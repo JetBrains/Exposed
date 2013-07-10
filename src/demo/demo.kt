@@ -10,7 +10,6 @@ object Users : Table() {
 }
 
 object Cities : Table() {
-    // Boilerplate #1. We cannot guess the column type in runtime :-(
     val id = column<String>("id", ColumnType.INT)
     val name = column<String>("name", ColumnType.STRING)
 }
@@ -45,12 +44,21 @@ fun main(args: Array<String>) {
             // and we cannot use the precedence of operators :-(
             println("${it[Users.name]} lives in ${it[Cities.name]}") // Unsafe code #2. We cannot check if row has this column
         }
-
-        // Outputs:
-
-        // SQL: CREATE TABLE Users (id INT, name VARCHAR(50))
-        // SQL: INSERT INTO Users (id, name) VALUES (1, 'Andrey')
-        // SQL: SELECT id, name FROM Users
-        // Andrey's id is 1
     }
+
+    // Outputs:
+
+    // SQL: CREATE TABLE Cities (id INT, name VARCHAR(50))
+    // SQL: CREATE TABLE Users (id INT, name VARCHAR(50), city_id INT)
+    // SQL: INSERT INTO Cities (id, name) VALUES (1, 'St. Petersburg')
+    // SQL: INSERT INTO Cities (id, name) VALUES (2, 'Munich')
+    // SQL: INSERT INTO Users (id, name, city_id) VALUES (1, 'Andrey', 1)
+    // SQL: INSERT INTO Users (id, name, city_id) VALUES (2, 'Sergey', 2)
+    // All cities:
+    // SQL: SELECT Cities.name FROM Cities
+    // St. Petersburg
+    // Munich
+    // Look up users:
+    // SQL: SELECT Users.id, Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
+    // Sergey lives in Munich
 }
