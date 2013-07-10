@@ -13,7 +13,11 @@ class Database(val url: String, val driver: String) {
     }
 
     fun withSession(statement: (session: Session) -> Unit) {
-        statement(Session(DriverManager.getConnection(url)))
+        val connection = DriverManager.getConnection(url)
+        connection.setAutoCommit(false)
+        statement(Session(connection))
+        connection.commit()
+        connection.close()
     }
 }
 
