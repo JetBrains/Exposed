@@ -35,5 +35,6 @@ Outputs:
 
     SQL: CREATE TABLE Users (id INT, name VARCHAR(50))
     SQL: INSERT INTO Users (id, name) VALUES (1, 'Andrey')
-    SQL: SELECT id, name FROM Users
+    SQL: INSERT INTO Users (id, name) VALUES (2, 'Sergey')
+    SQL: SELECT id, name FROM Users WHERE id = 1 or name = 'Andrey'
     Andrey's id is 1
