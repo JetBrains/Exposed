@@ -1,3 +1,8 @@
+Kotlin SQL Library
+==================
+
+This is an early prototype for a library to access SQL over JDBC, written for Kotlin language.
+
 ```java
 object Users : Table() {
     // Boilerplate #1. We cannot guess the column type in runtime :-(
