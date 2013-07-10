@@ -6,6 +6,7 @@ import java.sql.DriverManager
 import java.sql.Connection
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.HashSet
 
 class Database(val url: String, val driver: String) {
     {
@@ -27,13 +28,24 @@ class Session (val connection: Connection){
 open class Table(name: String = "") {
     val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName()
 
-    val tableColumns: List<Column<*>> = ArrayList<Column<*>>() //TODO
+    val tableColumns: List<Column<*>> = ArrayList<Column<*>>()
+    val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
 
     fun <T> column(name: String, columnType: ColumnType): Column<T> {
         val column = Column<T>(this, name, columnType)
         (tableColumns as ArrayList<Column<*>>).add(column)
         return column
     }
+
+    fun foreignKey(name: String, column: Column<Int>, table: Table): ForeignKey {
+        val foreignKey = ForeignKey()
+        (foreignKeys as ArrayList<ForeignKey>).add(foreignKey)
+        return foreignKey
+    }
+}
+
+class ForeignKey {
+
 }
 
 open class Op : Expression {
@@ -113,7 +125,7 @@ class Column<T>(val table: Table, val name: String, val columnType: ColumnType) 
     }
 
     fun toString(): String {
-        return name;
+        return table.tableName + "." + name;
     }
 }
 
@@ -167,18 +179,28 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
     }
 
     fun forEach(statement: (row: Row) -> Unit) {
+        val tables: MutableSet<Table> = HashSet<Table>()
         val sql = StringBuilder("SELECT ")
         if (columns.size > 0) {
             var c = 0;
             for (column in columns) {
-                sql.append(column.name)
+                tables.add(column.table)
+                sql.append(column.table.tableName).append(".").append(column.name)
                 c++
                 if (c < columns.size) {
                     sql.append(", ")
                 }
             }
         }
-        sql.append(" FROM " + columns[0].table.tableName)
+        sql.append(" FROM ")
+        var c= 0;
+        for (table in tables) {
+            sql.append(table.tableName)
+            c++
+            if (c < tables.size) {
+                sql.append(", ")
+            }
+        }
         if (op != null) {
             sql.append(" WHERE " + op.toString())
         }
