@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
         it.create(Users)
 
         it.insert(Users.id to 1, Users.name to "Andrey")
+        it.insert(Users.id to 2, Users.name to "Sergey")
         // Unsafe code #1. We cannot check if the value is of column's type
         // or all required columns are specified :-(
 
