@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
         // or all required columns are specified :-(
 
         it.select (Users.id, Users.name) where
-                (Users.id.equals(1) or Users.name.equals("Andrey")) groupBy(Users.name) forEach {
+                (Users.id.equals(1) or Users.name.equals("Andrey")) forEach {
             // Boilerplate # 2. We cannot write Users.id == 1 || Users.name == "Andrey"
             // and we cannot use the precedence of operators :-(
             println("${it[Users.name]}'s id is ${it[Users.id]}") // Unsafe code #2. We cannot check if row has this column
