@@ -29,22 +29,26 @@ open class Table(name: String = "") {
     val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName()
 
     val tableColumns: List<Column<*>> = ArrayList<Column<*>>()
+    val primaryKeys: List<Column<*>> = ArrayList<Column<*>>()
     val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
 
     fun <T> column(name: String, columnType: ColumnType): Column<T> {
         val column = Column<T>(this, name, columnType)
+        if (columnType == ColumnType.PRIMARY_KEY) {
+            (primaryKeys as ArrayList<Column<*>>).add(column)
+        }
         (tableColumns as ArrayList<Column<*>>).add(column)
         return column
     }
 
-    fun foreignKey(name: String, column: Column<Int>, table: Table): ForeignKey {
-        val foreignKey = ForeignKey()
+    fun foreignKey(column: Column<Int>, table: Table): ForeignKey {
+        val foreignKey = ForeignKey(this, column, table)
         (foreignKeys as ArrayList<ForeignKey>).add(foreignKey)
         return foreignKey
     }
 }
 
-class ForeignKey {
+class ForeignKey(val table:Table, val column:Column<*>, val referencedTable:Table) {
 
 }
 
@@ -111,6 +115,7 @@ class OrOp(val expr1: Expression, val expr2: Expression): Op() {
 }
 
 enum class ColumnType {
+    PRIMARY_KEY
     INT
     STRING
 }
@@ -147,9 +152,8 @@ fun Session.insert(vararg columns: Pair<Column<*>, Any>) {
         sql.append("VALUES (")
         for (column in columns) {
             when (column.component1().columnType) {
-                ColumnType.INT -> sql.append(column.component2())
                 ColumnType.STRING -> sql.append("'" + column.component2() + "'")
-                else -> throw IllegalStateException()
+                else -> sql.append(column.component2())
             }
             c++
             if (c < columns.size) {
@@ -168,6 +172,16 @@ fun Session.select(vararg columns: Column<*>): Query {
 
 open class Query(val connection: Connection, val columns: Array<Column<*>>) {
     var op: Op? = null;
+    var joinedTables = HashSet<Table>();
+    var joins = HashSet<ForeignKey>();
+
+    fun join (vararg foreignKeys: ForeignKey):Query {
+        for (foreignKey in foreignKeys) {
+            joins.add(foreignKey)
+            joinedTables.add(foreignKey.referencedTable)
+        }
+        return this
+    }
 
     fun where(op: Op): Query {
         this.op = op
@@ -184,7 +198,9 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         if (columns.size > 0) {
             var c = 0;
             for (column in columns) {
-                tables.add(column.table)
+                if (!joinedTables.contains(column.table)) {
+                    tables.add(column.table)
+                }
                 sql.append(column.table.tableName).append(".").append(column.name)
                 c++
                 if (c < columns.size) {
@@ -199,6 +215,12 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
             c++
             if (c < tables.size) {
                 sql.append(", ")
+            }
+        }
+        if (joins.size > 0) {
+            for (foreignKey in joins) {
+                sql.append(" JOIN ").append(foreignKey.referencedTable.tableName).append(" ON ").
+                        append(foreignKey.referencedTable.primaryKeys[0]).append(" = ").append(foreignKey.column);
             }
         }
         if (op != null) {
@@ -234,6 +256,7 @@ fun Session.create(vararg tables: Table) {
                 for (column in table.tableColumns) {
                     ddl.append(column.name).append(" ")
                     when (column.columnType) {
+                        ColumnType.PRIMARY_KEY -> ddl.append("INT PRIMARY KEY")
                         ColumnType.INT -> ddl.append("INT")
                         ColumnType.STRING -> ddl.append("VARCHAR(50)")
                         else -> throw IllegalStateException()
@@ -243,8 +266,15 @@ fun Session.create(vararg tables: Table) {
                         ddl.append(", ")
                     }
                 }
+                ddl.append(");")
             }
-            ddl.append(")")
+            if (table.foreignKeys.size > 0) {
+                for (foreignKey in table.foreignKeys) {
+                    ddl.append(" ALTER TABLE ${table.tableName} ADD FOREIGN KEY (").append(foreignKey.column.name).
+                            append(") REFERENCES ").append(foreignKey.column.table.tableName).append("(").
+                            append(foreignKey.column.table.primaryKeys[0].name).append(");")
+                }
+            }
             println("SQL: " + ddl.toString())
             connection.createStatement()?.executeUpdate(ddl.toString())
         }

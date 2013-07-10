@@ -2,15 +2,15 @@ package demo
 
 object Users : Table() {
     // Boilerplate #1. We cannot guess the column type in runtime :-(
-    val id = column<Int>("id", ColumnType.INT)
+    val id = column<Int>("id", ColumnType.PRIMARY_KEY)
     val name = column<String>("name", ColumnType.STRING)
     val cityId = column<Int>("city_id", ColumnType.INT)
 
-    val city = foreignKey("city", cityId, Cities)
+    val city = foreignKey(cityId, Cities)
 }
 
 object Cities : Table() {
-    val id = column<String>("id", ColumnType.INT)
+    val id = column<String>("id", ColumnType.PRIMARY_KEY)
     val name = column<String>("name", ColumnType.STRING)
 }
 
@@ -30,13 +30,13 @@ fun main(args: Array<String>) {
         // Unsafe code #1. We cannot check if the value is of column's type
         // or all required columns are specified :-(
 
-        println("All cities: ")
+        println("All cities:")
 
         it.select (Cities.name) forEach {
             println(it[Cities.name])
         }
 
-        println("Look up users: ")
+        println("Manual join:")
         it.select (Users.id, Users.name, Cities.name) where
                 ((Users.id.equals(1) or Users.name.equals("Sergey")) and Users.id.equals(2) and
                     Users.cityId.equals(Cities.id)) forEach {
@@ -44,12 +44,17 @@ fun main(args: Array<String>) {
             // and we cannot use the precedence of operators :-(
             println("${it[Users.name]} lives in ${it[Cities.name]}") // Unsafe code #2. We cannot check if row has this column
         }
+
+        println("Join with foreign key:")
+        it.select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg")) forEach {
+            println("${it[Users.name]} lives in ${it[Cities.name]}")
+        }
     }
 
     // Outputs:
 
-    // SQL: CREATE TABLE Cities (id INT, name VARCHAR(50))
-    // SQL: CREATE TABLE Users (id INT, name VARCHAR(50), city_id INT)
+    // SQL: CREATE TABLE Cities (id INT PRIMARY KEY, name VARCHAR(50));
+    // SQL: CREATE TABLE Users (id INT PRIMARY KEY, name VARCHAR(50), city_id INT); ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Users(id);
     // SQL: INSERT INTO Cities (id, name) VALUES (1, 'St. Petersburg')
     // SQL: INSERT INTO Cities (id, name) VALUES (2, 'Munich')
     // SQL: INSERT INTO Users (id, name, city_id) VALUES (1, 'Andrey', 1)
@@ -58,7 +63,10 @@ fun main(args: Array<String>) {
     // SQL: SELECT Cities.name FROM Cities
     // St. Petersburg
     // Munich
-    // Look up users:
+    // Manual join:
     // SQL: SELECT Users.id, Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
     // Sergey lives in Munich
+    // Join with foreign key:
+    // SQL: SELECT Users.name, Cities.name FROM Users JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg'
+    // Andrey lives in St. Petersburg
 }
