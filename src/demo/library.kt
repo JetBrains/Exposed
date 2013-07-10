@@ -32,17 +32,65 @@ open class Table(name: String = "") {
     }
 }
 
-fun <T> T.equals(c: Column<T>): Boolean {
-    return true
-}
-
-class Op {
+open class Op : Expression {
     fun and(op: Op): Op {
-        return Op()
+        return AndOp(this, op)
     }
 
     fun or(op: Op): Op {
-        return Op()
+        return OrOp(this, op)
+    }
+}
+
+trait Expression {
+
+}
+
+class LiteralOp(val value: Any): Op() {
+    fun toString():String {
+        return if (value is String) "'" + value + "'" else value.toString()
+    }
+}
+
+class EqualsOp(val expr1: Expression, val expr2: Expression): Op() {
+    fun toString():String {
+        val sb = StringBuilder()
+        if (expr1 is OrOp) {
+            sb.append("(").append(expr1).append(")")
+        } else {
+            sb.append(expr1)
+        }
+        sb.append(" = ")
+        if (expr2 is OrOp) {
+            sb.append("(").append(expr2).append(")")
+        } else {
+            sb.append(expr2)
+        }
+        return sb.toString()
+    }
+}
+
+class AndOp(val expr1: Expression, val expr2: Expression): Op() {
+    fun toString():String {
+        val sb = StringBuilder()
+        if (expr1 is OrOp) {
+            sb.append("(").append(expr1).append(")")
+        } else {
+            sb.append(expr1)
+        }
+        sb.append(" and ")
+        if (expr2 is OrOp) {
+            sb.append("(").append(expr2).append(")")
+        } else {
+            sb.append(expr2)
+        }
+        return sb.toString()
+    }
+}
+
+class OrOp(val expr1: Expression, val expr2: Expression): Op() {
+    fun toString():String {
+        return expr1.toString() + " or " + expr2.toString()
     }
 }
 
@@ -51,9 +99,17 @@ enum class ColumnType {
     STRING
 }
 
-class Column<T>(val table: Table, val name: String, val columnType: ColumnType) {
-    fun equals(other: Any?): Op {
-        return Op()
+class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Expression {
+    fun equals(other: Expression): Op {
+        return EqualsOp(this, other)
+    }
+
+    fun equals(other: Any): Op {
+        return EqualsOp(this, LiteralOp(other))
+    }
+
+    fun toString(): String {
+        return name;
     }
 }
 
@@ -120,7 +176,7 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         }
         sql.append(" FROM " + columns[0].table.tableName)
         if (op != null) {
-
+            sql.append(" WHERE " + op.toString())
         }
         println("SQL: " + sql.toString())
         val rs = connection.createStatement()?.executeQuery(sql.toString())!!
