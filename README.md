@@ -21,6 +21,8 @@ fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     db.withSession {
+        val (a, b) = Pair(1, "af")
+
         create(Cities)
         create(Users)
 
@@ -34,22 +36,24 @@ fun main(args: Array<String>) {
         println("All cities:")
 
         select (Cities.name) forEach {
-            println(it[Cities.name])
+            println(it)
         }
 
         println("Manual join:")
         select (Users.id, Users.name, Cities.name) where
                 ((Users.id.equals(1) or Users.name.equals("Sergey")) and Users.id.equals(2) and
                     Users.cityId.equals(Cities.id)) forEach {
-            println("${it[Users.name]} lives in ${it[Cities.name]}")
+            val (userName, cityName) = it
+            println("$userName lives in $cityName")
         }
 
         println("Join with foreign key:")
-        select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg") or (Users.cityId.isNull())) forEach {
-            if (it.has(Users.city)) {
-                println("${it[Users.name]} lives in ${it[Cities.name]}")
+        select (Users.name, Users.cityId, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg") or (Users.cityId.isNull())) forEach {
+            val (userName, cityId, cityName) = it
+            if (cityId != null) {
+                println("$userName lives in $cityName")
             } else {
-                println("${it[Users.name]} lives nowhere")
+                println("$userName lives nowhere")
             }
         }
     }
@@ -71,8 +75,8 @@ Outputs:
     Munich
     Manual join:
     SQL: SELECT Users.id, Users.name, Cities.name FROM Users, Cities WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
-    Sergey lives in Munich
+    2 lives in Sergey
     Join with foreign key:
-    SQL: SELECT Users.name, Cities.name, Users.city_id FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
+    SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
     Andrey lives in St. Petersburg
     Alex lives nowhere

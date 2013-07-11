@@ -195,18 +195,32 @@ fun Session.insert(vararg columns: Pair<Column<*>, *>) {
     }
 }
 
-fun Session.select(vararg columns: Column<*>): Query {
-    return Query(connection, columns)
+fun <A> Session.select(a: Column<A>): Query<A> {
+    return Query(connection, array(a))
 }
 
-open class Query(val connection: Connection, val columns: Array<Column<*>>) {
+fun <A, B> Session.select(a: Column<A>, b: Column<B>): Query<Pair<A, B>> {
+    return Query(connection, array(a, b))
+}
+
+fun <A, B, C> Session.select(a: Column<A>, b: Column<B>, c: Column<C>): Query<Triple<A, B, C>> {
+    return Query(connection, array(a, b, c))
+}
+
+/*
+fun <T> Session.select(vararg columns: Column<*>): Query<T> {
+    return Query(connection, columns)
+}
+*/
+
+open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
     var op: Op? = null;
     var joinedTables = HashSet<Table>();
     var selectedColumns = HashSet<Column<*>>();
     val finalColumns = ArrayList<Column<*>>()
     var joins = HashSet<ForeignKey>();
 
-    fun join (vararg foreignKeys: ForeignKey):Query {
+    fun join (vararg foreignKeys: ForeignKey):Query<T> {
         for (foreignKey in foreignKeys) {
             joins.add(foreignKey)
             joinedTables.add(foreignKey.referencedTable)
@@ -214,16 +228,16 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         return this
     }
 
-    fun where(op: Op): Query {
+    fun where(op: Op): Query<T> {
         this.op = op
         return this
     }
 
-    fun groupBy(vararg b: Column<*>): Query {
+    fun groupBy(vararg b: Column<*>): Query<T> {
         return this
     }
 
-    fun forEach(statement: (row: Row) -> Unit) {
+    fun forEach(statement: (row: T) -> Unit) {
         val tables: MutableSet<Table> = HashSet<Table>()
         val sql = StringBuilder("SELECT ")
         if (columns.size > 0) {
@@ -272,16 +286,23 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         val values = HashMap<Column<*>, Any?>()
         while (rs.next()) {
             var c = 0;
-            for (column in finalColumns) {
+            for (column in columns) {
                 c++;
                 values[column] = rs.getObject(c)
             }
-            statement(Row(values))
+            if (columns.size == 1) {
+                statement(values[columns[0]] as T)
+            } else if (columns.size == 2) {
+                statement(Pair(values[columns[0]], values[columns[1]]) as T)
+            } else if (columns.size == 3) {
+                statement(Triple(values[columns[0]], values[columns[1]], values[columns[2]]) as T)
+            }
         }
     }
 }
 
-class Row(val values: Map<Column<*>, *>) {
+/*
+open class Row<T>(val values: Map<Column<*>, *>) {
     fun has(foreignKey: ForeignKey): Boolean {
         return values.get(foreignKey.column) != null
     }
@@ -294,6 +315,7 @@ class Row(val values: Map<Column<*>, *>) {
         return values.get(column) != null
     }
 }
+*/
 
 fun Session.create(vararg tables: Table) {
     if (tables.size > 0) {
