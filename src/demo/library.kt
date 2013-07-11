@@ -204,7 +204,7 @@ fun <A, B> Session.select(a: Column<A>, b: Column<B>): Query<Pair<A, B>> {
 }
 
 fun <A, B, C> Session.select(a: Column<A>, b: Column<B>, c: Column<C>): Query<Triple<A, B, C>> {
-    return Query(connection, array(a, b, c))
+    return Query<Triple<A, B, C>>(connection, array(a, b, c))
 }
 
 /*
@@ -217,7 +217,6 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
     var op: Op? = null;
     var joinedTables = HashSet<Table>();
     var selectedColumns = HashSet<Column<*>>();
-    val finalColumns = ArrayList<Column<*>>()
     var joins = HashSet<ForeignKey>();
 
     fun join (vararg foreignKeys: ForeignKey):Query<T> {
@@ -244,7 +243,6 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
             var c = 0;
             for (column in columns) {
                 selectedColumns.add(column)
-                finalColumns.add(column)
                 if (!joinedTables.contains(column.table)) {
                     tables.add(column.table)
                 }
@@ -252,14 +250,6 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
                 c++
                 if (c < columns.size) {
                     sql.append(", ")
-                }
-            }
-        }
-        if (joins.size > 0) {
-            for (foreignKey in joins) {
-                if (!selectedColumns.contains(foreignKey.column)) {
-                    finalColumns.add(foreignKey.column)
-                    sql.append(", ").append(foreignKey.column.table.tableName).append(".").append(foreignKey.column.name)
                 }
             }
         }
@@ -283,19 +273,13 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
         }
         println("SQL: " + sql.toString())
         val rs = connection.createStatement()?.executeQuery(sql.toString())!!
-        val values = HashMap<Column<*>, Any?>()
         while (rs.next()) {
-            var c = 0;
-            for (column in columns) {
-                c++;
-                values[column] = rs.getObject(c)
-            }
             if (columns.size == 1) {
-                statement(values[columns[0]] as T)
+                statement(rs.getObject(1) as T)
             } else if (columns.size == 2) {
-                statement(Pair(values[columns[0]], values[columns[1]]) as T)
+                statement(Pair(rs.getObject(1), rs.getObject(2)) as T)
             } else if (columns.size == 3) {
-                statement(Triple(values[columns[0]], values[columns[1]], values[columns[2]]) as T)
+                statement(Triple(rs.getObject(1), rs.getObject(2), rs.getObject(3)) as T)
             }
         }
     }

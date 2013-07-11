@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
         }
 
         println("Manual join:")
-        select (Users.id, Users.name, Cities.name) where
+        select (Users.name, Cities.name) where
                 ((Users.id.equals(1) or Users.name.equals("Sergey")) and Users.id.equals(2) and
                     Users.cityId.equals(Cities.id)) forEach {
             val (userName, cityName) = it
@@ -72,8 +72,8 @@ Outputs:
     St. Petersburg
     Munich
     Manual join:
-    SQL: SELECT Users.id, Users.name, Cities.name FROM Users, Cities WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
-    2 lives in Sergey
+    SQL: SELECT Users.name, Cities.name FROM Users, Cities WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
+    Sergey lives in Munich
     Join with foreign key:
     SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
     Andrey lives in St. Petersburg
