@@ -40,12 +40,16 @@ open class Table(name: String = "") {
         return column<Int>(name, ColumnType.INT)
     }
 
+    fun columnNullableInt(name: String): Column<Int?> {
+        return column<Int?>(name, ColumnType.INT, true)
+    }
+
     fun columnString(name: String): Column<String> {
         return column<String>(name, ColumnType.STRING)
     }
 
-    private fun <T> column(name: String, columnType: ColumnType): Column<T> {
-        val column = Column<T>(this, name, columnType)
+    private fun <T> column(name: String, columnType: ColumnType, nullable: Boolean = false): Column<T> {
+        val column = Column<T>(this, name, columnType, nullable)
         if (columnType == ColumnType.PRIMARY_KEY) {
             (primaryKeys as ArrayList<Column<*>>).add(column)
         }
@@ -53,7 +57,7 @@ open class Table(name: String = "") {
         return column
     }
 
-    fun foreignKey(column: Column<Int>, table: Table): ForeignKey {
+    fun foreignKey(column: Column<*>, table: Table): ForeignKey {
         val foreignKey = ForeignKey(this, column, table)
         (foreignKeys as ArrayList<ForeignKey>).add(foreignKey)
         return foreignKey
@@ -61,7 +65,9 @@ open class Table(name: String = "") {
 }
 
 class ForeignKey(val table:Table, val column:Column<*>, val referencedTable:Table) {
-
+    fun isNull(): Op {
+        return IsNullOp(this)
+    }
 }
 
 open class Op : Expression {
@@ -76,6 +82,12 @@ open class Op : Expression {
 
 trait Expression {
 
+}
+
+class IsNullOp(val foreignKey: ForeignKey): Op() {
+    fun toString():String {
+        return "${foreignKey.column} IS NULL"
+    }
 }
 
 class LiteralOp(val value: Any): Op() {
@@ -132,7 +144,7 @@ enum class ColumnType {
     STRING
 }
 
-class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Expression {
+class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean) : Expression {
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
@@ -189,6 +201,8 @@ fun Session.select(vararg columns: Column<*>): Query {
 open class Query(val connection: Connection, val columns: Array<Column<*>>) {
     var op: Op? = null;
     var joinedTables = HashSet<Table>();
+    var selectedColumns = HashSet<Column<*>>();
+    val finalColumns = ArrayList<Column<*>>()
     var joins = HashSet<ForeignKey>();
 
     fun join (vararg foreignKeys: ForeignKey):Query {
@@ -214,6 +228,8 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         if (columns.size > 0) {
             var c = 0;
             for (column in columns) {
+                selectedColumns.add(column)
+                finalColumns.add(column)
                 if (!joinedTables.contains(column.table)) {
                     tables.add(column.table)
                 }
@@ -221,6 +237,14 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
                 c++
                 if (c < columns.size) {
                     sql.append(", ")
+                }
+            }
+        }
+        if (joins.size > 0) {
+            for (foreignKey in joins) {
+                if (!selectedColumns.contains(foreignKey.column)) {
+                    finalColumns.add(foreignKey.column)
+                    sql.append(", ").append(foreignKey.column.table.tableName).append(".").append(foreignKey.column.name)
                 }
             }
         }
@@ -235,7 +259,7 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         }
         if (joins.size > 0) {
             for (foreignKey in joins) {
-                sql.append(" JOIN ").append(foreignKey.referencedTable.tableName).append(" ON ").
+                sql.append(" LEFT JOIN ").append(foreignKey.referencedTable.tableName).append(" ON ").
                         append(foreignKey.referencedTable.primaryKeys[0]).append(" = ").append(foreignKey.column);
             }
         }
@@ -247,7 +271,7 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
         val values = HashMap<Column<*>, Any?>()
         while (rs.next()) {
             var c = 0;
-            for (column in columns) {
+            for (column in finalColumns) {
                 c++;
                 values[column] = rs.getObject(c)
             }
@@ -257,6 +281,10 @@ open class Query(val connection: Connection, val columns: Array<Column<*>>) {
 }
 
 class Row(val values: Map<Column<*>, *>) {
+    fun has(foreignKey: ForeignKey): Boolean {
+        return values.get(foreignKey.column) != null
+    }
+
     fun <T> get(column: Column<T>): T {
         return values.get(column) as T
     }
@@ -276,6 +304,12 @@ fun Session.create(vararg tables: Table) {
                         ColumnType.INT -> ddl.append("INT")
                         ColumnType.STRING -> ddl.append("VARCHAR(50)")
                         else -> throw IllegalStateException()
+                    }
+                    ddl.append(" ")
+                    if (column.nullable) {
+                        ddl.append("NULL")
+                    } else {
+                        ddl.append("NOT NULL")
                     }
                     c++
                     if (c < table.tableColumns.size) {
