@@ -232,6 +232,16 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
         return this
     }
 
+    fun or(op: Op): Query<T> {
+        this.op = OrOp(this.op!!, op)
+        return this
+    }
+
+    fun and(op: Op): Query<T> {
+        this.op = AndOp(this.op!!, op)
+        return this
+    }
+
     fun groupBy(vararg b: Column<*>): Query<T> {
         return this
     }
