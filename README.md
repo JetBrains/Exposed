@@ -17,7 +17,6 @@ object Cities : Table() {
     val name = columnString("name")
 }
 
-
 fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
