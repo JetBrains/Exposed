@@ -35,14 +35,17 @@ fun main(args: Array<String>) {
         }
 
         println("Manual join:")
-        select (Users.name, Cities.name) where
-        (Users.id.equals(1) or Users.name.equals("Sergey")) and Users.id.equals(2) and Users.cityId.equals(Cities.id) forEach {
+
+        select (Users.name, Cities.name) where (Users.id.equals(1) or Users.name.equals("Sergey")) and
+                Users.id.equals(2) and Users.cityId.equals(Cities.id) forEach {
             val (userName, cityName) = it
             println("$userName lives in $cityName")
         }
 
         println("Join with foreign key:")
-        select (Users.name, Users.cityId, Cities.name) join Users.city where Cities.name.equals("St. Petersburg") or Users.cityId.isNull() forEach {
+
+        select (Users.name, Users.cityId, Cities.name) join Users.city where
+                Cities.name.equals("St. Petersburg") or Users.cityId.isNull() forEach {
             val (userName, cityId, cityName) = it
             if (cityId != null) {
                 println("$userName lives in $cityName")
