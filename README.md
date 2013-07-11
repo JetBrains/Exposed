@@ -21,15 +21,16 @@ fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     db.withSession {
-        create(Cities)
-        create(Users)
+        create(Cities, Users)
 
-        insert(Cities.id(1), Cities.name("St. Petersburg"))
-        insert(Cities.id(2), Cities.name to "Munich")
+        insert (Cities.id(1), Cities.name("St. Petersburg"))
+        insert (Cities.id(2), Cities.name to "Munich")
 
-        insert(Users.id(1), Users.name("Andrey"), Users.cityId(1))
-        insert(Users.id(2), Users.name("Sergey"), Users.cityId(2))
-        insert(Users.id(3), Users.name("Alex"))
+        insert (Users.id(1), Users.name("Andrey"), Users.cityId(1))
+        insert (Users.id(2), Users.name("Sergey"), Users.cityId(2))
+        insert (Users.id(3), Users.name("Alex"))
+
+        update (Users.name("Alexey")) where Users.id.equals(3)
 
         println("All cities:")
 
@@ -66,6 +67,7 @@ Outputs:
     SQL: INSERT INTO Users (id, name, city_id) VALUES (1, 'Andrey', 1)
     SQL: INSERT INTO Users (id, name, city_id) VALUES (2, 'Sergey', 2)
     SQL: INSERT INTO Users (id, name) VALUES (3, 'Alex')
+    SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 3
     All cities:
     SQL: SELECT Cities.name FROM Cities
     St. Petersburg
@@ -76,4 +78,4 @@ Outputs:
     Join with foreign key:
     SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
     Andrey lives in St. Petersburg
-    Alex lives nowhere
+    Alexey lives nowhere
