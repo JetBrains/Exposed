@@ -289,6 +289,10 @@ class Row(val values: Map<Column<*>, *>) {
     fun <T> get(column: Column<T>): T {
         return values.get(column) as T
     }
+
+    fun has(column: Column<*>): Boolean {
+        return values.get(column) != null
+    }
 }
 
 fun Session.create(vararg tables: Table) {
