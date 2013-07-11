@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
         create(Users)
 
         insert(Cities.id(1), Cities.name("St. Petersburg"))
-        insert(Cities.id to 2, Cities.name to "Munich")
+        insert(Cities.id(2), Cities.name to "Munich")
 
         insert(Users.id(1), Users.name("Andrey"), Users.cityId(1))
         insert(Users.id(2), Users.name("Sergey"), Users.cityId(2))
