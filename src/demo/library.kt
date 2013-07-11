@@ -167,6 +167,18 @@ fun Session.update(vararg pairs: Pair<Column<*>, *>): UpdateQuery {
     return UpdateQuery(connection, pairs)
 }
 
+fun Session.delete(table: Table): DeleteQuery {
+    return DeleteQuery(connection, table)
+}
+
+class DeleteQuery(val connection: Connection, val table: Table) {
+    fun where(op: Op) {
+        var sql = StringBuilder("DELETE FROM ${table.tableName} WHERE $op")
+        println("SQL: " + sql)
+        connection.createStatement()!!.executeUpdate(sql.toString())
+    }
+}
+
 class UpdateQuery(val connection: Connection, val pairs: Array<Pair<Column<*>, *>>) {
     fun where(op: Op) {
         if (pairs.size > 0) {
@@ -375,6 +387,16 @@ fun Session.create(vararg tables: Table) {
                             append(foreignKey.column.table.primaryKeys[0].name).append(");")
                 }
             }
+            println("SQL: " + ddl.toString())
+            connection.createStatement()?.executeUpdate(ddl.toString())
+        }
+    }
+}
+
+fun Session.drop(vararg tables: Table) {
+    if (tables.size > 0) {
+        for (table in tables) {
+            val ddl = StringBuilder("DROP TABLE ${table.tableName}")
             println("SQL: " + ddl.toString())
             connection.createStatement()?.executeUpdate(ddl.toString())
         }

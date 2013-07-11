@@ -21,16 +21,19 @@ fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     db.withSession {
-        create(Cities, Users)
+        create (Cities, Users)
 
         insert (Cities.id(1), Cities.name("St. Petersburg"))
         insert (Cities.id(2), Cities.name to "Munich")
 
-        insert (Users.id(1), Users.name("Andrey"), Users.cityId(1))
+        insert(Users.id(1), Users.name("Andrey"), Users.cityId(1))
         insert (Users.id(2), Users.name("Sergey"), Users.cityId(2))
         insert (Users.id(3), Users.name("Alex"))
+        insert (Users.id(4), Users.name("Something"))
 
         update (Users.name("Alexey")) where Users.id.equals(3)
+
+        delete(Users) where Users.id.equals(4)
 
         println("All cities:")
 
@@ -57,6 +60,8 @@ fun main(args: Array<String>) {
                 println("$userName lives nowhere")
             }
         }
+
+        drop (Cities, Users)
     }
 }
 ```
@@ -70,15 +75,19 @@ Outputs:
     SQL: INSERT INTO Users (id, name, city_id) VALUES (1, 'Andrey', 1)
     SQL: INSERT INTO Users (id, name, city_id) VALUES (2, 'Sergey', 2)
     SQL: INSERT INTO Users (id, name) VALUES (3, 'Alex')
+    SQL: INSERT INTO Users (id, name) VALUES (4, 'Something')
     SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 3
+    SQL: DELETE FROM Users WHERE Users.id = 4
     All cities:
     SQL: SELECT Cities.name FROM Cities
     St. Petersburg
     Munich
     Manual join:
-    SQL: SELECT Users.name, Cities.name FROM Users, Cities WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
+    SQL: SELECT Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
     Sergey lives in Munich
     Join with foreign key:
     SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
     Andrey lives in St. Petersburg
     Alexey lives nowhere
+    SQL: DROP TABLE Cities
+    SQL: DROP TABLE Users
