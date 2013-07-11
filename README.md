@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
         }
 
         println("Join with foreign key:")
-        select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg") or (Users.city.isNull())) forEach {
+        select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg") or (Users.cityId.isNull())) forEach {
             if (it.has(Users.city)) {
                 println("${it[Users.name]} lives in ${it[Cities.name]}")
             } else {

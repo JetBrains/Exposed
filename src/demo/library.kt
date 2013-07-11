@@ -65,9 +65,6 @@ open class Table(name: String = "") {
 }
 
 class ForeignKey(val table:Table, val column:Column<*>, val referencedTable:Table) {
-    fun isNull(): Op {
-        return IsNullOp(this)
-    }
 }
 
 open class Op : Expression {
@@ -84,9 +81,9 @@ trait Expression {
 
 }
 
-class IsNullOp(val foreignKey: ForeignKey): Op() {
+class IsNullOp(val column: Column<*>): Op() {
     fun toString():String {
-        return "${foreignKey.column} IS NULL"
+        return "${column} IS NULL"
     }
 }
 
@@ -151,6 +148,10 @@ class Column<T>(val table: Table, val name: String, val columnType: ColumnType, 
 
     fun equals(other: Any): Op {
         return EqualsOp(this, LiteralOp(other))
+    }
+
+    fun isNull(): Op {
+        return IsNullOp(this)
     }
 
     fun toString(): String {
