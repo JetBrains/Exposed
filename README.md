@@ -5,17 +5,16 @@ This is an early prototype for a library to access SQL over JDBC, written for Ko
 
 ```java
 object Users : Table() {
-    // Boilerplate #1. We cannot guess the column type in runtime :-(
-    val id = column<Int>("id", ColumnType.PRIMARY_KEY)
-    val name = column<String>("name", ColumnType.STRING)
-    val cityId = column<Int>("city_id", ColumnType.INT)
+    val id = primaryKey("id")
+    val name = columnString("name")
+    val cityId = columnInt("city_id")
 
     val city = foreignKey(cityId, Cities)
 }
 
 object Cities : Table() {
-    val id = column<String>("id", ColumnType.PRIMARY_KEY)
-    val name = column<String>("name", ColumnType.STRING)
+    val id = primaryKey("id")
+    val name = columnString("name")
 }
 
 
@@ -23,34 +22,30 @@ fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     db.withSession {
-        it.create(Cities)
-        it.create(Users)
+        create(Cities)
+        create(Users)
 
-        it.insert(Cities.id to 1, Cities.name to "St. Petersburg")
-        it.insert(Cities.id to 2, Cities.name to "Munich")
+        insert(Cities.id(1), Cities.name("St. Petersburg"))
+        insert(Cities.id to 2, Cities.name to "Munich")
 
-        it.insert(Users.id to 1, Users.name to "Andrey", Users.cityId to 1)
-        it.insert(Users.id to 2, Users.name to "Sergey", Users.cityId to 2)
-        // Unsafe code #1. We cannot check if the value is of column's type
-        // or all required columns are specified :-(
+        insert(Users.id(1), Users.name("Andrey"), Users.cityId(1))
+        insert(Users.id(2), Users.name("Sergey"), Users.cityId(2))
 
         println("All cities:")
 
-        it.select (Cities.name) forEach {
+        select (Cities.name) forEach {
             println(it[Cities.name])
         }
 
         println("Manual join:")
-        it.select (Users.id, Users.name, Cities.name) where
+        select (Users.id, Users.name, Cities.name) where
                 ((Users.id.equals(1) or Users.name.equals("Sergey")) and Users.id.equals(2) and
                     Users.cityId.equals(Cities.id)) forEach {
-            // Boilerplate # 2. We cannot write Users.id == 1 || Users.name == "Andrey"
-            // and we cannot use the precedence of operators :-(
-            println("${it[Users.name]} lives in ${it[Cities.name]}") // Unsafe code #2. We cannot check if row has this column
+            println("${it[Users.name]} lives in ${it[Cities.name]}")
         }
 
         println("Join with foreign key:")
-        it.select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg")) forEach {
+        select (Users.name, Cities.name) join (Users.city) where (Cities.name.equals("St. Petersburg")) forEach {
             println("${it[Users.name]} lives in ${it[Cities.name]}")
         }
     }
@@ -75,3 +70,4 @@ Outputs:
     Join with foreign key:
     SQL: SELECT Users.name, Cities.name FROM Users JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg'
     Andrey lives in St. Petersburg
+

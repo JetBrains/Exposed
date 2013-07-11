@@ -13,16 +13,16 @@ class Database(val url: String, val driver: String) {
         Class.forName(driver)
     }
 
-    fun withSession(statement: (session: Session) -> Unit) {
+    fun withSession(statement: Session.() -> Unit) {
         val connection = DriverManager.getConnection(url)
         connection.setAutoCommit(false)
-        statement(Session(connection))
+        Session(connection).statement()
         connection.commit()
         connection.close()
     }
 }
 
-class Session (val connection: Connection){
+open class Session (val connection: Connection) {
 }
 
 open class Table(name: String = "") {
@@ -32,7 +32,19 @@ open class Table(name: String = "") {
     val primaryKeys: List<Column<*>> = ArrayList<Column<*>>()
     val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
 
-    fun <T> column(name: String, columnType: ColumnType): Column<T> {
+    fun primaryKey(name: String): Column<Int> {
+        return column<Int>(name, ColumnType.PRIMARY_KEY)
+    }
+
+    fun columnInt(name: String): Column<Int> {
+        return column<Int>(name, ColumnType.INT)
+    }
+
+    fun columnString(name: String): Column<String> {
+        return column<String>(name, ColumnType.STRING)
+    }
+
+    private fun <T> column(name: String, columnType: ColumnType): Column<T> {
         val column = Column<T>(this, name, columnType)
         if (columnType == ColumnType.PRIMARY_KEY) {
             (primaryKeys as ArrayList<Column<*>>).add(column)
@@ -132,9 +144,13 @@ class Column<T>(val table: Table, val name: String, val columnType: ColumnType) 
     fun toString(): String {
         return table.tableName + "." + name;
     }
+
+    fun invoke(value: T): Pair<Column<T>, T> {
+        return Pair<Column<T>, T>(this, value)
+    }
 }
 
-fun Session.insert(vararg columns: Pair<Column<*>, Any>) {
+fun Session.insert(vararg columns: Pair<Column<*>, *>) {
     if (columns.size > 0) {
         val table = columns[0].component1().table
         var sql = StringBuilder("INSERT INTO ${table.tableName}")
