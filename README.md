@@ -1,7 +1,7 @@
 Kotlin SQL Library
 ==================
 
-_Exposed_ is an prototype for a lightweight SQL library written over JDBC driver for [Kotlin](https://github.com/JetBrains/kotlin) language.
+_Exposed_ is a prototype for a lightweight SQL library written over JDBC driver for [Kotlin](https://github.com/JetBrains/kotlin) language.
 
 ```java
 object Users : Table() {
