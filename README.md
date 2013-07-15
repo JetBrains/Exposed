@@ -25,15 +25,17 @@ fun main(args: Array<String>) {
 
         insert (Cities.id(1), Cities.name("St. Petersburg"))
         insert (Cities.id(2), Cities.name to "Munich")
+        insert (Cities.id(3), Cities.name to "Prague")
 
-        insert(Users.id(1), Users.name("Andrey"), Users.cityId(1))
+        insert (Users.id(1), Users.name("Andrey"), Users.cityId(1))
         insert (Users.id(2), Users.name("Sergey"), Users.cityId(2))
-        insert (Users.id(3), Users.name("Alex"))
-        insert (Users.id(4), Users.name("Something"))
+        insert (Users.id(3), Users.name("Eugene"), Users.cityId(2))
+        insert (Users.id(4), Users.name("Alex"))
+        insert (Users.id(5), Users.name("Something"))
 
-        update (Users.name("Alexey")) where Users.id.equals(3)
+        update (Users.name("Alexey")) where Users.id.equals(4)
 
-        delete(Users) where Users.id.equals(4)
+        delete(Users) where Users.id.equals(5)
 
         println("All cities:")
 
@@ -61,6 +63,17 @@ fun main(args: Array<String>) {
             }
         }
 
+        println("Functions and group by:")
+
+        select (Cities.name, Count(Users.id)) join Users groupBy Cities.name forEach {
+            val (cityName, userCount) = it
+            if (userCount > 0) {
+                println("$userCount user(s) live(s) in $cityName")
+            } else {
+                println("Nobody lives in $cityName")
+            }
+        }
+
         drop (Cities, Users)
     }
 }
@@ -72,16 +85,19 @@ Outputs:
     SQL: CREATE TABLE Users (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL); ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Users(id);
     SQL: INSERT INTO Cities (id, name) VALUES (1, 'St. Petersburg')
     SQL: INSERT INTO Cities (id, name) VALUES (2, 'Munich')
+    SQL: INSERT INTO Cities (id, name) VALUES (3, 'Prague')
     SQL: INSERT INTO Users (id, name, city_id) VALUES (1, 'Andrey', 1)
     SQL: INSERT INTO Users (id, name, city_id) VALUES (2, 'Sergey', 2)
-    SQL: INSERT INTO Users (id, name) VALUES (3, 'Alex')
-    SQL: INSERT INTO Users (id, name) VALUES (4, 'Something')
-    SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 3
-    SQL: DELETE FROM Users WHERE Users.id = 4
+    SQL: INSERT INTO Users (id, name, city_id) VALUES (3, 'Eugene', 2)
+    SQL: INSERT INTO Users (id, name) VALUES (4, 'Alex')
+    SQL: INSERT INTO Users (id, name) VALUES (5, 'Something')
+    SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 4
+    SQL: DELETE FROM Users WHERE Users.id = 5
     All cities:
     SQL: SELECT Cities.name FROM Cities
     St. Petersburg
     Munich
+    Prague
     Manual join:
     SQL: SELECT Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
     Sergey lives in Munich
@@ -89,5 +105,10 @@ Outputs:
     SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Cities.id = Users.city_id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
     Andrey lives in St. Petersburg
     Alexey lives nowhere
+    Functions and group by:
+    SQL: SELECT Cities.name, COUNT(Users.id) FROM Cities LEFT JOIN Users ON Cities.id = Users.city_id GROUP BY Cities.name
+    Nobody lives in Prague
+    1 user(s) live(s) in St. Petersburg
+    2 user(s) live(s) in Munich
     SQL: DROP TABLE Cities
     SQL: DROP TABLE Users
