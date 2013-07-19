@@ -108,9 +108,9 @@ Outputs:
     Andrey lives in St. Petersburg
     Alexey lives nowhere
     Functions and group by:
-    SQL: SELECT Cities.name, COUNT(id) FROM Cities GROUP BY Cities.name
-    1 user(s) live(s) in Prague
+    SQL: SELECT Cities.name, COUNT(Users.id) FROM Cities LEFT JOIN Users ON Cities.id = Users.city_id GROUP BY Cities.name
+    Nobody lives in Prague
     1 user(s) live(s) in St. Petersburg
-    1 user(s) live(s) in Munich
+    2 user(s) live(s) in Munich
     SQL: DROP TABLE Users
     SQL: DROP TABLE Cities

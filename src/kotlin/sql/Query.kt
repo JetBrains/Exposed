@@ -12,7 +12,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
     var inverseJoins = HashSet<ForeignKey>();
     var groupedByColumns = ArrayList<Column<*>>();
 
-    fun join (vararg foreignKeys: ForeignKey):Query<T> {
+    fun join (vararg foreignKeys: ForeignKey): Query<T> {
         for (foreignKey in foreignKeys) {
             leftJoins.add(foreignKey)
             joinedTables.add(foreignKey.referencedTable)
@@ -20,12 +20,17 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
         return this
     }
 
-    fun join (vararg tables: Table):Query<T> {
+    fun join (vararg tables: Table): Query<T> {
         for (table in tables) {
             for (foreignKey in table.foreignKeys) {
                 for (field in fields) {
                     if (field is Column<*> && foreignKey.table == field.table) {
                         inverseJoins.add(foreignKey)
+                    } else if (field is Function<*>) {
+                        for (column in field.columns)
+                            if (foreignKey.table == column.table) {
+                                inverseJoins.add(foreignKey)
+                            }
                     }
                 }
             }
@@ -67,6 +72,13 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
                     if (!joinedTables.contains(field.table)) {
                         tables.add(field.table)
                     }
+                } else if (field is Function<*>) {
+                    for (column in field.columns) {
+                        selectedColumns.add(column)
+                        if (!joinedTables.contains(column.table)) {
+                            tables.add(column.table)
+                        }
+                    }
                 }
                 sql.append(field.toSQL())
                 c++
@@ -76,7 +88,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
             }
         }
         sql.append(" FROM ")
-        var c= 0;
+        var c = 0;
         for (table in tables) {
             sql.append(session.identity(table))
             c++
@@ -102,7 +114,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
         if (groupedByColumns.size > 0) {
             sql.append(" GROUP BY ")
         }
-        c= 0;
+        c = 0;
         for (column in groupedByColumns) {
             sql.append(session.fullIdentity(column))
             c++

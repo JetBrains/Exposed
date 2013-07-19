@@ -1,4 +1,4 @@
 package kotlin.sql
 
-abstract class Function<T>(): Field<T>() {
+abstract class Function<T>(vararg val columns: Column<*>): Field<T>() {
 }
