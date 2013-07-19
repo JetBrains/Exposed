@@ -19,6 +19,7 @@ object Cities : Table() {
 
 fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.withSession {
         create (Cities, Users)
@@ -65,7 +66,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        select (Cities.name, Count(Users.id)) join Users groupBy Cities.name forEach {
+        select (Cities.name, count(Users.id)) join Users groupBy Cities.name forEach {
             val (cityName, userCount) = it
             if (userCount > 0) {
                 println("$userCount user(s) live(s) in $cityName")
@@ -74,15 +75,16 @@ fun main(args: Array<String>) {
             }
         }
 
-        drop (Cities, Users)
+        drop (Users, Cities)
     }
 }
 ```
 
 Outputs:
 
-    SQL: CREATE TABLE Cities (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL);
-    SQL: CREATE TABLE Users (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL); ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Users(id);
+    SQL: CREATE TABLE Cities (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
+    SQL: CREATE TABLE Users (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL)
+    SQL: ALTER TABLE Users ADD CONSTRAINT "fk_Users_Cities_city_id" FOREIGN KEY (city_id) REFERENCES Cities(id)
     SQL: INSERT INTO Cities (id, name) VALUES (1, 'St. Petersburg')
     SQL: INSERT INTO Cities (id, name) VALUES (2, 'Munich')
     SQL: INSERT INTO Cities (id, name) VALUES (3, 'Prague')
@@ -106,9 +108,9 @@ Outputs:
     Andrey lives in St. Petersburg
     Alexey lives nowhere
     Functions and group by:
-    SQL: SELECT Cities.name, COUNT(Users.id) FROM Cities LEFT JOIN Users ON Cities.id = Users.city_id GROUP BY Cities.name
-    Nobody lives in Prague
+    SQL: SELECT Cities.name, COUNT(id) FROM Cities GROUP BY Cities.name
+    1 user(s) live(s) in Prague
     1 user(s) live(s) in St. Petersburg
-    2 user(s) live(s) in Munich
-    SQL: DROP TABLE Cities
+    1 user(s) live(s) in Munich
     SQL: DROP TABLE Users
+    SQL: DROP TABLE Cities

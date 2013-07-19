@@ -17,7 +17,7 @@ object Cities : Table() {
 
 fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
-    //var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
+    // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.withSession {
         create (Cities, Users)
