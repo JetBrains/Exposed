@@ -1,6 +1,6 @@
 package kotlin.sql
 
-open class Op : Expression {
+abstract class Op() : Expression {
     fun and(op: Op): Op {
         return AndOp(this, op)
     }
@@ -11,55 +11,55 @@ open class Op : Expression {
 }
 
 class IsNullOp(val column: Column<*>): Op() {
-    fun toString():String {
-        return "${column} IS NULL"
+    override fun toSQL():String {
+        return "${Session.get().fullIdentity(column)} IS NULL"
     }
 }
 
 class LiteralOp(val value: Any): Op() {
-    fun toString():String {
+    override fun toSQL():String {
         return if (value is String) "'" + value + "'" else value.toString()
     }
 }
 
 class EqualsOp(val expr1: Expression, val expr2: Expression): Op() {
-    fun toString():String {
+    override fun toSQL():String {
         val sb = StringBuilder()
         if (expr1 is OrOp) {
-            sb.append("(").append(expr1).append(")")
+            sb.append("(").append(expr1.toSQL()).append(")")
         } else {
-            sb.append(expr1)
+            sb.append(expr1.toSQL())
         }
         sb.append(" = ")
         if (expr2 is OrOp) {
-            sb.append("(").append(expr2).append(")")
+            sb.append("(").append(expr2.toSQL()).append(")")
         } else {
-            sb.append(expr2)
+            sb.append(expr2.toSQL())
         }
         return sb.toString()
     }
 }
 
 class AndOp(val expr1: Expression, val expr2: Expression): Op() {
-    fun toString():String {
+    override fun toSQL():String {
         val sb = StringBuilder()
         if (expr1 is OrOp) {
-            sb.append("(").append(expr1).append(")")
+            sb.append("(").append(expr1.toSQL()).append(")")
         } else {
-            sb.append(expr1)
+            sb.append(expr1.toSQL())
         }
         sb.append(" and ")
         if (expr2 is OrOp) {
-            sb.append("(").append(expr2).append(")")
+            sb.append("(").append(expr2.toSQL()).append(")")
         } else {
-            sb.append(expr2)
+            sb.append(expr2.toSQL())
         }
         return sb.toString()
     }
 }
 
 class OrOp(val expr1: Expression, val expr2: Expression): Op() {
-    fun toString():String {
-        return expr1.toString() + " or " + expr2.toString()
+    override fun toSQL():String {
+        return expr1.toSQL() + " or " + expr2.toSQL()
     }
 }

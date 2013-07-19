@@ -2,15 +2,15 @@ package kotlin.sql
 
 import java.sql.Connection
 
-class UpdateQuery(val connection: Connection, val pairs: Array<Pair<Column<*>, *>>) {
+class UpdateQuery(val session: Session, val pairs: Array<Pair<Column<*>, *>>) {
     fun where(op: Op) {
         if (pairs.size > 0) {
             val table = pairs[0].component1().table
-            var sql = StringBuilder("UPDATE ${table.tableName}")
+            var sql = StringBuilder("UPDATE ${session.identity(table)}")
             var c = 0;
             sql.append(" ")
             for (pair in pairs) {
-                sql.append("SET ").append(pair.component1().name).append(" = ")
+                sql.append("SET ").append(session.identity(pair.component1())).append(" = ")
                 when (pair.component1().columnType) {
                     ColumnType.STRING -> sql.append("'").append(pair.component2()).append("'")
                     else -> sql.append(pair.component2())
@@ -20,9 +20,9 @@ class UpdateQuery(val connection: Connection, val pairs: Array<Pair<Column<*>, *
                     sql.append(", ")
                 }
             }
-            sql.append(" WHERE " + op.toString())
+            sql.append(" WHERE " + op.toSQL())
             println("SQL: " + sql)
-            connection.createStatement()!!.executeUpdate(sql.toString())
+            session.connection.createStatement()!!.executeUpdate(sql.toString())
         }
     }
 }

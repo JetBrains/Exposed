@@ -9,6 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="h2" level="project" />
+    <orderEntry type="library" name="mysql-connector" level="project" />
   </component>
 </module>
 

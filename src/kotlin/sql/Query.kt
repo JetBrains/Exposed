@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.util.HashSet
 import java.util.ArrayList
 
-open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
+open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
     var op: Op? = null;
     var joinedTables = HashSet<Table>();
     var selectedColumns = HashSet<Column<*>>();
@@ -23,8 +23,8 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
     fun join (vararg tables: Table):Query<T> {
         for (table in tables) {
             for (foreignKey in table.foreignKeys) {
-                for (column in columns) {
-                    if (foreignKey.table == column.table) {
+                for (field in fields) {
+                    if (field is Column<*> && foreignKey.table == field.table) {
                         inverseJoins.add(foreignKey)
                     }
                 }
@@ -59,16 +59,18 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
     fun forEach(statement: (row: T) -> Unit) {
         val tables: MutableSet<Table> = HashSet<Table>()
         val sql = StringBuilder("SELECT ")
-        if (columns.size > 0) {
+        if (fields.size > 0) {
             var c = 0;
-            for (column in columns) {
-                selectedColumns.add(column)
-                if (!joinedTables.contains(column.table)) {
-                    tables.add(column.table)
+            for (field in fields) {
+                if (field is Column<*>) {
+                    selectedColumns.add(field)
+                    if (!joinedTables.contains(field.table)) {
+                        tables.add(field.table)
+                    }
                 }
-                sql.append(column)
+                sql.append(field.toSQL())
                 c++
-                if (c < columns.size) {
+                if (c < fields.size) {
                     sql.append(", ")
                 }
             }
@@ -76,7 +78,7 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
         sql.append(" FROM ")
         var c= 0;
         for (table in tables) {
-            sql.append(table.tableName)
+            sql.append(session.identity(table))
             c++
             if (c < tables.size) {
                 sql.append(", ")
@@ -84,38 +86,38 @@ open class Query<T>(val connection: Connection, val columns: Array<Column<*>>) {
         }
         if (leftJoins.size > 0) {
             for (foreignKey in leftJoins) {
-                sql.append(" LEFT JOIN ").append(foreignKey.referencedTable.tableName).append(" ON ").
-                append(foreignKey.referencedTable.primaryKeys[0]).append(" = ").append(foreignKey.column);
+                sql.append(" LEFT JOIN ").append(session.identity(foreignKey.referencedTable)).append(" ON ").
+                append(session.fullIdentity(foreignKey.referencedTable.primaryKeys[0])).append(" = ").append(session.fullIdentity(foreignKey.column));
             }
         }
         if (inverseJoins.size > 0) {
             for (foreignKey in inverseJoins) {
-                sql.append(" LEFT JOIN ").append(foreignKey.table.tableName).append(" ON ").
-                append(foreignKey.referencedTable.primaryKeys[0]).append(" = ").append(foreignKey.column);
+                sql.append(" LEFT JOIN ").append(session.identity(foreignKey.table)).append(" ON ").
+                append(session.fullIdentity(foreignKey.referencedTable.primaryKeys[0])).append(" = ").append(session.fullIdentity(foreignKey.column));
             }
         }
         if (op != null) {
-            sql.append(" WHERE " + op.toString())
+            sql.append(" WHERE ").append(op!!.toSQL())
         }
         if (groupedByColumns.size > 0) {
             sql.append(" GROUP BY ")
         }
         c= 0;
         for (column in groupedByColumns) {
-            sql.append(column)
+            sql.append(session.fullIdentity(column))
             c++
             if (c < groupedByColumns.size) {
                 sql.append(", ")
             }
         }
         println("SQL: " + sql.toString())
-        val rs = connection.createStatement()?.executeQuery(sql.toString())!!
+        val rs = session.connection.createStatement()?.executeQuery(sql.toString())!!
         while (rs.next()) {
-            if (columns.size == 1) {
+            if (fields.size == 1) {
                 statement(rs.getObject(1) as T)
-            } else if (columns.size == 2) {
+            } else if (fields.size == 2) {
                 statement(Pair(rs.getObject(1), rs.getObject(2)) as T)
-            } else if (columns.size == 3) {
+            } else if (fields.size == 3) {
                 statement(Triple(rs.getObject(1), rs.getObject(2), rs.getObject(3)) as T)
             }
         }

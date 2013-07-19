@@ -17,6 +17,7 @@ object Cities : Table() {
 
 fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    //var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.withSession {
         create (Cities, Users)
@@ -63,7 +64,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        select (Cities.name, Count(Users.id)) join Users groupBy Cities.name forEach {
+        select (Cities.name, count(Users.id)) join Users groupBy Cities.name forEach {
             val (cityName, userCount) = it
             if (userCount > 0) {
                 println("$userCount user(s) live(s) in $cityName")
@@ -72,6 +73,6 @@ fun main(args: Array<String>) {
             }
         }
 
-        drop (Cities, Users)
+        drop (Users, Cities)
     }
 }

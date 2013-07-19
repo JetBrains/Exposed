@@ -1,6 +1,6 @@
 package kotlin.sql
 
-open class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean) : Expression {
+open class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean) : Field<T>() {
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
@@ -13,8 +13,8 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return IsNullOp(this)
     }
 
-    open fun toString(): String {
-        return table.tableName + "." + name;
+    override fun toSQL(): String {
+        return Session.get().fullIdentity(this);
     }
 
     fun invoke(value: T): Pair<Column<T>, T> {
