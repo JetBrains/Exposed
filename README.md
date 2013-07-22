@@ -15,6 +15,8 @@ object Users : Table() {
 object Cities : Table() {
     val id = primaryKey("id")
     val name = columnString("name")
+
+    val all = id + name
 }
 
 fun main(args: Array<String>) {
@@ -40,8 +42,9 @@ fun main(args: Array<String>) {
 
         println("All cities:")
 
-        select (Cities.name) forEach {
-            println(it)
+        select (Cities.all) forEach {
+            val (id, name) = it
+            println("$id: $name")
         }
 
         println("Manual join:")
@@ -96,10 +99,10 @@ Outputs:
     SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 4
     SQL: DELETE FROM Users WHERE Users.id = 5
     All cities:
-    SQL: SELECT Cities.name FROM Cities
-    St. Petersburg
-    Munich
-    Prague
+    SQL: SELECT Cities.id, Cities.name FROM Cities
+    1: St. Petersburg
+    2: Munich
+    3: Prague
     Manual join:
     SQL: SELECT Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
     Sergey lives in Munich

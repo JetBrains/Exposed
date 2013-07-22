@@ -8,8 +8,6 @@ object Users : Table() {
     val cityId = columnNullableInt("city_id")
 
     val city = foreignKey(cityId, Cities)
-
-    val all = id + name + cityId
 }
 
 object Cities : Table() {
