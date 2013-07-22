@@ -9,7 +9,7 @@ object Users : Table() {
 }
 
 object Cities : Table() {
-    val id = id("id")
+    val id = id("id", autoIncrement = true)
     val name = varchar("name", 50)
 
     val all = id + name
@@ -22,14 +22,14 @@ fun main(args: Array<String>) {
     db.withSession {
         create (Cities, Users)
 
-        insert (Cities.id(1), Cities.name("St. Petersburg"))
-        insert (Cities.id(2), Cities.name to "Munich")
-        insert (Cities.id(3), Cities.name to "Prague")
+        val saintPetersburgId = insert(Cities.name("St. Petersburg")) get Cities.id
+        val munichId = insert (Cities.name("Munich")) get Cities.id
+        insert (Cities.name("Prague"))
 
-        insert (Users.name("Andrey"), Users.cityId(1))
+        insert (Users.name("Andrey"), Users.cityId(saintPetersburgId))
 
-        insert (Users.name("Sergey"), Users.cityId(2))
-        insert (Users.name("Eugene"), Users.cityId(2))
+        insert (Users.name("Sergey"), Users.cityId(munichId))
+        insert (Users.name("Eugene"), Users.cityId(munichId))
         insert (Users.name("Alex"))
         insert (Users.name("Something"))
 

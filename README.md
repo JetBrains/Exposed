@@ -11,7 +11,7 @@ object Users : Table() {
 }
 
 object Cities : Table() {
-    val id = id("id")
+    val id = id("id", autoIncrement = true)
     val name = varchar("name", 50)
 
     val all = id + name
@@ -24,14 +24,14 @@ fun main(args: Array<String>) {
     db.withSession {
         create (Cities, Users)
 
-        insert (Cities.id(1), Cities.name("St. Petersburg"))
-        insert (Cities.id(2), Cities.name to "Munich")
-        insert (Cities.id(3), Cities.name to "Prague")
+        val saintPetersburgId = insert(Cities.name("St. Petersburg")) get Cities.id
+        val munichId = insert (Cities.name("Munich")) get Cities.id
+        insert (Cities.name("Prague"))
 
-        insert (Users.name("Andrey"), Users.cityId(1))
+        insert (Users.name("Andrey"), Users.cityId(saintPetersburgId))
 
-        insert (Users.name("Sergey"), Users.cityId(2))
-        insert (Users.name("Eugene"), Users.cityId(2))
+        insert (Users.name("Sergey"), Users.cityId(munichId))
+        insert (Users.name("Eugene"), Users.cityId(munichId))
         insert (Users.name("Alex"))
         insert (Users.name("Something"))
 
@@ -84,12 +84,12 @@ fun main(args: Array<String>) {
 
 Outputs:
 
-    SQL: CREATE TABLE Cities (id INT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
+    SQL: CREATE TABLE Cities (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL)
     SQL: CREATE TABLE Users (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL)
     SQL: ALTER TABLE Users ADD CONSTRAINT "fk_Users_Cities_city_id" FOREIGN KEY (city_id) REFERENCES Cities(id)
-    SQL: INSERT INTO Cities (id, name) VALUES (1, 'St. Petersburg')
-    SQL: INSERT INTO Cities (id, name) VALUES (2, 'Munich')
-    SQL: INSERT INTO Cities (id, name) VALUES (3, 'Prague')
+    SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
+    SQL: INSERT INTO Cities (name) VALUES ('Munich')
+    SQL: INSERT INTO Cities (name) VALUES ('Prague')
     SQL: INSERT INTO Users (name, city_id) VALUES ('Andrey', 1)
     SQL: INSERT INTO Users (name, city_id) VALUES ('Sergey', 2)
     SQL: INSERT INTO Users (name, city_id) VALUES ('Eugene', 2)
@@ -103,7 +103,7 @@ Outputs:
     2: Munich
     3: Prague
     Manual join:
-    SQL: SELECT Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
+    SQL: SELECT Users.name, Cities.name FROM Users, Cities WHERE (Users.id = 1 or Users.name = 'Sergey') and Users.id = 2 and Users.city_id = Cities.id
     Sergey lives in Munich
     Join with foreign key:
     SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Users.city_id = Cities.id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
