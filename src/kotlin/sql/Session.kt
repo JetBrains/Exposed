@@ -26,6 +26,14 @@ open class Session (val connection: Connection, val driver: Driver) {
         return Query<Triple<A, B, C>>(this, array(a, b, c))
     }
 
+    fun <A, B> select(a: Column2<A, B>): Query<Pair<A, B>> {
+        return Query(this, array(a.a, a.b))
+    }
+
+    fun <A, B, C> select(a: Column3<A, B, C>): Query<Triple<A, B, C>> {
+        return Query(this, array(a.a, a.b, a. c))
+    }
+
     fun update(vararg pairs: Pair<Column<*>, *>): UpdateQuery {
         return UpdateQuery(this, pairs)
     }

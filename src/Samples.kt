@@ -8,11 +8,15 @@ object Users : Table() {
     val cityId = columnNullableInt("city_id")
 
     val city = foreignKey(cityId, Cities)
+
+    val all = id + name + cityId
 }
 
 object Cities : Table() {
     val id = primaryKey("id")
     val name = columnString("name")
+
+    val all = id + name
 }
 
 fun main(args: Array<String>) {
@@ -38,8 +42,9 @@ fun main(args: Array<String>) {
 
         println("All cities:")
 
-        select (Cities.name) forEach {
-            println(it)
+        select (Cities.all) forEach {
+            val (id, name) = it
+            println("$id: $name")
         }
 
         println("Manual join:")
