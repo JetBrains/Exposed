@@ -3,16 +3,14 @@ package demo
 import kotlin.sql.*
 
 object Users : Table() {
-    val id = primaryKey("id")
-    val name = columnString("name")
-    val cityId = columnNullableInt("city_id")
-
-    val city = foreignKey(cityId, Cities)
+    val id = id("id", autoIncrement = true)
+    val name = varchar("name", length = 50)
+    val cityId = integerNullable("city_id", references = Cities.id)
 }
 
 object Cities : Table() {
-    val id = primaryKey("id")
-    val name = columnString("name")
+    val id = id("id")
+    val name = varchar("name", 50)
 
     val all = id + name
 }
@@ -28,15 +26,16 @@ fun main(args: Array<String>) {
         insert (Cities.id(2), Cities.name to "Munich")
         insert (Cities.id(3), Cities.name to "Prague")
 
-        insert (Users.id(1), Users.name("Andrey"), Users.cityId(1))
-        insert (Users.id(2), Users.name("Sergey"), Users.cityId(2))
-        insert (Users.id(3), Users.name("Eugene"), Users.cityId(2))
-        insert (Users.id(4), Users.name("Alex"))
-        insert (Users.id(5), Users.name("Something"))
+        insert (Users.name("Andrey"), Users.cityId(1))
 
-        update (Users.name("Alexey")) where Users.id.equals(4)
+        insert (Users.name("Sergey"), Users.cityId(2))
+        insert (Users.name("Eugene"), Users.cityId(2))
+        insert (Users.name("Alex"))
+        insert (Users.name("Something"))
 
-        delete(Users) where Users.id.equals(5)
+        update (Users.name("Alexey")) where Users.name.equals("Alex")
+
+        delete(Users) where Users.name.equals("Something")
 
         println("All cities:")
 
@@ -55,7 +54,7 @@ fun main(args: Array<String>) {
 
         println("Join with foreign key:")
 
-        select (Users.name, Users.cityId, Cities.name) join Users.city where
+        select (Users.name, Users.cityId, Cities.name) from Users join Cities where
                 Cities.name.equals("St. Petersburg") or Users.cityId.isNull() forEach {
             val (userName, cityId, cityName) = it
             if (cityId != null) {
@@ -67,7 +66,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        select (Cities.name, count(Users.id)) join Users groupBy Cities.name forEach {
+        select (Cities.name, count(Users.id)) from Cities join Users groupBy Cities.name forEach {
             val (cityName, userCount) = it
             if (userCount > 0) {
                 println("$userCount user(s) live(s) in $cityName")

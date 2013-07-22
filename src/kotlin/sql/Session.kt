@@ -4,6 +4,8 @@ import java.sql.Connection
 import org.h2.engine.Session
 import java.sql.Driver
 import java.util.regex.Pattern
+import java.sql.Statement
+import java.sql.ResultSet
 
 open class Session (val connection: Connection, val driver: Driver) {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
@@ -70,7 +72,12 @@ open class Session (val connection: Connection, val driver: Driver) {
             }
             sql.append(") ")
             println("SQL: " + sql.toString())
-            connection.createStatement()?.executeUpdate(sql.toString())
+            val statement = connection.createStatement()!!
+            statement.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
+            /*val rs = statement.getGeneratedKeys()!!;
+            if (rs.next()) {
+                println("GENERATED KEYS: ${rs.getInt(1)}");
+            }*/
         }
     }
 
@@ -86,10 +93,13 @@ open class Session (val connection: Connection, val driver: Driver) {
                         when (column.columnType) {
                             ColumnType.PRIMARY_KEY -> ddl.append("INT PRIMARY KEY")
                             ColumnType.INT -> ddl.append("INT")
-                            ColumnType.STRING -> ddl.append("VARCHAR(50)")
+                            ColumnType.STRING -> ddl.append("VARCHAR(${column.length})")
                             else -> throw IllegalStateException()
                         }
                         ddl.append(" ")
+                        if (column.autoIncrement) {
+                            ddl.append(autoIncrement(column)).append(" ")
+                        }
                         if (column.nullable) {
                             ddl.append("NULL")
                         } else {
@@ -152,6 +162,17 @@ open class Session (val connection: Connection, val driver: Driver) {
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
                 "ALTER TABLE ${identity(foreignKey.table)} ADD CONSTRAINT ${identity(foreignKey)} FOREIGN KEY (${identity(foreignKey.column)}) REFERENCES ${identity(foreignKey.referencedTable)}(${identity(foreignKey.column.table.primaryKeys[0])})"
+            }
+            else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
+        }
+    }
+
+    fun autoIncrement(column: Column<*>): String {
+        return when (driver.getClass().getName()) {
+            "com.mysql.jdbc.Driver", /*"oracle.jdbc.driver.OracleDriver",*/
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver", /*"org.postgresql.Driver",*/
+            "org.h2.Driver" -> {
+                "AUTO_INCREMENT"
             }
             else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
         }

@@ -9,24 +9,28 @@ open class Table(name: String = "") {
     val primaryKeys: List<Column<*>> = ArrayList<Column<*>>()
     val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
 
-    fun primaryKey(name: String): Column<Int> {
-        return column<Int>(name, ColumnType.PRIMARY_KEY)
+    fun id(name: String, autoIncrement: Boolean = false): Column<Int> {
+        return column<Int>(name, ColumnType.PRIMARY_KEY, false, autoIncrement = autoIncrement)
     }
 
-    fun columnInt(name: String): Column<Int> {
-        return column<Int>(name, ColumnType.INT)
+    fun integer(name: String, references: Column<*>? = null): Column<Int> {
+        return column<Int>(name, ColumnType.INT, false, references = references)
     }
 
-    fun columnNullableInt(name: String): Column<Int?> {
-        return column<Int?>(name, ColumnType.INT, true)
+    fun integerNullable(name: String, references: Column<*>? = null): Column<Int?> {
+        val column = column<Int?>(name, ColumnType.INT, nullable = true, autoIncrement = false, references = references)
+        if (references != null) {
+            foreignKey(column, references.table)
+        }
+        return column
     }
 
-    fun columnString(name: String): Column<String> {
-        return column<String>(name, ColumnType.STRING)
+    fun varchar(name: String, length: Int): Column<String> {
+        return column<String>(name, ColumnType.STRING, false, length = length)
     }
 
-    private fun <T> column(name: String, columnType: ColumnType, nullable: Boolean = false): Column<T> {
-        val column = Column<T>(this, name, columnType, nullable)
+    private fun <T> column(name: String, columnType: ColumnType, nullable: Boolean, length: Int = 0, autoIncrement: Boolean = false, references: Column<*>? = null): Column<T> {
+        val column = Column<T>(this, name, columnType, nullable, length, autoIncrement, references)
         if (columnType == ColumnType.PRIMARY_KEY) {
             (primaryKeys as ArrayList<Column<*>>).add(column)
         }

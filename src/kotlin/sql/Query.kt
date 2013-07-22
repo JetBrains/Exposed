@@ -6,23 +6,31 @@ import java.util.ArrayList
 
 open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
     var op: Op? = null;
-    var joinedTables = HashSet<Table>();
+    var selectedTables = ArrayList<Table>();
+    var joinedTables = ArrayList<Table>();
     var selectedColumns = HashSet<Column<*>>();
-    var leftJoins = HashSet<ForeignKey>();
-    var inverseJoins = HashSet<ForeignKey>();
+    //var leftJoins = HashSet<ForeignKey>();
+    //var inverseJoins = HashSet<ForeignKey>();
     var groupedByColumns = ArrayList<Column<*>>();
 
-    fun join (vararg foreignKeys: ForeignKey): Query<T> {
+    /*fun join (vararg foreignKeys: ForeignKey): Query<T> {
         for (foreignKey in foreignKeys) {
-            leftJoins.add(foreignKey)
+            //leftJoins.add(foreignKey)
             joinedTables.add(foreignKey.referencedTable)
+        }
+        return this
+    }*/
+
+    fun from (vararg tables: Table) : Query<T> {
+        for (table in tables) {
+            selectedTables.add(table)
         }
         return this
     }
 
     fun join (vararg tables: Table): Query<T> {
         for (table in tables) {
-            for (foreignKey in table.foreignKeys) {
+            /*for (foreignKey in table.foreignKeys) {
                 for (field in fields) {
                     if (field is Column<*> && foreignKey.table == field.table) {
                         inverseJoins.add(foreignKey)
@@ -33,7 +41,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
                             }
                     }
                 }
-            }
+            }*/
             joinedTables.add(table)
         }
         return this
@@ -89,14 +97,48 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
         }
         sql.append(" FROM ")
         var c = 0;
-        for (table in tables) {
-            sql.append(session.identity(table))
-            c++
-            if (c < tables.size) {
-                sql.append(", ")
+        if (selectedTables.isEmpty()) {
+            for (table in tables) {
+                sql.append(session.identity(table))
+                c++
+                if (c < tables.size) {
+                    sql.append(", ")
+                }
+            }
+        } else {
+            for (table in selectedTables) {
+                sql.append(session.identity(table))
+                c++
+                if (c < tables.size) {
+                    sql.append(", ")
+                }
             }
         }
-        if (leftJoins.size > 0) {
+        if (!joinedTables.isEmpty()) {
+            for (table in joinedTables) {
+                if (table.primaryKeys.size == 1) {
+                    val primaryKey = table.primaryKeys.get(0)
+                    for (column in selectedColumns) {
+                        if (column.references == primaryKey) {
+                            sql.append(" LEFT JOIN ").append(session.identity(column.references.table)).append(" ON ").
+                            append(session.fullIdentity(column)).append(" = ").append(session.fullIdentity(primaryKey));
+                        }
+                    }
+                }
+                for (selectedTable in selectedTables) {
+                    if (selectedTable.primaryKeys.size == 1) {
+                        val primaryKey = selectedTable.primaryKeys.get(0)
+                        for (column in table.tableColumns) {
+                            if (column.references == primaryKey) {
+                                sql.append(" LEFT JOIN ").append(session.identity(table)).append(" ON ").
+                                append(session.fullIdentity(column)).append(" = ").append(session.fullIdentity(primaryKey));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /*if (leftJoins.size > 0) {
             for (foreignKey in leftJoins) {
                 sql.append(" LEFT JOIN ").append(session.identity(foreignKey.referencedTable)).append(" ON ").
                 append(session.fullIdentity(foreignKey.referencedTable.primaryKeys[0])).append(" = ").append(session.fullIdentity(foreignKey.column));
@@ -107,7 +149,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
                 sql.append(" LEFT JOIN ").append(session.identity(foreignKey.table)).append(" ON ").
                 append(session.fullIdentity(foreignKey.referencedTable.primaryKeys[0])).append(" = ").append(session.fullIdentity(foreignKey.column));
             }
-        }
+        }*/
         if (op != null) {
             sql.append(" WHERE ").append(op!!.toSQL())
         }

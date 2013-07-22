@@ -1,6 +1,6 @@
 package kotlin.sql
 
-open class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean) : Field<T>() {
+open class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean, val length: Int, val autoIncrement: Boolean, val references: Column<*>?) : Field<T>() {
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
