@@ -61,7 +61,7 @@ open class Session (val connection: Connection, val driver: Driver) {
         sql.append("VALUES (")
         for (column in columns) {
             when (column.component1().columnType) {
-                ColumnType.STRING -> sql.append("'" + column.component2() + "'")
+                InternalColumnType.STRING -> sql.append("'" + column.component2() + "'")
                 else -> sql.append(column.component2())
             }
             c++
@@ -79,34 +79,7 @@ open class Session (val connection: Connection, val driver: Driver) {
     fun create(vararg tables: Table) {
         if (tables.size > 0) {
             for (table in tables) {
-                var ddl = StringBuilder("CREATE TABLE ${identity(table)}")
-                if (table.tableColumns.size > 0) {
-                    ddl.append(" (")
-                    var c = 0;
-                    for (column in table.tableColumns) {
-                        ddl.append(identity(column)).append(" ")
-                        when (column.columnType) {
-                            ColumnType.PRIMARY_KEY -> ddl.append("INT PRIMARY KEY")
-                            ColumnType.INT -> ddl.append("INT")
-                            ColumnType.STRING -> ddl.append("VARCHAR(${column.length})")
-                            else -> throw IllegalStateException()
-                        }
-                        ddl.append(" ")
-                        if (column.autoIncrement) {
-                            ddl.append(autoIncrement(column)).append(" ")
-                        }
-                        if (column.nullable) {
-                            ddl.append("NULL")
-                        } else {
-                            ddl.append("NOT NULL")
-                        }
-                        c++
-                        if (c < table.tableColumns.size) {
-                            ddl.append(", ")
-                        }
-                    }
-                    ddl.append(")")
-                }
+                val ddl = table.ddl
                 println("SQL: " + ddl.toString())
                 connection.createStatement()?.executeUpdate(ddl.toString())
                 if (table.foreignKeys.size > 0) {

@@ -1,12 +1,16 @@
 package kotlin.sql
 
-open class Column<T>(val table: Table, val name: String, val columnType: ColumnType, val nullable: Boolean, val length: Int, val autoIncrement: Boolean, val references: Column<*>?) : Field<T>() {
+open class Column<T>(val table: Table, val name: String, val columnType: InternalColumnType, val primaryKey: Boolean, val nullable: Boolean, val length: Int, val autoIncrement: Boolean, val references: Column<*>?) : Field<T>() {
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
 
-    fun equals(other: Any): Op {
+    fun equals(other: T): Op {
         return EqualsOp(this, LiteralOp(other))
+    }
+
+    fun like(other: String): Op {
+        return LikeOp(this, LiteralOp(other))
     }
 
     fun isNull(): Op {
@@ -24,6 +28,10 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
     fun <B> plus(b: Column<B>): Column2<T, B> {
         return Column2<T, B>(this, b)
     }
+}
+
+class PKColumn<T>(table: Table, name: String, columnType: InternalColumnType, primaryKey: Boolean, nullable: Boolean, length: Int, autoIncrement: Boolean, references: Column<*>?) : Column<T>(table, name, columnType, primaryKey, nullable, length, autoIncrement, references) {
+
 }
 
 class Column2<A, B>(val a: Column<A>, val b: Column<B>) {

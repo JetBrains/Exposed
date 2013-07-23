@@ -1,7 +1,15 @@
 package kotlin.sql
 
-enum class ColumnType {
-    PRIMARY_KEY
-    INT
-    STRING
+object ColumnType {
+    val PRIMARY_KEY = PrimaryKeyColumnType()
+    val NULLABLE = NullableColumnType()
+}
+
+class PrimaryKeyColumnType {
+    private {
+    }
+}
+class NullableColumnType {
+    private {
+    }
 }

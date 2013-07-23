@@ -3,16 +3,18 @@ package demo
 import kotlin.sql.*
 
 object Users : Table() {
-    val id = id("id", autoIncrement = true)
-    val name = varchar("name", length = 50)
-    val cityId = integerNullable("city_id", references = Cities.id)
+    val id = varchar("id", ColumnType.PRIMARY_KEY, length = 10) // PKColumn<String>
+    val name = varchar("name", length = 50) // Column<String>
+    val cityId = integer("city_id", ColumnType.NULLABLE, references = Cities.id) // Column<Int?>
+
+    val all = id + name + cityId // Column2<String, String, Int?>
 }
 
 object Cities : Table() {
-    val id = id("id", autoIncrement = true)
-    val name = varchar("name", 50)
+    val id = integer("id", ColumnType.PRIMARY_KEY, autoIncrement = true) // PKColumn<Int>
+    val name = varchar("name", 50) // Column<String>
 
-    val all = id + name
+    val all = id + name // Column2<Int, String>
 }
 
 fun main(args: Array<String>) {
@@ -26,16 +28,16 @@ fun main(args: Array<String>) {
         val munichId = insert (Cities.name("Munich")) get Cities.id
         insert (Cities.name("Prague"))
 
-        insert (Users.name("Andrey"), Users.cityId(saintPetersburgId))
+        insert (Users.id("andrey"), Users.name("Andrey"), Users.cityId(saintPetersburgId))
 
-        insert (Users.name("Sergey"), Users.cityId(munichId))
-        insert (Users.name("Eugene"), Users.cityId(munichId))
-        insert (Users.name("Alex"))
-        insert (Users.name("Something"))
+        insert (Users.id("sergey"), Users.name("Sergey"), Users.cityId(munichId))
+        insert (Users.id("eugene"), Users.name("Eugene"), Users.cityId(munichId))
+        insert (Users.id("alex"), Users.name("Alex"))
+        insert (Users.id("smth"), Users.name("Something"))
 
-        update (Users.name("Alexey")) where Users.name.equals("Alex")
+        update (Users.name("Alexey")) where Users.id.equals("alex")
 
-        delete(Users) where Users.name.equals("Something")
+        delete(Users) where Users.name.like("%thing")
 
         println("All cities:")
 
@@ -46,8 +48,8 @@ fun main(args: Array<String>) {
 
         println("Manual join:")
 
-        select (Users.name, Cities.name) where (Users.id.equals(1) or Users.name.equals("Sergey")) and
-                Users.id.equals(2) and Users.cityId.equals(Cities.id) forEach {
+        select (Users.name, Cities.name) where (Users.id.equals("andrey") or Users.name.equals("Sergey")) and
+                Users.id.equals("sergey") and Users.cityId.equals(Cities.id) forEach {
             val (userName, cityName) = it
             println("$userName lives in $cityName")
         }

@@ -40,6 +40,24 @@ class EqualsOp(val expr1: Expression, val expr2: Expression): Op() {
     }
 }
 
+class LikeOp(val expr1: Expression, val expr2: Expression): Op() {
+    override fun toSQL():String {
+        val sb = StringBuilder()
+        if (expr1 is OrOp) {
+            sb.append("(").append(expr1.toSQL()).append(")")
+        } else {
+            sb.append(expr1.toSQL())
+        }
+        sb.append(" LIKE ")
+        if (expr2 is OrOp) {
+            sb.append("(").append(expr2.toSQL()).append(")")
+        } else {
+            sb.append(expr2.toSQL())
+        }
+        return sb.toString()
+    }
+}
+
 class AndOp(val expr1: Expression, val expr2: Expression): Op() {
     override fun toSQL():String {
         val sb = StringBuilder()
