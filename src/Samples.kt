@@ -7,7 +7,7 @@ object Users : Table() {
     val name = varchar("name", length = 50) // Column<String>
     val cityId = integer("city_id", ColumnType.NULLABLE, references = Cities.id) // Column<Int?>
 
-    val all = id + name + cityId // Column2<String, String, Int?>
+    val all = id + name + cityId // Column3<String, String, Int?>
 }
 
 object Cities : Table() {
