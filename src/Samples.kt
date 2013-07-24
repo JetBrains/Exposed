@@ -8,6 +8,7 @@ object Users : Table() {
     val cityId = integer("city_id", ColumnType.NULLABLE, references = Cities.id) // Column<Int?>
 
     val all = id + name + cityId // Column3<String, String, Int?>
+    val values = id + name + cityId // The columns required for insert statement
 }
 
 object Cities : Table() {
@@ -15,6 +16,7 @@ object Cities : Table() {
     val name = varchar("name", 50) // Column<String>
 
     val all = id + name // Column2<Int, String>
+    val values = name // The columns required for insert statement
 }
 
 fun main(args: Array<String>) {
@@ -24,20 +26,22 @@ fun main(args: Array<String>) {
     db.withSession {
         create (Cities, Users)
 
-        val saintPetersburgId = insert(Cities.name("St. Petersburg")) get Cities.id
-        val munichId = insert (Cities.name("Munich")) get Cities.id
-        insert (Cities.name("Prague"))
+        val saintPetersburgId = insert (Cities.values("St. Petersburg")) get Cities.id
+        val munichId = insert (Cities.values("Munich")) get Cities.id
+        insert (Cities.values("Prague"))
 
-        insert (Users.id("andrey"), Users.name("Andrey"), Users.cityId(saintPetersburgId))
+        insert (Users.values("andrey", "Andrey", saintPetersburgId))
 
-        insert (Users.id("sergey"), Users.name("Sergey"), Users.cityId(munichId))
-        insert (Users.id("eugene"), Users.name("Eugene"), Users.cityId(munichId))
-        insert (Users.id("alex"), Users.name("Alex"))
-        insert (Users.id("smth"), Users.name("Something"))
+        insert (Users.values("sergey", "Sergey", munichId))
+        insert (Users.values("eugene", "Eugene", munichId))
+        insert (Users.values("alex", "Alex", null))
+        insert (Users.values("smth", "Something", null))
 
-        update (Users.name("Alexey")) where Users.id.equals("alex")
+        update (Users) {
+            set(name("Alexey"))
+        } where Users.id.equals("alex")
 
-        delete(Users) where Users.name.like("%thing")
+        delete (Users) where Users.name.like("%thing")
 
         println("All cities:")
 

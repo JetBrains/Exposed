@@ -36,6 +36,12 @@ open class Session (val connection: Connection, val driver: Driver) {
         return Query(this, array(a.a, a.b, a. c))
     }
 
+    fun <T : Table> update(table: T, statement: T.() -> Unit): UpdateQuery {
+        Table.setPairs.set(null)
+        table.statement()
+        return UpdateQuery(this, Table.setPairs.get()!!)
+    }
+
     fun update(vararg pairs: Pair<Column<*>, *>): UpdateQuery {
         return UpdateQuery(this, pairs)
     }
@@ -44,7 +50,11 @@ open class Session (val connection: Connection, val driver: Driver) {
         return DeleteQuery(this, table)
     }
 
-    fun insert(vararg columns: Pair<Column<*>, *>): InsertQuery {
+    fun <T> insert(column: Pair<Column<T>, T>): InsertQuery {
+        return insert(array(column) as Array<Pair<Column<*>, *>>)
+    }
+
+    fun insert(columns: Array<Pair<Column<*>, *>>): InsertQuery {
         val table = columns[0].component1().table
         var sql = StringBuilder("INSERT INTO ${identity(table)}")
         var c = 0

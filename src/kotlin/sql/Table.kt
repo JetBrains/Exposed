@@ -51,10 +51,18 @@ open class Table(name: String = "") {
         return column
     }
 
-    fun foreignKey(column: Column<*>, table: Table): ForeignKey {
+    internal fun foreignKey(column: Column<*>, table: Table): ForeignKey {
         val foreignKey = ForeignKey(this, column, table)
         (foreignKeys as ArrayList<ForeignKey>).add(foreignKey)
         return foreignKey
+    }
+
+    class object {
+        internal val setPairs = ThreadLocal<Array<Pair<Column<*>, *>>>()
+    }
+
+    internal fun set(vararg pairs: Pair<Column<*>, *>) {
+        setPairs.set(pairs);
     }
 
     val ddl: String

@@ -38,14 +38,25 @@ class Column2<A, B>(val a: Column<A>, val b: Column<B>) {
     fun <C> plus(c: Column<C>): Column3<A, B, C> {
         return Column3<A, B, C>(a, b, c)
     }
+
+    fun invoke(av: A, bv: B): Array<Pair<Column<*>, *>> {
+        return array(Pair(a, av), Pair(b, bv))
+    }
 }
 
 class Column3<A, B, C>(val a: Column<A>, val b: Column<B>, val c: Column<C>) {
     fun <D> plus(d: Column<D>): Column4<A, B, C, D> {
         return Column4<A, B, C, D>(a, b, c, d)
     }
+
+    fun invoke(av: A, bv: B, cv: C): Array<Pair<Column<*>, *>> {
+        return array(Pair(a, av), Pair(b, bv), Pair(c, cv))
+    }
 }
 
 class Column4<A, B, C, D>(val a: Column<A>, val b: Column<B>, val c: Column<C>, val d: Column<D>) {
+    fun invoke(av: A, bv: B, cv: C, dv: D): Array<Pair<Column<*>, *>> {
+        return array(Pair(a, av), Pair(b, bv), Pair(c, cv), Pair(d, dv))
+    }
 }
 
