@@ -9,24 +9,28 @@ open class Table(name: String = "") {
     val primaryKeys: List<Column<*>> = ArrayList<Column<*>>()
     val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
 
-    fun integer(name: String, autoIncrement: Boolean = false, references: PKColumn<*>? = null): Column<Int> {
+    fun integer(name: String, autoIncrement: Boolean = false, references: PKColumn<Int>? = null): Column<Int> {
         return column<Int>(name, InternalColumnType.INTEGER, false, autoIncrement = autoIncrement, references = references)
     }
 
-    fun integer(name: String, primaryKeyColumnType: PrimaryKeyColumnType, autoIncrement: Boolean = false, references: PKColumn<*>? = null): PKColumn<Int> {
-        return pkColumn<Int>(name, InternalColumnType.INTEGER, false, autoIncrement = autoIncrement, references = references)
+    fun integer(name: String, primaryKeyColumnType: PrimaryKeyColumnType, autoIncrement: Boolean = false): PKColumn<Int> {
+        return pkColumn<Int>(name, InternalColumnType.INTEGER, false, autoIncrement = autoIncrement)
     }
 
-    fun integer(name: String, nullableColumnType: NullableColumnType, references: PKColumn<*>? = null): Column<Int?> {
+    fun integer(name: String, nullableColumnType: NullableColumnType, references: PKColumn<Int>? = null): Column<Int?> {
         return column<Int?>(name, InternalColumnType.INTEGER, true, references = references)
     }
 
-    fun varchar(name: String, length: Int): Column<String> {
-        return column<String>(name, InternalColumnType.STRING, false, length = length)
+    fun varchar(name: String, length: Int, references: PKColumn<String>? = null): Column<String> {
+        return column<String>(name, InternalColumnType.STRING, false, length = length, references = references)
     }
 
     fun varchar(name: String, primaryKeyColumnType: PrimaryKeyColumnType, length: Int): PKColumn<String> {
         return pkColumn<String>(name, InternalColumnType.STRING, false, length = length)
+    }
+
+    fun varchar(name: String, nullableColumnType: NullableColumnType, references: PKColumn<String>? = null): Column<String?> {
+        return column<String?>(name, InternalColumnType.STRING, true, references = references)
     }
 
     private fun <T> column(name: String, columnType: InternalColumnType, nullable: Boolean, length: Int = 0, autoIncrement: Boolean = false, references: Column<*>? = null): Column<T> {
