@@ -69,6 +69,21 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
         return this
     }
 
+    fun single(): T {
+        var answer: T? = null
+        var found = false;
+
+        forEach {
+            if (found) {
+                throw RuntimeException("Duplicate entries")
+            }
+            found = true
+            answer = it
+        }
+
+        return answer ?: throw RuntimeException("No entries found")
+    }
+
     fun forEach(statement: (row: T) -> Unit) {
         val tables: MutableSet<Table> = HashSet<Table>()
         val sql = StringBuilder("SELECT ")
