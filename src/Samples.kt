@@ -26,20 +26,51 @@ fun main(args: Array<String>) {
     db.withSession {
         create (Cities, Users)
 
-        val saintPetersburgId = insert (Cities.values("St. Petersburg")) get Cities.id
-        val munichId = insert (Cities.values("Munich")) get Cities.id
-        insert (Cities.values("Prague"))
+        val saintPetersburgId = Cities.insert {
+            it[name] = "St. Petersburg"
+        } get Cities.id
 
-        insert (Users.values("andrey", "Andrey", saintPetersburgId))
+        val munichId = Cities.insert {
+            it[name] = "Munich"
+        } get Cities.id
 
-        insert (Users.values("sergey", "Sergey", munichId))
-        insert (Users.values("eugene", "Eugene", munichId))
-        insert (Users.values("alex", "Alex", null))
-        insert (Users.values("smth", "Something", null))
+        Cities.insert {
+            it[name] = "Prague"
+        }
 
-        update (Users) {
-            set(name("Alexey"))
-        } where Users.id.equals("alex")
+        Users.insert {
+            it[id] = "andrey"
+            it[name] = "Andrey"
+            it[cityId] = saintPetersburgId
+        }
+
+        Users.insert {
+            it[id] = "sergey"
+            it[name] = "Sergey"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "eugene"
+            it[name] = "Eugene"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "alex"
+            it[name] = "Alex"
+            it[cityId] = null
+        }
+
+        Users.insert {
+            it[id] = "smth"
+            it[name] = "Something"
+            it[cityId] = null
+        }
+
+        Users.update(Users.id.equals("alex")) {
+            it[name] = "Alexey"
+        }
 
         delete (Users) where Users.name.like("%thing")
 

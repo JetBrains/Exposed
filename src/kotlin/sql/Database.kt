@@ -10,10 +10,10 @@ class Database(val url: String, driver: String, var user: String = "", val passw
         val connection = if (user != "") DriverManager.getConnection(url, user, password) else DriverManager.getConnection(url)
         connection.setAutoCommit(false)
         val session = Session(connection, driver)
-        Session.threadLocale.set(session)
+        Session.threadLocal.set(session)
         session.statement()
         connection.commit()
-        Session.threadLocale.set(null)
+        Session.threadLocal.set(null)
         connection.close()
     }
 }

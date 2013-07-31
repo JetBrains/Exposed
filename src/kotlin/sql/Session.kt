@@ -36,54 +36,22 @@ open class Session (val connection: Connection, val driver: Driver) {
         return Query(this, array(a.a, a.b, a. c))
     }
 
-    fun <T : Table> update(table: T, statement: T.() -> Unit): UpdateQuery {
-        Table.setPairs.set(null)
-        table.statement()
-        return UpdateQuery(this, Table.setPairs.get()!!)
-    }
-
-    fun update(vararg pairs: Pair<Column<*>, *>): UpdateQuery {
-        return UpdateQuery(this, pairs)
-    }
-
     fun delete(table: Table): DeleteQuery {
         return DeleteQuery(this, table)
     }
 
-    fun <T> insert(column: Pair<Column<T>, T>): InsertQuery {
-        return insert(array(column) as Array<Pair<Column<*>, *>>)
+    fun <T:Table> T.insert(body: T.(InsertQuery)->Unit): InsertQuery {
+        val answer = InsertQuery(this)
+        body(answer)
+        answer.execute(this@Session)
+        return answer
     }
 
-    fun insert(columns: Array<Pair<Column<*>, *>>): InsertQuery {
-        val table = columns[0].component1().table
-        var sql = StringBuilder("INSERT INTO ${identity(table)}")
-        var c = 0
-        sql.append(" (")
-        for (column in columns) {
-            sql.append(identity(column.component1()))
-            c++
-            if (c < columns.size) {
-                sql.append(", ")
-            }
-        }
-        sql.append(") ")
-        c = 0
-        sql.append("VALUES (")
-        for (column in columns) {
-            when (column.component1().columnType) {
-                is StringColumnType -> sql.append("'" + column.component2() + "'")
-                else -> sql.append(column.component2())
-            }
-            c++
-            if (c < columns.size) {
-                sql.append(", ")
-            }
-        }
-        sql.append(") ")
-        println("SQL: " + sql.toString())
-        val statement = connection.createStatement()!!
-        statement.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
-        return InsertQuery(statement)
+    fun <T:Table> T.update(where: Op, body: T.(UpdateQuery)->Unit): UpdateQuery {
+        val answer = UpdateQuery(this, where)
+        body(answer)
+        answer.execute(this@Session)
+        return answer
     }
 
     fun create(vararg tables: Table) {
@@ -157,10 +125,10 @@ open class Session (val connection: Connection, val driver: Driver) {
     }
 
     class object {
-        val threadLocale = ThreadLocal<Session>()
+        val threadLocal = ThreadLocal<Session>()
 
         fun get(): Session {
-            return threadLocale.get()!!
+            return threadLocal.get()!!
         }
     }
 }
