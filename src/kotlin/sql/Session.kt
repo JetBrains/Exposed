@@ -112,6 +112,29 @@ open class Session (val connection: Connection, val driver: Driver) {
         }
     }
 
+    fun <T> withLockedTables (vararg tables: Table, statement : () -> T) : T {
+/* Locks are not supported in H2
+        if (tables.size > 0) {
+            val ddl = StringBuilder("LOCK TABLES ${(tables map { identity(it) }).makeString(", ", "", "")}")
+            println("SQL: " + ddl.toString())
+            connection.createStatement()?.executeUpdate(ddl.toString())
+        }
+*/
+
+        try {
+            return statement()
+        }
+        finally {
+/* Locks are not supported in H2
+            if (tables.size > 0) {
+                val ddl = "UNLOCK TABLES"
+                println("SQL: " + ddl.toString())
+                connection.createStatement()?.executeUpdate(ddl.toString())
+            }
+*/
+        }
+    }
+
     class object {
         val threadLocal = ThreadLocal<Session>()
 
