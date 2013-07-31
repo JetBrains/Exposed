@@ -1,15 +1,7 @@
 package kotlin.sql
 
-object ColumnType {
-    val PRIMARY_KEY = PrimaryKeyColumnType()
-    val NULLABLE = NullableColumnType()
-}
+open class ColumnType(var nullable: Boolean = false)
 
-class PrimaryKeyColumnType {
-    private {
-    }
-}
-class NullableColumnType {
-    private {
-    }
-}
+open class IntegerColumnType(var autoinc: Boolean = false): ColumnType()
+
+class StringColumnType(val length: Int = 0): ColumnType()

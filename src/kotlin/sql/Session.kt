@@ -71,7 +71,7 @@ open class Session (val connection: Connection, val driver: Driver) {
         sql.append("VALUES (")
         for (column in columns) {
             when (column.component1().columnType) {
-                InternalColumnType.STRING -> sql.append("'" + column.component2() + "'")
+                is StringColumnType -> sql.append("'" + column.component2() + "'")
                 else -> sql.append(column.component2())
             }
             c++

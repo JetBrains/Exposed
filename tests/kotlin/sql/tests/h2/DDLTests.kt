@@ -9,7 +9,7 @@ public class DDLTests {
 
     Test fun unnamedTableWithQuotesSQL() {
         object TestTable : Table() {
-            val id = integer("id", ColumnType.PRIMARY_KEY)
+            val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
         }
 
@@ -29,9 +29,9 @@ public class DDLTests {
 
     Test fun tableWithDifferentColumnTypesSQL() {
         object TestTable : Table("test_table_with_different_column_types") {
-            val id = integer("id", autoIncrement = true)
-            val name = varchar("name", ColumnType.PRIMARY_KEY, length = 42)
-            val age = integer("age", ColumnType.NULLABLE)
+            val id = integer("id").autoIncrement()
+            val name = varchar("name", 42).primaryKey()
+            val age = integer("age").nullable()
         }
 
         db.withSession {
@@ -47,12 +47,11 @@ public class DDLTests {
 }
 
 object TestTableWithReference1 : Table("test_table_1") {
-    val id = integer("id", ColumnType.PRIMARY_KEY)
-    val testTable2Id = integer("id", references = TestTableWithReference2.id)
+    val id = integer("id").primaryKey()
+    val testTable2Id = integer("id") references TestTableWithReference2.id
 }
 
 object TestTableWithReference2 : Table("test_table_1") {
-    val id = integer("id", ColumnType.PRIMARY_KEY)
-    val testTable1Id = integer("id", ColumnType.NULLABLE, references = TestTableWithReference1.id)
+    val id = integer("id").primaryKey()
+    val testTable1Id = integer("id").nullable() references TestTableWithReference1.id
 }
-

@@ -1,6 +1,8 @@
 package kotlin.sql
 
-open class Column<T>(val table: Table, val name: String, val columnType: InternalColumnType, val primaryKey: Boolean, val nullable: Boolean, val length: Int, val autoIncrement: Boolean, val references: Column<*>?) : Field<T>() {
+open class Column<out T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
+    var referee: PKColumn<T>? = null
+
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
@@ -30,7 +32,7 @@ open class Column<T>(val table: Table, val name: String, val columnType: Interna
     }
 }
 
-class PKColumn<T>(table: Table, name: String, columnType: InternalColumnType, primaryKey: Boolean, nullable: Boolean, length: Int, autoIncrement: Boolean, references: Column<*>?) : Column<T>(table, name, columnType, primaryKey, nullable, length, autoIncrement, references) {
+class PKColumn<out T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
 
 }
 

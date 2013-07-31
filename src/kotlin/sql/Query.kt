@@ -134,8 +134,8 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
                 if (table.primaryKeys.size == 1) {
                     val primaryKey = table.primaryKeys.get(0)
                     for (column in selectedColumns) {
-                        if (column.references == primaryKey) {
-                            sql.append(" LEFT JOIN ").append(session.identity(column.references.table)).append(" ON ").
+                        if (column.referee == primaryKey) {
+                            sql.append(" LEFT JOIN ").append(session.identity(column.referee!!.table)).append(" ON ").
                             append(session.fullIdentity(column)).append(" = ").append(session.fullIdentity(primaryKey));
                         }
                     }
@@ -144,7 +144,7 @@ open class Query<T>(val session: Session, val fields: Array<Field<*>>) {
                     if (selectedTable.primaryKeys.size == 1) {
                         val primaryKey = selectedTable.primaryKeys.get(0)
                         for (column in table.tableColumns) {
-                            if (column.references == primaryKey) {
+                            if (column.referee == primaryKey) {
                                 sql.append(" LEFT JOIN ").append(session.identity(table)).append(" ON ").
                                 append(session.fullIdentity(column)).append(" = ").append(session.fullIdentity(primaryKey));
                             }

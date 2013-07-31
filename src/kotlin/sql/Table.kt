@@ -5,55 +5,48 @@ import java.util.ArrayList
 open class Table(name: String = "") {
     val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName()
 
-    val tableColumns: List<Column<*>> = ArrayList<Column<*>>()
-    val primaryKeys: List<Column<*>> = ArrayList<Column<*>>()
-    val foreignKeys: List<ForeignKey> = ArrayList<ForeignKey>()
+    val tableColumns = ArrayList<Column<*>>()
+    val primaryKeys  = ArrayList<Column<*>>()
+    val foreignKeys  = ArrayList<ForeignKey>()
 
-    fun integer(name: String, autoIncrement: Boolean = false, references: PKColumn<Int>? = null): Column<Int> {
-        return column<Int>(name, InternalColumnType.INTEGER, false, autoIncrement = autoIncrement, references = references)
+    fun <T> Column<T>.primaryKey(): PKColumn<T> {
+        tableColumns.remove(this)
+        val answer = PKColumn<T>(table, name, columnType)
+        primaryKeys.add(answer)
+        tableColumns.add(answer)
+        return answer
     }
 
-    fun integer(name: String, primaryKeyColumnType: PrimaryKeyColumnType, autoIncrement: Boolean = false): PKColumn<Int> {
-        return pkColumn<Int>(name, InternalColumnType.INTEGER, false, autoIncrement = autoIncrement)
+    fun integer(name: String): Column<Int> {
+        val answer = Column<Int>(this, name, IntegerColumnType())
+        tableColumns.add(answer)
+        return answer
     }
 
-    fun integer(name: String, nullableColumnType: NullableColumnType, references: PKColumn<Int>? = null): Column<Int?> {
-        return column<Int?>(name, InternalColumnType.INTEGER, true, references = references)
+    fun varchar(name: String, length: Int): Column<String> {
+        val answer = Column<String>(this, name, StringColumnType(length))
+        tableColumns.add(answer)
+        return answer
     }
 
-    fun varchar(name: String, length: Int, references: PKColumn<String>? = null): Column<String> {
-        return column<String>(name, InternalColumnType.STRING, false, length = length, references = references)
+    fun <C:Column<Int>> C.autoIncrement(): C {
+        (columnType as IntegerColumnType).autoinc = true
+        return this
     }
 
-    fun varchar(name: String, primaryKeyColumnType: PrimaryKeyColumnType, length: Int): PKColumn<String> {
-        return pkColumn<String>(name, InternalColumnType.STRING, false, length = length)
+    fun <T, C:Column<T>> C.references(ref: PKColumn<T>): C {
+        referee = ref
+        return this
     }
 
-    fun varchar(name: String, nullableColumnType: NullableColumnType, references: PKColumn<String>? = null): Column<String?> {
-        return column<String?>(name, InternalColumnType.STRING, true, references = references)
-    }
-
-    private fun <T> column(name: String, columnType: InternalColumnType, nullable: Boolean, length: Int = 0, autoIncrement: Boolean = false, references: Column<*>? = null): Column<T> {
-        val column = Column<T>(this, name, columnType, false, nullable, length, autoIncrement, references)
-        if (column.primaryKey) {
-            (primaryKeys as ArrayList<Column<*>>).add(column)
-        }
-        (tableColumns as ArrayList<Column<*>>).add(column)
-        return column
-    }
-
-    private fun <T> pkColumn(name: String, columnType: InternalColumnType, nullable: Boolean, length: Int = 0, autoIncrement: Boolean = false, references: Column<*>? = null): PKColumn<T> {
-        val column = PKColumn<T>(this, name, columnType, true, nullable, length, autoIncrement, references)
-        if (column.primaryKey) {
-            (primaryKeys as ArrayList<Column<*>>).add(column)
-        }
-        (tableColumns as ArrayList<Column<*>>).add(column)
-        return column
+    fun <T:Any> Column<T>.nullable(): Column<T?> {
+        columnType.nullable = true
+        return this
     }
 
     internal fun foreignKey(column: Column<*>, table: Table): ForeignKey {
         val foreignKey = ForeignKey(this, column, table)
-        (foreignKeys as ArrayList<ForeignKey>).add(foreignKey)
+        foreignKeys.add(foreignKey)
         return foreignKey
     }
 
@@ -75,19 +68,20 @@ open class Table(name: String = "") {
             var c = 0;
             for (column in tableColumns) {
                 ddl.append(Session.get().identity(column)).append(" ")
-                when (column.columnType) {
-                    InternalColumnType.INTEGER -> ddl.append("INT")
-                    InternalColumnType.STRING -> ddl.append("VARCHAR(${column.length})")
+                val colType = column.columnType
+                when (colType) {
+                    is IntegerColumnType -> ddl.append("INT")
+                    is StringColumnType -> ddl.append("VARCHAR(${colType.length})")
                     else -> throw IllegalStateException()
                 }
                 ddl.append(" ")
-                if (column.primaryKey) {
+                if (column is PKColumn<*>) {
                     ddl.append("PRIMARY KEY ")
                 }
-                if (column.autoIncrement) {
+                if (colType is IntegerColumnType && colType.autoinc) {
                     ddl.append(Session.get().autoIncrement(column)).append(" ")
                 }
-                if (column.nullable) {
+                if (colType.nullable) {
                     ddl.append("NULL")
                 } else {
                     ddl.append("NOT NULL")

@@ -1,4 +1,4 @@
 package kotlin.sql
 
-abstract class Field<T> : Expression {
+abstract class Field<out T> : Expression {
 }

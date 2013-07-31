@@ -12,7 +12,7 @@ class UpdateQuery(val session: Session, val pairs: Array<Pair<Column<*>, *>>) {
             for (pair in pairs) {
                 sql.append("SET ").append(session.identity(pair.component1())).append(" = ")
                 when (pair.component1().columnType) {
-                    InternalColumnType.STRING -> sql.append("'").append(pair.component2()).append("'")
+                    is StringColumnType -> sql.append("'").append(pair.component2()).append("'")
                     else -> sql.append(pair.component2())
                 }
                 c++

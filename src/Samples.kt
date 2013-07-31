@@ -3,16 +3,16 @@ package demo
 import kotlin.sql.*
 
 object Users : Table() {
-    val id = varchar("id", ColumnType.PRIMARY_KEY, length = 10) // PKColumn<String>
+    val id = varchar("id", 10).primaryKey() // PKColumn<String>
     val name = varchar("name", length = 50) // Column<String>
-    val cityId = integer("city_id", ColumnType.NULLABLE, references = Cities.id) // Column<Int?>
+    val cityId = integer("city_id").nullable() references Cities.id // Column<Int?>
 
     val all = id + name + cityId // Column3<String, String, Int?>
     val values = id + name + cityId // The columns required for insert statement
 }
 
 object Cities : Table() {
-    val id = integer("id", ColumnType.PRIMARY_KEY, autoIncrement = true) // PKColumn<Int>
+    val id = integer("id").autoIncrement().primaryKey() // PKColumn<Int>
     val name = varchar("name", 50) // Column<String>
 
     val all = id + name // Column2<Int, String>
