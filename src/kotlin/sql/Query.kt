@@ -15,7 +15,11 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
     }
 
     fun <T> get(c: Field<T>) : T {
-        val d = data[c] ?: throw RuntimeException("${c.toSQL()} is not in record set")
+        val d:Any? = when {
+            data.containsKey(c) -> data[c]
+            else -> throw RuntimeException("${c.toSQL()} is not in record set")
+        }
+
         return d as T
     }
 }
