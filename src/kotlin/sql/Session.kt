@@ -12,28 +12,16 @@ open class Session (val connection: Connection, val driver: Driver) {
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
 
-    fun <A> select(a: Field<A>): Query<A> {
-        return Query(this, array(a))
-    }
-
     fun count(column: Column<*>): Count {
         return Count(column)
     }
 
-    fun <A, B> select(a: Field<A>, b: Field<B>): Query<Pair<A, B>> {
-        return Query(this, array(a, b))
+    fun FieldSet.select(where: Op) : Query {
+        return Query(this@Session, this, where)
     }
 
-    fun <A, B, C> select(a: Field<A>, b: Field<B>, c: Field<C>): Query<Triple<A, B, C>> {
-        return Query<Triple<A, B, C>>(this, array(a, b, c))
-    }
-
-    fun <A, B> select(a: Column2<A, B>): Query<Pair<A, B>> {
-        return Query(this, array(a.a, a.b))
-    }
-
-    fun <A, B, C> select(a: Column3<A, B, C>): Query<Triple<A, B, C>> {
-        return Query(this, array(a.a, a.b, a. c))
+    fun FieldSet.selectAll() : Query {
+        return Query(this@Session, this, null)
     }
 
     fun delete(table: Table): DeleteQuery {

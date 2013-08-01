@@ -6,17 +6,11 @@ object Users : Table() {
     val id = varchar("id", 10).primaryKey() // PKColumn<String>
     val name = varchar("name", length = 50) // Column<String>
     val cityId = integer("city_id").nullable() references Cities.id // Column<Int?>
-
-    val all = id + name + cityId // Column3<String, String, Int?>
-    val values = id + name + cityId // The columns required for insert statement
 }
 
 object Cities : Table() {
     val id = integer("id").autoIncrement().primaryKey() // PKColumn<Int>
     val name = varchar("name", 50) // Column<String>
-
-    val all = id + name // Column2<Int, String>
-    val values = name // The columns required for insert statement
 }
 
 fun main(args: Array<String>) {
@@ -76,35 +70,36 @@ fun main(args: Array<String>) {
 
         println("All cities:")
 
-        select (Cities.all) forEach {
-            val (id, name) = it
-            println("$id: $name")
+        for (city in Cities.selectAll()) {
+            println("${city[Cities.id]}: ${city[Cities.name]}")
         }
 
         println("Manual join:")
-
-        select (Users.name, Cities.name) where (Users.id.equals("andrey") or Users.name.equals("Sergey")) and
-                Users.id.equals("sergey") and Users.cityId.equals(Cities.id) forEach {
-            val (userName, cityName) = it
-            println("$userName lives in $cityName")
+        (Users join Cities).slice(Users.name, Cities.name).
+            select((Users.id.equals("andrey") or Users.name.equals("Sergey")) and
+                    Users.id.equals("sergey") and Users.cityId.equals(Cities.id)) forEach {
+            println("${it[Users.name]} lives in ${it[Cities.name]}")
         }
 
         println("Join with foreign key:")
 
-        select (Users.name, Users.cityId, Cities.name) from Users join Cities where
-                Cities.name.equals("St. Petersburg") or Users.cityId.isNull() forEach {
-            val (userName, cityId, cityName) = it
-            if (cityId != null) {
-                println("$userName lives in $cityName")
-            } else {
-                println("$userName lives nowhere")
+
+        (Users join Cities).slice(Users.name, Users.cityId, Cities.name).
+                select(Cities.name.equals("St. Petersburg") or Users.cityId.isNull()) forEach {
+            if (it[Users.cityId] != null) {
+                println("${it[Users.name]} lives in ${it[Cities.name]}")
+            }
+            else {
+                println("${it[Users.name]} lives nowhere")
             }
         }
 
         println("Functions and group by:")
 
-        select (Cities.name, count(Users.id)) from Cities join Users groupBy Cities.name forEach {
-            val (cityName, userCount) = it
+        (Cities join Users).slice(Cities.name, count(Users.id)).selectAll() groupBy Cities.name forEach {
+            val cityName = it[Cities.name]
+            val userCount = it[count(Users.id)]
+
             if (userCount > 0) {
                 println("$userCount user(s) live(s) in $cityName")
             } else {
