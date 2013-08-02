@@ -105,6 +105,7 @@ class DMLTests : DatabaseTestsBase() {
         }
         return false
     }
+
     Test fun testDelete01() {
         withCitiesAndUsers { cities, users ->
             val smthId = users.slice(users.id).select(users.name.like("%thing")).single()[users.id]
