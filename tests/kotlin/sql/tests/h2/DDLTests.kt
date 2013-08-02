@@ -4,8 +4,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.sql.*
 
-public class DDLTests {
-    var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
+public class DDLTests : DatabaseTestsBase() {
 
     Test fun unnamedTableWithQuotesSQL() {
         object TestTable : Table() {
@@ -13,7 +12,7 @@ public class DDLTests {
             val name = varchar("name", length = 42)
         }
 
-        db.withSession {
+        withTables(TestTable) {
             assertEquals("CREATE TABLE \"unnamedTableWithQuotesSQL\$TestTable\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
@@ -22,7 +21,7 @@ public class DDLTests {
         object TestTable : Table("test_named_table") {
         }
 
-        db.withSession {
+        withTables(TestTable) {
             assertEquals("CREATE TABLE test_named_table", TestTable.ddl)
         }
     }
@@ -34,7 +33,7 @@ public class DDLTests {
             val age = integer("age").nullable()
         }
 
-        db.withSession {
+        withTables(TestTable) {
             assertEquals("CREATE TABLE test_table_with_different_column_types (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(42) PRIMARY KEY NOT NULL, age INT NULL)", TestTable.ddl)
         }
     }
