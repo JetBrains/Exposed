@@ -117,3 +117,5 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 }
+
+// fake commit to cope with bloody git
