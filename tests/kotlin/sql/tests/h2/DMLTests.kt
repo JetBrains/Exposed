@@ -116,7 +116,47 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(false, hasSmth)
         }
     }
-}
 
-// fake commit to cope with bloody git
-// one more 
+    // manual join
+    Test fun testJoin01() {
+        withCitiesAndUsers { cities, users ->
+            (users join cities).slice(users.name, cities.name).
+            select((users.id.equals("andrey") or users.name.equals("Sergey")) and users.cityId.equals(cities.id)) forEach {
+                val userName = it[users.name]
+                val cityName = it[cities.name]
+                when (userName) {
+                    "Andrey" -> assertEquals("St. Petersburg", cityName)
+                    "Sergey" -> assertEquals("Munich", cityName)
+                    else -> throw RuntimeException ("Unexpected user $userName")
+                }
+            }
+        }
+    }
+
+    // join with foreign key
+    Test fun testJoin02() {
+        withCitiesAndUsers { cities, users ->
+            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).
+            select(cities.name.equals("St. Petersburg") or users.cityId.isNull()).single()
+            assertEquals("Andrey", stPetersburgUser[users.name])
+            assertEquals("St. Petersburg", stPetersburgUser[cities.name])
+            }
+        }
+
+    Test fun testGroupBy01() {
+        withCitiesAndUsers { cities, users ->
+            (cities join users).slice(cities.name, count(users.id)).selectAll() groupBy cities.name forEach {
+                val cityName = it[cities.name]
+                val userCount = it[count(users.id)]
+
+                when (cityName) {
+                    "Munich" -> assertEquals(2, userCount)
+                    "Prague" -> assertEquals(0, userCount)
+                    "St. Petersburg" -> assertEquals(1, userCount)
+                    else -> throw RuntimeException ("Unknow city $cityName")
+                }
+            }
+        }
+    }
+}
+// fake commit to cope with bloody git// one more 

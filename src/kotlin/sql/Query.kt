@@ -22,6 +22,10 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
 
         return d as T
     }
+
+    fun<T> hasValue (c: Field<T>) : Boolean {
+        return data.containsKey(c);
+    }
 }
 
 open class Query(val session: Session, val set: FieldSet, val where: Op?): Iterable<ResultRow> {

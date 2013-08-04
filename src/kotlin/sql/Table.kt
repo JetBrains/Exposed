@@ -15,26 +15,40 @@ abstract class ColumnSet(): FieldSet {
     abstract fun describe(s: Session): String
 
     fun slice(vararg columns: Field<*>): FieldSet = Slice(this, listOf(*columns))
-    fun join(another: ColumnSet): ColumnSet {
-        return tryJoin(this, another) ?: tryJoin(another, this) ?: throw RuntimeException("Can't find pair of column to join with")
+
+    fun join (another: ColumnSet) : ColumnSet {
+        return joinImpl (another, JoinType.LEFT)
+    }
+    fun innerJoin (another: ColumnSet) : ColumnSet {
+        return joinImpl (another, JoinType.INNER)
+    }
+
+    private fun joinImpl(another: ColumnSet, joinType : JoinType): ColumnSet {
+        return tryJoin(this, another, joinType) ?: tryJoin(another, this, joinType) ?: throw RuntimeException("Can't find pair of column to join with")
     }
 }
 
-private fun tryJoin(a: ColumnSet, b: ColumnSet): Join? {
+private fun tryJoin(a: ColumnSet, b: ColumnSet, joinType : JoinType): Join? {
     val a_pk = a.columns.find { it is PKColumn<*> }
     if (a_pk == null) return null
 
     val b_fk = b.columns.find { it.referee == a_pk }
     if (b_fk == null) return null
 
-    return Join(a, b, a_pk, b_fk)
+    return Join(a, b, a_pk, b_fk, joinType)
 }
 
 class Slice(override val source: ColumnSet, override val fields: List<Field<*>>): FieldSet
 
-class Join(val a: ColumnSet, val b: ColumnSet, val a_pk: Column<*>, val b_fk: Column<*>): ColumnSet() {
+enum class JoinType {
+    INNER
+    LEFT
+    RIGHT
+    FULL
+}
+class Join(val a: ColumnSet, val b: ColumnSet, val a_pk: Column<*>, val b_fk: Column<*>, val joinType: JoinType): ColumnSet() {
     override fun describe(s: Session): String {
-        return "${a.describe(s)} LEFT JOIN ${b.describe(s)} ON ${s.fullIdentity(a_pk)} = ${s.fullIdentity(b_fk)}"
+        return "${a.describe(s)} $joinType JOIN ${b.describe(s)} ON ${s.fullIdentity(a_pk)} = ${s.fullIdentity(b_fk)}"
     }
 
     override val columns: List<Column<*>> get() {
