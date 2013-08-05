@@ -37,6 +37,7 @@ class InsertQuery(val table: Table) {
         sql.append((values map {
             when(it.key.columnType) {
                 is StringColumnType -> "'${it.value}'"
+                is DateColumnType -> "'${it.value}'"
                 else -> "${it.value}"
             }
         }). makeString( ", ", "", ""))
