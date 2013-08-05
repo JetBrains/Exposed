@@ -66,7 +66,6 @@ open class Table(name: String = ""): ColumnSet() {
     override val columns = ArrayList<Column<*>>()
     override fun describe(s: Session): String = s.identity(this)
 
-
     val primaryKeys  = ArrayList<Column<*>>()
     val foreignKeys  = ArrayList<ForeignKey>()
 
