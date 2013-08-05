@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import java.util.ArrayList
+import java.sql.Date
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -86,6 +87,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun date(name: String): Column<Date> {
+        val answer = Column<Date>(this, name, DateColumnType())
+        columns.add(answer)
+        return answer
+    }
+
     fun varchar(name: String, length: Int): Column<String> {
         val answer = Column<String>(this, name, StringColumnType(length))
         columns.add(answer)
@@ -127,6 +134,7 @@ open class Table(name: String = ""): ColumnSet() {
                 when (colType) {
                     is IntegerColumnType -> ddl.append("INT")
                     is StringColumnType -> ddl.append("VARCHAR(${colType.length})")
+                    is DateColumnType -> ddl.append("DATE")
                     else -> throw IllegalStateException()
                 }
                 ddl.append(" ")
