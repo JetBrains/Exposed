@@ -80,6 +80,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>) : Column<T> {
+        val answer = Column<T>(this, name, EnumerationColumnType(klass))
+        columns.add(answer)
+        return answer
+    }
+
     fun integer(name: String): Column<Int> {
         val answer = Column<Int>(this, name, IntegerColumnType())
         columns.add(answer)
@@ -131,6 +137,7 @@ open class Table(name: String = ""): ColumnSet() {
                 ddl.append(Session.get().identity(column)).append(" ")
                 val colType = column.columnType
                 when (colType) {
+                    is EnumerationColumnType<*>,
                     is IntegerColumnType -> ddl.append("INT")
                     is StringColumnType -> ddl.append("VARCHAR(${colType.length})")
                     is DateColumnType -> ddl.append("DATE")

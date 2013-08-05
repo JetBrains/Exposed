@@ -13,7 +13,8 @@ class InsertQuery(val table: Table) {
         if (values containsKey column) {
             throw RuntimeException("$column is already initialized")
         }
-        values[column] = value
+
+        values.put(column, if (column.columnType is EnumerationColumnType<*>) (value as Enum<*>).ordinal() else value)
     }
 
     fun get(column: Column<Int>): Int { //TODO: use column!!!
