@@ -94,6 +94,9 @@ fun main(args: Array<String>) {
             }
         }
 
+    }
+
+    db.withSession {
         println("Functions and group by:")
 
         (Cities join Users).slice(Cities.name, count(Users.id)).selectAll() groupBy Cities.name forEach {
@@ -109,4 +112,6 @@ fun main(args: Array<String>) {
 
         drop (Users, Cities)
     }
+
+    db.shutDown()
 }
