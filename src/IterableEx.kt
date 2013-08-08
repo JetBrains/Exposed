@@ -19,7 +19,7 @@ fun<T> Iterable<T>.any() : Boolean {
     return false
 }
 
-fun<T> Iterable<T>.firstOrDefault() : T? {
+fun<T:Any> Iterable<T>.firstOrNull() : T? {
     for (t in this) {
         return t
     }
