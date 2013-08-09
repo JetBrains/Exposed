@@ -5,7 +5,7 @@ import kotlin.sql.*
 object Users : Table() {
     val id = varchar("id", 10).primaryKey() // PKColumn<String>
     val name = varchar("name", length = 50) // Column<String>
-    val cityId = integer("city_id").nullable() references Cities.id // Column<Int?>
+    val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
 }
 
 object Cities : Table() {

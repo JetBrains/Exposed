@@ -6,8 +6,24 @@ import java.sql.Driver
 import java.util.regex.Pattern
 import java.sql.Statement
 import java.sql.ResultSet
+import java.util.HashMap
 
-open class Session (val connection: Connection, val driver: Driver) {
+public class Key<T>()
+open class UserDataHolder() {
+    private val userdata = HashMap<Key<*>, Any?>()
+
+    public fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
+        if (userdata.containsKey(key)) {
+            return userdata[key] as T
+        }
+
+        val new = init()
+        userdata[key] = new
+        return new
+    }
+}
+
+open class Session (val connection: Connection, val driver: Driver): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -137,6 +153,8 @@ open class Session (val connection: Connection, val driver: Driver) {
 
     class object {
         val threadLocal = ThreadLocal<Session>()
+
+        fun hasSession(): Boolean = threadLocal.get() != null
 
         fun get(): Session {
             return threadLocal.get()!!

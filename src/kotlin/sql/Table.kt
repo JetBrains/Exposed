@@ -116,7 +116,7 @@ open class Table(name: String = ""): ColumnSet() {
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         columnType.nullable = true
-        return this
+        return this as Column<T?>
     }
 
     internal fun foreignKey(column: Column<*>, table: Table): ForeignKey {

@@ -52,5 +52,5 @@ object TestTableWithReference1 : Table("test_table_1") {
 
 object TestTableWithReference2 : Table("test_table_1") {
     val id = integer("id").primaryKey()
-    val testTable1Id = integer("id").nullable() references TestTableWithReference1.id
+    val testTable1Id = (integer("id") references TestTableWithReference1.id).nullable()
 }

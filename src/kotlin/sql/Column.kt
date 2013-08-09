@@ -1,6 +1,6 @@
 package kotlin.sql
 
-open class Column<out T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
+open class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
     var referee: PKColumn<T>? = null
 
     fun equals(other: Expression): Op {
@@ -24,6 +24,6 @@ open class Column<out T>(val table: Table, val name: String, val columnType: Col
     }
 }
 
-class PKColumn<out T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
+class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
 
 }
