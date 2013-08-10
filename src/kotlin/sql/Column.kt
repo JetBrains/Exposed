@@ -19,6 +19,10 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return IsNullOp(this)
     }
 
+    fun isNotNull(): Op {
+        return IsNotNullOp(this)
+    }
+
     override fun toSQL(): String {
         return Session.get().fullIdentity(this);
     }

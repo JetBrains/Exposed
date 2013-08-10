@@ -16,6 +16,12 @@ class IsNullOp(val column: Column<*>): Op() {
     }
 }
 
+class IsNotNullOp(val column: Column<*>): Op() {
+    override fun toSQL():String {
+        return "${Session.get().fullIdentity(column)} IS NOT NULL"
+    }
+}
+
 class LiteralOp(val value: Any): Op() {
     override fun toSQL():String {
         return if (value is String) "'" + value + "'" else value.toString()
