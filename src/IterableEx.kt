@@ -26,6 +26,21 @@ fun<T:Any> Iterable<T>.firstOrNull() : T? {
     return null
 }
 
-inline fun <T:Any> Iterator<T>.firstOrNull(): T? {
-    return if (hasNext()) next() else null
+fun <T, R> Iterable<T>.mapLazy(f:(T)->R):Iterable<R> {
+    val source = this
+    return object : Iterable<R> {
+        public override fun iterator(): Iterator<R> {
+            val sourceIterator = source.iterator()
+            return object: Iterator<R> {
+                public override fun next(): R {
+                    return f(sourceIterator.next())
+                }
+
+                public override fun hasNext(): Boolean {
+                    return sourceIterator.hasNext()
+                }
+            }
+
+        }
+    }
 }

@@ -33,9 +33,11 @@ class NullableLink<Target: Entity> (val reference: Column<Int?>, val factory: En
     }
 }
 
+class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>)
+
 // TODO: add caching
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
-    fun get<TClass>(o: TClass, desc: jet.PropertyMetadataImpl): Collection<Target> = factory.find(op).toList()
+    fun get<TClass>(o: TClass, desc: jet.PropertyMetadataImpl): Iterable<Target> = factory.find(op)
 }
 
 open public class Entity(val id: EntityID) {
@@ -144,9 +146,9 @@ abstract public class EntityClass<out T: Entity>() {
         return find(table.id.equals(id)).firstOrNull()
     }
 
-    public fun find(op: Op): Iterator<T> {
+    public fun find(op: Op): Iterable<T> {
         return with (Session.get()) {
-            table.select(op).iterator() map {wrap(it[table.id], this)}
+            table.select(op) mapLazy {wrap(it[table.id], this)}
         }
     }
 
