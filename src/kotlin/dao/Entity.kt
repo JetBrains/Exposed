@@ -50,7 +50,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
 
 // TODO: add caching
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
-    fun get(o: Any, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
+    fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
 
 open public class Entity(val id: EntityID) {
