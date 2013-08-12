@@ -21,11 +21,9 @@ private fun <T:Int?>checkReference(reference: Column<T>, factory: EntityClass<*>
     }
 }
 
-class Link<Target: Entity> (val reference: Column<Int>, val factory: EntityClass<Target>, isRealHardLink: Boolean = true) {
+class Link<Target : Entity> (val reference: Column<Int>, val factory: EntityClass<Target>) {
     {
-        if (isRealHardLink) {
-            checkReference(reference, factory)
-        }
+        checkReference(reference, factory)
     }
 }
 
@@ -39,7 +37,6 @@ class NullableLink<Target: Entity> (val reference: Column<Int?>, val factory: En
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
     fun get<TClass>(o: TClass, desc: jet.PropertyMetadataImpl): Collection<Target> = factory.find(op).toList()
 }
-
 
 open public class Entity(val id: EntityID) {
     val writeValues = LinkedHashMap<Column<*>, Any?>()
