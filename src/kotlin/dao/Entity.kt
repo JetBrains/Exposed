@@ -96,7 +96,7 @@ open public class Entity(val id: EntityID) {
     }
 }
 
-class PersistentObjectsCache {
+class EntityCache {
     val data = HashMap<EntityClass<*>, MutableMap<Int, *>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
@@ -124,10 +124,10 @@ class PersistentObjectsCache {
     }
 
     class object {
-        val key = Key<PersistentObjectsCache>()
-        val newCache = {PersistentObjectsCache()}
+        val key = Key<EntityCache>()
+        val newCache = { EntityCache()}
 
-        fun getOrCreate(s: Session): PersistentObjectsCache {
+        fun getOrCreate(s: Session): EntityCache {
             return s.getOrCreate(key, newCache)
         }
     }
@@ -156,7 +156,7 @@ abstract public class EntityClass<out T: Entity>() {
     protected open fun createInstance(entityId: EntityID) : T = cons.newInstance(entityId) as T
 
     public fun wrap(id: Int, s: Session): T {
-        val cache = PersistentObjectsCache.getOrCreate(s)
+        val cache = EntityCache.getOrCreate(s)
         return cache.find(this, id) ?: run {
             val new = createInstance(EntityID(id, this))
             cache.store(this, new)
