@@ -157,7 +157,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         fun hasSession(): Boolean = threadLocal.get() != null
 
         fun get(): Session {
-            return threadLocal.get()!!
+            return threadLocal.get() ?: throw RuntimeException("No session in context. Use transaction?")
         }
     }
 }
