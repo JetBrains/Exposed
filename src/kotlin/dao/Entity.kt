@@ -21,23 +21,36 @@ private fun <T:Int?>checkReference(reference: Column<T>, factory: EntityClass<*>
     }
 }
 
-class Link<Target : Entity> (val reference: Column<Int>, val factory: EntityClass<Target>) {
+class Reference<Target : Entity> (val reference: Column<Int>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class NullableLink<Target: Entity> (val reference: Column<Int?>, val factory: EntityClass<Target>) {
+class OptionalReference<Target: Entity> (val reference: Column<Int?>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>)
+class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>) {
+    {
+        val refColumn = reference.referee
+        if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
+
+        if (factory.table != reference.table) {
+            throw RuntimeException("Column and factory point to different tables")
+        }
+    }
+
+    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
+        return factory.find(reference.equals(o.id.id))
+    }
+}
 
 // TODO: add caching
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
-    fun get<TClass>(o: TClass, desc: jet.PropertyMetadataImpl): Iterable<Target> = factory.find(op)
+    fun get(o: Any, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
 
 open public class Entity(val id: EntityID) {
@@ -49,19 +62,19 @@ open public class Entity(val id: EntityID) {
         }.first()
     }
 
-    fun <T: Entity> Link<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+    fun <T: Entity> Reference<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
         return factory.findById(reference.get(o, desc))!!
     }
 
-    fun <T: Entity> Link<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
+    fun <T: Entity> Reference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
         reference.set(o, desc, value.id.id)
     }
 
-    fun <T: Entity> NullableLink<T>.get(o: Entity, desc: jet.PropertyMetadata): T? {
+    fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: jet.PropertyMetadata): T? {
         return reference.get(o, desc)?.let{factory.findById(it)}
     }
 
-    fun <T: Entity> NullableLink<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T?) {
+    fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T?) {
         reference.set(o, desc, value?.id?.id)
     }
 
@@ -178,4 +191,16 @@ abstract public class EntityClass<out T: Entity>() {
     }
 
     public fun view (op: Op) : View<T>  = View(op, this)
+
+    public fun referencedOn(column: Column<Int>): Reference<T> {
+        return Reference(column, this)
+    }
+
+    public fun optionalReferencedOn(column: Column<Int?>): OptionalReference<T> {
+        return OptionalReference(column, this)
+    }
+
+    public fun referrersOn(column: Column<Int>): Referrers<T> {
+        return Referrers(column, this)
+    }
 }
