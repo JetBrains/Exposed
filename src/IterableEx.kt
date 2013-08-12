@@ -1,4 +1,4 @@
-fun<T> Iterable<T>.single() : T {
+fun<T:Any> Iterable<T>.single() : T {
     var answer: T? = null;
     var found: Boolean = false;
     for (t in this) {
@@ -24,4 +24,8 @@ fun<T:Any> Iterable<T>.firstOrNull() : T? {
         return t
     }
     return null
+}
+
+inline fun <T:Any> Iterator<T>.firstOrNull(): T? {
+    return if (hasNext()) next() else null
 }
