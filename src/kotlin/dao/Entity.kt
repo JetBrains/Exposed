@@ -192,13 +192,15 @@ abstract public class EntityClass<out T: Entity>() {
         }
     }
 
+    public fun all(): Iterable<T> {
+        return with(Session.get()) {
+            wrapRows(table.selectAll())
+        }
+    }
+
     public fun find(op: Op): Iterable<T> {
         return with (Session.get()) {
-            table.select(op) mapLazy {
-                val entity = wrap(it[table.id], this)
-                entity._readValues = it
-                entity
-            }
+            wrapRows(table.select(op))
         }
     }
 
