@@ -43,6 +43,44 @@ public class DDLTests : DatabaseTestsBase() {
             assertEquals("CREATE TABLE test_table_with_different_column_types (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(42) NOT NULL, age INT NULL)", TestTable.ddl)
         }*/
     }
+
+    Test fun testIndices01() {
+        object t : Table("t") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", 255).index()
+        }
+
+        withTables(t) {
+            with (Session.get()) {
+                val alter = index(t.indices[0])
+                assertEquals("CREATE INDEX ON t (name)", alter)
+            }
+
+        }
+    }
+
+    Test fun testIndices02() {
+        object t : Table("t") {
+            val id = integer("id").primaryKey()
+            val lvalue = integer("lvalue")
+            val rvalue = integer("rvalue");
+            val name = varchar("name", 255).index();
+
+            {
+                index (lvalue, rvalue)
+            }
+        }
+
+        withTables(t) {
+            with (Session.get()) {
+                val a1 = index(t.indices[0])
+                assertEquals("CREATE INDEX ON t (name)", a1)
+
+                val a2 = index(t.indices[1])
+                assertEquals("CREATE INDEX ON t (lvalue, rvalue)", a2)
+            }
+        }
+    }
 }
 
 object TestTableWithReference1 : Table("test_table_1") {

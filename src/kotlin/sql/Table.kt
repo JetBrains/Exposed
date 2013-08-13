@@ -67,6 +67,7 @@ open class Table(name: String = ""): ColumnSet() {
     override fun describe(s: Session): String = s.identity(this)
 
     val primaryKeys  = ArrayList<Column<*>>()
+    val indices = ArrayList<Array<Column<*>>>()
 
     override val fields: List<Field<*>>
         get() = columns
@@ -118,6 +119,15 @@ open class Table(name: String = ""): ColumnSet() {
         return this as Column<T?>
     }
 
+    fun index (vararg columns: Column<*>) {
+        indices.add(columns)
+    }
+
+    fun<T> Column<T>.index() : Column<T> {
+        this.table.index(this)
+        return this
+    }
+
     val ddl: String
         get() = ddl()
 
@@ -153,6 +163,7 @@ open class Table(name: String = ""): ColumnSet() {
                     ddl.append(", ")
                 }
             }
+
             ddl.append(")")
         }
         return ddl.toString()

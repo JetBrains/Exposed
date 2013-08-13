@@ -61,12 +61,21 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
     fun create(vararg tables: Table) {
         if (tables.size > 0) {
             for (table in tables) {
+                // create table
                 val ddl = table.ddl
                 println("SQL: " + ddl.toString())
                 connection.createStatement()?.executeUpdate(ddl.toString())
+
+                // create indices
+                for (table_index in table.indices) {
+                    val alterTable = index(table_index)
+                    println("SQL: " + alterTable.toString())
+                    connection.createStatement()?.executeUpdate(alterTable.toString())
+                }
             }
 
             for (table in tables) {
+                // foreign keys
                 for (column in table.columns) {
                     if (column.referee != null) {
                         val fKDdl = foreignKey(column);
@@ -113,6 +122,32 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
                 "ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})"
+            }
+            else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
+        }
+    }
+
+    fun index (columns: Array<Column<*>>): String {
+        if (columns.size == 0) throw RuntimeException("No columns to create index from")
+
+        val table = columns[0].table
+        return when (driver.getClass().getName()) {
+            "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
+            "org.h2.Driver" -> {
+                var alter = StringBuilder()
+                alter.append("CREATE INDEX ON ${identity(table)} (")
+                var isFirst = true
+                for (c in columns) {
+                    if (table != c.table) throw RuntimeException("Columns from different tables cannot make index")
+                    if (!isFirst) {
+                        alter.append(", ")
+                    }
+                    isFirst = false
+                    alter.append(identity(c))
+                }
+                alter.append(")")
+                alter.toString()
             }
             else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
         }
