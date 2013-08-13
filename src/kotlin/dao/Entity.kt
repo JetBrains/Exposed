@@ -54,6 +54,21 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 }
 
+class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory: EntityClass<Source>) {
+    {
+        val refColumn = reference.referee
+        if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
+
+        if (factory.table != reference.table) {
+            throw RuntimeException("Column and factory point to different tables")
+        }
+    }
+
+    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
+        return factory.find(reference.equals(o.id))
+    }
+}
+
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
@@ -260,5 +275,9 @@ abstract public class EntityClass<out T: Entity>() {
 
     public fun referrersOn(column: Column<Int>): Referrers<T> {
         return Referrers(column, this)
+    }
+
+    public fun optionalReferrersOn(column: Column<Int?>): OptionalReferrers<T> {
+        return OptionalReferrers(column, this)
     }
 }
