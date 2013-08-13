@@ -13,7 +13,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE \"unnamedTableWithQuotesSQL\$TestTable\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE \"unnamedTableWithQuotesSQL\$Test\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
 

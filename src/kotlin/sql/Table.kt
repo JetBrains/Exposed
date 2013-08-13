@@ -61,7 +61,7 @@ class Join(val a: ColumnSet, val b: ColumnSet, val a_pk: Column<*>, val b_fk: Co
 }
 
 open class Table(name: String = ""): ColumnSet() {
-    val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName()
+    val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName().trimTrailing("Table")
 
     override val columns = ArrayList<Column<*>>()
     override fun describe(s: Session): String = s.identity(this)
