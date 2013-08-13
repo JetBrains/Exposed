@@ -48,9 +48,20 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 }
 
-// TODO: add caching
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
+}
+
+class InnerTableLink<Source: Entity, Target: Entity>(val source: EntityClass<Source>,
+                                                     val table: Table,
+                                                     val target: EntityClass<Target>) {
+    val sourceRefColumn = table.columns.find { it.referee == source.table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
+
+    fun get(o: Source, desc: jet.PropertyMetadata): Iterable<Target> {
+        return with(Session.get()) {
+            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.equals(o.id.id)))
+        }
+    }
 }
 
 open public class Entity(val id: EntityID) {
@@ -98,6 +109,12 @@ open public class Entity(val id: EntityID) {
     fun <T> Column<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
         writeValues[this] = value
     }
+
+    public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Entity, Target> {
+        return InnerTableLink(id.factory, table, this)
+    }
+
+    public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
     fun flush() {
         if (!writeValues.isEmpty()) {
@@ -162,6 +179,15 @@ abstract public class EntityClass<out T: Entity>() {
 
     public fun findById(id: Int): T? {
         return find(table.id.equals(id)).firstOrNull()
+    }
+
+    public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {
+        val session = Session.get()
+        return rows mapLazy {
+            val entity = wrap(it[table.id], session)
+            entity._readValues = it
+            entity
+        }
     }
 
     public fun find(op: Op): Iterable<T> {
