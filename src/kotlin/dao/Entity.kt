@@ -44,7 +44,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
-        return factory.find(reference.equals(o.id.id))
+        return factory.find(reference.equals(o.id))
     }
 }
 
@@ -52,38 +52,40 @@ class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
 
-class InnerTableLink<Source: Entity, Target: Entity>(val source: EntityClass<Source>,
-                                                     val table: Table,
-                                                     val target: EntityClass<Target>) {
-    val sourceRefColumn = table.columns.find { it.referee == source.table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
-
-    fun get(o: Source, desc: jet.PropertyMetadata): Iterable<Target> {
+class InnerTableLink<Target: Entity>(val table: Table,
+                                     val target: EntityClass<Target>) {
+    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Target> {
+        val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
         return with(Session.get()) {
-            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.equals(o.id.id)))
+            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.equals(o.id)))
         }
     }
 }
 
-open public class Entity(val id: EntityID) {
+open public class Entity(val id: Int) {
+    var klass: EntityClass<*>? = null
+
     val writeValues = LinkedHashMap<Column<*>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
             get() {
                 return _readValues ?: run {
                     _readValues = with(Session.get()) {
-                        val table = id.table()
-                        table.select(table.id.equals(id.id))
+                        val table = factory().table
+                        table.select(table.id.equals(id))
                     }.first()
                     _readValues!!
                 }
             }
+
+    public fun factory(): EntityClass<*> = klass!!
 
     fun <T: Entity> Reference<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
         return factory.findById(reference.get(o, desc))!!
     }
 
     fun <T: Entity> Reference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
-        reference.set(o, desc, value.id.id)
+        reference.set(o, desc, value.id)
     }
 
     fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: jet.PropertyMetadata): T? {
@@ -91,11 +93,11 @@ open public class Entity(val id: EntityID) {
     }
 
     fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T?) {
-        reference.set(o, desc, value?.id?.id)
+        reference.set(o, desc, value?.id)
     }
 
     fun <T> Column<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
-        if (id.id == -1) {
+        if (id == -1) {
             throw RuntimeException("Prototypes are write only")
         }
         else {
@@ -110,8 +112,8 @@ open public class Entity(val id: EntityID) {
         writeValues[this] = value
     }
 
-    public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Entity, Target> {
-        return InnerTableLink(id.factory, table, this)
+    public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
+        return InnerTableLink(table, this@via)
     }
 
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
@@ -119,8 +121,8 @@ open public class Entity(val id: EntityID) {
     fun flush() {
         if (!writeValues.isEmpty()) {
             with(Session.get()) {
-                val table = id.table()
-                table.update(table.id.equals(id.id)) {
+                val table = factory().table
+                table.update(table.id.equals(id)) {
                     for ((c, v) in writeValues) {
                         it[c as Column<Any?>] = v
                     }
@@ -146,7 +148,7 @@ class EntityCache {
     }
 
     fun <T: Entity> store(f: EntityClass<T>, o: T) {
-        getMap(f).put(o.id.id, o)
+        getMap(f).put(o.id, o)
     }
 
     fun flush() {
@@ -200,19 +202,20 @@ abstract public class EntityClass<out T: Entity>() {
         }
     }
 
-    protected open fun createInstance(entityId: EntityID) : T = cons.newInstance(entityId) as T
+    protected open fun createInstance(entityId: Int) : T = cons.newInstance(entityId) as T
 
     public fun wrap(id: Int, s: Session): T {
         val cache = EntityCache.getOrCreate(s)
         return cache.find(this, id) ?: run {
-            val new = createInstance(EntityID(id, this))
+            val new = createInstance(id)
+            new.klass = this
             cache.store(this, new)
             new
         }
     }
 
     public fun new(init: T.() -> Unit) : T {
-        val prototype = createInstance(EntityID(-1, this))
+        val prototype = createInstance(-1)
         prototype.init()
 
         val row = InsertQuery(table)
