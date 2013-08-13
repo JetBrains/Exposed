@@ -33,6 +33,12 @@ class OptionalReference<Target: Entity> (val reference: Column<Int?>, val factor
     }
 }
 
+class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<Int?>, val factory: EntityClass<Target>) {
+    {
+        checkReference(reference, factory)
+    }
+}
+
 class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>) {
     {
         val refColumn = reference.referee
@@ -94,6 +100,14 @@ open public class Entity(val id: Int) {
 
     fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T?) {
         reference.set(o, desc, value?.id)
+    }
+
+    fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+        return reference.get(o, desc)!!.let{factory.findById(it)}!!
+    }
+
+    fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
+        reference.set(o, desc, value.id)
     }
 
     fun <T> Column<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
@@ -238,6 +252,10 @@ abstract public class EntityClass<out T: Entity>() {
 
     public fun optionalReferencedOn(column: Column<Int?>): OptionalReference<T> {
         return OptionalReference(column, this)
+    }
+
+    public fun optionalReferencedOnSureNotNull(column: Column<Int?>): OptionalReferenceSureNotNull<T> {
+        return OptionalReferenceSureNotNull(column, this)
     }
 
     public fun referrersOn(column: Column<Int>): Referrers<T> {
