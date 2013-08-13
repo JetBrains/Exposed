@@ -55,12 +55,17 @@ class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
 
 open public class Entity(val id: EntityID) {
     val writeValues = LinkedHashMap<Column<*>, Any?>()
-    val readValues: ResultRow by Delegates.lazy {
-        with(Session.get()) {
-            val table = id.table()
-            table.select(table.id.equals(id.id))
-        }.first()
-    }
+    var _readValues: ResultRow? = null
+    val readValues: ResultRow
+            get() {
+                return _readValues ?: run {
+                    _readValues = with(Session.get()) {
+                        val table = id.table()
+                        table.select(table.id.equals(id.id))
+                    }.first()
+                    _readValues!!
+                }
+            }
 
     fun <T: Entity> Reference<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
         return factory.findById(reference.get(o, desc))!!
@@ -161,7 +166,11 @@ abstract public class EntityClass<out T: Entity>() {
 
     public fun find(op: Op): Iterable<T> {
         return with (Session.get()) {
-            table.select(op) mapLazy {wrap(it[table.id], this)}
+            table.select(op) mapLazy {
+                val entity = wrap(it[table.id], this)
+                entity._readValues = it
+                entity
+            }
         }
     }
 
