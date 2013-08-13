@@ -64,9 +64,12 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
                 val ddl = table.ddl
                 println("SQL: " + ddl.toString())
                 connection.createStatement()?.executeUpdate(ddl.toString())
-                if (table.foreignKeys.size > 0) {
-                    for (foreignKey in table.foreignKeys) {
-                        val fKDdl = foreignKey(foreignKey);
+            }
+
+            for (table in tables) {
+                for (column in table.columns) {
+                    if (column.referee != null) {
+                        val fKDdl = foreignKey(column);
                         println("SQL: " + fKDdl)
                         connection.createStatement()?.executeUpdate(fKDdl)
                     }
@@ -102,16 +105,14 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             column.name else "$identityQuoteString${column.name}$identityQuoteString"
     }
 
-    fun identity(foreignKey: ForeignKey): String {
-        return "$identityQuoteString${foreignKey.name}$identityQuoteString"
-    }
+    fun foreignKey(reference: Column<*>): String {
+        val referee = reference.referee ?: throw RuntimeException("$reference does not reference anything")
 
-    fun foreignKey(foreignKey: ForeignKey): String {
         return when (driver.getClass().getName()) {
             "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
-                "ALTER TABLE ${identity(foreignKey.table)} ADD CONSTRAINT ${identity(foreignKey)} FOREIGN KEY (${identity(foreignKey.column)}) REFERENCES ${identity(foreignKey.referencedTable)}(${identity(foreignKey.column.table.primaryKeys[0])})"
+                "ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})"
             }
             else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
         }

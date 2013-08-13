@@ -67,7 +67,6 @@ open class Table(name: String = ""): ColumnSet() {
     override fun describe(s: Session): String = s.identity(this)
 
     val primaryKeys  = ArrayList<Column<*>>()
-    val foreignKeys  = ArrayList<ForeignKey>()
 
     override val fields: List<Field<*>>
         get() = columns
@@ -117,12 +116,6 @@ open class Table(name: String = ""): ColumnSet() {
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         columnType.nullable = true
         return this as Column<T?>
-    }
-
-    internal fun foreignKey(column: Column<*>, table: Table): ForeignKey {
-        val foreignKey = ForeignKey(this, column, table)
-        foreignKeys.add(foreignKey)
-        return foreignKey
     }
 
     val ddl: String
