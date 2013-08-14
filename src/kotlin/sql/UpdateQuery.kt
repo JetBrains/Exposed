@@ -18,9 +18,9 @@ class UpdateQuery(val table: Table, val where: Op) {
         if (!values.isEmpty()) {
             var sql = StringBuilder("UPDATE ${session.identity(table)}")
             var c = 0;
-            sql.append(" ")
+            sql.append(" SET ")
             for ((col, value) in values) {
-                sql.append("SET ").append(session.identity(col)).append(" = ")
+                sql.append(session.identity(col)).append("=")
                 when (col.columnType) {
                     is StringColumnType -> sql.append("'").append(value).append("'")
                     else -> sql.append(value)
