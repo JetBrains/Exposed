@@ -24,7 +24,11 @@ class IsNotNullOp(val column: Column<*>): Op() {
 
 class LiteralOp(val value: Any): Op() {
     override fun toSQL():String {
-        return if (value is String) "'" + value + "'" else value.toString()
+        return when (value) {
+            is String -> "'${value}'"
+            is Enum<*> -> value.ordinal().toString()
+            else -> value.toString()
+        }
     }
 }
 
