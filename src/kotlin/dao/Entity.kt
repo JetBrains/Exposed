@@ -69,7 +69,8 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 }
 
-class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) {
+class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) : Iterable<Target> {
+    public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
 

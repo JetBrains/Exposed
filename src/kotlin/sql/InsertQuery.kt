@@ -6,7 +6,7 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 
 class InsertQuery(val table: Table) {
-    val values = LinkedHashMap<Column<*>, Any>()
+    val values = LinkedHashMap<Column<*>, Any?>()
     var statement: Statement? = null
 
     fun <T> set(column: Column<T>, value: T) {
@@ -35,7 +35,9 @@ class InsertQuery(val table: Table) {
 
         sql.append("VALUES (")
         sql.append((values map {
-            when(it.key.columnType) {
+            if (it.value == null)
+                "${it.value}"
+            else when(it.key.columnType) {
                 is StringColumnType -> "'${it.value}'"
                 is DateColumnType -> "'${it.value}'"
                 else -> "${it.value}"
