@@ -63,13 +63,13 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             for (table in tables) {
                 // create table
                 val ddl = table.ddl
-                println("SQL: " + ddl.toString())
+                log(ddl)
                 connection.createStatement()?.executeUpdate(ddl.toString())
 
                 // create indices
                 for (table_index in table.indices) {
                     val alterTable = index(table_index)
-                    println("SQL: " + alterTable.toString())
+                    log(alterTable)
                     connection.createStatement()?.executeUpdate(alterTable.toString())
                 }
             }
@@ -79,7 +79,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
                 for (column in table.columns) {
                     if (column.referee != null) {
                         val fKDdl = foreignKey(column);
-                        println("SQL: " + fKDdl)
+                        log(fKDdl)
                         connection.createStatement()?.executeUpdate(fKDdl)
                     }
                 }
@@ -91,7 +91,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         if (tables.size > 0) {
             for (table in tables) {
                 val ddl = StringBuilder("DROP TABLE ${identity(table)}")
-                println("SQL: " + ddl.toString())
+                log(ddl)
                 connection.createStatement()?.executeUpdate(ddl.toString())
             }
         }

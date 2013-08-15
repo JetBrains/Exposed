@@ -29,7 +29,7 @@ class UpdateQuery(val table: Table, val where: Op) {
                 }
             }
             sql.append(" WHERE " + where.toSQL())
-            println("SQL: " + sql)
+            log(sql)
             session.connection.createStatement()!!.executeUpdate(sql.toString())
         }
     }

@@ -39,7 +39,7 @@ class InsertQuery(val table: Table) {
         sql.append((values map { it.key.columnType.valueToString(it.value) }). makeString( ", ", "", ""))
 
         sql.append(") ")
-        println("SQL: " + sql.toString())
+        log(sql)
         statement = session.connection.createStatement()!!
         statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
     }

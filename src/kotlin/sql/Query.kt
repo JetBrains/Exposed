@@ -62,7 +62,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
             }
         }
 
-        println("SQL: " + sql.toString())
+        log(sql)
         sql.toString()
     }
 
