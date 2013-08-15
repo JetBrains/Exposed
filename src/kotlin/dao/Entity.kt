@@ -208,7 +208,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     }
 
     public fun findById(id: Int): T? {
-        return find(table.id.equals(id)).firstOrNull()
+        val cache = EntityCache.getOrCreate(Session.get())
+        return cache.find(this, id) ?: find(table.id.equals(id)).firstOrNull()
     }
 
     public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {
