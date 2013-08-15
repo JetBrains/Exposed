@@ -8,11 +8,16 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
     }
 
     fun equals(other: T): Op {
-        return EqualsOp(this, LiteralOp(other))
+        if (other == null)
+        {
+            if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
+            return isNull()
+        }
+        return EqualsOp(this, LiteralOp(columnType, other))
     }
 
     fun like(other: String): Op {
-        return LikeOp(this, LiteralOp(other))
+        return LikeOp(this, LiteralOp(columnType, other))
     }
 
     fun isNull(): Op {
@@ -29,5 +34,4 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
 }
 
 class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
-
 }

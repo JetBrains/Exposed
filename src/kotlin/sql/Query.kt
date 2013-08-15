@@ -20,12 +20,15 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
             else -> throw RuntimeException("${c.toSQL()} is not in record set")
         }
 
+        if (d == null) {
+            return null as T
+        }
+
         if (c is Column<*>) {
             val enumType = (c.columnType as? EnumerationColumnType<*>)?.klass
             if (enumType != null) {
                 return enumType.getEnumConstants()!![d as Int] as T
             }
-
         }
 
         return d as T

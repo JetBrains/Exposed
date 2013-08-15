@@ -14,7 +14,9 @@ class InsertQuery(val table: Table) {
             throw RuntimeException("$column is already initialized")
         }
 
-        values.put(column, if (column.columnType is EnumerationColumnType<*>) (value as Enum<*>).ordinal() else value)
+        values.put(column, if (value == null) null else {
+            if (column.columnType is EnumerationColumnType<*>) (value as Enum<*>).ordinal() else value
+        })
     }
 
     fun get(column: Column<Int>): Int { //TODO: use column!!!
@@ -34,15 +36,7 @@ class InsertQuery(val table: Table) {
         sql.append(") ")
 
         sql.append("VALUES (")
-        sql.append((values map {
-            if (it.value == null)
-                "${it.value}"
-            else when(it.key.columnType) {
-                is StringColumnType -> "'${it.value}'"
-                is DateColumnType -> "'${it.value}'"
-                else -> "${it.value}"
-            }
-        }). makeString( ", ", "", ""))
+        sql.append((values map { it.key.columnType.valueToString(it.value) }). makeString( ", ", "", ""))
 
         sql.append(") ")
         println("SQL: " + sql.toString())

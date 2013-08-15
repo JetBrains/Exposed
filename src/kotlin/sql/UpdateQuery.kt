@@ -13,18 +13,16 @@ class UpdateQuery(val table: Table, val where: Op) {
         values[column] = value
     }
 
-
     fun execute(session: Session) {
         if (!values.isEmpty()) {
             var sql = StringBuilder("UPDATE ${session.identity(table)}")
             var c = 0;
             sql.append(" SET ")
             for ((col, value) in values) {
-                sql.append(session.identity(col)).append("=")
-                when (col.columnType) {
-                    is StringColumnType -> sql.append("'").append(value).append("'")
-                    else -> sql.append(value)
-                }
+                sql.append(session.identity(col))
+                   .append("=")
+                   .append(col.columnType.valueToString(value))
+
                 c++
                 if (c < values.size()) {
                     sql.append(", ")
