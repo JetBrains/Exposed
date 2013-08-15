@@ -19,10 +19,14 @@ class Database(val url: String, driver: String, var user: String = "", val passw
 
     fun <T> withSession(statement: Session.() -> T): T {
         val session = Session(connection, driver)
-        Session.threadLocal.set(session)
-        val answer = session.statement()
-        connection.commit()
-        Session.threadLocal.set(null)
-        return answer
+        try {
+            Session.threadLocal.set(session)
+            val answer = session.statement()
+            connection.commit()
+            return answer
+        }
+        finally {
+            Session.threadLocal.set(null)
+        }
     }
 }
