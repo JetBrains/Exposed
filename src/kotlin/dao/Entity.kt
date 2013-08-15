@@ -139,7 +139,9 @@ open public class Entity(val id: Int) {
     }
 
     fun <T> Column<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
-        writeValues[this] = value
+        if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
+            writeValues[this] = value
+        }
     }
 
     public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
