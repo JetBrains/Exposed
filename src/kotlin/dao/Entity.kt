@@ -199,9 +199,7 @@ class EntityCache {
     }
 }
 
-abstract public class EntityClass<out T: Entity>() {
-    abstract val table: IdTable
-
+abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.getEnclosingClass()!!
     private val cons = klass.getConstructors()[0]
 
