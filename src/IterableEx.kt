@@ -1,3 +1,5 @@
+package kotlin.sql
+
 fun<T:Any> Iterable<T>.single() : T {
     var answer: T? = null;
     var found: Boolean = false;
