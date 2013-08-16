@@ -19,4 +19,11 @@ fun today() : sqlDate {
     return sqlDate(todayDate)
 }
 
-val MAX_DATE = sqlDate(Date (java.lang.Long.MAX_VALUE))
+fun sqlDate.addDays (days: Int) : sqlDate {
+    val c = Calendar.getInstance()
+    c.setTime(this) // Now use today date.
+    c.add(Calendar.DATE, days); // Adding days
+    return sqlDate(c.getTime())
+}
+
+val MAX_DATE = date("3333-01-01")
