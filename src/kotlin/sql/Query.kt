@@ -7,6 +7,7 @@ import java.util.HashMap
 import java.sql.ResultSet
 import kotlin.properties.Delegates
 import java.util.NoSuchElementException
+import kotlin.dao.EntityCache
 
 public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
     val data = HashMap<Field<*>, Any?>();
@@ -90,6 +91,10 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
     }
 
     public override fun iterator(): Iterator<ResultRow> {
+        // Flush data before executing query or results may be unpredictable
+        EntityCache.getOrCreate(session).flush()
+
+        // Execute query itself
         val rs = session.connection.createStatement()?.executeQuery(statement)!!
         return ResultIterator(rs)
     }
