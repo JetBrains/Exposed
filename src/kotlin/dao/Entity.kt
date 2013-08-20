@@ -160,6 +160,17 @@ open public class Entity(val id: Int) {
                     }
                 }
             }
+
+            // move write values to read values
+            if (_readValues != null) {
+                for ((c, v) in writeValues) {
+                    _readValues!!.data.remove(c)
+                    _readValues!!.data.put(c, v)
+                }
+            }
+
+            // clear write values
+            writeValues.clear()
         }
     }
 }
