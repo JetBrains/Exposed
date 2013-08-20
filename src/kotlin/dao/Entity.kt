@@ -69,6 +69,9 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 }
 
+open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
+}
+
 class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) : Iterable<Target> {
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
@@ -90,15 +93,20 @@ open public class Entity(val id: Int) {
     val writeValues = LinkedHashMap<Column<*>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
-            get() {
-                return _readValues ?: run {
-                    _readValues = with(Session.get()) {
-                        val table = factory().table
-                        table.select(table.id.equals(id))
-                    }.first()
-                    _readValues!!
-                }
-            }
+    get() {
+        return _readValues ?: run {
+            _readValues = with(Session.get()) {
+                val table = factory().table
+                table.select(table.id.equals(id))
+            }.first()
+            _readValues!!
+        }
+    }
+
+    /*private val cachedData = LinkedHashMap<String, Any>()
+    public fun<T> getOrCreate(key: String, evaluate: ()->T) : T {
+        return cachedData.getOrPut(key, evaluate) as T
+    }*/
 
     public fun factory(): EntityClass<*> = klass!!
 
@@ -142,6 +150,14 @@ open public class Entity(val id: Int) {
         if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
             writeValues[this] = value
         }
+    }
+
+    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.get(o: Entity, desc: jet.PropertyMetadata): TReal {
+        return toReal(column.get(o, desc))
+    }
+
+    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.set(o: Entity, desc: jet.PropertyMetadata, value: TReal) {
+        column.set(o, desc, toColumn(value))
     }
 
     public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
@@ -292,5 +308,9 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun optionalReferrersOn(column: Column<Int?>): OptionalReferrers<T> {
         return OptionalReferrers(column, this)
+    }
+
+    fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> {
+        return ColumnWithTransform(this, toColumn, toReal)
     }
 }
