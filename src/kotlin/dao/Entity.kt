@@ -166,6 +166,13 @@ open public class Entity(val id: Int) {
 
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
+    public fun delete(){
+        with(Session.get()) {
+            val table = factory().table
+            delete(table).where(table.id.equals(id))
+        }
+    }
+
     fun flush() {
         if (!writeValues.isEmpty()) {
             with(Session.get()) {

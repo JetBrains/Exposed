@@ -3,10 +3,12 @@ package kotlin.sql
 open class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
     var referee: PKColumn<T>? = null
 
+    //TODO: rename it to eq
     fun equals(other: Expression): Op {
         return EqualsOp(this, other)
     }
 
+    //TODO: rename it to eq
     fun equals(other: T): Op {
         if (other == null)
         {
