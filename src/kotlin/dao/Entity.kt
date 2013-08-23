@@ -240,7 +240,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val cons = klass.getConstructors()[0]
 
     public fun get(id: Int): T {
-        return findById(id)!!
+        return findById(id) ?: throw RuntimeException("Entity not found in database")
     }
 
     public fun findById(id: Int): T? {
