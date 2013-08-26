@@ -16,6 +16,7 @@ open class ColumnType(var nullable: Boolean = false) {
 }
 
 class IntegerColumnType(var autoinc: Boolean = false): ColumnType()
+class LongColumnType(var autoinc: Boolean = false): ColumnType()
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
         return when (value) {

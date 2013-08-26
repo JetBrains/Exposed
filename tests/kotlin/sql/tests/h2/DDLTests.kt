@@ -13,7 +13,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE \"unnamedTableWithQuotesSQL\$Test\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$Test\" (`id` INT PRIMARY KEY NOT NULL, `name` VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
 
@@ -22,7 +22,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE test_named_table", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS test_named_table", TestTable.ddl)
         }
     }
 
@@ -34,7 +34,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE test_table_with_different_column_types (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(42) PRIMARY KEY NOT NULL, age INT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (`id` INT AUTO_INCREMENT NOT NULL, `name` VARCHAR(42) PRIMARY KEY NOT NULL, `age` INT NULL)", TestTable.ddl)
         }
     }
 
@@ -45,7 +45,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testIndices01() {
-        object t : Table("t") {
+        object t : Table("t1") {
             val id = integer("id").primaryKey()
             val name = varchar("name", 255).index()
         }
@@ -53,14 +53,14 @@ public class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             with (Session.get()) {
                 val alter = index(t.indices[0])
-                assertEquals("CREATE INDEX ON t (name)", alter)
+                assertEquals("CREATE INDEX t1_name ON t1 (name)", alter)
             }
 
         }
     }
 
     Test fun testIndices02() {
-        object t : Table("t") {
+        object t : Table("t2") {
             val id = integer("id").primaryKey()
             val lvalue = integer("lvalue")
             val rvalue = integer("rvalue");
@@ -74,10 +74,10 @@ public class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             with (Session.get()) {
                 val a1 = index(t.indices[0])
-                assertEquals("CREATE INDEX ON t (name)", a1)
+                assertEquals("CREATE INDEX t2_name ON t2 (name)", a1)
 
                 val a2 = index(t.indices[1])
-                assertEquals("CREATE INDEX ON t (lvalue, rvalue)", a2)
+                assertEquals("CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue)", a2)
             }
         }
     }

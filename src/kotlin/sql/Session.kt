@@ -136,7 +136,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
                 var alter = StringBuilder()
-                alter.append("CREATE INDEX ON ${identity(table)} (")
+                alter.append("CREATE INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
                 var isFirst = true
                 for (c in columns) {
                     if (table != c.table) throw RuntimeException("Columns from different tables cannot make index")

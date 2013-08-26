@@ -92,6 +92,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun long(name: String): Column<Long> {
+        val answer = Column<Long>(this, name, LongColumnType())
+        columns.add(answer)
+        return answer
+    }
+
     fun date(name: String): Column<Date> {
         val answer = Column<Date>(this, name, DateColumnType())
         columns.add(answer)
@@ -132,16 +138,17 @@ open class Table(name: String = ""): ColumnSet() {
         get() = ddl()
 
     private fun ddl(): String {
-        var ddl = StringBuilder("CREATE TABLE ${Session.get().identity(this)}")
+        var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Session.get().identity(this)}")
         if (columns.size > 0) {
             ddl.append(" (")
             var c = 0;
             for (column in columns) {
-                ddl.append(Session.get().identity(column)).append(" ")
+                ddl.append("`").append(Session.get().identity(column)).append("`").append(" ")
                 val colType = column.columnType
                 when (colType) {
                     is EnumerationColumnType<*>,
                     is IntegerColumnType -> ddl.append("INT")
+                    is LongColumnType -> ddl.append("BIGINT")
                     is StringColumnType -> ddl.append("VARCHAR(${colType.length})")
                     is DateColumnType -> ddl.append("DATE")
                     else -> throw IllegalStateException()
