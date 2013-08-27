@@ -237,7 +237,7 @@ class EntityCache {
 
 abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.getEnclosingClass()!!
-    private val cons = klass.getConstructors()[0]
+    private val ctor = klass.getConstructors()[0]
 
     public fun get(id: Int): T {
         return findById(id) ?: throw RuntimeException("Entity not found in database")
@@ -269,7 +269,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         }
     }
 
-    protected open fun createInstance(entityId: Int) : T = cons.newInstance(entityId) as T
+    protected open fun createInstance(entityId: Int) : T = ctor.newInstance(entityId) as T
 
     public fun wrap(id: Int, s: Session): T {
         val cache = EntityCache.getOrCreate(s)
@@ -281,8 +281,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         }
     }
 
-    public fun new(init: T.() -> Unit) : T {
-        val prototype = createInstance(-1)
+    public fun new(prototype: T = createInstance(-1), init: T.() -> Unit) : T {
         prototype.init()
 
         val row = InsertQuery(table)
@@ -313,6 +312,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return Referrers(column, this)
     }
 
+    //TODO: what's the difference with referrersOn?
     public fun optionalReferrersOn(column: Column<Int?>): OptionalReferrers<T> {
         return OptionalReferrers(column, this)
     }
