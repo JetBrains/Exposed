@@ -28,7 +28,7 @@ class LiteralOp(val columnType: ColumnType, val value: Any): Op() {
     }
 }
 
-class EqualsOp(val expr1: Expression, val expr2: Expression): Op() {
+class EqOp(val expr1: Expression, val expr2: Expression): Op() {
     override fun toSQL():String {
         val sb = StringBuilder()
         if (expr1 is OrOp) {

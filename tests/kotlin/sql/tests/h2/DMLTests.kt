@@ -93,15 +93,15 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testUpdate01() {
         withCitiesAndUsers { cities, users ->
             val alexId = "alex"
-            val alexName = users.slice(users.name).select (users.id.equals(alexId)).first()[users.name]
+            val alexName = users.slice(users.name).select (users.id.eq(alexId)).first()[users.name]
             assertEquals("Alex", alexName);
 
             val newName = "Alexey"
-            users.update(users.id.equals(alexId)) {
+            users.update(users.id.eq(alexId)) {
                 it[users.name] = newName
             }
 
-            val alexNewName = users.slice(users.name).select (users.id.equals(alexId)).first()[users.name]
+            val alexNewName = users.slice(users.name).select (users.id.eq(alexId)).first()[users.name]
             assertEquals(newName, alexNewName);
         }
     }
@@ -121,7 +121,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testJoin01() {
         withCitiesAndUsers { cities, users ->
             (users join cities).slice(users.name, cities.name).
-            select((users.id.equals("andrey") or users.name.equals("Sergey")) and users.cityId.equals(cities.id)) forEach {
+            select((users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)) forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
                 when (userName) {
@@ -137,7 +137,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testJoin02() {
         withCitiesAndUsers { cities, users ->
             val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).
-            select(cities.name.equals("St. Petersburg") or users.cityId.isNull()).single()
+            select(cities.name.eq("St. Petersburg") or users.cityId.isNull()).single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
             }
@@ -234,21 +234,21 @@ class DMLTests : DatabaseTestsBase() {
                 it[s] = sTest
             }
 
-            t.checkRow(t.select(t.n.equals(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.n.eq(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
             t.checkRow(t.select(t.nn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.nn.equals(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.nn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
 
-            t.checkRow(t.select(t.d.equals(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.d.eq(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
             t.checkRow(t.select(t.dn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.dn.equals(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.dn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
 
-            t.checkRow(t.select(t.e.equals(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.e.eq(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
             t.checkRow(t.select(t.en.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.en.equals(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.en.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
 
-            t.checkRow(t.select(t.s.equals(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.s.eq(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
             t.checkRow(t.select(t.sn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.sn.equals(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.sn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
         }
     }
 
@@ -269,16 +269,16 @@ class DMLTests : DatabaseTestsBase() {
                 it[sn] = sTest
             }
 
-            t.checkRow(t.select(t.nn.equals(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.nn.eq(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
             t.checkRow(t.select(t.nn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
 
-            t.checkRow(t.select(t.dn.equals(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.dn.eq(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
             t.checkRow(t.select(t.dn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
 
-            t.checkRow(t.select(t.en.equals(eOne)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.en.eq(eOne)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
             t.checkRow(t.select(t.en.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
 
-            t.checkRow(t.select(t.sn.equals(sTest)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.sn.eq(sTest)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
             t.checkRow(t.select(t.sn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
         }
     }
@@ -300,7 +300,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[sn] = sTest
             }
 
-            t.update(t.n.equals(42)) {
+            t.update(t.n.eq(42)) {
                 it[nn] = null
                 it[dn] = null
                 it[en] = null

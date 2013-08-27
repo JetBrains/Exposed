@@ -50,7 +50,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
-        return factory.find(reference.equals(o.id))
+        return factory.find(reference.eq(o.id))
     }
 }
 
@@ -65,7 +65,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
-        return factory.find(reference.equals(o.id))
+        return factory.find(reference.eq(o.id))
     }
 }
 
@@ -82,7 +82,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
         return with(Session.get()) {
-            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.equals(o.id)))
+            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.eq(o.id)))
         }
     }
 }
@@ -97,7 +97,7 @@ open public class Entity(val id: Int) {
         return _readValues ?: run {
             _readValues = with(Session.get()) {
                 val table = factory().table
-                table.select(table.id.equals(id))
+                table.select(table.id.eq(id))
             }.first()
             _readValues!!
         }
@@ -169,7 +169,7 @@ open public class Entity(val id: Int) {
     public fun delete(){
         with(Session.get()) {
             val table = factory().table
-            delete(table).where(table.id.equals(id))
+            delete(table).where(table.id.eq(id))
         }
     }
 
@@ -177,7 +177,7 @@ open public class Entity(val id: Int) {
         if (!writeValues.isEmpty()) {
             with(Session.get()) {
                 val table = factory().table
-                table.update(table.id.equals(id)) {
+                table.update(table.id.eq(id)) {
                     for ((c, v) in writeValues) {
                         it[c as Column<Any?>] = v
                     }
@@ -245,7 +245,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun findById(id: Int): T? {
         val cache = EntityCache.getOrCreate(Session.get())
-        return cache.find(this, id) ?: find(table.id.equals(id)).firstOrNull()
+        return cache.find(this, id) ?: find(table.id.eq(id)).firstOrNull()
     }
 
     public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {

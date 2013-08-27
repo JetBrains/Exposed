@@ -3,19 +3,17 @@ package kotlin.sql
 open class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
     var referee: PKColumn<T>? = null
 
-    //TODO: rename it to eq
-    fun equals(other: Expression): Op {
-        return EqualsOp(this, other)
+    fun eq(other: Expression): Op {
+        return EqOp(this, other)
     }
 
-    //TODO: rename it to eq
-    fun equals(other: T): Op {
+    fun eq(other: T): Op {
         if (other == null)
         {
             if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
             return isNull()
         }
-        return EqualsOp(this, LiteralOp(columnType, other))
+        return EqOp(this, LiteralOp(columnType, other))
     }
 
     fun like(other: String): Op {
