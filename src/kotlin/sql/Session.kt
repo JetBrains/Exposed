@@ -58,9 +58,30 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         return answer
     }
 
+    fun Table.exists (): Boolean {
+        val tableName = this.tableName
+        val resultSet = connection.createStatement()?.executeQuery("show tables")
+        if (resultSet != null) {
+            while (resultSet.next()) {
+                val existingTableName = resultSet.getString(1)
+                if (tableName == existingTableName) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
     fun create(vararg tables: Table) {
         if (tables.size > 0) {
+            val exists = HashMap<Table,Boolean>(tables.size)
+
             for (table in tables) {
+                exists.put(table, table.exists())
+                if (exists.get(table)!!)
+                    continue
+
                 // create table
                 val ddl = table.ddl
                 log(ddl)
@@ -75,6 +96,9 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             }
 
             for (table in tables) {
+                if (exists.get(table)!!)
+                    continue
+
                 // foreign keys
                 for (column in table.columns) {
                     if (column.referee != null) {

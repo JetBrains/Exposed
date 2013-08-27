@@ -6,6 +6,28 @@ import kotlin.sql.*
 
 public class DDLTests : DatabaseTestsBase() {
 
+    Test fun tableExists01() {
+        object TestTable : Table("test") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", length = 42)
+        }
+
+        withDb {
+            assertEquals (false, TestTable.exists())
+        }
+    }
+
+    Test fun tableExists02() {
+        object TestTable : Table() {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", length = 42)
+        }
+
+        withTables(TestTable) {
+            assertEquals (true, TestTable.exists())
+        }
+    }
+
     Test fun unnamedTableWithQuotesSQL() {
         object TestTable : Table() {
             val id = integer("id").primaryKey()
