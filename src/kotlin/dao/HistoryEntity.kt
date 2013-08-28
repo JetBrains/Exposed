@@ -1,6 +1,6 @@
 package kotlin.dao
 import java.sql.Date
-import kotlin.sql.Session
+import kotlin.sql.*
 
 public open class HistoryEntity (id: Int, table: HistoryTable) : Entity(id) {
     public var start: Date by table.start
