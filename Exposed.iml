@@ -11,7 +11,7 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="h2" level="project" />
     <orderEntry type="library" name="mysql-connector" level="project" />
-    <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" scope="TEST" name="junit" level="project" />
   </component>
 </module>
 
