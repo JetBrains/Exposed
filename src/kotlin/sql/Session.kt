@@ -89,7 +89,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
 
                 // create indices
                 for (table_index in table.indices) {
-                    val alterTable = index(table_index)
+                    val alterTable = index(table_index.first, table_index.second)
                     log(alterTable)
                     connection.createStatement()?.executeUpdate(alterTable.toString())
                 }
@@ -151,7 +151,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         }
     }
 
-    fun index (columns: Array<Column<*>>): String {
+    fun index (columns: Array<Column<*>>, isUnique: Boolean): String {
         if (columns.size == 0) throw RuntimeException("No columns to create index from")
 
         val table = columns[0].table
@@ -160,7 +160,8 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
                 var alter = StringBuilder()
-                alter.append("CREATE INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
+                val indexType = if (isUnique) "UNIQUE " else ""
+                alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
                 var isFirst = true
                 for (c in columns) {
                     if (table != c.table) throw RuntimeException("Columns from different tables cannot make index")

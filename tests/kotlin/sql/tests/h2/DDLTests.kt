@@ -74,7 +74,7 @@ public class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             with (Session.get()) {
-                val alter = index(t.indices[0])
+                val alter = index(t.indices[0].first, t.indices[0].second)
                 assertEquals("CREATE INDEX t1_name ON t1 (name)", alter)
             }
 
@@ -89,18 +89,33 @@ public class DDLTests : DatabaseTestsBase() {
             val name = varchar("name", 255).index();
 
             {
-                index (lvalue, rvalue)
+                index (false, lvalue, rvalue)
             }
         }
 
         withTables(t) {
             with (Session.get()) {
-                val a1 = index(t.indices[0])
+                val a1 = index(t.indices[0].first, t.indices[0].second)
                 assertEquals("CREATE INDEX t2_name ON t2 (name)", a1)
 
-                val a2 = index(t.indices[1])
+                val a2 = index(t.indices[1].first, t.indices[1].second)
                 assertEquals("CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue)", a2)
             }
+        }
+    }
+
+    Test fun testIndices03() {
+        object t : Table("t1") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", 255).uniqueIndex()
+        }
+
+        withTables(t) {
+            with (Session.get()) {
+                val alter = index(t.indices[0].first, t.indices[0].second)
+                assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
+            }
+
         }
     }
 }
