@@ -12,6 +12,7 @@
     <orderEntry type="library" name="h2" level="project" />
     <orderEntry type="library" name="mysql-connector" level="project" />
     <orderEntry type="library" scope="TEST" name="junit" level="project" />
+    <orderEntry type="library" exported="" name="joda-time" level="project" />
   </component>
 </module>
 

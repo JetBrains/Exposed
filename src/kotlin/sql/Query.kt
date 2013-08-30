@@ -8,6 +8,7 @@ import java.sql.ResultSet
 import kotlin.properties.Delegates
 import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
+import org.joda.time.DateTime
 
 public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
     val data = HashMap<Field<*>, Any?>();
@@ -30,6 +31,10 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
             if (enumType != null) {
                 return enumType.getEnumConstants()!![d as Int] as T
             }
+        }
+
+        if (d is java.sql.Date) {
+            return DateTime(d.getTime()) as T
         }
 
         return d as T

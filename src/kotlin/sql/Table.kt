@@ -1,7 +1,7 @@
 package kotlin.sql
 
 import java.util.ArrayList
-import java.sql.Date
+import org.joda.time.DateTime
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -98,8 +98,8 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
-    fun date(name: String): Column<Date> {
-        val answer = Column<Date>(this, name, DateColumnType())
+    fun date(name: String): Column<DateTime> {
+        val answer = Column<DateTime>(this, name, DateColumnType())
         columns.add(answer)
         return answer
     }

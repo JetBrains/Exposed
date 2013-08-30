@@ -1,17 +1,17 @@
 package kotlin.dao
-import java.sql.Date
 import kotlin.sql.*
+import org.joda.time.DateTime
 
 public open class HistoryEntity (id: Int, table: HistoryTable) : Entity(id) {
-    public var start: Date by table.start
-    public var end: Date? by table.end
+    public var start: DateTime by table.start
+    public var end: DateTime? by table.end
 
-    public fun isValidBy (date: Date? = null) : Boolean {
+    public fun isValidBy (date: DateTime? = null) : Boolean {
         if (date == null) return end == null
         return start <= date && (end == null || date < end!!)
     }
 
-    public fun close(date: Date = today()) {
+    public fun close(date: DateTime = DateTime.now()) {
         with (Session.get()) {
             end = date
         }

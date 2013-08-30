@@ -1,9 +1,9 @@
 package kotlin.sql.tests.h2
 
-import kotlin.sql.*;
+import kotlin.sql.*
 import org.junit.Test
 import kotlin.test.assertEquals
-import java.sql.Date
+import org.joda.time.DateTime
 
 object DMLTestsData {
     object Cities : Table() {
@@ -39,9 +39,9 @@ object DMLTestsData {
 }
 
 class DMLTests : DatabaseTestsBase() {
-    fun withCitiesAndUsers(statement: Session.(cities : DMLTestsData.Cities, users : DMLTestsData.Users) -> Unit) {
-        val Users =    DMLTestsData.Users;
-        val Cities =    DMLTestsData.Cities;
+    fun withCitiesAndUsers(statement: Session.(cities: DMLTestsData.Cities, users: DMLTestsData.Users) -> Unit) {
+        val Users = DMLTestsData.Users;
+        val Cities = DMLTestsData.Cities;
 
         withTables(Cities, Users) {
             val saintPetersburgId = Cities.insert {
@@ -140,8 +140,8 @@ class DMLTests : DatabaseTestsBase() {
             select(cities.name.eq("St. Petersburg") or users.cityId.isNull()).single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
-            }
         }
+    }
 
     Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users ->
@@ -159,8 +159,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: Date, dn: Date?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?) {
-        assertEquals(row[this.n], n )
+    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?) {
+        assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
         assertEquals(row[this.d], d)
         assertEquals(row[this.dn], dn)

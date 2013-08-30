@@ -1,12 +1,14 @@
 package kotlin.sql
 
+import org.joda.time.DateTime
+
 open class ColumnType(var nullable: Boolean = false) {
     public fun valueToString(value: Any?) : String {
         return if (value == null) {
             if (!nullable) throw RuntimeException("NULL in non-nullable column")
             "NULL"
         } else {
-            nonNullValueToString (value!!)
+            nonNullValueToString (value)
         }
     }
 
@@ -29,7 +31,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
 class DateColumnType(): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
-        return "'$value'"
+        return "'${java.sql.Date((value as DateTime).getMillis())}'"
     }
 }
 
