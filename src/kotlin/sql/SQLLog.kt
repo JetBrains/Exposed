@@ -1,7 +1,7 @@
 package kotlin.sql
 
 fun log(stmt: String) {
-    //println(stmt)
+//    println(stmt)
 }
 
 fun log(stmt: StringBuilder) {

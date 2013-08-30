@@ -35,7 +35,7 @@ class DateColumnType(): ColumnType() {
     }
 }
 
-class StringColumnType(val length: Int = 0): ColumnType() {
+class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
         return "'$value'"
     }

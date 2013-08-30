@@ -104,8 +104,8 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
-    fun varchar(name: String, length: Int): Column<String> {
-        val answer = Column<String>(this, name, StringColumnType(length))
+    fun varchar(name: String, length: Int, collate: String? = null): Column<String> {
+        val answer = Column<String>(this, name, StringColumnType(length, collate))
         columns.add(answer)
         return answer
     }
@@ -153,7 +153,11 @@ open class Table(name: String = ""): ColumnSet() {
                     is EnumerationColumnType<*>,
                     is IntegerColumnType -> ddl.append("INT")
                     is LongColumnType -> ddl.append("BIGINT")
-                    is StringColumnType -> ddl.append("VARCHAR(${colType.length})")
+                    is StringColumnType -> {
+                        ddl.append("VARCHAR(${colType.length})")
+                        if (colType.collate != null)
+                            ddl.append(" COLLATE ${colType.collate}")
+                    }
                     is DateColumnType -> ddl.append("DATE")
                     else -> throw IllegalStateException()
                 }

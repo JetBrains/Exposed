@@ -26,7 +26,7 @@ open class UserDataHolder() {
 open class Session (val connection: Connection, val driver: Driver): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
-    val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
+    val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
 
     fun count(column: Column<*>): Count {
         return Count(column)

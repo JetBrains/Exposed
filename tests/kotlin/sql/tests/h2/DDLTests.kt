@@ -53,6 +53,8 @@ public class DDLTests : DatabaseTestsBase() {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42).primaryKey()
             val age = integer("age").nullable()
+// not applicable in H2 database
+//            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
         withTables(TestTable) {
