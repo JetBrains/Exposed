@@ -48,6 +48,7 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
 open class Query(val session: Session, val set: FieldSet, val where: Op?): Iterable<ResultRow> {
     var selectedColumns = HashSet<Column<*>>();
     val groupedByColumns = ArrayList<Column<*>>();
+    val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
 
     private val statement: String by Delegates.lazy {
         val sql = StringBuilder("SELECT ")
@@ -66,6 +67,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
                 append(" GROUP BY ")
                 append((groupedByColumns map {session.fullIdentity(it)}).makeString(", ", "", ""))
             }
+
+            if (orderByColumns.size > 0) {
+                append(" ORDER BY ")
+                append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
+            }
         }
 
         log(sql)
@@ -75,6 +81,18 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
     fun groupBy(vararg columns: Column<*>): Query {
         for (column in columns) {
             groupedByColumns.add(column)
+        }
+        return this
+    }
+
+    fun orderBy (column: Column<*>, isAsc: Boolean = true) : Query {
+        orderByColumns.add(column to isAsc)
+        return this
+    }
+
+    fun orderBy (vararg columns: Pair<Column<*>,Boolean>) : Query {
+        for (pair in columns) {
+            orderByColumns.add(pair)
         }
         return this
     }

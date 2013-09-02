@@ -159,6 +159,53 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    Test fun orderBy01() {
+        withCitiesAndUsers { cities, users ->
+            val r = users.selectAll().orderBy (users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals("alex", r[0][users.id])
+            assertEquals("andrey", r[1][users.id])
+            assertEquals("eugene", r[2][users.id])
+            assertEquals("sergey", r[3][users.id])
+            assertEquals("smth", r[4][users.id])
+        }
+    }
+
+    Test fun orderBy02() {
+        withCitiesAndUsers { cities, users ->
+            val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals("eugene", r[0][users.id])
+            assertEquals("sergey", r[1][users.id])
+            assertEquals("andrey", r[2][users.id])
+            assertEquals("alex", r[3][users.id])
+            assertEquals("smth", r[4][users.id])
+        }
+    }
+
+    Test fun orderBy03() {
+        withCitiesAndUsers { cities, users ->
+            val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
+            assertEquals(5, r.size)
+            assertEquals("eugene", r[0][users.id])
+            assertEquals("sergey", r[1][users.id])
+            assertEquals("andrey", r[2][users.id])
+            assertEquals("alex", r[3][users.id])
+            assertEquals("smth", r[4][users.id])
+        }
+    }
+
+    Test fun testOrderBy04() {
+        withCitiesAndUsers { cities, users ->
+            val r = (cities innerJoin users).slice(cities.name, count(users.id)).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
+            assertEquals(2, r.size)
+            assertEquals("Munich", r[0][cities.name])
+            assertEquals(2 as Long, r[0][count(users.id)])
+            assertEquals("St. Petersburg", r[1][cities.name])
+            assertEquals(1 as Long, r[1][count(users.id)])
+        }
+    }
+
     private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?) {
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
