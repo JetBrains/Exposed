@@ -269,6 +269,15 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         }
     }
 
+    public fun count(op: Op? = null): Int {
+        return with (Session.get()) {
+            val query = table.slice(count(table.id))
+            (if (op == null) query.selectAll() else query.select(op)).first()[
+                count(table.id)
+            ]
+        }
+    }
+
     protected open fun createInstance(entityId: Int) : T = ctor.newInstance(entityId) as T
 
     public fun wrap(id: Int, s: Session): T {
