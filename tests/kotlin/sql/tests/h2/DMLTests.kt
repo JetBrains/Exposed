@@ -17,6 +17,11 @@ object DMLTestsData {
         val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
     }
 
+    object UserData : Table() {
+        val user_id = varchar("user_id", 10) references Users.id
+        val comment = varchar("comment", 30)
+    }
+
     enum class E {
         ONE
         TWO
@@ -39,11 +44,12 @@ object DMLTestsData {
 }
 
 class DMLTests : DatabaseTestsBase() {
-    fun withCitiesAndUsers(statement: Session.(cities: DMLTestsData.Cities, users: DMLTestsData.Users) -> Unit) {
+    fun withCitiesAndUsers(statement: Session.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
         val Users = DMLTestsData.Users;
         val Cities = DMLTestsData.Cities;
+        val UserData = DMLTestsData.UserData;
 
-        withTables(Cities, Users) {
+        withTables(Cities, Users, UserData) {
             val saintPetersburgId = Cities.insert {
                 it[name] = "St. Petersburg"
             } get Cities.id
@@ -86,12 +92,26 @@ class DMLTests : DatabaseTestsBase() {
                 it[cityId] = null
             }
 
-            statement (Cities, Users)
+            UserData.insert {
+                it[user_id] = "smth"
+                it[comment] = "Something is here"
+            }
+
+            UserData.insert {
+                it[user_id] = "eugene"
+                it[comment] = "Comment for Eugene"
+            }
+
+            UserData.insert {
+                it[user_id] = "sergey"
+                it[comment] = "Comment for Sergey"
+            }
+            statement (Cities, Users, UserData)
         }
     }
 
     Test fun testUpdate01() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val alexId = "alex"
             val alexName = users.slice(users.name).select (users.id.eq(alexId)).first()[users.name]
             assertEquals("Alex", alexName);
@@ -107,7 +127,11 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     Test fun testDelete01() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
+            delete(userData).all()
+            val userDataExists = userData.selectAll().any()
+            assertEquals(false, userDataExists)
+
             val smthId = users.slice(users.id).select(users.name.like("%thing")).single()[users.id]
             assertEquals ("smth", smthId)
 
@@ -119,7 +143,7 @@ class DMLTests : DatabaseTestsBase() {
 
     // manual join
     Test fun testJoin01() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             (users join cities).slice(users.name, cities.name).
             select((users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)) forEach {
                 val userName = it[users.name]
@@ -135,7 +159,7 @@ class DMLTests : DatabaseTestsBase() {
 
     // join with foreign key
     Test fun testJoin02() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).
             select(cities.name.eq("St. Petersburg") or users.cityId.isNull()).single()
             assertEquals("Andrey", stPetersburgUser[users.name])
@@ -143,8 +167,22 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    // triple join
+    Test fun testJoin03() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
+            assertEquals (2, r.size)
+            assertEquals("Eugene", r[0][users.name])
+            assertEquals("Comment for Eugene", r[0][userData.comment])
+            assertEquals("Munich", r[0][cities.name])
+            assertEquals("Sergey", r[1][users.name])
+            assertEquals("Comment for Sergey", r[1][userData.comment])
+            assertEquals("Munich", r[1][cities.name])
+        }
+    }
+
     Test fun testGroupBy01() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             (cities join users).slice(cities.name, count(users.id)).selectAll() groupBy cities.name forEach {
                 val cityName = it[cities.name]
                 val userCount = it[count(users.id)]
@@ -160,7 +198,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     Test fun orderBy01() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy (users.id).toList()
             assertEquals(5, r.size)
             assertEquals("alex", r[0][users.id])
@@ -172,7 +210,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     Test fun orderBy02() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -184,7 +222,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     Test fun orderBy03() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -196,7 +234,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     Test fun testOrderBy04() {
-        withCitiesAndUsers { cities, users ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, count(users.id)).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])

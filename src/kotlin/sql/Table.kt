@@ -30,13 +30,12 @@ abstract class ColumnSet(): FieldSet {
 }
 
 private fun tryJoin(a: ColumnSet, b: ColumnSet, joinType : JoinType): Join? {
-    val a_pk = a.columns.find { it is PKColumn<*> }
-    if (a_pk == null) return null
-
-    val b_fk = b.columns.find { it.referee == a_pk }
-    if (b_fk == null) return null
-
-    return Join(a, b, a_pk, b_fk, joinType)
+    for (a_pk in a.columns.filter { it is PKColumn<*> }) {
+        val b_fk = b.columns.find { it.referee == a_pk }
+        if (b_fk != null)
+            return Join(a, b, a_pk, b_fk, joinType)
+    }
+    return null
 }
 
 class Slice(override val source: ColumnSet, override val fields: List<Field<*>>): FieldSet
