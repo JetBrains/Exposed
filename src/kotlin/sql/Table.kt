@@ -2,6 +2,7 @@ package kotlin.sql
 
 import java.util.ArrayList
 import org.joda.time.DateTime
+import kotlin.sql.Join.JoinPart
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -16,26 +17,6 @@ abstract class ColumnSet(): FieldSet {
     abstract fun describe(s: Session): String
 
     fun slice(vararg columns: Field<*>): FieldSet = Slice(this, listOf(*columns))
-
-    fun join (another: ColumnSet) : ColumnSet {
-        return joinImpl (another, JoinType.LEFT)
-    }
-    fun innerJoin (another: ColumnSet) : ColumnSet {
-        return joinImpl (another, JoinType.INNER)
-    }
-
-    private fun joinImpl(another: ColumnSet, joinType : JoinType): ColumnSet {
-        return tryJoin(this, another, joinType) ?: tryJoin(another, this, joinType) ?: throw RuntimeException("Can't find pair of column to join with")
-    }
-}
-
-private fun tryJoin(a: ColumnSet, b: ColumnSet, joinType : JoinType): Join? {
-    for (a_pk in a.columns.filter { it is PKColumn<*> }) {
-        val b_fk = b.columns.find { it.referee == a_pk }
-        if (b_fk != null)
-            return Join(a, b, a_pk, b_fk, joinType)
-    }
-    return null
 }
 
 class Slice(override val source: ColumnSet, override val fields: List<Field<*>>): FieldSet
@@ -46,16 +27,65 @@ enum class JoinType {
     RIGHT
     FULL
 }
-class Join(val a: ColumnSet, val b: ColumnSet, val a_pk: Column<*>, val b_fk: Column<*>, val joinType: JoinType): ColumnSet() {
+
+fun Table.join (otherTable: Table) : Join {
+    return Join (this, otherTable, JoinType.INNER)
+}
+
+fun Table.join (otherTable: Table, joinType: JoinType) : Join {
+    return Join (this, otherTable, joinType)
+}
+
+fun Table.innerJoin (otherTable: Table) : Join {
+    return Join (this, otherTable, JoinType.INNER)
+}
+
+class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER) : ColumnSet() {
+    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>) {
+    }
+
+    val joinParts: ArrayList<JoinPart> = ArrayList<JoinPart>();
+
+    fun innerJoin (otherTable: Table) : Join {
+        return join(otherTable, JoinType.INNER)
+    }
+
+    fun join (otherTable: Table, joinType: JoinType = JoinType.INNER) : Join {
+        val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
+        if (keysPair == null) throw RuntimeException ("Cannot join with ${otherTable.tableName} as there is no matching primary key/ foreign key pair")
+        joinParts.add(JoinPart(joinType, otherTable, keysPair.first, keysPair.second))
+        return this
+    }
+
+    private fun findKeys(a: ColumnSet, b: ColumnSet): Pair<Column<*>, Column<*>>? {
+        for (a_pk in a.columns.filter { it is PKColumn<*> }) {
+            val b_fk = b.columns.find { it.referee == a_pk }
+            if (b_fk != null)
+                return a_pk to b_fk!!
+        }
+        return null
+    }
+
     override fun describe(s: Session): String {
-        return "${a.describe(s)} $joinType JOIN ${b.describe(s)} ON ${s.fullIdentity(a_pk)} = ${s.fullIdentity(b_fk)}"
+        val sb = StringBuilder()
+        sb.append(table.describe(s))
+        for (p in joinParts) {
+            sb.append(" ${p.joinType} JOIN ${p.table.describe(s)} ON ${s.fullIdentity(p.pkColumn)} = ${s.fullIdentity(p.fkColumn)}" )
+        }
+        return sb.toString()
     }
 
     override val columns: List<Column<*>> get() {
         val answer = ArrayList<Column<*>>()
-        answer.addAll(a.columns)
-        answer.addAll(b.columns)
+        answer.addAll(table.columns)
+        for (p in joinParts)
+            answer.addAll(p.table.columns)
         return answer
+    }
+
+    // ctor body
+    {
+        join(otherTable, joinType)
     }
 }
 

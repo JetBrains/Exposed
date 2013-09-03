@@ -181,6 +181,38 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    // triple join
+    Test fun testJoin04() {
+        object Numbers : Table() {
+            val id = integer("id").primaryKey()
+        }
+
+        object Names : Table() {
+            val name = varchar("name", 10).primaryKey()
+        }
+
+        object Map: Table () {
+            val id_ref = integer("id_ref") references Numbers.id
+            val name_ref = varchar("name_ref", 10) references Names.name
+        }
+
+        withTables (Numbers, Names, Map) {
+            Numbers.insert { it[id] = 1 }
+            Numbers.insert { it[id] = 2 }
+            Names.insert { it[name] = "Foo"}
+            Names.insert { it[name] = "Bar"}
+            Map.insert {
+                it[id_ref] = 2
+                it[name_ref] = "Foo"
+            }
+
+            val r = (Numbers innerJoin Map innerJoin Names).selectAll().toList()
+            assertEquals(1, r.size)
+            assertEquals(2, r[0][Numbers.id])
+            assertEquals("Foo", r[0][Names.name])
+        }
+    }
+
     Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
             (cities join users).slice(cities.name, count(users.id)).selectAll() groupBy cities.name forEach {
