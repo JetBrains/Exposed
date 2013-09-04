@@ -3,9 +3,9 @@ package kotlin.sql.tests.h2
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.sql.*
+import java.util.regex.Pattern
 
 public class DDLTests : DatabaseTestsBase() {
-
     Test fun tableExists01() {
         object TestTable : Table("test") {
             val id = integer("id").primaryKey()
@@ -35,7 +35,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$Test\" (`id` INT PRIMARY KEY NOT NULL, `name` VARCHAR(42) NOT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$Test\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
 
@@ -58,7 +58,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (`id` INT AUTO_INCREMENT NOT NULL, `name` VARCHAR(42) PRIMARY KEY NOT NULL, `age` INT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(42) PRIMARY KEY NOT NULL, age INT NULL)", TestTable.ddl)
         }
     }
 

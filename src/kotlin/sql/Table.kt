@@ -176,7 +176,7 @@ open class Table(name: String = ""): ColumnSet() {
             ddl.append(" (")
             var c = 0;
             for (column in columns) {
-                ddl.append("`").append(Session.get().identity(column)).append("`").append(" ")
+                ddl.append(Session.get().identity(column)).append(" ")
                 val colType = column.columnType
                 when (colType) {
                     is EnumerationColumnType<*>,

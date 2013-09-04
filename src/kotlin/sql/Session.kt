@@ -7,6 +7,7 @@ import java.util.regex.Pattern
 import java.sql.Statement
 import java.sql.ResultSet
 import java.util.HashMap
+import java.util.HashSet
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -27,6 +28,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
+    val keywords = arrayListOf("key")
 
     fun count(column: Column<*>): Count {
         return Count(column)
@@ -121,21 +123,24 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         }
     }
 
+    private fun needQuotes (identity: String) : Boolean {
+        return keywords.contains (identity) || !identifierPattern.matcher(identity).matches()
+    }
+
+    private fun quoteIfNecessary (identity: String) : String {
+        return if (needQuotes(identity)) "$identityQuoteString$identity$identityQuoteString" else identity
+    }
+
     fun identity(table: Table): String {
-        return if (identifierPattern.matcher(table.tableName).matches())
-            table.tableName else "$identityQuoteString${table.tableName}$identityQuoteString"
+        return quoteIfNecessary(table.tableName)
     }
 
     fun fullIdentity(column: Column<*>): String {
-        return (if (identifierPattern.matcher(column.table.tableName).matches())
-            column.table.tableName else "$identityQuoteString${column.table.tableName}$identityQuoteString") + "." +
-        (if (identifierPattern.matcher(column.name).matches())
-            column.name else "$identityQuoteString${column.name}$identityQuoteString")
+        return "${quoteIfNecessary(column.table.tableName)}.${quoteIfNecessary(column.name)}"
     }
 
     fun identity(column: Column<*>): String {
-        return if (identifierPattern.matcher(column.name).matches())
-            column.name else "$identityQuoteString${column.name}$identityQuoteString"
+        return quoteIfNecessary(column.name)
     }
 
     fun foreignKey(reference: Column<*>): String {
