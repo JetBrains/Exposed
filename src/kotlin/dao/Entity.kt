@@ -205,7 +205,17 @@ class EntityCache {
     val referrers = HashMap<Entity, MutableMap<Column<*>, List<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
-        return data.getOrPut(f, {HashMap()}) as MutableMap<Int, T>
+        var init: Boolean = false
+        val answer = data.getOrPut(f, {
+            init = true
+            HashMap()
+        }) as MutableMap<Int, T>
+
+        if (init && f.eagerSelect) {
+            f.all().count()
+        }
+
+        return answer
     }
 
     fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()->Iterable<R>): List<R> {
@@ -238,7 +248,7 @@ class EntityCache {
     }
 }
 
-abstract public class EntityClass<out T: Entity>(val table: IdTable) {
+abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSelect: Boolean = false) {
     private val klass = javaClass.getEnclosingClass()!!
     private val ctor = klass.getConstructors()[0]
 
