@@ -40,4 +40,3 @@ class StringColumnType(val length: Int = 0, val collate: String? = null): Column
         return "'$value'"
     }
 }
-

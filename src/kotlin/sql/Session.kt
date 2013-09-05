@@ -34,6 +34,14 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         return Count(column)
     }
 
+    fun<T> min(column: Column<T>): Min<T> {
+        return Min(column)
+    }
+
+    fun<T> max(column: Column<T>): Max<T> {
+        return Max(column)
+    }
+
     fun FieldSet.select(where: Op) : Query {
         return Query(this@Session, this, where)
     }

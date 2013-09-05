@@ -49,6 +49,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
     var selectedColumns = HashSet<Column<*>>();
     val groupedByColumns = ArrayList<Column<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
+    var having: Op? = null;
 
     private val statement: String by Delegates.lazy {
         val sql = StringBuilder("SELECT ")
@@ -68,6 +69,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
                 append((groupedByColumns map {session.fullIdentity(it)}).makeString(", ", "", ""))
             }
 
+            if (having != null) {
+                append(" HAVING ")
+                append(having!!.toSQL())
+            }
+
             if (orderByColumns.size > 0) {
                 append(" ORDER BY ")
                 append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
@@ -83,6 +89,12 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
             groupedByColumns.add(column)
         }
         return this
+    }
+
+    fun having (op: Op) : Query {
+        if (having != null) throw RuntimeException ("HAVING clause is specified twice. Old value = '${having!!.toSQL()}', new value = '${op.toSQL()}'")
+        having = op;
+        return this;
     }
 
     fun orderBy (column: Column<*>, isAsc: Boolean = true) : Query {
