@@ -16,6 +16,38 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return EqOp(this, LiteralOp(columnType, other))
     }
 
+    fun less(other: Expression): Op {
+        return LessOp(this, other)
+    }
+
+    fun less(other: T): Op {
+        return LessOp(this, LiteralOp(columnType, other))
+    }
+
+    fun lessEq(other: Expression): Op {
+        return LessEqOp(this, other)
+    }
+
+    fun lessEq(other: T): Op {
+        return LessEqOp(this, LiteralOp(columnType, other))
+    }
+
+    fun greater(other: Expression): Op {
+        return GreaterOp(this, other)
+    }
+
+    fun greater(other: T): Op {
+        return GreaterOp(this, LiteralOp(columnType, other))
+    }
+
+    fun greaterEq(other: Expression): Op {
+        return GreaterEqOp(this, other)
+    }
+
+    fun greaterEq(other: T): Op {
+        return GreaterEqOp(this, LiteralOp(columnType, other))
+    }
+
     fun like(other: String): Op {
         return LikeOp(this, LiteralOp(columnType, other))
     }

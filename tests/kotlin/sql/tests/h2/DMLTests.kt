@@ -252,6 +252,32 @@ class DMLTests : DatabaseTestsBase() {
                 assertEquals("Munich", r[it][cities.name])
                 val count = r[it][count(users.id)]
                 assertEquals(2, count)
+                val max = r[it][max(cities.id)]
+                assertEquals(2, max)
+            }
+            1.let {
+                assertEquals("St. Petersburg", r[it][cities.name])
+                val count = r[it][count(users.id)]
+                assertEquals(1, count)
+                val max = r[it][max(cities.id)]
+                assertEquals(1, max)
+            }
+        }
+    }
+
+    Test fun testGroupBy04() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = (cities join users).slice(cities.name, count(users.id), max(cities.id)).selectAll()
+                    .groupBy(cities.name)
+                    .having(count(users.id) lessEq 42)
+                    .orderBy(cities.name)
+                    .toList()
+
+            assertEquals(2, r.size())
+            0.let {
+                assertEquals("Munich", r[it][cities.name])
+                val count = r[it][count(users.id)]
+                assertEquals(2, count)
             }
             1.let {
                 assertEquals("St. Petersburg", r[it][cities.name])
