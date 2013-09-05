@@ -254,10 +254,14 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {
         val session = Session.get()
         return rows mapLazy {
-            val entity = wrap(it[table.id], session)
-            entity._readValues = it
-            entity
+            wrapRow(it, session)
         }
+    }
+
+    public fun wrapRow (row: ResultRow, session: Session) : T {
+        val entity = wrap(row[table.id], session)
+        entity._readValues = row
+        return entity
     }
 
     public fun all(): Iterable<T> {
@@ -268,8 +272,12 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun find(op: Op): Iterable<T> {
         return with (Session.get()) {
-            wrapRows(table.select(op))
+            wrapRows(searchQuery(op))
         }
+    }
+
+    protected open fun Session.searchQuery(op: Op): Query {
+        return table.select(op)
     }
 
     public fun count(op: Op? = null): Int {
