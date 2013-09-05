@@ -205,15 +205,9 @@ class EntityCache {
     val referrers = HashMap<Entity, MutableMap<Column<*>, List<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
-        var init: Boolean = false
         val answer = data.getOrPut(f, {
-            init = true
             HashMap()
         }) as MutableMap<Int, T>
-
-        if (init && f.eagerSelect) {
-            f.all().count()
-        }
 
         return answer
     }
@@ -224,6 +218,10 @@ class EntityCache {
 
     fun <T: Entity> find(f: EntityClass<T>, id: Int): T? {
         return getMap(f)[id]
+    }
+
+    fun <T: Entity> findAll(f: EntityClass<T>): Iterable<T> {
+        return getMap(f).values()
     }
 
     fun <T: Entity> store(f: EntityClass<T>, o: T) {
@@ -256,9 +254,19 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return findById(id) ?: throw RuntimeException("Entity not found in database")
     }
 
-    public fun findById(id: Int): T? {
+    private fun warmCache(): EntityCache {
         val cache = EntityCache.getOrCreate(Session.get())
-        return cache.find(this, id) ?: find(table.id.eq(id)).firstOrNull()
+        if (eagerSelect) {
+            if (!cache.data.containsKey(this)) {
+                retrieveAll().count()
+            }
+        }
+
+        return cache
+    }
+
+    public fun findById(id: Int): T? {
+        return warmCache().find(this, id) ?: find(table.id.eq(id)).firstOrNull()
     }
 
     public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {
@@ -275,6 +283,14 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun all(): Iterable<T> {
+        if (eagerSelect) {
+            return warmCache().findAll(this)
+        }
+
+        return retrieveAll()
+    }
+
+    private fun retrieveAll(): Iterable<T> {
         return with(Session.get()) {
             wrapRows(table.selectAll())
         }
