@@ -39,7 +39,7 @@ class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<Int?>,
     }
 }
 
-class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>) {
+class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
@@ -50,11 +50,12 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
-        return factory.find(reference.eq(o.id))
+        val query = {factory.find(reference.eq(o.id))}
+        return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
 
-class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory: EntityClass<Source>) {
+class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
@@ -65,7 +66,8 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
-        return factory.find(reference.eq(o.id))
+        val query = {factory.find(reference.eq(o.id))}
+        return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
 
@@ -200,13 +202,14 @@ open public class Entity(val id: Int) {
 
 class EntityCache {
     val data = HashMap<EntityClass<*>, MutableMap<Int, *>>()
+    val referrers = HashMap<Entity, MutableMap<Column<*>, List<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
-        return data.get(f) as MutableMap<Int, T>? ?: run {
-            val new = HashMap<Int, T>()
-            data[f] = new
-            new
-        }
+        return data.getOrPut(f, {HashMap()}) as MutableMap<Int, T>
+    }
+
+    fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()->Iterable<R>): List<R> {
+        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {refs().toList()}) as List<R>
     }
 
     fun <T: Entity> find(f: EntityClass<T>, id: Int): T? {
@@ -317,13 +320,13 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    public fun referrersOn(column: Column<Int>): Referrers<T> {
-        return Referrers(column, this)
+    public fun referrersOn(column: Column<Int>, cache: Boolean = false): Referrers<T> {
+        return Referrers(column, this, cache)
     }
 
     //TODO: what's the difference with referrersOn?
-    public fun optionalReferrersOn(column: Column<Int?>): OptionalReferrers<T> {
-        return OptionalReferrers(column, this)
+    public fun optionalReferrersOn(column: Column<Int?>, cache: Boolean = false): OptionalReferrers<T> {
+        return OptionalReferrers(column, this, cache)
     }
 
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> {
