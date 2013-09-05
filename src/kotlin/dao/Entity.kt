@@ -277,7 +277,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun wrapRow (row: ResultRow, session: Session) : T {
-        val entity = wrap(row[table.id], session)
+        val entity = wrap(row[table.id], row, session)
         entity._readValues = row
         return entity
     }
@@ -315,19 +315,19 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    protected open fun createInstance(entityId: Int) : T = ctor.newInstance(entityId) as T
+    protected open fun createInstance(entityId: Int, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
-    public fun wrap(id: Int, s: Session): T {
+    public fun wrap(id: Int, row: ResultRow?, s: Session): T {
         val cache = EntityCache.getOrCreate(s)
         return cache.find(this, id) ?: run {
-            val new = createInstance(id)
+            val new = createInstance(id, row)
             new.klass = this
             cache.store(this, new)
             new
         }
     }
 
-    public fun new(prototype: T = createInstance(-1), init: T.() -> Unit) : T {
+    public fun new(prototype: T = createInstance(-1, null), init: T.() -> Unit) : T {
         prototype.init()
 
         val row = InsertQuery(table)
@@ -337,7 +337,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
 
         val session = Session.get()
         row.execute(session)
-        return wrap(row get table.id, session)
+        return wrap(row get table.id, null, session)
     }
 
     public fun view (op: Op) : View<T>  = View(op, this)
