@@ -40,7 +40,12 @@ class InsertQuery(val table: Table) {
 
         sql.append(") ")
         log(sql)
+        try {
         statement = session.connection.createStatement()!!
-        statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
+        statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS) }
+        catch (e: Exception) {
+            println("BAD SQL: $sql")
+            throw e
+        }
     }
 }

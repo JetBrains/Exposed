@@ -397,6 +397,40 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    Test fun testInsert04() {
+        val stringThatNeedsEscaping = "A'braham Barakhyahu"
+        val t = DMLTestsData.Misc
+        withTables(t) {
+            t.insert {
+                it[n] = 42
+                it[d] = today()
+                it[e] = DMLTestsData.E.ONE
+                it[s] = stringThatNeedsEscaping
+            }
+
+            val row = t.selectAll().single()
+            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null)
+        }
+    }
+
+/*
+    Test fun testInsert05() {
+        val stringThatNeedsEscaping = "multi\r\nline"
+        val t = DMLTestsData.Misc
+        withTables(t) {
+            t.insert {
+                it[n] = 42
+                it[d] = today()
+                it[e] = DMLTestsData.E.ONE
+                it[s] = stringThatNeedsEscaping
+            }
+
+            val row = t.selectAll().single()
+            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null)
+        }
+    }
+*/
+
     Test fun testSelect01() {
         val t = DMLTestsData.Misc
         withTables(t) {

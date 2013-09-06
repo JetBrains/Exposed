@@ -36,7 +36,23 @@ class DateColumnType(): ColumnType() {
 }
 
 class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
+    val charactersToEscape = hashMapOf(
+            '\'' to "\'\'",
+            '\"' to "\"\"",
+            '\r' to "\\r",
+            '\n' to "\\n")
+
     protected override fun nonNullValueToString(value: Any): String {
-        return "'$value'"
+        val beforeEscaping = value.toString()
+        val sb = StringBuilder(beforeEscaping.length+2)
+        sb.append('\'')
+        for (c in beforeEscaping) {
+            if (charactersToEscape.containsKey(c))
+                sb.append(charactersToEscape[c])
+            else
+                sb.append(c)
+        }
+        sb.append('\'')
+        return sb.toString()
     }
 }
