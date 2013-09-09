@@ -23,7 +23,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
         return when (value) {
             is Int -> "$value"
-            is T -> "${value.ordinal()}"
+            is Enum<*> -> "${value.ordinal()}"
             else -> throw RuntimeException("$value is not valid for enum ${javaClass<T>().getName()}")
         }
     }
