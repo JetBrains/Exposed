@@ -7,14 +7,26 @@ import kotlin.properties.Delegates
 
 class Database(val url: String, driver: String, var user: String = "", val password: String = "") {
     val driver: Driver = Class.forName(driver).newInstance() as Driver
-    val connection: Connection by Delegates.blockingLazy {
-        val c = if (user != "") DriverManager.getConnection(url, user, password) else DriverManager.getConnection(url)
-        c.setAutoCommit(false)
-        c
+
+    var _connection: Connection? = null
+
+    val connection: Connection get() {
+        return synchronized(this) {
+            if (_connection?.isClosed() ?: false) {
+                _connection = null
+            }
+
+            if (_connection == null) {
+                val c = if (user != "") DriverManager.getConnection(url, user, password) else DriverManager.getConnection(url)
+                c.setAutoCommit(false)
+                _connection = c
+            }
+            _connection!!
+        }
     }
 
     fun shutDown() {
-        connection.close()
+        _connection?.close()
     }
 
     fun <T> withSession(statement: Session.() -> T): T {
