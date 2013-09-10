@@ -17,9 +17,10 @@ open class ColumnType(var nullable: Boolean = false) {
     }
 }
 
-class IntegerColumnType(var autoinc: Boolean = false): ColumnType()
-class LongColumnType(var autoinc: Boolean = false): ColumnType()
-class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
+data class IntegerColumnType(var autoinc: Boolean = false): ColumnType()
+data class LongColumnType(var autoinc: Boolean = false): ColumnType()
+data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType()
+data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
         return when (value) {
             is Int -> "$value"
@@ -29,13 +30,13 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     }
 }
 
-class DateColumnType(): ColumnType() {
+data class DateColumnType(): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
         return "'${java.sql.Date((value as DateTime).getMillis())}'"
     }
 }
 
-class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
+data class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
     val charactersToEscape = hashMapOf(
             '\'' to "\'\'",
             '\"' to "\"\"",

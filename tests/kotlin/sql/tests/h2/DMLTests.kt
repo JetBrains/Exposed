@@ -4,6 +4,7 @@ import kotlin.sql.*
 import org.junit.Test
 import kotlin.test.assertEquals
 import org.joda.time.DateTime
+import java.math.BigDecimal
 
 object DMLTestsData {
     object Cities : Table() {
@@ -40,6 +41,10 @@ object DMLTestsData {
 
         val s = varchar("s", 100)
         val sn = varchar("sn", 100).nullable()
+
+        val dc = decimal("dc", 12, 2)
+        val dcn = decimal("dcn", 12, 2).nullable()
+
     }
 }
 
@@ -334,7 +339,7 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?) {
+    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?, dc: BigDecimal, dcn: BigDecimal?) {
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
         assertEquals(row[this.d], d)
@@ -343,6 +348,8 @@ class DMLTests : DatabaseTestsBase() {
         assertEquals(row[this.en], en)
         assertEquals(row[this.s], s)
         assertEquals(row[this.sn], sn)
+        assertEquals(row[this.dc], dc)
+        assertEquals(row[this.dcn], dcn)
     }
 
     Test fun testInsert01() {
@@ -353,10 +360,11 @@ class DMLTests : DatabaseTestsBase() {
                 it[d] = today()
                 it[e] = DMLTestsData.E.ONE
                 it[s] = "test"
+                it[dc] = BigDecimal("239.42")
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, "test", null)
+            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, "test", null, BigDecimal("239.42"), null)
         }
     }
 
@@ -372,10 +380,12 @@ class DMLTests : DatabaseTestsBase() {
                 it[en] = null
                 it[s] = "test"
                 it[sn] = null
+                it[dc] = BigDecimal("239.42")
+                it[dcn] = null
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, "test", null)
+            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, "test", null, BigDecimal("239.42"), null)
         }
     }
     Test fun testInsert03() {
@@ -390,10 +400,12 @@ class DMLTests : DatabaseTestsBase() {
                 it[en] = DMLTestsData.E.ONE
                 it[s] = "test"
                 it[sn] = "test"
+                it[dc] = BigDecimal("239.42")
+                it[dcn] = BigDecimal("239.42")
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, 42, today(), today(), DMLTestsData.E.ONE, DMLTestsData.E.ONE, "test", "test")
+            t.checkRow(row, 42, 42, today(), today(), DMLTestsData.E.ONE, DMLTestsData.E.ONE, "test", "test", BigDecimal("239.42"), BigDecimal("239.42"))
         }
     }
 
@@ -406,10 +418,11 @@ class DMLTests : DatabaseTestsBase() {
                 it[d] = today()
                 it[e] = DMLTestsData.E.ONE
                 it[s] = stringThatNeedsEscaping
+                it[dc] = BigDecimal("239.42")
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null)
+            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null, BigDecimal("239.42"), null)
         }
     }
 
@@ -436,28 +449,30 @@ class DMLTests : DatabaseTestsBase() {
         withTables(t) {
             val date = today()
             val sTest = "test"
+            val dec = BigDecimal("239.42")
             t.insert {
                 it[n] = 42
                 it[d] = date
                 it[e] = DMLTestsData.E.ONE
                 it[s] = sTest
+                it[dc] = dec
             }
 
-            t.checkRow(t.select(t.n.eq(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.nn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.nn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.n.eq(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.nn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.nn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.d.eq(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.dn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.dn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.d.eq(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.dn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.dn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.e.eq(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.en.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.en.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.e.eq(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.en.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.en.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.s.eq(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.sn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
-            t.checkRow(t.select(t.sn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null)
+            t.checkRow(t.select(t.s.eq(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.sn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.sn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
@@ -467,6 +482,7 @@ class DMLTests : DatabaseTestsBase() {
             val date = today()
             val sTest = "test"
             val eOne = DMLTestsData.E.ONE
+            val dec = BigDecimal("239.42")
             t.insert {
                 it[n] = 42
                 it[nn] = 42
@@ -476,19 +492,22 @@ class DMLTests : DatabaseTestsBase() {
                 it[en] = eOne
                 it[s] = sTest
                 it[sn] = sTest
+                it[dc] = dec
+                it[dcn] = dec
+
             }
 
-            t.checkRow(t.select(t.nn.eq(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
-            t.checkRow(t.select(t.nn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.nn.eq(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select(t.nn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.dn.eq(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
-            t.checkRow(t.select(t.dn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.dn.eq(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select(t.dn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.en.eq(eOne)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
-            t.checkRow(t.select(t.en.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.en.eq(eOne)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select(t.en.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.sn.eq(sTest)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
-            t.checkRow(t.select(t.sn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest)
+            t.checkRow(t.select(t.sn.eq(sTest)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select(t.sn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
         }
     }
 
@@ -498,6 +517,7 @@ class DMLTests : DatabaseTestsBase() {
             val date = today()
             val eOne = DMLTestsData.E.ONE
             val sTest = "test"
+            val dec = BigDecimal("239.42")
             t.insert {
                 it[n] = 42
                 it[nn] = 42
@@ -507,6 +527,8 @@ class DMLTests : DatabaseTestsBase() {
                 it[en] = eOne
                 it[s] = sTest
                 it[sn] = sTest
+                it[dc] = dec
+                it[dcn] = dec
             }
 
             t.update(t.n.eq(42)) {
@@ -514,10 +536,11 @@ class DMLTests : DatabaseTestsBase() {
                 it[dn] = null
                 it[en] = null
                 it[sn] = null
+                it[dcn] = null
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, null, date, null, eOne, null, sTest, null)
+            t.checkRow(row, 42, null, date, null, eOne, null, sTest, null, dec, null)
         }
     }
 }

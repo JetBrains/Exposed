@@ -3,6 +3,7 @@ package kotlin.sql
 import java.util.ArrayList
 import org.joda.time.DateTime
 import kotlin.sql.Join.JoinPart
+import java.math.BigDecimal
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -121,6 +122,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> {
+        val answer = Column<BigDecimal>(this, name, DecimalColumnType(scale, precision))
+        columns.add(answer)
+        return answer
+    }
+
     fun long(name: String): Column<Long> {
         val answer = Column<Long>(this, name, LongColumnType())
         columns.add(answer)
@@ -181,6 +188,7 @@ open class Table(name: String = ""): ColumnSet() {
                 when (colType) {
                     is EnumerationColumnType<*>,
                     is IntegerColumnType -> ddl.append("INT")
+                    is DecimalColumnType -> ddl.append("DECIMAL(${colType.scale}, ${colType.precision})")
                     is LongColumnType -> ddl.append("BIGINT")
                     is StringColumnType -> {
                         ddl.append("VARCHAR(${colType.length})")
