@@ -330,14 +330,28 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     public fun new(prototype: T = createInstance(-1, null), init: T.() -> Unit) : T {
         prototype.init()
 
-        val row = InsertQuery(table)
+        val insert = InsertQuery(table)
+        val row = ResultRow()
         for ((c, v) in prototype.writeValues) {
-            row.set(c as Column<Any?>, v)
+            insert.set(c as Column<Any?>, v)
+            row.data[c] = insert.values[c]
+        }
+
+        for (c in table.columns) {
+            if (row.data.containsKey(c) || c == table.id) continue
+            if (c.columnType.nullable) {
+                row.data[c] = null
+            }
+            else {
+                throw RuntimeException("Required column ${c.name} is missing from INSERT")
+            }
         }
 
         val session = Session.get()
-        row.execute(session)
-        return wrap(row get table.id, null, session)
+        insert.execute(session)
+
+        row.data[table.id] = insert[table.id]
+        return wrapRow(row, session)
     }
 
     public fun view (op: Op) : View<T>  = View(op, this)

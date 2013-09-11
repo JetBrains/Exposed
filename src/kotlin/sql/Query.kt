@@ -10,11 +10,8 @@ import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
 import org.joda.time.DateTime
 
-public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
-    val data = HashMap<Field<*>, Any?>();
-    {
-        fields.forEachWithIndex { (i, f) -> data[f] = rs.getObject(i + 1) }
-    }
+public class ResultRow() {
+    val data = HashMap<Field<*>, Any?>()
 
     fun <T> get(c: Field<T>) : T {
         val d:Any? = when {
@@ -42,6 +39,14 @@ public class ResultRow(val rs: ResultSet, fields: List<Field<*>>) {
 
     fun<T> hasValue (c: Field<T>) : Boolean {
         return data.containsKey(c);
+    }
+
+    class object {
+        fun create(rs: ResultSet, fields: List<Field<*>>): ResultRow {
+            val answer = ResultRow()
+            fields.forEachWithIndex { (i, f) -> answer.data[f] = rs.getObject(i + 1) }
+            return answer
+        }
     }
 }
 
@@ -116,7 +121,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
-            return ResultRow(rs, set.fields)
+            return ResultRow.create(rs, set.fields)
         }
 
         public override fun hasNext(): Boolean {
