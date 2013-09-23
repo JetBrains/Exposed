@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import kotlin.sql.Join.JoinPart
 import java.math.BigDecimal
 import java.sql.Blob
+import kotlin.dao.IdTable
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -163,11 +164,11 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
-    fun reference(name: String, foreign: PKColumn<Int>): Column<Int> {
-        return integer(name) references foreign
+    fun reference(name: String, foreign: IdTable): Column<Int> {
+        return integer(name) references foreign.id
     }
 
-    fun optReference(name: String, foreign: PKColumn<Int>): Column<Int?> {
+    fun optReference(name: String, foreign: IdTable): Column<Int?> {
         return reference(name, foreign).nullable()
     }
 
