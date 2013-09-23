@@ -1,9 +1,9 @@
 package kotlin.sql
 
-import java.sql.Connection
 import java.sql.Statement
-import java.util.HashMap
 import java.util.LinkedHashMap
+import java.sql.PreparedStatement
+import java.sql.Blob
 
 class InsertQuery(val table: Table) {
     val values = LinkedHashMap<Column<*>, Any?>()
@@ -19,7 +19,8 @@ class InsertQuery(val table: Table) {
         })
     }
 
-    fun get(column: Column<Int>): Int { //TODO: use column!!!
+    fun get(column: Column<Int>): Int {
+        //TODO: use column!!!
         val rs = (statement?:throw RuntimeException("Statement is not executed")).getGeneratedKeys()!!;
         if (rs.next()) {
             return rs.getInt(1)
@@ -36,13 +37,28 @@ class InsertQuery(val table: Table) {
         sql.append(") ")
 
         sql.append("VALUES (")
-        sql.append((values map { it.key.columnType.valueToString(it.value) }). makeString( ", ", "", ""))
+        sql.append((values map { it.key.columnType.valueToString(it.value) }). makeString(", ", "", ""))
 
         sql.append(") ")
         log(sql)
         try {
-        statement = session.connection.createStatement()!!
-        statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS) }
+            if (values.keySet() any { it.columnType is BlobColumnType }) {
+                val autoincs = table.columns.filter { it.columnType is IntegerColumnType && it.columnType.autoinc } map {session.identity(it)}
+                statement = session.connection.prepareStatement(sql.toString(), autoincs.toArray(array("sample")))!!
+                var count = 0
+                for ((key, value) in values) {
+                    count++
+                    if (key.columnType is BlobColumnType) {
+                        (statement as PreparedStatement).setBlob(count, value as Blob)
+                    }
+                }
+                (statement as PreparedStatement).executeUpdate()
+            }
+            else {
+                statement = session.connection.createStatement()!!
+                statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
+            }
+        }
         catch (e: Exception) {
             println("BAD SQL: $sql")
             throw e

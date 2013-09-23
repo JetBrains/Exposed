@@ -3,7 +3,6 @@ package kotlin.sql.tests.h2
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.sql.*
-import java.util.regex.Pattern
 
 public class DDLTests : DatabaseTestsBase() {
     Test fun tableExists01() {
@@ -53,8 +52,8 @@ public class DDLTests : DatabaseTestsBase() {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42).primaryKey()
             val age = integer("age").nullable()
-// not applicable in H2 database
-//            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
+            // not applicable in H2 database
+            //            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
         withTables(TestTable) {
@@ -118,6 +117,30 @@ public class DDLTests : DatabaseTestsBase() {
                 assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
             }
 
+        }
+    }
+
+    Test fun testBlob() {
+        object t: Table("t1") {
+            val id = integer("id").autoIncrement().primaryKey()
+            val b = blob("blob")
+        }
+
+        withTables(t) {
+            with (Session.get()) {
+                val blob = connection.createBlob()!!
+                blob.setBytes(1, "Hello there!".getBytes())
+
+                val id = t.insert {
+                    it[t.b] = blob
+                } get (t.id)
+
+
+                val readOn = t.select(t.id eq id).first()[t.b]
+                val text = readOn.getBinaryStream().reader().readText()
+
+                assertEquals("Hello there!", text)
+            }
         }
     }
 }

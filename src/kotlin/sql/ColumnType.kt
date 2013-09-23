@@ -57,3 +57,9 @@ data class StringColumnType(val length: Int = 0, val collate: String? = null): C
         return sb.toString()
     }
 }
+
+data class BlobColumnType(): ColumnType() {
+    override fun nonNullValueToString(value: Any): String {
+        return "?"
+    }
+}

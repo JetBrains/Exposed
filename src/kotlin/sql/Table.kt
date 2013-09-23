@@ -4,6 +4,7 @@ import java.util.ArrayList
 import org.joda.time.DateTime
 import kotlin.sql.Join.JoinPart
 import java.math.BigDecimal
+import java.sql.Blob
 
 trait FieldSet {
     val fields: List<Field<*>>
@@ -140,6 +141,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun blob(name: String): Column<Blob> {
+        val answer = Column<Blob>(this, name, BlobColumnType())
+        columns.add(answer)
+        return answer
+    }
+
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> {
         val answer = Column<String>(this, name, StringColumnType(length, collate))
         columns.add(answer)
@@ -196,6 +203,7 @@ open class Table(name: String = ""): ColumnSet() {
                             ddl.append(" COLLATE ${colType.collate}")
                     }
                     is DateColumnType -> ddl.append("DATE")
+                    is BlobColumnType -> ddl.append("BLOB")
                     else -> throw IllegalStateException()
                 }
                 ddl.append(" ")
