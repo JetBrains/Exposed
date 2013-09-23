@@ -163,6 +163,14 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
+    fun reference(name: String, foreign: PKColumn<Int>): Column<Int> {
+        return integer(name) references foreign
+    }
+
+    fun optReference(name: String, foreign: PKColumn<Int>): Column<Int?> {
+        return reference(name, foreign).nullable()
+    }
+
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         columnType.nullable = true
         return this as Column<T?>
