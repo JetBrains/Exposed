@@ -137,7 +137,13 @@ open class Table(name: String = ""): ColumnSet() {
     }
 
     fun date(name: String): Column<DateTime> {
-        val answer = Column<DateTime>(this, name, DateColumnType())
+        val answer = Column<DateTime>(this, name, DateColumnType(false))
+        columns.add(answer)
+        return answer
+    }
+
+    fun datetime(name: String): Column<DateTime> {
+        val answer = Column<DateTime>(this, name, DateColumnType(true))
         columns.add(answer)
         return answer
     }
@@ -211,7 +217,7 @@ open class Table(name: String = ""): ColumnSet() {
                         if (colType.collate != null)
                             ddl.append(" COLLATE ${colType.collate}")
                     }
-                    is DateColumnType -> ddl.append("DATE")
+                    is DateColumnType -> if (colType.time) ddl.append("DATETIME") else ddl.append("DATE")
                     is BlobColumnType -> ddl.append("BLOB")
                     else -> throw IllegalStateException()
                 }
