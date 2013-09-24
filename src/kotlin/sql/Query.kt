@@ -44,7 +44,12 @@ public class ResultRow() {
     class object {
         fun create(rs: ResultSet, fields: List<Field<*>>): ResultRow {
             val answer = ResultRow()
-            fields.forEachWithIndex { (i, f) -> answer.data[f] = rs.getObject(i + 1) }
+            fields.forEachWithIndex { (i, f) ->
+                answer.data[f] = when {
+                    f is Column<*> && f.columnType is BlobColumnType -> rs.getBlob(i + 1)
+                    else -> rs.getObject(i + 1)
+                }
+            }
             return answer
         }
     }
