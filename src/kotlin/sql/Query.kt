@@ -34,6 +34,10 @@ public class ResultRow() {
             return DateTime(d.getTime()) as T
         }
 
+        if (d is java.sql.Timestamp) {
+            return DateTime(d.getTime()) as T
+        }
+
         return d as T
     }
 

@@ -32,7 +32,11 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
 data class DateColumnType(val time: Boolean): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
-        return "'${java.sql.Date((value as DateTime).getMillis())}'"
+        if (time) {
+            return "'${java.sql.Timestamp((value as DateTime).getMillis())}'"
+        } else {
+            return "'${java.sql.Date((value as DateTime).getMillis())}'"
+        }
     }
 }
 
