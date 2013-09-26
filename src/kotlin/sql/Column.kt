@@ -16,6 +16,15 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return EqOp(this, LiteralOp(columnType, other))
     }
 
+    fun neq(other: T): Op {
+        if (other == null)
+        {
+            if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
+            return isNull()
+        }
+        return NeqOp(this, LiteralOp(columnType, other))
+    }
+
     fun less(other: Expression): Op {
         return LessOp(this, other)
     }

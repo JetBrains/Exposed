@@ -49,6 +49,9 @@ abstract class ComparisonOp(val expr1: Expression, val expr2: Expression, val op
 class EqOp(expr1: Expression, expr2: Expression): ComparisonOp(expr1, expr2, "=") {
 }
 
+class NeqOp(expr1: Expression, expr2: Expression): ComparisonOp(expr1, expr2, "<>") {
+}
+
 class LessOp(expr1: Expression, expr2: Expression): ComparisonOp(expr1, expr2, "<") {
 }
 
