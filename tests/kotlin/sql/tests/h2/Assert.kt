@@ -24,3 +24,13 @@ fun<T> assertEqualCollections (collection : Iterable<T>, vararg expected : T) {
 fun<T> assertEqualCollections (collection : Iterable<T>, expected : Collection<T>) {
     assertEqualCollectionsImpl(collection.toList(), expected)
 }
+
+fun<T> assertEqualLists (l1: List<T>, l2: List<T>) {
+    assertEquals(l1.size, l2.size, "Count mismatch")
+    for (i in 0..l1.size-1)
+        assertEquals(l1[i], l2[i], "Error at pos $i:")
+}
+
+fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
+    assertEqualLists(l1, expected.toList())
+}
