@@ -45,7 +45,7 @@ class InsertQuery(val table: Table) {
             val blobs = values.keySet() filter {it.columnType is BlobColumnType}
             if (!blobs.isEmpty()) {
                 val autoincs = table.columns.filter { it.columnType is IntegerColumnType && it.columnType.autoinc } map {session.identity(it)}
-                statement = session.connection.prepareStatement(sql.toString(), autoincs.toArray(array("sample")))!!
+                statement = session.connection.prepareStatement(sql.toString(), autoincs.copyToArray())!!
                 var count = 0
                 for (key in blobs) {
                     count++

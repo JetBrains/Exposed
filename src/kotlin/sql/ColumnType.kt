@@ -25,7 +25,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         return when (value) {
             is Int -> "$value"
             is Enum<*> -> "${value.ordinal()}"
-            else -> throw RuntimeException("$value is not valid for enum ${javaClass<T>().getName()}")
+            else -> throw RuntimeException("$value is not valid for enum ${klass.getName()}")
         }
     }
 }
