@@ -147,6 +147,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun bool(name: String): Column<Boolean> {
+        val answer = Column<Boolean>(this, name, BooleanColumnType())
+        columns.add(answer)
+        return answer
+    }
+
     fun datetime(name: String): Column<DateTime> {
         val answer = Column<DateTime>(this, name, DateColumnType(true))
         columns.add(answer)
@@ -224,6 +230,7 @@ open class Table(name: String = ""): ColumnSet() {
                     }
                     is DateColumnType -> if (colType.time) ddl.append("DATETIME") else ddl.append("DATE")
                     is BlobColumnType -> ddl.append("BLOB")
+                    is BooleanColumnType -> ddl.append("BIT")
                     else -> throw IllegalStateException()
                 }
                 ddl.append(" ")

@@ -13,6 +13,7 @@ import org.joda.time.DateTime
 public class ResultRow() {
     val data = HashMap<Field<*>, Any?>()
 
+    [suppress("UNCHECKED_CAST")]
     fun <T> get(c: Field<T>) : T {
         val d:Any? = when {
             data.containsKey(c) -> data[c]
@@ -27,6 +28,9 @@ public class ResultRow() {
             val enumType = (c.columnType as? EnumerationColumnType<*>)?.klass
             if (enumType != null) {
                 return enumType.getEnumConstants()!![d as Int] as T
+            }
+            else if (c.columnType is BooleanColumnType) {
+                return ((d != 0) as T)
             }
         }
 

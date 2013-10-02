@@ -67,3 +67,9 @@ data class BlobColumnType(): ColumnType() {
         return "?"
     }
 }
+
+data class BooleanColumnType() : ColumnType() {
+    override fun nonNullValueToString(value: Any): String {
+        return if (value as Boolean) "1" else "0"
+    }
+}
