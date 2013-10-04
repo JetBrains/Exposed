@@ -20,6 +20,7 @@ abstract class ColumnSet(): FieldSet {
     abstract fun describe(s: Session): String
 
     fun slice(vararg columns: Field<*>): FieldSet = Slice(this, listOf(*columns))
+    fun slice(columns: List<Field<*>>): FieldSet = Slice(this, columns)
 }
 
 class Slice(override val source: ColumnSet, override val fields: List<Field<*>>): FieldSet
