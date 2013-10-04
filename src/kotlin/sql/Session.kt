@@ -36,14 +36,18 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
     }
 
     fun<T> min(column: Column<T>): Min<T> {
-        return Min(column)
+        return Min(column, column.columnType)
     }
 
     fun<T> max(column: Column<T>): Max<T> {
-        return Max(column)
+        return Max(column, column.columnType)
     }
 
-    fun FieldSet.select(where: Op) : Query {
+    fun<T> sum(column: Column<T>): Sum<T> {
+        return Sum(column, column.columnType)
+    }
+
+    fun FieldSet.select(where: Op<Boolean>) : Query {
         return Query(this@Session, this, where)
     }
 
@@ -62,7 +66,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         return answer
     }
 
-    fun <T:Table> T.update(where: Op, body: T.(UpdateQuery)->Unit): UpdateQuery {
+    fun <T:Table> T.update(where: Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {
         val answer = UpdateQuery(this, where)
         body(answer)
         answer.execute(this@Session)

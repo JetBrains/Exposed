@@ -3,7 +3,7 @@ package kotlin.sql
 import java.sql.Connection
 import java.util.LinkedHashMap
 
-class UpdateQuery(val table: Table, val where: Op) {
+class UpdateQuery(val table: Table, val where: Op<Boolean>) {
     val values = LinkedHashMap<Column<*>, Any>()
 
     fun <T> set(column: Column<T>, value: T) {

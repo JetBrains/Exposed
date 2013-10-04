@@ -21,6 +21,7 @@ object DMLTestsData {
     object UserData : Table() {
         val user_id = varchar("user_id", 10) references Users.id
         val comment = varchar("comment", 30)
+        val value = integer("value")
     }
 
     enum class E {
@@ -100,16 +101,19 @@ class DMLTests : DatabaseTestsBase() {
             UserData.insert {
                 it[user_id] = "smth"
                 it[comment] = "Something is here"
+                it[value] = 10
             }
 
             UserData.insert {
                 it[user_id] = "eugene"
                 it[comment] = "Comment for Eugene"
+                it[value] = 20
             }
 
             UserData.insert {
                 it[user_id] = "sergey"
                 it[comment] = "Comment for Sergey"
+                it[value] = 30
             }
             statement (Cities, Users, UserData)
         }
@@ -336,6 +340,40 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(2 as Long, r[0][count(users.id)])
             assertEquals("St. Petersburg", r[1][cities.name])
             assertEquals(1 as Long, r[1][count(users.id)])
+        }
+    }
+
+    Test fun testCalc01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = cities.slice(sum(cities.id)).selectAll().toList()
+            assertEquals(1, r.size)
+            assertEquals(6 as Long, r[0][sum(cities.id)])
+        }
+    }
+
+    Test fun testCalc02() {
+        withCitiesAndUsers { cities, users, userData ->
+            val sum = Sum(cities.id + userData.value, IntegerColumnType())
+            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
+                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+            assertEquals(2, r.size)
+            assertEquals("eugene", r[0][users.id])
+            assertEquals(22 as Long, r[0][sum])
+            assertEquals("sergey", r[1][users.id])
+            assertEquals(32 as Long, r[1][sum])
+        }
+    }
+
+    Test fun testCalc03() {
+        withCitiesAndUsers { cities, users, userData ->
+            val sum = Sum(cities.id*100 + userData.value/10, IntegerColumnType())
+            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
+                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+            assertEquals(2, r.size)
+            assertEquals("eugene", r[0][users.id])
+            assertEquals(202 as Long, r[0][sum])
+            assertEquals("sergey", r[1][users.id])
+            assertEquals(203 as Long, r[1][sum])
         }
     }
 

@@ -74,7 +74,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
 }
 
-class View<Target: Entity> (val op : Op, val factory: EntityClass<Target>) : Iterable<Target> {
+class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : Iterable<Target> {
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
     fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
 }
@@ -296,17 +296,17 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    public fun find(op: Op): Iterable<T> {
+    public fun find(op: Op<Boolean>): Iterable<T> {
         return with (Session.get()) {
             wrapRows(searchQuery(op))
         }
     }
 
-    protected open fun Session.searchQuery(op: Op): Query {
+    protected open fun Session.searchQuery(op: Op<Boolean>): Query {
         return table.select(op)
     }
 
-    public fun count(op: Op? = null): Int {
+    public fun count(op: Op<Boolean>? = null): Int {
         return with (Session.get()) {
             val query = table.slice(count(table.id))
             (if (op == null) query.selectAll() else query.select(op)).first()[
@@ -354,7 +354,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return wrapRow(row, session)
     }
 
-    public fun view (op: Op) : View<T>  = View(op, this)
+    public fun view (op: Op<Boolean>) : View<T>  = View(op, this)
 
     public fun referencedOn(column: Column<Int>): Reference<T> {
         return Reference(column, this)

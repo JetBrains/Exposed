@@ -63,11 +63,11 @@ public class ResultRow() {
     }
 }
 
-open class Query(val session: Session, val set: FieldSet, val where: Op?): Iterable<ResultRow> {
+open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): Iterable<ResultRow> {
     var selectedColumns = HashSet<Column<*>>();
     val groupedByColumns = ArrayList<Column<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
-    var having: Op? = null;
+    var having: Op<Boolean>? = null;
 
     private val statement: String by Delegates.lazy {
         val sql = StringBuilder("SELECT ")
@@ -109,7 +109,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op?): Itera
         return this
     }
 
-    fun having (op: Op) : Query {
+    fun having (op: Op<Boolean>) : Query {
         if (having != null) throw RuntimeException ("HAVING clause is specified twice. Old value = '${having!!.toSQL()}', new value = '${op.toSQL()}'")
         having = op;
         return this;

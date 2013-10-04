@@ -1,25 +1,33 @@
 package kotlin.sql
 
-data class Count(val column: Column<*>): Function<Int>(column) {
+data class Count(val expr: Expression<*>): Function<Int>() {
     override fun toSQL(): String {
-        return "COUNT(${Session.get().fullIdentity(column)})"
+        return "COUNT(${expr.toSQL()})"
     }
 
-    protected override val columnType: ColumnType = IntegerColumnType();
+    override val columnType: ColumnType = IntegerColumnType();
 }
 
-data class Min<T>(val column: Column<T>): Function<T>(column) {
+data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(): String {
-        return "MIN(${Session.get().fullIdentity(column)})"
+        return "MIN(${expr.toSQL()})"
     }
 
-    protected override val columnType: ColumnType = column.columnType
+    override val columnType: ColumnType = _columnType
 }
 
-data class Max<T>(val column: Column<T>): Function<T>(column) {
+data class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(): String {
-        return "MAX(${Session.get().fullIdentity(column)})"
+        return "MAX(${expr.toSQL()})"
     }
 
-    protected override val columnType: ColumnType = column.columnType
+    override val columnType: ColumnType = _columnType
+}
+
+data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+    override fun toSQL(): String {
+        return "SUM(${expr.toSQL()})"
+    }
+
+    override val columnType: ColumnType = _columnType
 }

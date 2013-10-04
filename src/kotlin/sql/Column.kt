@@ -1,13 +1,13 @@
 package kotlin.sql
 
-open class Column<T>(val table: Table, val name: String, val columnType: ColumnType) : Field<T>() {
+open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : Field<T>(), ExpressionWithColumnType<T> {
     var referee: PKColumn<T>? = null
 
-    fun eq(other: Expression): Op {
+    fun eq(other: Expression<T>): Op<Boolean> {
         return EqOp(this, other)
     }
 
-    fun eq(other: T): Op {
+    fun eq(other: T): Op<Boolean> {
         if (other == null)
         {
             if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
@@ -16,7 +16,7 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return EqOp(this, LiteralOp(columnType, other))
     }
 
-    fun neq(other: T): Op {
+    fun neq(other: T): Op<Boolean> {
         if (other == null)
         {
             if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
@@ -25,47 +25,47 @@ open class Column<T>(val table: Table, val name: String, val columnType: ColumnT
         return NeqOp(this, LiteralOp(columnType, other))
     }
 
-    fun less(other: Expression): Op {
+    fun less(other: Expression<T>): Op<Boolean> {
         return LessOp(this, other)
     }
 
-    fun less(other: T): Op {
+    fun less(other: T): Op<Boolean> {
         return LessOp(this, LiteralOp(columnType, other))
     }
 
-    fun lessEq(other: Expression): Op {
+    fun lessEq(other: Expression<T>): Op<Boolean> {
         return LessEqOp(this, other)
     }
 
-    fun lessEq(other: T): Op {
+    fun lessEq(other: T): Op<Boolean> {
         return LessEqOp(this, LiteralOp(columnType, other))
     }
 
-    fun greater(other: Expression): Op {
+    fun greater(other: Expression<T>): Op<Boolean> {
         return GreaterOp(this, other)
     }
 
-    fun greater(other: T): Op {
+    fun greater(other: T): Op<Boolean> {
         return GreaterOp(this, LiteralOp(columnType, other))
     }
 
-    fun greaterEq(other: Expression): Op {
+    fun greaterEq(other: Expression<T>): Op<Boolean> {
         return GreaterEqOp(this, other)
     }
 
-    fun greaterEq(other: T): Op {
+    fun greaterEq(other: T): Op<Boolean> {
         return GreaterEqOp(this, LiteralOp(columnType, other))
     }
 
-    fun like(other: String): Op {
+    fun like(other: String): Op<Boolean> {
         return LikeOp(this, LiteralOp(columnType, other))
     }
 
-    fun isNull(): Op {
+    fun isNull(): Op<Boolean> {
         return IsNullOp(this)
     }
 
-    fun isNotNull(): Op {
+    fun isNotNull(): Op<Boolean> {
         return IsNotNullOp(this)
     }
 
