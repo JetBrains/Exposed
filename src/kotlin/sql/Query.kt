@@ -29,9 +29,6 @@ public class ResultRow() {
             if (enumType != null) {
                 return enumType.getEnumConstants()!![d as Int] as T
             }
-            else if (c.columnType is BooleanColumnType) {
-                return ((d != 0) as T)
-            }
         }
 
         if (d is java.sql.Date) {
