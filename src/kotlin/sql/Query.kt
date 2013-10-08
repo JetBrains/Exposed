@@ -65,6 +65,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     val groupedByColumns = ArrayList<Column<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
     var having: Op<Boolean>? = null;
+    var limit: Int? = null
 
     private val statement: String by Delegates.lazy {
         val sql = StringBuilder("SELECT ")
@@ -92,6 +93,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             if (orderByColumns.size > 0) {
                 append(" ORDER BY ")
                 append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
+            }
+
+            if (limit != null) {
+                append(" LIMIT ")
+                append(limit)
             }
         }
 
@@ -121,6 +127,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         for (pair in columns) {
             orderByColumns.add(pair)
         }
+        return this
+    }
+
+    fun limit(limit: Int): Query {
+        this.limit = limit
         return this
     }
 
