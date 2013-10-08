@@ -6,6 +6,7 @@ private val logger = Logger.getLogger("Exposed")
 
 fun log(stmt: String) {
     logger?.debug(stmt)
+//    System.out.println(stmt)
 }
 
 fun log(stmt: StringBuilder) {
