@@ -43,7 +43,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
 data class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
     val charactersToEscape = hashMapOf(
             '\'' to "\'\'",
-            '\"' to "\"\"",
+//            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
             '\r' to "\\r",
             '\n' to "\\n")
 
