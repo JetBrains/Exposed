@@ -68,6 +68,12 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     var limit: Int? = null
 
     private val statement: String by Delegates.lazy {
+        val sql = toSQL()
+        log(sql)
+        sql
+    }
+
+    fun toSQL() : String {
         val sql = StringBuilder("SELECT ")
 
         with(sql) {
@@ -101,8 +107,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             }
         }
 
-        log(sql)
-        sql.toString()
+        return sql.toString()
     }
 
     fun groupBy(vararg columns: Column<*>): Query {

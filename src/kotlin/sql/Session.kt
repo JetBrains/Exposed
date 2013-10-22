@@ -9,6 +9,7 @@ import java.sql.ResultSet
 import java.util.HashMap
 import java.util.HashSet
 import java.sql.PreparedStatement
+import jet.*
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -47,6 +48,10 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         return Sum(column, column.columnType)
     }
 
+    fun substring(column: Column<String>, start: Int, length: Int): Substring {
+        return Substring(column, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
+    }
+
     fun FieldSet.select(where: Op<Boolean>) : Query {
         return Query(this@Session, this, where)
     }
@@ -64,6 +69,11 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         body(answer)
         answer.execute(this@Session)
         return answer
+    }
+
+    fun <T:Table> T.insert (selectQuery: Query): Unit {
+        val answer = InsertSelectQuery (this, selectQuery)
+        answer.execute(this@Session)
     }
 
     fun <T:Table> T.update(where: Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {

@@ -31,3 +31,11 @@ data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
 
     override val columnType: ColumnType = _columnType
 }
+
+data class Substring(val expr: Expression<String>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
+    override fun toSQL(): String {
+        return "SUBSTRING(${expr.toSQL()}, ${start.toSQL()}, ${length.toSQL()})"
+    }
+
+    override val columnType: ColumnType = StringColumnType()
+}

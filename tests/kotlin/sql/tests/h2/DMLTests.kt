@@ -5,6 +5,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import demo.Cities
 
 object DMLTestsData {
     object Cities : Table() {
@@ -374,6 +375,32 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(202 as Long, r[0][sum])
             assertEquals("sergey", r[1][users.id])
             assertEquals(203 as Long, r[1][sum])
+        }
+    }
+
+    Test fun testSubsting01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val substring = substring(users.name, 0, 2)
+            val r = (users).slice(users.id, substring)
+                    .selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals("Al", r[0][substring])
+            assertEquals("An", r[1][substring])
+            assertEquals("Eu", r[2][substring])
+            assertEquals("Se", r[3][substring])
+            assertEquals("So", r[4][substring])
+        }
+    }
+
+    Test fun testInsertSelect01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val substring = substring(users.name, 0, 2)
+            Cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
+
+            val r = Cities.slice(Cities.name).selectAll().orderBy(Cities.id, false).limit(2).toList()
+            assertEquals(2, r.size)
+            assertEquals("An", r[0][Cities.name])
+            assertEquals("Al", r[1][Cities.name])
         }
     }
 
