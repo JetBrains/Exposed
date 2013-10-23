@@ -52,6 +52,10 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         return Substring(column, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
     }
 
+    fun case(value: Expression<*>? = null) : Case {
+        return Case(value)
+    }
+
     fun FieldSet.select(where: Op<Boolean>) : Query {
         return Query(this@Session, this, where)
     }

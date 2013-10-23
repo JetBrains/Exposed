@@ -28,6 +28,10 @@ class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
     }
 }
 
+fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp<Int> (IntegerColumnType(), value)
+fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp<Long>(LongColumnType(), value)
+fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp<String>(StringColumnType(), value)
+
 abstract class ComparisonOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, val opSign: String): Op<Boolean>() {
     override fun toSQL():String {
         val sb = StringBuilder()

@@ -404,6 +404,18 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    Test fun testSelectCase01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val field = case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))
+            val r = (users).slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
+            assertEquals(2, r.size)
+            assertEquals("11", r[0][field])
+            assertEquals("alex", r[0][users.id])
+            assertEquals("22", r[1][field])
+            assertEquals("andrey", r[1][users.id])
+        }
+    }
+
     private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?, dc: BigDecimal, dcn: BigDecimal?) {
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
