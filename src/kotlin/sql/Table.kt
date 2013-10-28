@@ -186,6 +186,12 @@ open class Table(name: String = ""): ColumnSet() {
         return integer(name) references foreign.id
     }
 
+    fun<T> Table.reference(name: String, pkColumn: PKColumn<T>): Column<T> {
+        val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
+        this.columns.add(column)
+        return column
+    }
+
     fun optReference(name: String, foreign: IdTable): Column<Int?> {
         return reference(name, foreign).nullable()
     }
