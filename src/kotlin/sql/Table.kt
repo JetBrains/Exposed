@@ -166,6 +166,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun text(name: String): Column<String> {
+        val answer = Column<String>(this, name, StringColumnType(0))
+        columns.add(answer)
+        return answer
+    }
+
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> {
         val answer = Column<String>(this, name, StringColumnType(length, collate))
         columns.add(answer)
@@ -231,7 +237,13 @@ open class Table(name: String = ""): ColumnSet() {
                     is DecimalColumnType -> ddl.append("DECIMAL(${colType.scale}, ${colType.precision})")
                     is LongColumnType -> ddl.append("BIGINT")
                     is StringColumnType -> {
-                        ddl.append("VARCHAR(${colType.length})")
+                        if (colType.length in 1..255) {
+                            ddl.append("VARCHAR(${colType.length})")
+                        }
+                        else {
+                            ddl.append("TEXT")
+                        }
+
                         if (colType.collate != null)
                             ddl.append(" COLLATE ${colType.collate}")
                     }
