@@ -167,7 +167,7 @@ open class Table(name: String = ""): ColumnSet() {
     }
 
     fun text(name: String): Column<String> {
-        val answer = Column<String>(this, name, StringColumnType(0))
+        val answer = Column<String>(this, name, StringColumnType(65535))
         columns.add(answer)
         return answer
     }
