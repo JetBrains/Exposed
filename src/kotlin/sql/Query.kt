@@ -39,6 +39,10 @@ public class ResultRow() {
             return DateTime(d.getTime()) as T
         }
 
+        if (d is java.sql.Clob) {
+            return d.getCharacterStream().readText() as T
+        }
+
         return d as T
     }
 
