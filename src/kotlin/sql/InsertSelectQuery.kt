@@ -22,7 +22,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query) {
         val columns = table.columns.filter {
             val columntType = it.columnType as? IntegerColumnType
             columntType == null || !columntType.autoinc
-        }.mapLazy { session.identity(it) }.makeString(", ", "(", ")")
+        }.map { session.identity(it) }.makeString(", ", "(", ")")
         var sql = "INSERT INTO ${session.identity(table)} $columns ${selectQuery.toSQL()}"
         log(sql)
         try {

@@ -64,7 +64,7 @@ public class ResultRow() {
     }
 }
 
-open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): Iterable<ResultRow> {
+open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
     var selectedColumns = HashSet<Column<*>>();
     val groupedByColumns = ArrayList<Column<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
@@ -77,11 +77,22 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         sql
     }
 
-    fun toSQL() : String {
+    private val countStatement: String by Delegates.lazy {
+        val sql = toSQL(true)
+        log(sql)
+        sql
+    }
+
+    fun toSQL(count: Boolean = false) : String {
         val sql = StringBuilder("SELECT ")
 
         with(sql) {
-            append((set.fields map {it.toSQL()}).makeString(", ", "", ""))
+            if (count) {
+                append("COUNT(*)")
+            }
+            else {
+                append((set.fields map {it.toSQL()}).makeString(", ", "", ""))
+            }
             append(" FROM ")
             append(set.source.describe(session))
 
@@ -90,24 +101,26 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 append(where.toSQL())
             }
 
-            if (groupedByColumns.size > 0) {
-                append(" GROUP BY ")
-                append((groupedByColumns map {session.fullIdentity(it)}).makeString(", ", "", ""))
-            }
+            if (!count) {
+                if (groupedByColumns.size > 0) {
+                    append(" GROUP BY ")
+                    append((groupedByColumns map {session.fullIdentity(it)}).makeString(", ", "", ""))
+                }
 
-            if (having != null) {
-                append(" HAVING ")
-                append(having!!.toSQL())
-            }
+                if (having != null) {
+                    append(" HAVING ")
+                    append(having!!.toSQL())
+                }
 
-            if (orderByColumns.size > 0) {
-                append(" ORDER BY ")
-                append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
-            }
+                if (orderByColumns.size > 0) {
+                    append(" ORDER BY ")
+                    append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
+                }
 
-            if (limit != null) {
-                append(" LIMIT ")
-                append(limit)
+                if (limit != null) {
+                    append(" LIMIT ")
+                    append(limit)
+                }
             }
         }
 
@@ -167,5 +180,15 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         // Execute query itself
         val rs = session.connection.createStatement()?.executeQuery(statement)!!
         return ResultIterator(rs)
+    }
+
+    public override fun count(): Int {
+        // Flush data before executing query or results may be unpredictable
+        EntityCache.getOrCreate(session).flush()
+
+        // Execute query itself
+        val rs = session.connection.createStatement()?.executeQuery(countStatement)!!
+        rs.next()
+        return rs.getInt(1)
     }
 }

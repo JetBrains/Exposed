@@ -49,7 +49,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
         }
     }
 
-    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
+    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
         val query = {factory.find(reference.eq(o.id))}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -65,7 +65,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
         }
     }
 
-    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Source> {
+    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
         val query = {factory.find(reference.eq(o.id))}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -74,14 +74,15 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
 }
 
-class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : Iterable<Target> {
+class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
+    override fun count(): Int = factory.find(op).count()
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
-    fun get(o: Any?, desc: jet.PropertyMetadata): Iterable<Target> = factory.find(op)
+    fun get(o: Any?, desc: jet.PropertyMetadata): SizedIterable<Target> = factory.find(op)
 }
 
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
-    fun get(o: Entity, desc: jet.PropertyMetadata): Iterable<Target> {
+    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
         return with(Session.get()) {
             target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.eq(o.id)))
@@ -202,7 +203,7 @@ open public class Entity(val id: Int) {
 
 class EntityCache {
     val data = HashMap<EntityClass<*>, MutableMap<Int, *>>()
-    val referrers = HashMap<Entity, MutableMap<Column<*>, List<*>>>()
+    val referrers = HashMap<Entity, MutableMap<Column<*>, SizedCollection<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
         val answer = data.getOrPut(f, {
@@ -212,16 +213,16 @@ class EntityCache {
         return answer
     }
 
-    fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()->Iterable<R>): List<R> {
-        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {refs().toList()}) as List<R>
+    fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
+        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {SizedCollection(refs().toList())}) as SizedIterable<R>
     }
 
     fun <T: Entity> find(f: EntityClass<T>, id: Int): T? {
         return getMap(f)[id]
     }
 
-    fun <T: Entity> findAll(f: EntityClass<T>): Iterable<T> {
-        return getMap(f).values()
+    fun <T: Entity> findAll(f: EntityClass<T>): SizedIterable<T> {
+        return SizedCollection(getMap(f).values())
     }
 
     fun <T: Entity> store(f: EntityClass<T>, o: T) {
@@ -258,7 +259,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         val cache = EntityCache.getOrCreate(Session.get())
         if (eagerSelect) {
             if (!cache.data.containsKey(this)) {
-                retrieveAll().count()
+                retrieveAll().reduce { a, b -> a }
             }
         }
 
@@ -269,7 +270,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return warmCache().find(this, id) ?: find(table.id.eq(id)).firstOrNull()
     }
 
-    public fun wrapRows(rows: Iterable<ResultRow>): Iterable<T> {
+    public fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
         val session = Session.get()
         return rows mapLazy {
             wrapRow(it, session)
@@ -282,7 +283,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return entity
     }
 
-    public fun all(): Iterable<T> {
+    public fun all(): SizedIterable<T> {
         if (eagerSelect) {
             return warmCache().findAll(this)
         }
@@ -290,13 +291,13 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return retrieveAll()
     }
 
-    private fun retrieveAll(): Iterable<T> {
+    private fun retrieveAll(): SizedIterable<T> {
         return with(Session.get()) {
             wrapRows(table.selectAll())
         }
     }
 
-    public fun find(op: Op<Boolean>): Iterable<T> {
+    public fun find(op: Op<Boolean>): SizedIterable<T> {
         return with (Session.get()) {
             wrapRows(searchQuery(op))
         }
