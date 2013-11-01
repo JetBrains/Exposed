@@ -94,3 +94,9 @@ class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolea
         return expr1.toSQL() + " or " + expr2.toSQL()
     }
 }
+
+class exists(val query: Query) : Op<Boolean>() {
+    override fun toSQL(): String {
+        return "EXISTS (${query.toSQL()})"
+    }
+}
