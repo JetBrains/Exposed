@@ -344,6 +344,15 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    Test fun testSizedIterable() {
+        withCitiesAndUsers { cities, users, userData ->
+            assertEquals( false, cities.selectAll().empty())
+            assertEquals( true, cities.select(cities.name eq "Qwertt").empty())
+            assertEquals( 0, cities.select(cities.name eq "Qwertt").count())
+            assertEquals( 3, cities.selectAll().count())
+        }
+    }
+
     Test fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select(exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))).toList()

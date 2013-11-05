@@ -76,6 +76,7 @@ open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val 
 
 class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
     override fun count(): Int = factory.find(op).count()
+    override fun empty(): Boolean = factory.find(op).empty()
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
     fun get(o: Any?, desc: jet.PropertyMetadata): SizedIterable<Target> = factory.find(op)
 }

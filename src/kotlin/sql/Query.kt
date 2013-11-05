@@ -191,4 +191,22 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         rs.next()
         return rs.getInt(1)
     }
+
+    public override fun empty(): Boolean {
+        // Flush data before executing query or results may be unpredictable
+        EntityCache.getOrCreate(session).flush()
+
+        val selectOneRowStatement = run {
+            val oldLimit = limit
+            try {
+                limit = 1
+                toSQL(false)
+            } finally {
+                limit = oldLimit
+            }
+        }
+        // Execute query itself
+        val rs = session.connection.createStatement()?.executeQuery(selectOneRowStatement)!!
+        return !rs.next()
+    }
 }
