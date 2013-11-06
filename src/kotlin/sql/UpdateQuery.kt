@@ -28,7 +28,7 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
                     sql.append(", ")
                 }
             }
-            sql.append(" WHERE " + where.toSQL())
+            sql.append(" WHERE " + where.toSQL(QueryBuilder(false)))
             log(sql)
             session.connection.createStatement()!!.executeUpdate(sql.toString())
         }

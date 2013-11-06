@@ -50,7 +50,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
-        val query = {factory.find(reference.eq(o.id))}
+        val query = {factory.find(reference eq intParam(o.id))}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
@@ -66,7 +66,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
-        val query = {factory.find(reference.eq(o.id))}
+        val query = {factory.find(reference eq intParam(o.id))}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
@@ -86,7 +86,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
         return with(Session.get()) {
-            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn.eq(o.id)))
+            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn eq intParam(o.id)))
         }
     }
 }
@@ -101,7 +101,7 @@ open public class Entity(val id: Int) {
         return _readValues ?: run {
             _readValues = with(Session.get()) {
                 val table = factory().table
-                table.select(table.id.eq(id))
+                table.select(table.id eq intParam(id))
             }.first()
             _readValues!!
         }
@@ -173,7 +173,7 @@ open public class Entity(val id: Int) {
     public fun delete(){
         with(Session.get()) {
             val table = factory().table
-            delete(table).where(table.id.eq(id))
+            delete(table).where(table.id eq intParam(id))
         }
     }
 
@@ -181,7 +181,7 @@ open public class Entity(val id: Int) {
         if (!writeValues.isEmpty()) {
             with(Session.get()) {
                 val table = factory().table
-                table.update(table.id.eq(id)) {
+                table.update(table.id eq intParam(id)) {
                     for ((c, v) in writeValues) {
                         it[c as Column<Any?>] = v
                     }
@@ -268,7 +268,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun findById(id: Int): T? {
-        return warmCache().find(this, id) ?: find(table.id.eq(id)).firstOrNull()
+        return warmCache().find(this, id) ?: find(table.id eq intParam(id)).firstOrNull()
     }
 
     public fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {

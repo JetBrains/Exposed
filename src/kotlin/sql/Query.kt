@@ -17,7 +17,7 @@ public class ResultRow() {
     fun <T> get(c: Field<T>) : T {
         val d:Any? = when {
             data.containsKey(c) -> data[c]
-            else -> throw RuntimeException("${c.toSQL()} is not in record set")
+            else -> throw RuntimeException("${c.toSQL(QueryBuilder(false))} is not in record set")
         }
 
         if (d == null) {
@@ -72,18 +72,18 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     var limit: Int? = null
 
     private val statement: String by Delegates.lazy {
-        val sql = toSQL()
+        val sql = toSQL(QueryBuilder(false))
         log(sql)
         sql
     }
 
     private val countStatement: String by Delegates.lazy {
-        val sql = toSQL(true)
+        val sql = toSQL(QueryBuilder(false), true)
         log(sql)
         sql
     }
 
-    fun toSQL(count: Boolean = false) : String {
+    fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {
         val sql = StringBuilder("SELECT ")
 
         with(sql) {
@@ -91,14 +91,14 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 append("COUNT(*)")
             }
             else {
-                append((set.fields map {it.toSQL()}).makeString(", ", "", ""))
+                append((set.fields map {it.toSQL(queryBuilder)}).makeString(", ", "", ""))
             }
             append(" FROM ")
             append(set.source.describe(session))
 
             if (where != null) {
                 append(" WHERE ")
-                append(where.toSQL())
+                append(where.toSQL(queryBuilder))
             }
 
             if (!count) {
@@ -109,7 +109,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (having != null) {
                     append(" HAVING ")
-                    append(having!!.toSQL())
+                    append(having!!.toSQL(queryBuilder))
                 }
 
                 if (orderByColumns.size > 0) {
@@ -135,7 +135,10 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     }
 
     fun having (op: Op<Boolean>) : Query {
-        if (having != null) throw RuntimeException ("HAVING clause is specified twice. Old value = '${having!!.toSQL()}', new value = '${op.toSQL()}'")
+        if (having != null) {
+            val fake = QueryBuilder(false)
+            throw RuntimeException ("HAVING clause is specified twice. Old value = '${having!!.toSQL(fake)}', new value = '${op.toSQL(fake)}'")
+        }
         having = op;
         return this;
     }
@@ -177,8 +180,19 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         // Flush data before executing query or results may be unpredictable
         EntityCache.getOrCreate(session).flush()
 
-        // Execute query itself
-        val rs = session.connection.createStatement()?.executeQuery(statement)!!
+        val builder = QueryBuilder(true )
+        val statement = toSQL(builder)
+        val rs = if (builder.args.isNotEmpty()) {
+            val stmt = session.connection.prepareStatement(statement)!!
+            var index = 1
+            for (arg in builder.args) {
+                stmt.setObject(index++, arg)
+            }
+            stmt.executeQuery()
+        }
+        else {
+            session.connection.createStatement()?.executeQuery(statement)!!
+        }
         return ResultIterator(rs)
     }
 
@@ -200,7 +214,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             val oldLimit = limit
             try {
                 limit = 1
-                toSQL(false)
+                toSQL(QueryBuilder(false), false)
             } finally {
                 limit = oldLimit
             }

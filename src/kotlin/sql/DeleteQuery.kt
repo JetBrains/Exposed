@@ -4,7 +4,7 @@ import java.sql.Connection
 
 class DeleteQuery(val session: Session, val table: Table) {
     fun where(op: Op<Boolean>) {
-        val sql = StringBuilder("DELETE FROM ${session.identity(table)} WHERE ${op.toSQL()}")
+        val sql = StringBuilder("DELETE FROM ${session.identity(table)} WHERE ${op.toSQL(QueryBuilder(false))}")
         log(sql)
         session.connection.createStatement()!!.executeUpdate(sql.toString())
     }

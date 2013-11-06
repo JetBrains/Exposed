@@ -69,7 +69,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         return IsNotNullOp(this)
     }
 
-    override fun toSQL(): String {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
         return Session.get().fullIdentity(this);
     }
 }

@@ -3,40 +3,40 @@ package kotlin.sql
 import java.util.ArrayList
 
 data class Count(val expr: Expression<*>): Function<Int>() {
-    override fun toSQL(): String {
-        return "COUNT(${expr.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "COUNT(${expr.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = IntegerColumnType();
 }
 
 data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
-    override fun toSQL(): String {
-        return "MIN(${expr.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "MIN(${expr.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = _columnType
 }
 
 data class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
-    override fun toSQL(): String {
-        return "MAX(${expr.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "MAX(${expr.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = _columnType
 }
 
 data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
-    override fun toSQL(): String {
-        return "SUM(${expr.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "SUM(${expr.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = _columnType
 }
 
 data class Substring(val expr: Expression<String>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
-    override fun toSQL(): String {
-        return "SUBSTRING(${expr.toSQL()}, ${start.toSQL()}, ${length.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "SUBSTRING(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = StringColumnType()
@@ -62,17 +62,17 @@ class CaseWhen<T> (val value: Expression<*>?) {
 }
 
 class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>) : Field<T>() {
-    override fun toSQL(): String {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
         val sb = StringBuilder()
         sb.append("CASE")
         if (caseWhen.value != null)
-            sb.append( " ${caseWhen.value.toSQL()}")
+            sb.append( " ${caseWhen.value.toSQL(queryBuilder)}")
 
         for (whenPair in caseWhen.cases) {
-            sb.append(" WHEN ${whenPair.first.toSQL()} THEN ${whenPair.second.toSQL()}")
+            sb.append(" WHEN ${whenPair.first.toSQL(queryBuilder)} THEN ${whenPair.second.toSQL(queryBuilder)}")
         }
 
-        sb.append(" ELSE ${elseResult.toSQL()} END")
+        sb.append(" ELSE ${elseResult.toSQL(queryBuilder)} END")
         return sb.toString()
     }
 }

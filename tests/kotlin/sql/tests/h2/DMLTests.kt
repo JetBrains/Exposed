@@ -136,6 +136,13 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    Test fun testPreparedStatement() {
+        withCitiesAndUsers { cities, users, userData ->
+            val name = users.select(users.id eq stringParam("eugene")).first()[users.name]
+            assertEquals("Eugene", name)
+        }
+    }
+
     Test fun testDelete01() {
         withCitiesAndUsers { cities, users, userData ->
             delete(userData).all()

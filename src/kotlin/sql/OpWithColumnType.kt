@@ -33,26 +33,26 @@ fun<T> ExpressionWithColumnType<T>.div(other: T) : ExpressionWithColumnType<T> {
 }
 
 class PlusOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL():String {
-        return expr1.toSQL() + "+" + expr2.toSQL()
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return expr1.toSQL(queryBuilder) + "+" + expr2.toSQL(queryBuilder)
     }
 }
 
 class MinusOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL():String {
-        return expr1.toSQL() + "-" + expr2.toSQL()
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return expr1.toSQL(queryBuilder) + "-" + expr2.toSQL(queryBuilder)
     }
 }
 
 class TimesOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL():String {
-        return "(${expr1.toSQL()}) * (${expr2.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return "(${expr1.toSQL(queryBuilder)}) * (${expr2.toSQL(queryBuilder)})"
     }
 }
 
 class DivideOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL():String {
-        return "(${expr1.toSQL()}) / (${expr2.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
     }
 
     fun toString(): String {

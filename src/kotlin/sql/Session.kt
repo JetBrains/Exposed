@@ -26,7 +26,7 @@ open class UserDataHolder() {
     }
 }
 
-open class Session (val connection: Connection, val driver: Driver): UserDataHolder() {
+open class Session (val connection: Connection, val driver: String): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
@@ -173,13 +173,13 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
     fun foreignKey(reference: Column<*>): String {
         val referee = reference.referee ?: throw RuntimeException("$reference does not reference anything")
 
-        return when (driver.getClass().getName()) {
+        return when (driver) {
             "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
                 "ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})"
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
+            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
         }
     }
 
@@ -187,7 +187,7 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
         if (columns.size == 0) throw RuntimeException("No columns to create index from")
 
         val table = columns[0].table
-        return when (driver.getClass().getName()) {
+        return when (driver) {
             "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
             "org.h2.Driver" -> {
@@ -206,18 +206,18 @@ open class Session (val connection: Connection, val driver: Driver): UserDataHol
                 alter.append(")")
                 alter.toString()
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
+            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
         }
     }
 
     fun autoIncrement(column: Column<*>): String {
-        return when (driver.getClass().getName()) {
+        return when (driver) {
             "com.mysql.jdbc.Driver", /*"oracle.jdbc.driver.OracleDriver",*/
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", /*"org.postgresql.Driver",*/
             "org.h2.Driver" -> {
                 "AUTO_INCREMENT"
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver.getClass().getName())
+            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
         }
     }
 

@@ -1,5 +1,7 @@
 package kotlin.sql
 
+import org.joda.time.DateTime
+
 abstract class Op<T>() : Expression<T> {
     fun and(op: Expression<T>): Op<Boolean> {
         return AndOp(this, op)
@@ -11,40 +13,50 @@ abstract class Op<T>() : Expression<T> {
 }
 
 class IsNullOp(val column: Column<*>): Op<Boolean>() {
-    override fun toSQL():String {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
         return "${Session.get().fullIdentity(column)} IS NULL"
     }
 }
 
 class IsNotNullOp(val column: Column<*>): Op<Boolean>() {
-    override fun toSQL():String {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
         return "${Session.get().fullIdentity(column)} IS NOT NULL"
     }
 }
 
 class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
-    override fun toSQL():String {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
         return columnType.valueToString(value)
     }
 }
+
+class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T> {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return queryBuilder.registerArgument(value, sqlType)
+    }
+}
+
+fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
+fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
+fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 
 fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp<Int> (IntegerColumnType(), value)
 fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp<Long>(LongColumnType(), value)
 fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp<String>(StringColumnType(), value)
 
 abstract class ComparisonOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, val opSign: String): Op<Boolean>() {
-    override fun toSQL():String {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
         val sb = StringBuilder()
         if (expr1 is OrOp<*>) {
-            sb.append("(").append(expr1.toSQL()).append(")")
+            sb.append("(").append(expr1.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr1.toSQL())
+            sb.append(expr1.toSQL(queryBuilder))
         }
         sb.append(" $opSign ")
         if (expr2 is OrOp<*>) {
-            sb.append("(").append(expr2.toSQL()).append(")")
+            sb.append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr2.toSQL())
+            sb.append(expr2.toSQL(queryBuilder))
         }
         return sb.toString()
     }
@@ -72,31 +84,31 @@ class LikeOp<out T>(expr1: Expression<T>, expr2: Expression<T>): ComparisonOp<T>
 }
 
 class AndOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
-    override fun toSQL():String {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
         val sb = StringBuilder()
         if (expr1 is OrOp<*>) {
-            sb.append("(").append(expr1.toSQL()).append(")")
+            sb.append("(").append(expr1.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr1.toSQL())
+            sb.append(expr1.toSQL(queryBuilder))
         }
         sb.append(" and ")
         if (expr2 is OrOp<*>) {
-            sb.append("(").append(expr2.toSQL()).append(")")
+            sb.append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr2.toSQL())
+            sb.append(expr2.toSQL(queryBuilder))
         }
         return sb.toString()
     }
 }
 
 class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
-    override fun toSQL():String {
-        return expr1.toSQL() + " or " + expr2.toSQL()
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return expr1.toSQL(queryBuilder) + " or " + expr2.toSQL(queryBuilder)
     }
 }
 
 class exists(val query: Query) : Op<Boolean>() {
-    override fun toSQL(): String {
-        return "EXISTS (${query.toSQL()})"
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "EXISTS (${query.toSQL(QueryBuilder(false))})"
     }
 }

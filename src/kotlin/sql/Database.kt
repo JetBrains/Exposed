@@ -4,37 +4,34 @@ import java.sql.DriverManager
 import java.sql.Driver
 import java.sql.Connection
 import kotlin.properties.Delegates
+import javax.sql.DataSource
+import com.mchange.v2.c3p0.ComboPooledDataSource
 
-class Database(val url: String, driver: String, var user: String = "", val password: String = "") {
-    val driver: Driver = Class.forName(driver).newInstance() as Driver
-
-    var _connection: Connection? = null
-
-    val connection: Connection get() {
-        return synchronized(this) {
-            if (_connection?.isClosed() ?: false) {
-                _connection = null
-            }
-
-            if (_connection == null) {
-                val c = if (user != "") DriverManager.getConnection(url, user, password) else DriverManager.getConnection(url)
-                c.setAutoCommit(false)
-                _connection = c
-            }
-            _connection!!
+class Database(val url: String, val driver: String, val user: String = "", val password: String = "") {
+    val datasource: ComboPooledDataSource by Delegates.lazy {
+        val cpds = ComboPooledDataSource()
+        cpds.setDriverClass(driver)
+        cpds.setJdbcUrl(url)
+        cpds.setMaxStatements(180)
+        if (user != "") {
+            cpds.setUser(user);
+            cpds.setPassword(password);
         }
+
+        cpds
     }
 
     fun shutDown() {
-        _connection?.close()
+        datasource.close()
     }
 
     fun <T> withSession(statement: Session.() -> T): T {
+        val connection = datasource.getConnection()!!
         val session = Session(connection, driver)
         try {
             Session.threadLocal.set(session)
             val answer = session.statement()
-            connection.commit()
+            connection.close()
             return answer
         }
         finally {

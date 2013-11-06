@@ -23,7 +23,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query) {
             val columntType = it.columnType as? IntegerColumnType
             columntType == null || !columntType.autoinc
         }.map { session.identity(it) }.makeString(", ", "(", ")")
-        var sql = "INSERT INTO ${session.identity(table)} $columns ${selectQuery.toSQL()}"
+        var sql = "INSERT INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
         log(sql)
         try {
             statement = session.connection.createStatement()!!
