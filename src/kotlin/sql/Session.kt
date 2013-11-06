@@ -244,6 +244,13 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
         }
     }
 
+    private val statementsCache = HashMap<String, PreparedStatement>()
+    fun prepareStatement(sql: String): PreparedStatement {
+        return statementsCache.getOrPut(sql) {
+            connection.prepareStatement(sql)!!
+        }
+    }
+
     class object {
         val threadLocal = ThreadLocal<Session>()
 

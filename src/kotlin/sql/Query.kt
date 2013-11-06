@@ -183,7 +183,8 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         val builder = QueryBuilder(true )
         val statement = toSQL(builder)
         val rs = if (builder.args.isNotEmpty()) {
-            val stmt = session.connection.prepareStatement(statement)!!
+            val stmt = session.prepareStatement(statement)
+            stmt.clearParameters()
             var index = 1
             for (arg in builder.args) {
                 stmt.setObject(index++, arg)
