@@ -204,7 +204,7 @@ open public class Entity(val id: Int) {
 
 class EntityCache {
     val data = HashMap<EntityClass<*>, MutableMap<Int, *>>()
-    val referrers = HashMap<Entity, MutableMap<Column<*>, SizedCollection<*>>>()
+    val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
         val answer = data.getOrPut(f, {
@@ -215,7 +215,7 @@ class EntityCache {
     }
 
     fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
-        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {SizedCollection(refs().toList())}) as SizedIterable<R>
+        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
     }
 
     fun <T: Entity> find(f: EntityClass<T>, id: Int): T? {

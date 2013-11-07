@@ -1,5 +1,7 @@
 package kotlin.sql
 
+import kotlin.properties.Delegates
+
 public trait SizedIterable<out T>: Iterable<T> {
     fun count(): Int
     fun empty(): Boolean
@@ -9,6 +11,20 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
     override fun iterator() = delegate.iterator()
     override fun count() = delegate.size()
     override fun empty() = delegate.empty
+}
+
+public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
+    var _wrapper: List<T>? = null
+    val wrapper: List<T> get() {
+        if (_wrapper == null) {
+            _wrapper = delegate.toList()
+        }
+        return _wrapper!!
+    }
+
+    override fun iterator() = wrapper.iterator()
+    override fun count() = _wrapper?.size() ?: delegate.count()
+    override fun empty() = _wrapper?.isEmpty() ?: delegate.empty()
 }
 
 fun<T:Any> Iterable<T>.single() : T {
