@@ -174,6 +174,7 @@ open public class Entity(val id: Int) {
         with(Session.get()) {
             val table = factory().table
             delete(table).where(table.id eq intParam(id))
+            EntityCache.getOrCreate(this).clearReferrersCache()
         }
     }
 
@@ -236,6 +237,10 @@ class EntityCache {
                 (p as Entity).flush()
             }
         }
+    }
+
+    fun clearReferrersCache() {
+        referrers.clear()
     }
 
     class object {
@@ -353,6 +358,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         insert.execute(session)
 
         row.data[table.id] = insert[table.id]
+        EntityCache.getOrCreate(session).clearReferrersCache()
+
         return wrapRow(row, session)
     }
 
