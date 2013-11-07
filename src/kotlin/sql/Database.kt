@@ -13,6 +13,8 @@ class Database(val url: String, val driver: String, val user: String = "", val p
         cpds.setDriverClass(driver)
         cpds.setJdbcUrl(url)
         cpds.setMaxStatements(180)
+        cpds.setMaxIdleTime(200)
+        cpds.setIdleConnectionTestPeriod(300)
         if (user != "") {
             cpds.setUser(user);
             cpds.setPassword(password);
