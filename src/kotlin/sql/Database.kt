@@ -8,7 +8,7 @@ import javax.sql.DataSource
 import com.mchange.v2.c3p0.ComboPooledDataSource
 
 class Database(val url: String, val driver: String, val user: String = "", val password: String = "") {
-    val datasource: ComboPooledDataSource by Delegates.lazy {
+    val datasource: ComboPooledDataSource by Delegates.blockingLazy {
         val cpds = ComboPooledDataSource()
         cpds.setDriverClass(driver)
         cpds.setJdbcUrl(url)
