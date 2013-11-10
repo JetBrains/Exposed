@@ -1,5 +1,6 @@
 package kotlin.sql
 
+
 fun<T> ExpressionWithColumnType<T>.plus(other: Expression<T>) : ExpressionWithColumnType<T> {
     return PlusOp (this, other, columnType)
 }
@@ -56,6 +57,6 @@ class DivideOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, overri
     }
 
     fun toString(): String {
-        throw RuntimeException("!")
+        error("!")
     }
 }

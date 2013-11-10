@@ -14,10 +14,10 @@ class EntityID(val id: Int, val factory: EntityClass<*>) {
 
 private fun <T:Int?>checkReference(reference: Column<T>, factory: EntityClass<*>) {
     val refColumn = reference.referee
-    if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
+    if (refColumn == null) error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factory.table != targetTable) {
-        throw RuntimeException("Column and factory point to different tables")
+        error("Column and factory point to different tables")
     }
 }
 
@@ -42,10 +42,10 @@ class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<Int?>,
 class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
-        if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
+        if (refColumn == null) error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
-            throw RuntimeException("Column and factory point to different tables")
+            error("Column and factory point to different tables")
         }
     }
 
@@ -58,10 +58,10 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
 class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
-        if (refColumn == null) throw RuntimeException("Column $reference is not a reference")
+        if (refColumn == null) error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
-            throw RuntimeException("Column and factory point to different tables")
+            error("Column and factory point to different tables")
         }
     }
 
@@ -84,7 +84,7 @@ class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Targe
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
-        val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: throw RuntimeException("Table does not reference source")
+        val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
         return with(Session.get()) {
             target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn eq intParam(o.id)))
         }
@@ -140,7 +140,7 @@ open public class Entity(val id: Int) {
 
     fun <T> Column<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
         if (id == -1) {
-            throw RuntimeException("Prototypes are write only")
+            error("Prototypes are write only")
         }
         else {
             if (writeValues.containsKey(this)) {
@@ -258,7 +258,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     private val ctor = klass.getConstructors()[0]
 
     public fun get(id: Int): T {
-        return findById(id) ?: throw RuntimeException("Entity not found in database")
+        return findById(id) ?: error("Entity not found in database")
     }
 
     private fun warmCache(): EntityCache {
@@ -350,7 +350,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
                 row.data[c] = null
             }
             else {
-                throw RuntimeException("Required column ${c.name} is missing from INSERT")
+                error("Required column ${c.name} is missing from INSERT")
             }
         }
 

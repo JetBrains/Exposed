@@ -8,7 +8,7 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
 
     fun <T> set(column: Column<T>, value: T) {
         if (values containsKey column) {
-            throw RuntimeException("$column is already initialized")
+            error("$column is already initialized")
         }
         values[column] = value
     }

@@ -11,7 +11,7 @@ class InsertQuery(val table: Table) {
 
     fun <T> set(column: Column<T>, value: T) {
         if (values containsKey column) {
-            throw RuntimeException("$column is already initialized")
+            error("$column is already initialized")
         }
 
         values.put(column, if (value == null) null else {
@@ -21,7 +21,7 @@ class InsertQuery(val table: Table) {
 
     fun get(column: Column<Int>): Int {
         //TODO: use column!!!
-        val rs = (statement?:throw RuntimeException("Statement is not executed")).getGeneratedKeys()!!;
+        val rs = (statement?:error("Statement is not executed")).getGeneratedKeys()!!;
         if (rs.next()) {
             return rs.getInt(1)
         } else {

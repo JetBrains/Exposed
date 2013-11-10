@@ -5,7 +5,7 @@ import org.joda.time.DateTime
 open class ColumnType(var nullable: Boolean = false) {
     public fun valueToString(value: Any?) : String {
         return if (value == null) {
-            if (!nullable) throw RuntimeException("NULL in non-nullable column")
+            if (!nullable) error("NULL in non-nullable column")
             "NULL"
         } else {
             nonNullValueToString (value)
@@ -25,7 +25,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         return when (value) {
             is Int -> "$value"
             is Enum<*> -> "${value.ordinal()}"
-            else -> throw RuntimeException("$value is not valid for enum ${klass.getName()}")
+            else -> error("$value is not valid for enum ${klass.getName()}")
         }
     }
 }

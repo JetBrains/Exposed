@@ -168,7 +168,7 @@ class DMLTests : DatabaseTestsBase() {
                 when (userName) {
                     "Andrey" -> assertEquals("St. Petersburg", cityName)
                     "Sergey" -> assertEquals("Munich", cityName)
-                    else -> throw RuntimeException ("Unexpected user $userName")
+                    else -> error ("Unexpected user $userName")
                 }
             }
         }
@@ -240,7 +240,7 @@ class DMLTests : DatabaseTestsBase() {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
                     "St. Petersburg" -> assertEquals(1, userCount)
-                    else -> throw RuntimeException ("Unknow city $cityName")
+                    else -> error ("Unknow city $cityName")
                 }
             }
         }

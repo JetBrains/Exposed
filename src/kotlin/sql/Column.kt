@@ -1,5 +1,6 @@
 package kotlin.sql
 
+
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : Field<T>(), ExpressionWithColumnType<T> {
     var referee: PKColumn<T>? = null
 
@@ -10,7 +11,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     fun eq(other: T): Op<Boolean> {
         if (other == null)
         {
-            if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
+            if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNull()
         }
         return EqOp(this, LiteralOp(columnType, other))
@@ -19,7 +20,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     fun neq(other: T): Op<Boolean> {
         if (other == null)
         {
-            if (!columnType.nullable) throw RuntimeException("Attempt to compare non-nulable column value with null")
+            if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNull()
         }
         return NeqOp(this, LiteralOp(columnType, other))

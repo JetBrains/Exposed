@@ -2,6 +2,8 @@ package kotlin.sql
 
 import kotlin.properties.Delegates
 
+fun error(message: String): Nothing = throw RuntimeException(message)
+
 public trait SizedIterable<out T>: Iterable<T> {
     fun count(): Int
     fun empty(): Boolean
@@ -31,13 +33,13 @@ fun<T:Any> Iterable<T>.single() : T {
     var answer: T? = null;
     var found: Boolean = false;
     for (t in this) {
-        if (found) throw RuntimeException ("Duplicate items")
+        if (found) error ("Duplicate items")
 
         answer = t;
         found = true;
     }
 
-    if (!found) throw RuntimeException ("No items found")
+    if (!found) error ("No items found")
     return answer!!;
 }
 

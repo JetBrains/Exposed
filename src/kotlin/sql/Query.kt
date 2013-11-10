@@ -17,7 +17,7 @@ public class ResultRow() {
     fun <T> get(c: Field<T>) : T {
         val d:Any? = when {
             data.containsKey(c) -> data[c]
-            else -> throw RuntimeException("${c.toSQL(QueryBuilder(false))} is not in record set")
+            else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
         }
 
         if (d == null) {
@@ -137,7 +137,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     fun having (op: Op<Boolean>) : Query {
         if (having != null) {
             val fake = QueryBuilder(false)
-            throw RuntimeException ("HAVING clause is specified twice. Old value = '${having!!.toSQL(fake)}', new value = '${op.toSQL(fake)}'")
+            error ("HAVING clause is specified twice. Old value = '${having!!.toSQL(fake)}', new value = '${op.toSQL(fake)}'")
         }
         having = op;
         return this;

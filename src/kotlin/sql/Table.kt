@@ -56,7 +56,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
 
     fun join (otherTable: Table, joinType: JoinType = JoinType.INNER) : Join {
         val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
-        if (keysPair == null) throw RuntimeException ("Cannot join with ${otherTable.tableName} as there is no matching primary key/ foreign key pair")
+        if (keysPair == null) error ("Cannot join with ${otherTable.tableName} as there is no matching primary key/ foreign key pair")
 
         return join(otherTable, joinType, keysPair.first, keysPair.second)
     }

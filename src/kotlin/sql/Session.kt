@@ -171,7 +171,7 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
     }
 
     fun foreignKey(reference: Column<*>): String {
-        val referee = reference.referee ?: throw RuntimeException("$reference does not reference anything")
+        val referee = reference.referee ?: error("$reference does not reference anything")
 
         return when (driver) {
             "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
@@ -184,7 +184,7 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
     }
 
     fun index (columns: Array<Column<*>>, isUnique: Boolean): String {
-        if (columns.size == 0) throw RuntimeException("No columns to create index from")
+        if (columns.size == 0) error("No columns to create index from")
 
         val table = columns[0].table
         return when (driver) {
@@ -196,7 +196,7 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
                 alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
                 var isFirst = true
                 for (c in columns) {
-                    if (table != c.table) throw RuntimeException("Columns from different tables cannot make index")
+                    if (table != c.table) error("Columns from different tables cannot make index")
                     if (!isFirst) {
                         alter.append(", ")
                     }
@@ -257,7 +257,7 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
         fun hasSession(): Boolean = threadLocal.get() != null
 
         fun get(): Session {
-            return threadLocal.get() ?: throw RuntimeException("No session in context. Use transaction?")
+            return threadLocal.get() ?: error("No session in context. Use transaction?")
         }
     }
 }
