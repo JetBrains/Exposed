@@ -2,8 +2,6 @@ package kotlin.sql
 
 import kotlin.properties.Delegates
 
-fun error(message: String): Nothing = throw RuntimeException(message)
-
 public trait SizedIterable<out T>: Iterable<T> {
     fun count(): Int
     fun empty(): Boolean
