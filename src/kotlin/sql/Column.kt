@@ -3,6 +3,7 @@ package kotlin.sql
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : Field<T>(), ExpressionWithColumnType<T> {
     var referee: PKColumn<T>? = null
+    var defaultValue: T? = null
 
     fun eq(other: Expression<T>): Op<Boolean> {
         return EqOp(this, other)

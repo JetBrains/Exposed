@@ -207,6 +207,11 @@ open class Table(name: String = ""): ColumnSet() {
         return this as Column<T?>
     }
 
+    fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {
+        this.defaultValue = defaultValue
+        return this
+    }
+
     fun index (isUnique: Boolean = false, vararg columns: Column<*>) {
         indices.add(columns to isUnique)
     }
@@ -252,18 +257,23 @@ open class Table(name: String = ""): ColumnSet() {
                     is BooleanColumnType -> ddl.append("BIT")
                     else -> throw IllegalStateException()
                 }
-                ddl.append(" ")
                 if (column is PKColumn<*>) {
-                    ddl.append("PRIMARY KEY ")
+                    ddl.append(" PRIMARY KEY")
                 }
                 if (colType is IntegerColumnType && colType.autoinc) {
-                    ddl.append(Session.get().autoIncrement(column)).append(" ")
+                    ddl.append(" ").append(Session.get().autoIncrement(column))
                 }
                 if (colType.nullable) {
-                    ddl.append("NULL")
+                    ddl.append(" NULL")
                 } else {
-                    ddl.append("NOT NULL")
+                    ddl.append(" NOT NULL")
                 }
+                (column as? Column<Any>)?.let {
+                    if (it.defaultValue != null) {
+                        ddl.append (" DEFAULT ${colType.valueToString(it.defaultValue!!)}")
+                    }
+                }
+
                 c++
                 if (c < columns.size) {
                     ddl.append(", ")

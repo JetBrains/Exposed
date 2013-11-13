@@ -67,6 +67,17 @@ public class DDLTests : DatabaseTestsBase() {
         }*/
     }
 
+    Test fun testDefaults01() {
+        object TestTable : Table("t") {
+            val s = varchar("s", 100).default("test")
+            val l = long("l").default(42)
+        }
+
+        withTables(TestTable) {
+            assertEquals("CREATE TABLE IF NOT EXISTS t (s VARCHAR(100) NOT NULL DEFAULT 'test', l BIGINT NOT NULL DEFAULT 42)", TestTable.ddl)
+        }
+    }
+
     Test fun testIndices01() {
         object t : Table("t1") {
             val id = integer("id").primaryKey()
