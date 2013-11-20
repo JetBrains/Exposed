@@ -22,7 +22,7 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
             for ((col, value) in values) {
                 sql.append(session.identity(col))
                    .append("=")
-                   .append(col.columnType.valueToString(value))
+                   .append(builder.registerArgument(value, col.columnType))
 
                 c++
                 if (c < values.size()) {
