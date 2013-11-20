@@ -15,6 +15,7 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
 
     fun execute(session: Session) {
         if (!values.isEmpty()) {
+            val builder = QueryBuilder(true)
             var sql = StringBuilder("UPDATE ${session.identity(table)}")
             var c = 0;
             sql.append(" SET ")
@@ -28,9 +29,23 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
                     sql.append(", ")
                 }
             }
-            sql.append(" WHERE " + where.toSQL(QueryBuilder(false)))
+            sql.append(" WHERE " + where.toSQL(builder))
             log(sql)
-            session.connection.createStatement()!!.executeUpdate(sql.toString())
+
+            val statement = sql.toString()
+
+            if (builder.args.isNotEmpty()) {
+                val stmt = session.prepareStatement(statement)
+                stmt.clearParameters()
+                var index = 1
+                for (arg in builder.args) {
+                    stmt.setObject(index++, arg)
+                }
+                stmt.executeUpdate()
+            }
+            else {
+                session.connection.createStatement()?.executeUpdate(statement)!!
+            }
         }
     }
 }
