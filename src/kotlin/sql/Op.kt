@@ -37,6 +37,7 @@ class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T> {
 }
 
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
+fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 
