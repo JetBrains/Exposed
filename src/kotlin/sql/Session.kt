@@ -245,9 +245,14 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
     }
 
     private val statementsCache = HashMap<String, PreparedStatement>()
-    fun prepareStatement(sql: String): PreparedStatement {
+    fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
         return statementsCache.getOrPut(sql) {
-            connection.prepareStatement(sql)!!
+            if (autoincs == null) {
+                connection.prepareStatement(sql)!!
+            }
+            else {
+                connection.prepareStatement(sql, autoincs.copyToArray())!!
+            }
         }
     }
 
