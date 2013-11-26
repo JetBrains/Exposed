@@ -36,6 +36,10 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
         return Count(column)
     }
 
+    fun countDistinct(column: Column<*>): Count {
+        return Count(column, true)
+    }
+
     fun<T> min(column: Column<T>): Min<T> {
         return Min(column, column.columnType)
     }

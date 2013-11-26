@@ -2,9 +2,9 @@ package kotlin.sql
 
 import java.util.ArrayList
 
-data class Count(val expr: Expression<*>): Function<Int>() {
+data class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "COUNT(${expr.toSQL(queryBuilder)})"
+        return "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = IntegerColumnType();
