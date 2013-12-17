@@ -26,7 +26,7 @@ open class UserDataHolder() {
     }
 }
 
-open class Session (val connection: Connection, val driver: String): UserDataHolder() {
+open class Session (val connection: Connection, val vendor: DatabaseVendor): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
@@ -177,13 +177,13 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
     fun foreignKey(reference: Column<*>): String {
         val referee = reference.referee ?: error("$reference does not reference anything")
 
-        return when (driver) {
-            "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
-            "org.h2.Driver" -> {
+        return when (vendor) {
+            DatabaseVendor.MySql, DatabaseVendor.Oracle,
+            DatabaseVendor.SQLServer, DatabaseVendor.PostgreSQL,
+            DatabaseVendor.H2 -> {
                 "ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})"
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
+            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
         }
     }
 
@@ -191,10 +191,10 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
         if (columns.size == 0) error("No columns to create index from")
 
         val table = columns[0].table
-        return when (driver) {
-            "com.mysql.jdbc.Driver", "oracle.jdbc.driver.OracleDriver",
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.postgresql.Driver",
-            "org.h2.Driver" -> {
+        return when (vendor) {
+            DatabaseVendor.MySql, DatabaseVendor.Oracle,
+            DatabaseVendor.SQLServer, DatabaseVendor.PostgreSQL,
+            DatabaseVendor.H2 -> {
                 var alter = StringBuilder()
                 val indexType = if (isUnique) "UNIQUE " else ""
                 alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
@@ -210,18 +210,18 @@ open class Session (val connection: Connection, val driver: String): UserDataHol
                 alter.append(")")
                 alter.toString()
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
+            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
         }
     }
 
     fun autoIncrement(column: Column<*>): String {
-        return when (driver) {
-            "com.mysql.jdbc.Driver", /*"oracle.jdbc.driver.OracleDriver",*/
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", /*"org.postgresql.Driver",*/
-            "org.h2.Driver" -> {
+        return when (vendor) {
+            DatabaseVendor.MySql,
+            DatabaseVendor.SQLServer,
+            DatabaseVendor.H2 -> {
                 "AUTO_INCREMENT"
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + driver)
+            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
         }
     }
 

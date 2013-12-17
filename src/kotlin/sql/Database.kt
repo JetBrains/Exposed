@@ -27,17 +27,38 @@ class Database(val url: String, val driver: String, val user: String = "", val p
         datasource.close()
     }
 
-    fun <T> withSession(statement: Session.() -> T): T {
-        val connection = datasource.getConnection()!!
-        val session = Session(connection, driver)
-        try {
-            Session.threadLocal.set(session)
-            val answer = session.statement()
-            connection.close()
-            return answer
-        }
-        finally {
-            Session.threadLocal.set(null)
+    val vendor: DatabaseVendor by Delegates.lazy {
+        when(driver) {
+            "com.mysql.jdbc.Driver" -> DatabaseVendor.MySql
+            "oracle.jdbc.driver.OracleDriver" -> DatabaseVendor.Oracle
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver" -> DatabaseVendor.SQLServer
+            "org.postgresql.Driver" -> DatabaseVendor.PostgreSQL
+            "org.h2.Driver" -> DatabaseVendor.H2
+            else -> error("Unknown DB driver $driver")
         }
     }
+
+    fun <T> withSession(statement: Session.() -> T): T {
+        return withSession(datasource, vendor, statement)
+    }
+
+    class object {
+        public fun <T> withSession(datasource: DataSource, vendor: DatabaseVendor, statement: Session.() -> T): T {
+            val connection = datasource.getConnection()!!
+            val session = Session(connection, vendor)
+            try {
+                Session.threadLocal.set(session)
+                val answer = session.statement()
+                connection.close()
+                return answer
+            }
+            finally {
+                Session.threadLocal.set(null)
+            }
+        }
+    }
+}
+
+enum class DatabaseVendor {
+        MySql Oracle SQLServer PostgreSQL H2
 }
