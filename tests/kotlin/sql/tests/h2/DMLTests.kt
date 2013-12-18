@@ -345,9 +345,9 @@ class DMLTests : DatabaseTestsBase() {
             val r = (cities innerJoin users).slice(cities.name, count(users.id)).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
-            assertEquals(2 as Long, r[0][count(users.id)])
+            assertEquals(2L, r[0][count(users.id)])
             assertEquals("St. Petersburg", r[1][cities.name])
-            assertEquals(1 as Long, r[1][count(users.id)])
+            assertEquals(1L, r[1][count(users.id)])
         }
     }
 
@@ -394,7 +394,7 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = cities.slice(sum(cities.id)).selectAll().toList()
             assertEquals(1, r.size)
-            assertEquals(6 as Long, r[0][sum(cities.id)])
+            assertEquals(6L, r[0][sum(cities.id)])
         }
     }
 
@@ -405,9 +405,9 @@ class DMLTests : DatabaseTestsBase() {
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
-            assertEquals(22 as Long, r[0][sum])
+            assertEquals(22L, r[0][sum])
             assertEquals("sergey", r[1][users.id])
-            assertEquals(32 as Long, r[1][sum])
+            assertEquals(32L, r[1][sum])
         }
     }
 
@@ -418,9 +418,9 @@ class DMLTests : DatabaseTestsBase() {
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
-            assertEquals(202 as Long, r[0][sum])
+            assertEquals(202L, r[0][sum])
             assertEquals("sergey", r[1][users.id])
-            assertEquals(203 as Long, r[1][sum])
+            assertEquals(203L, r[1][sum])
         }
     }
 
