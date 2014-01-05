@@ -138,7 +138,7 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testPreparedStatement() {
         withCitiesAndUsers { cities, users, userData ->
-            val name = users.select(users.id eq stringParam("eugene")).first()[users.name]
+            val name = users.select(users.id eq "eugene").first()[users.name]
             assertEquals("Eugene", name)
         }
     }

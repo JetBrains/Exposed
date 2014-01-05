@@ -9,22 +9,30 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         return EqOp(this, other)
     }
 
+    private fun wrap(value: T): Expression<T> {
+        if (QueryBuilder.isSupported(columnType)) {
+            return QueryParameter(value, columnType)
+        }
+
+        return LiteralOp(columnType, value)
+    }
+
     fun eq(other: T): Op<Boolean> {
-        if (other == null)
-        {
+        if (other == null) {
             if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNull()
         }
-        return EqOp(this, LiteralOp(columnType, other))
+
+        return EqOp(this, wrap(other))
     }
 
     fun neq(other: T): Op<Boolean> {
-        if (other == null)
-        {
+        if (other == null) {
             if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNull()
         }
-        return NeqOp(this, LiteralOp(columnType, other))
+
+        return NeqOp(this, wrap(other))
     }
 
     fun less(other: Expression<T>): Op<Boolean> {
@@ -32,7 +40,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     fun less(other: T): Op<Boolean> {
-        return LessOp(this, LiteralOp(columnType, other))
+        return LessOp(this, wrap(other))
     }
 
     fun lessEq(other: Expression<T>): Op<Boolean> {
@@ -40,7 +48,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     fun lessEq(other: T): Op<Boolean> {
-        return LessEqOp(this, LiteralOp(columnType, other))
+        return LessEqOp(this, wrap(other))
     }
 
     fun greater(other: Expression<T>): Op<Boolean> {
@@ -48,7 +56,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     fun greater(other: T): Op<Boolean> {
-        return GreaterOp(this, LiteralOp(columnType, other))
+        return GreaterOp(this, wrap(other))
     }
 
     fun greaterEq(other: Expression<T>): Op<Boolean> {
@@ -56,11 +64,12 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     fun greaterEq(other: T): Op<Boolean> {
-        return GreaterEqOp(this, LiteralOp(columnType, other))
+        return GreaterEqOp(this, wrap(other))
     }
 
     fun like(other: String): Op<Boolean> {
-        return LikeOp(this, LiteralOp(columnType, other))
+        if (columnType !is StringColumnType) error("Like is only for strings")
+        return LikeOp(this, QueryParameter(other, columnType))
     }
 
     fun isNull(): Op<Boolean> {

@@ -18,15 +18,6 @@ class QueryBuilder(val prepared: Boolean) {
         }
     }
 
-    private fun isSupported(sqlType: ColumnType): Boolean {
-        return sqlType is StringColumnType ||
-        sqlType is IntegerColumnType ||
-        sqlType is LongColumnType ||
-        sqlType is BlobColumnType ||
-        sqlType is DateColumnType ||
-        sqlType is DecimalColumnType
-    }
-
     private fun PreparedStatement.fillParameters() {
         clearParameters()
         var index = 1
@@ -74,6 +65,17 @@ class QueryBuilder(val prepared: Boolean) {
         val stmt = session.prepareStatement(sql)
         stmt.fillParameters()
         return stmt.executeQuery()
+    }
+
+    public class object {
+        fun isSupported(sqlType: ColumnType): Boolean {
+            return sqlType is StringColumnType ||
+            sqlType is IntegerColumnType ||
+            sqlType is LongColumnType ||
+            sqlType is BlobColumnType ||
+            sqlType is DateColumnType ||
+            sqlType is DecimalColumnType
+        }
     }
 }
 
