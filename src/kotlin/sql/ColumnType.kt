@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import org.joda.time.DateTime
+import java.sql.PreparedStatement
 
 open class ColumnType(var nullable: Boolean = false) {
     public fun valueToString(value: Any?) : String {
@@ -14,6 +15,10 @@ open class ColumnType(var nullable: Boolean = false) {
 
     protected open fun nonNullValueToString(value: Any) : String {
         return "$value"
+    }
+
+    public open fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
+        stmt.setObject(index, value)
     }
 }
 
@@ -36,6 +41,16 @@ data class DateColumnType(val time: Boolean): ColumnType() {
             return "'${java.sql.Timestamp((value as DateTime).getMillis())}'"
         } else {
             return "'${java.sql.Date((value as DateTime).getMillis())}'"
+        }
+    }
+
+    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
+        val millis = (value as DateTime).getMillis()
+        if (time) {
+            stmt.setTimestamp(index, java.sql.Timestamp(millis))
+        }
+        else {
+            stmt.setDate(index, java.sql.Date(millis))
         }
     }
 }

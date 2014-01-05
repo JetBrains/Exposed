@@ -22,25 +22,11 @@ class QueryBuilder(val prepared: Boolean) {
         clearParameters()
         var index = 1
         for ((sqlType, value) in args) {
-            when (sqlType) {
-                is DateColumnType -> {
-                    if (value == null) {
-                        setObject(index, null)
-                    }
-                    else {
-                        val millis = (value as DateTime).getMillis()
-                        if (sqlType.time) {
-                            setTimestamp(index, java.sql.Timestamp(millis))
-                        }
-                        else {
-                            setDate(index, java.sql.Date(millis))
-                        }
-                    }
-                }
-                else -> {
-                    setObject(index, value)
-
-                }
+            if (value == null) {
+                setObject(index, null)
+            }
+            else {
+                sqlType.setParameter(this, index, value)
             }
             index++
         }
