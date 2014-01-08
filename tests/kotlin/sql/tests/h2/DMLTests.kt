@@ -441,12 +441,21 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testInsertSelect01() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = substring(users.name, 0, 2)
-            Cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
+            cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
 
-            val r = Cities.slice(Cities.name).selectAll().orderBy(Cities.id, false).limit(2).toList()
+            val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
             assertEquals(2, r.size)
-            assertEquals("An", r[0][Cities.name])
-            assertEquals("Al", r[1][Cities.name])
+            assertEquals("An", r[0][cities.name])
+            assertEquals("Al", r[1][cities.name])
+        }
+    }
+
+    Test fun testInsertSelect02() {
+        withCitiesAndUsers { cities, users, userData ->
+            userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
+
+            val r = userData.select(userData.value eq 42).orderBy(userData.user_id).toList()
+            assertEquals(3, r.size)
         }
     }
 

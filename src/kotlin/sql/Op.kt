@@ -30,16 +30,16 @@ class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
     }
 }
 
-class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T> {
+class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Field<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return queryBuilder.registerArgument(value, sqlType)
     }
 }
 
-fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
-fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
-fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
-fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
+fun intParam(value: Int): Field<Int> = QueryParameter(value, IntegerColumnType())
+fun longParam(value: Long): Field<Long> = QueryParameter(value, LongColumnType())
+fun stringParam(value: String): Field<String> = QueryParameter(value, StringColumnType())
+fun dateParam(value: DateTime): Field<DateTime> = QueryParameter(value, DateColumnType(false))
 
 fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp<Int> (IntegerColumnType(), value)
 fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp<Long>(LongColumnType(), value)

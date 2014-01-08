@@ -84,6 +84,11 @@ open class Session (val connection: Connection, val vendor: DatabaseVendor): Use
         answer.execute(this@Session)
     }
 
+    fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
+        val answer = InsertSelectQuery (this, selectQuery, true)
+        answer.execute(this@Session)
+    }
+
     fun <T:Table> T.update(where: Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {
         val answer = UpdateQuery(this, where)
         body(answer)

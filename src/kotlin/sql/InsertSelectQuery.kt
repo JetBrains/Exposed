@@ -5,7 +5,7 @@ import java.util.LinkedHashMap
 import java.sql.PreparedStatement
 import java.sql.Blob
 
-class InsertSelectQuery(val table: Table, val selectQuery: Query) {
+class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: Boolean = false) {
     var statement: Statement? = null
 
     fun get(column: Column<Int>): Int {
@@ -23,7 +23,8 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query) {
             val columntType = it.columnType as? IntegerColumnType
             columntType == null || !columntType.autoinc
         }.map { session.identity(it) }.makeString(", ", "(", ")")
-        var sql = "INSERT INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
+        val ignore = if (isIgnore) " IGNORE " else ""
+        var sql = "INSERT ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
         log(sql)
         try {
             statement = session.connection.createStatement()!!
