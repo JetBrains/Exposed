@@ -6,6 +6,7 @@ import java.sql.Connection
 import kotlin.properties.Delegates
 import javax.sql.DataSource
 import com.mchange.v2.c3p0.ComboPooledDataSource
+import org.joda.time.DateTimeZone
 
 class Database(val url: String, val driver: String, val user: String = "", val password: String = "") {
     val datasource: ComboPooledDataSource by Delegates.blockingLazy {
@@ -43,11 +44,18 @@ class Database(val url: String, val driver: String, val user: String = "", val p
     }
 
     class object {
+        public val timeZone: DateTimeZone = DateTimeZone.UTC
         public fun <T> withSession(datasource: DataSource, vendor: DatabaseVendor, statement: Session.() -> T): T {
             val connection = datasource.getConnection()!!
             val session = Session(connection, vendor)
             try {
                 Session.threadLocal.set(session)
+                if (vendor == DatabaseVendor.MySql) {
+                    val stmt = connection.createStatement()!!
+                    val timeZoneString = if (timeZone == DateTimeZone.UTC) "+0:00" else timeZone.toString()
+                    stmt.execute("SET TIME_ZONE = '$timeZoneString'")
+                }
+
                 val answer = session.statement()
                 connection.close()
                 return answer

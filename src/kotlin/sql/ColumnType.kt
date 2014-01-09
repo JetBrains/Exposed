@@ -2,6 +2,7 @@ package kotlin.sql
 
 import org.joda.time.DateTime
 import java.sql.PreparedStatement
+import java.util.Locale
 
 open class ColumnType(var nullable: Boolean = false) {
     public fun valueToString(value: Any?) : String {
@@ -37,11 +38,9 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
 data class DateColumnType(val time: Boolean): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {
-        if (time) {
-            return "'${java.sql.Timestamp((value as DateTime).getMillis())}'"
-        } else {
-            return "'${java.sql.Date((value as DateTime).getMillis())}'"
-        }
+        val zonedTime = (value as DateTime).toDateTime(Database.timeZone)
+        val format = if (time) "YYYY-MM-dd HH:mm:ss.SSS" else "YYYY-MM-dd"
+        return "'${zonedTime.toString(format, Locale.ROOT)}'"
     }
 
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
