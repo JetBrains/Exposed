@@ -50,6 +50,9 @@ class Database(val url: String, val driver: String, val user: String = "", val p
             val session = Session(connection, vendor)
             try {
                 Session.threadLocal.set(session)
+                connection.setAutoCommit(false)
+                connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
+
                 if (vendor == DatabaseVendor.MySql) {
                     val stmt = connection.createStatement()!!
                     val timeZoneString = if (timeZone == DateTimeZone.UTC) "+0:00" else timeZone.toString()
@@ -57,10 +60,15 @@ class Database(val url: String, val driver: String, val user: String = "", val p
                 }
 
                 val answer = session.statement()
-                connection.close()
+                connection.commit()
                 return answer
             }
+            catch (e: Throwable) {
+                connection.rollback()
+                throw e
+            }
             finally {
+                connection.close()
                 Session.threadLocal.set(null)
             }
         }
