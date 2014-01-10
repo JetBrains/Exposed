@@ -1,6 +1,7 @@
 package kotlin.sql.tests.h2
 
 import kotlin.test.assertEquals
+import org.joda.time.DateTime
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size, collection.size(), "Count mismatch")
@@ -33,4 +34,16 @@ fun<T> assertEqualLists (l1: List<T>, l2: List<T>) {
 
 fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
+}
+
+fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
+    if (d1 == null) {
+        if (d2 != null)
+            error("d1 is null while d2 is not")
+        return
+    } else {
+        if (d2 == null)
+            error ("d1 is not null while d2 is null")
+        assertEquals(d1.getMillis(), d2.getMillis())
+    }
 }

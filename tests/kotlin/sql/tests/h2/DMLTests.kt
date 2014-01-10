@@ -474,8 +474,8 @@ class DMLTests : DatabaseTestsBase() {
     private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, s: String, sn: String?, dc: BigDecimal, dcn: BigDecimal?) {
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
-        assertEquals(row[this.d], d)
-        assertEquals(row[this.dn], dn)
+        assertEqualDateTime(row[this.d], d)
+        assertEqualDateTime(row[this.dn], dn)
         assertEquals(row[this.e], e)
         assertEquals(row[this.en], en)
         assertEquals(row[this.s], s)
