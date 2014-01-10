@@ -53,11 +53,13 @@ class Database(val url: String, val driver: String, val user: String = "", val p
                 connection.setAutoCommit(false)
                 connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
 
+/*
                 if (vendor == DatabaseVendor.MySql) {
                     val stmt = connection.createStatement()!!
                     val timeZoneString = if (timeZone == DateTimeZone.UTC) "+0:00" else timeZone.toString()
                     stmt.execute("SET TIME_ZONE = '$timeZoneString'")
                 }
+*/
 
                 val answer = session.statement()
                 connection.commit()
