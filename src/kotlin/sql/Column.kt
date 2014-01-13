@@ -72,6 +72,16 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         return LikeOp(this, QueryParameter(other, columnType))
     }
 
+    fun regexp(other: String): Op<Boolean> {
+        if (columnType !is StringColumnType) error("Regexp is only for strings")
+        return RegexpOp(this, QueryParameter(other, columnType))
+    }
+
+    fun notRegexp(other: String): Op<Boolean> {
+        if (columnType !is StringColumnType) error("Not regexp is only for strings")
+        return NotRegexpOp(this, QueryParameter(other, columnType))
+    }
+
     fun isNull(): Op<Boolean> {
         return IsNullOp(this)
     }

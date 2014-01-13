@@ -84,6 +84,12 @@ class GreaterEqOp<out T>(expr1: Expression<T>, expr2: Expression<T>): Comparison
 class LikeOp<out T>(expr1: Expression<T>, expr2: Expression<T>): ComparisonOp<T>(expr1, expr2, "LIKE") {
 }
 
+class RegexpOp<out T>(expr1: Expression<T>, expr2: Expression<T>): ComparisonOp<T>(expr1, expr2, "REGEXP") {
+}
+
+class NotRegexpOp<out T>(expr1: Expression<T>, expr2: Expression<T>): ComparisonOp<T>(expr1, expr2, "NOT REGEXP") {
+}
+
 class AndOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
         val sb = StringBuilder()

@@ -181,7 +181,9 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         EntityCache.getOrCreate(session).flush()
 
         val builder = QueryBuilder(true )
-        return ResultIterator(builder.executeQuery(session, toSQL(builder)))
+        val sql = toSQL(builder)
+        log (sql)
+        return ResultIterator(builder.executeQuery(session, sql))
     }
 
     public override fun count(): Int {
