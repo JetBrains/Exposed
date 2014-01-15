@@ -102,7 +102,7 @@ open class Session (val connection: Connection, val vendor: DatabaseVendor): Use
         if (resultSet != null) {
             while (resultSet.next()) {
                 val existingTableName = resultSet.getString(1)
-                if (tableName == existingTableName) {
+                if (existingTableName?.equalsIgnoreCase(tableName) ?: false) {
                     return true
                 }
             }
