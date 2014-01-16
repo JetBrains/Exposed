@@ -111,6 +111,24 @@ open class Session (val connection: Connection, val vendor: DatabaseVendor): Use
         return false
     }
 
+    fun Table.matchesDefinition(): Boolean {
+        val rs = connection.createStatement()?.executeQuery("show columns from $tableName")
+        if (rs == null)
+            return false
+
+        var nColumns = columns.size()
+        while (rs.next()) {
+            val fieldName = rs.getString(1)
+            val column = columns.find {it.name == fieldName}
+            if (column == null)
+                return false
+
+            --nColumns
+        }
+
+        return nColumns == 0
+    }
+
     fun create(vararg tables: Table) {
         if (tables.size > 0) {
             val exists = HashMap<Table,Boolean>(tables.size)
