@@ -139,6 +139,10 @@ open public class Entity(val id: Int) {
     }
 
     fun <T> Column<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+        return lookup()
+    }
+
+    fun <T> Column<T>.lookup(): T {
         if (id == -1) {
             error("Prototypes are write only")
         }
