@@ -90,6 +90,10 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         return IsNotNullOp(this)
     }
 
+    fun inList(list: List<T>): Op<Boolean> {
+        return InListOp(this, list)
+    }
+
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return Session.get().fullIdentity(this);
     }

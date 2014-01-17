@@ -30,6 +30,19 @@ class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
     }
 }
 
+class InListOp<T>(val column: Column<T>, val list: List<T>): Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        val sb = StringBuilder()
+
+        sb.append(Session.get().fullIdentity(column))
+        sb.append(" IN (")
+        sb.append(list.map {column.columnType.valueToString(it)}.makeString(", "))
+        sb.append(")")
+
+        return sb.toString()
+    }
+}
+
 class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Field<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return queryBuilder.registerArgument(value, sqlType)
