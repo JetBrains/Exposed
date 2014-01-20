@@ -208,11 +208,11 @@ open public class Entity(val id: Int) {
 }
 
 class EntityCache {
-    val data = HashMap<EntityClass<*>, MutableMap<Int, *>>()
+    val data = HashMap<Table, MutableMap<Int, *>>()
     val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
-        val answer = data.getOrPut(f, {
+        val answer = data.getOrPut(f.table, {
             HashMap()
         }) as MutableMap<Int, T>
 
