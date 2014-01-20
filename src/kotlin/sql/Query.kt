@@ -27,7 +27,7 @@ public class ResultRow() {
         if (c is Column<*>) {
             val enumType = (c.columnType as? EnumerationColumnType<*>)?.klass
             if (enumType != null) {
-                return enumType.getEnumConstants()!![d as Int] as T
+                return (if (d is Int) enumType.getEnumConstants()!![d as Int] else d) as T
             }
         }
 
