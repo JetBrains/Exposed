@@ -34,10 +34,15 @@ class InListOp<T>(val column: Column<T>, val list: List<T>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         val sb = StringBuilder()
 
-        sb.append(Session.get().fullIdentity(column))
-        sb.append(" IN (")
-        sb.append(list.map {column.columnType.valueToString(it)}.makeString(", "))
-        sb.append(")")
+        if (list.isNotEmpty()) {
+            sb.append(Session.get().fullIdentity(column))
+            sb.append(" IN (")
+            sb.append(list.map {column.columnType.valueToString(it)}.makeString(", "))
+            sb.append(")")
+        }
+        else {
+            sb.append(" FALSE")
+        }
 
         return sb.toString()
     }
