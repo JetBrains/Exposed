@@ -67,7 +67,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     }
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): Pair<Column<*>, Column<*>>? {
-        for (a_pk in a.columns.filter { it is PKColumn<*> }) {
+        for (a_pk in a.columns) {
             val b_fk = b.columns.find { it.referee == a_pk }
             if (b_fk != null)
                 return a_pk to b_fk!!
@@ -183,7 +183,7 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
-    fun <T, C:Column<T>> C.references(ref: PKColumn<T>): C {
+    fun <T, C:Column<T>> C.references(ref: Column<T>): C {
         referee = ref
         return this
     }
@@ -192,7 +192,7 @@ open class Table(name: String = ""): ColumnSet() {
         return integer(name) references foreign.id
     }
 
-    fun<T> Table.reference(name: String, pkColumn: PKColumn<T>): Column<T> {
+    fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
         val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
         this.columns.add(column)
         return column
