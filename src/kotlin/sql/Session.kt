@@ -10,6 +10,7 @@ import java.util.HashMap
 import java.util.HashSet
 import java.sql.PreparedStatement
 import jet.*
+import java.util.ArrayList
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -129,41 +130,49 @@ open class Session (val connection: Connection, val vendor: DatabaseVendor): Use
         return nColumns == 0
     }
 
+    fun createStatements (vararg tables: Table) : List<String> {
+        val statements = ArrayList<String>()
+        if (tables.size == 0)
+            return statements
+
+        val exists = HashMap<Table,Boolean>(tables.size)
+        for (table in tables) {
+            exists.put(table, table.exists())
+            if (exists.get(table)!!)
+                continue
+
+            // create table
+            val ddl = table.ddl
+            statements.add(ddl)
+
+            // create indices
+            for (table_index in table.indices) {
+                val alterTable = index(table_index.first, table_index.second)
+                statements.add(alterTable)
+            }
+        }
+
+        for (table in tables) {
+            if (exists.get(table)!!)
+                continue
+
+            // foreign keys
+            for (column in table.columns) {
+                if (column.referee != null) {
+                    val fKDdl = foreignKey(column);
+                    statements.add(fKDdl)
+                }
+            }
+        }
+
+        return statements
+    }
+
     fun create(vararg tables: Table) {
-        if (tables.size > 0) {
-            val exists = HashMap<Table,Boolean>(tables.size)
-
-            for (table in tables) {
-                exists.put(table, table.exists())
-                if (exists.get(table)!!)
-                    continue
-
-                // create table
-                val ddl = table.ddl
-                log(ddl)
-                connection.createStatement()?.executeUpdate(ddl.toString())
-
-                // create indices
-                for (table_index in table.indices) {
-                    val alterTable = index(table_index.first, table_index.second)
-                    log(alterTable)
-                    connection.createStatement()?.executeUpdate(alterTable.toString())
-                }
-            }
-
-            for (table in tables) {
-                if (exists.get(table)!!)
-                    continue
-
-                // foreign keys
-                for (column in table.columns) {
-                    if (column.referee != null) {
-                        val fKDdl = foreignKey(column);
-                        log(fKDdl)
-                        connection.createStatement()?.executeUpdate(fKDdl)
-                    }
-                }
-            }
+        val statements = createStatements(*tables)
+        for (statement in statements) {
+            log (statement)
+            connection.createStatement()?.executeUpdate(statement)
         }
     }
 

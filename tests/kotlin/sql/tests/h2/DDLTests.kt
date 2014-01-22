@@ -61,12 +61,6 @@ public class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    Test fun tablesWithCrossReferencesSQL() {
-        /*db.withSession {
-            assertEquals("CREATE TABLE test_table_with_different_column_types (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(42) NOT NULL, age INT NULL)", TestTable.ddl)
-        }*/
-    }
-
     Test fun testDefaults01() {
         object TestTable : Table("t") {
             val s = varchar("s", 100).default("test")
@@ -154,14 +148,31 @@ public class DDLTests : DatabaseTestsBase() {
             }
         }
     }
+
+    Test fun tablesWithCrossReferencesSQL() {
+        object TestTableWithReference1 : Table("test_table_1") {
+            val id = integer("id").primaryKey()
+            val testTable2Id = integer("id_ref")
+        }
+
+        object TestTableWithReference2 : Table("test_table_2") {
+            val id = integer("id").primaryKey()
+            val testTable1Id = (integer("id_ref") references TestTableWithReference1.id).nullable()
+        }
+
+        with (TestTableWithReference1) {
+            testTable2Id.references( TestTableWithReference2.id)
+        }
+
+        withDb {
+            val statements = createStatements(TestTableWithReference1, TestTableWithReference2)
+            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_1 (id INT PRIMARY KEY NOT NULL, id_ref INT NOT NULL)", statements[0])
+            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_2 (id INT PRIMARY KEY NOT NULL, id_ref INT NULL)", statements[1])
+            assertEquals ("ALTER TABLE test_table_1 ADD FOREIGN KEY (id_ref) REFERENCES test_table_2(id)", statements[2])
+            assertEquals ("ALTER TABLE test_table_2 ADD FOREIGN KEY (id_ref) REFERENCES test_table_1(id)", statements[3])
+
+            create(TestTableWithReference1, TestTableWithReference2)
+        }
+    }
 }
 
-object TestTableWithReference1 : Table("test_table_1") {
-    val id = integer("id").primaryKey()
-    val testTable2Id = integer("id") references TestTableWithReference2.id
-}
-
-object TestTableWithReference2 : Table("test_table_1") {
-    val id = integer("id").primaryKey()
-    val testTable1Id = (integer("id") references TestTableWithReference1.id).nullable()
-}
