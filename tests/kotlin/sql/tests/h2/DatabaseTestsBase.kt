@@ -4,7 +4,7 @@ import kotlin.sql.*
 
 public abstract class DatabaseTestsBase {
     fun withDb( statement: Session.() -> Unit) {
-        var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
+        var db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
         db.withSession {
             statement()

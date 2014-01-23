@@ -1,16 +1,11 @@
 package kotlin.sql
 
 import java.sql.Connection
-import org.h2.engine.Session
-import java.sql.Driver
 import java.util.regex.Pattern
-import java.sql.Statement
-import java.sql.ResultSet
 import java.util.HashMap
-import java.util.HashSet
 import java.sql.PreparedStatement
-import jet.*
 import java.util.ArrayList
+import kotlin.properties.Delegates
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -27,11 +22,23 @@ open class UserDataHolder() {
     }
 }
 
-open class Session (val connection: Connection, val vendor: DatabaseVendor): UserDataHolder() {
+open class Session (val connection: Connection): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
+
+    val vendor: DatabaseVendor by Delegates.blockingLazy {
+        val url = connection.getMetaData()!!.getURL()!!
+        when {
+            url.startsWith("jdbc:mysql") -> DatabaseVendor.MySql
+            url.startsWith("jdbc:oracle") -> DatabaseVendor.Oracle
+            url.startsWith("jdbc:sqlserver") -> DatabaseVendor.SQLServer
+            url.startsWith("jdbc:postgresql") -> DatabaseVendor.PostgreSQL
+            url.startsWith("jdbc:h2") -> DatabaseVendor.H2
+            else -> error("Unknown database type $url")
+        }
+    }
 
     fun count(column: Column<*>): Count {
         return Count(column)
