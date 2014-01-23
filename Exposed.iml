@@ -14,7 +14,6 @@
     <orderEntry type="library" scope="TEST" name="junit" level="project" />
     <orderEntry type="library" exported="" name="joda-time" level="project" />
     <orderEntry type="library" name="Logging" level="project" />
-    <orderEntry type="library" name="c3p0" level="project" />
   </component>
 </module>
 
