@@ -51,18 +51,11 @@ public class Database private(val connector: () -> Connection) {
 
         public fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
             Class.forName(driver).newInstance()
-            val connection = DriverManager.getConnection(url, user, password)
 
             return Database {
-                EternalConnection(connection)
+                DriverManager.getConnection(url, user, password)
             }
         }
-    }
-}
-
-class EternalConnection(val delegate: Connection) : Connection by delegate {
-    override fun close() {
-        // Do nothing
     }
 }
 
