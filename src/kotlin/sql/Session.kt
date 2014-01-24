@@ -28,6 +28,10 @@ open class Session (val connection: Connection): UserDataHolder() {
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
 
+    ;{
+        Session.threadLocal.set(this)
+    }
+
     val vendor: DatabaseVendor by Delegates.blockingLazy {
         val url = connection.getMetaData()!!.getURL()!!
         when {
@@ -297,6 +301,13 @@ open class Session (val connection: Connection): UserDataHolder() {
                 connection.prepareStatement(sql, autoincs.copyToArray())!!
             }
         }
+    }
+
+    fun close() {
+        for (stmt in statementsCache.values()) {
+            stmt.close()
+        }
+        Session.threadLocal.set(null)
     }
 
     class object {

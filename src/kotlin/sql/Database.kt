@@ -22,7 +22,6 @@ public class Database private(val connector: () -> Connection) {
         val connection = connector()
         val session = Session(connection)
         try {
-            Session.threadLocal.set(session)
             connection.setAutoCommit(false)
             connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
 
@@ -35,8 +34,8 @@ public class Database private(val connector: () -> Connection) {
             throw e
         }
         finally {
+            session.close()
             connection.close()
-            Session.threadLocal.set(null)
         }
     }
 
