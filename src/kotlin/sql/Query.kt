@@ -1,11 +1,9 @@
 package kotlin.sql
 
-import java.sql.Connection
 import java.util.HashSet
 import java.util.ArrayList
 import java.util.HashMap
 import java.sql.ResultSet
-import kotlin.properties.Delegates
 import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
 import org.joda.time.DateTime
@@ -71,17 +69,6 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     var having: Op<Boolean>? = null;
     var limit: Int? = null
 
-    private val statement: String by Delegates.lazy {
-        val sql = toSQL(QueryBuilder(false))
-        log(sql)
-        sql
-    }
-
-    private val countStatement: String by Delegates.lazy {
-        val sql = toSQL(QueryBuilder(false), true)
-        log(sql)
-        sql
-    }
 
     fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {
         val sql = StringBuilder("SELECT ")
@@ -180,7 +167,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         // Flush data before executing query or results may be unpredictable
         EntityCache.getOrCreate(session).flush()
 
-        val builder = QueryBuilder(true )
+        val builder = QueryBuilder(true)
         val sql = toSQL(builder)
         log (sql)
         return ResultIterator(builder.executeQuery(session, sql))
@@ -190,8 +177,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         // Flush data before executing query or results may be unpredictable
         EntityCache.getOrCreate(session).flush()
 
-        // Execute query itself
-        val rs = session.connection.createStatement()?.executeQuery(countStatement)!!
+        val builder = QueryBuilder(true)
+        val sql = toSQL(builder, true)
+        log (sql)
+
+        val rs = builder.executeQuery(session, sql)
         rs.next()
         return rs.getInt(1)
     }
