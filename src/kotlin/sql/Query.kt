@@ -7,6 +7,7 @@ import java.sql.ResultSet
 import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
 import org.joda.time.DateTime
+import java.util.LinkedHashSet
 
 public class ResultRow() {
     val data = HashMap<Field<*>, Any?>()
@@ -78,7 +79,17 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 append("COUNT(*)")
             }
             else {
-                append((set.fields map {it.toSQL(queryBuilder)}).makeString(", ", "", ""))
+                val tables = set.source.columns.map { it.table }.toSet()
+                val fields = LinkedHashSet(set.fields)
+                val completeTables = ArrayList<Table>()
+                for (table in tables) {
+                    if (fields.containsAll(table.columns)) {
+                        completeTables.add(table)
+                        fields.removeAll(table.columns)
+                    }
+                }
+
+                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).makeString(", ", "", ""))
             }
             append(" FROM ")
             append(set.source.describe(session))
