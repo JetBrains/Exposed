@@ -45,7 +45,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
             return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
         } else {
             val date = Date (dateTime.getMillis())
-            return date.toString()
+            return "'${date.toString()}'"
         }
     }
 
