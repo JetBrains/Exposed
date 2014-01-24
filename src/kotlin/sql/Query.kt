@@ -32,7 +32,7 @@ public class ResultRow() {
         }
 
         if (d is java.sql.Date) {
-            return DateTime(d.getTime(), Database.timeZone) as T
+            return DateTime(d) as T
         }
 
         if (d is java.sql.Timestamp) {
