@@ -592,19 +592,19 @@ class DMLTests : DatabaseTestsBase() {
 
             t.checkRow(t.select(t.n.eq(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select(t.nn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.nn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.nn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             t.checkRow(t.select(t.d.eq(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select(t.dn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.dn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.dn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             t.checkRow(t.select(t.e.eq(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select(t.en.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.en.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.en.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             t.checkRow(t.select(t.s.eq(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select(t.sn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.sn.eq(null)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select(t.sn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
@@ -630,7 +630,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             t.checkRow(t.select(t.nn.eq(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
-            t.checkRow(t.select(t.nn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select(t.nn neq null: Int?).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
             t.checkRow(t.select(t.dn.eq(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
             t.checkRow(t.select(t.dn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
@@ -676,3 +676,27 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 }
+
+
+trait Foo<T> {}
+
+open class F<out T> : Foo<T> {
+}
+
+
+trait Foo2<out T> : Foo<T> {
+}
+
+fun<T> Foo2<T>.test() : String {
+    return "test"
+}
+
+class FooImpl<T> : F<T>(), Foo2<T> {}
+
+class FooTests {
+    Test fun test01() {
+        var foo = FooImpl<Int>()
+        assertEquals("test", foo.test())
+    }
+}
+

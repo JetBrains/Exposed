@@ -1,62 +1,134 @@
 package kotlin.sql
 
+public fun<T> ExpressionWithColumnType<T>.wrap(value: T): Expression<T> {
+    if (QueryBuilder.isSupported(columnType)) {
+        return QueryParameter(value, columnType)
+    }
 
-fun<T> ExpressionWithColumnType<T>.plus(other: Expression<T>) : ExpressionWithColumnType<T> {
+    return LiteralOp(columnType, value)
+}
+
+public fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
+    if (t == null) {
+        if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
+        return isNull()
+    }
+    return EqOp<T> (this, wrap(t))
+}
+
+
+public fun<T> Expression<T>.eq(other: Expression<T>) : Op<Boolean> {
+    return EqOp<T> (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.eq(other: Expression<T>) : Op<Boolean> {
+    return EqOp<T> (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
+    if (other == null) {
+        if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
+        return isNotNull()
+    }
+
+    return NeqOp(this, wrap(other))
+}
+
+public fun<T> ExpressionWithColumnType<T>.neq(other: Expression<T>) : Op<Boolean> {
+    return NeqOp<T> (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> {
+    return IsNullOp(this)
+}
+
+public fun<T> ExpressionWithColumnType<T>.isNotNull(): Op<Boolean> {
+    return IsNotNullOp(this)
+}
+
+public fun<T> ExpressionWithColumnType<T>.less(t: T) : LessOp<T> {
+    return LessOp<T> (this, wrap(t))
+}
+
+public fun<T> ExpressionWithColumnType<T>.less(other: Expression<T>) : LessOp<T> {
+    return LessOp<T> (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : LessEqOp<T> {
+    return LessEqOp<T> (this, wrap(t))
+}
+
+public fun<T> ExpressionWithColumnType<T>.lessEq(other: Expression<T>) : LessEqOp<T> {
+    return LessEqOp<T> (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.greater(t: T) : GreaterOp<T> {
+    return GreaterOp<T> (this, wrap(t))
+}
+
+public fun<T> ExpressionWithColumnType<T>.greater(other: Expression<T>) : GreaterOp<T> {
+    return GreaterOp (this, other)
+}
+
+public fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : GreaterEqOp<T> {
+    return GreaterEqOp (this, wrap(t))
+}
+
+public fun<T> ExpressionWithColumnType<T>.greaterEq(other: Expression<T>) : GreaterEqOp<T> {
+    return GreaterEqOp (this, other)
+}
+public fun<T> ExpressionWithColumnType<T>.plus(other: Expression<T>) : ExpressionWithColumnType<T> {
     return PlusOp (this, other, columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.plus(other: T) : ExpressionWithColumnType<T> {
-    return PlusOp (this, LiteralOp(columnType, other), columnType)
+public fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> {
+    return PlusOp (this, wrap(t), columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.minus(other: Expression<T>) : ExpressionWithColumnType<T> {
+public fun<T> ExpressionWithColumnType<T>.minus(other: Expression<T>) : ExpressionWithColumnType<T> {
     return MinusOp (this, other, columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.minus(other: T) : ExpressionWithColumnType<T> {
-    return MinusOp (this, LiteralOp(columnType, other), columnType)
+public fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> {
+    return MinusOp (this, wrap(t), columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.times(other: Expression<T>) : ExpressionWithColumnType<T> {
+public fun<T> ExpressionWithColumnType<T>.times(other: Expression<T>) : ExpressionWithColumnType<T> {
     return TimesOp (this, other, columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.times(other: T) : ExpressionWithColumnType<T> {
-    return TimesOp (this, LiteralOp(columnType, other), columnType)
+public fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> {
+    return TimesOp (this, wrap(t), columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.div(other: Expression<T>) : ExpressionWithColumnType<T> {
+public fun<T> ExpressionWithColumnType<T>.div(other: Expression<T>) : ExpressionWithColumnType<T> {
     return DivideOp (this, other, columnType)
 }
 
-fun<T> ExpressionWithColumnType<T>.div(other: T) : ExpressionWithColumnType<T> {
-    return DivideOp (this, LiteralOp(columnType, other), columnType)
+public fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> {
+    return DivideOp (this, wrap(t), columnType)
 }
 
-class PlusOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return expr1.toSQL(queryBuilder) + "+" + expr2.toSQL(queryBuilder)
-    }
+public fun<T> ExpressionWithColumnType<T>.like(other: String): Op<Boolean> {
+    if (columnType !is StringColumnType) error("Like is only for strings")
+    return LikeOp(this, QueryParameter(other, columnType))
 }
 
-class MinusOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return expr1.toSQL(queryBuilder) + "-" + expr2.toSQL(queryBuilder)
-    }
+public fun<T> ExpressionWithColumnType<T>.regexp(other: String): Op<Boolean> {
+    if (columnType !is StringColumnType) error("Regexp is only for strings")
+    return RegexpOp(this, QueryParameter(other, columnType))
 }
 
-class TimesOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "(${expr1.toSQL(queryBuilder)}) * (${expr2.toSQL(queryBuilder)})"
-    }
+public fun<T> ExpressionWithColumnType<T>.notRegexp(other: String): Op<Boolean> {
+    if (columnType !is StringColumnType) error("Not regexp is only for strings")
+    return NotRegexpOp(this, QueryParameter(other, columnType))
 }
 
-class DivideOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
-    }
-
-    fun toString(): String {
-        error("!")
-    }
+public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {
+    return InListOp(this, list.map { wrap(it) })
 }
+
+public fun<T> Expression<T>.inList(list: List<Expression<T>>): Op<Boolean> {
+    return InListOp(this, list)
+}
+

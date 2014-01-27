@@ -8,22 +8,22 @@ import java.sql.Blob
 import kotlin.dao.IdTable
 
 trait FieldSet {
-    val fields: List<Field<*>>
+    val fields: List<Expression<*>>
     val source: ColumnSet
 }
 
 abstract class ColumnSet(): FieldSet {
     abstract val columns: List<Column<*>>
-    override val fields: List<Field<*>> get() = columns
+    override val fields: List<Expression<*>> get() = columns
     override val source = this
 
     abstract fun describe(s: Session): String
 
-    fun slice(vararg columns: Field<*>): FieldSet = Slice(this, listOf(*columns))
-    fun slice(columns: List<Field<*>>): FieldSet = Slice(this, columns)
+    fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, listOf(*columns))
+    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
-class Slice(override val source: ColumnSet, override val fields: List<Field<*>>): FieldSet
+class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
 enum class JoinType {
     INNER
@@ -107,14 +107,18 @@ open class Table(name: String = ""): ColumnSet() {
     val primaryKeys  = ArrayList<Column<*>>()
     val indices = ArrayList<Pair<Array<Column<*>>, Boolean>>()
 
-    override val fields: List<Field<*>>
+    override val fields: List<Expression<*>>
         get() = columns
 
+    private fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
+        columns.remove(oldColumn)
+        columns.add(newColumn)
+        return newColumn
+    }
+
     fun <T> Column<T>.primaryKey(): PKColumn<T> {
-        columns.remove(this)
-        val answer = PKColumn<T>(table, name, columnType)
+        val answer = replaceColumn (this, PKColumn<T>(table, name, columnType))
         primaryKeys.add(answer)
-        columns.add(answer)
         return answer
     }
 
@@ -203,8 +207,11 @@ open class Table(name: String = ""): ColumnSet() {
     }
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
-        columnType.nullable = true
-        return this as Column<T?>
+        val newColumn = Column<T?> (table, name, columnType)
+        newColumn.referee = referee
+        newColumn.defaultValue = defaultValue
+        newColumn.columnType.nullable = true
+        return replaceColumn (this, newColumn)
     }
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {

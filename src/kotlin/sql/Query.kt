@@ -10,10 +10,10 @@ import org.joda.time.DateTime
 import java.util.LinkedHashSet
 
 public class ResultRow() {
-    val data = HashMap<Field<*>, Any?>()
+    val data = HashMap<Expression<*>, Any?>()
 
     [suppress("UNCHECKED_CAST")]
-    fun <T> get(c: Field<T>) : T {
+    fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
             data.containsKey(c) -> data[c]
             else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
@@ -45,12 +45,12 @@ public class ResultRow() {
         return d as T
     }
 
-    fun<T> hasValue (c: Field<T>) : Boolean {
+    fun<T> hasValue (c: Expression<T>) : Boolean {
         return data.containsKey(c);
     }
 
     class object {
-        fun create(rs: ResultSet, fields: List<Field<*>>): ResultRow {
+        fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
             val answer = ResultRow()
             fields.forEachWithIndex { (i, f) ->
                 answer.data[f] = when {

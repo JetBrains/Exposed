@@ -1,43 +1,80 @@
 package kotlin.sql
+import java.util.ArrayList
 
-abstract class Function<T>(): Field<T>(), ExpressionWithColumnType<T> {
-    fun eq(t: T) : EqOp<T> {
-        return EqOp<T> (this, LiteralOp(columnType, t))
+abstract class Function<out T>(): ExpressionWithColumnType<T> {
+}
+
+data class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
     }
 
-    fun eq(otherFunc: Function<T>) : EqOp<T> {
-        return EqOp<T> (this, otherFunc)
+    override val columnType: ColumnType = IntegerColumnType();
+}
+
+data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "MIN(${expr.toSQL(queryBuilder)})"
     }
 
-    fun less(t: T) : LessOp<T> {
-        return LessOp<T> (this, LiteralOp(columnType, t))
+    override val columnType: ColumnType = _columnType
+}
+
+data class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "MAX(${expr.toSQL(queryBuilder)})"
     }
 
-    fun less(otherFunc: Function<T>) : LessOp<T> {
-        return LessOp<T> (this, otherFunc)
+    override val columnType: ColumnType = _columnType
+}
+
+data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "SUM(${expr.toSQL(queryBuilder)})"
     }
 
-    fun lessEq(t: T) : LessEqOp<T> {
-        return LessEqOp<T> (this, LiteralOp(columnType, t))
+    override val columnType: ColumnType = _columnType
+}
+
+data class Substring(val expr: Expression<String>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "SUBSTRING(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
     }
 
-    fun lessEq(otherFunc: Function<T>) : LessEqOp<T> {
-        return LessEqOp<T> (this, otherFunc)
+    override val columnType: ColumnType = StringColumnType()
+}
+
+class Case(val value: Expression<*>? = null) {
+    fun<T> When (cond: Expression<Boolean>, result: Expression<T>) : CaseWhen<T> {
+        return CaseWhen<T>(value).When (cond, result)
+    }
+}
+
+class CaseWhen<T> (val value: Expression<*>?) {
+    val cases: ArrayList<Pair<Expression<Boolean>, Expression<T>>> =  ArrayList()
+
+    fun When (cond: Expression<Boolean>, result: Expression<T>) : CaseWhen<T> {
+        cases.add( cond to result )
+        return this
     }
 
-    fun greater(t: T) : GreaterOp<T> {
-        return GreaterOp<T> (this, LiteralOp(columnType, t))
+    fun Else(e: Expression<T>) : Expression<T> {
+        return CaseWhenElse<T>(this, e)
     }
+}
 
-    fun greater(otherFunc: Function<T>) : GreaterOp<T> {
-        return GreaterOp (this, otherFunc)
-    }
+class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>) : Expression<T> {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        val sb = StringBuilder()
+        sb.append("CASE")
+        if (caseWhen.value != null)
+            sb.append( " ${caseWhen.value.toSQL(queryBuilder)}")
 
-    fun greaterEq(t: T) : GreaterEqOp<T> {
-        return GreaterEqOp (this, LiteralOp(columnType, t))
-    }
+        for (whenPair in caseWhen.cases) {
+            sb.append(" WHEN ${whenPair.first.toSQL(queryBuilder)} THEN ${whenPair.second.toSQL(queryBuilder)}")
+        }
 
-    fun greaterEq(otherFunc: Function<T>) : GreaterEqOp<T> {
-        return GreaterEqOp (this, otherFunc)
+        sb.append(" ELSE ${elseResult.toSQL(queryBuilder)} END")
+        return sb.toString()
     }
 }
