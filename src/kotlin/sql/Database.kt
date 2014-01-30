@@ -58,6 +58,27 @@ public class Database private(val connector: () -> Connection) {
     }
 }
 
+val Database.name : String get() {
+    return url.let { it.substring(it.lastIndexOf("/")+1)}
+}
+
+/*
+fun Database.connectOther (otherName: String): Database {
+    if (otherName == name) return this
+    val otherUrl = url.let { it.substring(0, it.length - name.length) } + otherName
+    val connection = connector()
+    try {
+        val otherDriver = connection.getMetaData()!!.getDriverName()!!
+        val otherUser = connection.getMetaData()!!.getUserName() ?: ""
+        val otherPassword = connection.getClientInfo()!!["password"] as? String ?: ""
+        return Database.connect(otherUrl, otherDriver, otherUser, otherPassword)
+    }
+    finally {
+        connection.close()
+    }
+}
+*/
+
 enum class DatabaseVendor {
         MySql Oracle SQLServer PostgreSQL H2
 }
