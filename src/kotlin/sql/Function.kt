@@ -44,6 +44,12 @@ data class Substring(val expr: Expression<String>, val start: Expression<Int>, v
     override val columnType: ColumnType = StringColumnType()
 }
 
+data class Distinct<T>(val expr: Expression<T>, override val columnType: ColumnType): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "DISTINCT(${expr.toSQL(queryBuilder)})"
+    }
+}
+
 class Case(val value: Expression<*>? = null) {
     fun<T> When (cond: Expression<Boolean>, result: Expression<T>) : CaseWhen<T> {
         return CaseWhen<T>(value).When (cond, result)

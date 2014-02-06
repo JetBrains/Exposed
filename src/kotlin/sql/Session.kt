@@ -68,6 +68,10 @@ open class Session (val connection: Connection): UserDataHolder() {
         return Substring(column, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
     }
 
+    fun <T> distinct(column: Column<T>): Distinct<T> {
+        return Distinct(column, column.columnType)
+    }
+
     fun case(value: Expression<*>? = null) : Case {
         return Case(value)
     }
