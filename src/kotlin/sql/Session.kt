@@ -95,6 +95,13 @@ open class Session (val connection: Connection): UserDataHolder() {
         return answer
     }
 
+    fun <T:Table> T.insertIgnore(body: T.(InsertQuery)->Unit): InsertQuery {
+        val answer = InsertQuery(this, isIgnore = true)
+        body(answer)
+        answer.execute(this@Session)
+        return answer
+    }
+
     fun <T:Table> T.insert (selectQuery: Query): Unit {
         val answer = InsertSelectQuery (this, selectQuery)
         answer.execute(this@Session)

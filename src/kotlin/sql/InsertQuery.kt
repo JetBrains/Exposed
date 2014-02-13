@@ -1,11 +1,11 @@
 package kotlin.sql
 
-import java.sql.Statement
 import java.util.LinkedHashMap
-import java.sql.PreparedStatement
-import java.sql.Blob
 
-class InsertQuery(val table: Table) {
+/**
+ * isIgnore is supported for mysql only
+ */
+class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
     val values = LinkedHashMap<Column<*>, Any?>()
     var generatedKey: Int? = null
 
@@ -25,7 +25,8 @@ class InsertQuery(val table: Table) {
 
     fun execute(session: Session) {
         val builder = QueryBuilder(true)
-        var sql = StringBuilder("INSERT INTO ${session.identity(table)}")
+        val ignore = if (isIgnore) " IGNORE " else ""
+        var sql = StringBuilder("INSERT ${ignore}INTO ${session.identity(table)}")
 
         sql.append(" (")
         sql.append((values map { session.identity(it.key) }).makeString(", ", "", ""))
