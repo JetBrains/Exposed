@@ -59,7 +59,16 @@ public class Database private(val connector: () -> Connection) {
 }
 
 val Database.name : String get() {
-    return url.let { it.substring(it.lastIndexOf("/")+1)}
+    return url.let {
+        val query = it.substring(it.lastIndexOf("/")+1)
+        val params = query.indexOf('?')
+        if (params > 0) {
+            query.substring(0, params)
+        }
+        else {
+            query
+        }
+    }
 }
 
 enum class DatabaseVendor {

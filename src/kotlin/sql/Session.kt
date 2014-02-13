@@ -213,7 +213,11 @@ open class Session (val connection: Connection): UserDataHolder() {
     }
 
     private fun quoteIfNecessary (identity: String) : String {
-        return if (needQuotes(identity)) "$identityQuoteString$identity$identityQuoteString" else identity
+        return (identity.split('.') map {quoteTokenIfNecessary(it)}).makeString(".")
+    }
+
+    private fun quoteTokenIfNecessary(token: String) : String {
+        return if (needQuotes(token)) "$identityQuoteString$token$identityQuoteString" else token
     }
 
     fun identity(table: Table): String {
