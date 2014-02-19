@@ -12,8 +12,6 @@ public open class HistoryEntity (id: Int, table: HistoryTable) : Entity(id) {
     }
 
     public fun close(date: DateTime = DateTime.now()) {
-        with (Session.get()) {
-            end = date
-        }
+        end = date
     }
 }

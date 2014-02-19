@@ -85,9 +85,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
-        return with(Session.get()) {
-            target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})
-        }
+        return target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})
     }
 }
 
@@ -99,10 +97,8 @@ open public class Entity(val id: Int) {
     val readValues: ResultRow
     get() {
         return _readValues ?: run {
-            _readValues = with(Session.get()) {
-                val table = factory().table
-                table.select{table.id eq id}
-            }.first()
+            val table = factory().table
+            _readValues = table.select{table.id eq id}.first()
             _readValues!!
         }
     }
@@ -175,21 +171,17 @@ open public class Entity(val id: Int) {
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
     public fun delete(){
-        with(Session.get()) {
-            val table = factory().table
-            table.deleteWhere{table.id eq id}
-            EntityCache.getOrCreate(this).clearReferrersCache()
-        }
+        val table = factory().table
+        table.deleteWhere{table.id eq id}
+        EntityCache.getOrCreate(Session.get()).clearReferrersCache()
     }
 
     fun flush() {
         if (!writeValues.isEmpty()) {
-            with(Session.get()) {
-                val table = factory().table
-                table.update({table.id eq id}) {
-                    for ((c, v) in writeValues) {
-                        it[c as Column<Any?>] = v
-                    }
+            val table = factory().table
+            table.update({table.id eq id}) {
+                for ((c, v) in writeValues) {
+                    it[c as Column<Any?>] = v
                 }
             }
 
@@ -302,22 +294,18 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     private fun retrieveAll(): SizedIterable<T> {
-        return with(Session.get()) {
-            wrapRows(table.selectAll())
-        }
+        return wrapRows(table.selectAll())
     }
 
     public fun find(op: Op<Boolean>): SizedIterable<T> {
-        return with (Session.get()) {
-            wrapRows(searchQuery(op))
-        }
+        return wrapRows(searchQuery(op))
     }
 
     public fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         return find(SqlExpressionBuilder.op())
     }
 
-    protected open fun Session.searchQuery(op: Op<Boolean>): Query {
+    protected open fun searchQuery(op: Op<Boolean>): Query {
         return table.select{op}
     }
 

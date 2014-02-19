@@ -79,11 +79,8 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            with (Session.get()) {
-                val alter = index(t.indices[0].first, t.indices[0].second)
-                assertEquals("CREATE INDEX t1_name ON t1 (name)", alter)
-            }
-
+            val alter = index(t.indices[0].first, t.indices[0].second)
+            assertEquals("CREATE INDEX t1_name ON t1 (name)", alter)
         }
     }
 
@@ -100,13 +97,11 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            with (Session.get()) {
-                val a1 = index(t.indices[0].first, t.indices[0].second)
-                assertEquals("CREATE INDEX t2_name ON t2 (name)", a1)
+            val a1 = index(t.indices[0].first, t.indices[0].second)
+            assertEquals("CREATE INDEX t2_name ON t2 (name)", a1)
 
-                val a2 = index(t.indices[1].first, t.indices[1].second)
-                assertEquals("CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue)", a2)
-            }
+            val a2 = index(t.indices[1].first, t.indices[1].second)
+            assertEquals("CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue)", a2)
         }
     }
 
@@ -117,10 +112,8 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            with (Session.get()) {
-                val alter = index(t.indices[0].first, t.indices[0].second)
-                assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
-            }
+            val alter = index(t.indices[0].first, t.indices[0].second)
+            assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
 
         }
     }
@@ -132,20 +125,18 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            with (Session.get()) {
-                val blob = connection.createBlob()!!
-                blob.setBytes(1, "Hello there!".getBytes())
+            val blob = connection.createBlob()!!
+            blob.setBytes(1, "Hello there!".getBytes())
 
-                val id = t.insert {
-                    it[t.b] = blob
-                } get (t.id)
+            val id = t.insert {
+                it[t.b] = blob
+            } get (t.id)
 
 
-                val readOn = t.select{t.id eq id}.first()[t.b]
-                val text = readOn.getBinaryStream().reader().readText()
+            val readOn = t.select{t.id eq id}.first()[t.b]
+            val text = readOn.getBinaryStream().reader().readText()
 
-                assertEquals("Hello there!", text)
-            }
+            assertEquals("Hello there!", text)
         }
     }
 
