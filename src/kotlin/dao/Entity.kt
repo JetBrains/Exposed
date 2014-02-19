@@ -50,7 +50,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
-        val query = {factory.find(reference eq o.id)}
+        val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
@@ -66,7 +66,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
     }
 
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
-        val query = {factory.find(reference eq o.id)}
+        val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
 }
@@ -86,7 +86,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
         return with(Session.get()) {
-            target.wrapRows(target.table.innerJoin(table).select(sourceRefColumn eq o.id))
+            target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})
         }
     }
 }
@@ -101,7 +101,7 @@ open public class Entity(val id: Int) {
         return _readValues ?: run {
             _readValues = with(Session.get()) {
                 val table = factory().table
-                table.select(table.id eq id)
+                table.select{table.id eq id}
             }.first()
             _readValues!!
         }
@@ -177,7 +177,7 @@ open public class Entity(val id: Int) {
     public fun delete(){
         with(Session.get()) {
             val table = factory().table
-            table.deleteWhere(table.id eq id)
+            table.deleteWhere{table.id eq id}
             EntityCache.getOrCreate(this).clearReferrersCache()
         }
     }
@@ -186,7 +186,7 @@ open public class Entity(val id: Int) {
         if (!writeValues.isEmpty()) {
             with(Session.get()) {
                 val table = factory().table
-                table.update(table.id eq id) {
+                table.update({table.id eq id}) {
                     for ((c, v) in writeValues) {
                         it[c as Column<Any?>] = v
                     }
@@ -277,7 +277,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun findById(id: Int): T? {
-        return warmCache().find(this, id) ?: find(table.id eq id).firstOrNull()
+        return warmCache().find(this, id) ?: find{table.id eq id}.firstOrNull()
     }
 
     public fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
@@ -313,15 +313,19 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
+    public fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
+        return find(SqlExpressionBuilder.op())
+    }
+
     protected open fun Session.searchQuery(op: Op<Boolean>): Query {
-        return table.select(op)
+        return table.select{op}
     }
 
     public fun count(op: Op<Boolean>? = null): Int {
         return with (Session.get()) {
-            val query = table.slice(count(table.id))
-            (if (op == null) query.selectAll() else query.select(op)).first()[
-                count(table.id)
+            val query = table.slice(table.id.count())
+            (if (op == null) query.selectAll() else query.select{op}).first()[
+                table.id.count()
             ]
         }
     }
@@ -367,7 +371,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return wrapRow(row, session)
     }
 
-    public fun view (op: Op<Boolean>) : View<T>  = View(op, this)
+    public fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
 
     public fun referencedOn(column: Column<Int>): Reference<T> {
         return Reference(column, this)

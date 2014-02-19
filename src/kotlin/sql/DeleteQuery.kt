@@ -10,7 +10,7 @@ object DeleteQuery {
         builder.executeUpdate(session, sql.toString())
     }
 
-    fun all(session: Session, table: Table, ) {
+    fun all(session: Session, table: Table) {
         val sql = StringBuilder("DELETE FROM ${session.identity(table)}")
         log(sql)
         session.connection.createStatement()!!.executeUpdate(sql.toString())

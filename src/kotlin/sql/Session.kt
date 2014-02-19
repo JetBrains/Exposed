@@ -44,36 +44,8 @@ class Session (val connection: Connection): UserDataHolder() {
         }
     }
 
-    fun count(column: Column<*>): Count {
-        return Count(column)
-    }
-
-    fun countDistinct(column: Column<*>): Count {
-        return Count(column, true)
-    }
-
-    fun<T> min(column: Column<T>): Min<T> {
-        return Min(column, column.columnType)
-    }
-
-    fun<T> max(column: Column<T>): Max<T> {
-        return Max(column, column.columnType)
-    }
-
-    fun<T> sum(column: Column<T>): Sum<T> {
-        return Sum(column, column.columnType)
-    }
-
-    fun substring(column: Column<String>, start: Int, length: Int): Substring {
-        return Substring(column, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
-    }
-
-    fun <T> distinct(column: Column<T>): Distinct<T> {
-        return Distinct(column, column.columnType)
-    }
-
-    fun case(value: Expression<*>? = null) : Case {
-        return Case(value)
+    fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
+        return select(SqlExpressionBuilder.where())
     }
 
     fun FieldSet.select(where: Op<Boolean>) : Query {
@@ -84,8 +56,8 @@ class Session (val connection: Connection): UserDataHolder() {
         return Query(this@Session, this, null)
     }
 
-    fun Table.deleteWhere(op: Op<Boolean>) {
-        DeleteQuery.where(this@Session, this@deleteWhere, op)
+    fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
+        DeleteQuery.where(this@Session, this@deleteWhere, SqlExpressionBuilder.op())
     }
 
     fun Table.deleteAll() {
@@ -116,8 +88,8 @@ class Session (val connection: Connection): UserDataHolder() {
         answer.execute(this@Session)
     }
 
-    fun <T:Table> T.update(where: Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {
-        val answer = UpdateQuery(this, where)
+    fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {
+        val answer = UpdateQuery(this, SqlExpressionBuilder.where())
         body(answer)
         answer.execute(this@Session)
         return answer

@@ -10,6 +10,12 @@ abstract class Op<T>() : Expression<T> {
     fun or(op: Expression<T>): Op<Boolean> {
         return OrOp(this, op)
     }
+
+    class object {
+        fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
+            return SqlExpressionBuilder.op()
+        }
+    }
 }
 
 

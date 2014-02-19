@@ -123,22 +123,22 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testUpdate01() {
         withCitiesAndUsers { cities, users, userData ->
             val alexId = "alex"
-            val alexName = users.slice(users.name).select (users.id.eq(alexId)).first()[users.name]
+            val alexName = users.slice(users.name).select {users.id.eq(alexId)}.first()[users.name]
             assertEquals("Alex", alexName);
 
             val newName = "Alexey"
-            users.update(users.id.eq(alexId)) {
+            users.update({users.id.eq(alexId)}) {
                 it[users.name] = newName
             }
 
-            val alexNewName = users.slice(users.name).select (users.id.eq(alexId)).first()[users.name]
+            val alexNewName = users.slice(users.name).select {users.id.eq(alexId)}.first()[users.name]
             assertEquals(newName, alexNewName);
         }
     }
 
     Test fun testPreparedStatement() {
         withCitiesAndUsers { cities, users, userData ->
-            val name = users.select(users.id eq "eugene").first()[users.name]
+            val name = users.select{users.id eq "eugene"}.first()[users.name]
             assertEquals("Eugene", name)
         }
     }
@@ -149,11 +149,11 @@ class DMLTests : DatabaseTestsBase() {
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.slice(users.id).select(users.name.like("%thing")).single()[users.id]
+            val smthId = users.slice(users.id).select{users.name.like("%thing")}.single()[users.id]
             assertEquals ("smth", smthId)
 
-            users.deleteWhere(users.name like  "%thing")
-            val hasSmth = users.slice(users.id).select(users.name.like("%thing")).any()
+            users.deleteWhere {users.name like  "%thing"}
+            val hasSmth = users.slice(users.id).select{users.name.like("%thing")}.any()
             assertEquals(false, hasSmth)
         }
     }
@@ -162,7 +162,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testJoin01() {
         withCitiesAndUsers { cities, users, userData ->
             (users join cities).slice(users.name, cities.name).
-            select((users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)) forEach {
+            select{(users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)} forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
                 when (userName) {
@@ -178,7 +178,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testJoin02() {
         withCitiesAndUsers { cities, users, userData ->
             val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).
-            select(cities.name.eq("St. Petersburg") or users.cityId.isNull()).single()
+            select{cities.name.eq("St. Petersburg") or users.cityId.isNull()}.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
         }
@@ -232,9 +232,9 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            (cities join users).slice(cities.name, count(users.id)).selectAll() groupBy cities.name forEach {
+            (cities join users).slice(cities.name, users.id.count()).selectAll() groupBy cities.name forEach {
                 val cityName = it[cities.name]
-                val userCount = it[count(users.id)]
+                val userCount = it[users.id.count()]
 
                 when (cityName) {
                     "Munich" -> assertEquals(2, userCount)
@@ -248,35 +248,35 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testGroupBy02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, count(users.id)).selectAll().groupBy(cities.name).having(count(users.id) eq 1).toList()
+            val r = (cities join users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having{users.id.count() eq 1}.toList()
             assertEquals(1, r.size())
             assertEquals("St. Petersburg", r[0][cities.name])
-            val count = r[0][count(users.id)]
+            val count = r[0][users.id.count()]
             assertEquals(1, count)
         }
     }
 
     Test fun testGroupBy03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, count(users.id), max(cities.id)).selectAll()
+            val r = (cities join users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                     .groupBy(cities.name)
-                    .having(count(users.id) eq max(cities.id))
+                    .having{users.id.count() eq cities.id.max()}
                     .orderBy(cities.name)
                     .toList()
 
             assertEquals(2, r.size())
             0.let {
                 assertEquals("Munich", r[it][cities.name])
-                val count = r[it][count(users.id)]
+                val count = r[it][users.id.count()]
                 assertEquals(2, count)
-                val max = r[it][max(cities.id)]
+                val max = r[it][cities.id.max()]
                 assertEquals(2, max)
             }
             1.let {
                 assertEquals("St. Petersburg", r[it][cities.name])
-                val count = r[it][count(users.id)]
+                val count = r[it][users.id.count()]
                 assertEquals(1, count)
-                val max = r[it][max(cities.id)]
+                val max = r[it][cities.id.max()]
                 assertEquals(1, max)
             }
         }
@@ -284,21 +284,21 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testGroupBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, count(users.id), max(cities.id)).selectAll()
+            val r = (cities join users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                     .groupBy(cities.name)
-                    .having(count(users.id) lessEq 42)
+                    .having{users.id.count() lessEq 42}
                     .orderBy(cities.name)
                     .toList()
 
             assertEquals(2, r.size())
             0.let {
                 assertEquals("Munich", r[it][cities.name])
-                val count = r[it][count(users.id)]
+                val count = r[it][users.id.count()]
                 assertEquals(2, count)
             }
             1.let {
                 assertEquals("St. Petersburg", r[it][cities.name])
-                val count = r[it][count(users.id)]
+                val count = r[it][users.id.count()]
                 assertEquals(1, count)
             }
         }
@@ -342,27 +342,27 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testOrderBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, count(users.id)).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
-            assertEquals(2L, r[0][count(users.id)])
+            assertEquals(2L, r[0][users.id.count()])
             assertEquals("St. Petersburg", r[1][cities.name])
-            assertEquals(1L, r[1][count(users.id)])
+            assertEquals(1L, r[1][users.id.count()])
         }
     }
 
     Test fun testSizedIterable() {
         withCitiesAndUsers { cities, users, userData ->
             assertEquals( false, cities.selectAll().empty())
-            assertEquals( true, cities.select(cities.name eq "Qwertt").empty())
-            assertEquals( 0, cities.select(cities.name eq "Qwertt").count())
+            assertEquals( true, cities.select{cities.name eq "Qwertt"}.empty())
+            assertEquals( 0, cities.select{cities.name eq "Qwertt"}.count())
             assertEquals( 3, cities.selectAll().count())
         }
     }
 
     Test fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select(exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))).toList()
+            val r = users.select{exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))}.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
         }
@@ -370,7 +370,7 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testExists02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select(exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))))
+            val r = users.select{exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey"))))}
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -380,9 +380,9 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testExists03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select(
-                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
-                        or exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey"))))
+            val r = users.select{
+                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
+                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))}
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -392,15 +392,17 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testCalc01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = cities.slice(sum(cities.id)).selectAll().toList()
+            val r = cities.slice(cities.id.sum()).selectAll().toList()
             assertEquals(1, r.size)
-            assertEquals(6L, r[0][sum(cities.id)])
+            assertEquals(6L, r[0][cities.id.sum()])
         }
     }
 
     Test fun testCalc02() {
         withCitiesAndUsers { cities, users, userData ->
-            val sum = Sum(cities.id + userData.value, IntegerColumnType())
+            val sum = Expression.build {
+                Sum(cities.id + userData.value, IntegerColumnType())
+            }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
@@ -413,7 +415,7 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testCalc03() {
         withCitiesAndUsers { cities, users, userData ->
-            val sum = Sum(cities.id*100 + userData.value/10, IntegerColumnType())
+            val sum = Expression.build {Sum(cities.id*100 + userData.value/10, IntegerColumnType())}
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
@@ -426,7 +428,7 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testSubsting01() {
         withCitiesAndUsers { cities, users, userData ->
-            val substring = substring(users.name, 0, 2)
+            val substring = users.name.substring(0, 2)
             val r = (users).slice(users.id, substring)
                     .selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
@@ -440,7 +442,7 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testInsertSelect01() {
         withCitiesAndUsers { cities, users, userData ->
-            val substring = substring(users.name, 0, 2)
+            val substring = users.name.substring(0, 2)
             cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
 
             val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
@@ -454,14 +456,14 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
-            val r = userData.select(userData.value eq 42).orderBy(userData.user_id).toList()
+            val r = userData.select {userData.value eq 42}.orderBy(userData.user_id).toList()
             assertEquals(3, r.size)
         }
     }
 
     Test fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
-            val field = case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))
+            val field = Expression.build {case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
             val r = (users).slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])
@@ -590,21 +592,21 @@ class DMLTests : DatabaseTestsBase() {
                 it[dc] = dec
             }
 
-            t.checkRow(t.select(t.n.eq(42)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.nn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.nn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.n.eq(42)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.nn.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.nn.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.d.eq(date)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.dn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.dn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.d.eq(date)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.dn.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.dn.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.e.eq(DMLTestsData.E.ONE)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.en.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.en.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.e.eq(DMLTestsData.E.ONE)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.en.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.en.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            t.checkRow(t.select(t.s.eq(sTest)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.sn.isNull()).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select(t.sn.eq(null: Int?)).single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.s.eq(sTest)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.sn.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.sn.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
@@ -629,17 +631,17 @@ class DMLTests : DatabaseTestsBase() {
 
             }
 
-            t.checkRow(t.select(t.nn.eq(42)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
-            t.checkRow(t.select(t.nn neq null: Int?).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.nn.eq(42)}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.nn neq null: Int?}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.dn.eq(date)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
-            t.checkRow(t.select(t.dn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.dn.eq(date)}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.dn.isNotNull()}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.en.eq(eOne)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
-            t.checkRow(t.select(t.en.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.en.eq(eOne)}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.en.isNotNull()}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
 
-            t.checkRow(t.select(t.sn.eq(sTest)).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
-            t.checkRow(t.select(t.sn.isNotNull()).single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.sn.eq(sTest)}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
+            t.checkRow(t.select{t.sn.isNotNull()}.single(), 42, 42, date, date, eOne, eOne, sTest, sTest, dec, dec)
         }
     }
 
@@ -663,7 +665,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[dcn] = dec
             }
 
-            t.update(t.n.eq(42)) {
+            t.update({t.n.eq(42)}) {
                 it[nn] = null
                 it[dn] = null
                 it[en] = null
