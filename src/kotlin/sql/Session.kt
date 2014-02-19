@@ -84,8 +84,12 @@ open class Session (val connection: Connection): UserDataHolder() {
         return Query(this@Session, this, null)
     }
 
-    fun delete(table: Table): DeleteQuery {
-        return DeleteQuery(this, table)
+    fun Table.deleteWhere(op: Op<Boolean>) {
+        DeleteQuery.where(this@Session, this@deleteWhere, op)
+    }
+
+    fun Table.deleteAll() {
+        DeleteQuery.all(this@Session, this@deleteAll)
     }
 
     fun <T:Table> T.insert(body: T.(InsertQuery)->Unit): InsertQuery {

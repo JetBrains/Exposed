@@ -177,7 +177,7 @@ open public class Entity(val id: Int) {
     public fun delete(){
         with(Session.get()) {
             val table = factory().table
-            delete(table).where(table.id eq id)
+            table.deleteWhere(table.id eq id)
             EntityCache.getOrCreate(this).clearReferrersCache()
         }
     }

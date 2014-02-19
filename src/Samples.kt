@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
             it[name] = "Alexey"
         }
 
-        delete (Users) where Users.name.like("%thing")
+        Users.deleteWhere(Users.name like "%thing")
 
         println("All cities:")
 

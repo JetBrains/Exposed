@@ -145,14 +145,14 @@ class DMLTests : DatabaseTestsBase() {
 
     Test fun testDelete01() {
         withCitiesAndUsers { cities, users, userData ->
-            delete(userData).all()
+            userData.deleteAll()
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
             val smthId = users.slice(users.id).select(users.name.like("%thing")).single()[users.id]
             assertEquals ("smth", smthId)
 
-            delete (users) where users.name.like("%thing")
+            users.deleteWhere(users.name like  "%thing")
             val hasSmth = users.slice(users.id).select(users.name.like("%thing")).any()
             assertEquals(false, hasSmth)
         }
