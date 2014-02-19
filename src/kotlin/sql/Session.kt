@@ -22,7 +22,7 @@ open class UserDataHolder() {
     }
 }
 
-open class Session (val connection: Connection): UserDataHolder() {
+class Session (val connection: Connection): UserDataHolder() {
     val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
