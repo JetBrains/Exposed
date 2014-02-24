@@ -85,7 +85,9 @@ class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
-        return target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})
+
+        val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
+        return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
     }
 }
 
