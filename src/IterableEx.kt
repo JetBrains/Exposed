@@ -15,6 +15,9 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
 
 public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
     var _wrapper: List<T>? = null
+    var _size: Int? = null
+    var _empty: Boolean? = null
+
     val wrapper: List<T> get() {
         if (_wrapper == null) {
             _wrapper = delegate.toList()
@@ -23,8 +26,25 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
     }
 
     override fun iterator() = wrapper.iterator()
-    override fun count() = _wrapper?.size() ?: delegate.count()
-    override fun empty() = _wrapper?.isEmpty() ?: delegate.empty()
+    override fun count() = _wrapper?.size() ?: _count()
+    override fun empty() = _wrapper?.isEmpty() ?: _empty()
+
+    private fun _count(): Int {
+        if (_size == null) {
+            _size = delegate.count()
+            _empty = (_size == 0)
+        }
+        return _size!!
+    }
+
+    private fun _empty(): Boolean {
+        if (_empty == null) {
+            _empty = delegate.empty()
+            if (_empty == true) _size = 0
+        }
+
+        return _empty!!
+    }
 }
 
 fun<T:Any> Iterable<T>.single() : T {
