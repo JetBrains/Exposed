@@ -203,18 +203,19 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     public override fun empty(): Boolean {
         // Flush data before executing query or results may be unpredictable
         EntityCache.getOrCreate(session).flush()
+        val builder = QueryBuilder(true)
 
         val selectOneRowStatement = run {
             val oldLimit = limit
             try {
                 limit = 1
-                toSQL(QueryBuilder(false), false)
+                toSQL(builder, false)
             } finally {
                 limit = oldLimit
             }
         }
         // Execute query itself
-        val rs = session.connection.createStatement()?.executeQuery(selectOneRowStatement)!!
+        val rs = builder.executeQuery(session, selectOneRowStatement)
         return !rs.next()
     }
 }
