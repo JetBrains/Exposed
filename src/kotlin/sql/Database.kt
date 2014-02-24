@@ -48,6 +48,7 @@ public class Database private(val connector: () -> Connection) {
             }
         }
 
+
         public fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
             Class.forName(driver).newInstance()
 
