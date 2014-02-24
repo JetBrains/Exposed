@@ -4,6 +4,7 @@ import java.util.ArrayList
 import java.sql.ResultSet
 import java.sql.PreparedStatement
 import org.joda.time.DateTime
+import kotlin.dao.EntityCache
 
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<ColumnType, Any?>>()
@@ -37,6 +38,8 @@ class QueryBuilder(val prepared: Boolean) {
         stmt.fillParameters()
 
         stmt.executeUpdate()
+        EntityCache.getOrCreate(session).clearReferrersCache()
+
         if (autoincs?.isNotEmpty() ?: false) {
             val rs = stmt.getGeneratedKeys()!!
             if (rs.next()) {

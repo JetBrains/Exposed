@@ -175,7 +175,6 @@ open public class Entity(val id: Int) {
     public fun delete(){
         val table = factory().table
         table.deleteWhere{table.id eq id}
-        EntityCache.getOrCreate(Session.get()).clearReferrersCache()
     }
 
     fun flush() {
@@ -356,7 +355,6 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         insert.execute(session)
 
         row.data[table.id] = insert[table.id]
-        EntityCache.getOrCreate(session).clearReferrersCache()
 
         return wrapRow(row, session)
     }
