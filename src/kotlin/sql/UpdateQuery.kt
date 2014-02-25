@@ -13,7 +13,7 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
         values[column] = value
     }
 
-    fun execute(session: Session) {
+    fun execute(session: Session): Int {
         if (!values.isEmpty()) {
             val builder = QueryBuilder(true)
             var sql = StringBuilder("UPDATE ${session.identity(table)}")
@@ -33,7 +33,8 @@ class UpdateQuery(val table: Table, val where: Op<Boolean>) {
             log(sql)
 
             val statement = sql.toString()
-            builder.executeUpdate(session, statement)
+            return builder.executeUpdate(session, statement)
         }
+        return 0
     }
 }

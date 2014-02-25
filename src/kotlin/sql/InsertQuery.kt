@@ -23,7 +23,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         return generatedKey ?: error("No key generated")
     }
 
-    fun execute(session: Session) {
+    fun execute(session: Session): Int {
         val builder = QueryBuilder(true)
         val ignore = if (isIgnore) " IGNORE " else ""
         var sql = StringBuilder("INSERT ${ignore}INTO ${session.identity(table)}")
@@ -39,7 +39,13 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         log(sql)
         try {
             val autoincs: List<String> = table.columns.filter { it.columnType.let { it is IntegerColumnType && it.autoinc } } map {session.identity(it)}
-            generatedKey = builder.executeUpdate(session, sql.toString(), autoincs)
+            return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
+                if (autoincs.isNotEmpty()) {
+                    if (rs.next()) {
+                        generatedKey = rs.getInt(1)
+                    }
+                }
+            }
         }
         catch (e: Exception) {
             println("BAD SQL: $sql")

@@ -44,11 +44,10 @@ fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
     answer.execute(Session.get())
 }
 
-fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, body: T.(UpdateQuery)->Unit): UpdateQuery {
-    val answer = UpdateQuery(this, SqlExpressionBuilder.where())
-    body(answer)
-    answer.execute(Session.get())
-    return answer
+fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, body: T.(UpdateQuery)->Unit): Int {
+    val query = UpdateQuery(this, SqlExpressionBuilder.where())
+    body(query)
+    return query.execute(Session.get())
 }
 
 fun Table.exists (): Boolean {
