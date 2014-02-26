@@ -158,10 +158,6 @@ object SqlExpressionBuilder {
     }
 
     public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {
-        return InListOp(this, list.map { wrap(it) })
-    }
-
-    public fun<T> Expression<T>.inList(list: List<Expression<T>>): Op<Boolean> {
         return InListOp(this, list)
     }
 }

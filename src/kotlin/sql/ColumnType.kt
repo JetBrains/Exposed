@@ -7,11 +7,19 @@ import java.sql.Date
 
 open class ColumnType(var nullable: Boolean = false) {
     public fun valueToString(value: Any?) : String {
-        return if (value == null) {
-            if (!nullable) error("NULL in non-nullable column")
-            "NULL"
-        } else {
-            nonNullValueToString (value)
+        return when (value) {
+            null -> {
+                if (!nullable) error("NULL in non-nullable column")
+                "NULL"
+            }
+
+            is List<*> -> {
+                value.map {valueToString(it)}.makeString(",")
+            }
+
+            else ->  {
+                nonNullValueToString (value)
+            }
         }
     }
 

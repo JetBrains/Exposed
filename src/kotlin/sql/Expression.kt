@@ -23,12 +23,15 @@ class QueryBuilder(val prepared: Boolean) {
         clearParameters()
         var index = 1
         for ((sqlType, value) in args) {
-            if (value == null) {
-                setObject(index, null)
+            when (value) {
+                null -> setObject(index, null)
+                is List<*> -> {
+                    val array = getConnection()!!.createArrayOf("INT", value.map {sqlType.valueToString(it)}.copyToArray())
+                    setArray(index, array)
+                }
+                else -> sqlType.setParameter(this, index, value)
             }
-            else {
-                sqlType.setParameter(this, index, value)
-            }
+
             index++
         }
     }
