@@ -40,7 +40,7 @@ class QueryBuilder(val prepared: Boolean) {
         val count = stmt.executeUpdate()
         EntityCache.getOrCreate(session).clearReferrersCache()
 
-        if (generatedKeys != null) {
+        if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
             generatedKeys(stmt.getGeneratedKeys()!!)
         }
 

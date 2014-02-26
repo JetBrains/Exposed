@@ -40,10 +40,8 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         try {
             val autoincs: List<String> = table.columns.filter { it.columnType.let { it is IntegerColumnType && it.autoinc } } map {session.identity(it)}
             return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
-                if (autoincs.isNotEmpty()) {
-                    if (rs.next()) {
-                        generatedKey = rs.getInt(1)
-                    }
+                if (rs.next()) {
+                    generatedKey = rs.getInt(1)
                 }
             }
         }
