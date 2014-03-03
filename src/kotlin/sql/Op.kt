@@ -180,7 +180,7 @@ class DivideOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>, overri
         return "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
     }
 
-    fun toString(): String {
+    override fun toString(): String {
         error("!")
     }
 }

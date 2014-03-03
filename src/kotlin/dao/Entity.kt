@@ -49,7 +49,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
         }
     }
 
-    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
+    fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -65,7 +65,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
         }
     }
 
-    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Source> {
+    fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -78,12 +78,12 @@ class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Targe
     override fun count(): Int = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
-    fun get(o: Any?, desc: jet.PropertyMetadata): SizedIterable<Target> = factory.find(op)
+    fun get(o: Any?, desc: kotlin.PropertyMetadata): SizedIterable<Target> = factory.find(op)
 }
 
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
-    fun get(o: Entity, desc: jet.PropertyMetadata): SizedIterable<Target> {
+    fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
 
         val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
@@ -112,31 +112,31 @@ open public class Entity(val id: Int) {
 
     public fun factory(): EntityClass<*> = klass!!
 
-    fun <T: Entity> Reference<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+    fun <T: Entity> Reference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
         return factory.findById(reference.get(o, desc))!!
     }
 
-    fun <T: Entity> Reference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
+    fun <T: Entity> Reference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
         reference.set(o, desc, value.id)
     }
 
-    fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: jet.PropertyMetadata): T? {
+    fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T? {
         return reference.get(o, desc)?.let{factory.findById(it)}
     }
 
-    fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T?) {
+    fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T?) {
         reference.set(o, desc, value?.id)
     }
 
-    fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+    fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
         return reference.get(o, desc)!!.let{factory.findById(it)}!!
     }
 
-    fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
+    fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
         reference.set(o, desc, value.id)
     }
 
-    fun <T> Column<T>.get(o: Entity, desc: jet.PropertyMetadata): T {
+    fun <T> Column<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
         return lookup()
     }
 
@@ -152,17 +152,17 @@ open public class Entity(val id: Int) {
         }
     }
 
-    fun <T> Column<T>.set(o: Entity, desc: jet.PropertyMetadata, value: T) {
+    fun <T> Column<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
         if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
             writeValues[this] = value
         }
     }
 
-    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.get(o: Entity, desc: jet.PropertyMetadata): TReal {
+    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.get(o: Entity, desc: kotlin.PropertyMetadata): TReal {
         return toReal(column.get(o, desc))
     }
 
-    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.set(o: Entity, desc: jet.PropertyMetadata, value: TReal) {
+    fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.set(o: Entity, desc: kotlin.PropertyMetadata, value: TReal) {
         column.set(o, desc, toColumn(value))
     }
 
