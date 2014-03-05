@@ -1,6 +1,6 @@
 package kotlin.sql
 
-fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
+inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
 }
 
@@ -12,7 +12,7 @@ fun FieldSet.selectAll() : Query {
     return Query(Session.get(), this, null)
 }
 
-fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
+inline fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
     DeleteQuery.where(Session.get(), this@deleteWhere, SqlExpressionBuilder.op())
 }
 

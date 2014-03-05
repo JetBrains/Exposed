@@ -74,7 +74,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory:
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
 }
 
-class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
+public class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
     override fun count(): Int = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
@@ -302,7 +302,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return wrapRows(searchQuery(op))
     }
 
-    public fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
+    public inline fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         return find(SqlExpressionBuilder.op())
     }
 
@@ -359,7 +359,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return wrapRow(row, session)
     }
 
-    public fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
+    public inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
 
     public fun referencedOn(column: Column<Int>): Reference<T> {
         return Reference(column, this)

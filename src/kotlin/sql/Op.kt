@@ -12,7 +12,7 @@ abstract class Op<T>() : Expression<T> {
     }
 
     class object {
-        fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
+        inline fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
             return SqlExpressionBuilder.op()
         }
     }
