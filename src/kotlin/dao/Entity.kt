@@ -302,7 +302,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return wrapRows(searchQuery(op))
     }
 
-    public inline fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
+    public fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         return find(SqlExpressionBuilder.op())
     }
 
