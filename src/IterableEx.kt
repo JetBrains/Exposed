@@ -1,7 +1,5 @@
 package kotlin.sql
 
-import kotlin.properties.Delegates
-
 public trait SizedIterable<out T>: Iterable<T> {
     fun count(): Int
     fun empty(): Boolean
@@ -59,20 +57,6 @@ fun<T:Any> Iterable<T>.single() : T {
 
     if (!found) error ("No items found")
     return answer!!;
-}
-
-fun<T> Iterable<T>.any() : Boolean {
-    for (t in this) {
-        return true
-    }
-    return false
-}
-
-fun<T:Any> Iterable<T>.firstOrNull() : T? {
-    for (t in this) {
-        return t
-    }
-    return null
 }
 
 fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
