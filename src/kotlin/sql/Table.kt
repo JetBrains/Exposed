@@ -44,7 +44,7 @@ fun Table.innerJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
-class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER) : ColumnSet() {
+class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null) : ColumnSet() {
     class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>) {
     }
 
@@ -94,7 +94,11 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
 
     // ctor body
     {
-        join(otherTable, joinType)
+        if (onColumn != null && otherColumn != null) {
+            join(otherTable, joinType, onColumn, otherColumn)
+        } else {
+            join(otherTable, joinType)
+        }
     }
 }
 
