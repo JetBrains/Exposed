@@ -1,6 +1,5 @@
 package kotlin.sql
 
-import java.sql.Connection
 import java.util.LinkedHashMap
 
 class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
@@ -22,7 +21,11 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
             for ((col, value) in values) {
                 sql.append(session.identity(col))
                    .append("=")
-                   .append(builder.registerArgument(value, col.columnType))
+
+                when {
+                    value != null && javaClass<Expression<Any>>().isAssignableFrom(value.javaClass) -> sql.append((value as Expression<Any>).toSQL(builder))
+                    else -> sql.append(builder.registerArgument(value, col.columnType))
+                }
 
                 c++
                 if (c < values.size()) {

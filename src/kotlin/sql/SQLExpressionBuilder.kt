@@ -20,7 +20,7 @@ fun<T> Column<T>.sum(): Sum<T> {
     return Sum(this, this.columnType)
 }
 
-fun Column<String>.substring(start: Int, length: Int): Substring {
+fun Column<String?>.substring(start: Int, length: Int): Substring {
     return Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 }
 

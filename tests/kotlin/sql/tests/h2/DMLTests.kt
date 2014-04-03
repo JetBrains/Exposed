@@ -5,7 +5,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import org.joda.time.DateTime
 import java.math.BigDecimal
-import demo.Cities
 
 object DMLTestsData {
     object Cities : Table() {
@@ -426,7 +425,7 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    Test fun testSubsting01() {
+    Test fun testSubstring01() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = users.name.substring(0, 2)
             val r = (users).slice(users.id, substring)
@@ -675,6 +674,31 @@ class DMLTests : DatabaseTestsBase() {
 
             val row = t.selectAll().single()
             t.checkRow(row, 42, null, date, null, eOne, null, sTest, null, dec, null)
+        }
+    }
+
+    Test fun testUpdate03() {
+        val t = DMLTestsData.Misc
+        val date = today()
+        val eOne = DMLTestsData.E.ONE
+        val dec = BigDecimal("239.42")
+        withTables(t) {
+            t.insert {
+                it[n] = 101
+                it[s] = "123456789"
+                it[sn] = "123456789"
+                it[d] = date
+                it[e] = eOne
+                it[dc] = dec
+            }
+
+            t.update({t.n.eq(101)}) {
+                it[s] = t.s.substring(2, 255)
+                it[sn] = t.s.substring(3, 255)
+            }
+
+            val row = t.select { t.n eq 101 }.single()
+            t.checkRow(row, 101, null, date, null, eOne, null, "23456789", "3456789", dec, null)
         }
     }
 }
