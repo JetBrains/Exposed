@@ -36,7 +36,7 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
             if (limit != null) {
                 sql.append(" LIMIT ").append(limit)
             }
-            log(sql)
+            session.logger.log(sql)
 
             val statement = sql.toString()
             return builder.executeUpdate(session, statement)

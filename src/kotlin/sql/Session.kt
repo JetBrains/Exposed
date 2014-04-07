@@ -27,8 +27,10 @@ class Session (val connection: Connection): UserDataHolder() {
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
+    val logger = CompositeSqlLogger()
 
     ;{
+        logger.addLogger(Log4jSqlLogger())
         Session.threadLocal.set(this)
     }
 
@@ -85,7 +87,7 @@ class Session (val connection: Connection): UserDataHolder() {
     fun create(vararg tables: Table) {
         val statements = createStatements(*tables)
         for (statement in statements) {
-            log (statement)
+            logger.log (statement)
             connection.createStatement()?.executeUpdate(statement)
         }
     }
@@ -94,7 +96,7 @@ class Session (val connection: Connection): UserDataHolder() {
         if (tables.size > 0) {
             for (table in tables) {
                 val ddl = StringBuilder("DROP TABLE ${identity(table)}")
-                log(ddl)
+                logger.log(ddl)
                 connection.createStatement()?.executeUpdate(ddl.toString())
             }
         }

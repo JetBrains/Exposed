@@ -183,7 +183,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
         val builder = QueryBuilder(true)
         val sql = toSQL(builder)
-        log (sql)
+        session.logger.log (sql)
         return ResultIterator(builder.executeQuery(session, sql))
     }
 
@@ -193,7 +193,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
         val builder = QueryBuilder(true)
         val sql = toSQL(builder, true)
-        log (sql)
+        session.logger.log (sql)
 
         val rs = builder.executeQuery(session, sql)
         rs.next()
