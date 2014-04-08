@@ -84,7 +84,7 @@ public class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClas
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
-        val sourceRefColumn = table.columns.find { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
+        val sourceRefColumn = table.columns.firstOrNull { it.referee == o.factory().table.id } as? Column<Int> ?: error("Table does not reference source")
 
         val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
