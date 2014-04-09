@@ -73,7 +73,7 @@ fun Table.matchesDefinition(): Boolean {
     var nColumns = columns.size()
     while (rs.next()) {
         val fieldName = rs.getString(1)
-        val column = columns.find {it.name == fieldName}
+        val column = columns.firstOrNull {it.name == fieldName}
         if (column == null)
             return false
 

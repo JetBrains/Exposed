@@ -68,7 +68,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): Pair<Column<*>, Column<*>>? {
         for (a_pk in a.columns) {
-            val b_fk = b.columns.find { it.referee == a_pk }
+            val b_fk = b.columns.firstOrNull { it.referee == a_pk }
             if (b_fk != null)
                 return a_pk to b_fk!!
         }
