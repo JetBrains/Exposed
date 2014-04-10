@@ -5,6 +5,7 @@ import java.sql.ResultSet
 import java.sql.PreparedStatement
 import org.joda.time.DateTime
 import kotlin.dao.EntityCache
+import java.util.Stack
 
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<ColumnType, Any?>>()
@@ -37,6 +38,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 
     public fun executeUpdate(session: Session, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
+        session.logger.log (sql, args)
         val stmt = session.prepareStatement(sql, autoincs)
         stmt.fillParameters()
 
@@ -52,6 +54,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 
     public fun executeQuery(session: Session, sql: String): ResultSet {
+        session.logger.log (sql, args)
         val stmt = session.prepareStatement(sql)
         stmt.fillParameters()
         return stmt.executeQuery()

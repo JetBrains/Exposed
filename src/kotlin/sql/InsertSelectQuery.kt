@@ -29,8 +29,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
         try {
             statement = session.connection.createStatement()!!
             statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println("BAD SQL: $sql")
             throw e
         }

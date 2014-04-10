@@ -95,9 +95,9 @@ class Session (val connection: Connection): UserDataHolder() {
     fun drop(vararg tables: Table) {
         if (tables.size > 0) {
             for (table in tables) {
-                val ddl = StringBuilder("DROP TABLE ${identity(table)}")
+                val ddl = StringBuilder("DROP TABLE ${identity(table)}").toString()
                 logger.log(ddl)
-                connection.createStatement()?.executeUpdate(ddl.toString())
+                connection.createStatement()?.executeUpdate(ddl)
             }
         }
     }

@@ -36,7 +36,6 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         sql.append((values map { builder.registerArgument(it.value, it.key.columnType) }). makeString(", ", "", ""))
 
         sql.append(") ")
-        session.logger.log(sql)
         try {
             val autoincs: List<String> = table.columns.filter { it.columnType.let { it is IntegerColumnType && it.autoinc } } map {session.identity(it)}
             return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
