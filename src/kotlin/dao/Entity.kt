@@ -177,7 +177,7 @@ open public class Entity(val id: Int) {
         table.deleteWhere{table.id eq id}
     }
 
-    fun flush() {
+    open fun flush() {
         if (!writeValues.isEmpty()) {
             val table = factory().table
             table.update({table.id eq id}) {

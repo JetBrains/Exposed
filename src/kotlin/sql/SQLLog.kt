@@ -13,6 +13,7 @@ public fun SqlLogger.log (stmt: StringBuilder) {
 }
 
 public fun SqlLogger.log (stmt: PreparedStatement) {
+//    stmt.setObject()
     log (stmt.toString()!!)
 }
 

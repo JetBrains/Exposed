@@ -15,30 +15,30 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
     fun execute(session: Session): Int {
         if (!values.isEmpty()) {
             val builder = QueryBuilder(true)
-            var sql = StringBuilder("UPDATE ${session.identity(table)}")
+            var sqlStatement = StringBuilder("UPDATE ${session.identity(table)}")
             var c = 0;
-            sql.append(" SET ")
+            sqlStatement.append(" SET ")
             for ((col, value) in values) {
-                sql.append(session.identity(col))
+                sqlStatement.append(session.identity(col))
                    .append("=")
 
                 when {
-                    value != null && javaClass<Expression<Any>>().isAssignableFrom(value.javaClass) -> sql.append((value as Expression<Any>).toSQL(builder))
-                    else -> sql.append(builder.registerArgument(value, col.columnType))
+                    value != null && javaClass<Expression<Any>>().isAssignableFrom(value.javaClass) -> sqlStatement.append((value as Expression<Any>).toSQL(builder))
+                    else -> sqlStatement.append(builder.registerArgument(value, col.columnType))
                 }
 
                 c++
                 if (c < values.size()) {
-                    sql.append(", ")
+                    sqlStatement.append(", ")
                 }
             }
-            sql.append(" WHERE " + where.toSQL(builder))
+            sqlStatement.append(" WHERE " + where.toSQL(builder))
             if (limit != null) {
-                sql.append(" LIMIT ").append(limit)
+                sqlStatement.append(" LIMIT ").append(limit)
             }
-            session.logger.log(sql)
+            session.logger.log(sqlStatement)
 
-            val statement = sql.toString()
+            val statement = sqlStatement.toString()
             return builder.executeUpdate(session, statement)
         }
         return 0
