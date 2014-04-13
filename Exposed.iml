@@ -9,11 +9,11 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
-    <orderEntry type="library" name="h2" level="project" />
-    <orderEntry type="library" name="mysql-connector" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="h2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="mysql-connector" level="project" />
     <orderEntry type="library" scope="TEST" name="junit" level="project" />
     <orderEntry type="library" exported="" name="joda-time" level="project" />
-    <orderEntry type="library" name="Logging" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Logging" level="project" />
   </component>
 </module>
 
