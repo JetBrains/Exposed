@@ -27,7 +27,8 @@ class Session (val connection: Connection): UserDataHolder() {
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
-    val logger = CompositeSqlLogger()
+    val logger = CompositeSqlLogger(this)
+    var statementCount: Int = 0
 
     ;{
         logger.addLogger(Log4jSqlLogger())

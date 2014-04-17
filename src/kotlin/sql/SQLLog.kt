@@ -61,7 +61,7 @@ public class Log4jSqlLogger(loggerName: String = "Exposed"): SqlLogger {
     }
 }
 
-public class CompositeSqlLogger : SqlLogger {
+public class CompositeSqlLogger(val session: Session) : SqlLogger {
     private val loggers: ArrayList<SqlLogger> = ArrayList<SqlLogger>()
 
     public fun addLogger (logger: SqlLogger) {
@@ -73,6 +73,7 @@ public class CompositeSqlLogger : SqlLogger {
     }
 
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
+        session.statementCount++
         for (logger in loggers) {
             logger.log(stmt, args)
         }
