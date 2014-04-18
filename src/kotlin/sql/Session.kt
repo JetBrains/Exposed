@@ -28,8 +28,12 @@ class Session (val connection: Connection): UserDataHolder() {
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
+
     var statementCount: Int = 0
     var duration: Long = 0
+    var debug = false
+
+    val statements = StringBuilder()
 
     ;{
         logger.addLogger(Log4jSqlLogger())
@@ -54,7 +58,13 @@ class Session (val connection: Connection): UserDataHolder() {
 
         val start = System.currentTimeMillis()
         val answer = body()
-        duration += (System.currentTimeMillis() - start)
+        val delta = System.currentTimeMillis() - start
+
+        duration += delta
+
+        if (debug) {
+            statements.append("[${delta}ms] ${stmt.take(1024)}\n\n")
+        }
 
         return answer
     }
