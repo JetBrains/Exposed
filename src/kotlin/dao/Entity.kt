@@ -113,7 +113,8 @@ open public class Entity(val id: Int) {
     public fun factory(): EntityClass<*> = klass!!
 
     fun <T: Entity> Reference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
-        return factory.findById(reference.get(o, desc))!!
+        val id = reference.get(o, desc)
+        return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
     fun <T: Entity> Reference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
@@ -129,7 +130,8 @@ open public class Entity(val id: Int) {
     }
 
     fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
-        return reference.get(o, desc)!!.let{factory.findById(it)}!!
+        val id = reference.get(o, desc) ?: error("${o.id}.$desc is null")
+        return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
     fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
