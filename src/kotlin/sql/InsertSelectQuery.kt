@@ -25,13 +25,15 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
         }.map { session.identity(it) }.makeString(", ", "(", ")")
         val ignore = if (isIgnore) " IGNORE " else ""
         var sql = "INSERT ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
-        session.logger.log(sql)
-        try {
-            statement = session.connection.createStatement()!!
-            statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
-        } catch (e: Exception) {
-            println("BAD SQL: $sql")
-            throw e
+
+        session.exec(sql) {
+            try {
+                statement = session.connection.createStatement()!!
+                statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
+            } catch (e: Exception) {
+                println("BAD SQL: $sql")
+                throw e
+            }
         }
     }
 }

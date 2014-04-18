@@ -38,26 +38,27 @@ class QueryBuilder(val prepared: Boolean) {
     }
 
     public fun executeUpdate(session: Session, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
-        session.logger.log (sql, args)
-        val stmt = session.prepareStatement(sql, autoincs)
-        stmt.fillParameters()
+        return session.exec(sql, args) {
+            val stmt = session.prepareStatement(sql, autoincs)
+            stmt.fillParameters()
 
-        val count = stmt.executeUpdate()
-        EntityCache.getOrCreate(session).clearReferrersCache()
+            val count = stmt.executeUpdate()
+            EntityCache.getOrCreate(session).clearReferrersCache()
 
-        if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
-            generatedKeys(stmt.getGeneratedKeys()!!)
+            if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
+                generatedKeys(stmt.getGeneratedKeys()!!)
+            }
+
+            count
         }
-
-
-        return count
     }
 
     public fun executeQuery(session: Session, sql: String): ResultSet {
-        session.logger.log (sql, args)
-        val stmt = session.prepareStatement(sql)
-        stmt.fillParameters()
-        return stmt.executeQuery()
+        return session.exec(sql, args) {
+            val stmt = session.prepareStatement(sql)
+            stmt.fillParameters()
+            stmt.executeQuery()
+        }
     }
 
     public class object {

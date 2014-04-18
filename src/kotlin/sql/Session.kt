@@ -27,8 +27,9 @@ class Session (val connection: Connection): UserDataHolder() {
     val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
-    val logger = CompositeSqlLogger(this)
+    val logger = CompositeSqlLogger()
     var statementCount: Int = 0
+    var duration: Long = 0
 
     ;{
         logger.addLogger(Log4jSqlLogger())
@@ -45,6 +46,17 @@ class Session (val connection: Connection): UserDataHolder() {
             url.startsWith("jdbc:h2") -> DatabaseVendor.H2
             else -> error("Unknown database type $url")
         }
+    }
+
+    fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
+        logger.log(stmt, args)
+        statementCount++
+
+        val start = System.currentTimeMillis()
+        val answer = body()
+        duration += (System.currentTimeMillis() - start)
+
+        return answer
     }
 
     fun createStatements (vararg tables: Table) : List<String> {
@@ -88,8 +100,9 @@ class Session (val connection: Connection): UserDataHolder() {
     fun create(vararg tables: Table) {
         val statements = createStatements(*tables)
         for (statement in statements) {
-            logger.log (statement)
-            connection.createStatement()?.executeUpdate(statement)
+            exec(statement) {
+                connection.createStatement()?.executeUpdate(statement)
+            }
         }
     }
 
@@ -97,8 +110,9 @@ class Session (val connection: Connection): UserDataHolder() {
         if (tables.size > 0) {
             for (table in tables) {
                 val ddl = StringBuilder("DROP TABLE ${identity(table)}").toString()
-                logger.log(ddl)
-                connection.createStatement()?.executeUpdate(ddl)
+                exec(ddl) {
+                    connection.createStatement()?.executeUpdate(ddl)
+                }
             }
         }
     }
