@@ -5,6 +5,7 @@ import java.sql.Connection
 import kotlin.properties.Delegates
 import javax.sql.DataSource
 import org.joda.time.DateTimeZone
+import kotlin.dao.EntityCache
 
 public class Database private(val connector: () -> Connection) {
 
@@ -19,23 +20,31 @@ public class Database private(val connector: () -> Connection) {
     }
 
     fun <T> withSession(statement: Session.() -> T): T {
-        val connection = connector()
-        val session = Session(connection)
-        try {
-            connection.setAutoCommit(false)
-            connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
+        val outer = Session.tryGet()
 
-            val answer = session.statement()
-            connection.commit()
-            return answer
+        if (outer != null) {
+            return outer.statement()
         }
-        catch (e: Throwable) {
-            connection.rollback()
-            throw e
-        }
-        finally {
-            session.close()
-            connection.close()
+        else {
+            val connection = connector()
+            val session = Session(connection)
+            try {
+                connection.setAutoCommit(false)
+                connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
+
+                val answer = session.statement()
+                EntityCache.getOrCreate(session).flush()
+                connection.commit()
+                return answer
+            }
+            catch (e: Throwable) {
+                connection.rollback()
+                throw e
+            }
+            finally {
+                session.close()
+                connection.close()
+            }
         }
     }
 

@@ -224,10 +224,12 @@ class Session (val connection: Connection): UserDataHolder() {
     class object {
         val threadLocal = ThreadLocal<Session>()
 
-        fun hasSession(): Boolean = threadLocal.get() != null
+        fun hasSession(): Boolean = tryGet() != null
+
+        fun tryGet(): Session? = threadLocal.get()
 
         fun get(): Session {
-            return threadLocal.get() ?: error("No session in context. Use transaction?")
+            return tryGet() ?: error("No session in context. Use transaction?")
         }
     }
 }
