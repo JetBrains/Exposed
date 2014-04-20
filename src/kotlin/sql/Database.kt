@@ -19,7 +19,7 @@ public class Database private(val connector: () -> Connection) {
         }
     }
 
-    fun <T> withSession(statement: Session.() -> T): T {
+    fun <T> withSession(transactionIsolation: Int = Connection.TRANSACTION_REPEATABLE_READ, statement: Session.() -> T): T {
         val outer = Session.tryGet()
 
         if (outer != null) {
@@ -30,7 +30,7 @@ public class Database private(val connector: () -> Connection) {
             val session = Session(connection)
             try {
                 connection.setAutoCommit(false)
-                connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ)
+                connection.setTransactionIsolation(transactionIsolation)
 
                 val answer = session.statement()
                 EntityCache.getOrCreate(session).flush()
