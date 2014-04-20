@@ -19,7 +19,10 @@ public class Database private(val connector: () -> Connection) {
         }
     }
 
-    fun <T> withSession(transactionIsolation: Int = Connection.TRANSACTION_REPEATABLE_READ, statement: Session.() -> T): T {
+    // Overloading methods instead of default parameters for Java conpatibility
+    fun <T> withSession(statement: Session.() -> T): T = withSession(Connection.TRANSACTION_REPEATABLE_READ, statement)
+
+    fun <T> withSession(transactionIsolation: Int, statement: Session.() -> T): T {
         val outer = Session.tryGet()
 
         if (outer != null) {
