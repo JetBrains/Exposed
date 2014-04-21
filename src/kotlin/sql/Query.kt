@@ -46,7 +46,7 @@ public class ResultRow() {
     }
 
     fun<T> hasValue (c: Expression<T>) : Boolean {
-        return data.containsKey(c);
+        return data.get(c) != null;
     }
 
     class object {

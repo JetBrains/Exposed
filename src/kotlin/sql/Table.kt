@@ -36,16 +36,16 @@ fun Table.join (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
-fun Table.join (otherTable: Table, joinType: JoinType) : Join {
-    return Join (this, otherTable, joinType)
+fun Table.join (otherTable: Table, joinType: JoinType, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
+    return Join (this, otherTable, joinType, null, null, additionalConstraint)
 }
 
 fun Table.innerJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
-class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null) : ColumnSet() {
-    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>) {
+class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : ColumnSet() {
+    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
 
     val joinParts: ArrayList<JoinPart> = ArrayList<JoinPart>();
@@ -54,15 +54,15 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         return join(otherTable, JoinType.INNER)
     }
 
-    fun join (otherTable: Table, joinType: JoinType = JoinType.INNER) : Join {
+    fun join (otherTable: Table, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
         val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
         if (keysPair == null) error ("Cannot join with ${otherTable.tableName} as there is no matching primary key/ foreign key pair")
 
-        return join(otherTable, joinType, keysPair.first, keysPair.second)
+        return join(otherTable, joinType, keysPair.first, keysPair.second, additionalConstraint)
     }
 
-    fun join(otherTable: Table, joinType: JoinType, onColumn: Column<*>, otherColumn: Column<*>): Join {
-        joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn))
+    fun join(otherTable: Table, joinType: JoinType, onColumn: Column<*>, otherColumn: Column<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
+        joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
         return this
     }
 
@@ -80,6 +80,8 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         sb.append(table.describe(s))
         for (p in joinParts) {
             sb.append(" ${p.joinType} JOIN ${p.table.describe(s)} ON ${s.fullIdentity(p.pkColumn)} = ${s.fullIdentity(p.fkColumn)}" )
+            if (p.additionalConstraint != null)
+                sb.append(" and (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(QueryBuilder(false))})")
         }
         return sb.toString()
     }
@@ -95,9 +97,9 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     // ctor body
     {
         if (onColumn != null && otherColumn != null) {
-            join(otherTable, joinType, onColumn, otherColumn)
+            join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {
-            join(otherTable, joinType)
+            join(otherTable, joinType, additionalConstraint)
         }
     }
 }
