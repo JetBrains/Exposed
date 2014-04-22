@@ -364,7 +364,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
             if (c.columnType.nullable) {
                 row.data[c] = null
             }
-            else {
+            else if (c.defaultValue == null) {
                 error("Required column ${c.name} is missing from INSERT")
             }
         }
