@@ -8,11 +8,11 @@ import kotlin.properties.Delegates
 /**
  * @author max
  */
-class EntityID(val id: Int, val factory: EntityClass<*>) {
-    fun table() = factory.table
+public data class EntityID(val value: Int, val table: IdTable) {
+    override fun toString() = value.toString()
 }
 
-private fun <T:Int?>checkReference(reference: Column<T>, factory: EntityClass<*>) {
+private fun <T:EntityID?>checkReference(reference: Column<T>, factory: EntityClass<*>) {
     val refColumn = reference.referee
     if (refColumn == null) error("Column $reference is not a reference")
     val targetTable = refColumn.table
@@ -21,25 +21,25 @@ private fun <T:Int?>checkReference(reference: Column<T>, factory: EntityClass<*>
     }
 }
 
-class Reference<Target : Entity> (val reference: Column<Int>, val factory: EntityClass<Target>) {
+class Reference<Target : Entity> (val reference: Column<EntityID>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class OptionalReference<Target: Entity> (val reference: Column<Int?>, val factory: EntityClass<Target>) {
+class OptionalReference<Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<Int?>, val factory: EntityClass<Target>) {
+class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityClass<Source>, val cache: Boolean) {
+class Referrers<Source:Entity>(val reference: Column<EntityID>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
@@ -55,7 +55,7 @@ class Referrers<Source:Entity>(val reference: Column<Int>, val factory: EntityCl
     }
 }
 
-class OptionalReferrers<Source:Entity>(val reference: Column<Int?>, val factory: EntityClass<Source>, val cache: Boolean) {
+class OptionalReferrers<Source:Entity>(val reference: Column<EntityID?>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
@@ -91,7 +91,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     }
 }
 
-open public class Entity(val id: Int) {
+open public class Entity(val id: EntityID) {
     var klass: EntityClass<*>? = null
 
     val writeValues = LinkedHashMap<Column<*>, Any?>()
@@ -143,7 +143,7 @@ open public class Entity(val id: Int) {
     }
 
     fun <T> Column<T>.lookup(): T {
-        if (id == -1) {
+        if (id.value == -1) {
             error("Prototypes are write only")
         }
         else {
@@ -218,8 +218,8 @@ class EntityCache {
         return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
     }
 
-    fun <T: Entity> find(f: EntityClass<T>, id: Int): T? {
-        return getMap(f)[id]
+    fun <T: Entity> find(f: EntityClass<T>, id: EntityID): T? {
+        return getMap(f)[id.value]
     }
 
     fun <T: Entity> findAll(f: EntityClass<T>): SizedIterable<T> {
@@ -227,7 +227,7 @@ class EntityCache {
     }
 
     fun <T: Entity> store(f: EntityClass<T>, o: T) {
-        getMap(f).put(o.id, o)
+        getMap(f).put(o.id.value, o)
     }
 
     fun flush() {
@@ -256,6 +256,10 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     private val klass = javaClass.getEnclosingClass()!!
     private val ctor = klass.getConstructors()[0]
 
+    public fun get(id: EntityID): T {
+        return findById(id) ?: error("Entity not found in database")
+    }
+
     public fun get(id: Int): T {
         return findById(id) ?: error("Entity not found in database")
     }
@@ -272,7 +276,19 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun findById(id: Int): T? {
+        return findById(EntityID(id, table))
+    }
+
+    public fun findById(id: EntityID): T? {
         return warmCache().find(this, id) ?: find{table.id eq id}.firstOrNull()
+    }
+
+    public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
+        return wrapRows(searchQuery(Op.build {table.id inList ids}))
+    }
+
+    public fun forIds(ids: List<Int>) : SizedIterable<T> {
+        return wrapRows(searchQuery(Op.build {table.id inList ids.map {EntityID(it, table)}}))
     }
 
     public fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
@@ -321,9 +337,9 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    protected open fun createInstance(entityId: Int, row: ResultRow?) : T = ctor.newInstance(entityId) as T
+    protected open fun createInstance(entityId: EntityID, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
-    public fun wrap(id: Int, row: ResultRow?, s: Session): T {
+    public fun wrap(id: EntityID, row: ResultRow?, s: Session): T {
         val cache = EntityCache.getOrCreate(s)
         return cache.find(this, id) ?: run {
             val new = createInstance(id, row)
@@ -333,7 +349,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    public fun new(prototype: T = createInstance(-1, null), init: T.() -> Unit) : T {
+    public fun new(prototype: T = createInstance(EntityID(-1, table), null), init: T.() -> Unit) : T {
         prototype.init()
 
         val insert = InsertQuery(table)
@@ -356,31 +372,31 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         val session = Session.get()
         insert.execute(session)
 
-        row.data[table.id] = insert[table.id]
+        row.data[table.id] = insert.generatedKey
 
         return wrapRow(row, session)
     }
 
     public inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
 
-    public fun referencedOn(column: Column<Int>): Reference<T> {
+    public fun referencedOn(column: Column<EntityID>): Reference<T> {
         return Reference(column, this)
     }
 
-    public fun optionalReferencedOn(column: Column<Int?>): OptionalReference<T> {
+    public fun optionalReferencedOn(column: Column<EntityID?>): OptionalReference<T> {
         return OptionalReference(column, this)
     }
 
-    public fun optionalReferencedOnSureNotNull(column: Column<Int?>): OptionalReferenceSureNotNull<T> {
+    public fun optionalReferencedOnSureNotNull(column: Column<EntityID?>): OptionalReferenceSureNotNull<T> {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    public fun referrersOn(column: Column<Int>, cache: Boolean = false): Referrers<T> {
+    public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
         return Referrers(column, this, cache)
     }
 
     //TODO: what's the difference with referrersOn?
-    public fun optionalReferrersOn(column: Column<Int?>, cache: Boolean = false): OptionalReferrers<T> {
+    public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
         return OptionalReferrers(column, this, cache)
     }
 

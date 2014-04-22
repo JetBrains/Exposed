@@ -65,6 +65,7 @@ class QueryBuilder(val prepared: Boolean) {
         fun isSupported(sqlType: ColumnType): Boolean {
             return sqlType is StringColumnType ||
             sqlType is IntegerColumnType ||
+            sqlType is EntityIDColumnType ||
             sqlType is LongColumnType ||
             sqlType is BlobColumnType ||
             sqlType is DateColumnType ||

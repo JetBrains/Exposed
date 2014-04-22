@@ -4,8 +4,10 @@ import org.joda.time.DateTime
 import java.sql.PreparedStatement
 import java.util.Locale
 import java.sql.Date
+import kotlin.dao.EntityID
+import kotlin.dao.IdTable
 
-open class ColumnType(var nullable: Boolean = false) {
+open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
     public fun valueToString(value: Any?) : String {
         return when (value) {
             null -> {
@@ -32,8 +34,15 @@ open class ColumnType(var nullable: Boolean = false) {
     }
 }
 
-data class IntegerColumnType(var autoinc: Boolean = false): ColumnType()
-data class LongColumnType(var autoinc: Boolean = false): ColumnType()
+data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnType(autoinc) {
+    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
+        val converted = if (value is EntityID) value.value else value
+        super<ColumnType>.setParameter(stmt, index, converted)
+    }
+}
+
+data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc)
+data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc)
 data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType()
 data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     protected override fun nonNullValueToString(value: Any): String {

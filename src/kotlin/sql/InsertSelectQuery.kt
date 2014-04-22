@@ -19,10 +19,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
     }
 
     fun execute(session: Session) {
-        val columns = table.columns.filter {
-            val columntType = it.columnType as? IntegerColumnType
-            columntType == null || !columntType.autoinc
-        }.map { session.identity(it) }.makeString(", ", "(", ")")
+        val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.makeString(", ", "(", ")")
         val ignore = if (isIgnore) " IGNORE " else ""
         var sql = "INSERT ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 

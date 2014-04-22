@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import java.util.LinkedHashMap
+import kotlin.dao.EntityID
 
 /**
  * isIgnore is supported for mysql only
@@ -15,13 +16,23 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         }
 
         values.put(column, if (value == null) null else {
-            if (column.columnType is EnumerationColumnType<*>) (value as Enum<*>).ordinal() else value
+            when(column.columnType) {
+                is EnumerationColumnType<*> -> (value as Enum<*>).ordinal()
+                is EntityIDColumnType -> (value as EntityID).value
+                else -> value
+            }
         })
     }
 
     fun get(column: Column<Int>): Int {
         return generatedKey ?: error("No key generated")
     }
+
+/*
+    fun get(column: Column<EntityID>): EntityID {
+        return EntityID(generatedKey ?: error("No key generated"), null)
+    }
+*/
 
     fun execute(session: Session): Int {
         val builder = QueryBuilder(true)
@@ -37,7 +48,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
 
         sql.append(") ")
         try {
-            val autoincs: List<String> = table.columns.filter { it.columnType.let { it is IntegerColumnType && it.autoinc } } map {session.identity(it)}
+            val autoincs: List<String> = table.columns.filter { it.columnType.autoinc } map {session.identity(it)}
             return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
                 if (rs.next()) {
                     generatedKey = rs.getInt(1)

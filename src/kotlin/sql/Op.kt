@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import org.joda.time.DateTime
+import kotlin.dao.EntityID
 
 abstract class Op<T>() : Expression<T> {
     fun and(op: Expression<T>): Op<Boolean> {
@@ -73,6 +74,7 @@ class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T> {
     }
 }
 
+fun idParam(value: EntityID): Expression<EntityID> = QueryParameter(value, EntityIDColumnType(value.table))
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())

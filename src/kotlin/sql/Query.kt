@@ -8,6 +8,7 @@ import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
 import org.joda.time.DateTime
 import java.util.LinkedHashSet
+import kotlin.dao.EntityID
 
 public class ResultRow() {
     val data = HashMap<Expression<*>, Any?>()
@@ -24,9 +25,15 @@ public class ResultRow() {
         }
 
         if (c is Column<*>) {
-            val enumType = (c.columnType as? EnumerationColumnType<*>)?.klass
-            if (enumType != null) {
-                return (if (d is Int) enumType.getEnumConstants()!![d as Int] else d) as T
+            val columnType = c.columnType
+            if (d is Int) when (columnType) {
+                is EnumerationColumnType<*> -> {
+                    return columnType.klass.getEnumConstants()!![d as Int] as T
+                }
+
+                is EntityIDColumnType -> {
+                    return EntityID(d as Int, columnType.table) as T
+                }
             }
         }
 

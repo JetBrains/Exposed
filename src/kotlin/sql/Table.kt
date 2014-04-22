@@ -6,6 +6,7 @@ import kotlin.sql.Join.JoinPart
 import java.math.BigDecimal
 import java.sql.Blob
 import kotlin.dao.IdTable
+import kotlin.dao.EntityID
 
 trait FieldSet {
     val fields: List<Expression<*>>
@@ -134,6 +135,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun entityId(name: String, table: IdTable) : Column<EntityID> {
+        val answer = Column<EntityID>(this, name, EntityIDColumnType(table))
+        columns.add(answer)
+        return answer
+    }
+
     fun integer(name: String): Column<Int> {
         val answer = Column<Int>(this, name, IntegerColumnType())
         columns.add(answer)
@@ -193,13 +200,18 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
+    fun <C:Column<EntityID>> C.autoinc(): C {
+        (columnType as EntityIDColumnType).autoinc = true
+        return this
+    }
+
     fun <T, C:Column<T>> C.references(ref: Column<T>): C {
         referee = ref
         return this
     }
 
-    fun reference(name: String, foreign: IdTable): Column<Int> {
-        return integer(name) references foreign.id
+    fun reference(name: String, foreign: IdTable): Column<EntityID> {
+        return entityId(name, foreign) references foreign.id
     }
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
@@ -208,7 +220,7 @@ open class Table(name: String = ""): ColumnSet() {
         return column
     }
 
-    fun optReference(name: String, foreign: IdTable): Column<Int?> {
+    fun optReference(name: String, foreign: IdTable): Column<EntityID?> {
         return reference(name, foreign).nullable()
     }
 
@@ -251,7 +263,9 @@ open class Table(name: String = ""): ColumnSet() {
                 val colType = column.columnType
                 when (colType) {
                     is EnumerationColumnType<*>,
+                    is EntityIDColumnType,
                     is IntegerColumnType -> ddl.append("INT")
+
                     is DecimalColumnType -> ddl.append("DECIMAL(${colType.scale}, ${colType.precision})")
                     is LongColumnType -> ddl.append("BIGINT")
                     is StringColumnType -> {
@@ -273,7 +287,7 @@ open class Table(name: String = ""): ColumnSet() {
                 if (column is PKColumn<*>) {
                     ddl.append(" PRIMARY KEY")
                 }
-                if (colType is IntegerColumnType && colType.autoinc) {
+                if (colType.autoinc) {
                     ddl.append(" ").append(Session.get().autoIncrement(column))
                 }
                 if (colType.nullable) {
