@@ -11,6 +11,14 @@ public class Key<T>()
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 
+    public fun <T:Any> putUserData(key: Key<T>, value: T?) {
+        userdata[key] = value
+    }
+
+    public fun <T:Any> getUserData(key: Key<T>) : T? {
+        return userdata[key] as T?
+    }
+
     public fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
         if (userdata.containsKey(key)) {
             return userdata[key] as T
