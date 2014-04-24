@@ -3,7 +3,7 @@ package kotlin.sql
 import java.util.LinkedHashMap
 
 class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
-    val values = LinkedHashMap<Column<*>, Any>()
+    val values = LinkedHashMap<Column<*>, Any?>()
 
     fun <T> set(column: Column<T>, value: T) {
         if (values containsKey column) {
