@@ -4,12 +4,34 @@ import kotlin.sql.*
 import java.util.HashMap
 import java.util.LinkedHashMap
 import kotlin.properties.Delegates
+import java.util.ArrayList
 
 /**
  * @author max
  */
-public data class EntityID(val value: Int, val table: IdTable) {
+public class EntityID(id: Int, val table: IdTable) {
+    var _value = id
+    val value: Int get() {
+        if (_value == -1) {
+            EntityCache.getOrCreate(Session.get()).flushInserts(table)
+            assert(_value > 0, "Entity must be inserted")
+        }
+
+        return _value
+    }
+
     override fun toString() = value.toString()
+
+    override fun hashCode(): Int {
+        if (_value == -1) error("The value is going to be changed, thus hashCode too!")
+        return _value
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is EntityID) return false
+
+        return other._value == _value && other.table == table
+    }
 }
 
 private fun <T:EntityID?>checkReference(reference: Column<T>, factory: EntityClass<*>) {
@@ -143,15 +165,10 @@ open public class Entity(val id: EntityID) {
     }
 
     fun <T> Column<T>.lookup(): T {
-        if (id.value == -1) {
-            error("Prototypes are write only")
+        if (writeValues.containsKey(this)) {
+            return writeValues[this] as T
         }
-        else {
-            if (writeValues.containsKey(this)) {
-                return writeValues[this] as T
-            }
-            return readValues[this]
-        }
+        return readValues[this]
     }
 
     fun <T> Column<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
@@ -203,11 +220,16 @@ open public class Entity(val id: EntityID) {
 }
 
 class EntityCache {
-    val data = HashMap<Table, MutableMap<Int, *>>()
+    val data = HashMap<Table, MutableMap<Int, Entity>>()
+    val inserts = HashMap<IdTable, MutableList<Entity>>()
     val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
-        val answer = data.getOrPut(f.table, {
+        return getMap(f.table)
+    }
+
+    private fun <T: Entity> getMap(table: IdTable) : MutableMap<Int, T> {
+        val answer = data.getOrPut(table, {
             HashMap()
         }) as MutableMap<Int, T>
 
@@ -230,12 +252,82 @@ class EntityCache {
         getMap(f).put(o.id.value, o)
     }
 
+    fun <T: Entity> store(table: IdTable, o: T) {
+        getMap<T>(table).put(o.id.value, o)
+    }
+
+    fun <T: Entity> scheduleInsert(f: EntityClass<T>, o: T) {
+        val list = inserts.getOrPut(f.table) {
+            ArrayList<Entity>()
+        }
+
+        list.add(o)
+    }
+
+    private fun Table.references(another: Table): Boolean {
+        return columns.any { it.referee?.table == another }
+    }
+
+    private fun<T> swap (list: ArrayList<T>, i : Int, j: Int) {
+        val tmp = list[i]
+        list[i] = list[j]
+        list[j] = tmp
+    }
+
+    fun<T> ArrayList<T>.topoSort (comparer: (T,T) -> Int) {
+        for (i in 0..this.size-2) {
+            var minIndex = i
+            for (j in (i+1)..this.size-1) {
+                if (comparer(this[minIndex], this[j]) > 0) {
+                    minIndex = j
+                }
+            }
+            if (minIndex != i)
+                swap(this, i, minIndex)
+        }
+    }
+
     fun flush() {
-        for ((f, map) in data) {
-            for ((i, p) in map) {
-                (p as Entity).flush()
+        val tables = inserts.keySet().toArrayList()
+        tables.topoSort { a, b ->
+            when {
+                a == b -> 0
+                a references b && b references a -> 0
+                a references b -> 1
+                b references a -> -1
+                else -> 0
             }
         }
+
+        for (t in tables) flushInserts(t)
+
+        for ((table, map) in data) {
+            for ((i, entity) in map) {
+                entity.flush()
+            }
+        }
+    }
+
+    fun flushInserts(table: IdTable) {
+        inserts.remove(table)?.let {
+            val query = BatchInsertQuery(table)
+            for (entry in it) {
+                query.addBatch()
+
+                for ((c, v) in entry.writeValues) {
+                    query.set(c, v)
+                }
+            }
+
+            val session = Session.get()
+
+            val ids = query.execute(session)
+            for ((entry, id) in it.zip(ids)) {
+                entry.id._value = id
+                EntityCache.getOrCreate(session).store(table, entry)
+            }
+        }
+
     }
 
     fun clearReferrersCache() {
@@ -349,32 +441,14 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    public fun new(prototype: T = createInstance(EntityID(-1, table), null), init: T.() -> Unit) : T {
+    public fun new(init: T.() -> Unit) : T {
+        val prototype: T = createInstance(EntityID(-1, table), null)
+        prototype.klass = this
         prototype.init()
 
-        val insert = InsertQuery(table)
-        val row = ResultRow()
-        for ((c, v) in prototype.writeValues) {
-            insert.set(c as Column<Any?>, v)
-            row.data[c] = insert.values[c]
-        }
+        EntityCache.getOrCreate(Session.get()).scheduleInsert(this, prototype)
 
-        for (c in table.columns) {
-            if (row.data.containsKey(c) || c == table.id) continue
-            if (c.columnType.nullable) {
-                row.data[c] = null
-            }
-            else if (c.defaultValue == null) {
-                error("Required column ${c.name} is missing from INSERT")
-            }
-        }
-
-        val session = Session.get()
-        insert.execute(session)
-
-        row.data[table.id] = insert.generatedKey
-
-        return wrapRow(row, session)
+        return prototype
     }
 
     public inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
