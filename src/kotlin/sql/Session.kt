@@ -124,6 +124,51 @@ class Session (val connection: Connection): UserDataHolder() {
         }
     }
 
+    private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
+        val statements = ArrayList<String>()
+        if (tables.size == 0)
+            return statements
+
+        val existingTableColumns = tableColumns()
+
+        val missingColumns = ArrayList<Column<*>>()
+
+        for (table in tables) {
+            //create columns
+            val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.contains(it.name) ?: true }
+            for (column in missingTableColumns) {
+                statements.add(column.ddl)
+            }
+            missingColumns.addAll(missingTableColumns)
+
+            // create indexes with new columns
+            for (table_index in table.indices) {
+                if (table_index.first.any { missingTableColumns.contains(it) }) {
+                    val alterTable = index(table_index.first, table_index.second)
+                    statements.add(alterTable)
+                }
+            }
+        }
+
+        for (column in missingColumns) {
+            if (column.referee != null) {
+                val fKDdl = foreignKey(column);
+                statements.add(fKDdl)
+            }
+        }
+
+        return statements
+    }
+
+    fun createMissingTablesAndColumns(vararg tables: Table) {
+        val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
+        for (statement in statements) {
+            exec(statement) {
+                connection.createStatement()?.executeUpdate(statement)
+            }
+        }
+    }
+
     fun drop(vararg tables: Table) {
         if (tables.size > 0) {
             for (table in tables) {

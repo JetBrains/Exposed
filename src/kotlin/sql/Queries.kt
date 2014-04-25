@@ -1,5 +1,8 @@
 package kotlin.sql
 
+import java.util.HashMap
+import java.util.ArrayList
+
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
 }
@@ -81,4 +84,42 @@ fun Table.matchesDefinition(): Boolean {
     }
 
     return nColumns == 0
+}
+
+/**
+ * returns list of column names for every table
+ */
+fun tableColumns(): HashMap<String, List<String>> {
+    if (Session.get().vendor != DatabaseVendor.MySql) {
+        throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
+    }
+
+    val tables = HashMap<String, List<String>>()
+
+    val rs = Session.get().connection.createStatement()?.executeQuery(
+            "SELECT DISTINCT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
+    if (rs == null)
+        return tables
+
+    while (rs.next()) {
+        val tableName = rs.getString(1)!!
+        val columnName = rs.getString(2)!!
+        tables[tableName] = (tables[tableName]?.plus(listOf(columnName)) ?: listOf(columnName))
+    }
+
+    return tables
+}
+
+fun getDatabase(): String {
+    return when (Session.get().vendor) {
+        DatabaseVendor.MySql -> {
+            val rs = Session.get().connection.createStatement()?.executeQuery("SELECT DATABASE()")
+            if (rs == null || !rs.next()) {
+                ""
+            } else {
+                rs.getString(1)!!
+            }
+        }
+        else -> throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
+    }
 }

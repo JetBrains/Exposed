@@ -259,48 +259,7 @@ open class Table(name: String = ""): ColumnSet() {
             ddl.append(" (")
             var c = 0;
             for (column in columns) {
-                ddl.append(Session.get().identity(column)).append(" ")
-                val colType = column.columnType
-                when (colType) {
-                    is EnumerationColumnType<*>,
-                    is EntityIDColumnType,
-                    is IntegerColumnType -> ddl.append("INT")
-
-                    is DecimalColumnType -> ddl.append("DECIMAL(${colType.scale}, ${colType.precision})")
-                    is LongColumnType -> ddl.append("BIGINT")
-                    is StringColumnType -> {
-                        if (colType.length in 1..255) {
-                            ddl.append("VARCHAR(${colType.length})")
-                        }
-                        else {
-                            ddl.append("TEXT")
-                        }
-
-                        if (colType.collate != null)
-                            ddl.append(" COLLATE ${colType.collate}")
-                    }
-                    is DateColumnType -> if (colType.time) ddl.append("DATETIME") else ddl.append("DATE")
-                    is BlobColumnType -> ddl.append("BLOB")
-                    is BooleanColumnType -> ddl.append("BIT")
-                    else -> throw IllegalStateException()
-                }
-                if (column is PKColumn<*>) {
-                    ddl.append(" PRIMARY KEY")
-                }
-                if (colType.autoinc) {
-                    ddl.append(" ").append(Session.get().autoIncrement(column))
-                }
-                if (colType.nullable) {
-                    ddl.append(" NULL")
-                } else {
-                    ddl.append(" NOT NULL")
-                }
-                (column as? Column<Any>)?.let {
-                    if (it.defaultValue != null) {
-                        ddl.append (" DEFAULT ${colType.valueToString(it.defaultValue!!)}")
-                    }
-                }
-
+                ddl.append(column.descriptionDdl())
                 c++
                 if (c < columns.size) {
                     ddl.append(", ")
