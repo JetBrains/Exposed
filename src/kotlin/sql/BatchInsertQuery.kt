@@ -83,20 +83,4 @@ class BatchInsertQuery(val table: Table) {
 
         return generatedKeys
     }
-
-    private fun PreparedStatement.fillParameters(columns: List<Column<*>>, values: Map<Column<*>, Any?>) {
-        clearParameters()
-        var index = 1
-        for (c in columns) {
-            val value = values[c]
-            val sqlType = c.columnType
-
-            when (value) {
-                null -> setObject(index, null)
-                else -> sqlType.setParameter(this, index, value)
-            }
-
-            index++
-        }
-    }
 }

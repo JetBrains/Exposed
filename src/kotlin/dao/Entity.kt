@@ -196,12 +196,20 @@ open public class Entity(val id: EntityID) {
         table.deleteWhere{table.id eq id}
     }
 
-    open fun flush() {
+    open fun flush(batch: BatchUpdateQuery? = null) {
         if (!writeValues.isEmpty()) {
-            val table = factory().table
-            table.update({table.id eq id}) {
+            if (batch == null) {
+                val table = factory().table
+                table.update({table.id eq id}) {
+                    for ((c, v) in writeValues) {
+                        it[c] = v
+                    }
+                }
+            }
+            else {
+                batch.addBatch(id)
                 for ((c, v) in writeValues) {
-                    it[c as Column<Any?>] = v
+                    batch[c] = v
                 }
             }
 
@@ -220,7 +228,7 @@ open public class Entity(val id: EntityID) {
 }
 
 class EntityCache {
-    val data = HashMap<Table, MutableMap<Int, Entity>>()
+    val data = HashMap<IdTable, MutableMap<Int, Entity>>()
     val inserts = HashMap<IdTable, MutableList<Entity>>()
     val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
 
@@ -301,10 +309,13 @@ class EntityCache {
 
         for (t in tables) flushInserts(t)
 
+
         for ((table, map) in data) {
+            val batch = BatchUpdateQuery(table)
             for ((i, entity) in map) {
-                entity.flush()
+                entity.flush(batch)
             }
+            batch.execute(Session.get())
         }
     }
 
