@@ -5,6 +5,7 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import kotlin.properties.Delegates
 import java.util.ArrayList
+import java.util.HashSet
 
 /**
  * @author max
@@ -173,6 +174,9 @@ open public class Entity(val id: EntityID) {
 
     fun <T> Column<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
         if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
+            if (referee != null) {
+                EntityCache.getOrCreate(Session.get()).clearReferrersCache()
+            }
             writeValues[this] = value
         }
     }
@@ -296,8 +300,31 @@ class EntityCache {
     }
 
     fun flush() {
-        val tables = inserts.keySet().toArrayList()
-        tables.topoSort { a, b ->
+        flush((inserts.keySet() + data.keySet()).toSet())
+    }
+
+    fun addDependencies(tables: Iterable<IdTable>): Iterable<IdTable> {
+        val workset = HashSet<IdTable>()
+
+        fun checkTable(table: IdTable) {
+            if (workset.add(table)) {
+                for (c in table.columns) {
+                    val referee = c.referee
+                    if (referee != null) {
+                        if (referee.table is IdTable) checkTable(referee.table)
+                    }
+                }
+            }
+        }
+
+        for (t in tables) checkTable(t)
+
+        return workset
+    }
+
+    fun flush(tables: Iterable<IdTable>) {
+        val sorted = addDependencies(tables).toArrayList()
+        sorted.topoSort { a, b ->
             when {
                 a == b -> 0
                 a references b && b references a -> 0
@@ -307,15 +334,19 @@ class EntityCache {
             }
         }
 
-        for (t in tables) flushInserts(t)
+        for (t in sorted) {
+            flushInserts(t)
+        }
 
-
-        for ((table, map) in data) {
-            val batch = BatchUpdateQuery(table)
-            for ((i, entity) in map) {
-                entity.flush(batch)
+        for (t in tables) {
+            val map = data[t]
+            if (map != null) {
+                val batch = BatchUpdateQuery(t)
+                for ((i, entity) in map) {
+                    entity.flush(batch)
+                }
+                batch.execute(Session.get())
             }
-            batch.execute(Session.get())
         }
     }
 

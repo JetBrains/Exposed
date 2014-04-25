@@ -9,6 +9,7 @@ import kotlin.dao.EntityCache
 import org.joda.time.DateTime
 import java.util.LinkedHashSet
 import kotlin.dao.EntityID
+import kotlin.dao.IdTable
 
 public class ResultRow() {
     val data = HashMap<Expression<*>, Any?>()
@@ -184,18 +185,21 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         }
     }
 
-    public override fun iterator(): Iterator<ResultRow> {
+    private fun flushEntities() {
         // Flush data before executing query or results may be unpredictable
-        EntityCache.getOrCreate(session).flush()
+        val tables = set.source.columns.map { it.table }.filterIsInstance(javaClass<IdTable>()).toSet()
+        EntityCache.getOrCreate(session).flush(tables)
+    }
 
+    public override fun iterator(): Iterator<ResultRow> {
+        flushEntities()
         val builder = QueryBuilder(true)
         val sql = toSQL(builder)
         return ResultIterator(builder.executeQuery(session, sql))
     }
 
     public override fun count(): Int {
-        // Flush data before executing query or results may be unpredictable
-        EntityCache.getOrCreate(session).flush()
+        flushEntities()
 
         val builder = QueryBuilder(true)
         val sql = toSQL(builder, true)
@@ -206,8 +210,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     }
 
     public override fun empty(): Boolean {
-        // Flush data before executing query or results may be unpredictable
-        EntityCache.getOrCreate(session).flush()
+        flushEntities()
         val builder = QueryBuilder(true)
 
         val selectOneRowStatement = run {

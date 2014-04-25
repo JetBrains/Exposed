@@ -52,8 +52,6 @@ class BatchUpdateQuery(val table: IdTable) {
 
             assert(count.size == set.size, "Number of results don't match number of entries in batch")
 
-            EntityCache.getOrCreate(session).clearReferrersCache()
-
             count.sum()
         }
     }

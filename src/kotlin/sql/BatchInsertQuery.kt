@@ -57,8 +57,6 @@ class BatchInsertQuery(val table: Table) {
 
                 assert(count.size == data.size, "Number of results don't match number of entries in batch")
 
-                EntityCache.getOrCreate(session).clearReferrersCache()
-
                 val rs = stmt.getGeneratedKeys()!!
                 while (rs.next()) {
                     generatedKeys.add(rs.getInt(1))
