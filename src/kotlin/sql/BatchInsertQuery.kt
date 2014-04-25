@@ -57,21 +57,23 @@ class BatchInsertQuery(val table: Table) {
 
                 assert(count.size == data.size, "Number of results don't match number of entries in batch")
 
-                val rs = stmt.getGeneratedKeys()!!
-                while (rs.next()) {
-                    generatedKeys.add(rs.getInt(1))
-                }
-
-                if (generatedKeys.size == 1 && count.size > 1) {
-                    // H2 only returns one last generated keys...
-                    var id = generatedKeys.first()
-
-                    while (generatedKeys.size < count.size) {
-                        generatedKeys.add(0, --id)
+                if (auto.isNotEmpty()) {
+                    val rs = stmt.getGeneratedKeys()!!
+                    while (rs.next()) {
+                        generatedKeys.add(rs.getInt(1))
                     }
-                }
 
-                assert(generatedKeys.size == 0 || generatedKeys.size == count.size, "Number of autoincs doesn't match number of batch entries")
+                    if (generatedKeys.size == 1 && count.size > 1) {
+                        // H2 only returns one last generated keys...
+                        var id = generatedKeys.first()
+
+                        while (generatedKeys.size < count.size) {
+                            generatedKeys.add(0, --id)
+                        }
+                    }
+
+                    assert(generatedKeys.size == 0 || generatedKeys.size == count.size, "Number of autoincs doesn't match number of batch entries")
+                }
             }
         }
         catch (e: Exception) {
