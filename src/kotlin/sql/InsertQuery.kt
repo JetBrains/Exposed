@@ -15,13 +15,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
             error("$column is already initialized")
         }
 
-        values.put(column, if (value == null) null else {
-            when(column.columnType) {
-                is EnumerationColumnType<*> -> (value as Enum<*>).ordinal()
-                is EntityIDColumnType -> (value as EntityID).value
-                else -> value
-            }
-        })
+        values.put(column, column.columnType.valueToDB(value))
     }
 
     fun get(column: Column<Int>): Int {

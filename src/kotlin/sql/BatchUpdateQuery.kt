@@ -17,11 +17,7 @@ class BatchUpdateQuery(val table: IdTable) {
             error("$column is already initialized")
         }
 
-        values[column] = when(column.columnType) {
-            is EnumerationColumnType<*> -> (value as Enum<*>).ordinal()
-            is EntityIDColumnType -> if (value is EntityID) value.value else value
-            else -> value
-        }
+        values[column] = column.columnType.valueToDB(value)
     }
 
     fun execute(session: Session): Int {

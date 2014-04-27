@@ -34,11 +34,7 @@ object SqlExpressionBuilder {
     }
 
     public fun<T> ExpressionWithColumnType<T>.wrap(value: T): Expression<T> {
-        if (QueryBuilder.isSupported(columnType)) {
-            return QueryParameter(value, columnType)
-        }
-
-        return LiteralOp(columnType, value)
+        return QueryParameter(value, columnType)
     }
 
     public fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {

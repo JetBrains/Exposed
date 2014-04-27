@@ -8,6 +8,8 @@ import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
 open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
+    public open fun valueFromDB(value: Any): Any  = value
+
     public fun valueToString(value: Any?) : String {
         return when (value) {
             null -> {
@@ -25,8 +27,12 @@ open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = fals
         }
     }
 
+    public fun valueToDB(value: Any?): Any? = if (value != null) notNullValueToDB(value) else null
+
+    public open fun notNullValueToDB(value: Any): Any  = value
+
     protected open fun nonNullValueToString(value: Any) : String {
-        return "$value"
+        return notNullValueToDB(value).toString()
     }
 
     public open fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
@@ -35,9 +41,16 @@ open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = fals
 }
 
 data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
-        val converted = if (value is EntityID) value.value else value
-        super<ColumnType>.setParameter(stmt, index, converted)
+    override fun notNullValueToDB(value: Any): Any {
+        return when (value) {
+            is EntityID -> value.value
+            is Int -> value
+            else -> error("Unknown value for entity id: $value")
+        }
+    }
+
+    override fun valueFromDB(value: Any): Any {
+        return  EntityID(value as Int, table)
     }
 }
 
@@ -45,12 +58,16 @@ data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc)
 data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc)
 data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType()
 data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
-    protected override fun nonNullValueToString(value: Any): String {
+    override fun notNullValueToDB(value: Any): Any {
         return when (value) {
-            is Int -> "$value"
-            is Enum<*> -> "${value.ordinal()}"
+            is Int -> value
+            is Enum<*> -> value.ordinal()
             else -> error("$value is not valid for enum ${klass.getName()}")
         }
+    }
+
+    override fun valueFromDB(value: Any): Any {
+        return klass.getEnumConstants()!![value as Int]
     }
 }
 
@@ -66,14 +83,29 @@ data class DateColumnType(val time: Boolean): ColumnType() {
         }
     }
 
-    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
-        val millis = (value as DateTime).getMillis()
-        if (time) {
-            stmt.setTimestamp(index, java.sql.Timestamp(millis))
+    override fun valueFromDB(value: Any): Any {
+        if (value is java.sql.Date) {
+            return DateTime(value)
         }
-        else {
-            stmt.setDate(index, java.sql.Date(millis))
+
+        if (value is java.sql.Timestamp) {
+            return DateTime(value.getTime(), Database.timeZone)
         }
+
+        return value
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (value is DateTime) {
+            val millis = value.getMillis()
+            if (time) {
+                return java.sql.Timestamp(millis)
+            }
+            else {
+                return java.sql.Date(millis)
+            }
+        }
+        return value
     }
 }
 
@@ -96,6 +128,13 @@ data class StringColumnType(val length: Int = 0, val collate: String? = null): C
         }
         sb.append('\'')
         return sb.toString()
+    }
+
+    override fun valueFromDB(value: Any): Any {
+        if (value is java.sql.Clob) {
+            return value.getCharacterStream().readText()
+        }
+        return value
     }
 }
 

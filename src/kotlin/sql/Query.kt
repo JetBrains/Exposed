@@ -25,29 +25,8 @@ public class ResultRow() {
             return null as T
         }
 
-        if (c is Column<*>) {
-            val columnType = c.columnType
-            if (d is Int) when (columnType) {
-                is EnumerationColumnType<*> -> {
-                    return columnType.klass.getEnumConstants()!![d as Int] as T
-                }
-
-                is EntityIDColumnType -> {
-                    return EntityID(d as Int, columnType.table) as T
-                }
-            }
-        }
-
-        if (d is java.sql.Date) {
-            return DateTime(d) as T
-        }
-
-        if (d is java.sql.Timestamp) {
-            return DateTime(d.getTime(), Database.timeZone) as T
-        }
-
-        if (d is java.sql.Clob) {
-            return d.getCharacterStream().readText() as T
+        if (c is ExpressionWithColumnType<*>) {
+            return c.columnType.valueFromDB(d) as T
         }
 
         return d as T
