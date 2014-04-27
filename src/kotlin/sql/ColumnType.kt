@@ -7,7 +7,9 @@ import java.sql.Date
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
-open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
+abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
+    public abstract fun sqlType(): String
+
     public open fun valueFromDB(value: Any): Any  = value
 
     public fun valueToString(value: Any?) : String {
@@ -41,6 +43,8 @@ open class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = fals
 }
 
 data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnType(autoinc) {
+    override fun sqlType(): String  = "INT"
+
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
             is EntityID -> value.value
@@ -54,10 +58,21 @@ data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): Col
     }
 }
 
-data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc)
-data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc)
-data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType()
+data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
+    override fun sqlType(): String  = "INT"
+}
+
+data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
+    override fun sqlType(): String  = "BIGINT"
+}
+
+data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
+    override fun sqlType(): String  = "DECIMAL(${scale}, ${precision})"
+}
+
 data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
+    override fun sqlType(): String  = "INT"
+
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
             is Int -> value
@@ -72,6 +87,8 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 }
 
 data class DateColumnType(val time: Boolean): ColumnType() {
+    override fun sqlType(): String  = if (time) "DATETIME" else "DATE"
+
     protected override fun nonNullValueToString(value: Any): String {
         val dateTime = value as DateTime
         if (time) {
@@ -110,6 +127,21 @@ data class DateColumnType(val time: Boolean): ColumnType() {
 }
 
 data class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
+    override fun sqlType(): String  {
+        val ddl = StringBuilder()
+
+        ddl.append(when (length) {
+            in 1..255 -> "VARCHAR($length)"
+            else -> "TEXT"
+        })
+
+        if (collate != null) {
+            ddl.append(" COLLATE ${collate}")
+        }
+
+        return ddl.toString()
+    }
+
     val charactersToEscape = hashMapOf(
             '\'' to "\'\'",
 //            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
@@ -139,12 +171,16 @@ data class StringColumnType(val length: Int = 0, val collate: String? = null): C
 }
 
 data class BlobColumnType(): ColumnType() {
+    override fun sqlType(): String  = "BLOB"
+
     override fun nonNullValueToString(value: Any): String {
         return "?"
     }
 }
 
 data class BooleanColumnType() : ColumnType() {
+    override fun sqlType(): String  = "BIT"
+
     override fun nonNullValueToString(value: Any): String {
         return if (value as Boolean) "1" else "0"
     }

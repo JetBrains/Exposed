@@ -19,29 +19,8 @@ open class Column<out T>(val table: Table, val name: String, override val column
     public fun descriptionDdl(): String {
         val ddl = StringBuilder(Session.get().identity(this)).append(" ")
         val colType = columnType
-        when (colType) {
-            is EnumerationColumnType<*>,
-            is EntityIDColumnType,
-            is IntegerColumnType -> ddl.append("INT")
+        ddl.append(colType.sqlType())
 
-            is DecimalColumnType -> ddl.append("DECIMAL(${colType.scale}, ${colType.precision})")
-            is LongColumnType -> ddl.append("BIGINT")
-            is StringColumnType -> {
-                if (colType.length in 1..255) {
-                    ddl.append("VARCHAR(${colType.length})")
-                }
-                else {
-                    ddl.append("TEXT")
-                }
-
-                if (colType.collate != null)
-                    ddl.append(" COLLATE ${colType.collate}")
-            }
-            is DateColumnType -> if (colType.time) ddl.append("DATETIME") else ddl.append("DATE")
-            is BlobColumnType -> ddl.append("BLOB")
-            is BooleanColumnType -> ddl.append("BIT")
-            else -> throw IllegalStateException()
-        }
         if (this is PKColumn<*>) {
             ddl.append(" PRIMARY KEY")
         }
