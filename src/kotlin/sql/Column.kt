@@ -32,10 +32,9 @@ open class Column<out T>(val table: Table, val name: String, override val column
         } else {
             ddl.append(" NOT NULL")
         }
-        (this as? Column<Any>)?.let {
-            if (it.defaultValue != null) {
-                ddl.append (" DEFAULT ${colType.valueToString(it.defaultValue!!)}")
-            }
+
+        if (defaultValue != null) {
+            ddl.append (" DEFAULT ${colType.valueToString(defaultValue!!)}")
         }
 
         return ddl.toString()
