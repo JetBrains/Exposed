@@ -1,8 +1,7 @@
 package kotlin.sql
 import java.util.ArrayList
 
-abstract class Function<out T>(): ExpressionWithColumnType<T> {
-}
+abstract class Function<T>(): ExpressionWithColumnType<T>
 
 data class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
@@ -36,7 +35,7 @@ data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     override val columnType: ColumnType = _columnType
 }
 
-data class Substring(val expr: Expression<String?>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
+data class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUBSTRING(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
     }

@@ -55,7 +55,7 @@ fun<T:Any> Iterable<T>.single() : T {
         found = true;
     }
 
-    if (!found) error ("No items found")
+        if (!found) error ("No items found")
     return answer!!;
 }
 

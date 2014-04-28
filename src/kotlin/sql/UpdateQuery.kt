@@ -5,7 +5,14 @@ import java.util.LinkedHashMap
 class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
     val values = LinkedHashMap<Column<*>, Any?>()
 
-    fun <T> set(column: Column<T>, value: T) {
+    fun <T, S: T> set(column: Column<T>, value: S) {
+        if (values containsKey column) {
+            error("$column is already initialized")
+        }
+        values[column] = value
+    }
+
+    fun <T, S: T> update(column: Column<T>, value: Expression<S>) {
         if (values containsKey column) {
             error("$column is already initialized")
         }
@@ -23,7 +30,7 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
                    .append("=")
 
                 when {
-                    value != null && javaClass<Expression<Any>>().isAssignableFrom(value.javaClass) -> sqlStatement.append((value as Expression<Any>).toSQL(builder))
+                    value is Expression<*> -> sqlStatement.append(value.toSQL(builder))
                     else -> sqlStatement.append(builder.registerArgument(value, col.columnType))
                 }
 

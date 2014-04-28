@@ -597,15 +597,15 @@ class DMLTests : DatabaseTestsBase() {
 
             t.checkRow(t.select{t.d.eq(date)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select{t.dn.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select{t.dn.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.dn.eq(null: DateTime?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             t.checkRow(t.select{t.e.eq(DMLTestsData.E.ONE)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select{t.en.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select{t.en.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.en.eq(null: DMLTestsData.E?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             t.checkRow(t.select{t.s.eq(sTest)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             t.checkRow(t.select{t.sn.isNull()}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            t.checkRow(t.select{t.sn.eq(null: Int?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            t.checkRow(t.select{t.sn.eq(null: String?)}.single(), 42, null, date, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
@@ -693,8 +693,8 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             t.update({t.n.eq(101)}) {
-                it[s] = t.s.substring(2, 255)
-                it[sn] = t.s.substring(3, 255)
+                it.update(s, t.s.substring(2, 255))
+                it.update(sn, t.s.substring(3, 255))
             }
 
             val row = t.select { t.n eq 101 }.single()

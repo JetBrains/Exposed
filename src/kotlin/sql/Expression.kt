@@ -45,7 +45,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 }
 
-trait Expression<out T> {
+trait Expression<T> {
     fun toSQL(queryBuilder: QueryBuilder): String
 
     class object {
@@ -55,7 +55,7 @@ trait Expression<out T> {
     }
 }
 
-trait ExpressionWithColumnType<out T> : Expression<T> {
+trait ExpressionWithColumnType<T> : Expression<T> {
     // used for operations with literals
     val columnType: ColumnType;
 }

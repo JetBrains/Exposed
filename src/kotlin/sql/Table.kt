@@ -205,7 +205,7 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
-    fun <T, C:Column<T>> C.references(ref: Column<T>): C {
+    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C {
         referee = ref
         return this
     }

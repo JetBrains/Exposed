@@ -20,7 +20,7 @@ fun<T> Column<T>.sum(): Sum<T> {
     return Sum(this, this.columnType)
 }
 
-fun Column<String?>.substring(start: Int, length: Int): Substring {
+fun<T:String?> Column<T>.substring(start: Int, length: Int): Substring {
     return Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 }
 
@@ -39,32 +39,29 @@ object SqlExpressionBuilder {
 
     public fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
         if (t == null) {
-            if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNull()
         }
-        return EqOp<T> (this, wrap(t))
+        return EqOp(this, wrap(t))
     }
 
-
-    public fun<T> Expression<T>.eq(other: Expression<T>) : Op<Boolean> {
-        return EqOp<T> (this, other)
+    public fun<T, S: T> Expression<T>.eq(other: Expression<S>) : Op<Boolean> {
+        return EqOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.eq(other: Expression<T>) : Op<Boolean> {
-        return EqOp<T> (this, other)
+    public fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> {
+        return EqOp (this, other)
     }
 
     public fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
-            if (!columnType.nullable) error("Attempt to compare non-nulable column value with null")
             return isNotNull()
         }
 
         return NeqOp(this, wrap(other))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.neq(other: Expression<T>) : Op<Boolean> {
-        return NeqOp<T> (this, other)
+    public fun<T, S: T> ExpressionWithColumnType<T>.neq(other: Expression<S>) : Op<Boolean> {
+        return NeqOp (this, other)
     }
 
     public fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> {
@@ -75,38 +72,39 @@ object SqlExpressionBuilder {
         return IsNotNullOp(this)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.less(t: T) : LessOp<T> {
-        return LessOp<T> (this, wrap(t))
+    public fun<T> ExpressionWithColumnType<T>.less(t: T) : Op<Boolean> {
+        return LessOp(this, wrap(t))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.less(other: Expression<T>) : LessOp<T> {
-        return LessOp<T> (this, other)
+    public fun<T, S: T> ExpressionWithColumnType<T>.less(other: Expression<S>) : Op<Boolean> {
+        return LessOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : LessEqOp<T> {
-        return LessEqOp<T> (this, wrap(t))
+    public fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : Op<Boolean> {
+        return LessEqOp(this, wrap(t))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.lessEq(other: Expression<T>) : LessEqOp<T> {
-        return LessEqOp<T> (this, other)
+    public fun<T, S: T> ExpressionWithColumnType<T>.lessEq(other: Expression<S>) : Op<Boolean> {
+        return LessEqOp(this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greater(t: T) : GreaterOp<T> {
-        return GreaterOp<T> (this, wrap(t))
+    public fun<T> ExpressionWithColumnType<T>.greater(t: T) : Op<Boolean> {
+        return GreaterOp(this, wrap(t))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greater(other: Expression<T>) : GreaterOp<T> {
+    public fun<T, S: T> ExpressionWithColumnType<T>.greater(other: Expression<S>) : Op<Boolean> {
         return GreaterOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : GreaterEqOp<T> {
+    public fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : Op<Boolean> {
         return GreaterEqOp (this, wrap(t))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greaterEq(other: Expression<T>) : GreaterEqOp<T> {
+    public fun<T, S: T> ExpressionWithColumnType<T>.greaterEq(other: Expression<S>) : Op<Boolean> {
         return GreaterEqOp (this, other)
     }
-    public fun<T> ExpressionWithColumnType<T>.plus(other: Expression<T>) : ExpressionWithColumnType<T> {
+
+    public fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> {
         return PlusOp (this, other, columnType)
     }
 
@@ -114,7 +112,7 @@ object SqlExpressionBuilder {
         return PlusOp (this, wrap(t), columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.minus(other: Expression<T>) : ExpressionWithColumnType<T> {
+    public fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> {
         return MinusOp (this, other, columnType)
     }
 
@@ -122,7 +120,7 @@ object SqlExpressionBuilder {
         return MinusOp (this, wrap(t), columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.times(other: Expression<T>) : ExpressionWithColumnType<T> {
+    public fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> {
         return TimesOp (this, other, columnType)
     }
 
@@ -130,7 +128,7 @@ object SqlExpressionBuilder {
         return TimesOp (this, wrap(t), columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.div(other: Expression<T>) : ExpressionWithColumnType<T> {
+    public fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> {
         return DivideOp (this, other, columnType)
     }
 
@@ -138,19 +136,16 @@ object SqlExpressionBuilder {
         return DivideOp (this, wrap(t), columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.like(other: String): Op<Boolean> {
-        if (columnType !is StringColumnType) error("Like is only for strings")
-        return LikeOp(this, QueryParameter(other, columnType))
+    public fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> {
+        return LikeOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.regexp(other: String): Op<Boolean> {
-        if (columnType !is StringColumnType) error("Regexp is only for strings")
-        return RegexpOp(this, QueryParameter(other, columnType))
+    public fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> {
+        return RegexpOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.notRegexp(other: String): Op<Boolean> {
-        if (columnType !is StringColumnType) error("Not regexp is only for strings")
-        return NotRegexpOp(this, QueryParameter(other, columnType))
+    public fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> {
+        return NotRegexpOp(this, QueryParameter(pattern, columnType))
     }
 
     public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {

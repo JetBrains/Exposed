@@ -1,7 +1,7 @@
 package kotlin.sql
 
 
-open class Column<out T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T> {
+open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T> {
     var referee: Column<*>? = null
     var defaultValue: T? = null
 
