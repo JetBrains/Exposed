@@ -82,6 +82,8 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     }
 
     override fun valueFromDB(value: Any): Any {
+        if (value is Enum<*>)
+            return value as Enum<T>
         return klass.getEnumConstants()!![value as Int]
     }
 }
