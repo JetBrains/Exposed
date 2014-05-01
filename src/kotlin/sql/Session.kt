@@ -71,7 +71,7 @@ class Session (val connection: Connection): UserDataHolder() {
         duration += delta
 
         if (debug) {
-            statements.append("[${delta}ms] ${stmt.take(1024)}\n\n")
+            statements.append("[${delta}ms] ${expandArgs(stmt, args).take(1024)}\n\n")
         }
 
         return answer
