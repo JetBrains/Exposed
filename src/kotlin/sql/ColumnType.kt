@@ -6,6 +6,7 @@ import java.util.Locale
 import java.sql.Date
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
+import java.sql.Timestamp
 
 abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
     public abstract fun sqlType(): String
@@ -92,7 +93,12 @@ data class DateColumnType(val time: Boolean): ColumnType() {
     override fun sqlType(): String  = if (time) "DATETIME" else "DATE"
 
     protected override fun nonNullValueToString(value: Any): String {
-        val dateTime = value as DateTime
+        val dateTime = when (value) {
+            is DateTime -> value as DateTime
+            is Timestamp -> DateTime(value)
+            else -> error("Unexpected value: $value")
+        }
+
         if (time) {
             val zonedTime = dateTime.toDateTime(Database.timeZone)
             return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
