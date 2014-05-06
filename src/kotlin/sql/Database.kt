@@ -6,6 +6,7 @@ import kotlin.properties.Delegates
 import javax.sql.DataSource
 import org.joda.time.DateTimeZone
 import kotlin.dao.EntityCache
+import java.sql.SQLException
 
 public class Database private(val connector: () -> Connection) {
 
@@ -20,9 +21,9 @@ public class Database private(val connector: () -> Connection) {
     }
 
     // Overloading methods instead of default parameters for Java conpatibility
-    fun <T> withSession(statement: Session.() -> T): T = withSession(Connection.TRANSACTION_REPEATABLE_READ, statement)
+    fun <T> withSession(statement: Session.() -> T): T = withSession(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
 
-    fun <T> withSession(transactionIsolation: Int, statement: Session.() -> T): T {
+    fun <T> withSession(transactionIsolation: Int, repetitionAttempts: Int, statement: Session.() -> T): T {
         val outer = Session.tryGet()
 
         if (outer != null) {
@@ -30,22 +31,36 @@ public class Database private(val connector: () -> Connection) {
         }
         else {
             val connection = connector()
-            val session = Session(connection)
+            var repetitions = 0
             try {
                 connection.setAutoCommit(false)
                 connection.setTransactionIsolation(transactionIsolation)
 
-                val answer = session.statement()
-                EntityCache.getOrCreate(session).flush()
-                connection.commit()
-                return answer
-            }
-            catch (e: Throwable) {
-                connection.rollback()
-                throw e
+                while(true) {
+                    val session = Session(connection)
+                    try {
+                        val answer = session.statement()
+                        EntityCache.getOrCreate(session).flush()
+                        connection.commit()
+                        return answer
+                    }
+                    catch (e: SQLException) {
+                        connection.rollback()
+                        repetitions++
+                        if (repetitions >= repetitionAttempts) {
+                            throw e
+                        }
+                    }
+                    catch (e: Throwable) {
+                        connection.rollback()
+                        throw e
+                    }
+                    finally {
+                        session.close()
+                    }
+                }
             }
             finally {
-                session.close()
                 connection.close()
             }
         }
