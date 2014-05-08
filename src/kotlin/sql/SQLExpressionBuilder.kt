@@ -149,6 +149,10 @@ object SqlExpressionBuilder {
     }
 
     public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {
-        return InListOp(this, list)
+        return InListOrNotInListOp(this, list, isInList = true)
+    }
+
+    public fun<T> ExpressionWithColumnType<T>.notInList(list: List<T>): Op<Boolean> {
+        return InListOrNotInListOp(this, list, isInList = false)
     }
 }
