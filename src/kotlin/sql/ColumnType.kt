@@ -93,6 +93,8 @@ data class DateColumnType(val time: Boolean): ColumnType() {
     override fun sqlType(): String  = if (time) "DATETIME" else "DATE"
 
     protected override fun nonNullValueToString(value: Any): String {
+        if (value is String) return value
+
         val dateTime = when (value) {
             is DateTime -> value as DateTime
             is Timestamp -> DateTime(value)
