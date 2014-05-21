@@ -97,7 +97,8 @@ data class DateColumnType(val time: Boolean): ColumnType() {
 
         val dateTime = when (value) {
             is DateTime -> value as DateTime
-            is Timestamp -> DateTime(value)
+            is java.sql.Date -> DateTime(value.getTime())
+            is java.sql.Timestamp -> DateTime(value.getTime())
             else -> error("Unexpected value: $value")
         }
 
