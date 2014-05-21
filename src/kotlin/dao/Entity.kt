@@ -401,7 +401,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     private fun warmCache(): EntityCache {
         val cache = EntityCache.getOrCreate(Session.get())
         if (eagerSelect) {
-            if (!cache.data.containsKey(this)) {
+            if (!cache.data.containsKey(table)) {
                 retrieveAll().reduce { a, b -> a }
             }
         }
