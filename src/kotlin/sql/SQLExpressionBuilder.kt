@@ -1,5 +1,7 @@
 package kotlin.sql
 
+import org.joda.time.DateTime
+
 fun Column<*>.count(): Count {
     return Count(this)
 }
@@ -154,5 +156,19 @@ object SqlExpressionBuilder {
 
     public fun<T> ExpressionWithColumnType<T>.notInList(list: List<T>): Op<Boolean> {
         return InListOrNotInListOp(this, list, isInList = false)
+    }
+
+    public fun<T, S> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
+        return when (value) {
+            is Int -> intLiteral(value)
+            is Long -> longLiteral(value)
+            is String -> stringLiteral(value)
+            is DateTime -> dateTimeLiteral(value)
+            else -> LiteralOp<T>(columnType, value)
+        }
+    }
+
+    public fun<T, S> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> {
+        return Between(this, asLiteral(from), asLiteral(to))
     }
 }

@@ -37,6 +37,12 @@ class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
     }
 }
 
+class Between(val expr: Expression<*>, val from: LiteralOp<*>, val to: LiteralOp<*> ): Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder):String {
+        return "${expr.toSQL(queryBuilder)} BETWEEN ${from.toSQL(queryBuilder)} AND ${to.toSQL(queryBuilder)}"
+    }
+}
+
 class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: List<T>, val isInList: Boolean = true): Op<Boolean>() {
 
     override fun toSQL(queryBuilder: QueryBuilder): String {
@@ -83,9 +89,10 @@ fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnT
 fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 
-fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp<Int> (IntegerColumnType(), value)
-fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp<Long>(LongColumnType(), value)
-fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp<String>(StringColumnType(), value)
+fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp (IntegerColumnType(), value)
+fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp(LongColumnType(), value)
+fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp(StringColumnType(), value)
+fun dateTimeLiteral(value: DateTime) : LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
 abstract class ComparisonOp(val expr1: Expression<*>, val expr2: Expression<*>, val opSign: String): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
