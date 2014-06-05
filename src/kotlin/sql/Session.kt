@@ -39,6 +39,7 @@ class Session (val connection: Connection): UserDataHolder() {
 
     var statementCount: Int = 0
     var duration: Long = 0
+    var warnLongQueriesDuration: Long = 2000
     var debug = false
 
     val statements = StringBuilder()
@@ -60,6 +61,10 @@ class Session (val connection: Connection): UserDataHolder() {
         }
     }
 
+    private fun describeStatement(args: List<Pair<ColumnType, Any?>>, delta: Long, stmt: String): String {
+        return "[${delta}ms] ${expandArgs(stmt, args).take(1024)}\n\n"
+    }
+
     fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
         logger.log(stmt, args)
         statementCount++
@@ -71,7 +76,11 @@ class Session (val connection: Connection): UserDataHolder() {
         duration += delta
 
         if (debug) {
-            statements.append("[${delta}ms] ${expandArgs(stmt, args).take(1024)}\n\n")
+            statements.append(describeStatement(args, delta, stmt))
+        }
+
+        if (delta > warnLongQueriesDuration) {
+            exposedLogger.warn("Long query: ${describeStatement(args, delta, stmt)}", RuntimeException())
         }
 
         return answer

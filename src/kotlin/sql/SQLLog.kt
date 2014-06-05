@@ -9,6 +9,8 @@ public trait SqlLogger {
     fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
 }
 
+val exposedLogger = Logger.getLogger("Exposed")!!
+
 fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
     if (args.size == 0)
         return sql
@@ -54,10 +56,9 @@ public class StdOutSqlLogger : SqlLogger {
     }
 }
 
-public class Log4jSqlLogger(loggerName: String = "Exposed"): SqlLogger {
-    private val logger = Logger.getLogger("Exposed")
+public class Log4jSqlLogger(): SqlLogger {
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
-        logger?.debug(stmt)
+        exposedLogger.debug(stmt)
     }
 }
 
