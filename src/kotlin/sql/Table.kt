@@ -37,8 +37,8 @@ fun Table.join (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
-fun Table.join (otherTable: Table, joinType: JoinType, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
-    return Join (this, otherTable, joinType, null, null, additionalConstraint)
+fun Table.join (otherTable: Table, joinType: JoinType, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
+    return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 }
 
 fun Table.innerJoin (otherTable: Table) : Join {
