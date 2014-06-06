@@ -30,38 +30,35 @@ public class Database private(val connector: () -> Connection) {
             return outer.statement()
         }
         else {
-            val connection = connector()
             var repetitions = 0
-            try {
+
+            while(true) {
+                val connection = connector()
                 connection.setAutoCommit(false)
                 connection.setTransactionIsolation(transactionIsolation)
 
-                while(true) {
-                    val session = Session(connection)
-                    try {
-                        val answer = session.statement()
-                        EntityCache.getOrCreate(session).flush()
-                        connection.commit()
-                        return answer
-                    }
-                    catch (e: SQLException) {
-                        connection.rollback()
-                        repetitions++
-                        if (repetitions >= repetitionAttempts) {
-                            throw e
-                        }
-                    }
-                    catch (e: Throwable) {
-                        connection.rollback()
+                val session = Session(connection)
+                try {
+                    val answer = session.statement()
+                    EntityCache.getOrCreate(session).flush()
+                    connection.commit()
+                    return answer
+                }
+                catch (e: SQLException) {
+                    if (!connection.isClosed()) connection.rollback()
+                    repetitions++
+                    if (repetitions >= repetitionAttempts) {
                         throw e
                     }
-                    finally {
-                        session.close()
-                    }
                 }
-            }
-            finally {
-                connection.close()
+                catch (e: Throwable) {
+                    if (!connection.isClosed()) connection.rollback()
+                    throw e
+                }
+                finally {
+                    session.close()
+                    connection.close()
+                }
             }
         }
     }
