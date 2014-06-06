@@ -117,7 +117,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
         }
 
         if (value is java.sql.Timestamp) {
-            return DateTime(value.getTime(), Database.timeZone)
+            return DateTime(value.getTime())
         }
 
         return value
