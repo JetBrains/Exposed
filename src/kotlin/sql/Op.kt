@@ -48,29 +48,35 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
     override fun toSQL(queryBuilder: QueryBuilder): String {
         val sb = StringBuilder()
 
-        if (list.isNotEmpty()) {
-            sb.append(expr.toSQL(queryBuilder))
-            when {
-                isInList -> sb.append(" IN (")
-                else -> sb.append(" NOT IN (")
+        when (list.size()) {
+            0 -> sb.append(" FALSE")
+
+            1 -> {
+                sb.append(" = ")
+                sb.append(queryBuilder.registerArgument(list.first(), expr.columnType))
             }
 
-            sb.append(when (Session.get().vendor) {
-                DatabaseVendor.PostgreSQL -> {
-                    queryBuilder.registerArgument(list, expr.columnType)
+            else -> {
+                sb.append(expr.toSQL(queryBuilder))
+                when {
+                    isInList -> sb.append(" IN (")
+                    else -> sb.append(" NOT IN (")
                 }
 
-                else -> {
-                    list.map {
-                        queryBuilder.registerArgument(it, expr.columnType)
-                    }.makeString(",")
-                }
-            })
+                sb.append(when (Session.get().vendor) {
+                    DatabaseVendor.PostgreSQL -> {
+                        queryBuilder.registerArgument(list, expr.columnType)
+                    }
 
-            sb.append(")")
-        }
-        else {
-            sb.append(" FALSE")
+                    else -> {
+                        list.map {
+                            queryBuilder.registerArgument(it, expr.columnType)
+                        }.makeString(",")
+                    }
+                })
+
+                sb.append(")")
+            }
         }
 
         return sb.toString()

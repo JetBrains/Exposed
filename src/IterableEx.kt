@@ -5,6 +5,32 @@ public trait SizedIterable<out T>: Iterable<T> {
     fun empty(): Boolean
 }
 
+fun <T> emptySized() : SizedIterable<T> {
+    return EmptySizedIterable()
+}
+
+class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
+    override fun count(): Int {
+        return 0
+    }
+
+    override fun empty(): Boolean {
+        return true
+    }
+
+    override fun iterator(): Iterator<T> {
+        return this
+    }
+
+    override fun next(): T {
+        throw UnsupportedOperationException()
+    }
+
+    override fun hasNext(): Boolean {
+        return false;
+    }
+}
+
 public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     override fun iterator() = delegate.iterator()
     override fun count() = delegate.size()
