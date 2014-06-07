@@ -52,6 +52,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
             0 -> sb.append(" FALSE")
 
             1 -> {
+                sb.append(expr.toSQL(queryBuilder))
                 sb.append(" = ")
                 sb.append(queryBuilder.registerArgument(list.first(), expr.columnType))
             }
