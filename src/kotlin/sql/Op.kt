@@ -49,11 +49,17 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
         val sb = StringBuilder()
 
         when (list.size()) {
-            0 -> sb.append(" FALSE")
+            0 -> when {
+                isInList ->  sb.append(" FALSE")
+                else -> sb.append(" TRUE")
+            }
 
             1 -> {
                 sb.append(expr.toSQL(queryBuilder))
-                sb.append(" = ")
+                when {
+                    isInList ->  sb.append(" = ")
+                    else -> sb.append(" != ")
+                }
                 sb.append(queryBuilder.registerArgument(list.first(), expr.columnType))
             }
 
