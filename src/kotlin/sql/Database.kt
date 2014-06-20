@@ -33,31 +33,32 @@ public class Database private(val connector: () -> Connection) {
             var repetitions = 0
 
             while(true) {
-                val connection = connector()
-                connection.setAutoCommit(false)
-                connection.setTransactionIsolation(transactionIsolation)
 
-                val session = Session(connection)
+                val session = Session({
+                    val connection = connector()
+                    connection.setAutoCommit(false)
+                    connection.setTransactionIsolation(transactionIsolation)
+                    connection
+                })
+
                 try {
                     val answer = session.statement()
-                    EntityCache.getOrCreate(session).flush()
-                    connection.commit()
+                    session.commit()
                     return answer
                 }
                 catch (e: SQLException) {
-                    if (!connection.isClosed()) connection.rollback()
+                    session.rollback()
                     repetitions++
                     if (repetitions >= repetitionAttempts) {
                         throw e
                     }
                 }
                 catch (e: Throwable) {
-                    if (!connection.isClosed()) connection.rollback()
+                    session.rollback()
                     throw e
                 }
                 finally {
                     session.close()
-                    connection.close()
                 }
             }
         }

@@ -6,6 +6,7 @@ import java.util.HashMap
 import java.sql.PreparedStatement
 import java.util.ArrayList
 import kotlin.properties.Delegates
+import kotlin.dao.EntityCache
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -30,9 +31,17 @@ open class UserDataHolder() {
     }
 }
 
-class Session (val connection: Connection): UserDataHolder() {
-    val identityQuoteString = connection.getMetaData()!!.getIdentifierQuoteString()!!
-    val extraNameCharacters = connection.getMetaData()!!.getExtraNameCharacters()!!
+class Session (val connector: ()-> Connection): UserDataHolder() {
+    private var _connection: Connection? = null
+    val connection: Connection get() {
+        if (_connection == null) {
+            _connection = connector()
+        }
+        return _connection!!
+    }
+
+    val identityQuoteString by Delegates.lazy { connection.getMetaData()!!.getIdentifierQuoteString()!! }
+    val extraNameCharacters by Delegates.lazy {connection.getMetaData()!!.getExtraNameCharacters()!!}
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
@@ -58,6 +67,19 @@ class Session (val connection: Connection): UserDataHolder() {
             url.startsWith("jdbc:postgresql") -> DatabaseVendor.PostgreSQL
             url.startsWith("jdbc:h2") -> DatabaseVendor.H2
             else -> error("Unknown database type $url")
+        }
+    }
+
+    fun commit() {
+        _connection?.let {
+            EntityCache.getOrCreate(this).flush()
+            it.commit()
+        }
+    }
+
+    fun rollback() {
+        _connection?. let {
+            if (!it.isClosed()) it.rollback()
         }
     }
 
@@ -281,6 +303,7 @@ class Session (val connection: Connection): UserDataHolder() {
             stmt.close()
         }
         Session.threadLocal.set(null)
+        _connection?.close()
     }
 
     class object {
