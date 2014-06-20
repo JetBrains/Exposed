@@ -71,8 +71,8 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
     }
 
     fun commit() {
+        EntityCache.getOrCreate(this).flush()
         _connection?.let {
-            EntityCache.getOrCreate(this).flush()
             it.commit()
         }
     }
