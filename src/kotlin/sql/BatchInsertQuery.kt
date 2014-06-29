@@ -1,10 +1,7 @@
 package kotlin.sql
 
 import java.util.LinkedHashMap
-import kotlin.dao.EntityID
 import java.util.ArrayList
-import kotlin.dao.EntityCache
-import java.sql.PreparedStatement
 
 class BatchInsertQuery(val table: Table) {
     val data = ArrayList<LinkedHashMap<Column<*>, Any?>>()
@@ -30,11 +27,11 @@ class BatchInsertQuery(val table: Table) {
         var sql = StringBuilder("INSERT INTO ${session.identity(table)}")
 
         sql.append(" (")
-        sql.append((columns map { session.identity(it) }).makeString(", ", "", ""))
+        sql.append((columns map { session.identity(it) }).join(", "))
         sql.append(") ")
 
         sql.append("VALUES (")
-        sql.append((columns map { "?" }). makeString(", ", "", ""))
+        sql.append((columns map { "?" }). join(", "))
 
         sql.append(") ")
         try {

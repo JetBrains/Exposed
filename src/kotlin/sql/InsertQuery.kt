@@ -1,7 +1,6 @@
 package kotlin.sql
 
 import java.util.LinkedHashMap
-import kotlin.dao.EntityID
 
 /**
  * isIgnore is supported for mysql only
@@ -34,11 +33,11 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
         var sql = StringBuilder("INSERT ${ignore}INTO ${session.identity(table)}")
 
         sql.append(" (")
-        sql.append((values map { session.identity(it.key) }).makeString(", ", "", ""))
+        sql.append((values map { session.identity(it.key) }).join(", "))
         sql.append(") ")
 
         sql.append("VALUES (")
-        sql.append((values map { builder.registerArgument(it.value, it.key.columnType) }). makeString(", ", "", ""))
+        sql.append((values map { builder.registerArgument(it.value, it.key.columnType) }). join(", "))
 
         sql.append(") ")
         try {

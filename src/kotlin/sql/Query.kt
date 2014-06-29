@@ -6,9 +6,7 @@ import java.util.HashMap
 import java.sql.ResultSet
 import java.util.NoSuchElementException
 import kotlin.dao.EntityCache
-import org.joda.time.DateTime
 import java.util.LinkedHashSet
-import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
 public class ResultRow() {
@@ -78,7 +76,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 }
 */
 
-                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).makeString(", ", "", ""))
+                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).join(", ", "", ""))
             }
             append(" FROM ")
             append(set.source.describe(session))
@@ -91,7 +89,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             if (!count) {
                 if (groupedByColumns.size > 0) {
                     append(" GROUP BY ")
-                    append((groupedByColumns map {session.fullIdentity(it)}).makeString(", ", "", ""))
+                    append((groupedByColumns map {session.fullIdentity(it)}).join(", ", "", ""))
                 }
 
                 if (having != null) {
@@ -101,7 +99,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (orderByColumns.size > 0) {
                     append(" ORDER BY ")
-                    append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).makeString(", ", "", ""))
+                    append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).join(", ", "", ""))
                 }
 
                 if (limit != null) {

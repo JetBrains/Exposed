@@ -6,7 +6,6 @@ import java.util.Locale
 import java.sql.Date
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
-import java.sql.Timestamp
 
 abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
     public abstract fun sqlType(): String
@@ -21,7 +20,7 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
             }
 
             is List<*> -> {
-                value.map {valueToString(it)}.makeString(",")
+                value.map {valueToString(it)}.join(",")
             }
 
             else ->  {

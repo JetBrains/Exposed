@@ -216,7 +216,7 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
     }
 
     private fun quoteIfNecessary (identity: String) : String {
-        return (identity.split('.') map {quoteTokenIfNecessary(it)}).makeString(".")
+        return (identity.split('.') map {quoteTokenIfNecessary(it)}).join(".")
     }
 
     private fun quoteTokenIfNecessary(token: String) : String {
@@ -258,7 +258,7 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
             DatabaseVendor.H2 -> {
                 var alter = StringBuilder()
                 val indexType = if (isUnique) "UNIQUE " else ""
-                alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.makeString("_")} ON ${identity(table)} (")
+                alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.join("_")} ON ${identity(table)} (")
                 var isFirst = true
                 for (c in columns) {
                     if (table != c.table) error("Columns from different tables cannot make index")

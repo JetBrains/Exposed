@@ -32,7 +32,7 @@ class BatchUpdateQuery(val table: IdTable) {
 
         val columns = set.first().second.keySet().toList()
 
-        sqlStatement.append(columns.map {"${session.identity(it)} = ?"}.makeString(", "))
+        sqlStatement.append(columns.map {"${session.identity(it)} = ?"}.join(", "))
         sqlStatement.append(" WHERE ${session.identity(table.id)} = ?")
 
         val sqlText = sqlStatement.toString()

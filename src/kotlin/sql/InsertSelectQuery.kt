@@ -1,9 +1,6 @@
 package kotlin.sql
 
 import java.sql.Statement
-import java.util.LinkedHashMap
-import java.sql.PreparedStatement
-import java.sql.Blob
 
 class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: Boolean = false) {
     var statement: Statement? = null
@@ -19,7 +16,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
     }
 
     fun execute(session: Session) {
-        val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.makeString(", ", "(", ")")
+        val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.join(", ", "(", ")")
         val ignore = if (isIgnore) " IGNORE " else ""
         var sql = "INSERT ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 
