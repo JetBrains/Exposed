@@ -63,7 +63,7 @@ public class Log4jSqlLogger(): SqlLogger {
 }
 
 public class CompositeSqlLogger() : SqlLogger {
-    private val loggers: ArrayList<SqlLogger> = ArrayList<SqlLogger>()
+    private val loggers: ArrayList<SqlLogger> = ArrayList()
 
     public fun addLogger (logger: SqlLogger) {
         loggers.add(logger)

@@ -64,7 +64,7 @@ class CaseWhen<T> (val value: Expression<*>?) {
     }
 
     fun Else(e: Expression<T>) : Expression<T> {
-        return CaseWhenElse<T>(this, e)
+        return CaseWhenElse(this, e)
     }
 }
 

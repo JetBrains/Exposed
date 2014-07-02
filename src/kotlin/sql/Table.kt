@@ -49,7 +49,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
 
-    val joinParts: ArrayList<JoinPart> = ArrayList<JoinPart>();
+    val joinParts: ArrayList<JoinPart> = ArrayList();
 
     fun innerJoin (otherTable: Table) : Join {
         return join(otherTable, JoinType.INNER)
