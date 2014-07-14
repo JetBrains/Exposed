@@ -155,7 +155,7 @@ class AndOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<
 
 class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
-        return expr1.toSQL(queryBuilder) + " or " + expr2.toSQL(queryBuilder)
+        return "(" + expr1.toSQL(queryBuilder) + ") or (" + expr2.toSQL(queryBuilder) + ")"
     }
 }
 
