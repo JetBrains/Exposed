@@ -3,14 +3,14 @@ package kotlin.dao
 import kotlin.sql.*
 import java.util.HashMap
 import java.util.LinkedHashMap
-import kotlin.properties.Delegates
 import java.util.ArrayList
 import java.util.HashSet
+import java.io.Serializable
 
 /**
  * @author max
  */
-public class EntityID(id: Int, val table: IdTable) {
+public class EntityID(id: Int, val table: IdTable) : Serializable {
     var _value = id
     val value: Int get() {
         if (_value == -1) {
