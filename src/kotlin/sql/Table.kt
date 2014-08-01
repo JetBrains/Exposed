@@ -270,4 +270,8 @@ open class Table(name: String = ""): ColumnSet() {
         }
         return ddl.toString()
     }
+    override fun equals(other: Any?): Boolean {
+        if (other !is IdTable) return false
+        return  other.tableName == tableName
+    }
 }
