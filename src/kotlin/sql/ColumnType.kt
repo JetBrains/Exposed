@@ -54,7 +54,10 @@ data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): Col
     }
 
     override fun valueFromDB(value: Any): Any {
-        return  EntityID(value as Int, table)
+        return when (value) {
+            is EntityID -> EntityID(value.value, table)
+            else -> EntityID(value as Int, table)
+        }
     }
 }
 
