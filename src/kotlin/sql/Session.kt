@@ -120,7 +120,7 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
     }
 
     fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
-        return with (BatchContext()) {
+        return execBatch {
             log(stmt, args)
             body()
         }
