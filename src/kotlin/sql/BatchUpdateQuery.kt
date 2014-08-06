@@ -36,9 +36,11 @@ class BatchUpdateQuery(val table: IdTable) {
         sqlStatement.append(" WHERE ${session.identity(table.id)} = ?")
 
         val sqlText = sqlStatement.toString()
-        return session.exec(sqlText) {
+        return session.execBatch {
             val stmt = session.prepareStatement(sqlText)
             for ((id, d) in set) {
+                log(sqlText, d.map {it.key.columnType to it.value} + (IntegerColumnType() to id))
+
                 val idx = stmt.fillParameters(columns, d)
                 stmt.setInt(idx, id.value)
                 stmt.addBatch()

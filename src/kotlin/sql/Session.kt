@@ -87,25 +87,43 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
         return "[${delta}ms] ${expandArgs(stmt, args).take(1024)}\n\n"
     }
 
-    fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
-        logger.log(stmt, args)
+    inner class BatchContext {
+        var stmt: String = ""
+        var args: List<Pair<ColumnType, Any?>> = listOf()
+
+        fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
+            this.stmt = stmt
+            this.args = args
+            logger.log(stmt, args)
+        }
+    }
+
+    fun <T> execBatch(body: BatchContext.() -> T): T {
+        val context = BatchContext()
         statementCount++
 
         val start = System.currentTimeMillis()
-        val answer = body()
+        val answer = context.body()
         val delta = System.currentTimeMillis() - start
 
         duration += delta
 
         if (debug) {
-            statements.append(describeStatement(args, delta, stmt))
+            statements.append(describeStatement(context.args, delta, context.stmt))
         }
 
         if (delta > warnLongQueriesDuration) {
-            exposedLogger.warn("Long query: ${describeStatement(args, delta, stmt)}", RuntimeException())
+            exposedLogger.warn("Long query: ${describeStatement(context.args, delta, context.stmt)}", RuntimeException())
         }
 
         return answer
+    }
+
+    fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
+        return with (BatchContext()) {
+            log(stmt, args)
+            body()
+        }
     }
 
     fun createStatements (vararg tables: Table) : List<String> {
