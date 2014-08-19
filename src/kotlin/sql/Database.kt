@@ -48,7 +48,7 @@ public class Database private(val connector: () -> Connection) {
                     return answer
                 }
                 catch (e: SQLException) {
-                    exposedLogger.log(Priority.WARN, "Session retpetition=$repetitions: ${e.getMessage()}")
+                    exposedLogger.log(Priority.INFO, "Session retpetition=$repetitions: ${e.getMessage()}")
                     session.rollback()
                     repetitions++
                     if (repetitions >= repetitionAttempts) {
@@ -56,7 +56,6 @@ public class Database private(val connector: () -> Connection) {
                     }
                 }
                 catch (e: Throwable) {
-                    exposedLogger.log(Priority.WARN, "Session retpetition=$repetitions: ${e.getMessage()}")
                     session.rollback()
                     throw e
                 }
