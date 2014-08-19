@@ -7,6 +7,7 @@ import javax.sql.DataSource
 import org.joda.time.DateTimeZone
 import kotlin.dao.EntityCache
 import java.sql.SQLException
+import org.apache.log4j.Priority
 
 public class Database private(val connector: () -> Connection) {
 
@@ -47,6 +48,7 @@ public class Database private(val connector: () -> Connection) {
                     return answer
                 }
                 catch (e: SQLException) {
+                    exposedLogger.log(Priority.ERROR, "Session retpetition=$repetitions: ${e.getMessage()}")
                     session.rollback()
                     repetitions++
                     if (repetitions >= repetitionAttempts) {
@@ -54,6 +56,7 @@ public class Database private(val connector: () -> Connection) {
                     }
                 }
                 catch (e: Throwable) {
+                    exposedLogger.log(Priority.ERROR, "Session retpetition=$repetitions: ${e.getMessage()}")
                     session.rollback()
                     throw e
                 }
@@ -72,7 +75,6 @@ public class Database private(val connector: () -> Connection) {
                 datasource.getConnection()!!
             }
         }
-
 
         public fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
             Class.forName(driver).newInstance()
