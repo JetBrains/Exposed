@@ -1,7 +1,6 @@
 package kotlin.sql
 
 import java.util.HashMap
-import java.util.ArrayList
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
@@ -108,6 +107,44 @@ fun tableColumns(): HashMap<String, List<String>> {
     }
 
     return tables
+}
+
+class Constraint (var name: String, var referencedTable: String, var deleteRule: String)
+
+/**
+ * returns map of constraint for a table name/column name pair
+ */
+fun columnConstraints(): HashMap<Pair<String, String>, Constraint> {
+    if (Session.get().vendor != DatabaseVendor.MySql) {
+        throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
+    }
+
+    val constraints = HashMap<Pair<String, String>, Constraint>()
+
+    val rs = Session.get().connection.createStatement()?.executeQuery(
+            "SELECT\n" +
+                    "  rc.TABLE_NAME,\n" +
+                    "  ku.COLUMN_NAME,\n" +
+                    "  rc.CONSTRAINT_NAME,\n" +
+                    "  rc.REFERENCED_TABLE_NAME,\n" +
+                    "  rc.DELETE_RULE\n" +
+                    "FROM information_schema.REFERENTIAL_CONSTRAINTS rc\n" +
+                    "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
+                    "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
+                    "WHERE ku.TABLE_SCHEMA = '${getDatabase()}'")
+    if (rs == null)
+        return constraints
+
+    while (rs.next()) {
+        val tableName = rs.getString("TABLE_NAME")!!
+        val columnName = rs.getString("COLUMN_NAME")!!
+        val constraintName = rs.getString("CONSTRAINT_NAME")!!
+        val refTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+        val constraintDeleteRule = rs.getString("DELETE_RULE")!!
+        constraints[Pair(tableName, columnName)] = Constraint(constraintName, refTableName, constraintDeleteRule)
+    }
+
+    return constraints
 }
 
 fun getDatabase(): String {

@@ -210,8 +210,10 @@ open class Table(name: String = ""): ColumnSet() {
         return this
     }
 
-    fun reference(name: String, foreign: IdTable): Column<EntityID> {
-        return entityId(name, foreign) references foreign.id
+    fun reference(name: String, foreign: IdTable, onDelete: ReferenceOption? = null): Column<EntityID> {
+        val column = entityId(name, foreign) references foreign.id
+        column.onDelete = onDelete
+        return column
     }
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
@@ -220,8 +222,10 @@ open class Table(name: String = ""): ColumnSet() {
         return column
     }
 
-    fun optReference(name: String, foreign: IdTable): Column<EntityID?> {
-        return reference(name, foreign).nullable()
+    fun optReference(name: String, foreign: IdTable, onDelete: ReferenceOption? = null): Column<EntityID?> {
+        val column = reference(name, foreign).nullable()
+        column.onDelete = onDelete
+        return column
     }
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {

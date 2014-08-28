@@ -3,6 +3,7 @@ package kotlin.sql
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T> {
     var referee: Column<*>? = null
+    var onDelete: ReferenceOption? = null
     var defaultValue: T? = null
 
     override fun toSQL(queryBuilder: QueryBuilder): String {
@@ -42,4 +43,14 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 }
 
 class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
+}
+
+enum class ReferenceOption {
+    CASCADE
+    SET_NULL
+    RESTRICT //default
+
+    override fun toString(): String {
+        return this.name().replace("_"," ")
+    }
 }

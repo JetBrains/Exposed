@@ -199,10 +199,22 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
             }
         }
 
-        for (column in missingColumns) {
-            if (column.referee != null) {
-                val fKDdl = foreignKey(column);
-                statements.add(fKDdl)
+        val existingColumnConstraint = columnConstraints()
+
+        for (table in tables) {
+            for (column in table.columns) {
+                if (column.referee != null) {
+                    val existingConstraint = existingColumnConstraint.get(Pair(table.tableName, column.name))
+                    if (existingConstraint == null) {
+                        val fKDdl = foreignKey(column);
+                        statements.add(fKDdl)
+                    } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
+                            || (column.onDelete ?: ReferenceOption.RESTRICT).toString() != existingConstraint.deleteRule) {
+                        statements.add("ALTER TABLE ${identity(table)} DROP FOREIGN KEY ${existingConstraint.name}")
+                        val fKDdl = foreignKey(column);
+                        statements.add(fKDdl)
+                    }
+                }
             }
         }
 
@@ -260,7 +272,11 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
             DatabaseVendor.MySql, DatabaseVendor.Oracle,
             DatabaseVendor.SQLServer, DatabaseVendor.PostgreSQL,
             DatabaseVendor.H2 -> {
-                "ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})"
+                var alter = StringBuilder("ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})")
+                reference.onDelete?.let { onDelete ->
+                    alter.append(" ON DELETE $onDelete")
+                }
+                alter.toString()
             }
             else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
         }
