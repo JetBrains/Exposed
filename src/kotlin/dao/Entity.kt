@@ -414,14 +414,27 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     public fun findById(id: EntityID): T? {
-        return warmCache().find(this, id) ?: find{table.id eq id}.firstOrNull()
+        return testCache(id) ?: find{table.id eq id}.firstOrNull()
+    }
+
+    private fun testCache(id: EntityID): T? {
+        return warmCache().find(this, id)
     }
 
     public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
+        val cached = ids.map { testCache(it) }.filterNotNull()
+        if (cached.size() == ids.size()) {
+            return SizedCollection(cached)
+        }
         return wrapRows(searchQuery(Op.build {table.id inList ids}))
     }
 
     public fun forIds(ids: List<Int>) : SizedIterable<T> {
+        val cached = ids.map { testCache(EntityID(it, table)) }.filterNotNull()
+        if (cached.size() == ids.size()) {
+            return SizedCollection(cached)
+        }
+
         return wrapRows(searchQuery(Op.build {table.id inList ids.map {EntityID(it, table)}}))
     }
 
