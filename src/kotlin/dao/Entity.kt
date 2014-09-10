@@ -10,7 +10,7 @@ import java.io.Serializable
 /**
  * @author max
  */
-public class EntityID(id: Int, val table: IdTable) : Serializable {
+public class EntityID(id: Int, val table: IdTable) {
     var _value = id
     val value: Int get() {
         if (_value == -1) {
