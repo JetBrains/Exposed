@@ -6,7 +6,7 @@ import kotlin.sql.*
 
 public class DDLTests : DatabaseTestsBase() {
     Test fun tableExists01() {
-        object TestTable : Table("test") {
+        val TestTable = object : Table("test") {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
         }
@@ -17,7 +17,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun tableExists02() {
-        object TestTable : Table() {
+        val TestTable = object : Table() {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
         }
@@ -28,18 +28,18 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun unnamedTableWithQuotesSQL() {
-        object TestTable : Table() {
+        val TestTable = object : Table() {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$Test\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$TestTable$1\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
 
     Test fun namedEmptyTableWithoutQuotesSQL() {
-        object TestTable : Table("test_named_table") {
+        val TestTable = object : Table("test_named_table") {
         }
 
         withTables(TestTable) {
@@ -48,7 +48,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun tableWithDifferentColumnTypesSQL() {
-        object TestTable : Table("test_table_with_different_column_types") {
+        val TestTable = object : Table("test_table_with_different_column_types") {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42).primaryKey()
             val age = integer("age").nullable()
@@ -62,7 +62,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testDefaults01() {
-        object TestTable : Table("t") {
+        val TestTable = object : Table("t") {
             val s = varchar("s", 100).default("test")
             val l = long("l").default(42)
         }
@@ -73,7 +73,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testIndices01() {
-        object t : Table("t1") {
+        val t = object : Table("t1") {
             val id = integer("id").primaryKey()
             val name = varchar("name", 255).index()
         }
@@ -85,7 +85,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testIndices02() {
-        object t : Table("t2") {
+        val t = object : Table("t2") {
             val id = integer("id").primaryKey()
             val lvalue = integer("lvalue")
             val rvalue = integer("rvalue");
@@ -106,7 +106,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testIndices03() {
-        object t : Table("t1") {
+        val t = object : Table("t1") {
             val id = integer("id").primaryKey()
             val name = varchar("name", 255).uniqueIndex()
         }
@@ -119,7 +119,7 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun testBlob() {
-        object t: Table("t1") {
+        val t = object: Table("t1") {
             val id = integer("id").autoIncrement().primaryKey()
             val b = blob("blob")
         }
@@ -141,12 +141,12 @@ public class DDLTests : DatabaseTestsBase() {
     }
 
     Test fun tablesWithCrossReferencesSQL() {
-        object TestTableWithReference1 : Table("test_table_1") {
+        val TestTableWithReference1 = object : Table("test_table_1") {
             val id = integer("id").primaryKey()
             val testTable2Id = integer("id_ref")
         }
 
-        object TestTableWithReference2 : Table("test_table_2") {
+        val TestTableWithReference2 = object : Table("test_table_2") {
             val id = integer("id").primaryKey()
             val testTable1Id = (integer("id_ref") references TestTableWithReference1.id).nullable()
         }

@@ -202,15 +202,15 @@ class DMLTests : DatabaseTestsBase() {
 
     // triple join
     Test fun testJoin04() {
-        object Numbers : Table() {
+        val Numbers = object : Table() {
             val id = integer("id").primaryKey()
         }
 
-        object Names : Table() {
+        val Names = object : Table() {
             val name = varchar("name", 10).primaryKey()
         }
 
-        object Map: Table () {
+        val Map = object: Table () {
             val id_ref = integer("id_ref") references Numbers.id
             val name_ref = varchar("name_ref", 10) references Names.name
         }
