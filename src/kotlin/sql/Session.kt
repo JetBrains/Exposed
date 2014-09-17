@@ -50,6 +50,7 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
     var duration: Long = 0
     var warnLongQueriesDuration: Long = 2000
     var debug = false
+    var selectsForUpdate = false
 
     val statements = StringBuilder()
 

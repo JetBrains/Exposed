@@ -107,6 +107,10 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                     append(limit)
                 }
             }
+
+            if (Session.get().selectsForUpdate) {
+                append(" FOR UPDATE")
+            }
         }
 
         return sql.toString()
