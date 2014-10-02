@@ -142,6 +142,10 @@ object SqlExpressionBuilder {
         return LikeOp(this, QueryParameter(pattern, columnType))
     }
 
+    public fun<T:String?> ExpressionWithColumnType<T>.notLike(pattern: String): Op<Boolean> {
+        return NotLikeOp(this, QueryParameter(pattern, columnType))
+    }
+
     public fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> {
         return RegexpOp(this, QueryParameter(pattern, columnType))
     }

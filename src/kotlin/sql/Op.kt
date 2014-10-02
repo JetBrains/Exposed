@@ -132,6 +132,7 @@ class LessEqOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, 
 class GreaterOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, ">")
 class GreaterEqOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, ">=")
 class LikeOp (expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, "LIKE")
+class NotLikeOp (expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, "NOT LIKE")
 class RegexpOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, "REGEXP")
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, "NOT REGEXP")
 
