@@ -60,7 +60,8 @@ class BatchInsertQuery(val table: Table) {
                         var id = generatedKeys.first()
 
                         while (generatedKeys.size < count.size) {
-                            generatedKeys.add(0, --id)
+                            id = id - 1
+                            generatedKeys.add(0, id)
                         }
                     }
 
