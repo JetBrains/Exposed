@@ -54,6 +54,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
+    var forUpdate: Boolean = session.selectsForUpdate
 
 
     fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {
@@ -108,12 +109,17 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 }
             }
 
-            if (Session.get().selectsForUpdate) {
+            if (forUpdate) {
                 append(" FOR UPDATE")
             }
         }
 
         return sql.toString()
+    }
+
+    fun forUpdate() : Query {
+        this.forUpdate = true
+        return this
     }
 
     fun groupBy(vararg columns: Column<*>): Query {
