@@ -5,7 +5,6 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.ArrayList
 import java.util.HashSet
-import java.io.Serializable
 
 /**
  * @author max
@@ -109,7 +108,15 @@ class InnerTableLink<Target: Entity>(val table: Table,
     fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.firstOrNull { it.referee == o.factory().table.id } as? Column<EntityID> ?: error("Table does not reference source")
 
-        val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
+        val query = {
+            if (target.eagerSelect) {
+                target.wrapRows(target.table.innerJoin(table).select { sourceRefColumn eq o.id })
+                val fk = table.columns.firstOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference target")
+                SizedCollection(table.select { sourceRefColumn eq o.id }.map { target.findById(it[fk])}.filterNotNull())
+            } else {
+                target.wrapRows(target.table.innerJoin(table).select { sourceRefColumn eq o.id })
+            }
+        }
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
     }
 }
