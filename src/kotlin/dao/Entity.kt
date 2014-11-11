@@ -108,15 +108,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
         val sourceRefColumn = table.columns.firstOrNull { it.referee == o.factory().table.id } as? Column<EntityID> ?: error("Table does not reference source")
 
-        val query = {
-            if (target.eagerSelect) {
-                target.wrapRows(target.table.innerJoin(table).select { sourceRefColumn eq o.id })
-                val fk = table.columns.firstOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference target")
-                SizedCollection(table.select { sourceRefColumn eq o.id }.map { target.findById(it[fk])}.filterNotNull())
-            } else {
-                target.wrapRows(target.table.innerJoin(table).select { sourceRefColumn eq o.id })
-            }
-        }
+        val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
     }
 }
@@ -242,6 +234,8 @@ class EntityCache {
     val data = HashMap<IdTable, MutableMap<Int, Entity>>()
     val inserts = HashMap<IdTable, MutableList<Entity>>()
     val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
+
+    val eagerSelected = HashSet<IdTable>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
         return getMap(f.table)
@@ -408,8 +402,9 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     private fun warmCache(): EntityCache {
         val cache = EntityCache.getOrCreate(Session.get())
         if (eagerSelect) {
-            if (!cache.data.containsKey(table)) {
+            if (!cache.eagerSelected.contains(table)) {
                 for (r in retrieveAll()) {}
+                cache.eagerSelected.add(table)
             }
         }
 
