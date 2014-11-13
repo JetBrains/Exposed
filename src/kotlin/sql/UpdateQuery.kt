@@ -2,7 +2,7 @@ package kotlin.sql
 
 import java.util.LinkedHashMap
 
-class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
+class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: Op<Boolean>? = null) {
     val values = LinkedHashMap<Column<*>, Any?>()
 
     fun <T, S: T> set(column: Column<T>, value: S) {
@@ -22,11 +22,11 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
     fun execute(session: Session): Int {
         if (!values.isEmpty()) {
             val builder = QueryBuilder(true)
-            var sqlStatement = StringBuilder("UPDATE ${session.identity(table)}")
+            var sqlStatement = StringBuilder("UPDATE ${target(session)}")
             var c = 0;
             sqlStatement.append(" SET ")
             for ((col, value) in values) {
-                sqlStatement.append(session.identity(col))
+                sqlStatement.append(col.toSQL(builder))
                    .append("=")
 
                 when {
@@ -39,7 +39,7 @@ class UpdateQuery(val table: Table, val limit: Int?, val where: Op<Boolean>) {
                     sqlStatement.append(", ")
                 }
             }
-            sqlStatement.append(" WHERE " + where.toSQL(builder))
+            where?.let { sqlStatement.append(" WHERE " + it.toSQL(builder)) }
             if (limit != null) {
                 sqlStatement.append(" LIMIT ").append(limit)
             }

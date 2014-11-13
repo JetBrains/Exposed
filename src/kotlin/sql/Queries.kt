@@ -47,7 +47,13 @@ fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
 }
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateQuery)->Unit): Int {
-    val query = UpdateQuery(this, limit, SqlExpressionBuilder.where())
+    val query = UpdateQuery({session -> session.identity(this)}, limit, SqlExpressionBuilder.where())
+    body(query)
+    return query.execute(Session.get())
+}
+
+fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateQuery)->Unit) : Int {
+    val query = UpdateQuery({session -> this.describe(session)}, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(Session.get())
 }
