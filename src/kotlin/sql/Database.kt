@@ -27,41 +27,45 @@ public class Database private(val connector: () -> Connection) {
     fun <T> withSession(transactionIsolation: Int, repetitionAttempts: Int, statement: Session.() -> T): T {
         val outer = Session.tryGet()
 
-        if (outer != null) {
-            return outer.statement()
+        return if (outer != null) {
+            outer.statement()
         }
         else {
-            var repetitions = 0
+            inNewTransaction(transactionIsolation, repetitionAttempts, statement)
+        }
+    }
 
-            while(true) {
+    fun <T> inNewTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Session.() -> T): T {
+        var repetitions = 0
 
-                val session = Session({
-                    val connection = connector()
-                    connection.setAutoCommit(false)
-                    connection.setTransactionIsolation(transactionIsolation)
-                    connection
-                })
+        while (true) {
 
-                try {
-                    val answer = session.statement()
-                    session.commit()
-                    return answer
-                }
-                catch (e: SQLException) {
-                    exposedLogger.log(Priority.INFO, "Session retpetition=$repetitions: ${e.getMessage()}")
-                    session.rollback()
-                    repetitions++
-                    if (repetitions >= repetitionAttempts) {
-                        throw e
-                    }
-                }
-                catch (e: Throwable) {
-                    session.rollback()
+            val session = Session({
+                val connection = connector()
+                connection.setAutoCommit(false)
+                connection.setTransactionIsolation(transactionIsolation)
+                connection
+            })
+
+            try {
+                val answer = session.statement()
+                session.commit()
+                return answer
+            }
+            catch (e: SQLException) {
+                exposedLogger.log(Priority.INFO, "Session retpetition=$repetitions: ${e.getMessage()}")
+                session.rollback()
+                repetitions++
+                if (repetitions >= repetitionAttempts) {
                     throw e
                 }
-                finally {
-                    session.close()
-                }
+            }
+            catch (e: Throwable) {
+                session.rollback()
+                throw e
+            }
+            finally {
+                session.close()
             }
         }
     }
