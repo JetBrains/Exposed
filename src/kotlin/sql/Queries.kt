@@ -60,10 +60,16 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
 
 fun Table.exists (): Boolean {
     val tableName = this.tableName
-    val resultSet = Session.get().connection.createStatement()?.executeQuery("show tables")
+    var sql = "show tables"
+    var resultSet:java.sql.ResultSet? = null
+    if (Session.get().vendor == DatabaseVendor.PostgreSQL) {
+        sql = "SELECT tablename FROM pg_catalog.pg_tables"
+    }
+    resultSet = Session.get().connection.createStatement()?.executeQuery(sql)
+
     if (resultSet != null) {
-        while (resultSet.next()) {
-            val existingTableName = resultSet.getString(1)
+        while (resultSet!!.next()) {
+            val existingTableName = resultSet!!.getString(1)
             if (existingTableName?.equalsIgnoreCase(tableName) ?: false) {
                 return true
             }
