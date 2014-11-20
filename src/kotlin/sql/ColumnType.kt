@@ -61,6 +61,10 @@ data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): Col
     }
 }
 
+data class CharacterColumnType() : ColumnType() {
+    override fun sqlType(): String  = "CHAR"
+}
+
 data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
     override fun sqlType(): String  = "INT"
 }

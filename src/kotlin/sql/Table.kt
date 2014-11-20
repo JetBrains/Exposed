@@ -147,6 +147,12 @@ open class Table(name: String = ""): ColumnSet() {
         return answer
     }
 
+    fun char(name: String): Column<Char> {
+        val answer = Column<Char>(this, name, CharacterColumnType())
+        columns.add(answer)
+        return answer
+    }
+
     fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> {
         val answer = Column<BigDecimal>(this, name, DecimalColumnType(scale, precision))
         columns.add(answer)
