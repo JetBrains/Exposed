@@ -40,7 +40,7 @@ public class Database private(val connector: () -> Connection) {
 
         while (true) {
 
-            val session = Session({
+            val session = Session(this, {
                 val connection = connector()
                 connection.setAutoCommit(false)
                 connection.setTransactionIsolation(transactionIsolation)

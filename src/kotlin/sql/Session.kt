@@ -31,7 +31,7 @@ open class UserDataHolder() {
     }
 }
 
-class Session (val connector: ()-> Connection): UserDataHolder() {
+class Session (val db: Database, val connector: ()-> Connection): UserDataHolder() {
     private var _connection: Connection? = null
     val connection: Connection get() {
         if (_connection == null) {
@@ -53,10 +53,11 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
     var selectsForUpdate = false
 
     val statements = StringBuilder()
+    val outerSession = threadLocal.get()
 
     ;{
         logger.addLogger(Log4jSqlLogger())
-        Session.threadLocal.set(this)
+        threadLocal.set(this)
     }
 
     val vendor: DatabaseVendor by Delegates.blockingLazy {
@@ -337,7 +338,8 @@ class Session (val connector: ()-> Connection): UserDataHolder() {
         for (stmt in statementsCache.values()) {
             stmt.close()
         }
-        Session.threadLocal.set(null)
+
+        threadLocal.set(outerSession)
         _connection?.close()
     }
 
