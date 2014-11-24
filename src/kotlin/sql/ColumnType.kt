@@ -63,14 +63,38 @@ data class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): Col
 
 data class CharacterColumnType() : ColumnType() {
     override fun sqlType(): String  = "CHAR"
+
+    override fun valueFromDB(value: Any): Any {
+        return when(value) {
+            is Char -> value
+            is Number -> value.toChar()
+            else -> error("Unexpected value of type Char: $value")
+        }
+    }
 }
 
 data class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
     override fun sqlType(): String  = "INT"
+
+    override fun valueFromDB(value: Any): Any {
+        return when(value) {
+            is Int -> value
+            is Number -> value.toInt()
+            else -> error("Unexpected value of type Int: $value")
+        }
+    }
 }
 
 data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
     override fun sqlType(): String  = "BIGINT"
+
+    override fun valueFromDB(value: Any): Any {
+        return when(value) {
+            is Long -> value
+            is Number -> value.toLong()
+            else -> error("Unexpected value of type Long: $value")
+        }
+    }
 }
 
 data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
