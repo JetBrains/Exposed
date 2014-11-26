@@ -536,4 +536,14 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> {
         return ColumnWithTransform(this, toColumn, toReal)
     }
+
+    fun<TReal: Enum<TReal>?> Column<String?>.byEnumNullable(clazz : Class<TReal>): ColumnWithTransform<String?, TReal?> {
+        return ColumnWithTransform(this, {it?.name()}, {it?.let{clazz.findValue(it)}})
+    }
+
+    fun<TReal: Enum<TReal>> Column<String>.byEnum(clazz : Class<TReal>): ColumnWithTransform<String, TReal> {
+        return ColumnWithTransform(this, { it.name() }, {clazz.findValue(it)})
+    }
+
+    fun <T: Enum<T>> Class<T>.findValue(name: String) = getEnumConstants().first {it.name() == name }
 }
