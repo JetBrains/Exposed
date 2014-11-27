@@ -177,20 +177,18 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
         val statements = ArrayList<String>()
-        if (tables.size == 0)
+        if (tables.size() == 0)
             return statements
 
         val existingTableColumns = tableColumns()
 
-        val missingColumns = ArrayList<Column<*>>()
 
         for (table in tables) {
             //create columns
-            val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.contains(it.name) ?: true }
+            val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.map { it.first }?.contains(it.name) ?: true }
             for (column in missingTableColumns) {
                 statements.add(column.ddl)
             }
-            missingColumns.addAll(missingTableColumns)
 
             // create indexes with new columns
             for (table_index in table.indices) {
@@ -198,6 +196,12 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                     val alterTable = index(table_index.first, table_index.second)
                     statements.add(alterTable)
                 }
+            }
+
+            // sync nullability of existing columns
+            val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false}
+            for (column in incorrectNullabilityColumns) {
+                statements.add("ALTER TABLE ${Session.get().identity(table)} MODIFY COLUMN ${column.descriptionDdl()}")
             }
         }
 

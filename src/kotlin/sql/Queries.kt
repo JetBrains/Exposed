@@ -92,26 +92,26 @@ fun Table.matchesDefinition(): Boolean {
 }
 
 /**
- * returns list of column names for every table
+ * returns list of pairs (column name + nullable) for every table
  */
-fun tableColumns(): HashMap<String, List<String>> {
+fun tableColumns(): HashMap<String, List<Pair<String, Boolean>>> {
     if (Session.get().vendor != DatabaseVendor.MySql) {
         throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
     }
 
-    val tables = HashMap<String, List<String>>()
+    val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
     val rs = Session.get().connection.createStatement()?.executeQuery(
-            "SELECT DISTINCT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
+            "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
     if (rs == null)
         return tables
 
     while (rs.next()) {
         val tableName = rs.getString(1)!!
         val columnName = rs.getString(2)!!
-        tables[tableName] = (tables[tableName]?.plus(listOf(columnName)) ?: listOf(columnName))
+        val nullable = rs.getBoolean(3)
+        tables[tableName] = (tables[tableName]?.plus(listOf(columnName to nullable)) ?: listOf(columnName to nullable))
     }
-
     return tables
 }
 
