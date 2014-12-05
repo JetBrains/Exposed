@@ -744,7 +744,7 @@ class DMLTests : DatabaseTestsBase() {
 }
 
 
-trait Foo<T> {}
+trait Foo<out T> {}
 
 open class F<out T> : Foo<T> {
 }

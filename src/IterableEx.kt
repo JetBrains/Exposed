@@ -38,9 +38,9 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
 }
 
 public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
-    var _wrapper: List<T>? = null
-    var _size: Int? = null
-    var _empty: Boolean? = null
+    private var _wrapper: List<T>? = null
+    private var _size: Int? = null
+    private var _empty: Boolean? = null
 
     val wrapper: List<T> get() {
         if (_wrapper == null) {

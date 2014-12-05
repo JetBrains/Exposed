@@ -43,25 +43,25 @@ private fun <T:EntityID?>checkReference(reference: Column<T>, factory: EntityCla
     }
 }
 
-class Reference<Target : Entity> (val reference: Column<EntityID>, val factory: EntityClass<Target>) {
+class Reference<out Target : Entity> (val reference: Column<EntityID>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class OptionalReference<Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
+class OptionalReference<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class OptionalReferenceSureNotNull<Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
+class OptionalReferenceSureNotNull<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     {
         checkReference(reference, factory)
     }
 }
 
-class Referrers<Source:Entity>(val reference: Column<EntityID>, val factory: EntityClass<Source>, val cache: Boolean) {
+class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
@@ -77,7 +77,7 @@ class Referrers<Source:Entity>(val reference: Column<EntityID>, val factory: Ent
     }
 }
 
-class OptionalReferrers<Source:Entity>(val reference: Column<EntityID?>, val factory: EntityClass<Source>, val cache: Boolean) {
+class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val factory: EntityClass<Source>, val cache: Boolean) {
     {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
@@ -96,7 +96,7 @@ class OptionalReferrers<Source:Entity>(val reference: Column<EntityID?>, val fac
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
 }
 
-public class View<Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
+public class View<out Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
     override fun count(): Int = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     public override fun iterator(): Iterator<Target> = factory.find(op).iterator()

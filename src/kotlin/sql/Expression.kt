@@ -45,7 +45,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 }
 
-trait Expression<T> {
+trait Expression<out T> {
     fun toSQL(queryBuilder: QueryBuilder): String
 
     class object {
