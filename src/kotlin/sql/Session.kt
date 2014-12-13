@@ -288,7 +288,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         }
     }
 
-    fun index (columns: Array<Column<*>>, isUnique: Boolean): String {
+    fun index (columns: Array<out Column<*>>, isUnique: Boolean): String {
         if (columns.size == 0) error("No columns to create index from")
 
         val table = columns[0].table

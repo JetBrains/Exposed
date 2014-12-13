@@ -112,7 +112,7 @@ open class Table(name: String = ""): ColumnSet() {
     override fun describe(s: Session): String = s.identity(this)
 
     val primaryKeys  = ArrayList<Column<*>>()
-    val indices = ArrayList<Pair<Array<Column<*>>, Boolean>>()
+    val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
 
     override val fields: List<Expression<*>>
         get() = columns
