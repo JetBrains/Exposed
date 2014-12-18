@@ -81,7 +81,7 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         maven(MavenPublication) {
-            group = "org.jetbrains.exposed"
+            group = "org.kotlinx"
             from components.java
 
             artifact sourceJar {
