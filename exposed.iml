@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="exposed" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" external.system.module.group="org.jetbrains.exposed" external.system.module.version="0.10.4-SNAPSHOT" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/build/classes/main" />
+    <output-test url="file://$MODULE_DIR$/build/classes/test" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/kotlin" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/kotlin" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.h2database:h2:1.4.183" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: mysql:mysql-connector-java:5.1.34" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: joda-time:joda-time:2.6" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: org.slf4j:slf4j-api:1.7.7" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:0.10.4" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: org.jetbrains.kotlin:kotlin-runtime:0.10.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-all:1.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.11" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: ch.qos.logback:logback-classic:1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: ch.qos.logback:logback-access:1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: ch.qos.logback:logback-core:1.1.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:jcl-over-slf4j:1.7.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:jul-to-slf4j:1.7.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:log4j-over-slf4j:1.7.7" level="project" />
+  </component>
+</module>

@@ -1,3 +1,17 @@
+_NOTE:_ forked from [JetBrains version](https://github.com/JetBrains/Exposed) and added
+gradle build, publishing to our open-source repo for people to use.
+Also changed naming to kotlinx.* packages to keep this from being confused as core Kotlin.
+
+Gradle build is setup top be used with Gradle [Pride plugin](https://github.com/prezi/pride) so
+that it can be developed along side other code and have direct compile-time dependencies.  If you
+don't know about the Pride plugin, you should. Same for [propdeps](https://github.com/spring-projects/gradle-plugins/tree/master/propdeps-plugin)
+plugin adding provided and optional scopes to Gradle.
+
+Logging is no SLF4j and no logging adapter is provided, assuming that your own application will include
+one such as Logback.  Just as you must provide your own JDBC driver.
+
+...END notes about this fork...
+
 Kotlin SQL Library
 ==================
 
