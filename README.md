@@ -27,81 +27,112 @@ TODO: After using this more, update the documentation (it is possibly out of dat
 Kotlin SQL Library
 ==================
 
-_Exposed_ is a prototype for a lightweight SQL library written over JDBC driver for [Kotlin](https://github.com/JetBrains/kotlin) language.
+see current samples in: [Samples.kt](https://github.com/Collokia/Exposed/blob/master/src/test/kotlin/kotlinx/samples/Samples.kt)
+which currently looks like:
 
-```java
+```kotlin
+package kotlinx.sql.sample
+
+import kotlinx.sql.*
+
 object Users : Table() {
-    val id = varchar("id", ColumnType.PRIMARY_KEY, length = 10) // PKColumn<String>
+    val id = varchar("id", 10).primaryKey() // PKColumn<String>
     val name = varchar("name", length = 50) // Column<String>
-    val cityId = integer("city_id", ColumnType.NULLABLE, references = Cities.id) // Column<Int?>
-
-    val all = id + name + cityId // Column3<String, String, Int?>
-    val values = id + name + cityId // The columns required for insert statement
+    val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
 }
 
 object Cities : Table() {
-    val id = integer("id", ColumnType.PRIMARY_KEY, autoIncrement = true) // PKColumn<Int>
+    val id = integer("id").autoIncrement().primaryKey() // PKColumn<Int>
     val name = varchar("name", 50) // Column<String>
-
-    val all = id + name // Column2<Int, String>
-    val values = name // The columns required for insert statement
 }
 
 fun main(args: Array<String>) {
-    var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    var db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
     // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.withSession {
         create (Cities, Users)
 
-        val saintPetersburgId = insert (Cities.values("St. Petersburg")) get Cities.id
-        val munichId = insert (Cities.values("Munich")) get Cities.id
-        insert (Cities.values("Prague"))
+        val saintPetersburgId = Cities.insert {
+            it[name] = "St. Petersburg"
+        } get Cities.id
 
-        insert (Users.values("andrey", "Andrey", saintPetersburgId))
+        val munichId = Cities.insert {
+            it[name] = "Munich"
+        } get Cities.id
 
-        insert (Users.values("sergey", "Sergey", munichId))
-        insert (Users.values("eugene", "Eugene", munichId))
-        insert (Users.values("alex", "Alex", null))
-        insert (Users.values("smth", "Something", null))
+        Cities.insert {
+            it[name] = "Prague"
+        }
 
-        update (Users) {
-            set(name("Alexey"))
-        } where Users.id.equals("alex")
+        Users.insert {
+            it[id] = "andrey"
+            it[name] = "Andrey"
+            it[cityId] = saintPetersburgId
+        }
 
-        delete (Users) where Users.name.like("%thing")
+        Users.insert {
+            it[id] = "sergey"
+            it[name] = "Sergey"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "eugene"
+            it[name] = "Eugene"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "alex"
+            it[name] = "Alex"
+            it[cityId] = null
+        }
+
+        Users.insert {
+            it[id] = "smth"
+            it[name] = "Something"
+            it[cityId] = null
+        }
+
+        Users.update({Users.id eq"alex"}) {
+            it[name] = "Alexey"
+        }
+
+        Users.deleteWhere{Users.name like "%thing"}
 
         println("All cities:")
 
-        select (Cities.all) forEach {
-            val (id, name) = it
-            println("$id: $name")
+        for (city in Cities.selectAll()) {
+            println("${city[Cities.id]}: ${city[Cities.name]}")
         }
 
         println("Manual join:")
-
-        select (Users.name, Cities.name) where (Users.id.equals("andrey") or Users.name.equals("Sergey")) and
-                Users.id.equals("sergey") and Users.cityId.equals(Cities.id) forEach {
-            val (userName, cityName) = it
-            println("$userName lives in $cityName")
+        (Users join Cities).slice(Users.name, Cities.name).
+            select {(Users.id.eq("andrey") or Users.name.eq("Sergey")) and
+                    Users.id.eq("sergey") and Users.cityId.eq(Cities.id)} forEach {
+            println("${it[Users.name]} lives in ${it[Cities.name]}")
         }
 
         println("Join with foreign key:")
 
-        select (Users.name, Users.cityId, Cities.name) from Users join Cities where
-                Cities.name.equals("St. Petersburg") or Users.cityId.isNull() forEach {
-            val (userName, cityId, cityName) = it
-            if (cityId != null) {
-                println("$userName lives in $cityName")
-            } else {
-                println("$userName lives nowhere")
+
+        (Users join Cities).slice(Users.name, Users.cityId, Cities.name).
+                select {Cities.name.eq("St. Petersburg") or Users.cityId.isNull()} forEach {
+            if (it[Users.cityId] != null) {
+                println("${it[Users.name]} lives in ${it[Cities.name]}")
+            }
+            else {
+                println("${it[Users.name]} lives nowhere")
             }
         }
 
         println("Functions and group by:")
 
-        select (Cities.name, count(Users.id)) from Cities join Users groupBy Cities.name forEach {
-            val (cityName, userCount) = it
+        (Cities join Users).slice(Cities.name, Users.id.count()).selectAll() groupBy Cities.name forEach {
+            val cityName = it[Cities.name]
+            val userCount = it[Users.id.count()]
+
             if (userCount > 0) {
                 println("$userCount user(s) live(s) in $cityName")
             } else {
@@ -110,43 +141,12 @@ fun main(args: Array<String>) {
         }
 
         drop (Users, Cities)
+
     }
 }
 ```
 
-Outputs:
-
-    SQL: CREATE TABLE Cities (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL)
-    SQL: CREATE TABLE Users (id VARCHAR(10) PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL)
-    SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-    SQL: INSERT INTO Cities (name) VALUES ('Munich')
-    SQL: INSERT INTO Cities (name) VALUES ('Prague')
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('andrey', 'Andrey', 1)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('sergey', 'Sergey', 2)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('eugene', 'Eugene', 2)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('alex', 'Alex', null)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('smth', 'Something', null)
-    SQL: UPDATE Users SET name = 'Alexey' WHERE Users.id = 'alex'
-    SQL: DELETE FROM Users WHERE Users.name LIKE '%thing'
-    All cities:
-    SQL: SELECT Cities.id, Cities.name FROM Cities
-    1: St. Petersburg
-    2: Munich
-    3: Prague
-    Manual join:
-    SQL: SELECT Users.name, Cities.name FROM Cities, Users WHERE (Users.id = 'andrey' or Users.name = 'Sergey') and Users.id = 'sergey' and Users.city_id = Cities.id
-    Sergey lives in Munich
-    Join with foreign key:
-    SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users LEFT JOIN Cities ON Users.city_id = Cities.id WHERE Cities.name = 'St. Petersburg' or Users.city_id IS NULL
-    Andrey lives in St. Petersburg
-    Alexey lives nowhere
-    Functions and group by:
-    SQL: SELECT Cities.name, COUNT(Users.id) FROM Cities LEFT JOIN Users ON Users.city_id = Cities.id GROUP BY Cities.name
-    Nobody lives in Prague
-    1 user(s) live(s) in St. Petersburg
-    2 user(s) live(s) in Munich
-    SQL: DROP TABLE Users
-    SQL: DROP TABLE Cities
+And also the [tests](https://github.com/Collokia/Exposed/tree/master/src/test/kotlin/kotlinx/sql/tests/h2) can be used as examples.
 
 _To execute SQL directly_ you may acquire the connection from an existing Exposed transaction using:
 
