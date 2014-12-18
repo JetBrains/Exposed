@@ -81,7 +81,8 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         maven(MavenPublication) {
-            group = "org.kotlinx"
+            groupId = "org.kotlinx"
+            artifactId = "kotlinx.sql"
             from components.java
 
             artifact sourceJar {
