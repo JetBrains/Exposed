@@ -10,6 +10,16 @@ plugin adding provided and optional scopes to Gradle.
 Logging is no SLF4j and no logging adapter is provided, assuming that your own application will include
 one such as Logback.  Just as you must provide your own JDBC driver.
 
+To use, add this repo to your Gradle build (or equivalent for Maven)
+
+```
+  maven {
+        url 'https://collokia.artifactoryonline.com/collokia/collokia-oss'
+    }
+```
+
+And add the dependency to: `org.kotlinx:kotlinx-sql:0.10.4-SNAPSHOT`
+
 ...END notes about this fork...
 
 Kotlin SQL Library
