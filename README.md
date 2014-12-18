@@ -18,7 +18,7 @@ To use, add this repo to your Gradle build (or equivalent for Maven)
     }
 ```
 
-And add the dependency to: `org.kotlinx:kotlinx-sql:0.10.4-SNAPSHOT`
+And add the dependency to: `org.kotlinx:kotlinx.sql:0.10.4-SNAPSHOT`
 
 ...END notes about this fork...
 
