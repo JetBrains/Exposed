@@ -20,6 +20,8 @@ To use, add this repo to your Gradle build (or equivalent for Maven)
 
 And add the dependency to: `org.kotlinx:kotlinx.sql:0.10.4-SNAPSHOT`
 
+TODO: After using this more, update the documentation (it is possibly out of date)
+
 ...END notes about this fork...
 
 Kotlin SQL Library
@@ -145,3 +147,7 @@ Outputs:
     2 user(s) live(s) in Munich
     SQL: DROP TABLE Users
     SQL: DROP TABLE Cities
+
+_To execute SQL directly_ you may acquire the connection from an existing Exposed transaction using:
+
+`val connection = Session.get().connection`
