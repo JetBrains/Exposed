@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="GradleSettings">
-    <option name="gradleHome" value="$USER_HOME$/Downloads/gradle-1.6" />
-    <option name="linkedProjectPath" value="$USER_HOME$/grails-petclinic/build.gradle" />
-    <option name="preferLocalInstallationToWrapper" value="true" />
-  </component>
-</project>
-

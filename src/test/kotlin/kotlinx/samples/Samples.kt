@@ -1,36 +1,3 @@
-_NOTE:_ forked from [JetBrains version](https://github.com/JetBrains/Exposed) and added
-gradle build, publishing to our open-source repo for people to use.
-Also changed naming to kotlinx.* packages to keep this from being confused as core Kotlin.
-
-Gradle build is setup top be used with Gradle [Pride plugin](https://github.com/prezi/pride) so
-that it can be developed along side other code and have direct compile-time dependencies.  If you
-don't know about the Pride plugin, you should. Same for [propdeps](https://github.com/spring-projects/gradle-plugins/tree/master/propdeps-plugin)
-plugin adding provided and optional scopes to Gradle.
-
-Logging is no SLF4j and no logging adapter is provided, assuming that your own application will include
-one such as Logback.  Just as you must provide your own JDBC driver.
-
-To use, add this repo to your Gradle build (or equivalent for Maven)
-
-```
-  maven {
-        url 'https://collokia.artifactoryonline.com/collokia/collokia-oss'
-    }
-```
-
-And add the dependency to: `org.kotlinx:kotlinx.sql:0.10.4-SNAPSHOT`
-
-_NOTE:_ (for the forkers of this fork) not sure this library is much clearer than JDBI or JOOQ and feels like it fell back towards JDBC.  I think API's in M11 and onwards with Kotlin runtime type info (reflection) will be able to do new ideas, so this library might be replaced with something stronger when that information is available.
-
-...END notes about this fork...
-
-Kotlin SQL Library
-==================
-
-see current samples in: [Samples.kt](https://github.com/Collokia/Exposed/blob/master/src/test/kotlin/kotlinx/samples/Samples.kt)
-which currently looks like:
-
-```kotlin
 package kotlinx.sql.sample
 
 import kotlinx.sql.*
@@ -144,10 +111,3 @@ fun main(args: Array<String>) {
 
     }
 }
-```
-
-And also the [tests](https://github.com/Collokia/Exposed/tree/master/src/test/kotlin/kotlinx/sql/tests/h2) can be used as examples.
-
-_To execute SQL directly_ you may acquire the connection from an existing Exposed transaction using:
-
-`val connection = Session.get().connection`
