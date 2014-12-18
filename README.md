@@ -20,7 +20,7 @@ To use, add this repo to your Gradle build (or equivalent for Maven)
 
 And add the dependency to: `org.kotlinx:kotlinx.sql:0.10.4-SNAPSHOT`
 
-TODO: After using this more, update the documentation (it is possibly out of date)
+_NOTE:_ (for the forkers of this fork) not sure this library is much clearer thatn JDBI or JOOQ and feels like it fell back towards JDBC.  I think API's in M11 and onwards with Kotlin runtime type info (reflection) will be able to do new ideas, so this library might be replaced with something stronger when that information is available.
 
 ...END notes about this fork...
 
