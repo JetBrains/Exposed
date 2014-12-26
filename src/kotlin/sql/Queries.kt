@@ -41,8 +41,13 @@ fun <T:Table> T.insert (selectQuery: Query): Unit {
     answer.execute(Session.get())
 }
 
+fun <T:Table> T.replace(selectQuery: Query): Unit {
+    val answer = InsertSelectQuery (this, selectQuery, isReplace = true)
+    answer.execute(Session.get())
+}
+
 fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
-    val answer = InsertSelectQuery (this, selectQuery, true)
+    val answer = InsertSelectQuery (this, selectQuery, isIgnore = true)
     answer.execute(Session.get())
 }
 

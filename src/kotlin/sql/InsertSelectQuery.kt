@@ -2,7 +2,7 @@ package kotlin.sql
 
 import java.sql.Statement
 
-class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: Boolean = false) {
+class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: Boolean = false, val isReplace: Boolean = false) {
     var statement: Statement? = null
 
     fun get(column: Column<Int>): Int {
@@ -18,7 +18,8 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
     fun execute(session: Session) {
         val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.join(", ", "(", ")")
         val ignore = if (isIgnore) " IGNORE " else ""
-        var sql = "INSERT ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
+        val insert = if (!isReplace) "INSERT" else "REPLACE"
+        var sql = "$insert ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 
         session.exec(sql) {
             try {
