@@ -36,6 +36,13 @@ fun <T:Table> T.insertIgnore(body: T.(InsertQuery)->Unit): InsertQuery {
     return answer
 }
 
+fun <T:Table> T.replace(body: T.(InsertQuery)->Unit): InsertQuery {
+    val answer = InsertQuery(this, isReplace = true)
+    body(answer)
+    answer.execute(Session.get())
+    return answer
+}
+
 fun <T:Table> T.insert (selectQuery: Query): Unit {
     val answer = InsertSelectQuery (this, selectQuery)
     answer.execute(Session.get())

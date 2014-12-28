@@ -5,7 +5,7 @@ import java.util.LinkedHashMap
 /**
  * isIgnore is supported for mysql only
  */
-class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
+class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace: Boolean = false) {
     val values = LinkedHashMap<Column<*>, Any?>()
     var generatedKey: Int? = null
 
@@ -30,7 +30,8 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false) {
     fun execute(session: Session): Int {
         val builder = QueryBuilder(true)
         val ignore = if (isIgnore) " IGNORE " else ""
-        var sql = StringBuilder("INSERT ${ignore}INTO ${session.identity(table)}")
+        val insert = if (isReplace) "REPLACE" else "INSERT"
+        var sql = StringBuilder("$insert ${ignore}INTO ${session.identity(table)}")
 
         sql.append(" (")
         sql.append((values map { session.identity(it.key) }).join(", "))
