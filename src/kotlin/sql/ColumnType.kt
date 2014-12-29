@@ -167,7 +167,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
     }
 }
 
-data class StringColumnType(val length: Int = 0, val collate: String? = null): ColumnType() {
+data class StringColumnType(val length: Int = 65535, val collate: String? = null): ColumnType() {
     override fun sqlType(): String  {
         val ddl = StringBuilder()
 
