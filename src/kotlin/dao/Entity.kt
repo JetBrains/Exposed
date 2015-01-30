@@ -195,6 +195,7 @@ open public class Entity(val id: EntityID) {
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
     public fun delete(){
+        factory().removeFromCache(this)
         val table = factory().table
         table.deleteWhere{table.id eq id}
     }
@@ -267,6 +268,10 @@ class EntityCache {
 
     fun <T: Entity> store(table: IdTable, o: T) {
         getMap<T>(table).put(o.id.value, o)
+    }
+
+    fun <T: Entity> remove(table: IdTable, o: T) {
+        getMap<T>(table).remove(o.id.value)
     }
 
     fun <T: Entity> scheduleInsert(f: EntityClass<T>, o: T) {
@@ -421,6 +426,10 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
 
     private fun testCache(id: EntityID): T? {
         return warmCache().find(this, id)
+    }
+
+    fun removeFromCache(entity: Entity) {
+        warmCache().remove(table, entity)
     }
 
     public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
