@@ -29,7 +29,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
 
     fun execute(session: Session): Int {
         val builder = QueryBuilder(true)
-        val ignore = if (isIgnore) " IGNORE " else ""
+        val ignore = if (isIgnore && Session.get().vendor == DatabaseVendor.MySql) " IGNORE " else ""
         val insert = if (isReplace) "REPLACE" else "INSERT"
         var sql = StringBuilder("$insert ${ignore}INTO ${session.identity(table)}")
 
