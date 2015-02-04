@@ -122,6 +122,11 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this
     }
 
+    fun notForUpdate(): Query {
+        forUpdate = false
+        return this
+    }
+
     fun groupBy(vararg columns: Column<*>): Query {
         for (column in columns) {
             groupedByColumns.add(column)
