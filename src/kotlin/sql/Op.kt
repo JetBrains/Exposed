@@ -43,6 +43,12 @@ class Between(val expr: Expression<*>, val from: LiteralOp<*>, val to: LiteralOp
     }
 }
 
+class NoOpConversion<T, S>(val expr: Expression<T>, val columnType: ColumnType): Op<S>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return expr.toSQL(queryBuilder)
+    }
+}
+
 class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: List<T>, val isInList: Boolean = true): Op<Boolean>() {
 
     override fun toSQL(queryBuilder: QueryBuilder): String {

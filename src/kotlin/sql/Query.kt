@@ -50,7 +50,7 @@ public class ResultRow() {
 
 open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
     var selectedColumns = HashSet<Column<*>>();
-    val groupedByColumns = ArrayList<Column<*>>();
+    val groupedByColumns = ArrayList<Expression<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
@@ -90,7 +90,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             if (!count) {
                 if (groupedByColumns.size > 0) {
                     append(" GROUP BY ")
-                    append((groupedByColumns map {session.fullIdentity(it)}).join(", ", "", ""))
+                    append((groupedByColumns map {it.toSQL(queryBuilder)}).join(", ", "", ""))
                 }
 
                 if (having != null) {
@@ -127,7 +127,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this
     }
 
-    fun groupBy(vararg columns: Column<*>): Query {
+    fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             groupedByColumns.add(column)
         }

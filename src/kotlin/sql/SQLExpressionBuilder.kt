@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import org.joda.time.DateTime
+import java.math.BigDecimal
 
 fun Column<*>.count(): Count {
     return Count(this)
@@ -174,5 +175,9 @@ object SqlExpressionBuilder {
 
     public fun<T, S> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> {
         return Between(this, asLiteral(from), asLiteral(to))
+    }
+
+    public fun ExpressionWithColumnType<Int>.intToDecimal(): Op<BigDecimal> {
+        return NoOpConversion(this, DecimalColumnType(15, 0))
     }
 }
