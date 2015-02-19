@@ -3,9 +3,10 @@ package kotlin.sql
 import java.sql.Connection
 
 object DeleteQuery {
-    fun where(session: Session, table: Table, op: Op<Boolean>): Int {
+    fun where(session: Session, table: Table, op: Op<Boolean>, isIgnore: Boolean = false): Int {
+        val ignore = if (isIgnore && Session.get().vendor == DatabaseVendor.MySql) "IGNORE" else ""
         val builder = QueryBuilder(true)
-        val sql = StringBuilder("DELETE FROM ${session.identity(table)} WHERE ${op.toSQL(builder)}")
+        val sql = StringBuilder("DELETE $ignore FROM ${session.identity(table)} WHERE ${op.toSQL(builder)}")
         return builder.executeUpdate(session, sql.toString())
     }
 

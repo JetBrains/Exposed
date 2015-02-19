@@ -18,6 +18,10 @@ inline fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
     DeleteQuery.where(Session.get(), this@deleteWhere, SqlExpressionBuilder.op())
 }
 
+inline fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
+    DeleteQuery.where(Session.get(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
+}
+
 fun Table.deleteAll() {
     DeleteQuery.all(Session.get(), this@deleteAll)
 }
