@@ -130,14 +130,16 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun createStatements (vararg tables: Table) : List<String> {
         val statements = ArrayList<String>()
-        if (tables.size == 0)
+        if (tables.size() == 0)
             return statements
 
-        val exists = HashMap<Table,Boolean>(tables.size)
+        val newTables = ArrayList<Table>()
+        val tablesInDatabase = allTablesNames()
+
         for (table in tables) {
-            exists.put(table, table.exists())
-            if (exists.get(table)!!)
-                continue
+            val exists = tablesInDatabase.contains(table.tableName)
+
+            if(exists) continue else newTables.add(table)
 
             // create table
             val ddl = table.ddl
@@ -150,10 +152,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             }
         }
 
-        for (table in tables) {
-            if (exists.get(table)!!)
-                continue
-
+        for (table in newTables) {
             // foreign keys
             for (column in table.columns) {
                 if (column.referee != null) {
@@ -162,7 +161,6 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                 }
             }
         }
-
         return statements
     }
 
@@ -170,7 +168,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         val statements = createStatements(*tables)
         for (statement in statements) {
             exec(statement) {
-                connection.createStatement()?.executeUpdate(statement)
+                connection.createStatement().executeUpdate(statement)
             }
         }
     }
@@ -228,21 +226,35 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
-        val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
-        for (statement in statements) {
-            exec(statement) {
-                connection.createStatement()?.executeUpdate(statement)
+        withDataBaseLock {
+            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
+            for (statement in statements) {
+                exec(statement) {
+                    connection.createStatement().executeUpdate(statement)
+                }
             }
         }
     }
 
+    fun <T>withDataBaseLock(body: () -> T): T {
+        if (vendor == DatabaseVendor.MySql) {
+            try {
+                connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS LockTable(fake bit);")
+                connection.createStatement().execute("LOCK TABLE LockTable WRITE")
+                return body()
+            } finally {
+                connection.createStatement().execute("UNLOCK TABLES")
+            }
+        } else {
+            throw UnsupportedOperationException("Unsupported driver: " + vendor)
+        }
+    }
+
     fun drop(vararg tables: Table) {
-        if (tables.size > 0) {
-            for (table in tables) {
-                val ddl = StringBuilder("DROP TABLE ${identity(table)}").toString()
-                exec(ddl) {
-                    connection.createStatement()?.executeUpdate(ddl)
-                }
+        for (table in tables) {
+            val ddl = StringBuilder("DROP TABLE ${identity(table)}").toString()
+            exec(ddl) {
+                connection.createStatement().executeUpdate(ddl)
             }
         }
     }

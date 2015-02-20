@@ -1,5 +1,6 @@
 package kotlin.sql
 
+import java.util.ArrayList
 import java.util.HashMap
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
@@ -74,15 +75,24 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
     return query.execute(Session.get())
 }
 
+fun allTablesNames(): List<String> {
+    val result = ArrayList<String>()
+    val resultSet = Session.get().connection.createStatement().executeQuery("show tables")
+
+    while (resultSet.next()) {
+        result.add(resultSet.getString(1))
+    }
+    return result
+}
+
 fun Table.exists (): Boolean {
     val tableName = this.tableName
-    val resultSet = Session.get().connection.createStatement()?.executeQuery("show tables")
-    if (resultSet != null) {
-        while (resultSet.next()) {
-            val existingTableName = resultSet.getString(1)
-            if (existingTableName?.equalsIgnoreCase(tableName) ?: false) {
-                return true
-            }
+    val resultSet = Session.get().connection.createStatement().executeQuery("show tables")
+
+    while (resultSet.next()) {
+        val existingTableName = resultSet.getString(1)
+        if (existingTableName?.equalsIgnoreCase(tableName) ?: false) {
+            return true
         }
     }
 
@@ -90,9 +100,7 @@ fun Table.exists (): Boolean {
 }
 
 fun Table.matchesDefinition(): Boolean {
-    val rs = Session.get().connection.createStatement()?.executeQuery("show columns from $tableName")
-    if (rs == null)
-        return false
+    val rs = Session.get().connection.createStatement().executeQuery("show columns from $tableName")
 
     var nColumns = columns.size()
     while (rs.next()) {
@@ -117,10 +125,8 @@ fun tableColumns(): HashMap<String, List<Pair<String, Boolean>>> {
 
     val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-    val rs = Session.get().connection.createStatement()?.executeQuery(
+    val rs = Session.get().connection.createStatement().executeQuery(
             "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
-    if (rs == null)
-        return tables
 
     while (rs.next()) {
         val tableName = rs.getString(1)!!
@@ -143,7 +149,7 @@ fun columnConstraints(): HashMap<Pair<String, String>, Constraint> {
 
     val constraints = HashMap<Pair<String, String>, Constraint>()
 
-    val rs = Session.get().connection.createStatement()?.executeQuery(
+    val rs = Session.get().connection.createStatement().executeQuery(
             "SELECT\n" +
                     "  rc.TABLE_NAME,\n" +
                     "  ku.COLUMN_NAME,\n" +
@@ -154,8 +160,6 @@ fun columnConstraints(): HashMap<Pair<String, String>, Constraint> {
                     "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
                     "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
                     "WHERE ku.TABLE_SCHEMA = '${getDatabase()}'")
-    if (rs == null)
-        return constraints
 
     while (rs.next()) {
         val tableName = rs.getString("TABLE_NAME")!!
@@ -172,12 +176,7 @@ fun columnConstraints(): HashMap<Pair<String, String>, Constraint> {
 fun getDatabase(): String {
     return when (Session.get().vendor) {
         DatabaseVendor.MySql -> {
-            val rs = Session.get().connection.createStatement()?.executeQuery("SELECT DATABASE()")
-            if (rs == null || !rs.next()) {
-                ""
-            } else {
-                rs.getString(1)!!
-            }
+            Session.get().connection.getCatalog()
         }
         else -> throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
     }
