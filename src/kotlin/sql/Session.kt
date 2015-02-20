@@ -240,7 +240,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         if (vendor == DatabaseVendor.MySql) {
             try {
                 connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS LockTable(fake bit);")
-                connection.createStatement().execute("LOCK TABLE LockTable WRITE")
+                connection.createStatement().execute("LOCK TABLES LockTable WRITE")
                 return body()
             } finally {
                 connection.createStatement().execute("UNLOCK TABLES")
