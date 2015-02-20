@@ -237,21 +237,10 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun <T>withDataBaseLock(body: () -> T): T {
-/*
-        if (vendor == DatabaseVendor.MySql) {
-            try {
-                connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS LockTable(fake bit);")
-                connection.createStatement().execute("LOCK TABLES LockTable WRITE")
-*/
-                return body()
-/*
-            } finally {
-                connection.createStatement().execute("UNLOCK TABLES")
-            }
-        } else {
-            throw UnsupportedOperationException("Unsupported driver: " + vendor)
-        }
-*/
+        connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS LockTable(fake bit unique)")
+        connection.createStatement().executeUpdate("INSERT IGNORE INTO LockTable (fake) VALUE (true)")
+        connection.createStatement().execute("SELECT * FROM LockTable FOR UPDATE")
+        return body()
     }
 
     fun drop(vararg tables: Table) {
