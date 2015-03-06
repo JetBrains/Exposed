@@ -31,7 +31,7 @@ class IsNotNullOp(val expr: Expression<*>): Op<Boolean>() {
     }
 }
 
-class LiteralOp<T>(val columnType: ColumnType, val value: Any): Expression<T> {
+class LiteralOp<T>(override val columnType: ColumnType, val value: Any): ExpressionWithColumnType<T> {
     override fun toSQL(queryBuilder: QueryBuilder):String {
         return columnType.valueToString(value)
     }
@@ -43,7 +43,7 @@ class Between(val expr: Expression<*>, val from: LiteralOp<*>, val to: LiteralOp
     }
 }
 
-class NoOpConversion<T, S>(val expr: Expression<T>, val columnType: ColumnType): Op<S>() {
+class NoOpConversion<T, S>(val expr: Expression<T>, override val columnType: ColumnType): ExpressionWithColumnType<S> {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return expr.toSQL(queryBuilder)
     }

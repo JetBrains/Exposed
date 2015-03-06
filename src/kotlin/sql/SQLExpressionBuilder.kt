@@ -7,6 +7,10 @@ fun Column<*>.count(): Count {
     return Count(this)
 }
 
+fun <T: DateTime?> Expression<T>.date(): Date {
+    return Date(this)
+}
+
 fun Column<*>.countDistinct(): Count {
     return Count(this, true)
 }
@@ -32,6 +36,10 @@ fun <T> Column<T>.distinct(): Distinct<T> {
 }
 
 object SqlExpressionBuilder {
+    public fun <T> coalesce(vararg expressions: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
+        return Coalesce(*expressions)
+    }
+
     fun case(value: Expression<*>? = null) : Case {
         return Case(value)
     }
@@ -177,7 +185,7 @@ object SqlExpressionBuilder {
         return Between(this, asLiteral(from), asLiteral(to))
     }
 
-    public fun ExpressionWithColumnType<Int>.intToDecimal(): Op<BigDecimal> {
+    public fun ExpressionWithColumnType<Int>.intToDecimal(): ExpressionWithColumnType<BigDecimal> {
         return NoOpConversion(this, DecimalColumnType(15, 0))
     }
 }

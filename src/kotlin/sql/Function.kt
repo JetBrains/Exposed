@@ -1,4 +1,5 @@
 package kotlin.sql
+import org.joda.time.DateTime
 import java.util.ArrayList
 
 abstract class Function<T>(): ExpressionWithColumnType<T>
@@ -9,6 +10,14 @@ data class Count(val expr: Expression<*>, val distinct: Boolean = false): Functi
     }
 
     override val columnType: ColumnType = IntegerColumnType();
+}
+
+data class Date(val expr: Expression<DateTime>): Function<DateTime>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "DATE(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DateColumnType(false);
 }
 
 data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
@@ -33,6 +42,14 @@ data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     }
 
     override val columnType: ColumnType = _columnType
+}
+
+data class Coalesce<T>(vararg val expr: ExpressionWithColumnType<T>): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "COALESCE(${expr.map {it.toSQL(queryBuilder)}.join(", ")})"
+    }
+
+    override val columnType: ColumnType = expr.first().columnType
 }
 
 data class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
