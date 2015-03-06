@@ -46,7 +46,7 @@ fun Table.innerJoin (otherTable: Table) : Join {
 }
 
 class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : ColumnSet() {
-    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Column<*>, val fkColumn: Column<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
+    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
 
     val joinParts: ArrayList<JoinPart> = ArrayList();
@@ -62,7 +62,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         return join(otherTable, joinType, keysPair.first, keysPair.second, additionalConstraint)
     }
 
-    fun join(otherTable: Table, joinType: JoinType, onColumn: Column<*>, otherColumn: Column<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
+    fun join(otherTable: Table, joinType: JoinType, onColumn: Expression<*>, otherColumn: Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
         joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
         return this
     }
@@ -80,7 +80,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         val sb = StringBuilder()
         sb.append(table.describe(s))
         for (p in joinParts) {
-            sb.append(" ${p.joinType} JOIN ${p.table.describe(s)} ON ${s.fullIdentity(p.pkColumn)} = ${s.fullIdentity(p.fkColumn)}" )
+            sb.append(" ${p.joinType} JOIN ${p.table.describe(s)} ON ${p.pkColumn.toSQL(QueryBuilder(false))} = ${p.fkColumn.toSQL(QueryBuilder(false))}" )
             if (p.additionalConstraint != null)
                 sb.append(" and (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(QueryBuilder(false))})")
         }
