@@ -1,6 +1,7 @@
 package kotlin.sql
 
 public trait SizedIterable<out T>: Iterable<T> {
+    fun limit(n: Int): SizedIterable<T>
     fun count(): Int
     fun empty(): Boolean
 }
@@ -12,6 +13,10 @@ fun <T> emptySized() : SizedIterable<T> {
 class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
     override fun count(): Int {
         return 0
+    }
+
+    override fun limit(n: Int): SizedIterable<T> {
+        return this;
     }
 
     override fun empty(): Boolean {
@@ -32,6 +37,10 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
 }
 
 public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
+    override fun limit(n: Int): SizedIterable<T> {
+        return SizedCollection(delegate.take(n))
+    }
+
     override fun iterator() = delegate.iterator()
     override fun count() = delegate.size()
     override fun empty() = delegate.empty
@@ -41,12 +50,17 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
     private var _wrapper: List<T>? = null
     private var _size: Int? = null
     private var _empty: Boolean? = null
+    private var _limit: Int? = null
 
     val wrapper: List<T> get() {
         if (_wrapper == null) {
             _wrapper = delegate.toList()
         }
         return _wrapper!!
+    }
+
+    override fun limit(n: Int): SizedIterable<T> {
+        return delegate.limit(n)
     }
 
     override fun iterator() = wrapper.iterator()
@@ -88,6 +102,10 @@ fun<T:Any> Iterable<T>.single() : T {
 fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
+        override fun limit(n: Int): SizedIterable<R> {
+            return source.limit(n).mapLazy(f)
+        }
+
         override fun count(): Int {
             return source.count()
         }

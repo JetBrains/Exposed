@@ -156,8 +156,8 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this
     }
 
-    fun limit(limit: Int): Query {
-        this.limit = limit
+    override fun limit(n: Int): Query {
+        this.limit = n
         return this
     }
 
