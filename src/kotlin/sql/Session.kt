@@ -352,7 +352,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         _connection?.close()
     }
 
-    class object {
+    default object {
         val threadLocal = ThreadLocal<Session>()
 
         fun hasSession(): Boolean = tryGet() != null

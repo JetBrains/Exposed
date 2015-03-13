@@ -48,7 +48,7 @@ class QueryBuilder(val prepared: Boolean) {
 trait Expression<out T> {
     fun toSQL(queryBuilder: QueryBuilder): String
 
-    class object {
+    default object {
         inline fun <T> build(builder: SqlExpressionBuilder.()->Expression<T>): Expression<T> {
             return SqlExpressionBuilder.builder()
         }

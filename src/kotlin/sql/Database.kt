@@ -70,7 +70,7 @@ public class Database private(val connector: () -> Connection) {
         }
     }
 
-    public class object {
+    public default object {
         public val timeZone: DateTimeZone = DateTimeZone.UTC
 
         public fun connect(datasource: DataSource): Database {
