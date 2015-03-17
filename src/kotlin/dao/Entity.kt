@@ -383,7 +383,7 @@ class EntityCache {
         referrers.clear()
     }
 
-    default object {
+    companion object {
         val key = Key<EntityCache>()
         val newCache = { EntityCache()}
 

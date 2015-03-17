@@ -34,7 +34,7 @@ public class ResultRow() {
         return data.get(c) != null;
     }
 
-    default object {
+    companion object {
         fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
             val answer = ResultRow()
             fields.forEachWithIndex { (i, f) ->

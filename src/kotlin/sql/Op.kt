@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import kotlin.dao.EntityID
 
 abstract class Op<T>() : Expression<T> {
-    default object {
+    companion object {
         inline fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
             return SqlExpressionBuilder.op()
         }
