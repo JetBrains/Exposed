@@ -11,6 +11,7 @@ object DeleteQuery {
     }
 
     fun all(session: Session, table: Table): Int {
+        session.flushCache()
         val sql = StringBuilder("DELETE FROM ${session.identity(table)}").toString()
         return session.exec(sql) {
             session.connection.createStatement()!!.executeUpdate(sql)

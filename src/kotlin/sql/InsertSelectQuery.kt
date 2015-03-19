@@ -22,6 +22,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
         var sql = "$insert ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 
         session.exec(sql) {
+            session.flushCache()
             try {
                 statement = session.connection.createStatement()!!
                 statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)

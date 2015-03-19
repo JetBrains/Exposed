@@ -22,6 +22,7 @@ class QueryBuilder(val prepared: Boolean) {
 
     public fun executeUpdate(session: Session, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
         return session.exec(sql, args) {
+            session.flushCache()
             val stmt = session.prepareStatement(sql, autoincs)
             stmt.fillParameters(args)
 

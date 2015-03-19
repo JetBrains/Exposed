@@ -73,10 +73,14 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun commit() {
-        EntityCache.getOrCreate(this).flush()
+        flushCache()
         _connection?.let {
             it.commit()
         }
+    }
+
+    fun flushCache() {
+        EntityCache.getOrCreate(this).flush()
     }
 
     fun rollback() {
