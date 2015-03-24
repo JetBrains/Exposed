@@ -47,7 +47,7 @@ class BatchInsertQuery(val table: Table) {
 
                 val count = stmt.executeBatch()!!
 
-                assert(count.size == data.size, "Number of results don't match number of entries in batch")
+                assert(count.size() == data.size(), "Number of results don't match number of entries in batch")
 
                 if (auto.isNotEmpty()) {
                     val rs = stmt.getGeneratedKeys()!!
@@ -55,17 +55,17 @@ class BatchInsertQuery(val table: Table) {
                         generatedKeys.add(rs.getInt(1))
                     }
 
-                    if (generatedKeys.size == 1 && count.size > 1) {
+                    if (generatedKeys.size() == 1 && count.size() > 1) {
                         // H2 only returns one last generated keys...
                         var id = generatedKeys.first()
 
-                        while (generatedKeys.size < count.size) {
+                        while (generatedKeys.size() < count.size()) {
                             id = id - 1
                             generatedKeys.add(0, id)
                         }
                     }
 
-                    assert(generatedKeys.size == 0 || generatedKeys.size == count.size, "Number of autoincs doesn't match number of batch entries")
+                    assert(generatedKeys.isEmpty() || generatedKeys.size() == count.size(), "Number of autoincs doesn't match number of batch entries")
                 }
             }
         }

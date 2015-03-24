@@ -88,7 +88,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             }
 
             if (!count) {
-                if (groupedByColumns.size > 0) {
+                if (groupedByColumns.isNotEmpty()) {
                     append(" GROUP BY ")
                     append((groupedByColumns map {it.toSQL(queryBuilder)}).join(", ", "", ""))
                 }
@@ -98,7 +98,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                     append(having!!.toSQL(queryBuilder))
                 }
 
-                if (orderByColumns.size > 0) {
+                if (orderByColumns.isNotEmpty()) {
                     append(" ORDER BY ")
                     append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).join(", ", "", ""))
                 }

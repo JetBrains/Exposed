@@ -265,13 +265,13 @@ open class Table(name: String = ""): ColumnSet() {
 
     private fun ddl(): String {
         var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Session.get().identity(this)}")
-        if (columns.size > 0) {
+        if (columns.isNotEmpty()) {
             ddl.append(" (")
             var c = 0;
             for (column in columns) {
                 ddl.append(column.descriptionDdl())
                 c++
-                if (c < columns.size) {
+                if (c < columns.size()) {
                     ddl.append(", ")
                 }
             }

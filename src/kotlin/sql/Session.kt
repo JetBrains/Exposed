@@ -134,7 +134,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun createStatements (vararg tables: Table) : List<String> {
         val statements = ArrayList<String>()
-        if (tables.size() == 0)
+        if (tables.isEmpty())
             return statements
 
         val newTables = ArrayList<Table>()
@@ -179,7 +179,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
         val statements = ArrayList<String>()
-        if (tables.size() == 0)
+        if (tables.isEmpty())
             return statements
 
         val existingTableColumns = tableColumns()
@@ -298,7 +298,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun index (columns: Array<out Column<*>>, isUnique: Boolean): String {
-        if (columns.size == 0) error("No columns to create index from")
+        if (columns.isEmpty()) error("No columns to create index from")
 
         val table = columns[0].table
         return when (vendor) {

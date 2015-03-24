@@ -12,7 +12,7 @@ public trait SqlLogger {
 val exposedLogger = Logger.getLogger("Exposed")!!
 
 fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
-    if (args.size == 0)
+    if (args.isEmpty())
         return sql
 
     val result = StringBuilder()
