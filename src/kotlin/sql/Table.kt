@@ -45,6 +45,10 @@ fun Table.innerJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
+fun Table.leftJoin (otherTable: Table) : Join {
+    return Join (this, otherTable, JoinType.LEFT)
+}
+
 class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : ColumnSet() {
     class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
@@ -53,6 +57,10 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
 
     fun innerJoin (otherTable: Table) : Join {
         return join(otherTable, JoinType.INNER)
+    }
+
+    fun leftJoin (otherTable: Table) : Join {
+        return join(otherTable, JoinType.LEFT)
     }
 
     fun join (otherTable: Table, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
