@@ -1,12 +1,12 @@
 package kotlin.sql
 
 import java.sql.Connection
-import java.util.regex.Pattern
-import java.util.HashMap
 import java.sql.PreparedStatement
 import java.util.ArrayList
-import kotlin.properties.Delegates
+import java.util.HashMap
+import java.util.regex.Pattern
 import kotlin.dao.EntityCache
+import kotlin.properties.Delegates
 
 public class Key<T>()
 open class UserDataHolder() {
@@ -55,7 +55,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     val statements = StringBuilder()
     val outerSession = threadLocal.get()
 
-    ;{
+    init {
         logger.addLogger(Log4jSqlLogger())
         threadLocal.set(this)
     }

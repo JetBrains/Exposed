@@ -1,8 +1,11 @@
 package kotlin.sql.tests.h2
 
 import org.junit.Test
+import kotlin.sql.Table
+import kotlin.sql.exists
+import kotlin.sql.insert
+import kotlin.sql.select
 import kotlin.test.assertEquals
-import kotlin.sql.*
 
 public class DDLTests : DatabaseTestsBase() {
     Test fun tableExists01() {
@@ -89,9 +92,9 @@ public class DDLTests : DatabaseTestsBase() {
             val id = integer("id").primaryKey()
             val lvalue = integer("lvalue")
             val rvalue = integer("rvalue");
-            val name = varchar("name", 255).index();
+            val name = varchar("name", 255).index()
 
-            {
+            init {
                 index (false, lvalue, rvalue)
             }
         }

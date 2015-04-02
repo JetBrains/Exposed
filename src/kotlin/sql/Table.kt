@@ -1,12 +1,11 @@
 package kotlin.sql
 
-import java.util.ArrayList
 import org.joda.time.DateTime
-import kotlin.sql.Join.JoinPart
 import java.math.BigDecimal
 import java.sql.Blob
-import kotlin.dao.IdTable
+import java.util.ArrayList
 import kotlin.dao.EntityID
+import kotlin.dao.IdTable
 
 trait FieldSet {
     val fields: List<Expression<*>>
@@ -104,7 +103,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     }
 
     // ctor body
-    {
+    init {
         if (onColumn != null && otherColumn != null) {
             join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {

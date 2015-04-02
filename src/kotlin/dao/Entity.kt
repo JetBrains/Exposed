@@ -44,25 +44,25 @@ private fun <T:EntityID?>checkReference(reference: Column<T>, factory: EntityCla
 }
 
 class Reference<out Target : Entity> (val reference: Column<EntityID>, val factory: EntityClass<Target>) {
-    {
+    init {
         checkReference(reference, factory)
     }
 }
 
 class OptionalReference<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
-    {
+    init {
         checkReference(reference, factory)
     }
 }
 
 class OptionalReferenceSureNotNull<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
-    {
+    init {
         checkReference(reference, factory)
     }
 }
 
 class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory: EntityClass<Source>, val cache: Boolean) {
-    {
+    init {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
 
@@ -78,7 +78,7 @@ class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory:
 }
 
 class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val factory: EntityClass<Source>, val cache: Boolean) {
-    {
+    init {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
 
