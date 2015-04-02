@@ -1,21 +1,17 @@
 package kotlin.sql
 
-import java.util.HashSet
-import java.util.ArrayList
-import java.util.HashMap
 import java.sql.ResultSet
-import java.util.NoSuchElementException
+import java.util.*
 import kotlin.dao.EntityCache
-import java.util.LinkedHashSet
 import kotlin.dao.IdTable
 
-public class ResultRow() {
-    val data = HashMap<Expression<*>, Any?>()
+public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
+    val data = arrayOfNulls<Any?>(size)
 
     [suppress("UNCHECKED_CAST")]
     fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
-            data.containsKey(c) -> data[c]
+            fieldIndex.containsKey(c) -> data[fieldIndex[c]!!]
             else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
         }
 
@@ -30,15 +26,30 @@ public class ResultRow() {
         return d as T
     }
 
+    fun <T> set(c: Expression<T>, value: T) {
+        val index = fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")
+        data[index] = value
+    }
+
     fun<T> hasValue (c: Expression<T>) : Boolean {
-        return data.get(c) != null;
+        return fieldIndex[c]?.let{data[it]} != null;
+    }
+
+    fun <T> tryGet(c: Expression<T>): T? {
+        return if (hasValue(c)) get(c) else null
+    }
+
+    override fun toString(): String {
+        return fieldIndex.map { "${it.getKey().toSQL(QueryBuilder(false))}=${data[it.getValue()]}" }.join()
     }
 
     companion object {
-        fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
-            val answer = ResultRow()
-            fields.forEachWithIndex { (i, f) ->
-                answer.data[f] = when {
+        fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>) : ResultRow {
+            val size = fieldsIndex.size()
+            val answer = ResultRow(size, fieldsIndex)
+
+            fields.forEachIndexed{ i, f ->
+                answer.data[i]  = when {
                     f is Column<*> && f.columnType is BlobColumnType -> rs.getBlob(i + 1)
                     else -> rs.getObject(i + 1)
                 }
@@ -163,12 +174,19 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
     private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
         private var hasNext: Boolean? = null
+        private val fieldsIndex = HashMap<Expression<*>, Int>()
+
+        init {
+            set.fields.forEachIndexed { idx, field ->
+                fieldsIndex[field] = idx
+            }
+        }
 
         public override fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
-            return ResultRow.create(rs, set.fields)
+            return ResultRow.create(rs, set.fields, fieldsIndex)
         }
 
         public override fun hasNext(): Boolean {

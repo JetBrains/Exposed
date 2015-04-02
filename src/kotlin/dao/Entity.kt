@@ -1,10 +1,10 @@
 package kotlin.dao
 
-import kotlin.sql.*
-import java.util.HashMap
-import java.util.LinkedHashMap
 import java.util.ArrayList
+import java.util.HashMap
 import java.util.HashSet
+import java.util.LinkedHashMap
+import kotlin.sql.*
 
 /**
  * @author max
@@ -221,8 +221,7 @@ open public class Entity(val id: EntityID) {
             // move write values to read values
             if (_readValues != null) {
                 for ((c, v) in writeValues) {
-                    _readValues!!.data.remove(c)
-                    _readValues!!.data.put(c, v)
+                    _readValues!!.set(c, v)
                 }
             }
 
