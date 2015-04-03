@@ -53,7 +53,7 @@ public class Database private(val connector: () -> Connection) {
                 return answer
             }
             catch (e: SQLException) {
-                exposedLogger.log(Priority.INFO, "Session retpetition=$repetitions: ${e.getMessage()}")
+                exposedLogger.info("Session repetition=$repetitions: ${e.getMessage()}", e)
                 session.rollback()
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
