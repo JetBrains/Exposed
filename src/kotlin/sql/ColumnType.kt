@@ -1,9 +1,9 @@
 package kotlin.sql
 
 import org.joda.time.DateTime
+import java.sql.Date
 import java.sql.PreparedStatement
 import java.util.Locale
-import java.sql.Date
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
@@ -112,6 +112,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         }
     }
 
+    [suppress("UNCHECKED_CAST")]
     override fun valueFromDB(value: Any): Any {
         if (value is Enum<*>)
             return value as Enum<T>

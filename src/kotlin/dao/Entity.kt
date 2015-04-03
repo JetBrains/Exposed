@@ -104,6 +104,7 @@ public class View<out Target: Entity> (val op : Op<Boolean>, val factory: Entity
     fun get(o: Any?, desc: kotlin.PropertyMetadata): SizedIterable<Target> = factory.find(op)
 }
 
+[suppress("UNCHECKED_CAST")]
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
@@ -165,6 +166,7 @@ open public class Entity(val id: EntityID) {
         return lookup()
     }
 
+    [suppress("UNCHECKED_CAST")]
     fun <T> Column<T>.lookup(): T {
         if (writeValues.containsKey(this)) {
             return writeValues[this] as T
@@ -231,6 +233,7 @@ open public class Entity(val id: EntityID) {
     }
 }
 
+[suppress("UNCHECKED_CAST")]
 class EntityCache {
     val data = HashMap<IdTable, MutableMap<Int, Entity>>()
     val inserts = HashMap<IdTable, MutableList<Entity>>()
@@ -392,6 +395,7 @@ class EntityCache {
     }
 }
 
+[suppress("UNCHECKED_CAST")]
 abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSelect: Boolean = false) {
     private val klass = javaClass.getEnclosingClass()!!
     private val ctor = klass.getConstructors()[0]

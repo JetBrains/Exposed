@@ -9,6 +9,7 @@ import kotlin.dao.EntityCache
 import kotlin.properties.Delegates
 
 public class Key<T>()
+[suppress("UNCHECKED_CAST")]
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 
