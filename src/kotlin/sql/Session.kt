@@ -1,5 +1,6 @@
 package kotlin.sql
 
+import org.h2.jdbc.JdbcConnection
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.util.ArrayList
@@ -71,6 +72,16 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             url.startsWith("jdbc:h2") -> DatabaseVendor.H2
             else -> error("Unknown database type $url")
         }
+    }
+
+    fun vendorCompatibleWith(): DatabaseVendor {
+        if (vendor == DatabaseVendor.H2) {
+            return ((connection as? JdbcConnection)?.getSession() as? org.h2.engine.Session)?.getDatabase()?.getMode()?.let { mode ->
+                DatabaseVendor.values().singleOrNull { it.name().equals(mode.getName(), true) }
+            } ?: vendor
+        }
+
+        return vendor
     }
 
     fun commit() {

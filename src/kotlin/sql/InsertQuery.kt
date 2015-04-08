@@ -41,6 +41,12 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
         sql.append((values map { builder.registerArgument(it.value, it.key.columnType) }). join(", "))
 
         sql.append(") ")
+
+        if (isReplace && Session.get().vendor == DatabaseVendor.H2 && Session.get().vendorCompatibleWith() == DatabaseVendor.MySql) {
+            sql.append("ON DUPLICATE KEY UPDATE ")
+            sql.append(values.map { "${session.identity(it.key)}=${it.key.columnType.valueToString(it.value)}"}.join(", "))
+        }
+
         try {
             val autoincs: List<String> = table.columns.filter { it.columnType.autoinc } map {session.identity(it)}
             return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
