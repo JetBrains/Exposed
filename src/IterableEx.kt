@@ -85,20 +85,6 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
     }
 }
 
-fun<T:Any> Iterable<T>.single() : T {
-    var answer: T? = null;
-    var found: Boolean = false;
-    for (t in this) {
-        if (found) error ("Duplicate items")
-
-        answer = t;
-        found = true;
-    }
-
-        if (!found) error ("No items found")
-    return answer!!;
-}
-
 fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
