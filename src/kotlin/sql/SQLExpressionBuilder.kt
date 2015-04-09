@@ -36,8 +36,8 @@ fun <T> Column<T>.distinct(): Distinct<T> {
 }
 
 object SqlExpressionBuilder {
-    public fun <T> coalesce(vararg expressions: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
-        return Coalesce(*expressions)
+    public fun <T:Any> coalesce(expr: ExpressionWithColumnType<out T?>, alternate: ExpressionWithColumnType<out T>): ExpressionWithColumnType<T> {
+        return Coalesce(expr, alternate)
     }
 
     fun case(value: Expression<*>? = null) : Case {

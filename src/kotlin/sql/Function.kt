@@ -44,12 +44,12 @@ data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     override val columnType: ColumnType = _columnType
 }
 
-data class Coalesce<T>(vararg val expr: ExpressionWithColumnType<T>): Function<T>() {
+data class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alternate: ExpressionWithColumnType<out T>): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "COALESCE(${expr.map {it.toSQL(queryBuilder)}.join(", ")})"
+        return "COALESCE(${expr.toSQL(queryBuilder)}, ${alternate.toSQL(queryBuilder)})"
     }
 
-    override val columnType: ColumnType = expr.first().columnType
+    override val columnType: ColumnType = alternate.columnType
 }
 
 data class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
