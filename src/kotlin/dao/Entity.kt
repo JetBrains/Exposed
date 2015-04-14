@@ -475,7 +475,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     private fun retrieveAll(): SizedIterable<T> {
-        return wrapRows(table.selectAll())
+        return wrapRows(table.selectAll().notForUpdate())
     }
 
     public fun find(op: Op<Boolean>): SizedIterable<T> {
