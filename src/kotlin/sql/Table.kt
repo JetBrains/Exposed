@@ -78,7 +78,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         for (a_pk in a.columns) {
             val b_fk = b.columns.firstOrNull { it.referee == a_pk }
             if (b_fk != null)
-                return a_pk to b_fk!!
+                return a_pk to b_fk
         }
         return null
     }
