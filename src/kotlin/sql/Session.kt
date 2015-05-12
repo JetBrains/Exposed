@@ -10,7 +10,7 @@ import kotlin.dao.EntityCache
 import kotlin.properties.Delegates
 
 public class Key<T>()
-[suppress("UNCHECKED_CAST")]
+@suppress("UNCHECKED_CAST")
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 
@@ -163,8 +163,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
             // create indices
             for (table_index in table.indices) {
-                val alterTable = index(table_index.first, table_index.second)
-                statements.add(alterTable)
+                statements.add(createIndex(table_index.first, table_index.second))
             }
         }
 
@@ -172,8 +171,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             // foreign keys
             for (column in table.columns) {
                 if (column.referee != null) {
-                    val fKDdl = foreignKey(column);
-                    statements.add(fKDdl)
+                    statements.add(createFKey(column))
                 }
             }
         }
@@ -196,7 +194,6 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
         val existingTableColumns = tableColumns()
 
-
         for (table in tables) {
             //create columns
             val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.map { it.first }?.contains(it.name) ?: true }
@@ -207,7 +204,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             // create indexes with new columns
             for (table_index in table.indices) {
                 if (table_index.first.any { missingTableColumns.contains(it) }) {
-                    val alterTable = index(table_index.first, table_index.second)
+                    val alterTable = createIndex(table_index.first, table_index.second)
                     statements.add(alterTable)
                 }
             }
@@ -215,24 +212,22 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             // sync nullability of existing columns
             val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false}
             for (column in incorrectNullabilityColumns) {
-                statements.add("ALTER TABLE ${Session.get().identity(table)} MODIFY COLUMN ${column.descriptionDdl()}")
+                statements.add(column.modifyStatement())
             }
         }
 
-        val existingColumnConstraint = columnConstraints()
+        val existingColumnConstraint = columnConstraints(*tables)
 
         for (table in tables) {
             for (column in table.columns) {
                 if (column.referee != null) {
-                    val existingConstraint = existingColumnConstraint.get(Pair(table.tableName, column.name))
+                    val existingConstraint = existingColumnConstraint.get(Pair(table.tableName, column.name))?.firstOrNull()
                     if (existingConstraint == null) {
-                        val fKDdl = foreignKey(column);
-                        statements.add(fKDdl)
+                        statements.add(createFKey(column))
                     } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
-                            || (column.onDelete ?: ReferenceOption.RESTRICT).toString() != existingConstraint.deleteRule) {
-                        statements.add("ALTER TABLE ${identity(table)} DROP FOREIGN KEY ${existingConstraint.name}")
-                        val fKDdl = foreignKey(column);
-                        statements.add(fKDdl)
+                            || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
+                        statements.add(existingConstraint.dropStatement())
+                        statements.add(createFKey(column))
                     }
                 }
             }
@@ -243,7 +238,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
-            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
+            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables) + checkMappingConsistence(*tables)
             for (statement in statements) {
                 exec(statement) {
                     connection.createStatement().executeUpdate(statement)
@@ -261,7 +256,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun drop(vararg tables: Table) {
         for (table in tables) {
-            val ddl = StringBuilder("DROP TABLE ${identity(table)}").toString()
+            val ddl = table.dropStatement()
             exec(ddl) {
                 connection.createStatement().executeUpdate(ddl)
             }
@@ -292,49 +287,9 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         return quoteIfNecessary(column.name)
     }
 
-    fun foreignKey(reference: Column<*>): String {
-        val referee = reference.referee ?: error("$reference does not reference anything")
+    fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
 
-        return when (vendor) {
-            DatabaseVendor.MySql, DatabaseVendor.Oracle,
-            DatabaseVendor.SQLServer, DatabaseVendor.PostgreSQL,
-            DatabaseVendor.H2 -> {
-                var alter = StringBuilder("ALTER TABLE ${identity(reference.table)} ADD FOREIGN KEY (${identity(reference)}) REFERENCES ${identity(referee.table)}(${identity(referee)})")
-                reference.onDelete?.let { onDelete ->
-                    alter.append(" ON DELETE $onDelete")
-                }
-                alter.toString()
-            }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
-        }
-    }
-
-    fun index (columns: Array<out Column<*>>, isUnique: Boolean): String {
-        if (columns.isEmpty()) error("No columns to create index from")
-
-        val table = columns[0].table
-        return when (vendor) {
-            DatabaseVendor.MySql, DatabaseVendor.Oracle,
-            DatabaseVendor.SQLServer, DatabaseVendor.PostgreSQL,
-            DatabaseVendor.H2 -> {
-                var alter = StringBuilder()
-                val indexType = if (isUnique) "UNIQUE " else ""
-                alter.append("CREATE ${indexType}INDEX ${identity(table)}_${columns.map{ identity(it) }.join("_")} ON ${identity(table)} (")
-                var isFirst = true
-                for (c in columns) {
-                    if (table != c.table) error("Columns from different tables cannot make index")
-                    if (!isFirst) {
-                        alter.append(", ")
-                    }
-                    isFirst = false
-                    alter.append(identity(c))
-                }
-                alter.append(")")
-                alter.toString()
-            }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
-        }
-    }
+    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
 
     fun autoIncrement(column: Column<*>): String {
         return when (vendor) {

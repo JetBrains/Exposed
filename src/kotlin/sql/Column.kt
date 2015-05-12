@@ -1,7 +1,7 @@
 package kotlin.sql
 
 
-open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T> {
+open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>, DdlAware {
     var referee: Column<*>? = null
     var onDelete: ReferenceOption? = null
     var defaultValue: T? = null
@@ -11,11 +11,13 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     val ddl: String
-        get() = ddl()
+        get() = createStatement()
 
-    private fun ddl(): String {
-        return "ALTER TABLE ${Session.get().identity(table)} ADD COLUMN ${descriptionDdl()}"
-    }
+    override fun createStatement(): String = "ALTER TABLE ${Session.get().identity(table)} ADD COLUMN ${descriptionDdl()}"
+
+    override fun modifyStatement(): String = "ALTER TABLE ${Session.get().identity(table)} MODIFY COLUMN ${descriptionDdl()}"
+
+    override fun dropStatement(): String = Session.get().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
 
     public fun descriptionDdl(): String {
         val ddl = StringBuilder(Session.get().identity(this)).append(" ")
@@ -43,14 +45,4 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 }
 
 class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
-}
-
-enum class ReferenceOption {
-    CASCADE
-    SET_NULL
-    RESTRICT //default
-
-    override fun toString(): String {
-        return this.name().replace("_"," ")
-    }
 }

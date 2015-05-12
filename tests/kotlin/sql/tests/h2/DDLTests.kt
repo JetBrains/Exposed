@@ -82,7 +82,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = index(t.indices[0].first, t.indices[0].second)
+            val alter = createIndex(t.indices[0].first, t.indices[0].second)
             assertEquals("CREATE INDEX t1_name ON t1 (name)", alter)
         }
     }
@@ -100,10 +100,10 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = index(t.indices[0].first, t.indices[0].second)
+            val a1 = createIndex(t.indices[0].first, t.indices[0].second)
             assertEquals("CREATE INDEX t2_name ON t2 (name)", a1)
 
-            val a2 = index(t.indices[1].first, t.indices[1].second)
+            val a2 = createIndex(t.indices[1].first, t.indices[1].second)
             assertEquals("CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue)", a2)
         }
     }
@@ -115,7 +115,7 @@ public class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = index(t.indices[0].first, t.indices[0].second)
+            val alter = createIndex(t.indices[0].first, t.indices[0].second)
             assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
 
         }

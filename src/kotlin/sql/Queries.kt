@@ -1,7 +1,6 @@
 package kotlin.sql
 
-import java.util.ArrayList
-import java.util.HashMap
+import java.util.*
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
@@ -77,10 +76,10 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
 
 fun allTablesNames(): List<String> {
     val result = ArrayList<String>()
-    val resultSet = Session.get().connection.createStatement().executeQuery("show tables")
+    val resultSet = Session.get().connection.getMetaData().getTables(null, null, null, arrayOf("TABLE"))
 
     while (resultSet.next()) {
-        result.add(resultSet.getString(1))
+        result.add(resultSet.getString("TABLE_NAME"))
     }
     return result
 }
@@ -119,65 +118,138 @@ fun Table.matchesDefinition(): Boolean {
  * returns list of pairs (column name + nullable) for every table
  */
 fun tableColumns(): HashMap<String, List<Pair<String, Boolean>>> {
-    if (Session.get().vendor != DatabaseVendor.MySql) {
-        throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
-    }
 
     val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-    val rs = Session.get().connection.createStatement().executeQuery(
-            "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
+    val rs = Session.get().connection.getMetaData().getColumns(getDatabase(), null, null, null)
 
     while (rs.next()) {
-        val tableName = rs.getString(1)!!
-        val columnName = rs.getString(2)!!
-        val nullable = rs.getBoolean(3)
+        val tableName = rs.getString("TABLE_NAME")!!
+        val columnName = rs.getString("COLUMN_NAME")!!
+        val nullable = rs.getBoolean("NULLABLE")
         tables[tableName] = (tables[tableName]?.plus(listOf(columnName to nullable)) ?: listOf(columnName to nullable))
     }
     return tables
 }
 
-class Constraint (var name: String, var referencedTable: String, var deleteRule: String)
 
 /**
  * returns map of constraint for a table name/column name pair
  */
-fun columnConstraints(): HashMap<Pair<String, String>, Constraint> {
-    if (Session.get().vendor != DatabaseVendor.MySql) {
-        throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
-    }
+fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
 
-    val constraints = HashMap<Pair<String, String>, Constraint>()
+    val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
 
-    val rs = Session.get().connection.createStatement().executeQuery(
-            "SELECT\n" +
-                    "  rc.TABLE_NAME,\n" +
-                    "  ku.COLUMN_NAME,\n" +
-                    "  rc.CONSTRAINT_NAME,\n" +
-                    "  rc.REFERENCED_TABLE_NAME,\n" +
-                    "  rc.DELETE_RULE\n" +
-                    "FROM information_schema.REFERENTIAL_CONSTRAINTS rc\n" +
-                    "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
-                    "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
-                    "WHERE ku.TABLE_SCHEMA = '${getDatabase()}'")
+    for (table in tables) {
+        val rs = Session.get().connection.getMetaData().getExportedKeys(getDatabase(), null, table.tableName)
 
-    while (rs.next()) {
-        val tableName = rs.getString("TABLE_NAME")!!
-        val columnName = rs.getString("COLUMN_NAME")!!
-        val constraintName = rs.getString("CONSTRAINT_NAME")!!
-        val refTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-        val constraintDeleteRule = rs.getString("DELETE_RULE")!!
-        constraints[Pair(tableName, columnName)] = Constraint(constraintName, refTableName, constraintDeleteRule)
+        while (rs.next()) {
+            val refereeTableName = rs.getString("FKTABLE_NAME")!!
+            val refereeColumnName = rs.getString("FKCOLUMN_NAME")!!
+            val constraintName = rs.getString("FK_NAME")!!
+            val refTableName = rs.getString("PKTABLE_NAME")!!
+            val refColumnName = rs.getString("PKCOLUMN_NAME")!!
+            val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
+            constraints.getOrPut(Pair(refereeTableName, refereeColumnName), {arrayListOf()})
+                    .add (ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
+        }
     }
 
     return constraints
 }
 
-fun getDatabase(): String {
-    return when (Session.get().vendor) {
-        DatabaseVendor.MySql -> {
-            Session.get().connection.getCatalog()
+fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
+
+    val indices = HashMap<String, List<Index>>()
+
+    for(table in tables) {
+        val rs = Session.get().connection.getMetaData().getIndexInfo(getDatabase(), null, table.tableName, false, false)
+
+        val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
+
+        while (rs.next()) {
+            val indexName = rs.getString("INDEX_NAME")!!
+            val column = rs.getString("COLUMN_NAME")!!
+            val isUnique = !rs.getBoolean("NON_UNIQUE")
+            tmpIndices.getOrPut(indexName to isUnique, { arrayListOf()} ).add(column)
         }
-        else -> throw UnsupportedOperationException("Unsupported driver: " + Session.get().vendor)
+
+        indices.put(table.tableName, tmpIndices.filterNot { it.getKey().first == "PRIMARY" }.map { Index(it.getKey().first, table.tableName, it.getValue(), it.getKey().second)})
+    }
+    return indices
+}
+
+/**
+ * Log entity <-> database mapping problems and returns DDL Statements to fix them
+ */
+fun checkMappingConsistence(vararg tables: Table): List<String> {
+    checkExcessiveIndices(*tables)
+    return checkMissingIndices(*tables).map{ it.createStatement() }
+}
+
+fun checkExcessiveIndices(vararg tables: Table) {
+
+    val excessiveConstraints = columnConstraints(*tables).filter { it.getValue().size() > 1 }
+
+    if (!excessiveConstraints.isEmpty()) {
+        exposedLogger.warn("List of excessive foreign key constraints:")
+        excessiveConstraints.forEach {
+            val (pair, fk) = it
+            val constraint = fk.first()
+            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.join(", ")}")
+        }
+    }
+
+    val excessiveIndices = existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.join()) }.filter {it.getValue().size() > 1}
+    if (!excessiveIndices.isEmpty()) {
+        exposedLogger.warn("List of excessive indices:")
+        excessiveIndices.forEach {
+            val (triple, indices) = it
+            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.join(", ")}")
+        }
     }
 }
+
+/** Returns list of indices missed in database **/
+private fun checkMissingIndices(vararg tables: Table): List<Index> {
+    fun Collection<Index>.log(mainMessage: String) {
+        if (isNotEmpty()) {
+            exposedLogger.warn(mainMessage)
+            forEach {
+                exposedLogger.warn("\t\t$it")
+            }
+        }
+    }
+
+    val fKeyCostraints = columnConstraints(*tables).keySet()
+
+    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyCostraints}
+
+    val allExistingIndices = existingIndices(*tables)
+    val missingIndices = HashSet<Index>()
+    val notMappedIndices = HashMap<String, MutableSet<Index>>()
+    val nameDiffers = HashSet<Index>()
+    for (table in tables) {
+        val existingTableIndices = allExistingIndices[table.tableName].orEmpty().filterFKeys()
+        val mappedIndices = table.indices.map { Index.forColumns(*it.first, unique = it.second)}.filterFKeys()
+
+        existingTableIndices.forEach { index ->
+            mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
+                exposedLogger.info("Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}")
+                nameDiffers.add(index)
+                nameDiffers.add(it)
+            }
+        }
+
+        notMappedIndices.getOrPut(table.javaClass.getSimpleName(), {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
+
+        missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
+    }
+
+    val toCreate = missingIndices.subtract(nameDiffers)
+    toCreate.log("Indices missed from database (will be created):")
+    notMappedIndices.forEach { it.getValue().subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${it.getKey()}':") }
+    return toCreate.toList()
+}
+
+fun getDatabase(): String = with(Session.get().connection) { getSchema() ?: getCatalog() }

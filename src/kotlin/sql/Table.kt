@@ -112,7 +112,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     }
 }
 
-open class Table(name: String = ""): ColumnSet() {
+open class Table(name: String = ""): ColumnSet(), DdlAware {
     val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName().trimTrailing("Table")
 
     override val columns = ArrayList<Column<*>>()
@@ -268,9 +268,9 @@ open class Table(name: String = ""): ColumnSet() {
     }
 
     val ddl: String
-        get() = ddl()
+        get() = createStatement()
 
-    private fun ddl(): String {
+    override fun createStatement(): String {
         var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Session.get().identity(this)}")
         if (columns.isNotEmpty()) {
             ddl.append(" (")
@@ -287,6 +287,13 @@ open class Table(name: String = ""): ColumnSet() {
         }
         return ddl.toString()
     }
+
+    override fun dropStatement(): String = "DROP TABLE ${Session.get().identity(this)}"
+
+    override fun modifyStatement(): String {
+        throw UnsupportedOperationException("Use modify on columns and indices")
+    }
+
     override fun equals(other: Any?): Boolean {
         if (other !is Table) return false
         return  other.tableName == tableName
