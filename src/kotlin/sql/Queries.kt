@@ -1,8 +1,10 @@
 package kotlin.sql
 
+import org.apache.log4j.Logger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
+import kotlin.sql.vendors.dialect
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
@@ -76,119 +78,7 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
     return query.execute(Session.get())
 }
 
-fun allTablesNames(): List<String> {
-    val result = ArrayList<String>()
-    val resultSet = Session.get().connection.getMetaData().getTables(null, null, null, arrayOf("TABLE"))
-
-    while (resultSet.next()) {
-        result.add(resultSet.getString("TABLE_NAME"))
-    }
-    return result
-}
-
-fun Table.exists (): Boolean {
-    val tableName = this.tableName
-    val resultSet = Session.get().connection.createStatement().executeQuery("show tables")
-
-    while (resultSet.next()) {
-        val existingTableName = resultSet.getString(1)
-        if (existingTableName?.equalsIgnoreCase(tableName) ?: false) {
-            return true
-        }
-    }
-
-    return false
-}
-
-fun Table.matchesDefinition(): Boolean {
-    val rs = Session.get().connection.createStatement().executeQuery("show columns from $tableName")
-
-    var nColumns = columns.size()
-    while (rs.next()) {
-        val fieldName = rs.getString(1)
-        val column = columns.firstOrNull {it.name == fieldName}
-        if (column == null)
-            return false
-
-        --nColumns
-    }
-
-    return nColumns == 0
-}
-
-/**
- * returns list of pairs (column name + nullable) for every table
- */
-fun tableColumns(): HashMap<String, List<Pair<String, Boolean>>> {
-
-    val tables = HashMap<String, List<Pair<String, Boolean>>>()
-
-    val rs = Session.get().connection.getMetaData().getColumns(getDatabase(), null, null, null)
-
-    while (rs.next()) {
-        val tableName = rs.getString("TABLE_NAME")!!
-        val columnName = rs.getString("COLUMN_NAME")!!
-        val nullable = rs.getBoolean("NULLABLE")
-        tables[tableName] = (tables[tableName]?.plus(listOf(columnName to nullable)) ?: listOf(columnName to nullable))
-    }
-    return tables
-}
-
-
-/**
- * returns map of constraint for a table name/column name pair
- */
-
-val columnConstraintsCache = ConcurrentHashMap<Table, List<ForeignKeyConstraint>>()
-
-fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
-
-    val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-
-    for (table in tables) {
-        columnConstraintsCache.getOrPut(table, {
-            val rs = Session.get().connection.getMetaData().getExportedKeys(getDatabase(), null, table.tableName)
-            val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
-            while (rs.next()) {
-                val refereeTableName = rs.getString("FKTABLE_NAME")!!
-                val refereeColumnName = rs.getString("FKCOLUMN_NAME")!!
-                val constraintName = rs.getString("FK_NAME")!!
-                val refTableName = rs.getString("PKTABLE_NAME")!!
-                val refColumnName = rs.getString("PKCOLUMN_NAME")!!
-                val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
-                tableConstraint.add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
-            }
-            tableConstraint
-        }).forEach { it ->
-            constraints.getOrPut(it.refereeTable to it.refereeColumn, {arrayListOf()}).add(it)
-        }
-
-    }
-
-    return constraints
-}
-
-val existingIndicesCache = ConcurrentHashMap<String, List<Index>>()
-
-fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
-    for(table in tables) {
-        existingIndicesCache.getOrPut(table.tableName, {
-            val rs = Session.get().connection.getMetaData().getIndexInfo(getDatabase(), null, table.tableName, false, false)
-
-            val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
-
-            while (rs.next()) {
-                val indexName = rs.getString("INDEX_NAME")!!
-                val column = rs.getString("COLUMN_NAME")!!
-                val isUnique = !rs.getBoolean("NON_UNIQUE")
-                tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
-            }
-            tmpIndices.filterNot { it.getKey().first == "PRIMARY" }.map { Index(it.getKey().first, table.tableName, it.getValue(), it.getKey().second)}
-        }
-       )
-    }
-    return HashMap(existingIndicesCache)
-}
+fun Table.exists (): Boolean = dialect.tableExists(this)
 
 /**
  * Log entity <-> database mapping problems and returns DDL Statements to fix them
@@ -200,7 +90,7 @@ fun checkMappingConsistence(vararg tables: Table): List<String> {
 
 fun checkExcessiveIndices(vararg tables: Table) {
 
-    val excessiveConstraints = columnConstraints(*tables).filter { it.getValue().size() > 1 }
+    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.getValue().size() > 1 }
 
     if (!excessiveConstraints.isEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
@@ -209,14 +99,27 @@ fun checkExcessiveIndices(vararg tables: Table) {
             val constraint = fk.first()
             exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.join(", ")}")
         }
+
+        exposedLogger.info("SQL Queries to remove excessive keys:");
+        excessiveConstraints.forEach {
+            it.getValue().take(it.getValue().size() - 1).forEach {
+                exposedLogger.info("\t\t\t${it.dropStatement()};")
+            }
+        }
     }
 
-    val excessiveIndices = existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.join()) }.filter {it.getValue().size() > 1}
+    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.join()) }.filter {it.getValue().size() > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach {
             val (triple, indices) = it
             exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.join(", ")}")
+        }
+        exposedLogger.info("SQL Queries to remove excessive indices:");
+        excessiveIndices.forEach {
+            it.getValue().take(it.getValue().size() - 1).forEach {
+                exposedLogger.info("\t\t\t${it.dropStatement()};")
+            }
         }
     }
 }
@@ -232,11 +135,11 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
-    val fKeyCostraints = columnConstraints(*tables).keySet()
+    val fKeyConstraints = dialect.columnConstraints(*tables).keySet()
 
-    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyCostraints}
+    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyConstraints}
 
-    val allExistingIndices = existingIndices(*tables)
+    val allExistingIndices = dialect.existingIndices(*tables)
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
@@ -263,4 +166,4 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     return toCreate.toList()
 }
 
-fun getDatabase(): String = with(Session.get().connection) { getSchema() ?: getCatalog() }
+private val dialect = Session.get().vendor.dialect()

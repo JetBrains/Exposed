@@ -150,12 +150,10 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             return statements
 
         val newTables = ArrayList<Table>()
-        val tablesInDatabase = allTablesNames()
 
         for (table in tables) {
-            val exists = tablesInDatabase.contains(table.tableName)
 
-            if(exists) continue else newTables.add(table)
+            if(table.exists()) continue else newTables.add(table)
 
             // create table
             val ddl = table.ddl
@@ -192,7 +190,9 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         if (tables.isEmpty())
             return statements
 
-        val existingTableColumns = tableColumns()
+        val existingTableColumns = logTimeSpent("Extracting table columns") {
+            dialect.tableColumns()
+        }
 
         for (table in tables) {
             //create columns
@@ -216,7 +216,9 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             }
         }
 
-        val existingColumnConstraint = columnConstraints(*tables)
+        val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
+            dialect.columnConstraints(*tables)
+        }
 
         for (table in tables) {
             for (column in table.columns) {
@@ -238,15 +240,22 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
-            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
-            for (statement in statements) {
-                exec(statement) {
-                    connection.createStatement().executeUpdate(statement)
+            dialect.resetCaches()
+            val statements = logTimeSpent("Preparing create statements") {
+                 createStatements(*tables) + addMissingColumnsStatements(*tables)
+            }
+            logTimeSpent("Executing create statements") {
+                for (statement in statements) {
+                    exec(statement) {
+                        connection.createStatement().executeUpdate(statement)
+                    }
                 }
             }
-            for (statement in checkMappingConsistence(*tables)) {
-                exec(statement) {
-                    connection.createStatement().executeUpdate(statement)
+            logTimeSpent("Checking mapping consistence") {
+                for (statement in checkMappingConsistence(*tables)) {
+                    exec(statement) {
+                        connection.createStatement().executeUpdate(statement)
+                    }
                 }
             }
         }

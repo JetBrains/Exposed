@@ -11,6 +11,13 @@ public trait SqlLogger {
 
 val exposedLogger = Logger.getLogger("Exposed")!!
 
+inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
+    val start = System.currentTimeMillis()
+    val answer = block()
+    exposedLogger.info(message + " took " + (System.currentTimeMillis() - start) + "ms")
+    return answer
+}
+
 fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
     if (args.isEmpty())
         return sql

@@ -49,7 +49,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         return alter.toString()
     }
 
-    override fun dropStatement(): String = "ALTER TABLE $referencedTable DROP FOREIGN KEY $fkName"
+    override fun dropStatement(): String = "ALTER TABLE $refereeTable DROP FOREIGN KEY $fkName"
 
     override fun modifyStatement(): String = "${dropStatement()};\n${createStatement()}"
 
