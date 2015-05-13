@@ -1,6 +1,8 @@
 package kotlin.sql
 
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.properties.Delegates
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
@@ -136,47 +138,56 @@ fun tableColumns(): HashMap<String, List<Pair<String, Boolean>>> {
 /**
  * returns map of constraint for a table name/column name pair
  */
+
+val columnConstraintsCache = ConcurrentHashMap<Table, List<ForeignKeyConstraint>>()
+
 fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
 
     val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
 
     for (table in tables) {
-        val rs = Session.get().connection.getMetaData().getExportedKeys(getDatabase(), null, table.tableName)
-
-        while (rs.next()) {
-            val refereeTableName = rs.getString("FKTABLE_NAME")!!
-            val refereeColumnName = rs.getString("FKCOLUMN_NAME")!!
-            val constraintName = rs.getString("FK_NAME")!!
-            val refTableName = rs.getString("PKTABLE_NAME")!!
-            val refColumnName = rs.getString("PKCOLUMN_NAME")!!
-            val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
-            constraints.getOrPut(Pair(refereeTableName, refereeColumnName), {arrayListOf()})
-                    .add (ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
+        columnConstraintsCache.getOrPut(table, {
+            val rs = Session.get().connection.getMetaData().getExportedKeys(getDatabase(), null, table.tableName)
+            val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
+            while (rs.next()) {
+                val refereeTableName = rs.getString("FKTABLE_NAME")!!
+                val refereeColumnName = rs.getString("FKCOLUMN_NAME")!!
+                val constraintName = rs.getString("FK_NAME")!!
+                val refTableName = rs.getString("PKTABLE_NAME")!!
+                val refColumnName = rs.getString("PKCOLUMN_NAME")!!
+                val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
+                tableConstraint.add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
+            }
+            tableConstraint
+        }).forEach { it ->
+            constraints.getOrPut(it.refereeTable to it.refereeColumn, {arrayListOf()}).add(it)
         }
+
     }
 
     return constraints
 }
 
+val existingIndicesCache = ConcurrentHashMap<String, List<Index>>()
+
 fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
-
-    val indices = HashMap<String, List<Index>>()
-
     for(table in tables) {
-        val rs = Session.get().connection.getMetaData().getIndexInfo(getDatabase(), null, table.tableName, false, false)
+        existingIndicesCache.getOrPut(table.tableName, {
+            val rs = Session.get().connection.getMetaData().getIndexInfo(getDatabase(), null, table.tableName, false, false)
 
-        val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
+            val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
-        while (rs.next()) {
-            val indexName = rs.getString("INDEX_NAME")!!
-            val column = rs.getString("COLUMN_NAME")!!
-            val isUnique = !rs.getBoolean("NON_UNIQUE")
-            tmpIndices.getOrPut(indexName to isUnique, { arrayListOf()} ).add(column)
+            while (rs.next()) {
+                val indexName = rs.getString("INDEX_NAME")!!
+                val column = rs.getString("COLUMN_NAME")!!
+                val isUnique = !rs.getBoolean("NON_UNIQUE")
+                tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
+            }
+            tmpIndices.filterNot { it.getKey().first == "PRIMARY" }.map { Index(it.getKey().first, table.tableName, it.getValue(), it.getKey().second)}
         }
-
-        indices.put(table.tableName, tmpIndices.filterNot { it.getKey().first == "PRIMARY" }.map { Index(it.getKey().first, table.tableName, it.getValue(), it.getKey().second)})
+       )
     }
-    return indices
+    return HashMap(existingIndicesCache)
 }
 
 /**
