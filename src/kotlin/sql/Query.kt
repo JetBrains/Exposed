@@ -8,7 +8,7 @@ import kotlin.dao.IdTable
 public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     val data = arrayOfNulls<Any?>(size)
 
-    [suppress("UNCHECKED_CAST")]
+    @suppress("UNCHECKED_CAST")
     fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
             fieldIndex.containsKey(c) -> data[fieldIndex[c]!!]
