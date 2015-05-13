@@ -238,8 +238,13 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
-            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables) + checkMappingConsistence(*tables)
+            val statements = createStatements(*tables) + addMissingColumnsStatements(*tables)
             for (statement in statements) {
+                exec(statement) {
+                    connection.createStatement().executeUpdate(statement)
+                }
+            }
+            for (statement in checkMappingConsistence(*tables)) {
                 exec(statement) {
                     connection.createStatement().executeUpdate(statement)
                 }
