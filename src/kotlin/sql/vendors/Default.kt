@@ -27,13 +27,24 @@ trait DatabaseMetadataDialect {
      */
     fun existingIndices(vararg tables: Table): Map<String, List<Index>> = emptyMap()
 
-    fun tableExists(table: Table) = allTablesNames().any { it.equals(table.tableName, true) }
+    fun tableExists(table: Table): Boolean
 
     fun resetCaches()
 }
 
 private abstract class VendorDialect : DatabaseMetadataDialect {
 
+    /* Cached values */
+    private var _allTableNames: List<String>? = null
+    val allTablesNames: List<String>
+        get() {
+            if (_allTableNames == null) {
+                _allTableNames = allTablesNames()
+            }
+            return _allTableNames!!
+        }
+
+    /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
         val resultSet = Session.get().connection.getMetaData().getTables(null, null, null, arrayOf("TABLE"))
@@ -45,6 +56,8 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
     }
 
     override fun getDatabase() = Session.get().connection.getSchema()
+
+    override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
 
     override fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
@@ -109,6 +122,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
     }
 
     override fun resetCaches() {
+        _allTableNames = null
         columnConstraintsCache.clear()
         existingIndicesCache.clear()
     }
