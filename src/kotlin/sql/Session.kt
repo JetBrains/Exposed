@@ -183,6 +183,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                 connection.createStatement().executeUpdate(statement)
             }
         }
+        dialect.resetCaches()
     }
 
     private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
