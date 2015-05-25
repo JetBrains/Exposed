@@ -9,9 +9,9 @@ trait DdlAware {
 }
 
 enum class ReferenceOption {
-    CASCADE
-    SET_NULL
-    RESTRICT //default
+    CASCADE,
+    SET_NULL,
+    RESTRICT; //default
 
     override fun toString(): String {
         return this.name().replace("_"," ")

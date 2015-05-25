@@ -103,5 +103,5 @@ val Database.name : String get() {
 }
 
 enum class DatabaseVendor {
-        MySql Oracle SQLServer PostgreSQL H2
+        MySql, Oracle, SQLServer, PostgreSQL, H2
 }

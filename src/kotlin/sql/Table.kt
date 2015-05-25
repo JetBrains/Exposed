@@ -26,9 +26,9 @@ abstract class ColumnSet(): FieldSet {
 class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
 enum class JoinType {
-    INNER
-    LEFT
-    RIGHT
+    INNER,
+    LEFT,
+    RIGHT,
     FULL
 }
 

@@ -25,8 +25,8 @@ object DMLTestsData {
     }
 
     enum class E {
-        ONE
-        TWO
+        ONE,
+        TWO,
         THREE
     }
 
