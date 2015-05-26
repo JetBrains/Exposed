@@ -7,7 +7,7 @@ import kotlin.properties.Delegates
 import kotlin.sql
 import kotlin.sql.*
 
-trait DatabaseMetadataDialect {
+interface DatabaseMetadataDialect {
 
     fun getDatabase(): String
 

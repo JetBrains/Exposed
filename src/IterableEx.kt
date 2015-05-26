@@ -1,6 +1,6 @@
 package kotlin.sql
 
-public trait SizedIterable<out T>: Iterable<T> {
+public interface SizedIterable<out T>: Iterable<T> {
     fun limit(n: Int): SizedIterable<T>
     fun count(): Int
     fun empty(): Boolean

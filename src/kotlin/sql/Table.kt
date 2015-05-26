@@ -7,7 +7,7 @@ import java.util.ArrayList
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
-trait FieldSet {
+interface FieldSet {
     val fields: List<Expression<*>>
     val source: ColumnSet
 }

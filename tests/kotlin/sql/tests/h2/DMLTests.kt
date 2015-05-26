@@ -744,13 +744,13 @@ class DMLTests : DatabaseTestsBase() {
 }
 
 
-trait Foo<out T> {}
+interface Foo<out T> {}
 
 open class F<out T> : Foo<T> {
 }
 
 
-trait Foo2<out T> : Foo<T> {
+interface Foo2<out T> : Foo<T> {
 }
 
 fun<T> Foo2<T>.test() : String {

@@ -5,7 +5,7 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.Stack
 
-public trait SqlLogger {
+public interface SqlLogger {
     fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
 }
 

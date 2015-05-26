@@ -2,7 +2,7 @@ package kotlin.sql
 
 import java.sql.DatabaseMetaData
 
-trait DdlAware {
+interface DdlAware {
     fun createStatement(): String
     fun modifyStatement(): String
     fun dropStatement(): String
