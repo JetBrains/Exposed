@@ -3,7 +3,7 @@ package kotlin.sql
 import java.util.LinkedHashMap
 import java.util.ArrayList
 
-class BatchInsertQuery(val table: Table) {
+class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
     val data = ArrayList<LinkedHashMap<Column<*>, Any?>>()
 
     fun addBatch() {
@@ -23,8 +23,8 @@ class BatchInsertQuery(val table: Table) {
     fun execute(session: Session): List<Int> {
         val generatedKeys = ArrayList<Int>()
         val (auto, columns) = table.columns.partition { it.columnType.autoinc }
-
-        var sql = StringBuilder("INSERT INTO ${session.identity(table)}")
+        val ignore = if (_ignore) "IGNORE" else ""
+        var sql = StringBuilder("INSERT $ignore INTO ${session.identity(table)}")
 
         sql.append(" (")
         sql.append((columns map { session.identity(it) }).join(", "))
