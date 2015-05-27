@@ -107,11 +107,42 @@ public class View<out Target: Entity> (val op : Op<Boolean>, val factory: Entity
 @suppress("UNCHECKED_CAST")
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
-    fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
+    private fun getSourceRefColumn(o: Entity): Column<EntityID> {
         val sourceRefColumn = table.columns.firstOrNull { it.referee == o.factory().table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        return sourceRefColumn
+    }
 
+    private fun getTargetRefColumn(): Column<EntityID> {
+        val sourceRefColumn = table.columns.firstOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        return sourceRefColumn
+    }
+
+    fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
+        val sourceRefColumn = getSourceRefColumn(o)
         val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
+    }
+
+    fun set(o: Entity, desc: kotlin.PropertyMetadata, value: SizedIterable<Target>) {
+        val sourceRefColumn = getSourceRefColumn(o)
+        val targeRefColumn = getTargetRefColumn()
+
+        with(Session.get()) {
+            val entityCache = EntityCache.getOrCreate(Session.get())
+            entityCache.flush()
+            val existingIds = get(o, desc).map { it.id }.toSet()
+            entityCache.clearReferrersCache()
+
+            val targetIds = value.map { it.id }.toList()
+            table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
+            targetIds.filter { !existingIds.contains(it) }.forEach {
+                val targetId = it
+                table.insertIgnore {
+                    it[sourceRefColumn] = o.id
+                    it[targeRefColumn] = targetId
+                }
+            }
+        }
     }
 }
 

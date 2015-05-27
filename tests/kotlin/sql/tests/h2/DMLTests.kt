@@ -5,6 +5,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import kotlin.dao.IdTable
 
 object DMLTestsData {
     object Cities : Table() {
