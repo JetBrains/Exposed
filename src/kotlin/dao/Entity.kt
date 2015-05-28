@@ -228,7 +228,7 @@ open public class Entity(val id: EntityID) {
 
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
-    public fun delete(){
+    public open fun delete(){
         factory().removeFromCache(this)
         val table = factory().table
         table.deleteWhere{table.id eq id}
