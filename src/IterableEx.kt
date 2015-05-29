@@ -4,6 +4,8 @@ public interface SizedIterable<out T>: Iterable<T> {
     fun limit(n: Int): SizedIterable<T>
     fun count(): Int
     fun empty(): Boolean
+    fun forUpdate(): SizedIterable<T> = this
+    fun notForUpdate(): SizedIterable<T> = this
 }
 
 fun <T> emptySized() : SizedIterable<T> {
@@ -43,14 +45,13 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
 
     override fun iterator() = delegate.iterator()
     override fun count() = delegate.size()
-    override fun empty() = delegate.empty
+    override fun empty() = delegate.isEmpty()
 }
 
 public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
     private var _wrapper: List<T>? = null
     private var _size: Int? = null
     private var _empty: Boolean? = null
-    private var _limit: Int? = null
 
     val wrapper: List<T> get() {
         if (_wrapper == null) {
@@ -59,13 +60,12 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
         return _wrapper!!
     }
 
-    override fun limit(n: Int): SizedIterable<T> {
-        return delegate.limit(n)
-    }
-
+    override fun limit(n: Int): SizedIterable<T> = delegate.limit(n)
     override fun iterator() = wrapper.iterator()
     override fun count() = _wrapper?.size() ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
+    override fun forUpdate(): SizedIterable<T> = delegate.forUpdate()
+    override fun notForUpdate(): SizedIterable<T> = delegate.notForUpdate()
 
     private fun _count(): Int {
         if (_size == null) {
@@ -88,17 +88,11 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
 fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
-        override fun limit(n: Int): SizedIterable<R> {
-            return source.limit(n).mapLazy(f)
-        }
-
-        override fun count(): Int {
-            return source.count()
-        }
-
-        override fun empty(): Boolean {
-            return source.empty()
-        }
+        override fun limit(n: Int): SizedIterable<R> = source.limit(n).mapLazy(f)
+        override fun forUpdate(): SizedIterable<R> = source.forUpdate().mapLazy(f)
+        override fun notForUpdate(): SizedIterable<R> = source.notForUpdate().mapLazy(f)
+        override fun count(): Int = source.count()
+        override fun empty(): Boolean = source.empty()
 
         public override fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()

@@ -60,7 +60,6 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
 }
 
 open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
-    var selectedColumns = HashSet<Column<*>>();
     val groupedByColumns = ArrayList<Expression<*>>();
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
     var having: Op<Boolean>? = null;
@@ -128,12 +127,12 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return sql.toString()
     }
 
-    fun forUpdate() : Query {
+    override fun forUpdate() : Query {
         this.forUpdate = true
         return this
     }
 
-    fun notForUpdate(): Query {
+    override fun notForUpdate(): Query {
         forUpdate = false
         return this
     }
