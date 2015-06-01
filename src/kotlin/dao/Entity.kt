@@ -138,13 +138,14 @@ class InnerTableLink<Target: Entity>(val table: Table,
 
             val targetIds = value.map { it.id }.toList()
             table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
+            val query = BatchInsertQuery(table)
             targetIds.filter { !existingIds.contains(it) }.forEach {
                 val targetId = it
-                table.insertIgnore {
-                    it[sourceRefColumn] = o.id
-                    it[targeRefColumn] = targetId
-                }
+                query.addBatch()
+                query.set(sourceRefColumn, o.id)
+                query.set(targeRefColumn, targetId)
             }
+            query.execute(Session.get())
         }
     }
 }
