@@ -149,7 +149,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                exposedLogger.info("Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}")
+                exposedLogger.trace("Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}")
                 nameDiffers.add(index)
                 nameDiffers.add(it)
             }

@@ -61,7 +61,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
             assert(columns.isNotEmpty())
             assert (columns.groupBy { it.table }.size() == 1, "Columns from different tables can't persist in one index")
             val s = Session.get()
-            val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.join("_")}"
+            val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.join("_")}" + (if (unique) "_unique" else "")
             return Index(indexName, s.identity(columns.first().table), columns.map { s.identity(it) }, unique)
         }
     }
