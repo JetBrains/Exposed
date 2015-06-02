@@ -31,6 +31,10 @@ fun<T:String?> Column<T>.substring(start: Int, length: Int): Substring {
     return Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 }
 
+fun<T:String?> Column<T>.trim(): Trim {
+    return Trim(this)
+}
+
 fun <T> Column<T>.distinct(): Distinct<T> {
     return Distinct(this, this.columnType)
 }

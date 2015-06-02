@@ -60,6 +60,14 @@ data class Substring(val expr: Expression<*>, val start: Expression<Int>, val le
     override val columnType: ColumnType = StringColumnType()
 }
 
+data class Trim(val expr: Expression<*>): Function<String>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "TRIM(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = StringColumnType()
+}
+
 data class Distinct<T>(val expr: Expression<T>, override val columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DISTINCT(${expr.toSQL(queryBuilder)})"
