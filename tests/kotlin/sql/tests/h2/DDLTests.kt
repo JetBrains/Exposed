@@ -116,7 +116,7 @@ public class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = createIndex(t.indices[0].first, t.indices[0].second)
-            assertEquals("CREATE UNIQUE INDEX t1_name ON t1 (name)", alter)
+            assertEquals("CREATE UNIQUE INDEX t1_name_unique ON t1 (name)", alter)
 
         }
     }
