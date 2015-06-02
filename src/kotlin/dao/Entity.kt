@@ -22,10 +22,7 @@ public class EntityID(id: Int, val table: IdTable) {
 
     override fun toString() = value.toString()
 
-    override fun hashCode(): Int {
-        if (_value == -1) error("The value is going to be changed, thus hashCode too!")
-        return _value
-    }
+    override fun hashCode() = value
 
     override fun equals(other: Any?): Boolean {
         if (other !is EntityID) return false
