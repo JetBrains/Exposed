@@ -235,7 +235,7 @@ open public class Entity(val id: EntityID) {
         table.deleteWhere{table.id eq id}
     }
 
-    open fun flush(batch: BatchUpdateQuery? = null) {
+    open fun flush(batch: BatchUpdateQuery? = null): Boolean {
         if (!writeValues.isEmpty()) {
             if (batch == null) {
                 val table = factory().table
@@ -252,16 +252,22 @@ open public class Entity(val id: EntityID) {
                 }
             }
 
-            // move write values to read values
-            if (_readValues != null) {
-                for ((c, v) in writeValues) {
-                    _readValues!!.set(c, v)
-                }
-            }
-
-            // clear write values
-            writeValues.clear()
+            storeWrittenValues()
+            return true
         }
+        return false
+    }
+
+    public  fun storeWrittenValues() {
+        // move write values to read values
+        if (_readValues != null) {
+            for ((c, v) in writeValues) {
+                _readValues!!.set(c, v)
+            }
+        }
+
+        // clear write values
+        writeValues.clear()
     }
 }
 
@@ -382,11 +388,16 @@ class EntityCache {
         for (t in tables) {
             val map = data[t]
             if (map != null) {
+                val updatedEntities = HashSet<Entity>()
                 val batch = BatchUpdateQuery(t)
                 for ((i, entity) in map) {
-                    entity.flush(batch)
+                    if (entity.flush(batch))
+                        updatedEntities.add(entity)
                 }
                 batch.execute(Session.get())
+                updatedEntities.forEach {
+                    EntityHook.alertSubscribers(it, false)
+                }
             }
         }
     }
@@ -396,10 +407,10 @@ class EntityCache {
             val query = BatchInsertQuery(table)
             for (entry in it) {
                 query.addBatch()
-
                 for ((c, v) in entry.writeValues) {
                     query.set(c, v)
                 }
+                entry.storeWrittenValues()
             }
 
             val session = Session.get()
@@ -408,9 +419,9 @@ class EntityCache {
             for ((entry, id) in it.zip(ids)) {
                 entry.id._value = id
                 EntityCache.getOrCreate(session).store(table, entry)
+                EntityHook.alertSubscribers(entry, true)
             }
         }
-
     }
 
     fun clearReferrersCache() {
@@ -550,13 +561,12 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         }
     }
 
-    public fun new(init: T.() -> Unit) : T {
+    public fun new(init: T.() -> Unit): T {
         val prototype: T = createInstance(EntityID(-1, table), null)
         prototype.klass = this
         prototype.init()
 
         EntityCache.getOrCreate(Session.get()).scheduleInsert(this, prototype)
-
         return prototype
     }
 
