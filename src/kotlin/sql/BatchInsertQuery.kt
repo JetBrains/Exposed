@@ -11,7 +11,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
     }
 
     fun <T> set(column: Column<T>, value: T) {
-        val values = data.last!!
+        val values = data.last()
 
         if (values containsKey column) {
             error("$column is already initialized")

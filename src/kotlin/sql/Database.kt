@@ -9,7 +9,7 @@ import kotlin.dao.EntityCache
 import java.sql.SQLException
 import org.apache.log4j.Priority
 
-public class Database private(val connector: () -> Connection) {
+public class Database private constructor(val connector: () -> Connection) {
 
     val url: String by Delegates.lazy {
         val connection = connector()

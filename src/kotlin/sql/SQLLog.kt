@@ -26,10 +26,10 @@ fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
     val quoteStack = Stack<Char>()
     var argIndex = 0
     var lastPos = 0
-    for (i in 0..sql.length-1) {
+    for (i in 0..sql.length() -1) {
         val char = sql[i]
         if (char == '?') {
-            if (quoteStack.empty) {
+            if (quoteStack.isEmpty()) {
                 result.append(sql.substring(lastPos, i))
                 lastPos = i+1
                 result.append(args[argIndex].first.valueToString(args[argIndex].second))
@@ -39,7 +39,7 @@ fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
         }
 
         if (char == '\'' || char == '\"') {
-            if (quoteStack.empty) {
+            if (quoteStack.isEmpty()) {
                 quoteStack.push(char)
             } else {
                 val currentQuote = quoteStack.peek()
@@ -51,7 +51,7 @@ fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
         }
     }
 
-    if (lastPos < sql.length)
+    if (lastPos < sql.length())
         result.append(sql.substring(lastPos))
 
     return result.toString()

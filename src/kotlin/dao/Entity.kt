@@ -334,9 +334,9 @@ class EntityCache {
     }
 
     fun<T> ArrayList<T>.topoSort (comparer: (T,T) -> Int) {
-        for (i in 0..this.size-2) {
+        for (i in 0..this.size() -2) {
             var minIndex = i
-            for (j in (i+1)..this.size-1) {
+            for (j in (i+1)..this.size() -1) {
                 if (comparer(this[minIndex], this[j]) > 0) {
                     minIndex = j
                 }

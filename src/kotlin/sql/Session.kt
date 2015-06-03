@@ -324,7 +324,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                 connection.prepareStatement(sql)!!
             }
             else {
-                connection.prepareStatement(sql, autoincs.copyToArray())!!
+                connection.prepareStatement(sql, autoincs.toTypedArray())!!
             }
         }
     }

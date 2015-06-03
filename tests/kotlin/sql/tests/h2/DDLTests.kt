@@ -129,7 +129,7 @@ public class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val blob = connection.createBlob()!!
-            blob.setBytes(1, "Hello there!".getBytes())
+            blob.setBytes(1, "Hello there!".toByteArray())
 
             val id = t.insert {
                 it[t.b] = blob

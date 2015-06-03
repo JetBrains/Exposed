@@ -113,7 +113,7 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
 }
 
 open class Table(name: String = ""): ColumnSet(), DdlAware {
-    val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName().trimTrailing("Table")
+    val tableName = if (name.length() > 0) name else this.javaClass.getSimpleName().removeSuffix("Table")
 
     override val columns = ArrayList<Column<*>>()
     override fun describe(s: Session): String = s.identity(this)

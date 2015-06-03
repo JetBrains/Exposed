@@ -192,7 +192,7 @@ data class StringColumnType(val length: Int = 65535, val collate: String? = null
 
     protected override fun nonNullValueToString(value: Any): String {
         val beforeEscaping = value.toString()
-        val sb = StringBuilder(beforeEscaping.length+2)
+        val sb = StringBuilder(beforeEscaping.length() +2)
         sb.append('\'')
         for (c in beforeEscaping) {
             if (charactersToEscape.containsKey(c))

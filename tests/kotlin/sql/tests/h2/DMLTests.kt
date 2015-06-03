@@ -191,7 +191,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testJoin03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
-            assertEquals (2, r.size)
+            assertEquals (2, r.size())
             assertEquals("Eugene", r[0][users.name])
             assertEquals("Comment for Eugene", r[0][userData.comment])
             assertEquals("Munich", r[0][cities.name])
@@ -227,7 +227,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val r = (Numbers innerJoin Map innerJoin Names).selectAll().toList()
-            assertEquals(1, r.size)
+            assertEquals(1, r.size())
             assertEquals(2, r[0][Numbers.id])
             assertEquals("Foo", r[0][Names.name])
         }
@@ -310,7 +310,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun orderBy01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy (users.id).toList()
-            assertEquals(5, r.size)
+            assertEquals(5, r.size())
             assertEquals("alex", r[0][users.id])
             assertEquals("andrey", r[1][users.id])
             assertEquals("eugene", r[2][users.id])
@@ -322,7 +322,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun orderBy02() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
-            assertEquals(5, r.size)
+            assertEquals(5, r.size())
             assertEquals("eugene", r[0][users.id])
             assertEquals("sergey", r[1][users.id])
             assertEquals("andrey", r[2][users.id])
@@ -334,7 +334,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun orderBy03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
-            assertEquals(5, r.size)
+            assertEquals(5, r.size())
             assertEquals("eugene", r[0][users.id])
             assertEquals("sergey", r[1][users.id])
             assertEquals("andrey", r[2][users.id])
@@ -346,7 +346,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testOrderBy04() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("Munich", r[0][cities.name])
             assertEquals(2, r[0][users.id.count()])
             assertEquals("St. Petersburg", r[1][cities.name])
@@ -366,7 +366,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select{exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))}.toList()
-            assertEquals(1, r.size)
+            assertEquals(1, r.size())
             assertEquals("Something", r[0][users.name])
         }
     }
@@ -375,7 +375,7 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select{exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey"))))}
                     .orderBy(users.id).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("Sergey", r[0][users.name])
             assertEquals("Something", r[1][users.name])
         }
@@ -387,7 +387,7 @@ class DMLTests : DatabaseTestsBase() {
                         exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
                         exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))}
                     .orderBy(users.id).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("Sergey", r[0][users.name])
             assertEquals("Something", r[1][users.name])
         }
@@ -396,7 +396,7 @@ class DMLTests : DatabaseTestsBase() {
     Test fun testCalc01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = cities.slice(cities.id.sum()).selectAll().toList()
-            assertEquals(1, r.size)
+            assertEquals(1, r.size())
             assertEquals(6, r[0][cities.id.sum()])
         }
     }
@@ -408,7 +408,7 @@ class DMLTests : DatabaseTestsBase() {
             }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("eugene", r[0][users.id])
             assertEquals(22, r[0][sum])
             assertEquals("sergey", r[1][users.id])
@@ -421,7 +421,7 @@ class DMLTests : DatabaseTestsBase() {
             val sum = Expression.build {Sum(cities.id*100 + userData.value/10, IntegerColumnType())}
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("eugene", r[0][users.id])
             assertEquals(202, r[0][sum])
             assertEquals("sergey", r[1][users.id])
@@ -434,7 +434,7 @@ class DMLTests : DatabaseTestsBase() {
             val substring = users.name.substring(0, 2)
             val r = (users).slice(users.id, substring)
                     .selectAll().orderBy(users.id).toList()
-            assertEquals(5, r.size)
+            assertEquals(5, r.size())
             assertEquals("Al", r[0][substring])
             assertEquals("An", r[1][substring])
             assertEquals("Eu", r[2][substring])
@@ -449,7 +449,7 @@ class DMLTests : DatabaseTestsBase() {
             cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
 
             val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("An", r[0][cities.name])
             assertEquals("Al", r[1][cities.name])
         }
@@ -460,7 +460,7 @@ class DMLTests : DatabaseTestsBase() {
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
             val r = userData.select {userData.value eq 42}.orderBy(userData.user_id).toList()
-            assertEquals(3, r.size)
+            assertEquals(3, r.size())
         }
     }
 
@@ -468,7 +468,7 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val field = Expression.build {case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
             val r = (users).slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
-            assertEquals(2, r.size)
+            assertEquals(2, r.size())
             assertEquals("11", r[0][field])
             assertEquals("alex", r[0][users.id])
             assertEquals("22", r[1][field])
