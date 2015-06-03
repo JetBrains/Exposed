@@ -8,6 +8,9 @@ import kotlin.dao.IdTable
 public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     val data = arrayOfNulls<Any?>(size)
 
+    /**
+     * Function might returns null. Use @tryGet if you don't sure of nullability (e.g. in left-join cases)
+     */
     @suppress("UNCHECKED_CAST")
     fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
@@ -15,15 +18,9 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
             else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
         }
 
-        if (d == null) {
-            return null as T
-        }
-
-        if (c is ExpressionWithColumnType<*>) {
-            return c.columnType.valueFromDB(d) as T
-        }
-
-        return d as T
+        return d?.let {
+            (c as? ExpressionWithColumnType<*>)?.columnType?.valueFromDB(it) ?: it
+        } as T
     }
 
     fun <T> set(c: Expression<T>, value: T) {
