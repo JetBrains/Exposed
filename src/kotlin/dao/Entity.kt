@@ -277,8 +277,6 @@ class EntityCache {
     val inserts = HashMap<IdTable, MutableList<Entity>>()
     val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
 
-    val eagerSelected = HashSet<IdTable>()
-
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
         return getMap(f.table)
     }
@@ -391,8 +389,12 @@ class EntityCache {
                 val updatedEntities = HashSet<Entity>()
                 val batch = BatchUpdateQuery(t)
                 for ((i, entity) in map) {
-                    if (entity.flush(batch))
+                    if (entity.flush(batch)) {
+                        if (entity.klass is ImmutableEntityClass<*>) {
+                            throw IllegalStateException("Update on immutable entity ${entity.javaClass.getSimpleName()} ${entity.id}")
+                        }
                         updatedEntities.add(entity)
+                    }
                 }
                 batch.execute(Session.get())
                 updatedEntities.forEach {
@@ -432,6 +434,12 @@ class EntityCache {
         val key = Key<EntityCache>()
         val newCache = { EntityCache()}
 
+        fun invalidateGlobalCaches(created: List<Entity>) {
+            created.map { it.klass }.filterNotNull().filterIsInstance<ImmutableCachedEntityClass<*>>().toSet().forEach {
+                it.expireCache()
+            }
+        }
+
         fun getOrCreate(s: Session): EntityCache {
             return s.getOrCreate(key, newCache)
         }
@@ -439,7 +447,7 @@ class EntityCache {
 }
 
 @suppress("UNCHECKED_CAST")
-abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSelect: Boolean = false) {
+abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.getEnclosingClass()!!
     private val ctor = klass.getConstructors()[0]
 
@@ -451,17 +459,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return findById(id) ?: error("Entity not found in database")
     }
 
-    private fun warmCache(): EntityCache {
-        val cache = EntityCache.getOrCreate(Session.get())
-        if (eagerSelect) {
-            if (!cache.eagerSelected.contains(table)) {
-                for (r in retrieveAll()) {}
-                cache.eagerSelected.add(table)
-            }
-        }
-
-        return cache
-    }
+    open protected fun warmCache(): EntityCache = EntityCache.getOrCreate(Session.get())
 
     public fun findById(id: Int): T? {
         return findById(EntityID(id, table))
@@ -509,17 +507,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         return entity
     }
 
-    public fun all(): SizedIterable<T> {
-        if (eagerSelect) {
-            return warmCache().findAll(this)
-        }
-
-        return retrieveAll()
-    }
-
-    private fun retrieveAll(): SizedIterable<T> {
-        return wrapRows(table.selectAll().notForUpdate())
-    }
+    open public fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
     public fun find(op: Op<Boolean>): SizedIterable<T> {
         warmCache()
@@ -532,18 +520,18 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): Iterable<T> {
-        val cached = EntityCache.getOrCreate(Session.get()).findAll(this).filter { it.cacheCheckCondition() }
+        val cached = warmCache().findAll(this).filter { it.cacheCheckCondition() }
         return if (cached.isNotEmpty()) cached else find(op)
     }
 
     protected open fun searchQuery(op: Op<Boolean>): Query {
-        return table.select{op}
+        return table.select { op }.setForUpdateStatus()
     }
 
     public fun count(op: Op<Boolean>? = null): Int {
         return with (Session.get()) {
             val query = table.slice(table.id.count())
-            (if (op == null) query.selectAll() else query.select{op}).first()[
+            (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
                 table.id.count()
             ]
         }
@@ -566,7 +554,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
         prototype.klass = this
         prototype.init()
 
-        EntityCache.getOrCreate(Session.get()).scheduleInsert(this, prototype)
+        warmCache().scheduleInsert(this, prototype)
         return prototype
     }
 
@@ -606,4 +594,31 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable, val eagerSe
     }
 
     fun <T: Enum<T>> Class<T>.findValue(name: String) = getEnumConstants().first {it.name() == name }
+
+    private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
+}
+
+abstract public class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table)
+
+abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : ImmutableEntityClass<T>(table) {
+
+    var _cachedValues: MutableMap<Int, Entity>? = null
+
+    final override fun warmCache(): EntityCache {
+        val sessionCache = super.warmCache()
+        if (_cachedValues == null) synchronized(this) {
+            for(r in super.all()) {  /* force iteration to initialize lazy collection */ }
+            _cachedValues = sessionCache.data[table]
+        } else {
+            sessionCache.data.getOrPut(table) { _cachedValues }
+        }
+
+        return sessionCache
+    }
+
+    override fun all(): SizedIterable<T> = warmCache().findAll(this)
+
+    public synchronized fun expireCache() {
+        _cachedValues = null
+    }
 }

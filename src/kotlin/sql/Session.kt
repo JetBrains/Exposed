@@ -6,6 +6,7 @@ import java.sql.PreparedStatement
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.regex.Pattern
+import kotlin.dao.Entity
 import kotlin.dao.EntityCache
 import kotlin.properties.Delegates
 
@@ -85,14 +86,19 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun commit() {
-        flushCache()
+        val created = flushCache()
         _connection?.let {
             it.commit()
         }
+        EntityCache.invalidateGlobalCaches(created)
     }
 
-    fun flushCache() {
-        EntityCache.getOrCreate(this).flush()
+    fun flushCache(): List<Entity> {
+        with(EntityCache.getOrCreate(this)) {
+            val newEntities = inserts.flatMap { it.getValue() }
+            flush()
+            return newEntities
+        }
     }
 
     fun rollback() {
