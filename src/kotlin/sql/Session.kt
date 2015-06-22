@@ -268,11 +268,17 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         }
     }
 
-    fun <T>withDataBaseLock(body: () -> T): T {
-        connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS LockTable(fake bit unique)")
-        connection.createStatement().executeUpdate("INSERT IGNORE INTO LockTable (fake) VALUE (true)")
-        connection.createStatement().execute("SELECT * FROM LockTable FOR UPDATE")
-        return body()
+    fun <T>withDataBaseLock(body: () -> T) {
+        connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
+        val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
+        if (!isBusy) {
+            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUE (true)")
+            try {
+                body()
+            } finally {
+                connection.createStatement().executeUpdate("DELETE FROM BusyTable")
+            }
+        }
     }
 
     fun drop(vararg tables: Table) {
