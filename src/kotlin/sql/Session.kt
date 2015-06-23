@@ -272,7 +272,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
         val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
         if (!isBusy) {
-            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUE (true)")
+            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUES (1)")
             try {
                 body()
             } finally {
