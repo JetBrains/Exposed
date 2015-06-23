@@ -61,7 +61,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
-    var forUpdate: Boolean = session.selectsForUpdate
+    var forUpdate: Boolean = session.selectsForUpdate && session.vendorSupportsForUpdate()
 
 
     fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {

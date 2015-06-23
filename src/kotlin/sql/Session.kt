@@ -75,6 +75,11 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         }
     }
 
+    fun vendorSupportsForUpdate(): Boolean {
+        return vendor != DatabaseVendor.H2
+    }
+
+
     fun vendorCompatibleWith(): DatabaseVendor {
         if (vendor == DatabaseVendor.H2) {
             return ((connection as? JdbcConnection)?.getSession() as? org.h2.engine.Session)?.getDatabase()?.getMode()?.let { mode ->
