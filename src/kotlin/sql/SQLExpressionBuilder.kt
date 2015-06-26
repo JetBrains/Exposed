@@ -11,6 +11,10 @@ fun <T: DateTime?> Expression<T>.date(): Date {
     return Date(this)
 }
 
+fun <T: DateTime?> Expression<T>.month(): Month {
+    return Month(this)
+}
+
 fun Column<*>.countDistinct(): Count {
     return Count(this, true)
 }

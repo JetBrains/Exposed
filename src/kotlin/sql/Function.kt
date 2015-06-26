@@ -20,6 +20,14 @@ data class Date(val expr: Expression<DateTime>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
+data class Month(val expr: Expression<DateTime>): Function<DateTime>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "MONTH(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DateColumnType(false);
+}
+
 data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MIN(${expr.toSQL(queryBuilder)})"
