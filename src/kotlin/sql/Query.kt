@@ -58,7 +58,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
 
 open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
     val groupedByColumns = ArrayList<Expression<*>>();
-    val orderByColumns = ArrayList<Pair<Column<*>, Boolean>>();
+    val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
     var forUpdate: Boolean = session.selectsForUpdate && session.vendorSupportsForUpdate()
@@ -107,7 +107,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (orderByColumns.isNotEmpty()) {
                     append(" ORDER BY ")
-                    append((orderByColumns map { "${session.fullIdentity(it.first)} ${if(it.second) "ASC" else "DESC"}" }).join(", ", "", ""))
+                    append((orderByColumns map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).join(", ", "", ""))
                 }
 
                 if (limit != null) {
@@ -151,7 +151,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this;
     }
 
-    fun orderBy (column: Column<*>, isAsc: Boolean = true) : Query {
+    fun orderBy (column: Expression<*>, isAsc: Boolean = true) : Query {
         orderByColumns.add(column to isAsc)
         return this
     }
