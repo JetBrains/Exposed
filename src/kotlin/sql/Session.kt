@@ -282,6 +282,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                 body()
             } finally {
                 connection.createStatement().executeUpdate("DELETE FROM BusyTable")
+                connection.commit()
             }
         }
     }
