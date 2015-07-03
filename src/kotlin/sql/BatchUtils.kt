@@ -21,5 +21,14 @@ fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): In
 }
 
 fun PreparedStatement.fillParameters(columns: List<Column<*>>, values: Map<Column<*>, Any?>): Int {
-    return fillParameters(columns map {it.columnType to values[it]})
+    return fillParameters(columns map {it.columnType to run {
+        if (values.containsKey(it))
+            values[it]
+        else if (it.defaultValue != null)
+            it.defaultValue!!
+        else if (it.columnType.nullable)
+            null
+        else
+            error("No value specified for column ${it.name} of table ${it.table.tableName}")
+    }})
 }
