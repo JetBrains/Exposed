@@ -19,6 +19,40 @@ object EntityTestsData {
         companion object : EntityClass<XEntity>(XTable) {
         }
     }
+
+    enum class XType {
+        A, B
+    }
+
+    open class AEntity(id: EntityID): Entity(id) {
+        var b1 by XTable.b1
+
+        companion object: EntityClass<AEntity>(XTable) {
+            fun create(b1: Boolean, type: XType): AEntity {
+                val init: AEntity.() -> Unit = {
+                    this.b1 = b1
+                }
+                val answer = when (type) {
+                    XType.B -> BEntity.create { init() }
+                    else -> new { init() }
+                }
+                return answer
+            }
+        }
+    }
+
+    class BEntity(id: EntityID): AEntity(id) {
+        var b2 by XTable.b2
+
+        companion object: EntityClass<BEntity>(XTable) {
+            public fun create(init: AEntity.() -> Unit): BEntity {
+                val answer = new {
+                    init()
+                }
+                return answer
+            }
+        }
+    }
 }
 
 public class EntityTests: DatabaseTestsBase() {
@@ -27,6 +61,17 @@ public class EntityTests: DatabaseTestsBase() {
             val x = EntityTestsData.XEntity.new {  }
             assertEquals (x.b1, true, "b1 mismatched")
             assertEquals (x.b2, false, "b2 mismatched")
+        }
+    }
+
+    Test fun testDefaults02() {
+        withTables(EntityTestsData.XTable) {
+            val a: EntityTestsData.AEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.A)
+            assertEquals (a.b1, false, "a.b1 mismatched")
+
+            val b: EntityTestsData.BEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.B) as EntityTestsData.BEntity
+            assertEquals (b.b1, false, "a.b1 mismatched")
+            assertEquals (b.b2, false, "b.b2 mismatched")
         }
     }
 }
