@@ -77,7 +77,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 val tables = set.source.columns.map { it.table }.toSet()
                 val fields = LinkedHashSet(set.fields)
                 val completeTables = ArrayList<Table>()
-/* // Do not pretty print with * co the program won't crash on new column added
+/*              // Do not pretty print with * co the program won't crash on new column added
                 for (table in tables) {
                     if (fields.containsAll(table.columns)) {
                         completeTables.add(table)
