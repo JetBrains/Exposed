@@ -32,6 +32,8 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
         return fieldIndex[c]?.let{data[it]} != null;
     }
 
+    fun contains(c: Expression<*>) = fieldIndex.containsKey(c)
+
     fun <T> tryGet(c: Expression<T>): T? {
         return if (hasValue(c)) get(c) else null
     }
