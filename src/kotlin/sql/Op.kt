@@ -172,6 +172,12 @@ class exists(val query: Query) : Op<Boolean>() {
     }
 }
 
+class notExists(val query: Query) : Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "NOT EXISTS (${query.toSQL(QueryBuilder(false))})"
+    }
+}
+
 class PlusOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: ColumnType): ExpressionWithColumnType<T> {
     override fun toSQL(queryBuilder: QueryBuilder):String {
         return expr1.toSQL(queryBuilder) + "+" + expr2.toSQL(queryBuilder)
