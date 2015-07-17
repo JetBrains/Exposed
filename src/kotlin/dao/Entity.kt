@@ -519,9 +519,9 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return find(SqlExpressionBuilder.op())
     }
 
-    fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): Iterable<T> {
+    fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         val cached = warmCache().findAll(this).filter { it.cacheCheckCondition() }
-        return if (cached.isNotEmpty()) cached else find(op)
+        return if (cached.isNotEmpty()) SizedCollection(cached) else find(op)
     }
 
     protected open fun searchQuery(op: Op<Boolean>): Query {
