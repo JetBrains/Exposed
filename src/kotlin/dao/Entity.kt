@@ -602,7 +602,7 @@ abstract public class ImmutableEntityClass<out T: Entity>(table: IdTable) : Enti
 
 abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : ImmutableEntityClass<T>(table) {
 
-    var _cachedValues: MutableMap<Int, Entity>? = null
+    private var _cachedValues: MutableMap<Int, Entity>? = null
 
     final override fun warmCache(): EntityCache {
         val sessionCache = super.warmCache()
@@ -610,7 +610,7 @@ abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : Im
             for(r in super.all()) {  /* force iteration to initialize lazy collection */ }
             _cachedValues = sessionCache.data[table]
         } else {
-            sessionCache.data.getOrPut(table) { _cachedValues }
+            sessionCache.data.getOrPut(table) { _cachedValues!! }
         }
 
         return sessionCache
