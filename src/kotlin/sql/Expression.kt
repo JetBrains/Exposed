@@ -30,7 +30,7 @@ class QueryBuilder(val prepared: Boolean) {
             EntityCache.getOrCreate(session).clearReferrersCache()
 
             if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
-                generatedKeys(stmt.getGeneratedKeys()!!)
+                generatedKeys(stmt.generatedKeys!!)
             }
 
             count

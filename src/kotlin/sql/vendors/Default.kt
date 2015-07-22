@@ -47,7 +47,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
-        val resultSet = Session.get().connection.getMetaData().getTables(null, null, null, arrayOf("TABLE"))
+        val resultSet = Session.get().connection.metaData.getTables(null, null, null, arrayOf("TABLE"))
 
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME"))
@@ -55,14 +55,14 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
         return result
     }
 
-    override fun getDatabase() = Session.get().connection.getSchema()
+    override fun getDatabase() = Session.get().connection.schema
 
     override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
 
     override fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = Session.get().connection.getMetaData().getColumns(getDatabase(), null, null, null)
+        val rs = Session.get().connection.metaData.getColumns(getDatabase(), null, null, null)
 
         while (rs.next()) {
             val tableName = rs.getString("TABLE_NAME")!!
@@ -79,7 +79,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{it.tableName}) {
             columnConstraintsCache.getOrPut(table, {
-                val rs = Session.get().connection.getMetaData().getExportedKeys(getDatabase(), null, table)
+                val rs = Session.get().connection.metaData.getExportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val refereeTableName = rs.getString("FKTABLE_NAME")!!
@@ -104,7 +104,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
     override synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
         for(table in tables.map {it.tableName}) {
             existingIndicesCache.getOrPut(table, {
-                val rs = Session.get().connection.getMetaData().getIndexInfo(getDatabase(), null, table, false, false)
+                val rs = Session.get().connection.metaData.getIndexInfo(getDatabase(), null, table, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 

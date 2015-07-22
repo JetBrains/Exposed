@@ -137,7 +137,7 @@ public class DDLTests : DatabaseTestsBase() {
 
 
             val readOn = t.select{t.id eq id}.first()[t.b]
-            val text = readOn.getBinaryStream().reader().readText()
+            val text = readOn.binaryStream.reader().readText()
 
             assertEquals("Hello there!", text)
         }

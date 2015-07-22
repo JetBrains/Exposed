@@ -50,7 +50,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
                 assert(count.size() == data.size(), "Number of results don't match number of entries in batch")
 
                 if (auto.isNotEmpty()) {
-                    val rs = stmt.getGeneratedKeys()!!
+                    val rs = stmt.generatedKeys!!
                     while (rs.next()) {
                         generatedKeys.add(rs.getInt(1))
                     }

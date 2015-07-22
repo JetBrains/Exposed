@@ -98,6 +98,6 @@ private object MysqlDialect : VendorDialect() {
     }
 
     override fun getDatabase(): String {
-        return Session.get().connection.getCatalog()
+        return Session.get().connection.catalog
     }
 }

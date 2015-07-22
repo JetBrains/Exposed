@@ -43,8 +43,8 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         return _connection!!
     }
 
-    val identityQuoteString by Delegates.lazy { connection.getMetaData()!!.getIdentifierQuoteString()!! }
-    val extraNameCharacters by Delegates.lazy {connection.getMetaData()!!.getExtraNameCharacters()!!}
+    val identityQuoteString by Delegates.lazy { connection.metaData!!.identifierQuoteString!! }
+    val extraNameCharacters by Delegates.lazy {connection.metaData!!.extraNameCharacters!!}
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
@@ -64,7 +64,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     val vendor: DatabaseVendor by Delegates.blockingLazy {
-        val url = connection.getMetaData()!!.getURL()!!
+        val url = connection.metaData!!.url!!
         when {
             url.startsWith("jdbc:mysql") -> DatabaseVendor.MySql
             url.startsWith("jdbc:oracle") -> DatabaseVendor.Oracle
@@ -82,8 +82,8 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun vendorCompatibleWith(): DatabaseVendor {
         if (vendor == DatabaseVendor.H2) {
-            return ((connection as? JdbcConnection)?.getSession() as? org.h2.engine.Session)?.getDatabase()?.getMode()?.let { mode ->
-                DatabaseVendor.values().singleOrNull { it.name().equals(mode.getName(), true) }
+            return ((connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.let { mode ->
+                DatabaseVendor.values().singleOrNull { it.name().equals(mode.name, true) }
             } ?: vendor
         }
 
@@ -108,7 +108,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     fun rollback() {
         _connection?. let {
-            if (!it.isClosed()) it.rollback()
+            if (!it.isClosed) it.rollback()
         }
     }
 

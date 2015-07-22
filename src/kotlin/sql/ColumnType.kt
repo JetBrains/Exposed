@@ -108,7 +108,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         return when (value) {
             is Int -> value
             is Enum<*> -> value.ordinal()
-            else -> error("$value is not valid for enum ${klass.getName()}")
+            else -> error("$value is not valid for enum ${klass.name}")
         }
     }
 
@@ -116,7 +116,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     override fun valueFromDB(value: Any): Any {
         if (value is Enum<*>)
             return value as Enum<T>
-        return klass.getEnumConstants()!![value as Int]
+        return klass.enumConstants!![value as Int]
     }
 }
 
@@ -128,8 +128,8 @@ data class DateColumnType(val time: Boolean): ColumnType() {
 
         val dateTime = when (value) {
             is DateTime -> value as DateTime
-            is java.sql.Date -> DateTime(value.getTime())
-            is java.sql.Timestamp -> DateTime(value.getTime())
+            is java.sql.Date -> DateTime(value.time)
+            is java.sql.Timestamp -> DateTime(value.time)
             else -> error("Unexpected value: $value")
         }
 
@@ -137,7 +137,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
             val zonedTime = dateTime.toDateTime(Database.timeZone)
             return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
         } else {
-            val date = Date (dateTime.getMillis())
+            val date = Date (dateTime.millis)
             return "'${date.toString()}'"
         }
     }
@@ -148,7 +148,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
         }
 
         if (value is java.sql.Timestamp) {
-            return DateTime(value.getTime())
+            return DateTime(value.time)
         }
 
         return value
@@ -156,7 +156,7 @@ data class DateColumnType(val time: Boolean): ColumnType() {
 
     override fun notNullValueToDB(value: Any): Any {
         if (value is DateTime) {
-            val millis = value.getMillis()
+            val millis = value.millis
             if (time) {
                 return java.sql.Timestamp(millis)
             }
@@ -206,7 +206,7 @@ data class StringColumnType(val length: Int = 65535, val collate: String? = null
 
     override fun valueFromDB(value: Any): Any {
         if (value is java.sql.Clob) {
-            return value.getCharacterStream().readText()
+            return value.characterStream.readText()
         }
         return value
     }

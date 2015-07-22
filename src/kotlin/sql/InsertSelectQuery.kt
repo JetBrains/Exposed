@@ -7,7 +7,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
 
     fun get(column: Column<Int>): Int {
         //TODO: use column!!!
-        val rs = (statement?:error("Statement is not executed")).getGeneratedKeys()!!;
+        val rs = (statement?:error("Statement is not executed")).generatedKeys!!;
         if (rs.next()) {
             return rs.getInt(1)
         } else {

@@ -44,6 +44,6 @@ fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
     } else {
         if (d2 == null)
             error ("d1 is not null while d2 is null")
-        assertEquals(d1.getMillis(), d2.getMillis())
+        assertEquals(d1.millis, d2.millis)
     }
 }

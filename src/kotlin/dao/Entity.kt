@@ -391,7 +391,7 @@ class EntityCache {
                 for ((i, entity) in map) {
                     if (entity.flush(batch)) {
                         if (entity.klass is ImmutableEntityClass<*>) {
-                            throw IllegalStateException("Update on immutable entity ${entity.javaClass.getSimpleName()} ${entity.id}")
+                            throw IllegalStateException("Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}")
                         }
                         updatedEntities.add(entity)
                     }
@@ -448,8 +448,8 @@ class EntityCache {
 
 @suppress("UNCHECKED_CAST")
 abstract public class EntityClass<out T: Entity>(val table: IdTable) {
-    private val klass = javaClass.getEnclosingClass()!!
-    private val ctor = klass.getConstructors()[0]
+    private val klass = javaClass.enclosingClass!!
+    private val ctor = klass.constructors[0]
 
     public fun get(id: EntityID): T {
         return findById(id) ?: error("Entity not found in database")
@@ -593,7 +593,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return ColumnWithTransform(this, { it.name() }, {clazz.findValue(it)})
     }
 
-    fun <T: Enum<T>> Class<T>.findValue(name: String) = getEnumConstants().first {it.name() == name }
+    fun <T: Enum<T>> Class<T>.findValue(name: String) = enumConstants.first {it.name() == name }
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
 }

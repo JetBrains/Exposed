@@ -14,7 +14,7 @@ public class Database private constructor(val connector: () -> Connection) {
     val url: String by Delegates.lazy {
         val connection = connector()
         try {
-            connection.getMetaData()!!.getURL()!!
+            connection.metaData!!.url!!
         }
         finally {
             connection.close()
@@ -42,8 +42,8 @@ public class Database private constructor(val connector: () -> Connection) {
 
             val session = Session(this, {
                 val connection = connector()
-                connection.setAutoCommit(false)
-                connection.setTransactionIsolation(transactionIsolation)
+                connection.autoCommit = false
+                connection.transactionIsolation = transactionIsolation
                 connection
             })
 
@@ -75,7 +75,7 @@ public class Database private constructor(val connector: () -> Connection) {
 
         public fun connect(datasource: DataSource): Database {
             return Database {
-                datasource.getConnection()!!
+                datasource.connection!!
             }
         }
 

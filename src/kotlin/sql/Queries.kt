@@ -155,7 +155,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
             }
         }
 
-        notMappedIndices.getOrPut(table.javaClass.getSimpleName(), {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
+        notMappedIndices.getOrPut(table.javaClass.simpleName, {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
 
         missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
     }
