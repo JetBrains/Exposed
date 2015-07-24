@@ -598,7 +598,13 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
 }
 
-abstract public class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table)
+abstract public class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table) {
+    open public fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
+        table.update({ table.id eq entity.id }) {
+            it[column] = value
+        }
+    }
+}
 
 abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : ImmutableEntityClass<T>(table) {
 
@@ -620,5 +626,11 @@ abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : Im
 
     public synchronized fun expireCache() {
         _cachedValues = null
+    }
+
+    override public fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
+        super.forceUpdateEntity(entity, column, value)
+        entity._readValues?.set(column, value)
+        expireCache()
     }
 }

@@ -5,9 +5,12 @@ import java.util.LinkedHashMap
 class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: Op<Boolean>? = null) {
     val values = LinkedHashMap<Column<*>, Any?>()
 
-    fun <T, S: T> set(column: Column<T>, value: S) {
+    fun <T, S: T> set(column: Column<T>, value: S?) {
         if (values containsKey column) {
             error("$column is already initialized")
+        }
+        if (!column.columnType.nullable && value == null) {
+            error("Trying to set null to not nullable column $column")
         }
         values[column] = value
     }
@@ -29,8 +32,8 @@ class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: O
                 sqlStatement.append(col.toSQL(builder))
                    .append("=")
 
-                when {
-                    value is Expression<*> -> sqlStatement.append(value.toSQL(builder))
+                when (value) {
+                    is Expression<*> -> sqlStatement.append(value.toSQL(builder))
                     else -> sqlStatement.append(builder.registerArgument(value, col.columnType))
                 }
 
