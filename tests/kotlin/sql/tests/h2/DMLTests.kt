@@ -1,11 +1,10 @@
 package kotlin.sql.tests.h2
 
-import kotlin.sql.*
-import org.junit.Test
-import kotlin.test.assertEquals
 import org.joda.time.DateTime
+import org.junit.Test
 import java.math.BigDecimal
-import kotlin.dao.IdTable
+import kotlin.sql.*
+import kotlin.test.assertEquals
 
 object DMLTestsData {
     object Cities : Table() {

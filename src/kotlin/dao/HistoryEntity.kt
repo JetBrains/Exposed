@@ -1,5 +1,4 @@
 package kotlin.dao
-import kotlin.sql.*
 import org.joda.time.DateTime
 
 public open class HistoryEntity (id: EntityID, table: HistoryTable) : Entity(id) {

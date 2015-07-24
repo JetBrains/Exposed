@@ -1,9 +1,11 @@
 package kotlin.sql.tests.h2
 
-import com.sun.org.apache.xpath.internal.objects.XString
-import kotlin.dao.*
-import kotlin.sql.*
 import org.junit.Test
+import kotlin.dao.Entity
+import kotlin.dao.EntityClass
+import kotlin.dao.EntityID
+import kotlin.dao.IdTable
+import kotlin.sql.*
 import kotlin.test.assertEquals
 
 object ViaTestData {

@@ -8,7 +8,6 @@ import java.util.HashMap
 import java.util.regex.Pattern
 import kotlin.dao.Entity
 import kotlin.dao.EntityCache
-import kotlin.properties.Delegates
 
 public class Key<T>()
 @suppress("UNCHECKED_CAST")
@@ -43,8 +42,8 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         return _connection!!
     }
 
-    val identityQuoteString by Delegates.lazy { connection.metaData!!.identifierQuoteString!! }
-    val extraNameCharacters by Delegates.lazy {connection.metaData!!.extraNameCharacters!!}
+    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { connection.metaData!!.identifierQuoteString!! }
+    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) {connection.metaData!!.extraNameCharacters!!}
     val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
@@ -63,7 +62,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         threadLocal.set(this)
     }
 
-    val vendor: DatabaseVendor by Delegates.blockingLazy {
+    val vendor: DatabaseVendor by lazy {
         val url = connection.metaData!!.url!!
         when {
             url.startsWith("jdbc:mysql") -> DatabaseVendor.MySql

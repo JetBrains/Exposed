@@ -1,8 +1,6 @@
 package kotlin.sql
 
 import java.sql.PreparedStatement
-import java.util.HashMap
-import java.util.ArrayList
 
 fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
     clearParameters()

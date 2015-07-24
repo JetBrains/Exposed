@@ -1,8 +1,6 @@
 package kotlin.sql
 import org.apache.log4j.Logger
-import java.sql.PreparedStatement
 import java.util.ArrayList
-import java.util.Collections
 import java.util.Stack
 
 public interface SqlLogger {

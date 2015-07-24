@@ -1,10 +1,8 @@
 package kotlin.sql.vendors
 
-import org.h2.constraint.Constraint
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.properties.Delegates
-import kotlin.sql
 import kotlin.sql.*
 
 interface DatabaseMetadataDialect {

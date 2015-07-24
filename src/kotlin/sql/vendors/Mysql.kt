@@ -1,7 +1,6 @@
 package kotlin.sql.vendors
 
-import org.h2.constraint.Constraint
-import java.util.*
+import java.util.HashMap
 import kotlin.sql.*
 
 /**

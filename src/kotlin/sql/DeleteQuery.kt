@@ -1,7 +1,5 @@
 package kotlin.sql
 
-import java.sql.Connection
-
 object DeleteQuery {
     fun where(session: Session, table: Table, op: Op<Boolean>, isIgnore: Boolean = false): Int {
         val ignore = if (isIgnore && Session.get().vendor == DatabaseVendor.MySql) "IGNORE" else ""

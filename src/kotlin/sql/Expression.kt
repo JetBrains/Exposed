@@ -1,11 +1,8 @@
 package kotlin.sql
 
-import java.util.ArrayList
 import java.sql.ResultSet
-import java.sql.PreparedStatement
-import org.joda.time.DateTime
+import java.util.ArrayList
 import kotlin.dao.EntityCache
-import java.util.Stack
 
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<ColumnType, Any?>>()

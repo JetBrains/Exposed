@@ -1,9 +1,10 @@
 package kotlin.sql.tests.h2
 
 import org.junit.Test
-import kotlin.dao.*
-import kotlin.sql.*
-import kotlin.sql.tests.h2.DatabaseTestsBase
+import kotlin.dao.Entity
+import kotlin.dao.EntityClass
+import kotlin.dao.EntityID
+import kotlin.dao.IdTable
 import kotlin.test.assertEquals
 
 object EntityTestsData {

@@ -1,22 +1,18 @@
 package kotlin.sql
 
-import java.sql.DriverManager
-import java.sql.Connection
-import kotlin.properties.Delegates
-import javax.sql.DataSource
 import org.joda.time.DateTimeZone
-import kotlin.dao.EntityCache
+import java.sql.Connection
+import java.sql.DriverManager
 import java.sql.SQLException
-import org.apache.log4j.Priority
+import javax.sql.DataSource
 
 public class Database private constructor(val connector: () -> Connection) {
 
-    val url: String by Delegates.lazy {
+    val url: String by lazy(LazyThreadSafetyMode.NONE) {
         val connection = connector()
         try {
             connection.metaData!!.url!!
-        }
-        finally {
+        } finally {
             connection.close()
         }
     }

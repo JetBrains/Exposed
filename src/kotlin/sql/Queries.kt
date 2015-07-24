@@ -1,9 +1,7 @@
 package kotlin.sql
 
-import org.apache.log4j.Logger
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.properties.Delegates
+import java.util.HashMap
+import java.util.HashSet
 import kotlin.sql.vendors.dialect
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
