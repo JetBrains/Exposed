@@ -39,7 +39,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
     }
 
     override fun createStatement(): String {
-        var alter = StringBuilder("ALTER TABLE ${referencedTable} ADD")
+        var alter = StringBuilder("ALTER TABLE $referencedTable ADD")
         if (!fkName.isBlank()) alter.append(" CONSTRAINT $fkName")
         alter.append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
 
@@ -88,6 +88,6 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     }
 
     override fun toString(): String {
-        return "${if (unique) "Unique " else ""}Index '$indexName' for '${tableName}' on columns ${columns.join(", ")}"
+        return "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.join(", ")}"
     }
 }

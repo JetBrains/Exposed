@@ -98,7 +98,7 @@ data class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
 }
 
 data class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
-    override fun sqlType(): String  = "DECIMAL(${scale}, ${precision})"
+    override fun sqlType(): String  = "DECIMAL($scale, $precision)"
 }
 
 data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
@@ -178,7 +178,7 @@ data class StringColumnType(val length: Int = 65535, val collate: String? = null
         })
 
         if (collate != null) {
-            ddl.append(" COLLATE ${collate}")
+            ddl.append(" COLLATE $collate")
         }
 
         return ddl.toString()
