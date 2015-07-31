@@ -469,7 +469,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return testCache(id) ?: find{table.id eq id}.firstOrNull()
     }
 
-    private fun testCache(id: EntityID): T? {
+    public fun testCache(id: EntityID): T? {
         return warmCache().find(this, id)
     }
 
