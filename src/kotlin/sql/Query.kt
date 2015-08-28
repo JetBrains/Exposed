@@ -195,7 +195,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
     private fun flushEntities() {
         // Flush data before executing query or results may be unpredictable
-        val tables = set.source.columns.map { it.table }.filterIsInstance(javaClass<IdTable>()).toSet()
+        val tables = set.source.columns.map { it.table }.filterIsInstance(IdTable::class.java).toSet()
         EntityCache.getOrCreate(session).flush(tables)
     }
 

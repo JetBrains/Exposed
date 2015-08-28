@@ -40,8 +40,8 @@ object DMLTestsData {
         val t = datetime("t")
         val tn = datetime("tn").nullable()
 
-        val e = enumeration("e", javaClass<E>())
-        val en = enumeration("en", javaClass<E>()).nullable()
+        val e = enumeration("e", E::class.java)
+        val en = enumeration("en", E::class.java).nullable()
 
         val s = varchar("s", 100)
         val sn = varchar("sn", 100).nullable()
