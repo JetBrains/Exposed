@@ -12,7 +12,7 @@ data class Count(val expr: Expression<*>, val distinct: Boolean = false): Functi
     override val columnType: ColumnType = IntegerColumnType();
 }
 
-data class Date(val expr: Expression<DateTime>): Function<DateTime>() {
+data class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
@@ -20,7 +20,7 @@ data class Date(val expr: Expression<DateTime>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
-data class Month(val expr: Expression<DateTime>): Function<DateTime>() {
+data class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }

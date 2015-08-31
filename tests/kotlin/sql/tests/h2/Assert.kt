@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size(), collection.size(), "Count mismatch")
     for (p in collection) {
-        assert(expected.any {it.equals(p)}, "Unexpected element in collection pair $p")
+        assert(expected.any {p == it}, "Unexpected element in collection pair $p")
     }
 }
 

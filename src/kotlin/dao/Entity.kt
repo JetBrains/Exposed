@@ -585,7 +585,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return ColumnWithTransform(this, toColumn, toReal)
     }
 
-    fun<TReal: Enum<TReal>?> Column<String?>.byEnumNullable(clazz : Class<TReal>): ColumnWithTransform<String?, TReal?> {
+    fun<TReal: Enum<TReal>> Column<String?>.byEnumNullable(clazz : Class<TReal>): ColumnWithTransform<String?, TReal?> {
         return ColumnWithTransform(this, {it?.name()}, {it?.let{clazz.findValue(it)}})
     }
 

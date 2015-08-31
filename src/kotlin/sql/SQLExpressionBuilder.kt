@@ -179,7 +179,7 @@ object SqlExpressionBuilder {
         return InListOrNotInListOp(this, list, isInList = false)
     }
 
-    public fun<T, S> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
+    public fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
         return when (value) {
             is Int -> intLiteral(value)
             is Long -> longLiteral(value)
@@ -189,7 +189,7 @@ object SqlExpressionBuilder {
         }
     }
 
-    public fun<T, S> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> {
+    public fun<T, S: Any> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> {
         return Between(this, asLiteral(from), asLiteral(to))
     }
 
