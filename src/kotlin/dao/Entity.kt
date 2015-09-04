@@ -290,7 +290,30 @@ class EntityCache {
     }
 
     fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
-        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
+        val cachedInserts =
+                (inserts[key.table]?.filter { it.writeValues[key] == source.id } ?: emptyList()) as List<R>
+
+        val dbRecords =
+                referrers.getOrPut(source, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
+
+        return object : SizedIterable<R> {
+            override fun limit(n: Int) =
+                    throw UnsupportedOperationException("not implemented")
+
+            override fun count() = cachedInserts.size() + dbRecords.count()
+
+            override fun empty() = cachedInserts.isEmpty() && dbRecords.empty()
+
+            override fun iterator() = object: Iterator<R> {
+                private val cachedIterator = cachedInserts.iterator()
+                private val dbIterator = dbRecords.iterator()
+
+                override fun next(): R =
+                        if (cachedIterator.hasNext()) cachedIterator.next() else dbIterator.next()
+
+                override fun hasNext() = cachedIterator.hasNext() || dbIterator.hasNext()
+            }
+        }
     }
 
     fun <T: Entity> find(f: EntityClass<T>, id: EntityID): T? {
@@ -406,6 +429,13 @@ class EntityCache {
 
     fun flushInserts(table: IdTable) {
         inserts.remove(table)?.let {
+            referrers.values().forEach { columnMap ->
+                val iter = columnMap.entrySet().iterator()
+                for ((column, list) in iter) {
+                    if (column.table == table) iter.remove()
+                }
+            }
+
             val query = BatchInsertQuery(table)
             for (entry in it) {
                 query.addBatch()
