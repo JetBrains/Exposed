@@ -510,7 +510,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun wrapRow (row: ResultRow, session: Session) : T {
         val entity = wrap(row[table.id], row, session)
-        entity._readValues = row
+        if (entity._readValues == null)
+            entity._readValues = row
         return entity
     }
 
