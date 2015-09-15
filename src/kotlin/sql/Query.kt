@@ -11,7 +11,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
     /**
      * Function might returns null. Use @tryGet if you don't sure of nullability (e.g. in left-join cases)
      */
-    @suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
             fieldIndex.containsKey(c) -> data[fieldIndex[c]!!]

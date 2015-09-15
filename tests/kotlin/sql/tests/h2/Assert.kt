@@ -1,12 +1,12 @@
 package kotlin.sql.tests.h2
 
-import kotlin.test.assertEquals
 import org.joda.time.DateTime
+import kotlin.test.assertEquals
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size(), collection.size(), "Count mismatch")
     for (p in collection) {
-        assert(expected.any {p == it}, "Unexpected element in collection pair $p")
+        assert(expected.any {p == it}) { "Unexpected element in collection pair $p" }
     }
 }
 

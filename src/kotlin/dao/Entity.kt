@@ -1,9 +1,6 @@
 package kotlin.dao
 
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
-import java.util.LinkedHashMap
+import java.util.*
 import kotlin.sql.*
 
 /**
@@ -14,7 +11,7 @@ public class EntityID(id: Int, val table: IdTable) {
     val value: Int get() {
         if (_value == -1) {
             EntityCache.getOrCreate(Session.get()).flushInserts(table)
-            assert(_value > 0, "Entity must be inserted")
+            assert(_value > 0) { "Entity must be inserted" }
         }
 
         return _value
@@ -104,7 +101,7 @@ public class View<out Target: Entity> (val op : Op<Boolean>, val factory: Entity
     fun get(o: Any?, desc: kotlin.PropertyMetadata): SizedIterable<Target> = factory.find(op)
 }
 
-@suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST")
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     private fun getSourceRefColumn(o: Entity): Column<EntityID> {
@@ -198,7 +195,7 @@ open public class Entity(val id: EntityID) {
         return lookup()
     }
 
-    @suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     fun <T> Column<T>.lookup(): T {
         if (writeValues.containsKey(this)) {
             return writeValues[this] as T
@@ -271,7 +268,7 @@ open public class Entity(val id: EntityID) {
     }
 }
 
-@suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST")
 class EntityCache {
     val data = HashMap<IdTable, MutableMap<Int, Entity>>()
     val inserts = HashMap<IdTable, MutableList<Entity>>()
@@ -453,7 +450,7 @@ class EntityCache {
     }
 }
 
-@suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST")
 abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.enclosingClass!!
     private val ctor = klass.constructors[0]
@@ -632,7 +629,7 @@ abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : Im
 
     override fun all(): SizedIterable<T> = warmCache().findAll(this)
 
-    public synchronized fun expireCache() {
+    public @Synchronized fun expireCache() {
         _cachedValues = null
     }
 

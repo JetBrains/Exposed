@@ -1,6 +1,6 @@
 package kotlin.sql.vendors
 
-import java.util.HashMap
+import java.util.*
 import kotlin.sql.*
 
 /**
@@ -8,9 +8,9 @@ import kotlin.sql.*
  * Date: 08.05.2015
  */
 
-private object MysqlDialect : VendorDialect() {
+internal object MysqlDialect : VendorDialect() {
 
-    override synchronized fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
+    override @Synchronized fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
 
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
@@ -26,7 +26,7 @@ private object MysqlDialect : VendorDialect() {
         return tables
     }
 
-    override synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
+    override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
 
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
 
@@ -66,7 +66,7 @@ private object MysqlDialect : VendorDialect() {
         return constraints
     }
 
-    override synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
+    override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
 
         val constraints = HashMap<String, MutableList<Index>>()
 

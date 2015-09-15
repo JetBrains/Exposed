@@ -43,7 +43,7 @@ class VString(id: EntityID): Entity(id) {
 
 
 public class ViaTests : DatabaseTestsBase() {
-    Test fun testConnection01() {
+    @Test fun testConnection01() {
         withTables(*ViaTestData.allTables) {
             val n = VNumber.new { number = 10 }
             val s = VString.new { text = "aaa" }
@@ -55,7 +55,7 @@ public class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    Test fun testConnection02() {
+    @Test fun testConnection02() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
@@ -72,7 +72,7 @@ public class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    Test fun testConnection03() {
+    @Test fun testConnection03() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
@@ -103,7 +103,7 @@ public class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    Test fun testConnection04() {
+    @Test fun testConnection04() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }

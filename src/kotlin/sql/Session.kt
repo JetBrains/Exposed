@@ -3,14 +3,13 @@ package kotlin.sql
 import org.h2.jdbc.JdbcConnection
 import java.sql.Connection
 import java.sql.PreparedStatement
-import java.util.ArrayList
-import java.util.HashMap
+import java.util.*
 import java.util.regex.Pattern
 import kotlin.dao.Entity
 import kotlin.dao.EntityCache
 
 public class Key<T>()
-@suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST")
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 

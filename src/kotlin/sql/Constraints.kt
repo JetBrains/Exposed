@@ -32,7 +32,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
     companion object {
         fun from(column: Column<*>): ForeignKeyConstraint {
-            assert (column.referee !== null, "$column does not reference anything")
+            assert(column.referee !== null) { "$column does not reference anything" }
             val s = Session.get()
             return ForeignKeyConstraint("", s.identity(column.referee!!.table), s.identity(column.referee!!), s.identity(column.table), s.identity(column), column.onDelete)
         }
@@ -59,7 +59,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     companion object {
         fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
             assert(columns.isNotEmpty())
-            assert (columns.groupBy { it.table }.size() == 1, "Columns from different tables can't persist in one index")
+            assert(columns.groupBy { it.table }.size() == 1) { "Columns from different tables can't persist in one index" }
             val s = Session.get()
             val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.join("_")}" + (if (unique) "_unique" else "")
             return Index(indexName, s.identity(columns.first().table), columns.map { s.identity(it) }, unique)

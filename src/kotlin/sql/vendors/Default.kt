@@ -1,7 +1,6 @@
 package kotlin.sql.vendors
 
-import java.util.ArrayList
-import java.util.HashMap
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.sql.*
 
@@ -30,7 +29,7 @@ interface DatabaseMetadataDialect {
     fun resetCaches()
 }
 
-private abstract class VendorDialect : DatabaseMetadataDialect {
+internal abstract class VendorDialect : DatabaseMetadataDialect {
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
@@ -73,7 +72,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
 
     private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
 
-    override synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
+    override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{it.tableName}) {
             columnConstraintsCache.getOrPut(table, {
@@ -99,7 +98,7 @@ private abstract class VendorDialect : DatabaseMetadataDialect {
 
     private val existingIndicesCache = ConcurrentHashMap<String, List<Index>>()
 
-    override synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
+    override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
         for(table in tables.map {it.tableName}) {
             existingIndicesCache.getOrPut(table, {
                 val rs = Session.get().connection.metaData.getIndexInfo(getDatabase(), null, table, false, false)

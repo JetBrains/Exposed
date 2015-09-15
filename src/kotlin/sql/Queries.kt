@@ -1,7 +1,6 @@
 package kotlin.sql
 
-import java.util.HashMap
-import java.util.HashSet
+import java.util.*
 import kotlin.sql.vendors.dialect
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
@@ -164,4 +163,4 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     return toCreate.toList()
 }
 
-private val dialect = Session.get().vendor.dialect()
+internal val dialect = Session.get().vendor.dialect()

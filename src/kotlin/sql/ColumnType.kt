@@ -3,7 +3,7 @@ package kotlin.sql
 import org.joda.time.DateTime
 import java.sql.Date
 import java.sql.PreparedStatement
-import java.util.Locale
+import java.util.*
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
@@ -112,7 +112,7 @@ data class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         }
     }
 
-    @suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): Any {
         if (value is Enum<*>)
             return value as Enum<T>
@@ -127,11 +127,11 @@ data class DateColumnType(val time: Boolean): ColumnType() {
         if (value is String) return value
 
         val dateTime = when (value) {
-            is DateTime -> value as DateTime
+            is DateTime -> value
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)
             else -> error("Unexpected value: $value")
-        }
+        } as DateTime
 
         if (time) {
             val zonedTime = dateTime.toDateTime(Database.timeZone)

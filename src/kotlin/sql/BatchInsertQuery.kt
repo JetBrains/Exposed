@@ -1,7 +1,6 @@
 package kotlin.sql
 
-import java.util.LinkedHashMap
-import java.util.ArrayList
+import java.util.*
 
 class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
     val data = ArrayList<LinkedHashMap<Column<*>, Any?>>()
@@ -47,7 +46,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
 
                 val count = stmt.executeBatch()!!
 
-                assert(count.size() == data.size(), "Number of results don't match number of entries in batch")
+                assert(count.size() == data.size()) { "Number of results don't match number of entries in batch" }
 
                 if (auto.isNotEmpty()) {
                     val rs = stmt.generatedKeys!!
@@ -65,7 +64,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
                         }
                     }
 
-                    assert(generatedKeys.isEmpty() || generatedKeys.size() == count.size(), "Number of autoincs doesn't match number of batch entries")
+                    assert(generatedKeys.isEmpty() || generatedKeys.size() == count.size()) { "Number of autoincs doesn't match number of batch entries" }
                 }
             }
         }

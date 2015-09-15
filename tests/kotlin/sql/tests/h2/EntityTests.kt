@@ -57,7 +57,7 @@ object EntityTestsData {
 }
 
 public class EntityTests: DatabaseTestsBase() {
-    Test fun testDefaults01() {
+    @Test fun testDefaults01() {
         withTables(EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new {  }
             assertEquals (x.b1, true, "b1 mismatched")
@@ -65,7 +65,7 @@ public class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    Test fun testDefaults02() {
+    @Test fun testDefaults02() {
         withTables(EntityTestsData.XTable) {
             val a: EntityTestsData.AEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.A)
             assertEquals (a.b1, false, "a.b1 mismatched")
