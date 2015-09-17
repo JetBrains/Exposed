@@ -1,6 +1,7 @@
 package kotlin.dao
 
 import java.util.*
+import kotlin.properties.Delegates
 import kotlin.sql.*
 
 /**
@@ -105,7 +106,7 @@ public class View<out Target: Entity> (val op : Op<Boolean>, val factory: Entity
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     private fun getSourceRefColumn(o: Entity): Column<EntityID> {
-        val sourceRefColumn = table.columns.firstOrNull { it.referee == o.factory().table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        val sourceRefColumn = table.columns.firstOrNull { it.referee == o.klass.table.id } as? Column<EntityID> ?: error("Table does not reference source")
         return sourceRefColumn
     }
 
@@ -145,15 +146,15 @@ class InnerTableLink<Target: Entity>(val table: Table,
 }
 
 open public class Entity(val id: EntityID) {
-    var klass: EntityClass<*>? = null
+    var klass: EntityClass<*> by Delegates.notNull()
 
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
     get() {
         return _readValues ?: run {
-            val table = factory().table
-            _readValues = table.select{table.id eq id}.first()
+            val table = klass.table
+            _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
             _readValues!!
         }
     }
@@ -162,8 +163,6 @@ open public class Entity(val id: EntityID) {
     public fun<T> getOrCreate(key: String, evaluate: ()->T) : T {
         return cachedData.getOrPut(key, evaluate) as T
     }*/
-
-    public fun factory(): EntityClass<*> = klass!!
 
     fun <T: Entity> Reference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
         val id = reference.get(o, desc)
@@ -196,11 +195,12 @@ open public class Entity(val id: EntityID) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> Column<T>.lookup(): T {
-        if (writeValues.containsKey(this)) {
-            return writeValues[this] as T
+    fun <T:Any?> Column<T>.lookup(): T = when {
+        writeValues.containsKey(this) -> writeValues[this] as T
+        id._value == -1 && _readValues?.contains(this)?.not() ?: true -> {
+            defaultValue as T
         }
-        return readValues[this]
+        else -> readValues[this]
     }
 
     fun <T> Column<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
@@ -227,15 +227,15 @@ open public class Entity(val id: EntityID) {
     public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
     public open fun delete(){
-        factory().removeFromCache(this)
-        val table = factory().table
+        klass.removeFromCache(this)
+        val table = klass.table
         table.deleteWhere{table.id eq id}
     }
 
     open fun flush(batch: BatchUpdateQuery? = null): Boolean {
         if (!writeValues.isEmpty()) {
             if (batch == null) {
-                val table = factory().table
+                val table = klass.table
                 table.update({table.id eq id}) {
                     for ((c, v) in writeValues) {
                         it[c] = v
@@ -529,8 +529,11 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return if (cached.isNotEmpty()) SizedCollection(cached) else find(op)
     }
 
-    protected open fun searchQuery(op: Op<Boolean>): Query {
-        return table.select { op }.setForUpdateStatus()
+    protected open val dependsOnTables: ColumnSet by lazy { table }
+    protected open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
+
+    open fun searchQuery(op: Op<Boolean>): Query {
+        return dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
     }
 
     public fun count(op: Op<Boolean>? = null): Int {
