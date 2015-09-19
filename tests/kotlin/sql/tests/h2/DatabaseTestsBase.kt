@@ -1,8 +1,10 @@
 package kotlin.sql.tests.h2
 
-import kotlin.sql.*
-import java.util.TimeZone
 import org.joda.time.DateTimeZone
+import java.util.*
+import kotlin.sql.Database
+import kotlin.sql.Session
+import kotlin.sql.Table
 
 public abstract class DatabaseTestsBase {
     fun withDb( statement: Session.() -> Unit) {
@@ -21,6 +23,7 @@ public abstract class DatabaseTestsBase {
             create(*tables)
             try {
                 statement()
+                commit() // Need commit to persist data before drop tables
             }  finally {
                 drop (*tables)
             }
