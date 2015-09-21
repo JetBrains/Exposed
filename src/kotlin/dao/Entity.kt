@@ -116,8 +116,17 @@ class InnerTableLink<Target: Entity>(val table: Table,
     }
 
     fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
+        fun alreadyInJoin() = (target.dependsOnTables as? Join)?.joinParts?.any { it.joinType == JoinType.INNER && it.table == table} ?: false
         val sourceRefColumn = getSourceRefColumn(o)
-        val query = {target.wrapRows(target.table.innerJoin(table).select{sourceRefColumn eq o.id})}
+        val entityTables: ColumnSet = when {
+            target.dependsOnTables is Table -> (target.dependsOnTables as Table).innerJoin(table)
+            alreadyInJoin() -> target.dependsOnTables
+            else -> (target.dependsOnTables as Join).innerJoin(table)
+        }
+        val columns = (target.dependsOnColumns + (if (!alreadyInJoin()) table.columns else emptyList())
+            - sourceRefColumn).distinct() + sourceRefColumn
+
+        val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
     }
 
@@ -529,8 +538,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return if (cached.isNotEmpty()) SizedCollection(cached) else find(op)
     }
 
-    protected open val dependsOnTables: ColumnSet by lazy { table }
-    protected open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
+    open val dependsOnTables: ColumnSet get() = table
+    open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     open fun searchQuery(op: Op<Boolean>): Query {
         return dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
