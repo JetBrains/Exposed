@@ -39,7 +39,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
             session.execBatch {
                 val stmt = session.prepareStatement(sqlText, auto map {session.identity(it)})
                 for (d in data) {
-                    log(sqlText, columns map {it.columnType to d[it]})
+                    log(sqlText, columns map {it.columnType to (d[it] ?: it.defaultValue)})
                     stmt.fillParameters(columns, d)
                     stmt.addBatch()
                 }
