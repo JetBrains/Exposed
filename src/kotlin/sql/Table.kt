@@ -48,7 +48,17 @@ fun Table.leftJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.LEFT)
 }
 
-class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : ColumnSet() {
+class Join (val table: Table) : ColumnSet() {
+
+    public constructor(table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
+        val new = if (onColumn != null && otherColumn != null) {
+            join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+        } else {
+            join(otherTable, joinType, additionalConstraint)
+        }
+        joinParts.addAll(new.joinParts)
+    }
+
     class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
 
@@ -70,8 +80,10 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
     }
 
     fun join(otherTable: Table, joinType: JoinType, onColumn: Expression<*>, otherColumn: Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
-        joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
-        return this
+        val newJoin = Join(table)
+        newJoin.joinParts.addAll(joinParts)
+        newJoin.joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
+        return newJoin
     }
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): Pair<Column<*>, Column<*>>? {
@@ -100,15 +112,6 @@ class Join (val table: Table, otherTable: Table, joinType: JoinType = JoinType.I
         for (p in joinParts)
             answer.addAll(p.table.columns)
         return answer
-    }
-
-    // ctor body
-    init {
-        if (onColumn != null && otherColumn != null) {
-            join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
-        } else {
-            join(otherTable, joinType, additionalConstraint)
-        }
     }
 }
 
