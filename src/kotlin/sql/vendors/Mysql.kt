@@ -99,4 +99,12 @@ internal object MysqlDialect : VendorDialect() {
     override fun getDatabase(): String {
         return Session.get().connection.catalog
     }
+
+    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = MATCH(this, pattern)
+
+    private data class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String): Op<Boolean>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String {
+            return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' IN BOOLEAN  MODE)"
+        }
+    }
 }

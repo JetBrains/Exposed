@@ -29,7 +29,11 @@ interface DatabaseMetadataDialect {
     fun resetCaches()
 }
 
-internal abstract class VendorDialect : DatabaseMetadataDialect {
+interface DialectSpecificFunctions {
+    fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
+}
+
+internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecificFunctions {
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
