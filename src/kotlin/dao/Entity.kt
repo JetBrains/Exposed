@@ -203,6 +203,13 @@ open public class Entity(val id: EntityID) {
         return lookup()
     }
 
+    fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? {
+        if (_readValues?.contains(this) ?: false )
+            return found(readValues.tryGet(this))
+        else
+            return notFound()
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
         writeValues.containsKey(this) -> writeValues[this] as T
