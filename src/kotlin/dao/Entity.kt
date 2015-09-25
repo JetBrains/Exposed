@@ -489,6 +489,11 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return testCache(id) ?: find{table.id eq id}.firstOrNull()
     }
 
+    public fun reload(entity: Entity): T? {
+        removeFromCache(entity)
+        return find { table.id eq entity.id }.firstOrNull()
+    }
+
     public fun testCache(id: EntityID): T? {
         return warmCache().find(this, id)
     }
