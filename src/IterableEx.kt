@@ -25,11 +25,11 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
         return true
     }
 
-    override fun iterator(): Iterator<T> {
+    operator override fun iterator(): Iterator<T> {
         return this
     }
 
-    override fun next(): T {
+    operator override fun next(): T {
         throw UnsupportedOperationException()
     }
 
@@ -43,7 +43,7 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
         return SizedCollection(delegate.take(n))
     }
 
-    override fun iterator() = delegate.iterator()
+    operator override fun iterator() = delegate.iterator()
     override fun count() = delegate.size()
     override fun empty() = delegate.isEmpty()
 }
@@ -61,7 +61,7 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
     }
 
     override fun limit(n: Int): SizedIterable<T> = delegate.limit(n)
-    override fun iterator() = wrapper.iterator()
+    operator override fun iterator() = wrapper.iterator()
     override fun count() = _wrapper?.size() ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
     override fun forUpdate(): SizedIterable<T> = delegate.forUpdate()
@@ -94,10 +94,10 @@ fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
         override fun count(): Int = source.count()
         override fun empty(): Boolean = source.empty()
 
-        public override fun iterator(): Iterator<R> {
+        operator public override fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
             return object: Iterator<R> {
-                public override fun next(): R {
+                operator public override fun next(): R {
                     return f(sourceIterator.next())
                 }
 

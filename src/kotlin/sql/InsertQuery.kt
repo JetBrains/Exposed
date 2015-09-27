@@ -1,6 +1,6 @@
 package kotlin.sql
 
-import java.util.LinkedHashMap
+import java.util.*
 
 /**
  * isIgnore is supported for mysql only
@@ -9,7 +9,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
     val values = LinkedHashMap<Column<*>, Any?>()
     var generatedKey: Int? = null
 
-    fun <T> set(column: Column<T>, value: T) {
+    operator fun <T> set(column: Column<T>, value: T) {
         if (values containsKey column) {
             error("$column is already initialized")
         }
@@ -17,7 +17,7 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
         values.put(column, column.columnType.valueToDB(value))
     }
 
-    fun get(column: Column<Int>): Int {
+    operator fun get(column: Column<Int>): Int {
         return generatedKey ?: error("No key generated")
     }
 

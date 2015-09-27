@@ -124,35 +124,35 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return GreaterEqOp (this, other)
     }
 
-    public fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> {
+    operator public fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> {
         return PlusOp (this, other, columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> {
+    operator public fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> {
         return PlusOp (this, wrap(t), columnType)
     }
 
-    public fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> {
+    operator public fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> {
         return MinusOp (this, other, columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> {
+    operator public fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> {
         return MinusOp (this, wrap(t), columnType)
     }
 
-    public fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> {
+    operator public fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> {
         return TimesOp (this, other, columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> {
+    operator public fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> {
         return TimesOp (this, wrap(t), columnType)
     }
 
-    public fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> {
+    operator public fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> {
         return DivideOp (this, other, columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> {
+    operator public fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> {
         return DivideOp (this, wrap(t), columnType)
     }
 

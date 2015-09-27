@@ -12,7 +12,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
      * Function might returns null. Use @tryGet if you don't sure of nullability (e.g. in left-join cases)
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> get(c: Expression<T>) : T {
+    operator fun <T> get(c: Expression<T>) : T {
         val d:Any? = when {
             fieldIndex.containsKey(c) -> data[fieldIndex[c]!!]
             else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
@@ -23,7 +23,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
         } as T
     }
 
-    fun <T> set(c: Expression<T>, value: T) {
+    operator fun <T> set(c: Expression<T>, value: T) {
         val index = fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")
         data[index] = value
     }
@@ -180,7 +180,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             }
         }
 
-        public override fun next(): ResultRow {
+        operator public override fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
@@ -199,7 +199,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         EntityCache.getOrCreate(session).flush(tables)
     }
 
-    public override fun iterator(): Iterator<ResultRow> {
+    operator public override fun iterator(): Iterator<ResultRow> {
         flushEntities()
         val builder = QueryBuilder(true)
         val sql = toSQL(builder)

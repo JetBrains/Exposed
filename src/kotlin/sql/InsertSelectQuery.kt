@@ -5,7 +5,7 @@ import java.sql.Statement
 class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: Boolean = false, val isReplace: Boolean = false) {
     var statement: Statement? = null
 
-    fun get(column: Column<Int>): Int {
+    operator fun get(column: Column<Int>): Int {
         //TODO: use column!!!
         val rs = (statement?:error("Statement is not executed")).generatedKeys!!;
         if (rs.next()) {

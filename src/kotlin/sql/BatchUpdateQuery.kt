@@ -11,7 +11,7 @@ class BatchUpdateQuery(val table: IdTable) {
         data.add(id to HashMap())
     }
 
-    fun <T> set(column: Column<T>, value: T) {
+    operator fun <T> set(column: Column<T>, value: T) {
         val values = data.last().second
 
         if (values containsKey column) {
