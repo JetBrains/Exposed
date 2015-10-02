@@ -625,15 +625,15 @@ class DMLTests : DatabaseTestsBase() {
 
             tbl.checkRow(tbl.select{tbl.t.eq(time)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             tbl.checkRow(tbl.select{tbl.tn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.tn.eq(null: DateTime?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select{tbl.tn.eq(null as DateTime?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             tbl.checkRow(tbl.select{tbl.e.eq(DMLTestsData.E.ONE)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             tbl.checkRow(tbl.select{tbl.en.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.en.eq(null: DMLTestsData.E?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select{tbl.en.eq(null as DMLTestsData.E?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
             tbl.checkRow(tbl.select{tbl.s.eq(sTest)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
             tbl.checkRow(tbl.select{tbl.sn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.sn.eq(null: String?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select{tbl.sn.eq(null as String?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
@@ -662,7 +662,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             tbl.checkRow(tbl.select{tbl.nn.eq(42)}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.nn neq null: Int?}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select{tbl.nn neq null as Int?}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
 
             tbl.checkRow(tbl.select{tbl.dn.eq(date)}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
             tbl.checkRow(tbl.select{tbl.dn.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
