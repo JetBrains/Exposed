@@ -133,5 +133,6 @@ private object DefaultVendorDialect : VendorDialect()
 
 public fun DatabaseVendor.dialect() : DatabaseMetadataDialect = when (this) {
     DatabaseVendor.MySql -> MysqlDialect
+    DatabaseVendor.H2 -> H2Dialect
     else -> DefaultVendorDialect
 }
