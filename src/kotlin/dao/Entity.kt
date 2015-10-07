@@ -391,6 +391,8 @@ class EntityCache {
             }
         }
 
+        val insertedTables = inserts.map { it.key }
+
         for (t in sorted) {
             flushInserts(t)
         }
@@ -415,11 +417,14 @@ class EntityCache {
             }
         }
 
-        referrers.values().forEach { columnMap ->
-            val iter = columnMap.entrySet().iterator()
-            for ((column, list) in iter) {
-                if (column.table in sorted) iter.remove()
-            }
+        if (insertedTables.isNotEmpty()) {
+            removeTablesReferrers(insertedTables)
+        }
+    }
+
+    internal fun removeTablesReferrers(insertedTables: List<IdTable>) {
+        referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
+            referrers.remove(it)
         }
     }
 
@@ -498,7 +503,10 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     }
 
     fun removeFromCache(entity: Entity) {
-        warmCache().remove(table, entity)
+        val cache = warmCache()
+        cache.remove(table, entity)
+        cache.referrers.remove(entity)
+        cache.removeTablesReferrers(listOf(entity.klass.table))
     }
 
     public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
