@@ -20,7 +20,7 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
             }
 
             is List<*> -> {
-                value.map {valueToString(it)}.join(",")
+                value.map {valueToString(it)}.joinToString(",")
             }
 
             else ->  {

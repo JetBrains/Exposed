@@ -299,7 +299,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     private fun quoteIfNecessary (identity: String) : String {
-        return (identity.split('.') map {quoteTokenIfNecessary(it)}).join(".")
+        return (identity.split('.') map {quoteTokenIfNecessary(it)}).joinToString(".")
     }
 
     private fun quoteTokenIfNecessary(token: String) : String {

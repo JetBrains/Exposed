@@ -11,11 +11,11 @@ abstract class Op<T>() : Expression<T> {
     }
 }
 
-fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> {
+infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> {
     return AndOp(this, op)
 }
 
-fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> {
+infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> {
     return OrOp(this, op)
 }
 
@@ -54,7 +54,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
     override fun toSQL(queryBuilder: QueryBuilder): String {
         val sb = StringBuilder()
 
-        when (list.size()) {
+        when (list.size) {
             0 -> when {
                 isInList ->  sb.append(" FALSE")
                 else -> sb.append(" TRUE")
@@ -84,7 +84,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
                     else -> {
                         list.map {
                             queryBuilder.registerArgument(it, expr.columnType)
-                        }.join(",")
+                        }.joinToString(",")
                     }
                 })
 

@@ -26,11 +26,11 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
         var sql = StringBuilder("INSERT $ignore INTO ${session.identity(table)}")
 
         sql.append(" (")
-        sql.append((columns map { session.identity(it) }).join(", "))
+        sql.append((columns map { session.identity(it) }).joinToString(", "))
         sql.append(") ")
 
         sql.append("VALUES (")
-        sql.append((columns map { "?" }). join(", "))
+        sql.append((columns map { "?" }).joinToString(", "))
 
         sql.append(") ")
         try {
@@ -46,7 +46,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
 
                 val count = stmt.executeBatch()!!
 
-                assert(count.size() == data.size()) { "Number of results don't match number of entries in batch" }
+                assert(count.size() == data.size) { "Number of results don't match number of entries in batch" }
 
                 if (auto.isNotEmpty()) {
                     val rs = stmt.generatedKeys!!
@@ -54,17 +54,17 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
                         generatedKeys.add(rs.getInt(1))
                     }
 
-                    if (generatedKeys.size() == 1 && count.size() > 1) {
+                    if (generatedKeys.size == 1 && count.size() > 1) {
                         // H2 only returns one last generated keys...
                         var id = generatedKeys.first()
 
-                        while (generatedKeys.size() < count.size()) {
+                        while (generatedKeys.size < count.size()) {
                             id = id - 1
                             generatedKeys.add(0, id)
                         }
                     }
 
-                    assert(generatedKeys.isEmpty() || generatedKeys.size() == count.size()) { "Number of autoincs doesn't match number of batch entries" }
+                    assert(generatedKeys.isEmpty() || generatedKeys.size == count.size()) { "Number of autoincs doesn't match number of batch entries" }
                 }
             }
         }

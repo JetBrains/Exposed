@@ -3,10 +3,10 @@ package kotlin.sql
 import java.util.*
 
 class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: Op<Boolean>? = null) {
-    val values = LinkedHashMap<Column<*>, Any?>()
+    val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     operator fun <T, S: T> set(column: Column<T>, value: S?) {
-        if (values containsKey column) {
+        if (values.containsKey(column)) {
             error("$column is already initialized")
         }
         if (!column.columnType.nullable && value == null) {
@@ -16,7 +16,7 @@ class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: O
     }
 
     fun <T, S: T> update(column: Column<T>, value: Expression<S>) {
-        if (values containsKey column) {
+        if (values.containsKey(column)) {
             error("$column is already initialized")
         }
         values[column] = value
@@ -38,7 +38,7 @@ class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: O
                 }
 
                 c++
-                if (c < values.size()) {
+                if (c < values.size) {
                     sqlStatement.append(", ")
                 }
             }

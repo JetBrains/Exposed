@@ -59,9 +59,9 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     companion object {
         fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
             assert(columns.isNotEmpty())
-            assert(columns.groupBy { it.table }.size() == 1) { "Columns from different tables can't persist in one index" }
+            assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
             val s = Session.get()
-            val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.join("_")}" + (if (unique) "_unique" else "")
+            val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.joinToString("_")}" + (if (unique) "_unique" else "")
             return Index(indexName, s.identity(columns.first().table), columns.map { s.identity(it) }, unique)
         }
     }
@@ -88,6 +88,6 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     }
 
     override fun toString(): String {
-        return "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.join(", ")}"
+        return "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.joinToString(", ")}"
     }
 }

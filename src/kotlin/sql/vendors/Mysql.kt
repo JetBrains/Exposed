@@ -34,7 +34,7 @@ internal object MysqlDialect : VendorDialect() {
 
         fun inTableList(): String {
             if (tables.isNotEmpty()) {
-                return " AND ku.TABLE_NAME IN ${tableNames.join("','", prefix = "('", postfix = "')")}"
+                return " AND ku.TABLE_NAME IN ${tableNames.joinToString("','", prefix = "('", postfix = "')")}"
             }
             return ""
         }

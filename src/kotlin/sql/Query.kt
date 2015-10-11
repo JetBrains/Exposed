@@ -39,12 +39,12 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
     }
 
     override fun toString(): String {
-        return fieldIndex.map { "${it.getKey().toSQL(QueryBuilder(false))}=${data[it.getValue()]}" }.join()
+        return fieldIndex.map { "${it.getKey().toSQL(QueryBuilder(false))}=${data[it.getValue()]}" }.joinToString()
     }
 
     companion object {
         fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>) : ResultRow {
-            val size = fieldsIndex.size()
+            val size = fieldsIndex.size
             val answer = ResultRow(size, fieldsIndex)
 
             fields.forEachIndexed{ i, f ->
@@ -86,7 +86,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 }
 */
 
-                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).join(", ", "", ""))
+                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).joinToString(", ", "", ""))
             }
             append(" FROM ")
             append(set.source.describe(session))
@@ -99,7 +99,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             if (!count) {
                 if (groupedByColumns.isNotEmpty()) {
                     append(" GROUP BY ")
-                    append((groupedByColumns map {it.toSQL(queryBuilder)}).join(", ", "", ""))
+                    append((groupedByColumns map {it.toSQL(queryBuilder)}).joinToString(", ", "", ""))
                 }
 
                 if (having != null) {
@@ -109,7 +109,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (orderByColumns.isNotEmpty()) {
                     append(" ORDER BY ")
-                    append((orderByColumns map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).join(", ", "", ""))
+                    append((orderByColumns map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString(", ", "", ""))
                 }
 
                 if (limit != null) {
@@ -136,7 +136,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this
     }
 
-    fun groupBy(vararg columns: Expression<*>): Query {
+    infix fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             groupedByColumns.add(column)
         }
@@ -165,7 +165,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         return this
     }
 
-    override fun limit(n: Int): Query {
+    infix override fun limit(n: Int): Query {
         this.limit = n
         return this
     }

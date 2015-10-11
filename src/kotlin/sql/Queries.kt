@@ -87,34 +87,34 @@ fun checkMappingConsistence(vararg tables: Table): List<String> {
 
 fun checkExcessiveIndices(vararg tables: Table) {
 
-    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.getValue().size() > 1 }
+    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.getValue().size > 1 }
 
     if (!excessiveConstraints.isEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
         excessiveConstraints.forEach {
             val (pair, fk) = it
             val constraint = fk.first()
-            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.join(", ")}")
+            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.joinToString(", ")}")
         }
 
         exposedLogger.info("SQL Queries to remove excessive keys:");
         excessiveConstraints.forEach {
-            it.getValue().take(it.getValue().size() - 1).forEach {
+            it.getValue().take(it.getValue().size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
             }
         }
     }
 
-    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.join()) }.filter {it.getValue().size() > 1}
+    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.getValue().size > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach {
             val (triple, indices) = it
-            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.join(", ")}")
+            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.joinToString(", ")}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:");
         excessiveIndices.forEach {
-            it.getValue().take(it.getValue().size() - 1).forEach {
+            it.getValue().take(it.getValue().size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
             }
         }

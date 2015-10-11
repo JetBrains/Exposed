@@ -57,7 +57,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return QueryParameter(value, columnType)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
         if (t == null) {
             return isNull()
         }
@@ -68,11 +68,11 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return EqOp (this, other)
     }
 
-    public fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> {
+    infix public fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> {
         return EqOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
             return isNotNull()
         }
@@ -92,7 +92,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return IsNotNullOp(this)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.less(t: T) : Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.less(t: T) : Op<Boolean> {
         return LessOp(this, wrap(t))
     }
 
@@ -100,7 +100,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return LessOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : Op<Boolean> {
         return LessEqOp(this, wrap(t))
     }
 
@@ -108,7 +108,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return LessEqOp(this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greater(t: T) : Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.greater(t: T) : Op<Boolean> {
         return GreaterOp(this, wrap(t))
     }
 
@@ -116,7 +116,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return GreaterOp (this, other)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : Op<Boolean> {
         return GreaterEqOp (this, wrap(t))
     }
 
@@ -156,27 +156,27 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return DivideOp (this, wrap(t), columnType)
     }
 
-    public fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> {
+    infix public fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> {
         return LikeOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T:String?> ExpressionWithColumnType<T>.notLike(pattern: String): Op<Boolean> {
+    infix public fun<T:String?> ExpressionWithColumnType<T>.notLike(pattern: String): Op<Boolean> {
         return NotLikeOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> {
+    infix public fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> {
         return RegexpOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> {
+    infix public fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> {
         return NotRegexpOp(this, QueryParameter(pattern, columnType))
     }
 
-    public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> {
         return InListOrNotInListOp(this, list, isInList = true)
     }
 
-    public fun<T> ExpressionWithColumnType<T>.notInList(list: List<T>): Op<Boolean> {
+    infix public fun<T> ExpressionWithColumnType<T>.notInList(list: List<T>): Op<Boolean> {
         return InListOrNotInListOp(this, list, isInList = false)
     }
 
@@ -198,7 +198,7 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return NoOpConversion(this, DecimalColumnType(15, 0))
     }
 
-    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> {
+    infix override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> {
         return with((dialect as DialectSpecificFunctions)) {
             this@match.match(pattern)
         }

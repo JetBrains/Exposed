@@ -32,7 +32,7 @@ enum class JoinType {
     FULL
 }
 
-fun Table.join (otherTable: Table) : Join {
+infix fun Table.join (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
@@ -40,11 +40,11 @@ fun Table.join (otherTable: Table, joinType: JoinType, onColumn: Column<*>? = nu
     return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 }
 
-fun Table.innerJoin (otherTable: Table) : Join {
+infix fun Table.innerJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.INNER)
 }
 
-fun Table.leftJoin (otherTable: Table) : Join {
+infix fun Table.leftJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.LEFT)
 }
 
@@ -64,11 +64,11 @@ class Join (val table: Table) : ColumnSet() {
 
     val joinParts: ArrayList<JoinPart> = ArrayList();
 
-    fun innerJoin (otherTable: Table) : Join {
+    infix fun innerJoin (otherTable: Table) : Join {
         return join(otherTable, JoinType.INNER)
     }
 
-    fun leftJoin (otherTable: Table) : Join {
+    infix fun leftJoin (otherTable: Table) : Join {
         return join(otherTable, JoinType.LEFT)
     }
 
@@ -221,7 +221,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return this
     }
 
-    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C {
+    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C {
         referee = ref
         return this
     }
@@ -281,7 +281,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             for (column in columns) {
                 ddl.append(column.descriptionDdl())
                 c++
-                if (c < columns.size()) {
+                if (c < columns.size) {
                     ddl.append(", ")
                 }
             }

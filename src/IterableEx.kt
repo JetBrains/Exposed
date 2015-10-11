@@ -44,7 +44,7 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
     }
 
     operator override fun iterator() = delegate.iterator()
-    override fun count() = delegate.size()
+    override fun count() = delegate.size
     override fun empty() = delegate.isEmpty()
 }
 
@@ -62,7 +62,7 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
 
     override fun limit(n: Int): SizedIterable<T> = delegate.limit(n)
     operator override fun iterator() = wrapper.iterator()
-    override fun count() = _wrapper?.size() ?: _count()
+    override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
     override fun forUpdate(): SizedIterable<T> = delegate.forUpdate()
     override fun notForUpdate(): SizedIterable<T> = delegate.notForUpdate()
@@ -85,7 +85,7 @@ public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIt
     }
 }
 
-fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
+infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
         override fun limit(n: Int): SizedIterable<R> = source.limit(n).mapLazy(f)

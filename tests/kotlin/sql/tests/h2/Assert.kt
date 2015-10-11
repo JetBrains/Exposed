@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import kotlin.test.assertEquals
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
-    assertEquals (expected.size(), collection.size(), "Count mismatch")
+    assertEquals (expected.size, collection.size, "Count mismatch")
     for (p in collection) {
         assert(expected.any {p == it}) { "Unexpected element in collection pair $p" }
     }
@@ -27,8 +27,8 @@ fun<T> assertEqualCollections (collection : Iterable<T>, expected : Collection<T
 }
 
 fun<T> assertEqualLists (l1: List<T>, l2: List<T>) {
-    assertEquals(l1.size(), l2.size(), "Count mismatch")
-    for (i in 0..l1.size() -1)
+    assertEquals(l1.size, l2.size, "Count mismatch")
+    for (i in 0..l1.size -1)
         assertEquals(l1[i], l2[i], "Error at pos $i:")
 }
 

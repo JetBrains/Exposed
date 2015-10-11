@@ -235,7 +235,7 @@ open public class Entity(val id: EntityID) {
         column.set(o, desc, toColumn(value))
     }
 
-    public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
+    infix public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
         return InnerTableLink(table, this@via)
     }
 
@@ -333,7 +333,7 @@ class EntityCache {
         list.add(o)
     }
 
-    private fun Table.references(another: Table): Boolean {
+    infix private fun Table.references(another: Table): Boolean {
         return columns.any { it.referee?.table == another }
     }
 
@@ -344,9 +344,9 @@ class EntityCache {
     }
 
     fun<T> ArrayList<T>.topoSort (comparer: (T,T) -> Int) {
-        for (i in 0..this.size() -2) {
+        for (i in 0..this.size -2) {
             var minIndex = i
-            for (j in (i+1)..this.size() -1) {
+            for (j in (i+1)..this.size -1) {
                 if (comparer(this[minIndex], this[j]) > 0) {
                     minIndex = j
                 }
@@ -511,7 +511,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
         val cached = ids.map { testCache(it) }.filterNotNull()
-        if (cached.size() == ids.size()) {
+        if (cached.size == ids.size) {
             return SizedCollection(cached)
         }
         return wrapRows(searchQuery(Op.build {table.id inList ids}))
@@ -519,7 +519,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public fun forIds(ids: List<Int>) : SizedIterable<T> {
         val cached = ids.map { testCache(EntityID(it, table)) }.filterNotNull()
-        if (cached.size() == ids.size()) {
+        if (cached.size == ids.size) {
             return SizedCollection(cached)
         }
 
@@ -596,7 +596,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     public inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
 
-    public fun referencedOn(column: Column<EntityID>): Reference<T> {
+    infix public fun referencedOn(column: Column<EntityID>): Reference<T> {
         return Reference(column, this)
     }
 
@@ -613,7 +613,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     }
 
     //TODO: what's the difference with referrersOn?
-    public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
+    infix public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
         return OptionalReferrers(column, this, cache)
     }
 
