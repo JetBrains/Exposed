@@ -600,15 +600,15 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return Reference(column, this)
     }
 
-    public fun optionalReferencedOn(column: Column<EntityID?>): OptionalReference<T> {
+    infix public fun optionalReferencedOn(column: Column<EntityID?>): OptionalReference<T> {
         return OptionalReference(column, this)
     }
 
-    public fun optionalReferencedOnSureNotNull(column: Column<EntityID?>): OptionalReferenceSureNotNull<T> {
+    infix public fun optionalReferencedOnSureNotNull(column: Column<EntityID?>): OptionalReferenceSureNotNull<T> {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
+    infix public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
         return Referrers(column, this, cache)
     }
 
