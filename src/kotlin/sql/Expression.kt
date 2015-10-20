@@ -43,8 +43,20 @@ class QueryBuilder(val prepared: Boolean) {
     }
 }
 
-interface Expression<out T> {
-    fun toSQL(queryBuilder: QueryBuilder): String
+abstract class Expression<out T>() {
+    abstract fun toSQL(queryBuilder: QueryBuilder): String
+
+    override fun equals(other: Any?): Boolean {
+        return (other as? Expression<*>)?.toString() == toString()
+    }
+
+    override fun hashCode(): Int {
+        return toString().hashCode()
+    }
+
+    override fun toString(): String {
+        return toSQL(QueryBuilder(false))
+    }
 
     companion object {
         inline fun <T> build(builder: SqlExpressionBuilder.()->Expression<T>): Expression<T> {
@@ -53,7 +65,7 @@ interface Expression<out T> {
     }
 }
 
-interface ExpressionWithColumnType<T> : Expression<T> {
+abstract class ExpressionWithColumnType<T> : Expression<T>() {
     // used for operations with literals
-    val columnType: ColumnType;
+    abstract val columnType: ColumnType;
 }

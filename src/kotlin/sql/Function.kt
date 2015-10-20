@@ -2,9 +2,9 @@ package kotlin.sql
 import org.joda.time.DateTime
 import java.util.ArrayList
 
-abstract class Function<T>(): ExpressionWithColumnType<T>
+abstract class Function<T>(): ExpressionWithColumnType<T>()
 
-data class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
+class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
     }
@@ -12,7 +12,7 @@ data class Count(val expr: Expression<*>, val distinct: Boolean = false): Functi
     override val columnType: ColumnType = IntegerColumnType();
 }
 
-data class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
+class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
@@ -20,7 +20,7 @@ data class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
-data class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
+class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }
@@ -28,7 +28,7 @@ data class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
-data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MIN(${expr.toSQL(queryBuilder)})"
     }
@@ -36,7 +36,7 @@ data class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     override val columnType: ColumnType = _columnType
 }
 
-data class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MAX(${expr.toSQL(queryBuilder)})"
     }
@@ -44,7 +44,7 @@ data class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     override val columnType: ColumnType = _columnType
 }
 
-data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUM(${expr.toSQL(queryBuilder)})"
     }
@@ -52,7 +52,7 @@ data class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>
     override val columnType: ColumnType = _columnType
 }
 
-data class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alternate: ExpressionWithColumnType<out T>): Function<T>() {
+class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alternate: ExpressionWithColumnType<out T>): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "COALESCE(${expr.toSQL(queryBuilder)}, ${alternate.toSQL(queryBuilder)})"
     }
@@ -60,7 +60,7 @@ data class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alter
     override val columnType: ColumnType = alternate.columnType
 }
 
-data class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
+class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUBSTRING(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
     }
@@ -68,7 +68,7 @@ data class Substring(val expr: Expression<*>, val start: Expression<Int>, val le
     override val columnType: ColumnType = StringColumnType()
 }
 
-data class Trim(val expr: Expression<*>): Function<String>() {
+class Trim(val expr: Expression<*>): Function<String>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "TRIM(${expr.toSQL(queryBuilder)})"
     }
@@ -76,7 +76,7 @@ data class Trim(val expr: Expression<*>): Function<String>() {
     override val columnType: ColumnType = StringColumnType()
 }
 
-data class Distinct<T>(val expr: Expression<T>, override val columnType: ColumnType): Function<T>() {
+class Distinct<T>(val expr: Expression<T>, override val columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DISTINCT(${expr.toSQL(queryBuilder)})"
     }
@@ -101,7 +101,7 @@ class CaseWhen<T> (val value: Expression<*>?) {
     }
 }
 
-class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>) : Expression<T> {
+class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         val sb = StringBuilder()
         sb.append("CASE")

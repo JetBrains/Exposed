@@ -173,32 +173,32 @@ open public class Entity(val id: EntityID) {
     }*/
 
     operator fun <T: Entity> Reference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
-        val id = reference.get(o, desc)
+        val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
     operator fun <T: Entity> Reference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
-        reference.set(o, desc, value.id)
+        reference.setValue(o, desc, value.id)
     }
 
     operator fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T? {
-        return reference.get(o, desc)?.let{factory.findById(it)}
+        return reference.getValue(o, desc)?.let{factory.findById(it)}
     }
 
     operator fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T?) {
-        reference.set(o, desc, value?.id)
+        reference.setValue(o, desc, value?.id)
     }
 
     operator fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
-        val id = reference.get(o, desc) ?: error("${o.id}.$desc is null")
+        val id = reference.getValue(o, desc) ?: error("${o.id}.$desc is null")
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
     operator fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
-        reference.set(o, desc, value.id)
+        reference.setValue(o, desc, value.id)
     }
 
-    operator fun <T> Column<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
+    operator fun <T> Column<T>.getValue(o: Entity, desc: kotlin.PropertyMetadata): T {
         return lookup()
     }
 
@@ -218,7 +218,7 @@ open public class Entity(val id: EntityID) {
         else -> readValues[this]
     }
 
-    operator fun <T> Column<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
+    operator fun <T> Column<T>.setValue(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
         if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
             if (referee != null) {
                 EntityCache.getOrCreate(Session.get()).clearReferrersCache()
@@ -228,11 +228,11 @@ open public class Entity(val id: EntityID) {
     }
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.get(o: Entity, desc: kotlin.PropertyMetadata): TReal {
-        return toReal(column.get(o, desc))
+        return toReal(column.getValue(o, desc))
     }
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.set(o: Entity, desc: kotlin.PropertyMetadata, value: TReal) {
-        column.set(o, desc, toColumn(value))
+        column.setValue(o, desc, toColumn(value))
     }
 
     infix public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {

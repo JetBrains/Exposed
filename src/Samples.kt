@@ -62,7 +62,7 @@ fun main(args: Array<String>) {
             it[cityId] = null
         }
 
-        Users.update({Users.id eq"alex"}) {
+        Users.update({Users.id eq "alex"}) {
             it[name] = "Alexey"
         }
 
