@@ -12,7 +12,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
     operator fun <T> set(column: Column<T>, value: T) {
         val values = data.last()
 
-        if (values containsKey column) {
+        if (values.containsKey(column)) {
             error("$column is already initialized")
         }
 
@@ -20,33 +20,39 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
     }
 
     fun execute(session: Session): List<Int> {
+        if (data.isEmpty())
+            return emptyList()
+
         val generatedKeys = ArrayList<Int>()
         val (auto, columns) = table.columns.partition { it.columnType.autoinc }
         val ignore = if (_ignore) "IGNORE" else ""
         var sql = StringBuilder("INSERT $ignore INTO ${session.identity(table)}")
 
         sql.append(" (")
-        sql.append((columns map { session.identity(it) }).joinToString(", "))
+        sql.append((columns.map{ session.identity(it) }).joinToString(", "))
         sql.append(") ")
 
-        sql.append("VALUES (")
-        sql.append((columns map { "?" }).joinToString(", "))
+        sql.append("VALUES ")
+        val paramsPlaceholder = columns.map{ "?" }.joinToString(", ", prefix = "(", postfix = "),")
+        sql.append(paramsPlaceholder.repeat(data.size).removeSuffix(","))
 
-        sql.append(") ")
         try {
             val sqlText = sql.toString()
 
             session.execBatch {
-                val stmt = session.prepareStatement(sqlText, auto map {session.identity(it)})
-                for (d in data) {
-                    log(sqlText, columns map {it.columnType to (d[it] ?: it.defaultValue)})
-                    stmt.fillParameters(columns, d)
-                    stmt.addBatch()
+                val stmt = session.prepareStatement(sqlText, auto.map{session.identity(it)})
+
+                val args = arrayListOf<Pair<ColumnType, Any?>>()
+                for ((i, d) in data.withIndex()) {
+                    columns.mapTo(args) {it.columnType to (d[it] ?: it.defaultValue)}
+                    stmt.fillParameters(columns, d, i)
                 }
 
-                val count = stmt.executeBatch()!!
+                log(sqlText, args)
 
-                assert(count.size() == data.size) { "Number of results don't match number of entries in batch" }
+                val count = stmt.executeUpdate()
+
+                assert(count == data.size) { "Number of results don't match number of entries in batch" }
 
                 if (auto.isNotEmpty()) {
                     val rs = stmt.generatedKeys!!
@@ -54,17 +60,17 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
                         generatedKeys.add(rs.getInt(1))
                     }
 
-                    if (generatedKeys.size == 1 && count.size() > 1) {
+                    if (generatedKeys.size == 1 && count > 1) {
                         // H2 only returns one last generated keys...
                         var id = generatedKeys.first()
 
-                        while (generatedKeys.size < count.size()) {
-                            id = id - 1
+                        while (generatedKeys.size < count) {
+                            id -= 1
                             generatedKeys.add(0, id)
                         }
                     }
 
-                    assert(generatedKeys.isEmpty() || generatedKeys.size == count.size()) { "Number of autoincs doesn't match number of batch entries" }
+                    assert(generatedKeys.isEmpty() || generatedKeys.size == count) { "Number of autoincs doesn't match number of batch entries" }
                 }
             }
         }
