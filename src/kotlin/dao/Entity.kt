@@ -141,14 +141,10 @@ class InnerTableLink<Target: Entity>(val table: Table,
 
             val targetIds = value.map { it.id }.toList()
             table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
-            val query = BatchInsertQuery(table)
-            targetIds.filter { !existingIds.contains(it) }.forEach {
-                val targetId = it
-                query.addBatch()
-                query.set(sourceRefColumn, o.id)
-                query.set(targeRefColumn, targetId)
+            table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
+                this[sourceRefColumn] = o.id
+                this[targeRefColumn] = targetId
             }
-            query.execute(Session.get())
         }
     }
 }
@@ -430,21 +426,16 @@ class EntityCache {
 
     fun flushInserts(table: IdTable) {
         inserts.remove(table)?.let {
-            val query = BatchInsertQuery(table)
-            for (entry in it) {
-                query.addBatch()
+            val ids = table.batchInsert(it) { entry ->
                 for ((c, v) in entry.writeValues) {
-                    query.set(c, v)
+                    this[c] = v
                 }
                 entry.storeWrittenValues()
             }
 
-            val session = Session.get()
-
-            val ids = query.execute(session)
             for ((entry, id) in it.zip(ids)) {
                 entry.id._value = id
-                EntityCache.getOrCreate(session).store(table, entry)
+                EntityCache.getOrCreate(Session.get()).store(table, entry)
                 EntityHook.alertSubscribers(entry, true)
             }
         }
