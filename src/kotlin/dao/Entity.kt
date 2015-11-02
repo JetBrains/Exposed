@@ -268,12 +268,13 @@ open public class Entity(val id: EntityID) {
 
     public  fun storeWrittenValues() {
         // move write values to read values
-        if (_readValues != null) {
-            for ((c, v) in writeValues) {
-                _readValues!!.set(c, v)
-            }
+        if (_readValues == null) {
+            _readValues = ResultRow(klass.table.columns.size, klass.table.columns.mapIndexed { i, column -> column to i }.toMap())
         }
 
+        for ((c, v) in writeValues) {
+            _readValues!!.set(c, v)
+        }
         // clear write values
         writeValues.clear()
     }
