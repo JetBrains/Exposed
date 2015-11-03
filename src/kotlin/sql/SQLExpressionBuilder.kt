@@ -3,6 +3,7 @@ package kotlin.sql
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import kotlin.sql.vendors.DialectSpecificFunctions
+import kotlin.sql.vendors.MatchMode
 
 fun Column<*>.count(): Count {
     return Count(this)
@@ -42,6 +43,10 @@ fun<T:String?> Column<T>.trim(): Trim {
 
 fun <T> Column<T>.distinct(): Distinct<T> {
     return Distinct(this, this.columnType)
+}
+
+fun <T:String?> Column<T>.groupConcat(separator: String? = null, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat<T> {
+    return GroupConcat(this, this.columnType, separator, *orderBy)
 }
 
 object SqlExpressionBuilder: DialectSpecificFunctions {
@@ -198,9 +203,11 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return NoOpConversion(this, DecimalColumnType(15, 0))
     }
 
-    infix override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> {
+    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> {
         return with((dialect as DialectSpecificFunctions)) {
-            this@match.match(pattern)
+            this@match.match(pattern, mode)
         }
     }
+
+    infix fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 }

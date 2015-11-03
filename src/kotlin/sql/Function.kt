@@ -1,6 +1,6 @@
 package kotlin.sql
 import org.joda.time.DateTime
-import java.util.ArrayList
+import java.util.*
 
 abstract class Function<T>(): ExpressionWithColumnType<T>()
 
@@ -115,4 +115,27 @@ class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>)
         sb.append(" ELSE ${elseResult.toSQL(queryBuilder)} END")
         return sb.toString()
     }
+}
+
+class GroupConcat<T:String?>(val expr: Column<T>, _columnType: ColumnType, val separator: String?, vararg val orderBy: Pair<Expression<*>,Boolean>): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return buildString {
+            append("GROUP_CONCAT(${expr.toSQL(queryBuilder)}")
+            orderBy.forEach {
+                append(it.first.toSQL(queryBuilder))
+                append(" ")
+                if (it.second) {
+                    append("ASC")
+                } else {
+                    append("DESC")
+                }
+            }
+            separator?.let {
+                append("SEPARATOR $separator")
+            }
+            append(")")
+        }
+    }
+
+    override val columnType: ColumnType = _columnType
 }
