@@ -14,7 +14,7 @@ enum class ReferenceOption {
     RESTRICT; //default
 
     override fun toString(): String {
-        return this.name().replace("_"," ")
+        return this.name.replace("_"," ")
     }
 
     companion object {

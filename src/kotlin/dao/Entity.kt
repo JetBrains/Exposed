@@ -613,14 +613,14 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     }
 
     fun<TReal: Enum<TReal>> Column<String?>.byEnumNullable(clazz : Class<TReal>): ColumnWithTransform<String?, TReal?> {
-        return ColumnWithTransform(this, {it?.name()}, {it?.let{clazz.findValue(it)}})
+        return ColumnWithTransform(this, { it?.name }, {it?.let{clazz.findValue(it)}})
     }
 
     fun<TReal: Enum<TReal>> Column<String>.byEnum(clazz : Class<TReal>): ColumnWithTransform<String, TReal> {
-        return ColumnWithTransform(this, { it.name() }, {clazz.findValue(it)})
+        return ColumnWithTransform(this, { it.name }, {clazz.findValue(it)})
     }
 
-    fun <T: Enum<T>> Class<T>.findValue(name: String) = enumConstants.first {it.name() == name }
+    fun <T: Enum<T>> Class<T>.findValue(name: String) = enumConstants.first { it.name == name }
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
 }
