@@ -467,11 +467,11 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.enclosingClass!!
     private val ctor = klass.constructors[0]
 
-    public fun get(id: EntityID): T {
+    public operator fun get(id: EntityID): T {
         return findById(id) ?: error("Entity not found in database")
     }
 
-    public fun get(id: Int): T {
+    public operator fun get(id: Int): T {
         return findById(id) ?: error("Entity not found in database")
     }
 

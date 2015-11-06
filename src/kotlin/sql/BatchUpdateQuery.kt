@@ -49,7 +49,7 @@ class BatchUpdateQuery(val table: IdTable) {
 
             val count = stmt.executeBatch()!!
 
-            assert(count.size() == set.size) { "Number of results don't match number of entries in batch" }
+            assert(count.size == set.size) { "Number of results don't match number of entries in batch" }
 
             count.sum()
         }

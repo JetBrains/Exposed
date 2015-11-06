@@ -111,7 +111,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
             is Int -> value
-            is Enum<*> -> value.ordinal()
+            is Enum<*> -> value.ordinal
             else -> error("$value is not valid for enum ${klass.name}")
         }
     }
@@ -196,7 +196,7 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
 
     protected override fun nonNullValueToString(value: Any): String {
         val beforeEscaping = value.toString()
-        val sb = StringBuilder(beforeEscaping.length() +2)
+        val sb = StringBuilder(beforeEscaping.length +2)
         sb.append('\'')
         for (c in beforeEscaping) {
             if (charactersToEscape.containsKey(c))

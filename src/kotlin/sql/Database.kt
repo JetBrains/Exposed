@@ -49,7 +49,7 @@ public class Database private constructor(val connector: () -> Connection) {
                 return answer
             }
             catch (e: SQLException) {
-                exposedLogger.info("Session repetition=$repetitions: ${e.getMessage()}", e)
+                exposedLogger.info("Session repetition=$repetitions: ${e.message}", e)
                 session.rollback()
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
