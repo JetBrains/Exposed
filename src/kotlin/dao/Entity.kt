@@ -306,7 +306,7 @@ class EntityCache {
     }
 
     fun <T: Entity> findAll(f: EntityClass<T>): SizedIterable<T> {
-        return SizedCollection(getMap(f).values())
+        return SizedCollection(getMap(f).values)
     }
 
     fun <T: Entity> store(f: EntityClass<T>, o: T) {
@@ -353,7 +353,7 @@ class EntityCache {
     }
 
     fun flush() {
-        flush((inserts.keySet() + data.keySet()).toSet())
+        flush((inserts.keys + data.keys).toSet())
     }
 
     fun addDependencies(tables: Iterable<IdTable>): Iterable<IdTable> {

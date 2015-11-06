@@ -351,7 +351,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun close() {
-        for (stmt in statementsCache.values()) {
+        for (stmt in statementsCache.values) {
             stmt.close()
         }
 

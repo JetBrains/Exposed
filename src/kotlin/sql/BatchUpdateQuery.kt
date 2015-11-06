@@ -22,8 +22,8 @@ class BatchUpdateQuery(val table: IdTable) {
     }
 
     fun execute(session: Session): Int {
-        val updateSets = data filterNot {it.second.isEmpty()} groupBy { it.second.keySet() }
-        return updateSets.values().fold(0) { acc, set ->
+        val updateSets = data filterNot {it.second.isEmpty()} groupBy { it.second.keys }
+        return updateSets.values.fold(0) { acc, set ->
             acc + execute(session, set)
         }
     }
@@ -31,7 +31,7 @@ class BatchUpdateQuery(val table: IdTable) {
     private fun execute(session: Session, set: Collection<Pair<EntityID, HashMap<Column<*>, Any?>>>): Int {
         val sqlStatement = StringBuilder("UPDATE ${session.identity(table)} SET ")
 
-        val columns = set.first().second.keySet().toList()
+        val columns = set.first().second.keys.toList()
 
         sqlStatement.append(columns.map {"${session.identity(it)} = ?"}.joinToString(", "))
         sqlStatement.append(" WHERE ${session.identity(table.id)} = ?")

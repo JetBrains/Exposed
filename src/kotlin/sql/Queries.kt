@@ -142,7 +142,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
-    val fKeyConstraints = dialect.columnConstraints(*tables).keySet()
+    val fKeyConstraints = dialect.columnConstraints(*tables).keys
 
     fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyConstraints}
 
