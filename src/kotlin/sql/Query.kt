@@ -114,7 +114,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (limit != null) {
                     append(" LIMIT ")
-                    append(limit)
+                    append(limit!!)
                 }
             }
 

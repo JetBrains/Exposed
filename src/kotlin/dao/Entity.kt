@@ -2,6 +2,7 @@ package kotlin.dao
 
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 import kotlin.sql.*
 
 /**
@@ -66,7 +67,7 @@ class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory:
         }
     }
 
-    operator fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Source> {
+    operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -81,7 +82,7 @@ class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val
         }
     }
 
-    operator fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Source> {
+    operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -98,7 +99,7 @@ public class View<out Target: Entity> (val op : Op<Boolean>, val factory: Entity
     override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()
 
     operator public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
-    operator fun get(o: Any?, desc: kotlin.PropertyMetadata): SizedIterable<Target> = factory.find(op)
+    operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -114,7 +115,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
         return sourceRefColumn
     }
 
-    operator fun get(o: Entity, desc: kotlin.PropertyMetadata): SizedIterable<Target> {
+    operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Target> {
         fun alreadyInJoin() = (target.dependsOnTables as? Join)?.joinParts?.any { it.joinType == JoinType.INNER && it.table == table} ?: false
         val sourceRefColumn = getSourceRefColumn(o)
         val entityTables: ColumnSet = when {
@@ -129,14 +130,14 @@ class InnerTableLink<Target: Entity>(val table: Table,
         return EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, sourceRefColumn, query)
     }
 
-    operator fun set(o: Entity, desc: kotlin.PropertyMetadata, value: SizedIterable<Target>) {
+    operator fun setValue(o: Entity, desc: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
         val targeRefColumn = getTargetRefColumn()
 
         with(Session.get()) {
             val entityCache = EntityCache.getOrCreate(Session.get())
             entityCache.flush()
-            val existingIds = get(o, desc).map { it.id }.toSet()
+            val existingIds = getValue(o, desc).map { it.id }.toSet()
             entityCache.clearReferrersCache()
 
             val targetIds = value.map { it.id }.toList()
@@ -168,33 +169,33 @@ open public class Entity(val id: EntityID) {
         return cachedData.getOrPut(key, evaluate) as T
     }*/
 
-    operator fun <T: Entity> Reference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
+    operator fun <T: Entity> Reference<T>.getValue(o: Entity, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
-    operator fun <T: Entity> Reference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
+    operator fun <T: Entity> Reference<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
         reference.setValue(o, desc, value.id)
     }
 
-    operator fun <T: Entity> OptionalReference<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T? {
+    operator fun <T: Entity> OptionalReference<T>.getValue(o: Entity, desc: KProperty<*>): T? {
         return reference.getValue(o, desc)?.let{factory.findById(it)}
     }
 
-    operator fun <T: Entity> OptionalReference<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T?) {
+    operator fun <T: Entity> OptionalReference<T>.setValue(o: Entity, desc: KProperty<*>, value: T?) {
         reference.setValue(o, desc, value?.id)
     }
 
-    operator fun <T: Entity> OptionalReferenceSureNotNull<T>.get(o: Entity, desc: kotlin.PropertyMetadata): T {
+    operator fun <T: Entity> OptionalReferenceSureNotNull<T>.getValue(o: Entity, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc) ?: error("${o.id}.$desc is null")
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
-    operator fun <T: Entity> OptionalReferenceSureNotNull<T>.set(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
+    operator fun <T: Entity> OptionalReferenceSureNotNull<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
         reference.setValue(o, desc, value.id)
     }
 
-    operator fun <T> Column<T>.getValue(o: Entity, desc: kotlin.PropertyMetadata): T {
+    operator fun <T> Column<T>.getValue(o: Entity, desc: KProperty<*>): T {
         return lookup()
     }
 
@@ -214,7 +215,7 @@ open public class Entity(val id: EntityID) {
         else -> readValues[this]
     }
 
-    operator fun <T> Column<T>.setValue(o: Entity, desc: kotlin.PropertyMetadata, value: T) {
+    operator fun <T> Column<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
         if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
             if (referee != null) {
                 EntityCache.getOrCreate(Session.get()).clearReferrersCache()
@@ -223,11 +224,11 @@ open public class Entity(val id: EntityID) {
         }
     }
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.get(o: Entity, desc: kotlin.PropertyMetadata): TReal {
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity, desc: KProperty<*>): TReal {
         return toReal(column.getValue(o, desc))
     }
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.set(o: Entity, desc: kotlin.PropertyMetadata, value: TReal) {
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity, desc: KProperty<*>, value: TReal) {
         column.setValue(o, desc, toColumn(value))
     }
 
@@ -599,12 +600,12 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    infix public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
+    public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
         return Referrers(column, this, cache)
     }
 
     //TODO: what's the difference with referrersOn?
-    infix public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
+    public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
         return OptionalReferrers(column, this, cache)
     }
 
