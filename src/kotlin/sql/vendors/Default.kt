@@ -118,7 +118,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
                     val isUnique = !rs.getBoolean("NON_UNIQUE")
                     tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
                 }
-                tmpIndices.filterNot { it.getKey().first == "PRIMARY" }.map { Index(it.getKey().first, table, it.getValue(), it.getKey().second)}
+                tmpIndices.filterNot { it.key.first == "PRIMARY" }.map { Index(it.key.first, table, it.value, it.key.second)}
             }
             )
         }

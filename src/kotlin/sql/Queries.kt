@@ -97,7 +97,7 @@ fun checkMappingConsistence(vararg tables: Table): List<String> {
 
 fun checkExcessiveIndices(vararg tables: Table) {
 
-    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.getValue().size > 1 }
+    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
     if (!excessiveConstraints.isEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
@@ -109,13 +109,13 @@ fun checkExcessiveIndices(vararg tables: Table) {
 
         exposedLogger.info("SQL Queries to remove excessive keys:");
         excessiveConstraints.forEach {
-            it.getValue().take(it.getValue().size - 1).forEach {
+            it.value.take(it.value.size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
             }
         }
     }
 
-    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.getValue() }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.getValue().size > 1}
+    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.value.size > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach {
@@ -124,7 +124,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
         exposedLogger.info("SQL Queries to remove excessive indices:");
         excessiveIndices.forEach {
-            it.getValue().take(it.getValue().size - 1).forEach {
+            it.value.take(it.value.size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
             }
         }
@@ -169,7 +169,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val toCreate = missingIndices.subtract(nameDiffers)
     toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { it.getValue().subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${it.getKey()}':") }
+    notMappedIndices.forEach { it.value.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${it.key}':") }
     return toCreate.toList()
 }
 

@@ -39,7 +39,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
     }
 
     override fun toString(): String {
-        return fieldIndex.map { "${it.getKey().toSQL(QueryBuilder(false))}=${data[it.getValue()]}" }.joinToString()
+        return fieldIndex.map { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }.joinToString()
     }
 
     companion object {
