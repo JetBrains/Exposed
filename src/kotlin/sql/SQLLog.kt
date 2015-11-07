@@ -1,5 +1,5 @@
 package kotlin.sql
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.ArrayList
 import java.util.Stack
 
@@ -7,7 +7,7 @@ public interface SqlLogger {
     fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
 }
 
-val exposedLogger = Logger.getLogger("Exposed")!!
+val exposedLogger = LoggerFactory.getLogger("Exposed")!!
 
 inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
     val start = System.currentTimeMillis()
@@ -61,7 +61,7 @@ public class StdOutSqlLogger : SqlLogger {
     }
 }
 
-public class Log4jSqlLogger(): SqlLogger {
+public class Slf4jSqlLogger(): SqlLogger {
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
         exposedLogger.debug(stmt)
     }

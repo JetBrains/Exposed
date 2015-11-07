@@ -59,7 +59,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     val outerSession = threadLocal.get()
 
     init {
-        logger.addLogger(Log4jSqlLogger())
+        logger.addLogger(Slf4jSqlLogger())
         threadLocal.set(this)
     }
 
