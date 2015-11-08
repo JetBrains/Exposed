@@ -1,7 +1,6 @@
 package kotlin.sql.vendors
 
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.sql.*
 
 interface DatabaseMetadataDialect {
@@ -103,7 +102,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
         return constraints
     }
 
-    private val existingIndicesCache = ConcurrentHashMap<String, List<Index>>()
+    private val existingIndicesCache = HashMap<String, List<Index>>()
 
     override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
         for(table in tables.map {it.tableName}) {
@@ -125,7 +124,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
         return HashMap(existingIndicesCache)
     }
 
-    override fun resetCaches() {
+    override @Synchronized fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
         existingIndicesCache.clear()
