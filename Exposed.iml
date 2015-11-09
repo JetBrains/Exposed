@@ -14,6 +14,6 @@
     <orderEntry type="library" scope="TEST" name="junit" level="project" />
     <orderEntry type="library" name="Logging" level="project" />
     <orderEntry type="library" scope="TEST" name="log4j" level="project" />
-    <orderEntry type="library" name="joda-time-2.5" level="project" />
+    <orderEntry type="library" exported="" name="joda-time" level="project" />
   </component>
 </module>
