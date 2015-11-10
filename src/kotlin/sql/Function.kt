@@ -117,10 +117,13 @@ class CaseWhenElse<T> (val caseWhen: CaseWhen<T>, val elseResult: Expression<T>)
     }
 }
 
-class GroupConcat<T:String?>(val expr: Column<T>, _columnType: ColumnType, val separator: String?, vararg val orderBy: Pair<Expression<*>,Boolean>): Function<T>() {
+class GroupConcat(val expr: Column<*>, val separator: String?, val distinct: Boolean, vararg val orderBy: Pair<Expression<*>,Boolean>): Function<String?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return buildString {
-            append("GROUP_CONCAT(${expr.toSQL(queryBuilder)}")
+            append("GROUP_CONCAT(")
+            if (distinct)
+                append("DISTINCT ")
+            append(expr.toSQL(queryBuilder))
             orderBy.forEach {
                 append(it.first.toSQL(queryBuilder))
                 append(" ")
@@ -137,5 +140,5 @@ class GroupConcat<T:String?>(val expr: Column<T>, _columnType: ColumnType, val s
         }
     }
 
-    override val columnType: ColumnType = _columnType
+    override val columnType: ColumnType = StringColumnType()
 }

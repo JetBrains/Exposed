@@ -60,7 +60,8 @@ class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnTy
     override fun valueFromDB(value: Any): Any {
         return when (value) {
             is EntityID -> EntityID(value.value, table)
-            else -> EntityID(value as Int, table)
+            is Int -> EntityID(value, table)
+            else -> EntityID(value.toString().toInt(), table)
         }
     }
 }

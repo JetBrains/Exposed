@@ -2,8 +2,7 @@ package kotlin.sql
 
 import org.joda.time.DateTime
 import java.math.BigDecimal
-import kotlin.sql.vendors.DialectSpecificFunctions
-import kotlin.sql.vendors.MatchMode
+import kotlin.sql.vendors.*
 
 fun Column<*>.count(): Count {
     return Count(this)
@@ -45,8 +44,8 @@ fun <T> Column<T>.distinct(): Distinct<T> {
     return Distinct(this, this.columnType)
 }
 
-fun <T:String?> Column<T>.groupConcat(separator: String? = null, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat<T> {
-    return GroupConcat(this, this.columnType, separator, *orderBy)
+fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat {
+    return GroupConcat(this, separator, distinct, *orderBy)
 }
 
 object SqlExpressionBuilder: DialectSpecificFunctions {
