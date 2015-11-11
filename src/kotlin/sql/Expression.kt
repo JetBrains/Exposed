@@ -44,6 +44,10 @@ class QueryBuilder(val prepared: Boolean) {
 }
 
 abstract class Expression<out T>() {
+    private val _hashCode by lazy {
+        toString().hashCode()
+    }
+
     abstract fun toSQL(queryBuilder: QueryBuilder): String
 
     override fun equals(other: Any?): Boolean {
@@ -51,7 +55,7 @@ abstract class Expression<out T>() {
     }
 
     override fun hashCode(): Int {
-        return toString().hashCode()
+        return _hashCode
     }
 
     override fun toString(): String {
