@@ -338,23 +338,15 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         }
     }
 
-    private val statementsCache = HashMap<String, PreparedStatement>()
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
-        return statementsCache.getOrPut(sql) {
-            if (autoincs == null) {
-                connection.prepareStatement(sql)!!
-            }
-            else {
-                connection.prepareStatement(sql, autoincs.toTypedArray())!!
-            }
+        return if (autoincs == null) {
+            connection.prepareStatement(sql)!!
+        } else {
+            connection.prepareStatement(sql, autoincs.toTypedArray())!!
         }
     }
 
     fun close() {
-        for (stmt in statementsCache.values) {
-            stmt.close()
-        }
-
         threadLocal.set(outerSession)
         _connection?.close()
     }
