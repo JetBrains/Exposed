@@ -256,9 +256,9 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
             dialect.resetCaches()
-            val statements = logTimeSpent("Preparing create statements") {
-                 createStatements(*tables) + addMissingColumnsStatements(*tables)
-            }
+            val statements = LinkedHashSet(logTimeSpent("Preparing create statements") {
+                createStatements(*tables) + addMissingColumnsStatements(*tables)
+            })
             logTimeSpent("Executing create statements") {
                 for (statement in statements) {
                     exec(statement) {
@@ -268,7 +268,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             }
             logTimeSpent("Checking mapping consistence") {
                 for (statement in checkMappingConsistence(*tables)) {
-                    exec(statement) {
+                    if (!statements.contains(statement)) exec(statement) {
                         connection.createStatement().executeUpdate(statement)
                     }
                 }
