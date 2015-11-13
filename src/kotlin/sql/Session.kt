@@ -267,7 +267,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
                 }
             }
             logTimeSpent("Checking mapping consistence") {
-                for (statement in checkMappingConsistence(*tables)) {
+                for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
                     exec(statement) {
                         connection.createStatement().executeUpdate(statement)
                     }
