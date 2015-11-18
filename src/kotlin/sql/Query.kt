@@ -36,10 +36,7 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? {
-        val optional = c is PKColumn<*> || (c as? Column<T>)?.let { it.columnType?.nullable || it.referee is PKColumn<*>} ?: false
-        val value = fieldIndex[c]?.let { data[it] }
-        if (hasValue(c) && value == null && !optional) error("${c.toSQL(QueryBuilder(false))} is not in record set")
-        return value as T?
+        return data[fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")] as T?
     }
 
     override fun toString(): String {
