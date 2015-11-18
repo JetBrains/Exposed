@@ -199,26 +199,32 @@ open public class Entity(val id: EntityID) {
         return lookup()
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? {
-        if (_readValues?.contains(this) ?: false )
-            return found(readValues.tryGet(this))
+        if (_readValues?.hasValue(this) ?: false)
+            return found(readValues[this])
         else
             return notFound()
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
-        writeValues.containsKey(this) -> writeValues[this] as T
-        id._value == -1 && _readValues?.contains(this)?.not() ?: true -> {
-            defaultValue as T
-        }
+        writeValues.containsKeyRaw(this) -> writeValues.getRaw(this) as T
+        id._value == -1 && _readValues?.hasValue(this)?.not() ?: true -> defaultValue as T
         else -> readValues[this]
     }
 
     operator fun <T> Column<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
-        if (writeValues.containsKey(this) || _readValues == null || _readValues!![this] != value) {
+        if (writeValues.containsKeyRaw(this) || _readValues?.tryGet(this) != value) {
             if (referee != null) {
-                EntityCache.getOrCreate(Session.get()).clearReferrersCache()
+                EntityCache.getOrCreate(Session.get()).referrers.run {
+                    filterKeys { it.id == value }.forEach {
+                        if (it.value.keys.any { it == this@setValue } ) {
+                            this.remove(it.key)
+                        }
+                    }
+                }
+                EntityCache.getOrCreate(Session.get()).removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues.set(this as Column<Any?>, value)
         }
@@ -271,10 +277,12 @@ open public class Entity(val id: EntityID) {
         // move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
-                _readValues!!.set(c, v)
+                _readValues!!.set(c, v?.let { c.columnType.valueFromDB(c.columnType.valueToDB(it)!!)})
+            }
+            if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) } ) {
+                _readValues = null
             }
         }
-
         // clear write values
         writeValues.clear()
     }
@@ -419,7 +427,7 @@ class EntityCache {
         }
     }
 
-    internal fun removeTablesReferrers(insertedTables: List<IdTable>) {
+    internal fun removeTablesReferrers(insertedTables: List<Table>) {
         referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
             referrers.remove(it)
         }
@@ -431,11 +439,12 @@ class EntityCache {
                 for ((c, v) in entry.writeValues) {
                     this[c] = v
                 }
-                entry.storeWrittenValues()
             }
 
             for ((entry, id) in it.zip(ids)) {
                 entry.id._value = id
+                entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
+                entry.storeWrittenValues()
                 EntityCache.getOrCreate(Session.get()).store(table, entry)
                 EntityHook.alertSubscribers(entry, true)
             }
@@ -498,7 +507,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         val cache = warmCache()
         cache.remove(table, entity)
         cache.referrers.remove(entity)
-        cache.removeTablesReferrers(listOf(entity.klass.table))
+        cache.removeTablesReferrers(listOf(table))
     }
 
     public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
@@ -529,6 +538,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         val entity = wrap(row[table.id], row, session)
         if (entity._readValues == null)
             entity._readValues = row
+
         return entity
     }
 
@@ -580,8 +590,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     public fun new(init: T.() -> Unit): T {
         val prototype: T = createInstance(EntityID(-1, table), null)
         prototype.klass = this
+        prototype._readValues = ResultRow.create(dependsOnColumns)
         prototype.init()
-
         warmCache().scheduleInsert(this, prototype)
         return prototype
     }

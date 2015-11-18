@@ -17,7 +17,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     override fun toString(): String {
-        return "$table.$name"
+        return "${table.javaClass.name}.$name"
     }
 
     override fun toSQL(queryBuilder: QueryBuilder): String {

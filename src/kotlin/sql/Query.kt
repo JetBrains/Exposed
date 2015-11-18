@@ -13,12 +13,10 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
      */
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(c: Expression<T>) : T {
-        val d:Any? = when {
-            fieldIndex.containsKey(c) -> data[fieldIndex[c]!!]
-            else -> error("${c.toSQL(QueryBuilder(false))} is not in record set")
-        }
+        val d:Any? = getRaw(c)
 
         return d?.let {
+            if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
             (c as? ExpressionWithColumnType<*>)?.columnType?.valueFromDB(it) ?: it
         } as T
     }
@@ -29,18 +27,26 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
     }
 
     fun<T> hasValue (c: Expression<T>) : Boolean {
-        return fieldIndex[c]?.let{data[it]} != null;
+        return fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false;
     }
-
-    fun contains(c: Expression<*>) = fieldIndex.containsKey(c)
 
     fun <T> tryGet(c: Expression<T>): T? {
         return if (hasValue(c)) get(c) else null
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> getRaw(c: Expression<T>): T? {
+        val nullable = c is PKColumn<*> || (c as? Column<T>)?.columnType?.nullable ?: false
+        val value = fieldIndex[c]?.let { data[it] }
+        if (hasValue(c) && value == null && !nullable) error("${c.toSQL(QueryBuilder(false))} is not in record set")
+        return value as T?
+    }
+
     override fun toString(): String {
         return fieldIndex.map { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }.joinToString()
     }
+
+    internal object NotInitializedValue;
 
     companion object {
         fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>) : ResultRow {
@@ -55,6 +61,13 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
             }
             return answer
         }
+
+        internal fun create(columns : List<Column<*>>): ResultRow =
+            ResultRow(columns.size, columns.mapIndexed { i, c -> c to i }.toMap()).apply {
+                columns.forEach {
+                    this[it] = it.defaultValue ?: if (!it.columnType.nullable) NotInitializedValue else null
+                }
+            }
     }
 }
 
