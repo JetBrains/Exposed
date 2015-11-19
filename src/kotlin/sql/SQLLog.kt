@@ -1,7 +1,6 @@
 package kotlin.sql
 import org.slf4j.LoggerFactory
-import java.util.ArrayList
-import java.util.Stack
+import java.util.*
 
 public interface SqlLogger {
     fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
@@ -79,6 +78,7 @@ public class CompositeSqlLogger() : SqlLogger {
     }
 
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
+        println(stmt + " " + args)
         for (logger in loggers) {
             logger.log(stmt, args)
         }
