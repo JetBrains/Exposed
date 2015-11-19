@@ -503,6 +503,8 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return warmCache().find(this, id)
     }
 
+    fun testCache(cacheCheckCondition: T.()->Boolean): List<T> = warmCache().findAll(this).filter { it.cacheCheckCondition() }
+
     fun removeFromCache(entity: Entity) {
         val cache = warmCache()
         cache.remove(table, entity)
@@ -555,7 +557,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     }
 
     fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
-        val cached = warmCache().findAll(this).filter { it.cacheCheckCondition() }
+        val cached = testCache(cacheCheckCondition)
         return if (cached.isNotEmpty()) SizedCollection(cached) else find(op)
     }
 
