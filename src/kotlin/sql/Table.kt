@@ -3,7 +3,7 @@ package kotlin.sql
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
-import java.util.ArrayList
+import java.util.*
 import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
@@ -116,9 +116,10 @@ class Join (val table: Table) : ColumnSet() {
 }
 
 open class Table(name: String = ""): ColumnSet(), DdlAware {
-    val tableName = if (name.length > 0) name else this.javaClass.simpleName.removeSuffix("Table")
+    open val tableName = if (name.length > 0) name else this.javaClass.simpleName.removeSuffix("Table")
 
-    override val columns = ArrayList<Column<*>>()
+    private val _columns = ArrayList<Column<*>>()
+    override val columns: List<Column<*>> = _columns
     override fun describe(s: Session): String = s.identity(this)
 
     val primaryKeys  = ArrayList<Column<*>>()
@@ -128,8 +129,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         get() = columns
 
     private fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
-        columns.remove(oldColumn)
-        columns.add(newColumn)
+        _columns.remove(oldColumn)
+        _columns.add(newColumn)
         return newColumn
     }
 
@@ -141,73 +142,73 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun <T:Enum<T>> enumeration(name: String, klass: Class<T>) : Column<T> {
         val answer = Column<T>(this, name, EnumerationColumnType(klass))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun entityId(name: String, table: IdTable) : Column<EntityID> {
         val answer = Column<EntityID>(this, name, EntityIDColumnType(table))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun integer(name: String): Column<Int> {
         val answer = Column<Int>(this, name, IntegerColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun char(name: String): Column<Char> {
         val answer = Column<Char>(this, name, CharacterColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> {
         val answer = Column<BigDecimal>(this, name, DecimalColumnType(scale, precision))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun long(name: String): Column<Long> {
         val answer = Column<Long>(this, name, LongColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun date(name: String): Column<DateTime> {
         val answer = Column<DateTime>(this, name, DateColumnType(false))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun bool(name: String): Column<Boolean> {
         val answer = Column<Boolean>(this, name, BooleanColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun datetime(name: String): Column<DateTime> {
         val answer = Column<DateTime>(this, name, DateColumnType(true))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun blob(name: String): Column<Blob> {
         val answer = Column<Blob>(this, name, BlobColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun text(name: String): Column<String> {
         val answer = Column<String>(this, name, StringColumnType())
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> {
         val answer = Column<String>(this, name, StringColumnType(length, collate))
-        columns.add(answer)
+        _columns.add(answer)
         return answer
     }
 
@@ -234,7 +235,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
         val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
-        this.columns.add(column)
+        this._columns.add(column)
         return column
     }
 
@@ -299,6 +300,43 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun equals(other: Any?): Boolean {
         if (other !is Table) return false
-        return  other.tableName == tableName
+        return other.tableName == tableName
     }
+
+    override fun hashCode(): Int = tableName.hashCode()
 }
+
+class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
+
+    override val tableName: String get() = alias
+
+    val tableNameWithAlias: String = "${delegate.tableName} AS $alias"
+
+    private fun <T:Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
+
+    override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
+
+    override fun describe(s: Session): String = s.identity(this)
+
+    override val fields: List<Expression<*>> = columns
+
+    override fun createStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override fun dropStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override fun modifyStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override val source: ColumnSet = delegate.source
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is Alias<*>) return false
+        return this.tableNameWithAlias == other.tableNameWithAlias
+    }
+
+    override fun hashCode(): Int = tableNameWithAlias.hashCode()
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T: Any?> get(original: Column<T>): Column<T> = delegate.columns.find { it == original }?.let { it.clone() as? Column<T> } ?: error("Column not found in original table")
+}
+
+fun <T:Table> T.alias(alias: String) = Alias(this, alias)

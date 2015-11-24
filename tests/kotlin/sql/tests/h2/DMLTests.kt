@@ -741,6 +741,17 @@ class DMLTests : DatabaseTestsBase() {
             tbl.checkRow(row, 101, null, date, null, time, null, eOne, null, "23456789", "3456789", dec, null)
         }
     }
+
+    @Test fun testJoinWithAlias01() {
+        withCitiesAndUsers {  cities, users, userData ->
+            val usersAlias = users.alias("u2")
+            val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
+                    .select { users.id eq "alex" }.single()
+
+            assert(resultRow[users.name] == "Alex")
+            assert(resultRow[usersAlias[users.name]] == "Something")
+        }
+    }
 }
 
 

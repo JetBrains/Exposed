@@ -312,7 +312,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun identity(table: Table): String {
-        return quoteIfNecessary(table.tableName)
+        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName)
     }
 
     fun fullIdentity(column: Column<*>): String {

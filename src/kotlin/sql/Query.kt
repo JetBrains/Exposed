@@ -96,7 +96,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 }
 */
 
-                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields map {it.toSQL(queryBuilder)})).joinToString(", ", "", ""))
+                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields.map {it.toSQL(queryBuilder)})).joinToString())
             }
             append(" FROM ")
             append(set.source.describe(session))
@@ -109,7 +109,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             if (!count) {
                 if (groupedByColumns.isNotEmpty()) {
                     append(" GROUP BY ")
-                    append((groupedByColumns map {it.toSQL(queryBuilder)}).joinToString(", ", "", ""))
+                    append((groupedByColumns.map {it.toSQL(queryBuilder)}).joinToString())
                 }
 
                 if (having != null) {
@@ -119,7 +119,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
 
                 if (orderByColumns.isNotEmpty()) {
                     append(" ORDER BY ")
-                    append((orderByColumns map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString(", ", "", ""))
+                    append((orderByColumns.map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString())
                 }
 
                 if (limit != null) {
