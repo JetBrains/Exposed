@@ -43,7 +43,6 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { connection.metaData!!.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) {connection.metaData!!.extraNameCharacters!!}
-    val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
 
@@ -298,13 +297,24 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             }
         }
     }
+    val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
+
+    private fun String.isIdentifier(): Boolean {
+        if (isEmpty()) return false
+        val first = first()
+        if (first !in 'a'..'z' && first !in 'A'..'Z' && first != '_' ) return false
+
+        return all {
+            it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '_'
+        }
+    }
 
     private fun needQuotes (identity: String) : Boolean {
-        return keywords.contains (identity) || !identifierPattern.matcher(identity).matches()
+        return keywords.contains (identity) || !identity.isIdentifier()
     }
 
     private fun quoteIfNecessary (identity: String) : String {
-        return (identity.split('.') map {quoteTokenIfNecessary(it)}).joinToString(".")
+        return (identity.split('.').map {quoteTokenIfNecessary(it)}).joinToString(".")
     }
 
     private fun quoteTokenIfNecessary(token: String) : String {
