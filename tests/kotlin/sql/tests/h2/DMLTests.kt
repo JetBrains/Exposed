@@ -662,7 +662,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             tbl.checkRow(tbl.select{tbl.nn.eq(42)}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.nn neq null as Int?}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select{tbl.nn neq null }.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
 
             tbl.checkRow(tbl.select{tbl.dn.eq(date)}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)
             tbl.checkRow(tbl.select{tbl.dn.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, sTest, sTest, dec, dec)

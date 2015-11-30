@@ -209,13 +209,13 @@ open public class Entity(val id: EntityID) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
-        writeValues.containsKeyRaw(this) -> writeValues.getRaw(this) as T
+        writeValues.containsKey(this) -> writeValues.get(this) as T
         id._value == -1 && _readValues?.hasValue(this)?.not() ?: true -> defaultValue as T
         else -> readValues[this]
     }
 
     operator fun <T> Column<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
-        if (writeValues.containsKeyRaw(this) || _readValues?.tryGet(this) != value) {
+        if (writeValues.containsKey(this) || _readValues?.tryGet(this) != value) {
             if (referee != null) {
                 EntityCache.getOrCreate(Session.get()).referrers.run {
                     filterKeys { it.id == value }.forEach {

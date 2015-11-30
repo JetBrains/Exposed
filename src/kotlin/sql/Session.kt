@@ -82,7 +82,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     fun vendorCompatibleWith(): DatabaseVendor {
         if (vendor == DatabaseVendor.H2) {
             return ((connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.let { mode ->
-                DatabaseVendor.values.singleOrNull { it.name.equals(mode.name, true) }
+                DatabaseVendor.values().singleOrNull { it.name.equals(mode.name, true) }
             } ?: vendor
         }
 
