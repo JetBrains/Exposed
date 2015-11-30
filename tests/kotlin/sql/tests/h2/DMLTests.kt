@@ -164,7 +164,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testJoin01() {
         withCitiesAndUsers { cities, users, userData ->
             (users join cities).slice(users.name, cities.name).
-            select{(users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)} forEach {
+            select{(users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)}.forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
                 when (userName) {
@@ -234,7 +234,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            (cities join users).slice(cities.name, users.id.count()).selectAll() groupBy cities.name forEach {
+            ((cities join users).slice(cities.name, users.id.count()).selectAll() groupBy cities.name).forEach {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
 

@@ -14,7 +14,7 @@ class BatchUpdateQuery(val table: IdTable) {
     operator fun <T> set(column: Column<T>, value: T) {
         val values = data.last().second
 
-        if (values containsKey column) {
+        if (values.containsKey(column)) {
             error("$column is already initialized")
         }
 
@@ -22,7 +22,7 @@ class BatchUpdateQuery(val table: IdTable) {
     }
 
     fun execute(session: Session): Int {
-        val updateSets = data filterNot {it.second.isEmpty()} groupBy { it.second.keys }
+        val updateSets = data.filterNot {it.second.isEmpty()}.groupBy { it.second.keys }
         return updateSets.values.fold(0) { acc, set ->
             acc + execute(session, set)
         }
