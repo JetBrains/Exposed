@@ -25,7 +25,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
 
         val generatedKeys = ArrayList<Int>()
         val (auto, columns) = table.columns.partition { it.columnType.autoinc }
-        val ignore = if (_ignore) "IGNORE" else ""
+        val ignore = if (_ignore && session.vendor != DatabaseVendor.H2) "IGNORE" else ""
         var sql = StringBuilder("INSERT $ignore INTO ${session.identity(table)}")
 
         sql.append(" (")

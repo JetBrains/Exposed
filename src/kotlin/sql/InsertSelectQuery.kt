@@ -17,7 +17,7 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
 
     fun execute(session: Session) {
         val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.joinToString(", ", "(", ")")
-        val ignore = if (isIgnore) " IGNORE " else ""
+        val ignore = if (isIgnore && session.vendor != DatabaseVendor.H2) " IGNORE " else ""
         val insert = if (!isReplace) "INSERT" else "REPLACE"
         var sql = "$insert ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 
