@@ -476,30 +476,30 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.enclosingClass!!
     private val ctor = klass.constructors[0]
 
-    public operator fun get(id: EntityID): T {
+    operator fun get(id: EntityID): T {
         return findById(id) ?: error("Entity not found in database")
     }
 
-    public operator fun get(id: Int): T {
+    operator fun get(id: Int): T {
         return findById(id) ?: error("Entity not found in database")
     }
 
     open protected fun warmCache(): EntityCache = EntityCache.getOrCreate(Session.get())
 
-    public fun findById(id: Int): T? {
+    fun findById(id: Int): T? {
         return findById(EntityID(id, table))
     }
 
-    public fun findById(id: EntityID): T? {
+    open fun findById(id: EntityID): T? {
         return testCache(id) ?: find{table.id eq id}.firstOrNull()
     }
 
-    public fun reload(entity: Entity): T? {
+    fun reload(entity: Entity): T? {
         removeFromCache(entity)
         return find { table.id eq entity.id }.firstOrNull()
     }
 
-    public fun testCache(id: EntityID): T? {
+    fun testCache(id: EntityID): T? {
         return warmCache().find(this, id)
     }
 
@@ -512,7 +512,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         cache.removeTablesReferrers(listOf(table))
     }
 
-    public fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
+    open fun forEntityIds(ids: List<EntityID>) : SizedIterable<T> {
         val cached = ids.map { testCache(it) }.filterNotNull()
         if (cached.size == ids.size) {
             return SizedCollection(cached)
@@ -520,23 +520,16 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return wrapRows(searchQuery(Op.build {table.id inList ids}))
     }
 
-    public fun forIds(ids: List<Int>) : SizedIterable<T> {
-        val cached = ids.map { testCache(EntityID(it, table)) }.filterNotNull()
-        if (cached.size == ids.size) {
-            return SizedCollection(cached)
-        }
+    fun forIds(ids: List<Int>) : SizedIterable<T> = forEntityIds(ids.map {EntityID(it, table)})
 
-        return wrapRows(searchQuery(Op.build {table.id inList ids.map {EntityID(it, table)}}))
-    }
-
-    public fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
+    fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
         val session = Session.get()
         return rows mapLazy {
             wrapRow(it, session)
         }
     }
 
-    public fun wrapRow (row: ResultRow, session: Session) : T {
+    fun wrapRow (row: ResultRow, session: Session) : T {
         val entity = wrap(row[table.id], row, session)
         if (entity._readValues == null)
             entity._readValues = row
@@ -546,12 +539,12 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     open public fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
-    public fun find(op: Op<Boolean>): SizedIterable<T> {
+    fun find(op: Op<Boolean>): SizedIterable<T> {
         warmCache()
         return wrapRows(searchQuery(op))
     }
 
-    public fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
+    fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         warmCache()
         return find(SqlExpressionBuilder.op())
     }
@@ -568,7 +561,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
     }
 
-    public fun count(op: Op<Boolean>? = null): Int {
+    fun count(op: Op<Boolean>? = null): Int {
         return with (Session.get()) {
             val query = table.slice(table.id.count())
             (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
@@ -579,7 +572,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
 
     protected open fun createInstance(entityId: EntityID, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
-    public fun wrap(id: EntityID, row: ResultRow?, s: Session): T {
+    fun wrap(id: EntityID, row: ResultRow?, s: Session): T {
         val cache = EntityCache.getOrCreate(s)
         return cache.find(this, id) ?: run {
             val new = createInstance(id, row)
@@ -589,7 +582,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         }
     }
 
-    public fun new(init: T.() -> Unit): T {
+    fun new(init: T.() -> Unit): T {
         val prototype: T = createInstance(EntityID(-1, table), null)
         prototype.klass = this
         prototype._readValues = ResultRow.create(dependsOnColumns)
@@ -598,26 +591,26 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return prototype
     }
 
-    public inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
+    inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
 
-    infix public fun referencedOn(column: Column<EntityID>): Reference<T> {
+    infix fun referencedOn(column: Column<EntityID>): Reference<T> {
         return Reference(column, this)
     }
 
-    infix public fun optionalReferencedOn(column: Column<EntityID?>): OptionalReference<T> {
+    infix fun optionalReferencedOn(column: Column<EntityID?>): OptionalReference<T> {
         return OptionalReference(column, this)
     }
 
-    infix public fun optionalReferencedOnSureNotNull(column: Column<EntityID?>): OptionalReferenceSureNotNull<T> {
+    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID?>): OptionalReferenceSureNotNull<T> {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    public fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
+    fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
         return Referrers(column, this, cache)
     }
 
     //TODO: what's the difference with referrersOn?
-    public fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
+    fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
         return OptionalReferrers(column, this, cache)
     }
 
