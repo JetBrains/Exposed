@@ -68,6 +68,7 @@ class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory:
     }
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Source> {
+        if (o.id._value == -1) return emptySized()
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(Session.get()).getOrPutReferrers(o, reference, query)  else query()
     }
@@ -75,7 +76,7 @@ class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory:
 
 class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val factory: EntityClass<Source>, val cache: Boolean) {
     init {
-        val refColumn = reference.referee ?: error("Column $reference is not a reference")
+        reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
             error("Column and factory point to different tables")
