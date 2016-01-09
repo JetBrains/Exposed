@@ -2,7 +2,7 @@ package kotlin.sql
 
 import java.util.*
 
-class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: Op<Boolean>? = null) {
+class UpdateQuery(val target: ((Transaction)->String), val limit: Int?, val where: Op<Boolean>? = null) {
     val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     operator fun <T, S: T> set(column: Column<T>, value: S?) {
@@ -22,10 +22,10 @@ class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: O
         values[column] = value
     }
 
-    fun execute(session: Session): Int {
+    fun execute(transaction: Transaction): Int {
         if (!values.isEmpty()) {
             val builder = QueryBuilder(true)
-            var sqlStatement = StringBuilder("UPDATE ${target(session)}")
+            var sqlStatement = StringBuilder("UPDATE ${target(transaction)}")
             var c = 0;
             sqlStatement.append(" SET ")
             for ((col, value) in values) {
@@ -48,7 +48,7 @@ class UpdateQuery(val target: ((Session)->String), val limit: Int?, val where: O
             }
 
             val statement = sqlStatement.toString()
-            return builder.executeUpdate(session, statement)
+            return builder.executeUpdate(transaction, statement)
         }
         return 0
     }

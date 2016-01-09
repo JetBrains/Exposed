@@ -27,14 +27,14 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
     }
 */
 
-    fun execute(session: Session): Int {
+    fun execute(transaction: Transaction): Int {
         val builder = QueryBuilder(true)
-        val ignore = if (isIgnore && Session.get().vendor == DatabaseVendor.MySql) " IGNORE " else ""
-        val insert = if (isReplace && Session.get().vendor == DatabaseVendor.MySql) "REPLACE" else "INSERT"
-        var sql = StringBuilder("$insert ${ignore}INTO ${session.identity(table)}")
+        val ignore = if (isIgnore && transaction.db.vendor == DatabaseVendor.MySql) " IGNORE " else ""
+        val insert = if (isReplace && transaction.db.vendor == DatabaseVendor.MySql) "REPLACE" else "INSERT"
+        var sql = StringBuilder("$insert ${ignore}INTO ${transaction.identity(table)}")
 
         sql.append(" (")
-        sql.append((values.map { session.identity(it.key) }).joinToString(", "))
+        sql.append((values.map { transaction.identity(it.key) }).joinToString(", "))
         sql.append(") ")
 
         sql.append("VALUES (")
@@ -42,14 +42,14 @@ class InsertQuery(val table: Table, val isIgnore: Boolean = false, val isReplace
 
         sql.append(") ")
 
-        if (isReplace && Session.get().vendor == DatabaseVendor.H2 && Session.get().vendorCompatibleWith() == DatabaseVendor.MySql) {
+        if (isReplace && transaction.db.vendor == DatabaseVendor.H2 && transaction.db.vendorCompatibleWith() == DatabaseVendor.MySql) {
             sql.append("ON DUPLICATE KEY UPDATE ")
-            sql.append(values.map { "${session.identity(it.key)}=${it.key.columnType.valueToString(it.value)}"}.joinToString(", "))
+            sql.append(values.map { "${transaction.identity(it.key)}=${it.key.columnType.valueToString(it.value)}"}.joinToString(", "))
         }
 
         try {
-            val autoincs: List<String> = table.columns.filter { it.columnType.autoinc }.map {session.identity(it)}
-            return builder.executeUpdate(session, sql.toString(), autoincs) { rs ->
+            val autoincs: List<String> = table.columns.filter { it.columnType.autoinc }.map { transaction.identity(it)}
+            return builder.executeUpdate(transaction, sql.toString(), autoincs) { rs ->
                 if (rs.next()) {
                     generatedKey = rs.getInt(1)
                 }

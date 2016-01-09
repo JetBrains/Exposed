@@ -1,6 +1,7 @@
 package kotlin.sql
 
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.util.*
@@ -139,7 +140,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
         } as DateTime
 
         if (time) {
-            val zonedTime = dateTime.toDateTime(Database.timeZone)
+            val zonedTime = dateTime.toDateTime(DateTimeZone.UTC)
             return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
         } else {
             val date = Date (dateTime.millis)

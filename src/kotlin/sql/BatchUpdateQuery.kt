@@ -21,24 +21,24 @@ class BatchUpdateQuery(val table: IdTable) {
         values[column] = column.columnType.valueToDB(value)
     }
 
-    fun execute(session: Session): Int {
+    fun execute(transaction: Transaction): Int {
         val updateSets = data.filterNot {it.second.isEmpty()}.groupBy { it.second.keys }
         return updateSets.values.fold(0) { acc, set ->
-            acc + execute(session, set)
+            acc + execute(transaction, set)
         }
     }
 
-    private fun execute(session: Session, set: Collection<Pair<EntityID, HashMap<Column<*>, Any?>>>): Int {
-        val sqlStatement = StringBuilder("UPDATE ${session.identity(table)} SET ")
+    private fun execute(transaction: Transaction, set: Collection<Pair<EntityID, HashMap<Column<*>, Any?>>>): Int {
+        val sqlStatement = StringBuilder("UPDATE ${transaction.identity(table)} SET ")
 
         val columns = set.first().second.keys.toList()
 
-        sqlStatement.append(columns.map {"${session.identity(it)} = ?"}.joinToString(", "))
-        sqlStatement.append(" WHERE ${session.identity(table.id)} = ?")
+        sqlStatement.append(columns.map {"${transaction.identity(it)} = ?"}.joinToString(", "))
+        sqlStatement.append(" WHERE ${transaction.identity(table.id)} = ?")
 
         val sqlText = sqlStatement.toString()
-        return session.execBatch {
-            val stmt = session.prepareStatement(sqlText)
+        return transaction.execBatch {
+            val stmt = transaction.prepareStatement(sqlText)
             for ((id, d) in set) {
                 log(sqlText, columns.map {it.columnType to d[it]} + (IntegerColumnType() to id))
 

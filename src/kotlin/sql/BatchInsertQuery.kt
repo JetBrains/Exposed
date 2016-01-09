@@ -19,17 +19,17 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
         values.put(column, column.columnType.valueToDB(value))
     }
 
-    fun execute(session: Session): List<Int> {
+    fun execute(transaction: Transaction): List<Int> {
         if (data.isEmpty())
             return emptyList()
 
         val generatedKeys = ArrayList<Int>()
         val (auto, columns) = table.columns.partition { it.columnType.autoinc }
-        val ignore = if (_ignore && session.vendor != DatabaseVendor.H2) "IGNORE" else ""
-        var sql = StringBuilder("INSERT $ignore INTO ${session.identity(table)}")
+        val ignore = if (_ignore && transaction.db.vendor != DatabaseVendor.H2) "IGNORE" else ""
+        var sql = StringBuilder("INSERT $ignore INTO ${transaction.identity(table)}")
 
         sql.append(" (")
-        sql.append((columns.map{ session.identity(it) }).joinToString(", "))
+        sql.append((columns.map{ transaction.identity(it) }).joinToString(", "))
         sql.append(") ")
 
         sql.append("VALUES ")
@@ -39,8 +39,8 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
         try {
             val sqlText = sql.toString()
 
-            session.execBatch {
-                val stmt = session.prepareStatement(sqlText, auto.map{session.identity(it)})
+            transaction.execBatch {
+                val stmt = transaction.prepareStatement(sqlText, auto.map{ transaction.identity(it)})
 
                 val args = arrayListOf<Pair<ColumnType, Any?>>()
                 for ((i, d) in data.withIndex()) {

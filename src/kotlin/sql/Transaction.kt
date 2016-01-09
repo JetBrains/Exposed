@@ -1,10 +1,8 @@
 package kotlin.sql
 
-import org.h2.jdbc.JdbcConnection
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.util.*
-import java.util.regex.Pattern
 import kotlin.dao.Entity
 import kotlin.dao.EntityCache
 
@@ -32,7 +30,7 @@ open class UserDataHolder() {
     }
 }
 
-class Session (val db: Database, val connector: ()-> Connection): UserDataHolder() {
+class Transaction(val db: Database, val connector: ()-> Connection): UserDataHolder() {
     private var _connection: Connection? = null
     val connection: Connection get() {
         if (_connection == null) {
@@ -41,8 +39,8 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
         return _connection!!
     }
 
-    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { connection.metaData!!.identifierQuoteString!! }
-    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) {connection.metaData!!.extraNameCharacters!!}
+    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
+    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
     val keywords = arrayListOf("key")
     val logger = CompositeSqlLogger()
 
@@ -55,39 +53,13 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
     val statementStats = hashMapOf<String, Pair<Int,Long>>()
-    val outerSession = threadLocal.get()
+    val outerTransaction = threadLocal.get()
 
     init {
         logger.addLogger(Slf4jSqlLogger())
         threadLocal.set(this)
     }
 
-    val vendor: DatabaseVendor by lazy {
-        val url = connection.metaData!!.url!!
-        when {
-            url.startsWith("jdbc:mysql") -> DatabaseVendor.MySql
-            url.startsWith("jdbc:oracle") -> DatabaseVendor.Oracle
-            url.startsWith("jdbc:sqlserver") -> DatabaseVendor.SQLServer
-            url.startsWith("jdbc:postgresql") -> DatabaseVendor.PostgreSQL
-            url.startsWith("jdbc:h2") -> DatabaseVendor.H2
-            else -> error("Unknown database type $url")
-        }
-    }
-
-    fun vendorSupportsForUpdate(): Boolean {
-        return vendor != DatabaseVendor.H2
-    }
-
-
-    fun vendorCompatibleWith(): DatabaseVendor {
-        if (vendor == DatabaseVendor.H2) {
-            return ((connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.let { mode ->
-                DatabaseVendor.values().singleOrNull { it.name.equals(mode.name, true) }
-            } ?: vendor
-        }
-
-        return vendor
-    }
 
     fun commit() {
         val created = flushCache()
@@ -138,7 +110,7 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
 
         if (debug) {
             statements.append(describeStatement(context.args, delta, context.stmt))
-            statementStats.getOrElse(context.stmt, { 0 to 0 }).let { pair ->
+            (statementStats[context.stmt] ?: (0 to 0L)).let { pair ->
                 statementStats[context.stmt] = (pair.first + 1) to (pair.second + delta)
             }
         }
@@ -297,17 +269,9 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
             }
         }
     }
-    val identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$")
 
-    private fun String.isIdentifier(): Boolean {
-        if (isEmpty()) return false
-        val first = first()
-        if (first !in 'a'..'z' && first !in 'A'..'Z' && first != '_' ) return false
-
-        return all {
-            it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '_'
-        }
-    }
+    private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
+    private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     private fun needQuotes (identity: String) : Boolean {
         return keywords.contains (identity) || !identity.isIdentifier()
@@ -338,13 +302,13 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
 
     fun autoIncrement(column: Column<*>): String {
-        return when (vendor) {
+        return when (db.vendor) {
             DatabaseVendor.MySql,
             DatabaseVendor.SQLServer,
             DatabaseVendor.H2 -> {
                 "AUTO_INCREMENT"
             }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + vendor)
+            else -> throw UnsupportedOperationException("Unsupported driver: " + db.vendor)
         }
     }
 
@@ -357,19 +321,19 @@ class Session (val db: Database, val connector: ()-> Connection): UserDataHolder
     }
 
     fun close() {
-        threadLocal.set(outerSession)
+        threadLocal.set(outerTransaction)
         _connection?.close()
     }
 
     companion object {
-        val threadLocal = ThreadLocal<Session>()
+        val threadLocal = ThreadLocal<Transaction>()
 
-        fun hasSession(): Boolean = tryGet() != null
+        fun hasTransaction(): Boolean = currentOrNull() != null
 
-        fun tryGet(): Session? = threadLocal.get()
+        fun currentOrNull(): Transaction? = threadLocal.get()
 
-        fun get(): Session {
-            return tryGet() ?: error("No session in context. Use transaction?")
+        fun current(): Transaction {
+            return currentOrNull() ?: error("No transaction in context. Use Database.transaction() { ... }")
         }
     }
 }

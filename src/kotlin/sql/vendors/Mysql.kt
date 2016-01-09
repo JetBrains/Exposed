@@ -14,7 +14,7 @@ internal object MysqlDialect : VendorDialect() {
 
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = Session.get().connection.createStatement().executeQuery(
+        val rs = Transaction.current().connection.createStatement().executeQuery(
                 "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
 
         while (rs.next()) {
@@ -39,7 +39,7 @@ internal object MysqlDialect : VendorDialect() {
             return ""
         }
 
-        val rs = Session.get().connection.createStatement().executeQuery(
+        val rs = Transaction.current().connection.createStatement().executeQuery(
                 "SELECT\n" +
                         "  rc.CONSTRAINT_NAME,\n" +
                         "  ku.TABLE_NAME,\n" +
@@ -70,7 +70,7 @@ internal object MysqlDialect : VendorDialect() {
 
         val constraints = HashMap<String, MutableList<Index>>()
 
-        val rs = Session.get().connection.createStatement().executeQuery(
+        val rs = Transaction.current().connection.createStatement().executeQuery(
                 """SELECT ind.* from (
                         SELECT
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
@@ -97,7 +97,7 @@ internal object MysqlDialect : VendorDialect() {
     }
 
     override fun getDatabase(): String {
-        return Session.get().connection.catalog
+        return Transaction.current().connection.catalog
     }
 
 

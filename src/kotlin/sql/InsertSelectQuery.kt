@@ -15,16 +15,16 @@ class InsertSelectQuery(val table: Table, val selectQuery: Query, val isIgnore: 
         }
     }
 
-    fun execute(session: Session) {
-        val columns = table.columns.filter { !it.columnType.autoinc }.map { session.identity(it) }.joinToString(", ", "(", ")")
-        val ignore = if (isIgnore && session.vendor != DatabaseVendor.H2) " IGNORE " else ""
+    fun execute(transaction: Transaction) {
+        val columns = table.columns.filter { !it.columnType.autoinc }.map { transaction.identity(it) }.joinToString(", ", "(", ")")
+        val ignore = if (isIgnore && transaction.db.vendor != DatabaseVendor.H2) " IGNORE " else ""
         val insert = if (!isReplace) "INSERT" else "REPLACE"
-        var sql = "$insert ${ignore}INTO ${session.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
+        var sql = "$insert ${ignore}INTO ${transaction.identity(table)} $columns ${selectQuery.toSQL(QueryBuilder(false))}"
 
-        session.exec(sql) {
-            session.flushCache()
+        transaction.exec(sql) {
+            transaction.flushCache()
             try {
-                statement = session.connection.createStatement()!!
+                statement = transaction.connection.createStatement()!!
                 statement!!.executeUpdate(sql.toString(), Statement.RETURN_GENERATED_KEYS)
             } catch (e: Exception) {
                 println("BAD SQL: $sql")

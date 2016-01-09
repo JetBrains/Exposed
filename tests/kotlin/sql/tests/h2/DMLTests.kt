@@ -53,7 +53,7 @@ object DMLTestsData {
 }
 
 class DMLTests : DatabaseTestsBase() {
-    fun withCitiesAndUsers(statement: Session.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
+    fun withCitiesAndUsers(statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
         val Users = DMLTestsData.Users;
         val Cities = DMLTestsData.Cities;
         val UserData = DMLTestsData.UserData;

@@ -8,29 +8,29 @@ inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query 
 }
 
 fun FieldSet.select(where: Op<Boolean>) : Query {
-    return Query(Session.get(), this, where)
+    return Query(Transaction.current(), this, where)
 }
 
 fun FieldSet.selectAll() : Query {
-    return Query(Session.get(), this, null)
+    return Query(Transaction.current(), this, null)
 }
 
 inline fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
-    DeleteQuery.where(Session.get(), this@deleteWhere, SqlExpressionBuilder.op())
+    DeleteQuery.where(Transaction.current(), this@deleteWhere, SqlExpressionBuilder.op())
 }
 
 inline fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
-    DeleteQuery.where(Session.get(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
+    DeleteQuery.where(Transaction.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
 }
 
 fun Table.deleteAll() {
-    DeleteQuery.all(Session.get(), this@deleteAll)
+    DeleteQuery.all(Transaction.current(), this@deleteAll)
 }
 
 fun <T:Table> T.insert(body: T.(InsertQuery)->Unit): InsertQuery {
     val answer = InsertQuery(this)
     body(answer)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
     return answer
 }
 
@@ -40,49 +40,49 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             it.addBatch()
             it.body(element)
         }
-        return it.execute(Session.get())
+        return it.execute(Transaction.current())
     }
 }
 
 fun <T:Table> T.insertIgnore(body: T.(InsertQuery)->Unit): InsertQuery {
     val answer = InsertQuery(this, isIgnore = true)
     body(answer)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
     return answer
 }
 
 fun <T:Table> T.replace(body: T.(InsertQuery)->Unit): InsertQuery {
     val answer = InsertQuery(this, isReplace = true)
     body(answer)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
     return answer
 }
 
 fun <T:Table> T.insert (selectQuery: Query): Unit {
     val answer = InsertSelectQuery (this, selectQuery)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
 }
 
 fun <T:Table> T.replace(selectQuery: Query): Unit {
     val answer = InsertSelectQuery (this, selectQuery, isReplace = true)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
 }
 
 fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
     val answer = InsertSelectQuery (this, selectQuery, isIgnore = true)
-    answer.execute(Session.get())
+    answer.execute(Transaction.current())
 }
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateQuery)->Unit): Int {
-    val query = UpdateQuery({session -> session.identity(this)}, limit, SqlExpressionBuilder.where())
+    val query = UpdateQuery({transaction -> transaction.identity(this)}, limit, SqlExpressionBuilder.where())
     body(query)
-    return query.execute(Session.get())
+    return query.execute(Transaction.current())
 }
 
 fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateQuery)->Unit) : Int {
-    val query = UpdateQuery({session -> this.describe(session)}, limit, where?.let { SqlExpressionBuilder.it() })
+    val query = UpdateQuery({transaction -> this.describe(transaction)}, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(Session.get())
+    return query.execute(Transaction.current())
 }
 
 fun Table.exists (): Boolean = dialect.tableExists(this)
@@ -173,4 +173,4 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     return toCreate.toList()
 }
 
-internal val dialect = Session.get().vendor.dialect()
+internal val dialect = Transaction.current().db.vendor.dialect()

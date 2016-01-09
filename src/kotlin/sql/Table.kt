@@ -17,7 +17,7 @@ abstract class ColumnSet(): FieldSet {
     override val fields: List<Expression<*>> get() = columns
     override val source = this
 
-    abstract fun describe(s: Session): String
+    abstract fun describe(s: Transaction): String
 
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, listOf(*columns))
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
@@ -95,7 +95,7 @@ class Join (val table: Table) : ColumnSet() {
         return null
     }
 
-    override fun describe(s: Session): String {
+    override fun describe(s: Transaction): String {
         val sb = StringBuilder()
         sb.append(table.describe(s))
         for (p in joinParts) {
@@ -120,7 +120,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     private val _columns = ArrayList<Column<*>>()
     override val columns: List<Column<*>> = _columns
-    override fun describe(s: Session): String = s.identity(this)
+    override fun describe(s: Transaction): String = s.identity(this)
 
     val primaryKeys  = ArrayList<Column<*>>()
     val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
@@ -275,7 +275,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         get() = createStatement()
 
     override fun createStatement(): String {
-        var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Session.get().identity(this)}")
+        var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Transaction.current().identity(this)}")
         if (columns.isNotEmpty()) {
             ddl.append(" (")
             var c = 0;
@@ -292,7 +292,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return ddl.toString()
     }
 
-    override fun dropStatement(): String = "DROP TABLE ${Session.get().identity(this)}"
+    override fun dropStatement(): String = "DROP TABLE ${Transaction.current().identity(this)}"
 
     override fun modifyStatement(): String {
         throw UnsupportedOperationException("Use modify on columns and indices")
@@ -316,7 +316,7 @@ class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
 
     override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
 
-    override fun describe(s: Session): String = s.identity(this)
+    override fun describe(s: Transaction): String = s.identity(this)
 
     override val fields: List<Expression<*>> = columns
 

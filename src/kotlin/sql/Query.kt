@@ -68,12 +68,12 @@ public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int
     }
 }
 
-open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
+open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
     val groupedByColumns = ArrayList<Expression<*>>();
     val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
-    var forUpdate: Boolean = session.selectsForUpdate && session.vendorSupportsForUpdate()
+    var forUpdate: Boolean = transaction.selectsForUpdate && transaction.db.vendorSupportsForUpdate()
 
 
     fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {
@@ -96,10 +96,10 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
                 }
 */
 
-                append(((completeTables.map {Session.get().identity(it) + ".*"} ) + (fields.map {it.toSQL(queryBuilder)})).joinToString())
+                append(((completeTables.map { Transaction.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(queryBuilder)})).joinToString())
             }
             append(" FROM ")
-            append(set.source.describe(session))
+            append(set.source.describe(transaction))
 
             if (where != null) {
                 append(" WHERE ")
@@ -206,14 +206,14 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
     private fun flushEntities() {
         // Flush data before executing query or results may be unpredictable
         val tables = set.source.columns.map { it.table }.filterIsInstance(IdTable::class.java).toSet()
-        EntityCache.getOrCreate(session).flush(tables)
+        EntityCache.getOrCreate(transaction).flush(tables)
     }
 
     operator public override fun iterator(): Iterator<ResultRow> {
         flushEntities()
         val builder = QueryBuilder(true)
         val sql = toSQL(builder)
-        return ResultIterator(builder.executeQuery(session, sql))
+        return ResultIterator(builder.executeQuery(transaction, sql))
     }
 
     public override fun count(): Int {
@@ -222,7 +222,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
         val builder = QueryBuilder(true)
         val sql = toSQL(builder, true)
 
-        val rs = builder.executeQuery(session, sql)
+        val rs = builder.executeQuery(transaction, sql)
         rs.next()
         return rs.getInt(1)
     }
@@ -241,7 +241,7 @@ open class Query(val session: Session, val set: FieldSet, val where: Op<Boolean>
             }
         }
         // Execute query itself
-        val rs = builder.executeQuery(session, selectOneRowStatement)
+        val rs = builder.executeQuery(transaction, selectOneRowStatement)
         return !rs.next()
     }
 }

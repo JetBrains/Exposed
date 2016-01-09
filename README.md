@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
     var db = Database("jdbc:h2:mem:test", driver = "org.h2.Driver")
     // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
-    db.withSession {
+    db.transaction {
         create (Cities, Users)
 
         val saintPetersburgId = insert (Cities.values("St. Petersburg")) get Cities.id

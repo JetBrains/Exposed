@@ -33,7 +33,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
     companion object {
         fun from(column: Column<*>): ForeignKeyConstraint {
             assert(column.referee !== null) { "$column does not reference anything" }
-            val s = Session.get()
+            val s = Transaction.current()
             return ForeignKeyConstraint("", s.identity(column.referee!!.table), s.identity(column.referee!!), s.identity(column.table), s.identity(column), column.onDelete)
         }
     }
@@ -60,7 +60,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
             assert(columns.isNotEmpty())
             assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
-            val s = Session.get()
+            val s = Transaction.current()
             val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.joinToString("_")}" + (if (unique) "_unique" else "")
             return Index(indexName, s.identity(columns.first().table), columns.map { s.identity(it) }, unique)
         }
@@ -75,7 +75,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     }
 
     override fun dropStatement(): String {
-        val keyWord = if (Session.get().vendor == DatabaseVendor.MySql) "INDEX" else "CONSTRAINT"
+        val keyWord = if (Transaction.current().db.vendor == DatabaseVendor.MySql) "INDEX" else "CONSTRAINT"
         return "ALTER TABLE $tableName DROP $keyWord $indexName"
     }
 

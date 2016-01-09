@@ -1,42 +1,72 @@
 package kotlin.sql
 
-import org.joda.time.DateTimeZone
+import org.h2.jdbc.JdbcConnection
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.DriverManager
 import java.sql.SQLException
 import javax.sql.DataSource
 
 public class Database private constructor(val connector: () -> Connection) {
 
-    val url: String by lazy(LazyThreadSafetyMode.NONE) {
-        val connection = connector()
+    val metadata: DatabaseMetaData get() = Transaction.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
-            connection.metaData!!.url!!
-        } finally {
-            connection.close()
+            metaData
+        }
+        finally {
+            close()
         }
     }
 
-    // Overloading methods instead of default parameters for Java conpatibility
-    fun <T> withSession(statement: Session.() -> T): T = withSession(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
+    val url: String by lazy { metadata.url }
 
-    fun <T> withSession(transactionIsolation: Int, repetitionAttempts: Int, statement: Session.() -> T): T {
-        val outer = Session.tryGet()
+    val vendor: DatabaseVendor by lazy {
+        val url = url
+        when {
+            url.startsWith("jdbc:mysql") -> DatabaseVendor.MySql
+            url.startsWith("jdbc:oracle") -> DatabaseVendor.Oracle
+            url.startsWith("jdbc:sqlserver") -> DatabaseVendor.SQLServer
+            url.startsWith("jdbc:postgresql") -> DatabaseVendor.PostgreSQL
+            url.startsWith("jdbc:h2") -> DatabaseVendor.H2
+            else -> error("Unknown database type $url")
+        }
+    }
+
+    fun vendorSupportsForUpdate(): Boolean {
+        return vendor != DatabaseVendor.H2
+    }
+
+    fun vendorCompatibleWith(): DatabaseVendor {
+        if (vendor == DatabaseVendor.H2) {
+            return ((Transaction.current().connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.let { mode ->
+                DatabaseVendor.values().singleOrNull { it.name.equals(mode.name, true) }
+            } ?: vendor
+        }
+
+        return vendor
+    }
+
+
+    // Overloading methods instead of default parameters for Java compatibility
+    fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
+
+    fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
+        val outer = Transaction.currentOrNull()
 
         return if (outer != null) {
             outer.statement()
         }
         else {
-            inNewTransaction(transactionIsolation, repetitionAttempts, statement)
+            inTopLevelTransaction(transactionIsolation, repetitionAttempts, statement)
         }
     }
 
-    fun <T> inNewTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Session.() -> T): T {
+    fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
         var repetitions = 0
 
         while (true) {
 
-            val session = Session(this, {
+            val transaction = Transaction(this, {
                 val connection = connector()
                 connection.autoCommit = false
                 connection.transactionIsolation = transactionIsolation
@@ -44,31 +74,29 @@ public class Database private constructor(val connector: () -> Connection) {
             })
 
             try {
-                val answer = session.statement()
-                session.commit()
+                val answer = transaction.statement()
+                transaction.commit()
                 return answer
             }
             catch (e: SQLException) {
-                exposedLogger.info("Session repetition=$repetitions: ${e.message}", e)
-                session.rollback()
+                exposedLogger.info("Transaction attempt #$repetitions: ${e.message}", e)
+                transaction.rollback()
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
                     throw e
                 }
             }
             catch (e: Throwable) {
-                session.rollback()
+                transaction.rollback()
                 throw e
             }
             finally {
-                session.close()
+                transaction.close()
             }
         }
     }
 
     public companion object {
-        public val timeZone: DateTimeZone = DateTimeZone.UTC
-
         public fun connect(datasource: DataSource): Database {
             return Database {
                 datasource.connection!!

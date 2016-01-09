@@ -17,14 +17,14 @@ class QueryBuilder(val prepared: Boolean) {
         }
     }
 
-    public fun executeUpdate(session: Session, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
-        return session.exec(sql, args) {
-            session.flushCache()
-            val stmt = session.prepareStatement(sql, autoincs)
+    public fun executeUpdate(transaction: Transaction, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
+        return transaction.exec(sql, args) {
+            transaction.flushCache()
+            val stmt = transaction.prepareStatement(sql, autoincs)
             stmt.fillParameters(args)
 
             val count = stmt.executeUpdate()
-            EntityCache.getOrCreate(session).clearReferrersCache()
+            EntityCache.getOrCreate(transaction).clearReferrersCache()
 
             if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
                 generatedKeys(stmt.generatedKeys!!)
@@ -34,9 +34,9 @@ class QueryBuilder(val prepared: Boolean) {
         }
     }
 
-    public fun executeQuery(session: Session, sql: String): ResultSet {
-        return session.exec(sql, args) {
-            val stmt = session.prepareStatement(sql)
+    public fun executeQuery(transaction: Transaction, sql: String): ResultSet {
+        return transaction.exec(sql, args) {
+            val stmt = transaction.prepareStatement(sql)
             stmt.fillParameters(args)
             stmt.executeQuery()
         }

@@ -50,7 +50,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
-        val resultSet = Session.get().connection.metaData.getTables(null, null, null, arrayOf("TABLE"))
+        val resultSet = Transaction.current().db.metadata.getTables(null, null, null, arrayOf("TABLE"))
 
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME"))
@@ -58,14 +58,14 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
         return result
     }
 
-    override fun getDatabase() = Session.get().connection.schema
+    override fun getDatabase() = Transaction.current().connection.schema
 
     override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
 
     override fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = Session.get().connection.metaData.getColumns(getDatabase(), null, null, null)
+        val rs = Transaction.current().db.metadata.getColumns(getDatabase(), null, null, null)
 
         while (rs.next()) {
             val tableName = rs.getString("TABLE_NAME")!!
@@ -82,7 +82,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{it.tableName}) {
             columnConstraintsCache.getOrPut(table, {
-                val rs = Session.get().connection.metaData.getExportedKeys(getDatabase(), null, table)
+                val rs = Transaction.current().db.metadata.getExportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val refereeTableName = rs.getString("FKTABLE_NAME")!!
@@ -107,7 +107,7 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
     override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
         for(table in tables.map {it.tableName}) {
             existingIndicesCache.getOrPut(table, {
-                val rs = Session.get().connection.metaData.getIndexInfo(getDatabase(), null, table, false, false)
+                val rs = Transaction.current().db.metadata.getIndexInfo(getDatabase(), null, table, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
