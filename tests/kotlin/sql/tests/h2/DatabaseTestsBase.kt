@@ -1,10 +1,10 @@
-package kotlin.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.h2
 
 import org.joda.time.DateTimeZone
 import java.util.*
-import kotlin.sql.Database
-import kotlin.sql.Transaction
-import kotlin.sql.Table
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.Table
 
 abstract class DatabaseTestsBase {
     fun withDb( statement: Transaction.() -> Unit) {

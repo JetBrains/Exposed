@@ -1,11 +1,11 @@
-package kotlin.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.h2
 
 import org.junit.Test
-import kotlin.dao.Entity
-import kotlin.dao.EntityClass
-import kotlin.dao.EntityID
-import kotlin.dao.IdTable
-import kotlin.sql.*
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.*
 import kotlin.test.assertEquals
 
 object ViaTestData {

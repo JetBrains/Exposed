@@ -1,10 +1,10 @@
-package kotlin.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.h2
 
 import org.junit.Test
-import kotlin.sql.Table
-import kotlin.sql.exists
-import kotlin.sql.insert
-import kotlin.sql.select
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import kotlin.test.assertEquals
 
 class DDLTests : DatabaseTestsBase() {

@@ -1,9 +1,9 @@
-package kotlin.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.h2
 
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
-import kotlin.sql.*
+import org.jetbrains.exposed.sql.*
 import kotlin.test.assertEquals
 
 object DMLTestsData {
@@ -492,7 +492,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testInsert01() {
         val tbl = DMLTestsData.Misc
-        val date = today()
+        val date = today
         val time = DateTime.now();
 
         withTables(tbl) {
@@ -512,7 +512,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testInsert02() {
         val tbl = DMLTestsData.Misc
-        val date = today()
+        val date = today
         val time = DateTime.now();
 
         withTables(tbl) {
@@ -537,7 +537,7 @@ class DMLTests : DatabaseTestsBase() {
     }
     @Test fun testInsert03() {
         val tbl = DMLTestsData.Misc
-        val date = today()
+        val date = today
         val time = DateTime.now();
 
         withTables(tbl) {
@@ -564,7 +564,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsert04() {
         val stringThatNeedsEscaping = "A'braham Barakhyahu"
         val tbl = DMLTestsData.Misc
-        val date = today()
+        val date = today
         val time = DateTime.now();
         withTables(tbl) {
             tbl.insert {
@@ -588,13 +588,13 @@ class DMLTests : DatabaseTestsBase() {
         withTables(t) {
             t.insert {
                 it[n] = 42
-                it[d] = today()
+                it[d] = today
                 it[e] = DMLTestsData.E.ONE
                 it[s] = stringThatNeedsEscaping
             }
 
             val row = t.selectAll().single()
-            t.checkRow(row, 42, null, today(), null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null)
+            t.checkRow(row, 42, null, today, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null)
         }
     }
 */
@@ -602,7 +602,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testSelect01() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
-            val date = today()
+            val date = today
             val time = DateTime.now()
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -640,7 +640,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testSelect02() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
-            val date = today()
+            val date = today
             val time = DateTime.now()
             val sTest = "test"
             val eOne = DMLTestsData.E.ONE
@@ -681,7 +681,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testUpdate02() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
-            val date = today()
+            val date = today
             val time = DateTime.now()
             val eOne = DMLTestsData.E.ONE
             val sTest = "test"
@@ -717,7 +717,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testUpdate03() {
         val tbl = DMLTestsData.Misc
-        val date = today()
+        val date = today
         val time = DateTime.now()
         val eOne = DMLTestsData.E.ONE
         val dec = BigDecimal("239.42")
@@ -777,3 +777,4 @@ class FooTests {
     }
 }
 
+val today = DateTime.now().withTimeAtStartOfDay()

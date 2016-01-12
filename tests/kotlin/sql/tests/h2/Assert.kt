@@ -1,4 +1,4 @@
-package kotlin.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.h2
 
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
