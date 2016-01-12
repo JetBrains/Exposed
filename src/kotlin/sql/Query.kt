@@ -5,7 +5,7 @@ import java.util.*
 import kotlin.dao.EntityCache
 import kotlin.dao.IdTable
 
-public class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
+class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     val data = arrayOfNulls<Any?>(size)
 
     /**
@@ -190,14 +190,14 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             }
         }
 
-        operator public override fun next(): ResultRow {
+        operator override fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
             return ResultRow.create(rs, set.fields, fieldsIndex)
         }
 
-        public override fun hasNext(): Boolean {
+        override fun hasNext(): Boolean {
             if (hasNext == null) hasNext = rs.next()
             return hasNext!!
         }
@@ -209,14 +209,14 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         EntityCache.getOrCreate(transaction).flush(tables)
     }
 
-    operator public override fun iterator(): Iterator<ResultRow> {
+    operator override fun iterator(): Iterator<ResultRow> {
         flushEntities()
         val builder = QueryBuilder(true)
         val sql = toSQL(builder)
         return ResultIterator(builder.executeQuery(transaction, sql))
     }
 
-    public override fun count(): Int {
+    override fun count(): Int {
         flushEntities()
 
         val builder = QueryBuilder(true)
@@ -227,7 +227,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         return rs.getInt(1)
     }
 
-    public override fun empty(): Boolean {
+    override fun empty(): Boolean {
         flushEntities()
         val builder = QueryBuilder(true)
 

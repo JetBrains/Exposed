@@ -17,7 +17,7 @@ class QueryBuilder(val prepared: Boolean) {
         }
     }
 
-    public fun executeUpdate(transaction: Transaction, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
+    fun executeUpdate(transaction: Transaction, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
         return transaction.exec(sql, args) {
             transaction.flushCache()
             val stmt = transaction.prepareStatement(sql, autoincs)
@@ -34,7 +34,7 @@ class QueryBuilder(val prepared: Boolean) {
         }
     }
 
-    public fun executeQuery(transaction: Transaction, sql: String): ResultSet {
+    fun executeQuery(transaction: Transaction, sql: String): ResultSet {
         return transaction.exec(sql, args) {
             val stmt = transaction.prepareStatement(sql)
             stmt.fillParameters(args)

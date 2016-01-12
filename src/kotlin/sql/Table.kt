@@ -50,7 +50,7 @@ infix fun Table.leftJoin (otherTable: Table) : Join {
 
 class Join (val table: Table) : ColumnSet() {
 
-    public constructor(table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
+    constructor(table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
         val new = if (onColumn != null && otherColumn != null) {
             join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {

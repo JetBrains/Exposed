@@ -6,7 +6,7 @@ import kotlin.sql.Database
 import kotlin.sql.Transaction
 import kotlin.sql.Table
 
-public abstract class DatabaseTestsBase {
+abstract class DatabaseTestsBase {
     fun withDb( statement: Transaction.() -> Unit) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         DateTimeZone.setDefault(DateTimeZone.UTC)

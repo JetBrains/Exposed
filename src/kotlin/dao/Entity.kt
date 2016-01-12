@@ -8,7 +8,7 @@ import kotlin.sql.*
 /**
  * @author max
  */
-public class EntityID(id: Int, val table: IdTable) {
+class EntityID(id: Int, val table: IdTable) {
     var _value = id
     val value: Int get() {
         if (_value == -1) {
@@ -91,14 +91,14 @@ class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
 }
 
-public class View<out Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
+class View<out Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<Target>) : SizedIterable<Target> {
     override fun limit(n: Int): SizedIterable<Target> = factory.find(op).limit(n)
     override fun count(): Int = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     override fun forUpdate(): SizedIterable<Target> = factory.find(op).forUpdate()
     override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()
 
-    operator public override fun iterator(): Iterator<Target> = factory.find(op).iterator()
+    operator override fun iterator(): Iterator<Target> = factory.find(op).iterator()
     operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
 }
 
@@ -150,7 +150,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     }
 }
 
-open public class Entity(val id: EntityID) {
+open class Entity(val id: EntityID) {
     var klass: EntityClass<*> by Delegates.notNull()
 
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
@@ -209,13 +209,13 @@ open public class Entity(val id: EntityID) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
-        writeValues.containsKey(this) -> writeValues.get(this) as T
+        writeValues.containsKey(this as Column<out Any?>) -> writeValues.get(this as Column<out Any?>) as T
         id._value == -1 && _readValues?.hasValue(this)?.not() ?: true -> defaultValue as T
         else -> readValues[this]
     }
 
     operator fun <T> Column<T>.setValue(o: Entity, desc: KProperty<*>, value: T) {
-        if (writeValues.containsKey(this) || _readValues?.tryGet(this) != value) {
+        if (writeValues.containsKey(this as Column<out Any?>) || _readValues?.tryGet(this) != value) {
             if (referee != null) {
                 EntityCache.getOrCreate(Transaction.current()).referrers.run {
                     filterKeys { it.id == value }.forEach {
@@ -238,13 +238,13 @@ open public class Entity(val id: EntityID) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix public fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
+    infix fun <Target:Entity> EntityClass<Target>.via(table: Table): InnerTableLink<Target> {
         return InnerTableLink(table, this@via)
     }
 
-    public fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
+    fun <T: Entity> s(c: EntityClass<T>): EntityClass<T> = c
 
-    public open fun delete(){
+    open fun delete(){
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere{table.id eq id}
@@ -273,7 +273,7 @@ open public class Entity(val id: EntityID) {
         return false
     }
 
-    public  fun storeWrittenValues() {
+    fun storeWrittenValues() {
         // move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
@@ -472,7 +472,7 @@ class EntityCache {
 }
 
 @Suppress("UNCHECKED_CAST")
-abstract public class EntityClass<out T: Entity>(val table: IdTable) {
+abstract class EntityClass<out T: Entity>(val table: IdTable) {
     private val klass = javaClass.enclosingClass!!
     private val ctor = klass.constructors[0]
 
@@ -537,7 +537,7 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
         return entity
     }
 
-    open public fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
+    open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
     fun find(op: Op<Boolean>): SizedIterable<T> {
         warmCache()
@@ -631,15 +631,15 @@ abstract public class EntityClass<out T: Entity>(val table: IdTable) {
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
 }
 
-abstract public class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table) {
-    open public fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
+abstract class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table) {
+    open fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
         }
     }
 }
 
-abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : ImmutableEntityClass<T>(table) {
+abstract class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : ImmutableEntityClass<T>(table) {
 
     private var _cachedValues: MutableMap<Int, Entity>? = null
 
@@ -657,11 +657,11 @@ abstract public class ImmutableCachedEntityClass<T: Entity>(table: IdTable) : Im
 
     override fun all(): SizedIterable<T> = warmCache().findAll(this)
 
-    public @Synchronized fun expireCache() {
+    @Synchronized fun expireCache() {
         _cachedValues = null
     }
 
-    override public fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
+    override fun <T> forceUpdateEntity(entity: Entity, column: Column<T>, value: T?) {
         super.forceUpdateEntity(entity, column, value)
         entity._readValues?.set(column, value)
         expireCache()

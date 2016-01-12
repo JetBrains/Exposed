@@ -9,11 +9,11 @@ import kotlin.dao.EntityID
 import kotlin.dao.IdTable
 
 abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
-    public abstract fun sqlType(): String
+    abstract fun sqlType(): String
 
-    public open fun valueFromDB(value: Any): Any  = value
+    open fun valueFromDB(value: Any): Any  = value
 
-    public fun valueToString(value: Any?) : String {
+    fun valueToString(value: Any?) : String {
         return when (value) {
             null -> {
                 if (!nullable) error("NULL in non-nullable column")
@@ -30,15 +30,15 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
         }
     }
 
-    public fun valueToDB(value: Any?): Any? = if (value != null) notNullValueToDB(value) else null
+    fun valueToDB(value: Any?): Any? = if (value != null) notNullValueToDB(value) else null
 
-    public open fun notNullValueToDB(value: Any): Any  = value
+    open fun notNullValueToDB(value: Any): Any  = value
 
     protected open fun nonNullValueToString(value: Any) : String {
         return notNullValueToDB(value).toString()
     }
 
-    public open fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
+    open fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
         stmt.setObject(index, value)
     }
 
@@ -129,7 +129,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 class DateColumnType(val time: Boolean): ColumnType() {
     override fun sqlType(): String  = if (time) "DATETIME" else "DATE"
 
-    protected override fun nonNullValueToString(value: Any): String {
+    override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
 
         val dateTime = when (value) {
@@ -196,7 +196,7 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
             '\r' to "\\r",
             '\n' to "\\n")
 
-    protected override fun nonNullValueToString(value: Any): String {
+    override fun nonNullValueToString(value: Any): String {
         val beforeEscaping = value.toString()
         val sb = StringBuilder(beforeEscaping.length +2)
         sb.append('\'')

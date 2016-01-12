@@ -33,7 +33,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 
     override fun dropStatement(): String = Transaction.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
 
-    public fun descriptionDdl(): String {
+    fun descriptionDdl(): String {
         val ddl = StringBuilder(Transaction.current().identity(this)).append(" ")
         val colType = columnType
         ddl.append(colType.sqlType())

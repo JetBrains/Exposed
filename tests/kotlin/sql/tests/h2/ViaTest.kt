@@ -42,7 +42,7 @@ class VString(id: EntityID): Entity(id) {
 }
 
 
-public class ViaTests : DatabaseTestsBase() {
+class ViaTests : DatabaseTestsBase() {
     @Test fun testConnection01() {
         withTables(*ViaTestData.allTables) {
             val n = VNumber.new { number = 10 }

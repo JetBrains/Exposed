@@ -1,6 +1,6 @@
 package kotlin.sql
 
-public interface SizedIterable<out T>: Iterable<T> {
+interface SizedIterable<out T>: Iterable<T> {
     fun limit(n: Int): SizedIterable<T>
     fun count(): Int
     fun empty(): Boolean
@@ -38,7 +38,7 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
     }
 }
 
-public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
+class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     override fun limit(n: Int): SizedIterable<T> {
         return SizedCollection(delegate.take(n))
     }
@@ -48,7 +48,7 @@ public class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<
     override fun empty() = delegate.isEmpty()
 }
 
-public class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
+class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
     private var _wrapper: List<T>? = null
     private var _size: Int? = null
     private var _empty: Boolean? = null
@@ -94,14 +94,14 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
         override fun count(): Int = source.count()
         override fun empty(): Boolean = source.empty()
 
-        operator public override fun iterator(): Iterator<R> {
+        operator override fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
             return object: Iterator<R> {
-                operator public override fun next(): R {
+                operator override fun next(): R {
                     return f(sourceIterator.next())
                 }
 
-                public override fun hasNext(): Boolean {
+                override fun hasNext(): Boolean {
                     return sourceIterator.hasNext()
                 }
             }

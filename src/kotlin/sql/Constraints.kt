@@ -18,7 +18,7 @@ enum class ReferenceOption {
     }
 
     companion object {
-        public fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
+        fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
             DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
             DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
             DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT

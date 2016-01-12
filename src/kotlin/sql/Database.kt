@@ -7,7 +7,7 @@ import java.sql.DriverManager
 import java.sql.SQLException
 import javax.sql.DataSource
 
-public class Database private constructor(val connector: () -> Connection) {
+class Database private constructor(val connector: () -> Connection) {
 
     val metadata: DatabaseMetaData get() = Transaction.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
@@ -96,14 +96,14 @@ public class Database private constructor(val connector: () -> Connection) {
         }
     }
 
-    public companion object {
-        public fun connect(datasource: DataSource): Database {
+    companion object {
+        fun connect(datasource: DataSource): Database {
             return Database {
                 datasource.connection!!
             }
         }
 
-        public fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
+        fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
             Class.forName(driver).newInstance()
 
             return Database {

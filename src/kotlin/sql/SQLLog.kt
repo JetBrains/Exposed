@@ -3,7 +3,7 @@ import org.slf4j.LoggerFactory
 import java.util.ArrayList
 import java.util.Stack
 
-public interface SqlLogger {
+interface SqlLogger {
     fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
 }
 
@@ -55,26 +55,26 @@ fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
     return result.toString()
 }
 
-public class StdOutSqlLogger : SqlLogger {
+class StdOutSqlLogger : SqlLogger {
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
         System.out.println(stmt)
     }
 }
 
-public class Slf4jSqlLogger(): SqlLogger {
+class Slf4jSqlLogger(): SqlLogger {
     override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
         exposedLogger.debug(stmt)
     }
 }
 
-public class CompositeSqlLogger() : SqlLogger {
+class CompositeSqlLogger() : SqlLogger {
     private val loggers: ArrayList<SqlLogger> = ArrayList()
 
-    public fun addLogger (logger: SqlLogger) {
+    fun addLogger (logger: SqlLogger) {
         loggers.add(logger)
     }
 
-    public fun removeLogger (logger: SqlLogger) {
+    fun removeLogger (logger: SqlLogger) {
         loggers.remove(logger)
     }
 

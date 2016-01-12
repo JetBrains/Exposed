@@ -46,7 +46,7 @@ object EntityTestsData {
         var b2 by XTable.b2
 
         companion object: EntityClass<BEntity>(XTable) {
-            public fun create(init: AEntity.() -> Unit): BEntity {
+            fun create(init: AEntity.() -> Unit): BEntity {
                 val answer = new {
                     init()
                 }
@@ -56,7 +56,7 @@ object EntityTestsData {
     }
 }
 
-public class EntityTests: DatabaseTestsBase() {
+class EntityTests: DatabaseTestsBase() {
     @Test fun testDefaults01() {
         withTables(EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new {  }

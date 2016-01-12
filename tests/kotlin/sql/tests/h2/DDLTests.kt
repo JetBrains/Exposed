@@ -7,7 +7,7 @@ import kotlin.sql.insert
 import kotlin.sql.select
 import kotlin.test.assertEquals
 
-public class DDLTests : DatabaseTestsBase() {
+class DDLTests : DatabaseTestsBase() {
     @Test fun tableExists01() {
         val TestTable = object : Table("test") {
             val id = integer("id").primaryKey()
