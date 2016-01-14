@@ -17,45 +17,6 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
     return answer
 }
 
-fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
-    if (args.isEmpty())
-        return sql
-
-    val result = StringBuilder()
-    val quoteStack = Stack<Char>()
-    var argIndex = 0
-    var lastPos = 0
-    for (i in 0..sql.length -1) {
-        val char = sql[i]
-        if (char == '?') {
-            if (quoteStack.isEmpty()) {
-                result.append(sql.substring(lastPos, i))
-                lastPos = i+1
-                result.append(args[argIndex].first.valueToString(args[argIndex].second))
-                ++argIndex
-            }
-            continue
-        }
-
-        if (char == '\'' || char == '\"') {
-            if (quoteStack.isEmpty()) {
-                quoteStack.push(char)
-            } else {
-                val currentQuote = quoteStack.peek()
-                if (currentQuote == char)
-                    quoteStack.pop()
-                else
-                    quoteStack.push(char)
-            }
-        }
-    }
-
-    if (lastPos < sql.length)
-        result.append(sql.substring(lastPos))
-
-    return result.toString()
-}
-
 class StdOutSqlLogger : SqlLogger {
 
     override fun log(context: StatementContext) {

@@ -18,21 +18,24 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
 
             val sql = prepareSQL(transaction)
             val autoInc = if (type == StatementType.INSERT) targets.first().columns.filter { it.columnType.autoinc } else null
-            val statement = transaction.prepareStatement(sql, autoInc?.map { transaction.identity(it)})
 
             val arguments = arguments()
             val contexts = if (arguments.count() > 0) {
                 arguments.map { args ->
                     val context = StatementContext(sql, this, args)
                     transaction.monitor.notifyBeforeExecution(transaction, context)
-                    statement.fillParameters(args)
-                    statement.addBatch()
                     context
                 }
             } else {
                 val context = StatementContext(sql, this, emptyList())
                 transaction.monitor.notifyBeforeExecution(transaction, context)
                 listOf(context)
+            }
+
+            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it)})
+            contexts.forEach { context ->
+                statement.fillParameters(context.args)
+                statement.addBatch()
             }
 
             val result = statement.executeInternal(transaction)
