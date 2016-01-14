@@ -1,25 +1,26 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.sql.statements.*
 import java.sql.Connection
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.util.*
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityCache
 
-public class Key<T>()
+class Key<T>()
 @Suppress("UNCHECKED_CAST")
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 
-    public fun <T:Any> putUserData(key: Key<T>, value: T?) {
+    fun <T:Any> putUserData(key: Key<T>, value: T?) {
         userdata[key] = value
     }
 
-    public fun <T:Any> getUserData(key: Key<T>) : T? {
+    fun <T:Any> getUserData(key: Key<T>) : T? {
         return userdata[key] as T?
     }
 
-    public fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
+    fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
         if (userdata.containsKey(key)) {
             return userdata[key] as T
         }
@@ -42,6 +43,9 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
     val keywords = arrayListOf("key")
+
+    val monitor = StatementMonitor()
+
     val logger = CompositeSqlLogger()
 
     var statementCount: Int = 0
@@ -83,50 +87,54 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         }
     }
 
-    private fun describeStatement(args: List<Pair<ColumnType, Any?>>, delta: Long, stmt: String): String {
-        return "[${delta}ms] ${expandArgs(stmt, args).take(1024)}\n\n"
+    private fun describeStatement(delta: Long, stmt: String): String {
+        return "[${delta}ms] ${stmt.take(1024)}\n\n"
     }
 
-    inner class BatchContext {
-        var stmt: String = ""
-        var args: List<Pair<ColumnType, Any?>> = listOf()
+    fun <T> exec(stmt: String, transform: (ResultSet) -> T): T? {
+        val type = StatementType.values().first { stmt.startsWith(it.name, true) }
+        return exec(object : Statement<T>(type, emptyList()) {
+            override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
+                when (type) {
+                    StatementType.SELECT -> executeQuery()
+                    else  -> executeUpdate()
+                }
+                return resultSet?.let { transform(it) }
+            }
 
-        fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
-            this.stmt = stmt
-            this.args = args
-            logger.log(stmt, args)
-        }
+            override fun prepareSQL(transaction: Transaction): String = stmt
+
+            override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
+        })
     }
 
-    fun <T> execBatch(body: BatchContext.() -> T): T {
-        val context = BatchContext()
+    fun <T> exec(stmt: Statement<T>): T? = exec(stmt, {it})
+
+    fun <T, R> exec(stmt: Statement<T>, body: Statement<T>.(T) -> R): R? {
         statementCount++
 
         val start = System.currentTimeMillis()
-        val answer = context.body()
+        val answer = stmt.execute(this)
         val delta = System.currentTimeMillis() - start
+
+        val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
+            answer.second.map { it.sql }.distinct().joinToString()
+        }
 
         duration += delta
 
         if (debug) {
-            statements.append(describeStatement(context.args, delta, context.stmt))
-            (statementStats[context.stmt] ?: (0 to 0L)).let { pair ->
-                statementStats[context.stmt] = (pair.first + 1) to (pair.second + delta)
+            statements.append(describeStatement(delta, lazySQL.value))
+            statementStats.getOrPut(lazySQL.value, { 0 to 0L }).let { pair ->
+                statementStats[lazySQL.value] = (pair.first + 1) to (pair.second + delta)
             }
         }
 
         if (delta > warnLongQueriesDuration) {
-            exposedLogger.warn("Long query: ${describeStatement(context.args, delta, context.stmt)}", RuntimeException())
+            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", RuntimeException())
         }
 
-        return answer
-    }
-
-    fun <T> exec(stmt: String, args: List<Pair<ColumnType, Any?>> = listOf(), body: () -> T): T {
-        return execBatch {
-            log(stmt, args)
-            body()
-        }
+        return answer.first?.let { stmt.body(it) }
     }
 
     fun createStatements (vararg tables: Table) : List<String> {
@@ -313,11 +321,11 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     }
 
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
-        return if (autoincs == null) {
-            connection.prepareStatement(sql)!!
-        } else {
-            connection.prepareStatement(sql, autoincs.toTypedArray())!!
-        }
+        val flag = if (autoincs != null && autoincs.isNotEmpty())
+            java.sql.Statement.RETURN_GENERATED_KEYS
+        else
+            java.sql.Statement.NO_GENERATED_KEYS
+        return connection.prepareStatement(sql, flag)!!
     }
 
     fun close() {

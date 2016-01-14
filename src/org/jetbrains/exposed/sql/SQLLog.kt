@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.sql
+import org.jetbrains.exposed.sql.statements.*
 import org.slf4j.LoggerFactory
-import java.util.ArrayList
-import java.util.Stack
+import java.sql.PreparedStatement
+import java.util.*
 
 interface SqlLogger {
-    fun log (stmt: String, args: List<Pair<ColumnType, Any?>> = ArrayList<Pair<ColumnType, Any?>>());
+    fun log (context: StatementContext);
 }
 
 val exposedLogger = LoggerFactory.getLogger("Exposed")!!
@@ -56,18 +57,20 @@ fun expandArgs (sql: String, args: List<Pair<ColumnType, Any?>>) : String {
 }
 
 class StdOutSqlLogger : SqlLogger {
-    override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
-        System.out.println(stmt)
+
+    override fun log(context: StatementContext) {
+        System.out.println(context.expandArgs())
     }
 }
 
 class Slf4jSqlLogger(): SqlLogger {
-    override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
-        exposedLogger.debug(stmt)
+
+    override fun log(context: StatementContext) {
+        exposedLogger.debug(context.expandArgs())
     }
 }
 
-class CompositeSqlLogger() : SqlLogger {
+class CompositeSqlLogger() : SqlLogger, StatementInterceptor {
     private val loggers: ArrayList<SqlLogger> = ArrayList()
 
     fun addLogger (logger: SqlLogger) {
@@ -78,9 +81,17 @@ class CompositeSqlLogger() : SqlLogger {
         loggers.remove(logger)
     }
 
-    override fun log(stmt: String, args: List<Pair<ColumnType, Any?>>) {
+    override fun log(context: StatementContext) {
         for (logger in loggers) {
-            logger.log(stmt, args)
+            logger.log(context)
+        }
+    }
+
+    override fun beforeExecution(transaction: Transaction, context: StatementContext) { }
+
+    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatement) {
+        contexts.forEach {
+            log(it)
         }
     }
 }

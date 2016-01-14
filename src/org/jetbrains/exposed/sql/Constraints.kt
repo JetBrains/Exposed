@@ -66,11 +66,9 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         }
     }
 
-    override fun createStatement(): String {
-        return StringBuilder().apply {
-            append("CREATE ${if (unique) "UNIQUE " else ""}INDEX $indexName ON $tableName ")
-            columns.joinTo(this, ", ", "(", ")")
-        }.toString()
+    override fun createStatement(): String = buildString {
+        append("CREATE ${if (unique) "UNIQUE " else ""}INDEX $indexName ON $tableName ")
+        columns.joinTo(this, ", ", "(", ")")
     }
 
     override fun dropStatement(): String {

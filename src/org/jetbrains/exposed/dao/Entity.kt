@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.*
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
-import org.jetbrains.exposed.sql.*
 
 /**
  * @author max
@@ -134,18 +135,16 @@ class InnerTableLink<Target: Entity>(val table: Table,
         val sourceRefColumn = getSourceRefColumn(o)
         val targeRefColumn = getTargetRefColumn()
 
-        with(Transaction.current()) {
-            val entityCache = EntityCache.getOrCreate(Transaction.current())
-            entityCache.flush()
-            val existingIds = getValue(o, desc).map { it.id }.toSet()
-            entityCache.clearReferrersCache()
+        val entityCache = EntityCache.getOrCreate(Transaction.current())
+        entityCache.flush()
+        val existingIds = getValue(o, desc).map { it.id }.toSet()
+        entityCache.clearReferrersCache()
 
-            val targetIds = value.map { it.id }.toList()
-            table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
-            table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
-                this[sourceRefColumn] = o.id
-                this[targeRefColumn] = targetId
-            }
+        val targetIds = value.map { it.id }.toList()
+        table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
+        table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
+            this[sourceRefColumn] = o.id
+            this[targeRefColumn] = targetId
         }
     }
 }
@@ -250,7 +249,7 @@ open class Entity(val id: EntityID) {
         table.deleteWhere{table.id eq id}
     }
 
-    open fun flush(batch: BatchUpdateQuery? = null): Boolean {
+    open fun flush(batch: EntityBatchUpdate? = null): Boolean {
         if (!writeValues.isEmpty()) {
             if (batch == null) {
                 val table = klass.table
@@ -403,21 +402,22 @@ class EntityCache {
         }
 
         for (t in tables) {
-            val map = data[t]
-            if (map != null) {
-                val updatedEntities = HashSet<Entity>()
-                val batch = BatchUpdateQuery(t)
-                for ((i, entity) in map) {
-                    if (entity.flush(batch)) {
-                        if (entity.klass is ImmutableEntityClass<*>) {
-                            throw IllegalStateException("Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}")
+            data[t]?.let { map ->
+                if (map.isNotEmpty()) {
+                    val updatedEntities = HashSet<Entity>()
+                    val batch = EntityBatchUpdate(map.values.first().klass)
+                    for ((i, entity) in map) {
+                        if (entity.flush(batch)) {
+                            if (entity.klass is ImmutableEntityClass<*>) {
+                                throw IllegalStateException("Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}")
+                            }
+                            updatedEntities.add(entity)
                         }
-                        updatedEntities.add(entity)
                     }
-                }
-                batch.execute(Transaction.current())
-                updatedEntities.forEach {
-                    EntityHook.alertSubscribers(it, false)
+                    batch.execute(Transaction.current())
+                    updatedEntities.forEach {
+                        EntityHook.alertSubscribers(it, false)
+                    }
                 }
             }
         }

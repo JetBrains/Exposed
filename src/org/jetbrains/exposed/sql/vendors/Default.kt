@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
-import java.util.*
 import org.jetbrains.exposed.sql.*
+import java.util.*
 
 interface DatabaseDialect {
 
@@ -29,10 +29,8 @@ interface DatabaseDialect {
 
     // Specific SQL statements
 
-    fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String
-    fun replace(table: String, columns: List<String>, values: List<String>): String
-    fun replace(table: String, columns: List<String>, expr: String): String
-
+    fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
+    fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
 
     // Specific functions
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
@@ -136,20 +134,16 @@ internal abstract class VendorDialect : DatabaseDialect {
         existingIndicesCache.clear()
     }
 
-    override fun replace(table: String, columns: List<String>, values: List<String>): String {
-        return replace(table, columns, "VALUES (${values.joinToString()})")
-    }
-
-    override fun replace(table: String, columns: List<String>, expr: String): String {
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         throw UnsupportedOperationException("There's no generic SQL for replace. There must be vendor specific implementation")
     }
 
-    override fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String {
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         if (ignore) {
             throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
         }
 
-        return "INSERT INTO $table (${columns.joinToString()}) $expr"
+        return "INSERT INTO ${transaction.identity(table)} (${columns.map { transaction.identity(it) }.joinToString()}) $expr"
     }
 }
 

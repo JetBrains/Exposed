@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import java.sql.ResultSet
-import java.util.ArrayList
-import org.jetbrains.exposed.dao.EntityCache
+import java.util.*
 
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<ColumnType, Any?>>()
@@ -14,31 +12,6 @@ class QueryBuilder(val prepared: Boolean) {
         }
         else {
             return sqlType.valueToString(arg)
-        }
-    }
-
-    fun executeUpdate(transaction: Transaction, sql: String, autoincs: List<String>? = null, generatedKeys: ((ResultSet)->Unit)? = null): Int {
-        return transaction.exec(sql, args) {
-            transaction.flushCache()
-            val stmt = transaction.prepareStatement(sql, autoincs)
-            stmt.fillParameters(args)
-
-            val count = stmt.executeUpdate()
-            EntityCache.getOrCreate(transaction).clearReferrersCache()
-
-            if (autoincs?.isNotEmpty() ?: false && generatedKeys != null) {
-                generatedKeys(stmt.generatedKeys!!)
-            }
-
-            count
-        }
-    }
-
-    fun executeQuery(transaction: Transaction, sql: String): ResultSet {
-        return transaction.exec(sql, args) {
-            val stmt = transaction.prepareStatement(sql)
-            stmt.fillParameters(args)
-            stmt.executeQuery()
         }
     }
 }

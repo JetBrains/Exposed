@@ -1,11 +1,10 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.*
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
 import java.util.*
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
 
 interface FieldSet {
     val fields: List<Expression<*>>
@@ -340,3 +339,10 @@ class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)
+
+
+fun ColumnSet.targetTables(): List<Table> = when (this) {
+    is Table -> listOf(this)
+    is Join -> listOf(this.table) + this.joinParts.map { it.table }
+    else -> error("No target provided for update")
+}

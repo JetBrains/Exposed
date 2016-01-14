@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.sql.statements.*
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
-import org.jetbrains.exposed.dao.EntityCache
-import org.jetbrains.exposed.dao.IdTable
 
 class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     val data = arrayOfNulls<Any?>(size)
@@ -68,72 +69,67 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     }
 }
 
-open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow> {
+open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
     val groupedByColumns = ArrayList<Expression<*>>();
     val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
+    var count: Boolean = false
     var forUpdate: Boolean = transaction.selectsForUpdate && transaction.db.vendorSupportsForUpdate()
 
+    override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
 
-    fun toSQL(queryBuilder: QueryBuilder, count: Boolean = false) : String {
-        val sql = StringBuilder("SELECT ")
+    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).let {
+        prepareSQL(it)
+        if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
+    }
 
-        with(sql) {
-            if (count) {
-                append("COUNT(*)")
-            }
-            else {
-                val tables = set.source.columns.map { it.table }.toSet()
-                val fields = LinkedHashSet(set.fields)
-                val completeTables = ArrayList<Table>()
-/*              // Do not pretty print with * co the program won't crash on new column added
-                for (table in tables) {
-                    if (fields.containsAll(table.columns)) {
-                        completeTables.add(table)
-                        fields.removeAll(table.columns)
-                    }
-                }
-*/
+    override fun prepareSQL(transaction: Transaction): String = prepareSQL(QueryBuilder(true))
 
-                append(((completeTables.map { Transaction.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(queryBuilder)})).joinToString())
-            }
-            append(" FROM ")
-            append(set.source.describe(transaction))
+    fun prepareSQL(builder: QueryBuilder): String = buildString {
+        append("SELECT ")
 
-            if (where != null) {
-                append(" WHERE ")
-                append(where.toSQL(queryBuilder))
-            }
+        if (count) {
+            append("COUNT(*)")
+        }
+        else {
+            val tables = set.source.columns.map { it.table }.toSet()
+            val fields = LinkedHashSet(set.fields)
+            val completeTables = ArrayList<Table>()
+            append(((completeTables.map { Transaction.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(builder)})).joinToString())
+        }
+        append(" FROM ")
+        append(set.source.describe(transaction))
 
-            if (!count) {
-                if (groupedByColumns.isNotEmpty()) {
-                    append(" GROUP BY ")
-                    append((groupedByColumns.map {it.toSQL(queryBuilder)}).joinToString())
-                }
+        if (where != null) {
+            append(" WHERE ")
+            append(where.toSQL(builder))
+        }
 
-                if (having != null) {
-                    append(" HAVING ")
-                    append(having!!.toSQL(queryBuilder))
-                }
-
-                if (orderByColumns.isNotEmpty()) {
-                    append(" ORDER BY ")
-                    append((orderByColumns.map { "${it.first.toSQL(queryBuilder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString())
-                }
-
-                if (limit != null) {
-                    append(" LIMIT ")
-                    append(limit!!)
-                }
+        if (!count) {
+            if (groupedByColumns.isNotEmpty()) {
+                append(" GROUP BY ")
+                append((groupedByColumns.map {it.toSQL(builder)}).joinToString())
             }
 
-            if (forUpdate) {
-                append(" FOR UPDATE")
+            having?.let {
+                append(" HAVING ")
+                append(it.toSQL(builder))
+            }
+
+            if (orderByColumns.isNotEmpty()) {
+                append(" ORDER BY ")
+                append((orderByColumns.map { "${it.first.toSQL(builder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString())
+            }
+
+            limit?.let {
+                append(" LIMIT $it")
             }
         }
 
-        return sql.toString()
+        if (forUpdate) {
+            append(" FOR UPDATE")
+        }
     }
 
     override fun forUpdate() : Query {
@@ -211,37 +207,32 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
     operator override fun iterator(): Iterator<ResultRow> {
         flushEntities()
-        val builder = QueryBuilder(true)
-        val sql = toSQL(builder)
-        return ResultIterator(builder.executeQuery(transaction, sql))
+        return ResultIterator(transaction.exec(this)!!)
     }
 
     override fun count(): Int {
         flushEntities()
 
-        val builder = QueryBuilder(true)
-        val sql = toSQL(builder, true)
-
-        val rs = builder.executeQuery(transaction, sql)
-        rs.next()
-        return rs.getInt(1)
+        return try {
+            count = true
+            transaction.exec(this) {
+                it.next()
+                it.getInt(1)
+            }!!
+        }  finally {
+            count = false
+        }
     }
 
     override fun empty(): Boolean {
         flushEntities()
-        val builder = QueryBuilder(true)
 
-        val selectOneRowStatement = run {
-            val oldLimit = limit
-            try {
-                limit = 1
-                toSQL(builder, false)
-            } finally {
-                limit = oldLimit
-            }
+        val oldLimit = limit
+        try {
+            limit = 1
+            return !transaction.exec(this)!!.next()
+        } finally {
+            limit = oldLimit
         }
-        // Execute query itself
-        val rs = builder.executeQuery(transaction, selectOneRowStatement)
-        return !rs.next()
     }
 }

@@ -1,5 +1,6 @@
-package org.jetbrains.exposed.sql
+package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
 
 fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>, offset: Int = 0): Int {

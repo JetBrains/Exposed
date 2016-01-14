@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
-import java.util.*
 import org.jetbrains.exposed.sql.*
+import java.util.*
 
 /**
  * User: Andrey.Tarashevskiy
@@ -109,12 +109,15 @@ internal object MysqlDialect : VendorDialect() {
         }
     }
 
-    override fun replace(table: String, columns: List<String>, expr: String): String {
-        return "REPLACE INTO $table (${columns.joinToString()}) $expr"
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+        val builder = QueryBuilder(true)
+        val columns = data.map { transaction.identity(it.first) }
+        val values = data.map { builder.registerArgument(it.second, it.first.columnType) }
+        return "REPLACE INTO ${transaction.identity(table)} (${columns.joinToString()}) VALUES (${values.joinToString()})"
     }
 
-    override fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String {
-        val def = super.insert(false, table, columns, expr)
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 }

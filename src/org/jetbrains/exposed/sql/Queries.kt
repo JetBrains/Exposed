@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.vendors.*
 import java.util.*
-import org.jetbrains.exposed.sql.vendors.dialect
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
     return select(SqlExpressionBuilder.where())
@@ -16,42 +17,41 @@ fun FieldSet.selectAll() : Query {
 }
 
 inline fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
-    DeleteQuery.where(Transaction.current(), this@deleteWhere, SqlExpressionBuilder.op())
+    DeleteStatement.where(Transaction.current(), this@deleteWhere, SqlExpressionBuilder.op())
 }
 
 inline fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
-    DeleteQuery.where(Transaction.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
+    DeleteStatement.where(Transaction.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
 }
 
 fun Table.deleteAll() {
-    DeleteQuery.all(Transaction.current(), this@deleteAll)
+    DeleteStatement.all(Transaction.current(), this@deleteAll)
 }
 
-fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement {
-    return InsertStatement(this, isIgnore = false).apply {
-        body(this)
-        execute(Transaction.current())
-    }
+fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement = InsertStatement(this).apply {
+    body(this)
+    execute(Transaction.current())
 }
 
-fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertQuery.(E)->Unit): List<Int> {
-    BatchInsertQuery(this, ignore).let {
+fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Int> {
+    if (data.count() == 0) return emptyList()
+    BatchInsertStatement(this, ignore).let {
         for (element in data) {
             it.addBatch()
             it.body(element)
         }
-        return it.execute(Transaction.current())
+        return it.execute(Transaction.current()).first!!
     }
 }
 
-fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder)->Unit): InsertStatement {
-    return InsertStatement(this, isIgnore = true).apply {
-        body(this)
-        execute(Transaction.current())
-    }
+fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement {
+    val answer = InsertStatement(this, isIgnore = true)
+    body(answer)
+    answer.execute(Transaction.current())
+    return answer
 }
 
-fun <T:Table> T.replace(body: T.(UpdateBuilder)->Unit): ReplaceStatement {
+fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement {
     return ReplaceStatement(this).apply {
         body(this)
         execute(Transaction.current())
@@ -59,47 +59,23 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder)->Unit): ReplaceStatement {
 }
 
 fun <T:Table> T.insert (selectQuery: Query): Unit {
-    val transaction = Transaction.current()
-    val sql = transaction.db.dialect.insert(
-            false,
-            transaction.identity(this),
-            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
-            selectQuery.toSQL(QueryBuilder(false)))
-
-    QueryBuilder(false).executeUpdate(transaction, sql)
+    InsertSelectStatement(this, selectQuery).execute(Transaction.current())
 }
 
 fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
-    val transaction = Transaction.current()
-    val sql = transaction.db.dialect.insert(
-            true,
-            transaction.identity(this),
-            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
-            selectQuery.toSQL(QueryBuilder(false)))
-
-    QueryBuilder(false).executeUpdate(transaction, sql)
+    InsertSelectStatement(this, selectQuery, true).execute(Transaction.current())
 }
 
-fun <T:Table> T.replace(selectQuery: Query): Unit {
-    val transaction = Transaction.current()
-    val sql = transaction.db.dialect.replace(
-            transaction.identity(this),
-            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
-            selectQuery.toSQL(QueryBuilder(false)))
-
-    QueryBuilder(false).executeUpdate(transaction, sql)
-}
-
-fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateQuery)->Unit): Int {
-    val query = UpdateQuery({transaction -> transaction.identity(this)}, limit, SqlExpressionBuilder.where())
+fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
+    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
-    return query.execute(Transaction.current())
+    return query.execute(Transaction.current()).first!!
 }
 
-fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateQuery)->Unit) : Int {
-    val query = UpdateQuery({transaction -> this.describe(transaction)}, limit, where?.let { SqlExpressionBuilder.it() })
+fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
+    val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(Transaction.current())
+    return query.execute(Transaction.current()).first!!
 }
 
 fun Table.exists (): Boolean = dialect.tableExists(this)
