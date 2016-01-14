@@ -445,7 +445,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsertSelect01() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = users.name.substring(0, 2)
-            cities.insert((users).slice(substring).selectAll().orderBy(users.id).limit(2))
+            cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
 
             val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
             assertEquals(2, r.size)
@@ -466,7 +466,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
             val field = Expression.build {case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
-            val r = (users).slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
+            val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])
             assertEquals("alex", r[0][users.id])

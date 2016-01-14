@@ -27,11 +27,11 @@ fun Table.deleteAll() {
     DeleteQuery.all(Transaction.current(), this@deleteAll)
 }
 
-fun <T:Table> T.insert(body: T.(InsertQuery)->Unit): InsertQuery {
-    val answer = InsertQuery(this)
-    body(answer)
-    answer.execute(Transaction.current())
-    return answer
+fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement {
+    return InsertStatement(this, isIgnore = false).apply {
+        body(this)
+        execute(Transaction.current())
+    }
 }
 
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertQuery.(E)->Unit): List<Int> {
@@ -44,33 +44,50 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     }
 }
 
-fun <T:Table> T.insertIgnore(body: T.(InsertQuery)->Unit): InsertQuery {
-    val answer = InsertQuery(this, isIgnore = true)
-    body(answer)
-    answer.execute(Transaction.current())
-    return answer
+fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder)->Unit): InsertStatement {
+    return InsertStatement(this, isIgnore = true).apply {
+        body(this)
+        execute(Transaction.current())
+    }
 }
 
-fun <T:Table> T.replace(body: T.(InsertQuery)->Unit): InsertQuery {
-    val answer = InsertQuery(this, isReplace = true)
-    body(answer)
-    answer.execute(Transaction.current())
-    return answer
+fun <T:Table> T.replace(body: T.(UpdateBuilder)->Unit): ReplaceStatement {
+    return ReplaceStatement(this).apply {
+        body(this)
+        execute(Transaction.current())
+    }
 }
 
 fun <T:Table> T.insert (selectQuery: Query): Unit {
-    val answer = InsertSelectQuery (this, selectQuery)
-    answer.execute(Transaction.current())
-}
+    val transaction = Transaction.current()
+    val sql = transaction.db.dialect.insert(
+            false,
+            transaction.identity(this),
+            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
+            selectQuery.toSQL(QueryBuilder(false)))
 
-fun <T:Table> T.replace(selectQuery: Query): Unit {
-    val answer = InsertSelectQuery (this, selectQuery, isReplace = true)
-    answer.execute(Transaction.current())
+    QueryBuilder(false).executeUpdate(transaction, sql)
 }
 
 fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
-    val answer = InsertSelectQuery (this, selectQuery, isIgnore = true)
-    answer.execute(Transaction.current())
+    val transaction = Transaction.current()
+    val sql = transaction.db.dialect.insert(
+            true,
+            transaction.identity(this),
+            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
+            selectQuery.toSQL(QueryBuilder(false)))
+
+    QueryBuilder(false).executeUpdate(transaction, sql)
+}
+
+fun <T:Table> T.replace(selectQuery: Query): Unit {
+    val transaction = Transaction.current()
+    val sql = transaction.db.dialect.replace(
+            transaction.identity(this),
+            columns.filterNot { it.columnType.autoinc }.map { transaction.identity(it) },
+            selectQuery.toSQL(QueryBuilder(false)))
+
+    QueryBuilder(false).executeUpdate(transaction, sql)
 }
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateQuery)->Unit): Int {

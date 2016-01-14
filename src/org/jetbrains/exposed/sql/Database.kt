@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.h2.jdbc.JdbcConnection
+import org.jetbrains.exposed.sql.vendors.*
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
@@ -31,6 +32,8 @@ class Database private constructor(val connector: () -> Connection) {
             else -> error("Unknown database type $url")
         }
     }
+
+    val dialect: DatabaseDialect get() = vendor.dialect()
 
     fun vendorSupportsForUpdate(): Boolean {
         return vendor != DatabaseVendor.H2

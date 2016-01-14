@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import java.util.*
 import org.jetbrains.exposed.sql.*
 
-interface DatabaseMetadataDialect {
+interface DatabaseDialect {
 
     fun getDatabase(): String
 
@@ -26,9 +26,15 @@ interface DatabaseMetadataDialect {
     fun tableExists(table: Table): Boolean
 
     fun resetCaches()
-}
 
-interface DialectSpecificFunctions {
+    // Specific SQL statements
+
+    fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String
+    fun replace(table: String, columns: List<String>, values: List<String>): String
+    fun replace(table: String, columns: List<String>, expr: String): String
+
+
+    // Specific functions
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 }
 
@@ -36,7 +42,7 @@ interface MatchMode {
     fun mode() : String
 }
 
-internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecificFunctions {
+internal abstract class VendorDialect : DatabaseDialect {
     /* Cached values */
     private var _allTableNames: List<String>? = null
     val allTablesNames: List<String>
@@ -129,11 +135,27 @@ internal abstract class VendorDialect : DatabaseMetadataDialect, DialectSpecific
         columnConstraintsCache.clear()
         existingIndicesCache.clear()
     }
+
+    override fun replace(table: String, columns: List<String>, values: List<String>): String {
+        return replace(table, columns, "VALUES (${values.joinToString()})")
+    }
+
+    override fun replace(table: String, columns: List<String>, expr: String): String {
+        throw UnsupportedOperationException("There's no generic SQL for replace. There must be vendor specific implementation")
+    }
+
+    override fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String {
+        if (ignore) {
+            throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
+        }
+
+        return "INSERT INTO $table (${columns.joinToString()}) $expr"
+    }
 }
 
 private object DefaultVendorDialect : VendorDialect()
 
-fun DatabaseVendor.dialect() : DatabaseMetadataDialect = when (this) {
+fun DatabaseVendor.dialect() : DatabaseDialect = when (this) {
     DatabaseVendor.MySql -> MysqlDialect
     DatabaseVendor.H2 -> H2Dialect
     else -> DefaultVendorDialect

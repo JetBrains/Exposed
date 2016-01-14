@@ -25,22 +25,26 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
 
         val generatedKeys = ArrayList<Int>()
         val (auto, columns) = table.columns.partition { it.columnType.autoinc }
-        val ignore = if (_ignore && transaction.db.vendor != DatabaseVendor.H2) "IGNORE" else ""
-        var sql = StringBuilder("INSERT $ignore INTO ${transaction.identity(table)}")
 
-        sql.append(" (")
-        sql.append((columns.map{ transaction.identity(it) }).joinToString(", "))
-        sql.append(") ")
 
-        sql.append("VALUES ")
-        val paramsPlaceholder = columns.map{ "?" }.joinToString(", ", prefix = "(", postfix = "),")
-        sql.append(paramsPlaceholder.repeat(data.size).removeSuffix(","))
+        val paramsPlaceholder = columns.map{ "?" }.joinToString(", ", prefix = "(", postfix = ")")
+        val values = StringBuilder().apply {
+            append("VALUES ")
+
+            for (idx in data.indices) {
+                if (idx > 0) append(", ")
+                append(paramsPlaceholder)
+            }
+        }.toString()
+
+        val sql = transaction.db.dialect.insert(_ignore,
+                transaction.identity(table),
+                columns.map{ transaction.identity(it) }, values)
 
         try {
-            val sqlText = sql.toString()
 
             transaction.execBatch {
-                val stmt = transaction.prepareStatement(sqlText, auto.map{ transaction.identity(it)})
+                val stmt = transaction.prepareStatement(sql, auto.map{ transaction.identity(it)})
 
                 val args = arrayListOf<Pair<ColumnType, Any?>>()
                 for ((i, d) in data.withIndex()) {
@@ -48,7 +52,7 @@ class BatchInsertQuery(val table: Table, val _ignore: Boolean = false) {
                     stmt.fillParameters(columns, d, i)
                 }
 
-                log(sqlText, args)
+                log(sql, args)
 
                 val count = stmt.executeUpdate()
 

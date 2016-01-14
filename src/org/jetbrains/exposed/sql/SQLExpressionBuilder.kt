@@ -48,7 +48,7 @@ fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean 
     return GroupConcat(this, separator, distinct, *orderBy)
 }
 
-object SqlExpressionBuilder: DialectSpecificFunctions {
+object SqlExpressionBuilder {
     fun <T:Any> coalesce(expr: ExpressionWithColumnType<out T?>, alternate: ExpressionWithColumnType<out T>): ExpressionWithColumnType<T> {
         return Coalesce(expr, alternate)
     }
@@ -202,8 +202,8 @@ object SqlExpressionBuilder: DialectSpecificFunctions {
         return NoOpConversion(this, DecimalColumnType(15, 0))
     }
 
-    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> {
-        return with((dialect as DialectSpecificFunctions)) {
+    fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> {
+        return with(dialect) {
             this@match.match(pattern, mode)
         }
     }

@@ -108,6 +108,15 @@ internal object MysqlDialect : VendorDialect() {
             return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
         }
     }
+
+    override fun replace(table: String, columns: List<String>, expr: String): String {
+        return "REPLACE INTO $table (${columns.joinToString()}) $expr"
+    }
+
+    override fun insert(ignore: Boolean, table: String, columns: List<String>, expr: String): String {
+        val def = super.insert(false, table, columns, expr)
+        return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
+    }
 }
 
 enum class MysqlMatchMode(val operator: String): MatchMode {
