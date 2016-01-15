@@ -16,18 +16,17 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
         try {
             transaction.monitor.register(transaction.logger)
 
-            val sql = prepareSQL(transaction)
             val autoInc = if (type == StatementType.INSERT) targets.first().columns.filter { it.columnType.autoinc } else null
 
             val arguments = arguments()
             val contexts = if (arguments.count() > 0) {
                 arguments.map { args ->
-                    val context = StatementContext(sql, this, args)
+                    val context = StatementContext(this, args)
                     transaction.monitor.notifyBeforeExecution(transaction, context)
                     context
                 }
             } else {
-                val context = StatementContext(sql, this, emptyList())
+                val context = StatementContext(this, emptyList())
                 transaction.monitor.notifyBeforeExecution(transaction, context)
                 listOf(context)
             }
@@ -47,9 +46,12 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
     }
 }
 
-class StatementContext(val sql: String, val statement: Statement<*>, val args: Iterable<Pair<ColumnType, Any?>>)
+class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<ColumnType, Any?>>) {
+    fun sql(transaction: Transaction) = statement.prepareSQL(transaction)
+}
 
-fun StatementContext.expandArgs() : String {
+fun StatementContext.expandArgs(transaction: Transaction) : String {
+    val sql = sql(transaction)
     val iterator = args.iterator()
     if (!iterator.hasNext())
         return sql

@@ -118,7 +118,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         val delta = System.currentTimeMillis() - start
 
         val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
-            answer.second.map { it.sql }.distinct().joinToString()
+            answer.second.map { it.sql(this) }.distinct().joinToString()
         }
 
         duration += delta

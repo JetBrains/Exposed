@@ -5,7 +5,7 @@ import java.sql.PreparedStatement
 import java.util.*
 
 interface SqlLogger {
-    fun log (context: StatementContext);
+    fun log (context: StatementContext, transaction: Transaction);
 }
 
 val exposedLogger = LoggerFactory.getLogger("Exposed")!!
@@ -19,15 +19,15 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
 
 class StdOutSqlLogger : SqlLogger {
 
-    override fun log(context: StatementContext) {
-        System.out.println("SQL: ${context.expandArgs()}")
+    override fun log (context: StatementContext, transaction: Transaction) {
+        System.out.println("SQL: ${context.expandArgs(transaction)}")
     }
 }
 
 class Slf4jSqlLogger(): SqlLogger {
 
-    override fun log(context: StatementContext) {
-        exposedLogger.debug(context.expandArgs())
+    override fun log (context: StatementContext, transaction: Transaction) {
+        exposedLogger.debug(context.expandArgs(Transaction.current()))
     }
 }
 
@@ -42,9 +42,9 @@ class CompositeSqlLogger() : SqlLogger, StatementInterceptor {
         loggers.remove(logger)
     }
 
-    override fun log(context: StatementContext) {
+    override fun log (context: StatementContext, transaction: Transaction) {
         for (logger in loggers) {
-            logger.log(context)
+            logger.log(context, transaction)
         }
     }
 
@@ -52,7 +52,7 @@ class CompositeSqlLogger() : SqlLogger, StatementInterceptor {
 
     override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatement) {
         contexts.forEach {
-            log(it)
+            log(it, transaction)
         }
     }
 }
