@@ -605,7 +605,9 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
         return OptionalReferenceSureNotNull(column, this)
     }
 
-    fun referrersOn(column: Column<EntityID>, cache: Boolean = false): Referrers<T> {
+    infix fun referrersOn(column: Column<EntityID>) = referrersOn(column, false)
+
+    fun referrersOn(column: Column<EntityID>, cache: Boolean): Referrers<T> {
         return Referrers(column, this, cache)
     }
 

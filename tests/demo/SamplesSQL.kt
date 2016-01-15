@@ -1,4 +1,4 @@
-package demo
+package demo.sql
 
 import org.jetbrains.exposed.sql.*
 
@@ -15,7 +15,6 @@ object Cities : Table() {
 
 fun main(args: Array<String>) {
     val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
-    // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.transaction {
         logger.addLogger(StdOutSqlLogger())
