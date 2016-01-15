@@ -18,6 +18,8 @@ fun main(args: Array<String>) {
     // var db = Database("jdbc:mysql://localhost/test", driver = "com.mysql.jdbc.Driver", user = "root")
 
     db.transaction {
+        logger.addLogger(StdOutSqlLogger())
+
         create (Cities, Users)
 
         val saintPetersburgId = Cities.insert {

@@ -20,7 +20,7 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
 class StdOutSqlLogger : SqlLogger {
 
     override fun log(context: StatementContext) {
-        System.out.println(context.expandArgs())
+        System.out.println("SQL: ${context.expandArgs()}")
     }
 }
 
