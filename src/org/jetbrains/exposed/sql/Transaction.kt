@@ -309,17 +309,6 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
     fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
 
-    fun autoIncrement(column: Column<*>): String {
-        return when (db.vendor) {
-            DatabaseVendor.MySql,
-            DatabaseVendor.SQLServer,
-            DatabaseVendor.H2 -> {
-                "AUTO_INCREMENT"
-            }
-            else -> throw UnsupportedOperationException("Unsupported driver: " + db.vendor)
-        }
-    }
-
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
         val flag = if (autoincs != null && autoincs.isNotEmpty())
             java.sql.Statement.RETURN_GENERATED_KEYS

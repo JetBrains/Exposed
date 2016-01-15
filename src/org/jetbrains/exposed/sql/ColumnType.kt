@@ -48,7 +48,7 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
 }
 
 class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun sqlType(): String  = "INT"
+    override fun sqlType(): String  = if (autoinc) Transaction.current().db.dialect.shortAutoincType() else "INT"
 
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
@@ -80,7 +80,7 @@ class CharacterColumnType() : ColumnType() {
 }
 
 class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun sqlType(): String  = "INT"
+    override fun sqlType(): String  = if (autoinc) Transaction.current().db.dialect.shortAutoincType() else "INT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -92,7 +92,7 @@ class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
 }
 
 class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun sqlType(): String  = "BIGINT"
+    override fun sqlType(): String  = if (autoinc) Transaction.current().db.dialect.shortAutoincType() else "BIGINT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {

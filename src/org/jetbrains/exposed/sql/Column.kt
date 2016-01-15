@@ -41,9 +41,6 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         if (this is PKColumn<*>) {
             ddl.append(" PRIMARY KEY")
         }
-        if (colType.autoinc) {
-            ddl.append(" ").append(Transaction.current().autoIncrement(this))
-        }
         if (colType.nullable) {
             ddl.append(" NULL")
         } else {

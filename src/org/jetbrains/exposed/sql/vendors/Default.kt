@@ -29,6 +29,9 @@ interface DatabaseDialect {
 
     fun supportsSelectForUpdate(): Boolean
 
+    fun shortAutoincType(): String
+    fun longAutoincType(): String
+
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
@@ -183,6 +186,10 @@ internal abstract class VendorDialect : DatabaseDialect {
     }
 
     override fun supportsSelectForUpdate() = true
+
+    override fun shortAutoincType() = "INT AUTO_INCREMENT"
+
+    override fun longAutoincType() = "BIGINT AUTO_INCREMENT"
 }
 
 private object DefaultVendorDialect : VendorDialect()
