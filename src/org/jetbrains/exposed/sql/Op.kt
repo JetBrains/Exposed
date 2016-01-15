@@ -76,17 +76,9 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
                     else -> sb.append(" NOT IN (")
                 }
 
-                sb.append(when (Transaction.current().db.vendor) {
-                    DatabaseVendor.PostgreSQL -> {
-                        queryBuilder.registerArgument(list, expr.columnType)
-                    }
-
-                    else -> {
-                        list.map {
-                            queryBuilder.registerArgument(it, expr.columnType)
-                        }.joinToString(",")
-                    }
-                })
+                list.map {
+                    queryBuilder.registerArgument(it, expr.columnType)
+                }.joinTo(sb)
 
                 sb.append(")")
             }

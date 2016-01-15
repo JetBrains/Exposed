@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.*
 import java.sql.DatabaseMetaData
 
 interface DdlAware {
@@ -66,8 +67,8 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         }
     }
 
-    override fun createStatement(): String = Transaction.current().db.dialect.createIndex(unique, tableName, indexName, columns)
-    override fun dropStatement(): String  = Transaction.current().db.dialect.dropIndex(tableName, indexName)
+    override fun createStatement(): String = currentDialect.createIndex(unique, tableName, indexName, columns)
+    override fun dropStatement(): String  = currentDialect.dropIndex(tableName, indexName)
 
 
     override fun modifyStatement() = "${dropStatement()};\n${createStatement()}"

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import java.util.*
 
 interface DatabaseDialect {
+    val name: String
 
     fun getDatabase(): String
 
@@ -49,7 +50,7 @@ interface MatchMode {
     fun mode() : String
 }
 
-internal abstract class VendorDialect : DatabaseDialect {
+internal abstract class VendorDialect(override val name: String) : DatabaseDialect {
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
@@ -192,10 +193,4 @@ internal abstract class VendorDialect : DatabaseDialect {
     override fun longAutoincType() = "BIGINT AUTO_INCREMENT"
 }
 
-private object DefaultVendorDialect : VendorDialect()
-
-fun DatabaseVendor.dialect() : DatabaseDialect = when (this) {
-    DatabaseVendor.MySql -> MysqlDialect
-    DatabaseVendor.H2 -> H2Dialect
-    else -> DefaultVendorDialect
-}
+internal val currentDialect = Transaction.current().db.dialect

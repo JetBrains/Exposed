@@ -203,7 +203,7 @@ object SqlExpressionBuilder {
     }
 
     fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> {
-        return with(dialect) {
+        return with(currentDialect) {
             this@match.match(pattern, mode)
         }
     }

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.*
  * Date: 05.10.2015
  */
 
-internal object H2Dialect: VendorDialect() {
+internal object H2Dialect: VendorDialect("h2") {
 
     // h2 supports only JDBC API from Java 1.6
     override fun getDatabase(): String {

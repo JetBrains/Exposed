@@ -8,7 +8,7 @@ import java.util.*
  * Date: 08.05.2015
  */
 
-internal object MysqlDialect : VendorDialect() {
+internal object MysqlDialect : VendorDialect("mysql") {
 
     override @Synchronized fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
 

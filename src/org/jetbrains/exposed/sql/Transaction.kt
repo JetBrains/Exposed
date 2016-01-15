@@ -176,7 +176,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
                 connection.createStatement().executeUpdate(statement)
             }
         }
-        dialect.resetCaches()
+        db.dialect.resetCaches()
     }
 
     private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
@@ -185,7 +185,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
             return statements
 
         val existingTableColumns = logTimeSpent("Extracting table columns") {
-            dialect.tableColumns()
+            db.dialect.tableColumns()
         }
 
         for (table in tables) {
@@ -211,7 +211,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         }
 
         val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
-            dialect.columnConstraints(*tables)
+            db.dialect.columnConstraints(*tables)
         }
 
         for (table in tables) {
@@ -234,7 +234,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
-            dialect.resetCaches()
+            db.dialect.resetCaches()
             val statements = logTimeSpent("Preparing create statements") {
                  createStatements(*tables) + addMissingColumnsStatements(*tables)
             }

@@ -78,7 +78,7 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
     return query.execute(Transaction.current()).first!!
 }
 
-fun Table.exists (): Boolean = dialect.tableExists(this)
+fun Table.exists (): Boolean = currentDialect.tableExists(this)
 
 /**
  * Log entity <-> database mapping problems and returns DDL Statements to fix them
@@ -90,7 +90,7 @@ fun checkMappingConsistence(vararg tables: Table): List<String> {
 
 fun checkExcessiveIndices(vararg tables: Table) {
 
-    val excessiveConstraints = dialect.columnConstraints(*tables).filter { it.value.size > 1 }
+    val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
     if (!excessiveConstraints.isEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
@@ -108,7 +108,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
     }
 
-    val excessiveIndices = dialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.value.size > 1}
+    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.value.size > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach {
@@ -135,11 +135,11 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
-    val fKeyConstraints = dialect.columnConstraints(*tables).keys
+    val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
 
     fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyConstraints}
 
-    val allExistingIndices = dialect.existingIndices(*tables)
+    val allExistingIndices = currentDialect.existingIndices(*tables)
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
@@ -165,5 +165,3 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     notMappedIndices.forEach { it.value.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${it.key}':") }
     return toCreate.toList()
 }
-
-internal val dialect = Transaction.current().db.vendor.dialect()
