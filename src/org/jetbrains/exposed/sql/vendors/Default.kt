@@ -27,10 +27,16 @@ interface DatabaseDialect {
 
     fun resetCaches()
 
+    fun supportsSelectForUpdate(): Boolean
+
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
+    fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String
     fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
+
+    fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
+    fun dropIndex(tableName: String, indexName: String): String
 
     // Specific functions
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
@@ -41,6 +47,7 @@ interface MatchMode {
 }
 
 internal abstract class VendorDialect : DatabaseDialect {
+
     /* Cached values */
     private var _allTableNames: List<String>? = null
     val allTablesNames: List<String>
@@ -145,6 +152,37 @@ internal abstract class VendorDialect : DatabaseDialect {
 
         return "INSERT INTO ${transaction.identity(table)} (${columns.map { transaction.identity(it) }.joinToString()}) $expr"
     }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+        if (ignore) {
+            throw UnsupportedOperationException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
+        }
+
+        return buildString {
+            append("DELETE FROM ")
+            append(transaction.identity(table))
+            if (where != null) {
+                append(" WHERE ")
+                append(where)
+            }
+        }
+    }
+
+    override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
+        return buildString {
+            append("CREATE ")
+            if (unique) append("UNIQUE ")
+            append("INDEX $indexName ON $tableName ")
+            columns.joinTo(this, ", ", "(", ")")
+        }
+
+    }
+
+    override fun dropIndex(tableName: String, indexName: String): String {
+        return "ALTER TABLE $tableName DROP CONSTRAINT $indexName"
+    }
+
+    override fun supportsSelectForUpdate() = true
 }
 
 private object DefaultVendorDialect : VendorDialect()

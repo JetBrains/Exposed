@@ -15,6 +15,8 @@ internal object H2Dialect: VendorDialect() {
         return Transaction.current().connection.catalog
     }
 
+    override fun supportsSelectForUpdate() = false
+
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         if (currentMode() != "MySQL") throw UnsupportedOperationException("REPLACE is only supported in MySQL compatibility more for H2")
 

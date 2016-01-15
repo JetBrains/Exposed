@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql
 
-import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.sql.vendors.*
 import java.sql.Connection
 import java.sql.DatabaseMetaData
@@ -34,20 +33,6 @@ class Database private constructor(val connector: () -> Connection) {
     }
 
     val dialect: DatabaseDialect get() = vendor.dialect()
-
-    fun vendorSupportsForUpdate(): Boolean {
-        return vendor != DatabaseVendor.H2
-    }
-
-    fun vendorCompatibleWith(): DatabaseVendor {
-        if (vendor == DatabaseVendor.H2) {
-            return ((Transaction.current().connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.let { mode ->
-                DatabaseVendor.values().singleOrNull { it.name.equals(mode.name, true) }
-            } ?: vendor
-        }
-
-        return vendor
-    }
 
 
     // Overloading methods instead of default parameters for Java compatibility

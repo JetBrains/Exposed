@@ -14,13 +14,7 @@ class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIg
         }
     }
 
-    override fun prepareSQL(transaction: Transaction): String = buildString {
-        val ignore = if (isIgnore && transaction.db.vendor == DatabaseVendor.MySql) "IGNORE" else ""
-        append("DELETE $ignore FROM ${transaction.identity(table)}")
-        where?.let {
-            append(" WHERE ${it.toSQL(QueryBuilder(true))}")
-        }
-    }
+    override fun prepareSQL(transaction: Transaction): String = transaction.db.dialect.delete(isIgnore, table, where?.toSQL(QueryBuilder(true)), transaction)
 
     override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).run {
         where?.toSQL(this)

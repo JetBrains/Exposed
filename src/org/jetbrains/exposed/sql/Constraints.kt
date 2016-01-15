@@ -66,15 +66,8 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         }
     }
 
-    override fun createStatement(): String = buildString {
-        append("CREATE ${if (unique) "UNIQUE " else ""}INDEX $indexName ON $tableName ")
-        columns.joinTo(this, ", ", "(", ")")
-    }
-
-    override fun dropStatement(): String {
-        val keyWord = if (Transaction.current().db.vendor == DatabaseVendor.MySql) "INDEX" else "CONSTRAINT"
-        return "ALTER TABLE $tableName DROP $keyWord $indexName"
-    }
+    override fun createStatement(): String = Transaction.current().db.dialect.createIndex(unique, tableName, indexName, columns)
+    override fun dropStatement(): String  = Transaction.current().db.dialect.dropIndex(tableName, indexName)
 
 
     override fun modifyStatement() = "${dropStatement()};\n${createStatement()}"
