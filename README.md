@@ -118,7 +118,7 @@ fun main(args: Array<String>) {
 ```
 
 Outputs:
-
+```
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
     SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10) PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL)
     SQL: ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Cities(id)
@@ -149,6 +149,7 @@ Outputs:
     2 user(s) live(s) in Munich
     SQL: DROP TABLE Users
     SQL: DROP TABLE Cities
+```
 
 ## DAO sample
 ```kotlin
@@ -219,6 +220,7 @@ fun main(args: Array<String>) {
 ```
 
 Outputs:
+```
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
     SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL)
     SQL: CREATE INDEX Users_name ON Users (name)
@@ -231,4 +233,4 @@ Outputs:
     Users in St. Petersburg: a, b
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
-
+```
