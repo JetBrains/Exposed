@@ -122,7 +122,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
-        val def = super.delete(ignore, table, where, transaction)
+        val def = super.delete(false, table, where, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
