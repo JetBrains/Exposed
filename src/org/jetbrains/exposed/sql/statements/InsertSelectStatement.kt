@@ -12,8 +12,10 @@ class InsertSelectStatement(val table: Table, val selectQuery: Query, val isIgno
             generatedKey = generatedKeys?.let { rs ->
                 if (rs.next()) {
                     return rs.getInt(1)
-                } else {
+                } else if (!isIgnore) {
                     throw IllegalStateException("No key generated after statement: ${prepareSQL(transaction)}")
+                } else {
+                    null
                 }
             }
         }
