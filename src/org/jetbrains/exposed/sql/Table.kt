@@ -315,8 +315,6 @@ class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
 
     override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
 
-    override fun describe(s: Transaction): String = s.identity(this)
-
     override val fields: List<Expression<*>> = columns
 
     override fun createStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
@@ -324,8 +322,6 @@ class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
     override fun dropStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
 
     override fun modifyStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
-
-    override val source: ColumnSet = delegate.source
 
     override fun equals(other: Any?): Boolean {
         if (other !is Alias<*>) return false
@@ -342,6 +338,7 @@ fun <T:Table> T.alias(alias: String) = Alias(this, alias)
 
 
 fun ColumnSet.targetTables(): List<Table> = when (this) {
+    is Alias<*> -> listOf(this.delegate)
     is Table -> listOf(this)
     is Join -> listOf(this.table) + this.joinParts.map { it.table }
     else -> error("No target provided for update")
