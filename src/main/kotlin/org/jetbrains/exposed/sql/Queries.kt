@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.*
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
@@ -162,6 +162,6 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val toCreate = missingIndices.subtract(nameDiffers)
     toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { it.value.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${it.key}':") }
+    notMappedIndices.forEach { e -> e.value.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${e.key}':") }
     return toCreate.toList()
 }
