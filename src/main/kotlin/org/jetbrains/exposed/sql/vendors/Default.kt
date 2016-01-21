@@ -73,7 +73,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
         return result
     }
 
-    override fun getDatabase() = Transaction.current().connection.schema
+    override fun getDatabase() = Transaction.current().connection.catalog
 
     override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
 
