@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="Data Source" uuid="bc3abcbf-9773-4351-b088-d41565233f48">
+      <user-name>sa</user-name>
+      <schema-pattern>TEST.PUBLIC</schema-pattern>
+    </data-source>
+    <data-source name="Data Source [2]" uuid="a166e24c-4d32-4284-9a7f-cec4dda4bb4f">
+      <user-name>root</user-name>
+      <schema-pattern>test.*</schema-pattern>
+      <default-schemas>test.*</default-schemas>
+    </data-source>
+  </component>
+</project>

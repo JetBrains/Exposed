@@ -1,0 +1,41 @@
+buildscript {
+    version = '0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        maven {
+            url 'http://oss.sonatype.org/content/repositories/snapshots'
+        }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.0-beta-4584"
+    }
+}
+
+apply plugin: 'kotlin'
+group = 'org.jetbrains.exposed'
+
+defaultTasks 'jar'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'http://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+dependencies {
+    compile 'joda-time:joda-time:2.5'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.slf4j:slf4j-api:1.7.12'
+    compile 'org.slf4j:slf4j-log4j12:1.7.12'
+    testCompile 'junit:junit:4.11'
+    compile 'com.h2database:h2:1.4.186' // Shall be scope 'provided' instead
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.0.0-beta-4584"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:1.0.0-beta-4584"
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "2.7"
+}

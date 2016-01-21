@@ -18,6 +18,9 @@
         <processorPath useClasspath="true" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Exposed_main" target="1.7" />
+      <module name="Exposed_test" target="1.7" />
+    </bytecodeTargetLevel>
   </component>
 </project>
-
