@@ -1,5 +1,5 @@
 buildscript {
-    version = '0.1-SNAPSHOT'
+    version = exposed_version
 
     repositories {
         mavenCentral()
@@ -8,7 +8,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.0-beta-4584"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -16,6 +16,15 @@ apply plugin: 'kotlin'
 group = 'org.jetbrains.exposed'
 
 defaultTasks 'jar'
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
 
 repositories {
     mavenCentral()
@@ -32,8 +41,8 @@ dependencies {
     testCompile 'junit:junit:4.11'
     compile 'com.h2database:h2:1.4.186' // Shall be scope 'provided' instead
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:1.0.0-beta-4584"
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit:1.0.0-beta-4584"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 
 task wrapper(type: Wrapper) {
