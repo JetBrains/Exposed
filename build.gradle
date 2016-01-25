@@ -54,20 +54,10 @@ test {
     jvmArgs "-XX:MaxPermSize=256m"
 }
 
-publishing {
-    publications {
-        bintray(MavenPublication) {
-            from components.java
-            artifactId 'exposed'
-            artifact sourceJar
-        }
-    }
-}
-
 bintray {
     user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-    publications = ['bintray']
+    configurations = ['archives']
     pkg {
         userOrg = 'kotlin'
         repo = 'exposed'
