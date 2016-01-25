@@ -1,18 +1,23 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
 class BatchUpdateStatement(val table: IdTable): UpdateStatement(table, null) {
-    val data = ArrayList<Pair<EntityID, HashMap<Column<*>, Any?>>>()
+    val data = ArrayList<Pair<EntityID, SortedMap<Column<*>, Any?>>>()
 
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 
     fun addBatch(id: EntityID) {
         if (data.size < 2 || data.first().second.keys.toList().equals(data.last().second.keys.toList())) {
-            data.add(id to HashMap())
+            data.add(id to TreeMap())
         } else {
             val different = data.first().second.keys.intersect(data.last().second.keys)
             error("Some values missing for batch update. Different columns: $different")
@@ -32,10 +37,10 @@ class BatchUpdateStatement(val table: IdTable): UpdateStatement(table, null) {
 
 class EntityBatchUpdate(val klass: EntityClass<*>) {
 
-    val data = ArrayList<Pair<EntityID, HashMap<Column<*>, Any?>>>()
+    val data = ArrayList<Pair<EntityID, SortedMap<Column<*>, Any?>>>()
 
     fun addBatch(id: EntityID) {
-        data.add(id to HashMap())
+        data.add(id to TreeMap())
     }
 
     operator fun set(column: Column<*>, value: Any?) {

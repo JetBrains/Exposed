@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import kotlin.comparisons.compareBy
 
-open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware {
+
+open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
     var onDelete: ReferenceOption? = null
     var defaultValue: T? = null
@@ -53,6 +55,8 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 
         return ddl.toString()
     }
+
+    override fun compareTo(other: Column<*>): Int = compareBy<Column<*>>({it.table.tableName}, {it.name}).compare(this, other)
 }
 
 class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
