@@ -1,15 +1,20 @@
 buildscript {
-    version = exposed_version
-
     repositories {
+        jcenter()
         mavenCentral()
         maven {
             url 'http://oss.sonatype.org/content/repositories/snapshots'
         }
+        
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
+}
+
+plugins {
+    id "com.jfrog.bintray" version "1.5"
+    id 'net.researchgate.release' version '2.3.4'
 }
 
 apply plugin: 'kotlin'
@@ -44,6 +49,21 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    configurations = ['archives']
+    pkg {
+        userOrg = 'kotlin'
+        repo = 'exposed'
+        name = 'exposed'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/JetBrains/Exposed.git'
+    }
+}
+
+afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
     gradleVersion = "2.7"
