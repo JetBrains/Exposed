@@ -60,7 +60,7 @@ publishing {
     publications {
         bintray(MavenPublication) {
             from components.java
-            artifact sourceJar
+            artifact sourcesJar
         }
     }
 }
