@@ -97,7 +97,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        ((Cities join Users).slice(Cities.name, Users.id.count()).selectAll() groupBy Cities.name).forEach {
+        ((Cities join Users).slice(Cities.name, Users.id.count()).selectAll().groupBy(Cities.name)).forEach {
             val cityName = it[Cities.name]
             val userCount = it[Users.id.count()]
 

@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.statements.StatementType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -142,7 +144,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         return this
     }
 
-    infix fun groupBy(vararg columns: Expression<*>): Query {
+    fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             groupedByColumns.add(column)
         }

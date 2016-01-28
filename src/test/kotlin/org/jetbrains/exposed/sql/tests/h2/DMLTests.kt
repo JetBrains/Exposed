@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.sql.tests.h2
 
+import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
-import org.jetbrains.exposed.sql.*
 import kotlin.test.assertEquals
 
 object DMLTestsData {
@@ -234,7 +234,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            ((cities join users).slice(cities.name, users.id.count()).selectAll() groupBy cities.name).forEach {
+            ((cities join users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
 
