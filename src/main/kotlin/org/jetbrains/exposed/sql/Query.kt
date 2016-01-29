@@ -77,7 +77,9 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     var having: Op<Boolean>? = null;
     var limit: Int? = null
     var count: Boolean = false
-    var forUpdate: Boolean = transaction.selectsForUpdate && transaction.db.dialect.supportsSelectForUpdate()
+    var forUpdate: Boolean? = null
+
+    fun isForUpdate() = (forUpdate ?: transaction.selectsForUpdate) && transaction.db.dialect.supportsSelectForUpdate()
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
 
@@ -129,7 +131,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             }
         }
 
-        if (forUpdate) {
+        if (isForUpdate()) {
             append(" FOR UPDATE")
         }
     }
