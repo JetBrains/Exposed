@@ -19,11 +19,14 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
                 "VALUES (${values.map { builder.registerArgument(it.value, it.key.columnType) }.joinToString()})", transaction)
     }
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): Int  = executeUpdate().apply {
-        if (table.columns.any { it.columnType.autoinc }) {
-            generatedKeys?.let { rs ->
-                if (rs.next()) {
-                    generatedKey = rs.getInt(1)
+    override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
+        transaction.flushCache()
+        return executeUpdate().apply {
+            if (table.columns.any { it.columnType.autoinc }) {
+                generatedKeys?.let { rs ->
+                    if (rs.next()) {
+                        generatedKey = rs.getInt(1)
+                    }
                 }
             }
         }
