@@ -14,7 +14,9 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
 
     abstract fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>>
 
-    fun execute(transaction: Transaction): Pair<T?, List<StatementContext>> {
+    fun execute(transaction: Transaction): T? = transaction.exec(this)
+
+    internal fun executeIn(transaction: Transaction): Pair<T?, List<StatementContext>> {
         try {
             transaction.monitor.register(transaction.logger)
 

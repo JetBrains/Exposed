@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.statements.StatementMonitor
+import org.jetbrains.exposed.sql.statements.StatementType
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -114,7 +117,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         statementCount++
 
         val start = System.currentTimeMillis()
-        val answer = stmt.execute(this)
+        val answer = stmt.executeIn(this)
         val delta = System.currentTimeMillis() - start
 
         val lazySQL = lazy(LazyThreadSafetyMode.NONE) {

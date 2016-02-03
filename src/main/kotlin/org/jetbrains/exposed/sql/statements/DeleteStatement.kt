@@ -22,8 +22,8 @@ class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIg
     companion object {
 
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false): Int
-            = DeleteStatement(table, op, isIgnore).execute(transaction).first ?: 0
+            = DeleteStatement(table, op, isIgnore).execute(transaction) ?: 0
 
-        fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction).first ?: 0
+        fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction) ?: 0
     }
 }

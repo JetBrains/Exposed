@@ -40,7 +40,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             it.addBatch()
             it.body(element)
         }
-        return it.execute(Transaction.current()).first!!
+        return it.execute(Transaction.current())!!
     }
 }
 
@@ -69,13 +69,13 @@ fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
     val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
-    return query.execute(Transaction.current()).first!!
+    return query.execute(Transaction.current())!!
 }
 
 fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(Transaction.current()).first!!
+    return query.execute(Transaction.current())!!
 }
 
 fun Table.exists (): Boolean = currentDialect.tableExists(this)

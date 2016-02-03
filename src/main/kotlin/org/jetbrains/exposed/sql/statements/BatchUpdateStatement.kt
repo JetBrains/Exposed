@@ -58,7 +58,7 @@ class EntityBatchUpdate(val klass: EntityClass<*>) {
         return updateSets.values.fold(0) { acc, set ->
             acc + BatchUpdateStatement(klass.table).let {
                 it.data.addAll(set)
-                it.execute(transaction).first!!
+                it.execute(transaction)!!
             }
         }
     }

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -384,7 +384,7 @@ class EntityCache {
     }
 
     fun flush(tables: Iterable<IdTable>) {
-        val sorted = addDependencies(tables).toArrayList()
+        val sorted = addDependencies(tables).toCollection(arrayListOf())
         sorted.topoSort { a, b ->
             when {
                 a == b -> 0
