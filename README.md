@@ -4,6 +4,8 @@ Kotlin SQL Library
 _Exposed_ is a prototype for a lightweight SQL library written over JDBC driver for [Kotlin](https://github.com/JetBrains/kotlin) language.
 It does have two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects
 
+Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed/exposed/view#
+
 ## SQL DSL sample:
 ```kotlin
 object Users : Table() {
