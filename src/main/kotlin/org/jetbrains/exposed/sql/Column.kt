@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql
 
-//import kotlin.comparisons.compareBy
-
+import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
