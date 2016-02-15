@@ -1,13 +1,14 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import java.math.BigDecimal
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.util.*
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.vendors.*
 
 abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
     abstract fun sqlType(): String
@@ -106,6 +107,7 @@ class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
 
 class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
     override fun sqlType(): String  = "DECIMAL($scale, $precision)"
+    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(precision) ?: it }
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
