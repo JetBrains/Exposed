@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 object DMLTestsData {
     object Cities : Table() {
@@ -759,6 +760,21 @@ class DMLTests : DatabaseTestsBase() {
             val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
             assertEquals(3, resultRows.size)
+        }
+    }
+
+    @Test fun testJoinSubQuery02() {
+        withCitiesAndUsers { cities, users, userData ->
+            val expAlias = users.name.max().alias("m")
+
+            val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
+                users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId)
+            }
+            val innerExp = query.lastQueryAlias!![expAlias]
+
+            assertEquals("q0", query.lastQueryAlias?.alias)
+            assertEquals(3, query.selectAll().count())
+            assertNotNull(query.slice(users.columns + innerExp).selectAll().first().get(innerExp))
         }
     }
 }

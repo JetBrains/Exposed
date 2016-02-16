@@ -67,3 +67,13 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)
 fun <T:Query> T.alias(alias: String) = QueryAlias(this, alias)
 fun <T:Expression<*>> T.alias(alias: String) = ExpressionAlias(this, alias)
+
+fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> Query): Join {
+    val qAlias = joinPart().alias("q${joinParts.count { it.joinPart is QueryAlias }}")
+    return join (qAlias, joinType, additionalConstraint =  { on(qAlias) } )
+}
+
+fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> Query)
+    = Join(this).joinQuery(on, joinType, joinPart)
+
+val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()

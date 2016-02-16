@@ -50,7 +50,7 @@ infix fun Table.leftJoin (otherTable: Table) : Join {
 
 class Join (val table: ColumnSet) : ColumnSet() {
 
-    constructor(table: ColumnSet, otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
+    constructor(table: ColumnSet, otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) : this(table) {
         val new = if (onColumn != null && otherColumn != null) {
             join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {
@@ -59,27 +59,32 @@ class Join (val table: ColumnSet) : ColumnSet() {
         joinParts.addAll(new.joinParts)
     }
 
-    class JoinPart (val joinType: JoinType, val table: ColumnSet, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
+    class JoinPart(val joinType: JoinType, val joinPart: ColumnSet, val pkColumn: Expression<*>? = null, val fkColumn: Expression<*>? = null, val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) {
+        init {
+            if (!(pkColumn != null && fkColumn != null || additionalConstraint != null))
+                error("Missing join condition on $${this.joinPart}")
+        }
     }
 
     val joinParts: ArrayList<JoinPart> = ArrayList();
 
-    infix fun innerJoin (otherTable: ColumnSet) : Join {
+    infix fun innerJoin(otherTable: ColumnSet): Join {
         return join(otherTable, JoinType.INNER)
     }
 
-    infix fun leftJoin (otherTable: ColumnSet) : Join {
+    infix fun leftJoin(otherTable: ColumnSet): Join {
         return join(otherTable, JoinType.LEFT)
     }
 
-    fun join (otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
+    fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
         val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
-        if (keysPair == null) error ("Cannot join with ${otherTable} as there is no matching primary key/ foreign key pair")//todo
+        if (keysPair == null && additionalConstraint == null)
+            error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
-        return join(otherTable, joinType, keysPair.first, keysPair.second, additionalConstraint)
+        return join(otherTable, joinType, keysPair?.first, keysPair?.second, additionalConstraint)
     }
 
-    fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>, otherColumn: Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
+    fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
         val newJoin = Join(table)
         newJoin.joinParts.addAll(joinParts)
         newJoin.joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
@@ -95,23 +100,21 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return null
     }
 
-    override fun describe(s: Transaction): String {
-        val sb = StringBuilder()
-        sb.append(table.describe(s))
+    override fun describe(s: Transaction): String = buildString {
+        append(table.describe(s))
         for (p in joinParts) {
-            sb.append(" ${p.joinType} JOIN ${p.table.describe(s)} ON ${p.pkColumn.toSQL(QueryBuilder(false))} = ${p.fkColumn.toSQL(QueryBuilder(false))}" )
+            append(" ${p.joinType} JOIN ${p.joinPart.describe(s)} ON ")
+            if (p.pkColumn != null && p.fkColumn != null) {
+                append("${p.pkColumn.toSQL(QueryBuilder(false))} = ${p.fkColumn.toSQL(QueryBuilder(false))}")
+                if (p.additionalConstraint != null) append(" and ")
+            }
             if (p.additionalConstraint != null)
-                sb.append(" and (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(QueryBuilder(false))})")
+                append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(QueryBuilder(false))})")
         }
-        return sb.toString()
     }
 
-    override val columns: List<Column<*>> get() {
-        val answer = ArrayList<Column<*>>()
-        answer.addAll(table.columns)
-        for (p in joinParts)
-            answer.addAll(p.table.columns)
-        return answer
+    override val columns: List<Column<*>> get() = joinParts.fold(table.columns) { r, j ->
+        r + j.joinPart.columns
     }
 }
 
@@ -310,6 +313,6 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)
     is QueryAlias -> this.query.set.source.targetTables()
     is Table -> listOf(this)
-    is Join -> this.table.targetTables() + this.joinParts.flatMap { it.table.targetTables() }
+    is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }

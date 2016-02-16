@@ -117,7 +117,7 @@ class InnerTableLink<Target: Entity>(val table: Table,
     }
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Target> {
-        fun alreadyInJoin() = (target.dependsOnTables as? Join)?.joinParts?.any { it.joinType == JoinType.INNER && it.table == table} ?: false
+        fun alreadyInJoin() = (target.dependsOnTables as? Join)?.joinParts?.any { it.joinType == JoinType.INNER && it.joinPart == table} ?: false
         val sourceRefColumn = getSourceRefColumn(o)
         val entityTables: ColumnSet = when {
             target.dependsOnTables is Table -> (target.dependsOnTables as Table).innerJoin(table)
