@@ -1,0 +1,69 @@
+package org.jetbrains.exposed.sql
+
+
+class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
+
+    override val tableName: String get() = alias
+
+    val tableNameWithAlias: String = "${delegate.tableName} AS $alias"
+
+    private fun <T:Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
+
+    override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
+
+    override val fields: List<Expression<*>> = columns
+
+    override fun createStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override fun dropStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override fun modifyStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is Alias<*>) return false
+        return this.tableNameWithAlias == other.tableNameWithAlias
+    }
+
+    override fun hashCode(): Int = tableNameWithAlias.hashCode()
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T: Any?> get(original: Column<T>): Column<T> = delegate.columns.find { it == original }?.let { it.clone() as? Column<T> } ?: error("Column not found in original table")
+}
+
+
+class ExpressionAlias<T: Expression<Any?>>(val delegate: T, val alias: String) : Expression<Any?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "${delegate.toSQL(queryBuilder)} $alias"
+    }
+
+    fun aliasOnlyExpression() = object: Expression<Any?>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String {
+            return alias
+        }
+    }
+}
+
+class QueryAlias(val query: Query, val alias: String): ColumnSet() {
+
+    override fun describe(s: Transaction): String {
+        return "(${query.prepareSQL(QueryBuilder(false))}) $alias"
+    }
+
+    override val columns: List<Column<*>>
+        get() =  query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
+
+
+    private fun <T:Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T: Any?> get(original: Column<T>): Column<T> = query.set.source.columns.find { it == original }?.
+            let { it.clone() as? Column<T> } ?: error("Column not found in original table")
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun get(original: Expression<*>): Expression<*> = (query.set.fields.find { it == original } as? ExpressionAlias<*>)?.aliasOnlyExpression()
+            ?: error("Field not found in original table fields")
+}
+
+fun <T:Table> T.alias(alias: String) = Alias(this, alias)
+fun <T:Query> T.alias(alias: String) = QueryAlias(this, alias)
+fun <T:Expression<*>> T.alias(alias: String) = ExpressionAlias(this, alias)

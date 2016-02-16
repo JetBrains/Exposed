@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
@@ -47,9 +48,9 @@ infix fun Table.leftJoin (otherTable: Table) : Join {
     return Join (this, otherTable, JoinType.LEFT)
 }
 
-class Join (val table: Table) : ColumnSet() {
+class Join (val table: ColumnSet) : ColumnSet() {
 
-    constructor(table: Table, otherTable: Table, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
+    constructor(table: ColumnSet, otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : this(table) {
         val new = if (onColumn != null && otherColumn != null) {
             join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {
@@ -58,27 +59,27 @@ class Join (val table: Table) : ColumnSet() {
         joinParts.addAll(new.joinParts)
     }
 
-    class JoinPart (val joinType: JoinType, val table: Table, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
+    class JoinPart (val joinType: JoinType, val table: ColumnSet, val pkColumn: Expression<*>, val fkColumn: Expression<*>, val additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) {
     }
 
     val joinParts: ArrayList<JoinPart> = ArrayList();
 
-    infix fun innerJoin (otherTable: Table) : Join {
+    infix fun innerJoin (otherTable: ColumnSet) : Join {
         return join(otherTable, JoinType.INNER)
     }
 
-    infix fun leftJoin (otherTable: Table) : Join {
+    infix fun leftJoin (otherTable: ColumnSet) : Join {
         return join(otherTable, JoinType.LEFT)
     }
 
-    fun join (otherTable: Table, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
+    fun join (otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
         val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
-        if (keysPair == null) error ("Cannot join with ${otherTable.tableName} as there is no matching primary key/ foreign key pair")
+        if (keysPair == null) error ("Cannot join with ${otherTable} as there is no matching primary key/ foreign key pair")//todo
 
         return join(otherTable, joinType, keysPair.first, keysPair.second, additionalConstraint)
     }
 
-    fun join(otherTable: Table, joinType: JoinType, onColumn: Expression<*>, otherColumn: Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
+    fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>, otherColumn: Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join {
         val newJoin = Join(table)
         newJoin.joinParts.addAll(joinParts)
         newJoin.joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
@@ -305,41 +306,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override fun hashCode(): Int = tableName.hashCode()
 }
 
-class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
-
-    override val tableName: String get() = alias
-
-    val tableNameWithAlias: String = "${delegate.tableName} AS $alias"
-
-    private fun <T:Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
-
-    override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
-
-    override val fields: List<Expression<*>> = columns
-
-    override fun createStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
-
-    override fun dropStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
-
-    override fun modifyStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is Alias<*>) return false
-        return this.tableNameWithAlias == other.tableNameWithAlias
-    }
-
-    override fun hashCode(): Int = tableNameWithAlias.hashCode()
-
-    @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?> get(original: Column<T>): Column<T> = delegate.columns.find { it == original }?.let { it.clone() as? Column<T> } ?: error("Column not found in original table")
-}
-
-fun <T:Table> T.alias(alias: String) = Alias(this, alias)
-
-
 fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)
+    is QueryAlias -> this.query.set.source.targetTables()
     is Table -> listOf(this)
-    is Join -> listOf(this.table) + this.joinParts.map { it.table }
+    is Join -> this.table.targetTables() + this.joinParts.flatMap { it.table.targetTables() }
     else -> error("No target provided for update")
 }

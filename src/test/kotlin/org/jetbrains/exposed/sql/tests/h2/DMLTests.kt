@@ -752,6 +752,15 @@ class DMLTests : DatabaseTestsBase() {
             assert(resultRow[usersAlias[users.name]] == "Something")
         }
     }
+
+    @Test fun testJoinSubQuery01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val expAlias = users.name.max().alias("m")
+            val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
+            val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
+            assertEquals(3, resultRows.size)
+        }
+    }
 }
 
 
