@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.util.*
@@ -107,7 +108,7 @@ class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
 
 class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
     override fun sqlType(): String  = "DECIMAL($scale, $precision)"
-    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(precision) ?: it }
+    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(precision, RoundingMode.HALF_EVEN) ?: it }
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
