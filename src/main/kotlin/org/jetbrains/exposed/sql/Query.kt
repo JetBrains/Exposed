@@ -76,6 +76,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
     var having: Op<Boolean>? = null;
     var limit: Int? = null
+    var offset: Int = 0
     var count: Boolean = false
     var forUpdate: Boolean? = null
 
@@ -127,7 +128,8 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             }
 
             limit?.let {
-                append(" LIMIT $it")
+                append(" ")
+                append(transaction.db.dialect.limit(it, offset))
             }
         }
 
@@ -175,8 +177,9 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         return this
     }
 
-    infix override fun limit(n: Int): Query {
+    override fun limit(n: Int, offset: Int): Query {
         this.limit = n
+        this.offset = offset
         return this
     }
 

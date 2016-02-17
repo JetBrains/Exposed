@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 interface SizedIterable<out T>: Iterable<T> {
-    fun limit(n: Int): SizedIterable<T>
+    fun limit(n: Int, offset: Int = 0): SizedIterable<T>
     fun count(): Int
     fun empty(): Boolean
     fun forUpdate(): SizedIterable<T> = this
@@ -17,7 +17,7 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
         return 0
     }
 
-    override fun limit(n: Int): SizedIterable<T> {
+    override fun limit(n: Int, offset: Int): SizedIterable<T> {
         return this;
     }
 
@@ -39,8 +39,8 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
 }
 
 class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
-    override fun limit(n: Int): SizedIterable<T> {
-        return SizedCollection(delegate.take(n))
+    override fun limit(n: Int, offset: Int): SizedIterable<T> {
+        return SizedCollection(delegate.drop(offset).take(n))
     }
 
     operator override fun iterator() = delegate.iterator()
@@ -60,7 +60,7 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
         return _wrapper!!
     }
 
-    override fun limit(n: Int): SizedIterable<T> = delegate.limit(n)
+    override fun limit(n: Int, offset: Int): SizedIterable<T> = delegate.limit(n, offset)
     operator override fun iterator() = wrapper.iterator()
     override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
@@ -88,7 +88,7 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
 infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
-        override fun limit(n: Int): SizedIterable<R> = source.limit(n).mapLazy(f)
+        override fun limit(n: Int, offset: Int): SizedIterable<R> = source.limit(n, offset).mapLazy(f)
         override fun forUpdate(): SizedIterable<R> = source.forUpdate().mapLazy(f)
         override fun notForUpdate(): SizedIterable<R> = source.notForUpdate().mapLazy(f)
         override fun count(): Int = source.count()
