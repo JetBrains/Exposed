@@ -44,6 +44,8 @@ interface DatabaseDialect {
 
     // Specific functions
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
+
+    fun limit(size: Int, offset: Int = 0): String
 }
 
 interface MatchMode {
@@ -191,6 +193,8 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun shortAutoincType() = "INT AUTO_INCREMENT"
 
     override fun longAutoincType() = "BIGINT AUTO_INCREMENT"
+
+    override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 }
 
 internal val currentDialect = Transaction.current().db.dialect
