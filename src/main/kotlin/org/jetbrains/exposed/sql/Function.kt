@@ -134,7 +134,7 @@ class GroupConcat(val expr: Column<*>, val separator: String?, val distinct: Boo
                 }
             }
             separator?.let {
-                append("SEPARATOR $separator")
+                append(" SEPARATOR '$separator'")
             }
             append(")")
         }
