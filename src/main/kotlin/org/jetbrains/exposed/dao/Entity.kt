@@ -31,30 +31,30 @@ class EntityID(id: Int, val table: IdTable) {
     }
 }
 
-private fun <T:EntityID?>checkReference(reference: Column<T>, factory: EntityClass<*>) {
+private fun <T:EntityID?>checkReference(reference: Column<T>, factoryTable: IdTable) {
     val refColumn = reference.referee
     if (refColumn == null) error("Column $reference is not a reference")
     val targetTable = refColumn.table
-    if (factory.table != targetTable) {
+    if (factoryTable != targetTable) {
         error("Column and factory point to different tables")
     }
 }
 
 class Reference<out Target : Entity> (val reference: Column<EntityID>, val factory: EntityClass<Target>) {
     init {
-        checkReference(reference, factory)
+        checkReference(reference, factory.table)
     }
 }
 
 class OptionalReference<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     init {
-        checkReference(reference, factory)
+        checkReference(reference, factory.table)
     }
 }
 
 class OptionalReferenceSureNotNull<out Target: Entity> (val reference: Column<EntityID?>, val factory: EntityClass<Target>) {
     init {
-        checkReference(reference, factory)
+        checkReference(reference, factory.table)
     }
 }
 
@@ -70,7 +70,7 @@ class Referrers<out Source:Entity>(val reference: Column<EntityID>, val factory:
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
-        return if (cache) EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o, reference, query)  else query()
+        return if (cache) EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o.id, reference, query)  else query()
     }
 }
 
@@ -85,7 +85,7 @@ class OptionalReferrers<out Source:Entity>(val reference: Column<EntityID?>, val
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Source> {
         val query = {factory.find{reference eq o.id}}
-        return if (cache) EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o, reference, query)  else query()
+        return if (cache) EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o.id, reference, query)  else query()
     }
 }
 
@@ -107,33 +107,30 @@ class View<out Target: Entity> (val op : Op<Boolean>, val factory: EntityClass<T
 class InnerTableLink<Target: Entity>(val table: Table,
                                      val target: EntityClass<Target>) {
     private fun getSourceRefColumn(o: Entity): Column<EntityID> {
-        val sourceRefColumn = table.columns.firstOrNull { it.referee == o.klass.table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        val sourceRefColumn = table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID> ?: error("Table does not reference source")
         return sourceRefColumn
     }
 
     private fun getTargetRefColumn(): Column<EntityID> {
-        val sourceRefColumn = table.columns.firstOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        val sourceRefColumn = table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference source")
         return sourceRefColumn
     }
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Target> {
-        fun alreadyInJoin() = (target.dependsOnTables as? Join)?.joinParts?.any { it.joinType == JoinType.INNER && it.joinPart == table} ?: false
         val sourceRefColumn = getSourceRefColumn(o)
-        val entityTables: ColumnSet = when {
-            target.dependsOnTables is Table -> (target.dependsOnTables as Table).innerJoin(table)
-            alreadyInJoin() -> target.dependsOnTables
-            else -> (target.dependsOnTables as Join).innerJoin(table)
-        }
-        val columns = (target.dependsOnColumns + (if (!alreadyInJoin()) table.columns else emptyList())
+        val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
+        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.innerJoin(table)
+
+        val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
             - sourceRefColumn).distinct() + sourceRefColumn
 
         val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
-        return EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o, sourceRefColumn, query)
+        return EntityCache.getOrCreate(Transaction.current()).getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
     operator fun setValue(o: Entity, desc: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
-        val targeRefColumn = getTargetRefColumn()
+        val targetRefColumn = getTargetRefColumn()
 
         val entityCache = EntityCache.getOrCreate(Transaction.current())
         entityCache.flush()
@@ -141,10 +138,10 @@ class InnerTableLink<Target: Entity>(val table: Table,
         entityCache.clearReferrersCache()
 
         val targetIds = value.map { it.id }.toList()
-        table.deleteWhere { (sourceRefColumn eq o.id) and (targeRefColumn notInList targetIds) }
+        table.deleteWhere { (sourceRefColumn eq o.id) and (targetRefColumn notInList targetIds) }
         table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
             this[sourceRefColumn] = o.id
-            this[targeRefColumn] = targetId
+            this[targetRefColumn] = targetId
         }
     }
 }
@@ -217,7 +214,7 @@ open class Entity(val id: EntityID) {
         if (writeValues.containsKey(this as Column<out Any?>) || _readValues?.tryGet(this) != value) {
             if (referee != null) {
                 EntityCache.getOrCreate(Transaction.current()).referrers.run {
-                    filterKeys { it.id == value }.forEach {
+                    filterKeys { it == value }.forEach {
                         if (it.value.keys.any { it == this@setValue } ) {
                             this.remove(it.key)
                         }
@@ -291,7 +288,7 @@ open class Entity(val id: EntityID) {
 class EntityCache {
     val data = HashMap<IdTable, MutableMap<Int, Entity>>()
     val inserts = HashMap<IdTable, MutableList<Entity>>()
-    val referrers = HashMap<Entity, MutableMap<Column<*>, SizedIterable<*>>>()
+    val referrers = HashMap<EntityID, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun <T: Entity> getMap(f: EntityClass<T>) : MutableMap<Int, T> {
         return getMap(f.table)
@@ -305,8 +302,8 @@ class EntityCache {
         return answer
     }
 
-    fun <T: Entity, R: Entity> getOrPutReferrers(source: T, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
-        return referrers.getOrPut(source, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
+    fun <R: Entity> getOrPutReferrers(sourceId: EntityID, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
+        return referrers.getOrPut(sourceId, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
     }
 
     fun <T: Entity> find(f: EntityClass<T>, id: EntityID): T? {
@@ -508,7 +505,7 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
     fun removeFromCache(entity: Entity) {
         val cache = warmCache()
         cache.remove(table, entity)
-        cache.referrers.remove(entity)
+        cache.referrers.remove(entity.id)
         cache.removeTablesReferrers(listOf(table))
     }
 
@@ -578,6 +575,7 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
             val new = createInstance(id, row)
             new.klass = this
             cache.store(this, new)
+
             new
         }
     }
@@ -631,6 +629,40 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
     fun <T: Enum<T>> Class<T>.findValue(name: String) = enumConstants.first { it.name == name }
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
+
+    fun warmUpReferences(references: List<EntityID>, refColumn: Column<EntityID>): List<T> {
+        if (references.isEmpty()) return emptyList()
+        checkReference(refColumn, references.first().table)
+        val entities = find { refColumn inList references }.toList()
+        val cache = EntityCache.getOrCreate(Transaction.current())
+        val groupedBySourceId = entities.groupBy { it.readValues[refColumn] }
+        references.forEach {
+            cache.getOrPutReferrers(it, refColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+        }
+        return entities
+    }
+
+    fun warmUpReferences(references: List<EntityID>, linkTable: Table): List<T> {
+        if (references.isEmpty()) return emptyList()
+        val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID> ?: error("Can't detect source reference column")
+
+        val transaction = Transaction.current()
+        val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable)?: false
+        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.innerJoin(table)
+
+        val columns = (dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
+                - sourceRefColumn).distinct() + sourceRefColumn
+
+        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList references }.map { it[sourceRefColumn] to wrapRow(it, transaction) }
+
+        val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map {it.second} }
+
+        val cache = EntityCache.getOrCreate(transaction)
+        references.forEach {
+            cache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+        }
+        return entitiesWithRefs.map { it.second }
+    }
 }
 
 abstract class ImmutableEntityClass<out T: Entity>(table: IdTable) : EntityClass<T>(table) {

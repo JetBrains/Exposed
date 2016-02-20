@@ -62,6 +62,18 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
     @Suppress("UNCHECKED_CAST")
     operator fun get(original: Expression<*>): Expression<*> = (query.set.fields.find { it == original } as? ExpressionAlias<*>)?.aliasOnlyExpression()
             ?: error("Field not found in original table fields")
+
+    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join {
+        return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+    }
+
+    override infix fun innerJoin(otherTable: ColumnSet) : Join {
+        return Join (this, otherTable, JoinType.INNER)
+    }
+
+    override infix fun leftJoin(otherTable: ColumnSet) : Join {
+        return Join (this, otherTable, JoinType.LEFT)
+    }
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)

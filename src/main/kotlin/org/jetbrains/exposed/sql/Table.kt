@@ -19,6 +19,10 @@ abstract class ColumnSet(): FieldSet {
 
     abstract fun describe(s: Transaction): String
 
+    abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
+    abstract fun innerJoin(otherTable: ColumnSet): Join
+    abstract fun leftJoin(otherTable: ColumnSet) : Join
+
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, listOf(*columns))
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
@@ -32,25 +36,9 @@ enum class JoinType {
     FULL
 }
 
-infix fun Table.join (otherTable: Table) : Join {
-    return Join (this, otherTable, JoinType.INNER)
-}
-
-fun Table.join (otherTable: Table, joinType: JoinType, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Join {
-    return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
-}
-
-infix fun Table.innerJoin (otherTable: Table) : Join {
-    return Join (this, otherTable, JoinType.INNER)
-}
-
-infix fun Table.leftJoin (otherTable: Table) : Join {
-    return Join (this, otherTable, JoinType.LEFT)
-}
-
 class Join (val table: ColumnSet) : ColumnSet() {
 
-    constructor(table: ColumnSet, otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, onColumn: Column<*>? = null, otherColumn: Column<*>? = null, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) : this(table) {
+    constructor(table: ColumnSet, otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) : this(table) {
         val new = if (onColumn != null && otherColumn != null) {
             join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
         } else {
@@ -68,11 +56,11 @@ class Join (val table: ColumnSet) : ColumnSet() {
 
     val joinParts: ArrayList<JoinPart> = ArrayList();
 
-    infix fun innerJoin(otherTable: ColumnSet): Join {
+    override infix fun innerJoin(otherTable: ColumnSet): Join {
         return join(otherTable, JoinType.INNER)
     }
 
-    infix fun leftJoin(otherTable: ColumnSet): Join {
+    override infix fun leftJoin(otherTable: ColumnSet): Join {
         return join(otherTable, JoinType.LEFT)
     }
 
@@ -84,7 +72,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return join(otherTable, joinType, keysPair?.first, keysPair?.second, additionalConstraint)
     }
 
-    fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
+    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join {
         val newJoin = Join(table)
         newJoin.joinParts.addAll(joinParts)
         newJoin.joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
@@ -116,6 +104,8 @@ class Join (val table: ColumnSet) : ColumnSet() {
     override val columns: List<Column<*>> get() = joinParts.fold(table.columns) { r, j ->
         r + j.joinPart.columns
     }
+
+    fun alreadyInJoin(table: Table) = joinParts.any { it.joinPart == table}
 }
 
 open class Table(name: String = ""): ColumnSet(), DdlAware {
@@ -130,6 +120,22 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override val fields: List<Expression<*>>
         get() = columns
+
+    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join {
+        return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+    }
+
+    infix fun join(otherTable: ColumnSet) : Join {
+        return Join (this, otherTable, JoinType.INNER)
+    }
+
+    override infix fun innerJoin(otherTable: ColumnSet) : Join {
+        return Join (this, otherTable, JoinType.INNER)
+    }
+
+    override infix fun leftJoin(otherTable: ColumnSet) : Join {
+        return Join (this, otherTable, JoinType.LEFT)
+    }
 
     private fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
