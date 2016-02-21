@@ -8,6 +8,8 @@ Exposed is currently available for maven/gradle builds at https://bintray.com/ko
 
 ## SQL DSL sample:
 ```kotlin
+import org.jetbrains.exposed.sql.*
+
 object Users : Table() {
     val id = varchar("id", 10).primaryKey() // PKColumn<String>
     val name = varchar("name", length = 50) // Column<String>
@@ -101,7 +103,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        ((Cities join Users).slice(Cities.name, Users.id.count()).selectAll() groupBy Cities.name).forEach {
+        ((Cities join Users).slice(Cities.name, Users.id.count()).selectAll().groupBy(Cities.name)).forEach {
             val cityName = it[Cities.name]
             val userCount = it[Users.id.count()]
 
@@ -155,6 +157,9 @@ Outputs:
 
 ## DAO sample
 ```kotlin
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.dao.*
+
 object Users : IdTable() {
     val name = varchar("name", 50).index()
     val city = reference("city", Cities)
