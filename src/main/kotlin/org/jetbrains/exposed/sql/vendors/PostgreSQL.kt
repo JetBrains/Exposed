@@ -11,10 +11,7 @@ import java.util.*
 
 internal object PostgreSQL : VendorDialect("postgresql") {
 
-    companion object {
-        val DEFAULT_SEQ = "id_seq"
-    }
-
+    val DEFAULT_SEQ = "id_seq"
 
     override fun configure(database: Database): Unit {
         createSequenceIfNotExists(database, DEFAULT_SEQ)
