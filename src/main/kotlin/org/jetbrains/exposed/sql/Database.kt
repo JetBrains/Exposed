@@ -106,7 +106,10 @@ class Database private constructor(val connector: () -> Connection) {
             }
 
 
-            database.dialect.configure(database);
+            database.transaction {
+                database.dialect.configure(database);
+            }
+
 
             return database
 
