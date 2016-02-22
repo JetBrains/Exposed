@@ -10,6 +10,7 @@ import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
 
+
     val metadata: DatabaseMetaData get() = Transaction.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
             metaData
@@ -84,6 +85,7 @@ class Database private constructor(val connector: () -> Connection) {
         init {
             registerDialect(H2Dialect)
             registerDialect(MysqlDialect)
+            registerDialect(PostgreSQL)
         }
 
         fun registerDialect(dialect: DatabaseDialect) {
@@ -99,9 +101,19 @@ class Database private constructor(val connector: () -> Connection) {
         fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
             Class.forName(driver).newInstance()
 
-            return Database {
+            val database = Database {
                 DriverManager.getConnection(url, user, password)
             }
+
+
+            database.transaction {
+                database.dialect.configure(database);
+            }
+
+
+            return database
+
+
         }
     }
 }
