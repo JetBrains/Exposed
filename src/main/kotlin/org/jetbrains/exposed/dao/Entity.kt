@@ -648,9 +648,9 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
 
         val transaction = Transaction.current()
         val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable)?: false
-        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.innerJoin(table)
+        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.innerJoin(linkTable)
 
-        val columns = (dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
+        val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
                 - sourceRefColumn).distinct() + sourceRefColumn
 
         val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList references }.map { it[sourceRefColumn] to wrapRow(it, transaction) }
