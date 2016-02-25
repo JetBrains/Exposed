@@ -82,7 +82,7 @@ fun main(args: Array<String>) {
         }
 
         println("Manual join:")
-        (Users join Cities).slice(Users.name, Cities.name).
+        (Users innerJoin Cities).slice(Users.name, Cities.name).
             select {(Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)}.forEach {
             println("${it[Users.name]} lives in ${it[Cities.name]}")
@@ -91,7 +91,7 @@ fun main(args: Array<String>) {
         println("Join with foreign key:")
 
 
-        (Users join Cities).slice(Users.name, Users.cityId, Cities.name).
+        (Users innerJoin Cities).slice(Users.name, Users.cityId, Cities.name).
                 select {Cities.name.eq("St. Petersburg") or Users.cityId.isNull()}.forEach {
             if (it[Users.cityId] != null) {
                 println("${it[Users.name]} lives in ${it[Cities.name]}")
@@ -103,7 +103,7 @@ fun main(args: Array<String>) {
 
         println("Functions and group by:")
 
-        ((Cities join Users).slice(Cities.name, Users.id.count()).selectAll().groupBy(Cities.name)).forEach {
+        ((Cities innerJoin Users).slice(Cities.name, Users.id.count()).selectAll().groupBy(Cities.name)).forEach {
             val cityName = it[Cities.name]
             val userCount = it[Users.id.count()]
 

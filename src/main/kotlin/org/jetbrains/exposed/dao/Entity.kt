@@ -112,14 +112,14 @@ class InnerTableLink<Target: Entity>(val table: Table,
     }
 
     private fun getTargetRefColumn(): Column<EntityID> {
-        val sourceRefColumn = table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference source")
+        val sourceRefColumn = table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID> ?: error("Table does not reference target")
         return sourceRefColumn
     }
 
     operator fun getValue(o: Entity, desc: KProperty<*>): SizedIterable<Target> {
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
-        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.innerJoin(table)
+        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, getTargetRefColumn())
 
         val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
             - sourceRefColumn).distinct() + sourceRefColumn
@@ -645,10 +645,11 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
     fun warmUpReferences(references: List<EntityID>, linkTable: Table): List<T> {
         if (references.isEmpty()) return emptyList()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID> ?: error("Can't detect source reference column")
+        val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID>?: error("Can't detect target reference column")
 
         val transaction = Transaction.current()
         val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable)?: false
-        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.innerJoin(linkTable)
+        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
         val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
                 - sourceRefColumn).distinct() + sourceRefColumn

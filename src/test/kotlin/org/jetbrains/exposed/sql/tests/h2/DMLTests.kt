@@ -164,7 +164,7 @@ class DMLTests : DatabaseTestsBase() {
     // manual join
     @Test fun testJoin01() {
         withCitiesAndUsers { cities, users, userData ->
-            (users join cities).slice(users.name, cities.name).
+            (users innerJoin cities).slice(users.name, cities.name).
             select{(users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)}.forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
@@ -235,7 +235,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            ((cities join users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
+            ((cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
 
@@ -251,7 +251,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having{users.id.count() eq 1}.toList()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having{users.id.count() eq 1}.toList()
             assertEquals(1, r.size)
             assertEquals("St. Petersburg", r[0][cities.name])
             val count = r[0][users.id.count()]
@@ -261,7 +261,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                     .groupBy(cities.name)
                     .having{users.id.count() eq cities.id.max()}
                     .orderBy(cities.name)
@@ -287,7 +287,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities join users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                     .groupBy(cities.name)
                     .having{users.id.count() lessEq 42}
                     .orderBy(cities.name)

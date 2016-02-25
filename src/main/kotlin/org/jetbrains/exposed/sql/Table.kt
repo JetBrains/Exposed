@@ -27,6 +27,10 @@ abstract class ColumnSet(): FieldSet {
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
+fun ColumnSet.innerJoin(otherTable: ColumnSet, onColumn: Expression<*>, otherColumn: Expression<*>) = join(otherTable, JoinType.INNER, onColumn, otherColumn)
+
+fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Expression<*>, otherColumn: Expression<*>) = join(otherTable, JoinType.LEFT, onColumn, otherColumn)
+
 class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
 enum class JoinType {
@@ -64,12 +68,18 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return join(otherTable, JoinType.LEFT)
     }
 
-    fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
-        val keysPair = findKeys (this, otherTable) ?: findKeys (otherTable, this)
-        if (keysPair == null && additionalConstraint == null)
-            error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
+    private fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
+        val fkKeys = findKeys (this, otherTable) ?: findKeys (otherTable, this) ?: emptyList()
+        when {
+            fkKeys.isEmpty() && additionalConstraint == null ->
+                error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
-        return join(otherTable, joinType, keysPair?.first, keysPair?.second, additionalConstraint)
+            fkKeys.count() > 1 || fkKeys.any { it.second.count() > 1 } ->  {
+                val references = fkKeys.map { "${it.first.toString()} -> ${it.second.joinToString { it.toString() }}" }.joinToString(" & ")
+                error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
+            }
+            else -> return join(otherTable, joinType, fkKeys.singleOrNull()?.first, fkKeys.singleOrNull()?.second?.single(), additionalConstraint)
+        }
     }
 
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join {
@@ -79,25 +89,26 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return newJoin
     }
 
-    private fun findKeys(a: ColumnSet, b: ColumnSet): Pair<Column<*>, Column<*>>? {
-        for (a_pk in a.columns) {
-            val b_fk = b.columns.firstOrNull { it.referee == a_pk }
-            if (b_fk != null)
-                return a_pk to b_fk
-        }
-        return null
+    private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? {
+
+        val pkToFKeys = a.columns.map { a_pk ->
+            a_pk to b.columns.filter { it.referee == a_pk }
+        }.filter { it.second.isNotEmpty() }
+
+        return if (pkToFKeys.isNotEmpty()) pkToFKeys else null
     }
 
     override fun describe(s: Transaction): String = buildString {
         append(table.describe(s))
         for (p in joinParts) {
             append(" ${p.joinType} JOIN ${p.joinPart.describe(s)} ON ")
+            val queryBuilder = QueryBuilder(false)
             if (p.pkColumn != null && p.fkColumn != null) {
-                append("${p.pkColumn.toSQL(QueryBuilder(false))} = ${p.fkColumn.toSQL(QueryBuilder(false))}")
+                append("${p.pkColumn.toSQL(queryBuilder)} = ${p.fkColumn.toSQL(queryBuilder)}")
                 if (p.additionalConstraint != null) append(" and ")
             }
             if (p.additionalConstraint != null)
-                append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(QueryBuilder(false))})")
+                append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(queryBuilder)})")
         }
     }
 
@@ -125,6 +136,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
     }
 
+    @Deprecated("Just an alias to innerJoin", replaceWith = ReplaceWith("this innerJoin otherTable"))
     infix fun join(otherTable: ColumnSet) : Join {
         return Join (this, otherTable, JoinType.INNER)
     }
