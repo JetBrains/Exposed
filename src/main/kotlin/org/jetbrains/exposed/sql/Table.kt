@@ -27,9 +27,9 @@ abstract class ColumnSet(): FieldSet {
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
-fun ColumnSet.innerJoin(otherTable: ColumnSet, onColumn: Expression<*>, otherColumn: Expression<*>) = join(otherTable, JoinType.INNER, onColumn, otherColumn)
+fun <C1:ColumnSet, C2:ColumnSet> C1.innerJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
 
-fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Expression<*>, otherColumn: Expression<*>) = join(otherTable, JoinType.LEFT, onColumn, otherColumn)
+fun <C1:ColumnSet, C2:ColumnSet> C1.leftJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn())
 
 class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
