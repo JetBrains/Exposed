@@ -609,7 +609,6 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
         return Referrers(column, this, cache)
     }
 
-    //TODO: what's the difference with referrersOn?
     fun optionalReferrersOn(column: Column<EntityID?>, cache: Boolean = false): OptionalReferrers<T> {
         return OptionalReferrers(column, this, cache)
     }
@@ -630,6 +629,9 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*>) this.notForUpdate() else this
 
+    @Suppress("CAST_NEVER_SUCCEEDS")
+    fun warmUpOptReferences(references: List<EntityID>, refColumn: Column<EntityID?>): List<T> = warmUpReferences(references, refColumn as Column<EntityID>)
+
     fun warmUpReferences(references: List<EntityID>, refColumn: Column<EntityID>): List<T> {
         if (references.isEmpty()) return emptyList()
         checkReference(refColumn, references.first().table)
@@ -642,7 +644,7 @@ abstract class EntityClass<out T: Entity>(val table: IdTable) {
         return entities
     }
 
-    fun warmUpReferences(references: List<EntityID>, linkTable: Table): List<T> {
+    fun warmUpLinkedReferences(references: List<EntityID>, linkTable: Table): List<T> {
         if (references.isEmpty()) return emptyList()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID> ?: error("Can't detect source reference column")
         val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID>?: error("Can't detect target reference column")
