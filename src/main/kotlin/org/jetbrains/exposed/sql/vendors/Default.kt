@@ -48,6 +48,8 @@ interface DatabaseDialect {
     fun limit(size: Int, offset: Int = 0): String
 
     fun configure(database: Database): Unit = Unit
+
+    fun needQuotes(identity: String): Boolean
 }
 
 interface MatchMode {

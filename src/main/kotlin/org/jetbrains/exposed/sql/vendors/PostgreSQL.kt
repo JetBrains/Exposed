@@ -39,4 +39,7 @@ internal object PostgreSQL : VendorDialect("postgresql") {
     override fun shortAutoincType(): String = "INT DEFAULT nextval('$DEFAULT_SEQ')"
     override fun longAutoincType(): String = "LONG DEFAULT nextval('$DEFAULT_SEQ')"
 
+
+    val quotes = setOf("user")
+    override fun needQuotes(identity: String): Boolean = quotes.contains(identity)
 }

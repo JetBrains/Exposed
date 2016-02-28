@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -15,15 +16,15 @@ class Key<T>()
 open class UserDataHolder() {
     private val userdata = HashMap<Key<*>, Any?>()
 
-    fun <T:Any> putUserData(key: Key<T>, value: T?) {
+    fun <T : Any> putUserData(key: Key<T>, value: T?) {
         userdata[key] = value
     }
 
-    fun <T:Any> getUserData(key: Key<T>) : T? {
+    fun <T : Any> getUserData(key: Key<T>): T? {
         return userdata[key] as T?
     }
 
-    fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
+    fun <T : Any> getOrCreate(key: Key<T>, init: () -> T): T {
         if (userdata.containsKey(key)) {
             return userdata[key] as T
         }
@@ -34,7 +35,7 @@ open class UserDataHolder() {
     }
 }
 
-class Transaction(val db: Database, val connector: ()-> Connection): UserDataHolder() {
+class Transaction(val db: Database, val connector: () -> Connection) : UserDataHolder() {
     private var _connection: Connection? = null
     val connection: Connection get() {
         if (_connection == null) {
@@ -44,8 +45,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     }
 
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
-    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
-    val keywords = arrayListOf("key")
+    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!! }
 
     val monitor = StatementMonitor()
 
@@ -59,7 +59,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
-    val statementStats = hashMapOf<String, Pair<Int,Long>>()
+    val statementStats = hashMapOf<String, Pair<Int, Long>>()
     val outerTransaction = threadLocal.get()
 
     init {
@@ -85,7 +85,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     }
 
     fun rollback() {
-        _connection?. let {
+        _connection?.let {
             if (!it.isClosed) it.rollback()
         }
     }
@@ -100,7 +100,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
             override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
                 when (type) {
                     StatementType.SELECT -> executeQuery()
-                    else  -> executeUpdate()
+                    else -> executeUpdate()
                 }
                 return resultSet?.let { transform(it) }
             }
@@ -111,7 +111,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         })
     }
 
-    fun <T> exec(stmt: Statement<T>): T? = exec(stmt, {it})
+    fun <T> exec(stmt: Statement<T>): T? = exec(stmt, { it })
 
     fun <T, R> exec(stmt: Statement<T>, body: Statement<T>.(T) -> R): R? {
         statementCount++
@@ -140,7 +140,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return answer.first?.let { stmt.body(it) }
     }
 
-    fun createStatements (vararg tables: Table) : List<String> {
+    fun createStatements(vararg tables: Table): List<String> {
         val statements = ArrayList<String>()
         if (tables.isEmpty())
             return statements
@@ -149,7 +149,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
         for (table in tables) {
 
-            if(table.exists()) continue else newTables.add(table)
+            if (table.exists()) continue else newTables.add(table)
 
             // create table
             val ddl = table.ddl
@@ -175,6 +175,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     fun create(vararg tables: Table) {
         val statements = createStatements(*tables)
         for (statement in statements) {
+            println(statement)
             exec(statement) {
                 connection.createStatement().executeUpdate(statement)
             }
@@ -182,7 +183,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         db.dialect.resetCaches()
     }
 
-    private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
+    private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         val statements = ArrayList<String>()
         if (tables.isEmpty())
             return statements
@@ -207,7 +208,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
             }
 
             // sync nullability of existing columns
-            val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false}
+            val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false }
             for (column in incorrectNullabilityColumns) {
                 statements.add(column.modifyStatement())
             }
@@ -239,7 +240,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         withDataBaseLock {
             db.dialect.resetCaches()
             val statements = logTimeSpent("Preparing create statements") {
-                 createStatements(*tables) + addMissingColumnsStatements(*tables)
+                createStatements(*tables) + addMissingColumnsStatements(*tables)
             }
             logTimeSpent("Executing create statements") {
                 for (statement in statements) {
@@ -258,7 +259,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         }
     }
 
-    fun <T>withDataBaseLock(body: () -> T) {
+    fun <T> withDataBaseLock(body: () -> T) {
         connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
         val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
         if (!isBusy) {
@@ -284,20 +285,20 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
-    private fun needQuotes (identity: String) : Boolean {
-        return keywords.contains (identity) || !identity.isIdentifier()
+    private fun needQuotes(identity: String): Boolean {
+        return currentDialect.needQuotes(identity) || !identity.isIdentifier()
     }
 
-    private fun quoteIfNecessary (identity: String) : String {
-        return (identity.split('.').map {quoteTokenIfNecessary(it)}).joinToString(".")
+    public fun quoteIfNecessary(identity: String): String {
+        return (identity.split('.').map { quoteTokenIfNecessary(it) }).joinToString(".")
     }
 
-    private fun quoteTokenIfNecessary(token: String) : String {
+    private fun quoteTokenIfNecessary(token: String): String {
         return if (needQuotes(token)) "$identityQuoteString$token$identityQuoteString" else token
     }
 
     fun identity(table: Table): String {
-        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName)
+        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}" } ?: quoteIfNecessary(table.tableName)
     }
 
     fun fullIdentity(column: Column<*>): String {
@@ -307,6 +308,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     fun identity(column: Column<*>): String {
         return quoteIfNecessary(column.name)
     }
+
 
     fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
 

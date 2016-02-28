@@ -10,6 +10,8 @@ import java.util.*
 
 internal object MysqlDialect : VendorDialect("mysql") {
 
+    override fun needQuotes(identity: String): Boolean = "key".equals(identity)
+
     override @Synchronized fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
 
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
@@ -60,7 +62,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
             val refTableName = rs.getString("REFERENCED_TABLE_NAME")!!
             val refColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!
             val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-            constraints.getOrPut(Pair(refereeTableName, refereeColumnName), {arrayListOf()}).add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
+            constraints.getOrPut(Pair(refereeTableName, refereeColumnName), { arrayListOf() }).add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
         }
 
         return constraints
@@ -103,7 +105,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
 
     override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
-    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode): Op<Boolean>() {
+    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder): String {
             return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
         }
@@ -131,7 +133,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
     }
 }
 
-enum class MysqlMatchMode(val operator: String): MatchMode {
+enum class MysqlMatchMode(val operator: String) : MatchMode {
     STRICT("IN BOOLEAN MODE"),
     NATURAL_LANGUAGE("IN NATURAL LANGUAGE MODE");
 

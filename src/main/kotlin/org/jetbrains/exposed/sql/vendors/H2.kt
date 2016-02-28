@@ -8,7 +8,9 @@ import org.jetbrains.exposed.sql.*
  * Date: 05.10.2015
  */
 
-internal object H2Dialect: VendorDialect("h2") {
+internal object H2Dialect : VendorDialect("h2") {
+
+    override fun needQuotes(identity: String): Boolean = "key".equals(identity)
 
     // h2 supports only JDBC API from Java 1.6
     override fun getDatabase(): String {
