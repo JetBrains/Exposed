@@ -46,6 +46,8 @@ interface DatabaseDialect {
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 
     fun limit(size: Int, offset: Int = 0): String
+
+    fun configure(database: Database): Unit = Unit
 }
 
 interface MatchMode {
