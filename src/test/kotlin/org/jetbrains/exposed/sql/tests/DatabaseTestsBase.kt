@@ -35,7 +35,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                 }
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess.start().waitFor() }, afterConnection = { postgresSQLProcess.stop() })
+            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() })
 }
 
 private val registeredOnShutdown = HashSet<TestDB>()
