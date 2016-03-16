@@ -6,7 +6,7 @@ buildscript {
             url 'http://oss.sonatype.org/content/repositories/snapshots'
         }
         maven {
-            url "http://dl.bintray.com/kotlin/kotlin-eap"
+            url "http://dl.bintray.com/kotlin/kotlin"
         }
     }
     dependencies {
@@ -47,14 +47,19 @@ repositories {
 
 dependencies {
     compile 'joda-time:joda-time:2.5'
-    compile 'log4j:log4j:1.2.17'
     compile 'org.slf4j:slf4j-api:1.7.12'
-    compile 'org.slf4j:slf4j-log4j12:1.7.12'
+
     testCompile 'junit:junit:4.11'
     compile 'com.h2database:h2:1.4.186' // Shall be scope 'provided' instead
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testCompile 'org.slf4j:slf4j-log4j12:1.7.12'
+    testCompile 'log4j:log4j:1.2.17'
+    testCompile "mysql:mysql-connector-mxj:5.0.12"
+    testCompile 'org.postgresql:postgresql:9.4.1208.jre7'
+    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.10'
 }
 
 test {

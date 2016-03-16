@@ -1,23 +1,21 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.shared
 
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
 import kotlin.test.assertEquals
 
 object EntityTestsData {
-    object XTable: IdTable() {
+    object XTable: IntIdTable() {
         val b1 = bool("b1").default(true)
         val b2 = bool("b2").default(false)
     }
 
-    class XEntity(id: EntityID): Entity(id) {
+    class XEntity(id: EntityID<Int>): Entity<Int>(id) {
         var b1 by XTable.b1
         var b2 by XTable.b2
 
-        companion object : EntityClass<XEntity>(XTable) {
+        companion object : EntityClass<Int, XEntity>(XTable) {
         }
     }
 
@@ -25,10 +23,10 @@ object EntityTestsData {
         A, B
     }
 
-    open class AEntity(id: EntityID): Entity(id) {
+    open class AEntity(id: EntityID<Int>): IntEntity(id) {
         var b1 by XTable.b1
 
-        companion object: EntityClass<AEntity>(XTable) {
+        companion object: IntEntityClass<AEntity>(XTable) {
             fun create(b1: Boolean, type: XType): AEntity {
                 val init: AEntity.() -> Unit = {
                     this.b1 = b1
@@ -42,10 +40,10 @@ object EntityTestsData {
         }
     }
 
-    class BEntity(id: EntityID): AEntity(id) {
+    class BEntity(id: EntityID<Int>): AEntity(id) {
         var b2 by XTable.b2
 
-        companion object: EntityClass<BEntity>(XTable) {
+        companion object: IntEntityClass<BEntity>(XTable) {
             fun create(init: AEntity.() -> Unit): BEntity {
                 val answer = new {
                     init()

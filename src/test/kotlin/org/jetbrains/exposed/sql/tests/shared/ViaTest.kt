@@ -1,20 +1,26 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.shared
 
-import org.junit.Test
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.*
-import kotlin.test.assertEquals
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.junit.Test
+import java.util.*
+
+open class UUIDTable(name: String = "") : IdTable<UUID>(name) {
+    override val id: Column<EntityID<UUID>> = uuid("id").clientDefault { UUID.randomUUID() }.primaryKey().entityId()
+}
 
 object ViaTestData {
-    object NumbersTable: IdTable() {
+    object NumbersTable: UUIDTable() {
         val number = integer("number")
     }
 
-    object StringsTable: IdTable() {
-        val text = varchar("text", 10)
+    object StringsTable: IdTable<Long>("") {
+        override val id: Column<EntityID<Long>> =long("id").autoIncrement().primaryKey().entityId()
+        val text =varchar("text", 10)
     }
 
     object ConnectionTable: Table() {
@@ -22,23 +28,23 @@ object ViaTestData {
         val stringId = reference("stringId", StringsTable, ReferenceOption.CASCADE)
 
         init {
-            index(true, numId, stringId)
+           index(true, numId, stringId)
         }
     }
 
     val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable)
 }
 
-class VNumber(id: EntityID): Entity(id) {
+class VNumber(id: EntityID<UUID>): Entity<UUID>(id) {
     var number by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
 
-    companion object : EntityClass<VNumber>(ViaTestData.NumbersTable)
+    companion object : EntityClass<UUID, VNumber>(ViaTestData.NumbersTable)
 }
 
-class VString(id: EntityID): Entity(id) {
+class VString(id: EntityID<Long>): Entity<Long>(id) {
     var text by ViaTestData.StringsTable.text
-    companion object : EntityClass<VString>(ViaTestData.StringsTable)
+    companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
 
 
@@ -47,7 +53,7 @@ class ViaTests : DatabaseTestsBase() {
         withTables(*ViaTestData.allTables) {
             val n = VNumber.new { number = 10 }
             val s = VString.new { text = "aaa" }
-            n.connectedStrings = SizedCollection<VString>(listOf(s))
+            n.connectedStrings = SizedCollection(listOf(s))
 
             val row = ViaTestData.ConnectionTable.selectAll().single()
             assertEquals (n.id, row[ViaTestData.ConnectionTable.numId])
@@ -62,7 +68,7 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection<VString>(listOf(s1, s2))
+            n1.connectedStrings = SizedCollection(listOf(s1, s2))
 
             val row = ViaTestData.ConnectionTable.selectAll().toList()
             assertEquals(2, row.count())

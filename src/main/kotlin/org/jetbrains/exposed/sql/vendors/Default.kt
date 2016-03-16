@@ -32,6 +32,8 @@ interface DatabaseDialect {
 
     fun shortAutoincType(): String
     fun longAutoincType(): String
+    fun uuidType(): String
+    fun dateTimeType(): String
 
     // Specific SQL statements
 
@@ -194,7 +196,11 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
 
     override fun longAutoincType() = "BIGINT AUTO_INCREMENT"
 
+    override fun uuidType() = "BINARY(16)"
+
+    override fun dateTimeType() = "DATETIME"
+
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 }
 
-internal val currentDialect = Transaction.current().db.dialect
+internal val currentDialect: DatabaseDialect get() = Transaction.current().db.dialect

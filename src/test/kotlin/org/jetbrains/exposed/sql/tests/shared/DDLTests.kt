@@ -1,11 +1,14 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.shared
 
-import org.junit.Test
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import kotlin.test.assertEquals
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.Ignore
+import org.junit.Test
 
 class DDLTests : DatabaseTestsBase() {
     @Test fun tableExists01() {
@@ -14,7 +17,7 @@ class DDLTests : DatabaseTestsBase() {
             val name = varchar("name", length = 42)
         }
 
-        withDb {
+        withTables() {
             assertEquals (false, TestTable.exists())
         }
     }
@@ -37,7 +40,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS \"unnamedTableWithQuotesSQL\$TestTable$1\" (id INT PRIMARY KEY NOT NULL, name VARCHAR(42) NOT NULL)", TestTable.ddl)
+            val q = identityQuoteString
+            assertEquals("CREATE TABLE IF NOT EXISTS ${q}unnamedTableWithQuotesSQL\$TestTable$1$q (id INT NOT NULL, name VARCHAR(42) NOT NULL, CONSTRAINT ${q}pk_unnamedTableWithQuotesSQL\$TestTable$1$q PRIMARY KEY (id))", TestTable.ddl)
         }
     }
 
@@ -45,7 +49,7 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_named_table") {
         }
 
-        withTables(TestTable) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL), tables = TestTable) {
             assertEquals("CREATE TABLE IF NOT EXISTS test_named_table", TestTable.ddl)
         }
     }
@@ -59,8 +63,8 @@ class DDLTests : DatabaseTestsBase() {
             //            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
-        withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(42) PRIMARY KEY NOT NULL, age INT NULL)", TestTable.ddl)
+        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
+            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id ${currentDialect.shortAutoincType()} NOT NULL, name VARCHAR(42) NOT NULL, age INT NULL, CONSTRAINT pk_test_table_with_different_column_types PRIMARY KEY (name))", TestTable.ddl)
         }
     }
 
@@ -121,6 +125,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Ignore
     @Test fun testBlob() {
         val t = object: Table("t1") {
             val id = integer("id").autoIncrement().primaryKey()
@@ -158,10 +163,11 @@ class DDLTests : DatabaseTestsBase() {
             testTable2Id.references( TestTableWithReference2.id)
         }
 
-        withDb {
+        // Mysql requires to drop references before drop tables
+        withTables(excludeSettings = listOf(TestDB.MYSQL)) {
             val statements = createStatements(TestTableWithReference1, TestTableWithReference2)
-            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_1 (id INT PRIMARY KEY NOT NULL, id_ref INT NOT NULL)", statements[0])
-            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_2 (id INT PRIMARY KEY NOT NULL, id_ref INT NULL)", statements[1])
+            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_1 (id INT NOT NULL, id_ref INT NOT NULL, CONSTRAINT pk_test_table_1 PRIMARY KEY (id))", statements[0])
+            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_2 (id INT NOT NULL, id_ref INT NULL, CONSTRAINT pk_test_table_2 PRIMARY KEY (id))", statements[1])
             assertEquals ("ALTER TABLE test_table_1 ADD FOREIGN KEY (id_ref) REFERENCES test_table_2(id)", statements[2])
             assertEquals ("ALTER TABLE test_table_2 ADD FOREIGN KEY (id_ref) REFERENCES test_table_1(id)", statements[3])
 

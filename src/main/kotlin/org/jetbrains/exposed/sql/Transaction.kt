@@ -76,7 +76,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         EntityCache.invalidateGlobalCaches(created)
     }
 
-    fun flushCache(): List<Entity> {
+    fun flushCache(): List<Entity<*>> {
         with(EntityCache.getOrCreate(this)) {
             val newEntities = inserts.flatMap { it.value }
             flush()
@@ -94,7 +94,9 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return "[${delta}ms] ${stmt.take(1024)}\n\n"
     }
 
-    fun <T> exec(stmt: String, transform: (ResultSet) -> T): T? {
+    fun exec(stmt: String) = exec(stmt, { })
+
+    fun <T:Any> exec(stmt: String, transform: (ResultSet) -> T): T? {
         val type = StatementType.values().first { stmt.startsWith(it.name, true) }
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
@@ -172,16 +174,6 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return statements
     }
 
-    fun create(vararg tables: Table) {
-        val statements = createStatements(*tables)
-        for (statement in statements) {
-            exec(statement) {
-                connection.createStatement().executeUpdate(statement)
-            }
-        }
-        db.dialect.resetCaches()
-    }
-
     private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
         val statements = ArrayList<String>()
         if (tables.isEmpty())
@@ -235,6 +227,14 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return statements
     }
 
+    fun <T:Table> create(vararg tables: T) {
+        val statements = createStatements(*tables)
+        for (statement in statements) {
+            exec(statement)
+        }
+        db.dialect.resetCaches()
+    }
+
     fun createMissingTablesAndColumns(vararg tables: Table) {
         withDataBaseLock {
             db.dialect.resetCaches()
@@ -243,16 +243,12 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
             }
             logTimeSpent("Executing create statements") {
                 for (statement in statements) {
-                    exec(statement) {
-                        connection.createStatement().executeUpdate(statement)
-                    }
+                    exec(statement)
                 }
             }
             logTimeSpent("Checking mapping consistence") {
                 for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
-                    exec(statement) {
-                        connection.createStatement().executeUpdate(statement)
-                    }
+                    exec(statement)
                 }
             }
         }
@@ -275,9 +271,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     fun drop(vararg tables: Table) {
         for (table in tables) {
             val ddl = table.dropStatement()
-            exec(ddl) {
-                connection.createStatement().executeUpdate(ddl)
-            }
+            exec(ddl)
         }
     }
 
@@ -288,7 +282,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return keywords.contains (identity) || !identity.isIdentifier()
     }
 
-    private fun quoteIfNecessary (identity: String) : String {
+    internal fun quoteIfNecessary (identity: String) : String {
         return (identity.split('.').map {quoteTokenIfNecessary(it)}).joinToString(".")
     }
 

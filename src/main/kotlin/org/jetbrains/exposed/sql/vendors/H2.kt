@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.h2.jdbc.JdbcConnection
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 
 /**
  * User: Andrey.Tarashevskiy
@@ -29,6 +32,8 @@ internal object H2Dialect: VendorDialect("h2") {
 
         return "INSERT INTO ${transaction.identity(table)} (${preparedValues.map { it.first }.joinToString()}) VALUES (${values.joinToString()}) ON DUPLICATE KEY UPDATE ${preparedValues.map { "${it.first}=${it.second}" }.joinToString()}"
     }
+
+    override fun uuidType(): String = "UUID"
 
     private fun currentMode(): String {
         return ((Transaction.current().connection as? JdbcConnection)?.session as? org.h2.engine.Session)?.database?.mode?.name ?: ""

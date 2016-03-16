@@ -4,8 +4,10 @@ import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
-    var onDelete: ReferenceOption? = null
-    var defaultValue: T? = null
+    internal var indexInPK: Int? = null
+    internal var onDelete: ReferenceOption? = null
+    internal var defaultValueFun: (() -> T)? = null
+    internal var dbDefaultValue: T? = null
 
     override fun equals(other: Any?): Boolean {
         return (other as? Column<*>)?.let {
@@ -39,24 +41,18 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         val colType = columnType
         ddl.append(colType.sqlType())
 
-        if (this is PKColumn<*>) {
-            ddl.append(" PRIMARY KEY")
-        }
         if (colType.nullable) {
             ddl.append(" NULL")
         } else {
             ddl.append(" NOT NULL")
         }
 
-        if (defaultValue != null) {
-            ddl.append (" DEFAULT ${colType.valueToString(defaultValue!!)}")
+        if (dbDefaultValue != null) {
+            ddl.append (" DEFAULT ${colType.valueToString(dbDefaultValue!!)}")
         }
 
         return ddl.toString()
     }
 
     override fun compareTo(other: Column<*>): Int = compareBy<Column<*>>({it.table.tableName}, {it.name}).compare(this, other)
-}
-
-class PKColumn<T>(table: Table, name: String, columnType: ColumnType) : Column<T>(table, name, columnType) {
 }

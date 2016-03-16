@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 
-open class IdTable(name: String = ""): Table(name) {
-    val id = entityId("id", this).autoinc().primaryKey()
+abstract class IdTable<T:Any>(name: String): Table(name) {
+    abstract val id : Column<EntityID<T>>
+
 }

@@ -1,5 +1,7 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.shared
 
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
 
@@ -44,6 +46,12 @@ fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
     } else {
         if (d2 == null)
             error ("d1 is not null while d2 is null")
-        assertEquals(d1.millis, d2.millis)
+
+        // Mysql doesn't support millis prior 5.6.4
+        if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
+            assertEquals(d1.millis / 1000, d2.millis / 1000)
+        } else {
+            assertEquals(d1.millis, d2.millis)
+        }
     }
 }

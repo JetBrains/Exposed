@@ -129,6 +129,10 @@ internal object MysqlDialect : VendorDialect("mysql") {
     override fun dropIndex(tableName: String, indexName: String): String {
         return "ALTER TABLE $tableName DROP INDEX $indexName"
     }
+
+    fun isFractionDateTimeSupported() = Transaction.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
+
+    override fun dateTimeType(): String = if (isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 }
 
 enum class MysqlMatchMode(val operator: String): MatchMode {

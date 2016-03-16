@@ -33,7 +33,7 @@ fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement = Inser
     execute(Transaction.current())
 }
 
-fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Int> {
+fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Any> {
     if (data.count() == 0) return emptyList()
     BatchInsertStatement(this, ignore).let {
         for (element in data) {

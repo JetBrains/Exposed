@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.EntityID
 import org.joda.time.DateTime
 
 abstract class Op<T>() : Expression<T>() {
@@ -94,7 +94,7 @@ class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T>()
     }
 }
 
-fun idParam(value: EntityID): Expression<EntityID> = QueryParameter(value, EntityIDColumnType(value.table))
+fun <T:Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())

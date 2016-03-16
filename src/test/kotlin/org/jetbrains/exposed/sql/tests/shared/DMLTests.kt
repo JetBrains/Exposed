@@ -1,6 +1,8 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
@@ -53,13 +55,13 @@ object DMLTestsData {
     }
 }
 
-class DMLTests : DatabaseTestsBase() {
-    fun withCitiesAndUsers(statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
+class DMLTests() : DatabaseTestsBase() {
+    fun withCitiesAndUsers(exclude: List<TestDB> = emptyList(), statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
         val Users = DMLTestsData.Users;
         val Cities = DMLTestsData.Cities;
         val UserData = DMLTestsData.UserData;
 
-        withTables(Cities, Users, UserData) {
+        withTables(exclude, Cities, Users, UserData) {
             val saintPetersburgId = Cities.insert {
                 it[name] = "St. Petersburg"
             } get Cities.id
@@ -320,7 +322,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL)) { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -332,7 +334,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL)) { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -356,16 +358,16 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testSizedIterable() {
         withCitiesAndUsers { cities, users, userData ->
-            assertEquals( false, cities.selectAll().empty())
-            assertEquals( true, cities.select{cities.name eq "Qwertt"}.empty())
-            assertEquals( 0, cities.select{cities.name eq "Qwertt"}.count())
-            assertEquals( 3, cities.selectAll().count())
+            assertEquals(false, cities.selectAll().empty())
+            assertEquals(true, cities.select { cities.name eq "Qwertt" }.empty())
+            assertEquals(0, cities.select { cities.name eq "Qwertt" }.count())
+            assertEquals(3, cities.selectAll().count())
         }
     }
 
     @Test fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))}.toList()
+            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
         }
@@ -373,7 +375,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testExists02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey"))))}
+            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -385,7 +387,8 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select{
                         exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
-                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))}
+                                exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
+            }
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -418,7 +421,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testCalc03() {
         withCitiesAndUsers { cities, users, userData ->
-            val sum = Expression.build {Sum(cities.id*100 + userData.value/10, IntegerColumnType())}
+            val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
                     .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
@@ -431,7 +434,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testSubstring01() {
         withCitiesAndUsers { cities, users, userData ->
-            val substring = users.name.substring(0, 2)
+            val substring = users.name.substring(1, 2)
             val r = (users).slice(users.id, substring)
                     .selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
@@ -445,7 +448,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testInsertSelect01() {
         withCitiesAndUsers { cities, users, userData ->
-            val substring = users.name.substring(0, 2)
+            val substring = users.name.substring(1, 2)
             cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
 
             val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
@@ -466,7 +469,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
-            val field = Expression.build {case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
+            val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
             val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])
@@ -722,7 +725,7 @@ class DMLTests : DatabaseTestsBase() {
         val time = DateTime.now()
         val eOne = DMLTestsData.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(tbl) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = tbl) {
             tbl.insert {
                 it[n] = 101
                 it[s] = "123456789"

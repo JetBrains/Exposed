@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
@@ -10,12 +11,12 @@ import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
-class BatchUpdateStatement(val table: IdTable): UpdateStatement(table, null) {
-    val data = ArrayList<Pair<EntityID, SortedMap<Column<*>, Any?>>>()
+class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
+    val data = ArrayList<Pair<EntityID<*>, SortedMap<Column<*>, Any?>>>()
 
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 
-    fun addBatch(id: EntityID) {
+    fun addBatch(id: EntityID<*>) {
         if (data.size < 2 || data.first().second.keys.toList().equals(data.last().second.keys.toList())) {
             data.add(id to TreeMap())
         } else {
@@ -35,11 +36,11 @@ class BatchUpdateStatement(val table: IdTable): UpdateStatement(table, null) {
     override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = data.map { it.second.map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
 }
 
-class EntityBatchUpdate(val klass: EntityClass<*>) {
+class EntityBatchUpdate<ID:Any>(val klass: EntityClass<in ID, Entity<in ID>>) {
 
-    val data = ArrayList<Pair<EntityID, SortedMap<Column<*>, Any?>>>()
+    private val data = ArrayList<Pair<EntityID<ID>, SortedMap<Column<*>, Any?>>>()
 
-    fun addBatch(id: EntityID) {
+    fun addBatch(id: EntityID<ID>) {
         data.add(id to TreeMap())
     }
 

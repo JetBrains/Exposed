@@ -6,6 +6,8 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
 import java.util.*
+import kotlin.reflect.memberProperties
+import kotlin.reflect.primaryConstructor
 
 interface FieldSet {
     val fields: List<Expression<*>>
@@ -126,7 +128,6 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override val columns: List<Column<*>> = _columns
     override fun describe(s: Transaction): String = s.identity(this)
 
-    val primaryKeys  = ArrayList<Column<*>>()
     val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
 
     override val fields: List<Expression<*>>
@@ -149,97 +150,72 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return Join (this, otherTable, JoinType.LEFT)
     }
 
+    internal fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
+        _columns.add(this)
+    }
+
     private fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
         _columns.add(newColumn)
         return newColumn
     }
 
-    fun <T> Column<T>.primaryKey(): PKColumn<T> {
-        val answer = replaceColumn (this, PKColumn<T>(table, name, columnType))
-        primaryKeys.add(answer)
-        return answer
-    }
-
-    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>) : Column<T> {
-        val answer = Column<T>(this, name, EnumerationColumnType(klass))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun entityId(name: String, table: IdTable) : Column<EntityID> {
-        val answer = Column<EntityID>(this, name, EntityIDColumnType(table))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun integer(name: String): Column<Int> {
-        val answer = Column<Int>(this, name, IntegerColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun char(name: String): Column<Char> {
-        val answer = Column<Char>(this, name, CharacterColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> {
-        val answer = Column<BigDecimal>(this, name, DecimalColumnType(scale, precision))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun long(name: String): Column<Long> {
-        val answer = Column<Long>(this, name, LongColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun date(name: String): Column<DateTime> {
-        val answer = Column<DateTime>(this, name, DateColumnType(false))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun bool(name: String): Column<Boolean> {
-        val answer = Column<Boolean>(this, name, BooleanColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun datetime(name: String): Column<DateTime> {
-        val answer = Column<DateTime>(this, name, DateColumnType(true))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun blob(name: String): Column<Blob> {
-        val answer = Column<Blob>(this, name, BlobColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun text(name: String): Column<String> {
-        val answer = Column<String>(this, name, StringColumnType())
-        _columns.add(answer)
-        return answer
-    }
-
-    fun varchar(name: String, length: Int, collate: String? = null): Column<String> {
-        val answer = Column<String>(this, name, StringColumnType(length, collate))
-        _columns.add(answer)
-        return answer
-    }
-
-    fun <C:Column<Int>> C.autoIncrement(): C {
-        (columnType as IntegerColumnType).autoinc = true
+    fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> {
+        if (indx != null && table.columns.any { it.indexInPK == indx } ) throw IllegalArgumentException("Table $tableName already contains PK at $indx")
+        indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
         return this
     }
 
-    fun <C:Column<EntityID>> C.autoinc(): C {
-        (columnType as EntityIDColumnType).autoinc = true
+    @Suppress("UNCHECKED_CAST")
+    fun <T:Any> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).apply {
+        this.indexInPK = this@entityId.indexInPK
+        this.defaultValueFun = this@entityId.defaultValueFun?.let { { EntityID(it(), table as IdTable<T>) } }
+    })
+
+    fun <ID:Any> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
+        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
+        val copy = originalColumn.columnType.clone().apply { autoinc = false }
+        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column(table, name, copy), false))
+        _columns.add(answer)
+        return answer
+    }
+
+    private fun <T:Any> T.clone() = javaClass.kotlin.run {
+        val allParams = memberProperties.map { it.name to it.get(this@clone) }.toMap()
+        primaryConstructor!!.callBy(primaryConstructor!!.parameters.map { it to allParams[it.name] }.toMap())
+    }
+
+    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>) : Column<T>  = registerColumn(name, EnumerationColumnType(klass))
+
+    fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
+
+    fun char(name: String): Column<Char> = registerColumn(name, CharacterColumnType())
+
+    fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(scale, precision))
+
+    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
+
+    fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+
+    fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
+
+    fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+
+    fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
+
+    fun text(name: String): Column<String> = registerColumn(name, StringColumnType())
+
+    fun uuid(name: String) = registerColumn<UUID>(name, UUIDColumnType())
+
+    fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, StringColumnType(length, collate))
+
+    fun <N:Number, C:Column<N>> C.autoIncrement(): C {
+        columnType.autoinc = true
+        return this
+    }
+
+    fun <N:Number, C:Column<EntityID<N>>> C.autoinc(): C {
+        (columnType as EntityIDColumnType<*>).autoinc = true
         return this
     }
 
@@ -248,7 +224,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return this
     }
 
-    fun reference(name: String, foreign: IdTable, onDelete: ReferenceOption? = null): Column<EntityID> {
+    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> {
         val column = entityId(name, foreign) references foreign.id
         column.onDelete = onDelete
         return column
@@ -259,8 +235,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         this._columns.add(column)
         return column
     }
-
-    fun optReference(name: String, foreign: IdTable, onDelete: ReferenceOption? = null): Column<EntityID?> {
+    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> {
         val column = reference(name, foreign).nullable()
         column.onDelete = onDelete
         return column
@@ -269,13 +244,20 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
-        newColumn.defaultValue = defaultValue
+        newColumn.defaultValueFun = defaultValueFun
+        newColumn.dbDefaultValue = dbDefaultValue
         newColumn.columnType.nullable = true
         return replaceColumn (this, newColumn)
     }
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {
-        this.defaultValue = defaultValue
+        this.dbDefaultValue = defaultValue
+        this.defaultValueFun = { defaultValue }
+        return this
+    }
+
+    fun <T:Any> Column<T>.clientDefault(defaultValue: () -> T): Column<T> {
+        this.defaultValueFun = defaultValue
         return this
     }
 
@@ -283,34 +265,31 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         indices.add(columns to isUnique)
     }
 
-    fun<T> Column<T>.index(isUnique: Boolean = false) : Column<T> {
-        this.table.index(isUnique, this)
-        return this
+    fun<T> Column<T>.index(isUnique: Boolean = false) : Column<T> = apply {
+        table.index(isUnique, this)
     }
 
-    fun<T> Column<T>.uniqueIndex() : Column<T> {
-        return this.index(true)
-    }
+    fun<T> Column<T>.uniqueIndex() : Column<T> = index(true)
 
     val ddl: String
         get() = createStatement()
 
-    override fun createStatement(): String {
-        var ddl = StringBuilder("CREATE TABLE IF NOT EXISTS ${Transaction.current().identity(this)}")
-        if (columns.isNotEmpty()) {
-            ddl.append(" (")
-            var c = 0;
-            for (column in columns) {
-                ddl.append(column.descriptionDdl())
-                c++
-                if (c < columns.size) {
-                    ddl.append(", ")
-                }
+    override fun createStatement(): String  = buildString {
+        append("CREATE TABLE IF NOT EXISTS ${Transaction.current().identity(this@Table)}")
+        if (columns.any()) {
+            append(columns.map { it.descriptionDdl() }.joinToString(prefix = " ("))
+            var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
+            if (pkey.isEmpty()) {
+                pkey = columns.filter { it.columnType.autoinc }
             }
-
-            ddl.append(")")
+            if (pkey.isNotEmpty()) {
+                append(pkey.joinToString(
+                        prefix = ", CONSTRAINT ${Transaction.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
+                    Transaction.current().identity(it)
+                })
+            }
+            append(")")
         }
-        return ddl.toString()
     }
 
     override fun dropStatement(): String = "DROP TABLE ${Transaction.current().identity(this)}"

@@ -7,6 +7,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.nio.ByteBuffer
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.util.*
@@ -50,22 +51,26 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
     }
 }
 
-class EntityIDColumnType(val table: IdTable, autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.shortAutoincType() else "INT"
+class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idColumn.columnType.autoinc): ColumnType(autoinc = autoinc) {
+
+    init {
+        assert(idColumn.table is IdTable<*>){"EntityId supported only for IdTables"}
+    }
+
+    override fun sqlType(): String = idColumn.columnType.sqlType()
 
     override fun notNullValueToDB(value: Any): Any {
-        return when (value) {
-            is EntityID -> value.value
-            is Int -> value
-            else -> error("Unknown value for entity id: $value")
-        }
+        return idColumn.columnType.notNullValueToDB(when (value) {
+            is EntityID<*> -> value.value
+            else -> value
+        })
     }
 
     override fun valueFromDB(value: Any): Any {
+        @Suppress("UNCHECKED_CAST")
         return when (value) {
-            is EntityID -> EntityID(value.value, table)
-            is Int -> EntityID(value, table)
-            else -> EntityID(value.toString().toInt(), table)
+            is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
+            else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
         }
     }
 }
@@ -82,7 +87,7 @@ class CharacterColumnType() : ColumnType() {
     }
 }
 
-class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
+class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
     override fun sqlType(): String  = if (autoinc) currentDialect.shortAutoincType() else "INT"
 
     override fun valueFromDB(value: Any): Any {
@@ -94,8 +99,8 @@ class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
     }
 }
 
-class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.shortAutoincType() else "BIGINT"
+class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
+    override fun sqlType(): String  = if (autoinc) currentDialect.longAutoincType() else "BIGINT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -131,7 +136,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 }
 
 class DateColumnType(val time: Boolean): ColumnType() {
-    override fun sqlType(): String  = if (time) "DATETIME" else "DATE"
+    override fun sqlType(): String  = if (time) currentDialect.dateTimeType() else "DATE"
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
@@ -141,7 +146,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)
             else -> error("Unexpected value: $value")
-        } as DateTime
+        }
 
         if (time) {
             val zonedTime = dateTime.toDateTime(DateTimeZone.UTC)
@@ -231,9 +236,27 @@ class BlobColumnType(): ColumnType() {
 }
 
 class BooleanColumnType() : ColumnType() {
-    override fun sqlType(): String  = "BIT"
+    override fun sqlType(): String  = "BOOLEAN"
 
-    override fun nonNullValueToString(value: Any): String {
-        return if (value as Boolean) "1" else "0"
+    override fun nonNullValueToString(value: Any): String = (value as Boolean).toString()
+}
+
+class UUIDColumnType() : ColumnType(autoinc = false) {
+    override fun sqlType(): String = currentDialect.uuidType()
+
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is UUID -> ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
+        is String -> value.toByteArray()
+        is ByteArray -> value
+        else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
     }
+
+    override fun valueFromDB(value: Any): Any = when(value) {
+        is UUID -> value
+        is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
+        is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        is EntityID<*> -> valueFromDB(value.value)
+        else -> error("Unexpected value of type UUID: $value")
+    }
+
 }

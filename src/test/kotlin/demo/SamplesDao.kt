@@ -1,28 +1,32 @@
 package demo.dao
 
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.StdOutSqlLogger
 
-object Users : IdTable() {
+object Users : IntIdTable() {
     val name = varchar("name", 50).index()
     val city = reference("city", Cities)
     val age = integer("age")
 }
 
-object Cities: IdTable() {
+object Cities: IntIdTable() {
     val name = varchar("name", 50)
 }
 
-class User(id: EntityID) : Entity(id) {
-    companion object : EntityClass<User>(Users)
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
 
     var name by Users.name
     var city by City referencedOn Users.city
     var age by Users.age
 }
 
-class City(id: EntityID) : Entity(id) {
-    companion object : EntityClass<City>(Cities)
+class City(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<City>(Cities)
 
     var name by Cities.name
     val users by User referrersOn Users.city

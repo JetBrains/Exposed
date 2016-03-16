@@ -11,13 +11,13 @@ Exposed is currently available for maven/gradle builds at https://bintray.com/ko
 import org.jetbrains.exposed.sql.*
 
 object Users : Table() {
-    val id = varchar("id", 10).primaryKey() // PKColumn<String>
+    val id = varchar("id", 10).primaryKey() // Column<String>
     val name = varchar("name", length = 50) // Column<String>
     val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
 }
 
 object Cities : Table() {
-    val id = integer("id").autoIncrement().primaryKey() // PKColumn<Int>
+    val id = integer("id").autoIncrement().primaryKey() // Column<Int>
     val name = varchar("name", 50) // Column<String>
 }
 
@@ -123,8 +123,8 @@ fun main(args: Array<String>) {
 
 Outputs:
 ```
-    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
-    SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10) PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL)
+    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT pk_Cities PRIMARY KEY (id))
+    SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10) NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL, CONSTRAINT pk_Users PRIMARY KEY (id))
     SQL: ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Cities(id)
     SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
     SQL: INSERT INTO Cities (name) VALUES ('Munich')
@@ -160,26 +160,26 @@ Outputs:
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.dao.*
 
-object Users : IdTable() {
+object Users : IntIdTable() {
     val name = varchar("name", 50).index()
     val city = reference("city", Cities)
     val age = integer("age")
 }
 
-object Cities: IdTable() {
+object Cities: IntIdTable() {
     val name = varchar("name", 50)
 }
 
-class User(id: EntityID) : Entity(id) {
-    companion object : EntityClass<User>(Users)
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
 
     var name by Users.name
     var city by City referencedOn Users.city
     var age by Users.age
 }
 
-class City(id: EntityID) : Entity(id) {
-    companion object : EntityClass<City>(Cities)
+class City(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<City>(Cities)
 
     var name by Cities.name
     val users by User referrersOn Users.city
@@ -228,8 +228,8 @@ fun main(args: Array<String>) {
 
 Outputs:
 ```
-    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL)
-    SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL)
+    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT pk_Cities PRIMARY KEY (id))
+    SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL, CONSTRAINT pk_Users PRIMARY KEY (id))
     SQL: CREATE INDEX Users_name ON Users (name)
     SQL: ALTER TABLE Users ADD FOREIGN KEY (city) REFERENCES Cities(id)
     SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg'),('Munich')
