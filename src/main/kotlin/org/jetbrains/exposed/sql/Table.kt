@@ -150,11 +150,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return Join (this, otherTable, JoinType.LEFT)
     }
 
-    internal fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
+    fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
         _columns.add(this)
     }
 
-    private fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
+    fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
         _columns.add(newColumn)
         return newColumn
