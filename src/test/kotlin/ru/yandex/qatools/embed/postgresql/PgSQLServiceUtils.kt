@@ -60,6 +60,14 @@ object PgSQLServiceUtils {
             return (listOf(exe.executable().absolutePath, "-D", config.storage().dbDir().absolutePath) + config.args()).toMutableList()
         }
 
+        // we need msvcr120.dll for PostgreSQL which is available in JRE 8
+        override fun onBeforeProcessStart(processBuilder: ProcessBuilder?, config: PostgresConfig?, runtimeConfig: IRuntimeConfig?) {
+            super.onBeforeProcessStart(processBuilder, config, runtimeConfig)
+            processBuilder?.environment()?.let { env ->
+                env["Path"] = env["Path"].orEmpty() + ";${env["JAVA_HOME"]!!}\\jre\\bin"
+            }
+        }
+
         // Copy-paste from PostgresProcess to graceful shutdown postgresql on Windows
 
         override fun stopInternal() {
