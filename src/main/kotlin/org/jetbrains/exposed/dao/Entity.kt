@@ -335,29 +335,6 @@ class EntityCache {
         list.add(o)
     }
 
-    infix internal fun Table.references(another: Table): Boolean {
-        return columns.any { it.referee?.table == another }
-    }
-
-    private fun<T> swap (list: ArrayList<T>, i : Int, j: Int) {
-        val tmp = list[i]
-        list[i] = list[j]
-        list[j] = tmp
-    }
-
-    fun<T> ArrayList<T>.topoSort (comparer: (T,T) -> Int) {
-        for (i in 0..this.size -2) {
-            var minIndex = i
-            for (j in (i+1)..this.size -1) {
-                if (comparer(this[minIndex], this[j]) > 0) {
-                    minIndex = j
-                }
-            }
-            if (minIndex != i)
-                swap(this, i, minIndex)
-        }
-    }
-
     fun flush() {
         flush((inserts.keys + data.keys).toSet())
     }
@@ -381,16 +358,16 @@ class EntityCache {
         return workset
     }
 
-    fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).apply {
-        topoSort { a, b ->
-            when {
-                a == b -> 0
-                a references b && b references a -> 0
-                a references b -> 1
-                b references a -> -1
-                else -> 0
-            }
-        }
+    fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
+        if(this.isEmpty()) return this
+        val canBeReferenced = arrayListOf<Table>()
+        do {
+            val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
+            if (movable.isEmpty()) error("Cycle references detected, can't sort table references!")
+            canBeReferenced.addAll(movable)
+            this.removeAll(movable)
+        } while (others.isNotEmpty())
+        canBeReferenced
     }
 
     fun flush(tables: Iterable<IdTable<*>>) {
