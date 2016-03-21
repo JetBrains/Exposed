@@ -757,6 +757,17 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testStringFunctions() {
+        withCitiesAndUsers { cities, users, userData ->
+
+            val lcase = DMLTestsData.Cities.name.lcase()
+            assert(cities.slice(lcase).selectAll().any{ it[lcase] == "prague"})
+
+            val ucase = DMLTestsData.Cities.name.ucase()
+            assert(cities.slice(ucase).selectAll().any{ it[ucase] == "PRAGUE"})
+        }
+    }
+
     @Test fun testJoinSubQuery01() {
         withCitiesAndUsers { cities, users, userData ->
             val expAlias = users.name.max().alias("m")

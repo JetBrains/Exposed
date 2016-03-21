@@ -28,6 +28,22 @@ class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
+class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "LCASE(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType = StringColumnType()
+}
+
+class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "UCASE(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType = StringColumnType()
+}
+
 class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MIN(${expr.toSQL(queryBuilder)})"
