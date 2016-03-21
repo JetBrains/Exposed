@@ -760,10 +760,10 @@ class DMLTests() : DatabaseTestsBase() {
     @Test fun testStringFunctions() {
         withCitiesAndUsers { cities, users, userData ->
 
-            val lcase = DMLTestsData.Cities.name.lcase()
+            val lcase = DMLTestsData.Cities.name.lowerCase()
             assert(cities.slice(lcase).selectAll().any{ it[lcase] == "prague"})
 
-            val ucase = DMLTestsData.Cities.name.ucase()
+            val ucase = DMLTestsData.Cities.name.upperCase()
             assert(cities.slice(ucase).selectAll().any{ it[ucase] == "PRAGUE"})
         }
     }

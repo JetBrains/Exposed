@@ -40,8 +40,8 @@ fun<T:String?> Expression<T>.trim(): Trim {
     return Trim(this)
 }
 
-fun <T:String?> Expression<T>.lcase() = LowerCase(this)
-fun <T:String?> Expression<T>.ucase() = UpperCase(this)
+fun <T:String?> Expression<T>.lowerCase() = LowerCase(this)
+fun <T:String?> Expression<T>.upperCase() = UpperCase(this)
 
 fun <T> Column<T>.distinct(): Distinct<T> {
     return Distinct(this, this.columnType)
