@@ -85,7 +85,7 @@ abstract class DatabaseTestsBase() {
                     statement()
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    drop (*EntityCache.newCache().sortTablesByReferences(tables.toList()).reversed().toTypedArray())
+                    drop (*EntityCache.sortTablesByReferences(tables.toList()).reversed().toTypedArray())
                 }
             }
         }

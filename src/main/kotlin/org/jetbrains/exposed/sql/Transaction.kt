@@ -149,7 +149,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
         val newTables = ArrayList<Table>()
 
-        for (table in tables) {
+        for (table in EntityCache.sortTablesByReferences(tables.toList())) {
 
             if(table.exists()) continue else newTables.add(table)
 

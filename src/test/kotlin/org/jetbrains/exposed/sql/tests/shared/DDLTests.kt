@@ -148,31 +148,5 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun tablesWithCrossReferencesSQL() {
-        val TestTableWithReference1 = object : Table("test_table_1") {
-            val id = integer("id").primaryKey()
-            val testTable2Id = integer("id_ref")
-        }
-
-        val TestTableWithReference2 = object : Table("test_table_2") {
-            val id = integer("id").primaryKey()
-            val testTable1Id = (integer("id_ref") references TestTableWithReference1.id).nullable()
-        }
-
-        with (TestTableWithReference1) {
-            testTable2Id.references( TestTableWithReference2.id)
-        }
-
-        // Mysql requires to drop references before drop tables
-        withTables(excludeSettings = listOf(TestDB.MYSQL)) {
-            val statements = createStatements(TestTableWithReference1, TestTableWithReference2)
-            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_1 (id INT NOT NULL, id_ref INT NOT NULL, CONSTRAINT pk_test_table_1 PRIMARY KEY (id))", statements[0])
-            assertEquals ("CREATE TABLE IF NOT EXISTS test_table_2 (id INT NOT NULL, id_ref INT NULL, CONSTRAINT pk_test_table_2 PRIMARY KEY (id))", statements[1])
-            assertEquals ("ALTER TABLE test_table_1 ADD FOREIGN KEY (id_ref) REFERENCES test_table_2(id)", statements[2])
-            assertEquals ("ALTER TABLE test_table_2 ADD FOREIGN KEY (id_ref) REFERENCES test_table_1(id)", statements[3])
-
-            create(TestTableWithReference1, TestTableWithReference2)
-        }
-    }
 }
 

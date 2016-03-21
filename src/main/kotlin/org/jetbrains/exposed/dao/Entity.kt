@@ -165,29 +165,29 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         return cachedData.getOrPut(key, evaluate) as T
     }*/
 
-    operator fun <T: Entity<ID>> Reference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
+    operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
-    operator fun <T: Entity<ID>> Reference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+    operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
         reference.setValue(o, desc, value.id)
     }
 
-    operator fun <T: Entity<ID>> OptionalReference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T? {
+    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T? {
         return reference.getValue(o, desc)?.let{factory.findById(it)}
     }
 
-    operator fun <T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
+    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
         reference.setValue(o, desc, value?.id)
     }
 
-    operator fun <T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
+    operator fun <ID:Any, T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc) ?: error("${o.id}.$desc is null")
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
-    operator fun <T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+    operator fun <ID:Any, T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
         reference.setValue(o, desc, value.id)
     }
 
@@ -206,7 +206,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues.get(this as Column<out Any?>) as T
-        id._value == -1 && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
+        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
         else -> readValues[this]
     }
 
@@ -328,46 +328,11 @@ class EntityCache {
     }
 
     fun <ID:Any, T: Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-        val list = inserts.getOrPut(f.table) {
-            ArrayList<Entity<*>>()
-        }
-
-        list.add(o)
+        inserts.getOrPut(f.table) { arrayListOf() }.add(o)
     }
 
     fun flush() {
         flush((inserts.keys + data.keys).toSet())
-    }
-
-    fun addDependencies(tables: Iterable<Table>): Iterable<Table> {
-        val workset = HashSet<Table>()
-
-        fun checkTable(table: Table) {
-            if (workset.add(table)) {
-                for (c in table.columns) {
-                    val referee = c.referee
-                    if (referee != null) {
-                        if (referee.table is IdTable<*>) checkTable(referee.table)
-                    }
-                }
-            }
-        }
-
-        for (t in tables) checkTable(t)
-
-        return workset
-    }
-
-    fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
-        if(this.isEmpty()) return this
-        val canBeReferenced = arrayListOf<Table>()
-        do {
-            val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
-            if (movable.isEmpty()) error("Cycle references detected, can't sort table references!")
-            canBeReferenced.addAll(movable)
-            this.removeAll(movable)
-        } while (others.isNotEmpty())
-        canBeReferenced
     }
 
     fun flush(tables: Iterable<IdTable<*>>) {
@@ -444,6 +409,37 @@ class EntityCache {
 
         fun getOrCreate(s: Transaction): EntityCache {
             return s.getOrCreate(key, newCache)
+        }
+
+        fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
+            if(this.isEmpty()) return this
+            val canBeReferenced = arrayListOf<Table>()
+            do {
+                val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
+                if (movable.isEmpty()) error("Cycle references detected, can't sort table references!")
+                canBeReferenced.addAll(movable)
+                this.removeAll(movable)
+            } while (others.isNotEmpty())
+            canBeReferenced
+        }
+
+        fun addDependencies(tables: Iterable<Table>): Iterable<Table> {
+            val workset = HashSet<Table>()
+
+            fun checkTable(table: Table) {
+                if (workset.add(table)) {
+                    for (c in table.columns) {
+                        val referee = c.referee
+                        if (referee != null) {
+                            if (referee.table is IdTable<*>) checkTable(referee.table)
+                        }
+                    }
+                }
+            }
+
+            for (t in tables) checkTable(t)
+
+            return workset
         }
     }
 }

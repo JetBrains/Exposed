@@ -9,9 +9,9 @@ class SortByReferenceTest {
     @Test
     fun simpleTest() {
         val rightOrder = listOf(DMLTestsData.Cities, DMLTestsData.Users, DMLTestsData.UserData)
-        val r1 = EntityCache.newCache().sortTablesByReferences(listOf(DMLTestsData.Cities, DMLTestsData.UserData, DMLTestsData.Users))
-        val r2 = EntityCache.newCache().sortTablesByReferences(listOf(DMLTestsData.UserData, DMLTestsData.Cities, DMLTestsData.Users))
-        val r3 = EntityCache.newCache().sortTablesByReferences(listOf(DMLTestsData.Users, DMLTestsData.Cities, DMLTestsData.UserData))
+        val r1 = EntityCache.sortTablesByReferences(listOf(DMLTestsData.Cities, DMLTestsData.UserData, DMLTestsData.Users))
+        val r2 = EntityCache.sortTablesByReferences(listOf(DMLTestsData.UserData, DMLTestsData.Cities, DMLTestsData.Users))
+        val r3 = EntityCache.sortTablesByReferences(listOf(DMLTestsData.Users, DMLTestsData.Cities, DMLTestsData.UserData))
         assertEqualLists(r1, rightOrder)
         assertEqualLists(r2, rightOrder)
         assertEqualLists(r3, rightOrder)
@@ -44,6 +44,6 @@ class SortByReferenceTest {
         with (cities) {
             strange_id.references( strangeTable.id)
         }
-        EntityCache.newCache().sortTablesByReferences(listOf(cities, users, strangeTable))
+        EntityCache.sortTablesByReferences(listOf(cities, users, strangeTable))
     }
 }
