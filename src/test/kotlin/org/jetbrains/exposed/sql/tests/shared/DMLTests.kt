@@ -396,6 +396,25 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInList01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = users.select { users.id inList listOf("andrey","alex") }.orderBy(users.name).toList()
+
+            assertEquals(2, r.size)
+            assertEquals("Alex", r[0][users.name])
+            assertEquals("Andrey", r[1][users.name])
+        }
+    }
+
+    @Test fun testInList02() {
+        withCitiesAndUsers { cities, users, userData ->
+            val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
+            val r = cities.select { cities.id inList cityIds }
+
+            assertEquals(2, r.count())
+        }
+    }
+
     @Test fun testCalc01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = cities.slice(cities.id.sum()).selectAll().toList()
