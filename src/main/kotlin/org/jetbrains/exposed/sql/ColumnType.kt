@@ -2,15 +2,20 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
+import java.sql.Blob
 import java.sql.Date
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.util.*
+import javax.sql.rowset.serial.SerialBlob
 
 abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
     abstract fun sqlType(): String
@@ -42,7 +47,9 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
         return notNullValueToDB(value).toString()
     }
 
-    open fun setParameter(stmt: PreparedStatement, index: Int, value: Any) {
+    open fun readObject(rs: ResultSet, index: Int) = rs.getObject(index)
+
+    open fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
         stmt.setObject(index, value)
     }
 
@@ -228,10 +235,32 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
 }
 
 class BlobColumnType(): ColumnType() {
-    override fun sqlType(): String  = "BLOB"
+    override fun sqlType(): String  = currentDialect.blobType()
 
     override fun nonNullValueToString(value: Any): String {
         return "?"
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        if (currentDialect == PostgreSQLDialect)
+            return SerialBlob(rs.getBytes(index))
+        else
+            return rs.getBlob(index)
+    }
+
+    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
+        if (currentDialect == PostgreSQLDialect && value is InputStream) {
+            stmt.setBinaryStream(index, value, value.available())
+        } else {
+            super.setParameter(stmt, index, value)
+        }
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (currentDialect == PostgreSQLDialect)
+            return (value as Blob).binaryStream
+        else
+            return value
     }
 }
 

@@ -6,9 +6,10 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.junit.Ignore
 import org.junit.Test
+import javax.sql.rowset.serial.SerialBlob
 
 class DDLTests : DatabaseTestsBase() {
     @Test fun tableExists01() {
@@ -125,7 +126,6 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Ignore
     @Test fun testBlob() {
         val t = object: Table("t1") {
             val id = integer("id").autoIncrement().primaryKey()
@@ -133,8 +133,13 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val blob = connection.createBlob()!!
-            blob.setBytes(1, "Hello there!".toByteArray())
+            val blob = if (currentDialect != PostgreSQLDialect) {
+                connection.createBlob().apply {
+                    setBytes(1, "Hello there!".toByteArray())
+                }
+            } else {
+                SerialBlob("Hello there!".toByteArray())
+            }
 
             val id = t.insert {
                 it[t.b] = blob

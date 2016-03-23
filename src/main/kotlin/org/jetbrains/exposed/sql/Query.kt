@@ -53,11 +53,8 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
             val size = fieldsIndex.size
             val answer = ResultRow(size, fieldsIndex)
 
-            fields.forEachIndexed{ i, f ->
-                answer.data[i]  = when {
-                    f is Column<*> && f.columnType is BlobColumnType -> rs.getBlob(i + 1)
-                    else -> rs.getObject(i + 1)
-                }
+            fields.forEachIndexed { i, f ->
+                answer.data[i] = (f as? Column<*>)?.columnType?.readObject(rs, i + 1) ?: rs.getObject(i + 1)
             }
             return answer
         }

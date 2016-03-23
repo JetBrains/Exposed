@@ -34,6 +34,7 @@ interface DatabaseDialect {
     fun longAutoincType(): String
     fun uuidType(): String
     fun dateTimeType(): String
+    fun blobType(): String
 
     // Specific SQL statements
 
@@ -199,6 +200,8 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun uuidType() = "BINARY(16)"
 
     override fun dateTimeType() = "DATETIME"
+
+    override fun blobType(): String = "BLOB"
 
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 }

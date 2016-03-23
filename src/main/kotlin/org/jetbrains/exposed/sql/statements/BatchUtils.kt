@@ -1,19 +1,14 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ColumnType
 import java.sql.PreparedStatement
 
 fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
-    var index =  1
 
-    for ((c, v) in args) {
-        when (v) {
-            null -> setObject(index, null)
-            else -> setObject(index, c.valueToDB(v))
-        }
-
-        index++
+    args.forEachIndexed {index, pair ->
+        val (c, v) = pair
+        c.setParameter(this, index + 1, c.valueToDB(v))
     }
 
-    return index
+    return args.count() + 1
 }

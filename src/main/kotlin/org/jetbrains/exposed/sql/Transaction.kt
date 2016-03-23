@@ -45,7 +45,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
 
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
-    val keywords = arrayListOf("key")
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { db.metadata.sqlKeywords.split(',') }
 
     val monitor = StatementMonitor()
 
@@ -279,7 +279,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     private fun needQuotes (identity: String) : Boolean {
-        return keywords.contains (identity) || !identity.isIdentifier()
+        return keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
     }
 
     internal fun quoteIfNecessary (identity: String) : String {

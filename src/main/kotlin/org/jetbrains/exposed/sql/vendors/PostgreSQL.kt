@@ -9,4 +9,7 @@ internal object PostgreSQLDialect : VendorDialect("postgresql") {
     override fun dateTimeType(): String = "TIMESTAMP"
 
     override fun uuidType(): String = "bytea"
+
+    override fun blobType(): String = "bytea"
+
 }
