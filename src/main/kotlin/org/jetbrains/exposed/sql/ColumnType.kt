@@ -234,6 +234,10 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
     }
 }
 
+class BinaryColumnType(val length: Int) : ColumnType() {
+    override fun sqlType(): String  = currentDialect.binaryType(length)
+}
+
 class BlobColumnType(): ColumnType() {
     override fun sqlType(): String  = currentDialect.blobType()
 

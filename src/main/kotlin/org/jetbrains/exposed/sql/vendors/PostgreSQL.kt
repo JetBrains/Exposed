@@ -12,4 +12,5 @@ internal object PostgreSQLDialect : VendorDialect("postgresql") {
 
     override fun blobType(): String = "bytea"
 
+    override fun binaryType(length: Int): String = "bytea"
 }

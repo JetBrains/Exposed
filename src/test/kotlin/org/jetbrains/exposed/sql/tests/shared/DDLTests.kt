@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -150,6 +147,21 @@ class DDLTests : DatabaseTestsBase() {
             val text = readOn.binaryStream.reader().readText()
 
             assertEquals("Hello there!", text)
+        }
+    }
+
+    @Test fun testBinary() {
+        val t = object : Table() {
+            val binary = binary("bytes", 10)
+        }
+
+        withTables(t) {
+            t.insert { it[t.binary] = "Hello!".toByteArray() }
+
+            val bytes = t.selectAll().single()[t.binary]
+
+            assertEquals("Hello!", String(bytes))
+
         }
     }
 

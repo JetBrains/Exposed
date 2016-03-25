@@ -35,6 +35,7 @@ interface DatabaseDialect {
     fun uuidType(): String
     fun dateTimeType(): String
     fun blobType(): String
+    fun binaryType(length: Int): String
 
     // Specific SQL statements
 
@@ -202,6 +203,8 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun dateTimeType() = "DATETIME"
 
     override fun blobType(): String = "BLOB"
+
+    override fun binaryType(length: Int): String = "VARBINARY($length)"
 
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 }
