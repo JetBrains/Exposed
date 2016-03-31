@@ -16,17 +16,14 @@ fun FieldSet.selectAll() : Query {
     return Query(Transaction.current(), this, null)
 }
 
-inline fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
+fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
     DeleteStatement.where(Transaction.current(), this@deleteWhere, SqlExpressionBuilder.op())
-}
 
-inline fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) {
+fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
     DeleteStatement.where(Transaction.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
-}
 
-fun Table.deleteAll() {
+fun Table.deleteAll() =
     DeleteStatement.all(Transaction.current(), this@deleteAll)
-}
 
 fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement = InsertStatement(this).apply {
     body(this)
@@ -58,13 +55,13 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement {
     }
 }
 
-fun <T:Table> T.insert (selectQuery: Query): Unit {
+fun <T:Table> T.insert(selectQuery: Query) =
     InsertSelectStatement(this, selectQuery).execute(Transaction.current())
-}
 
-fun <T:Table> T.insertIgnore (selectQuery: Query): Unit {
+
+fun <T:Table> T.insertIgnore(selectQuery: Query) =
     InsertSelectStatement(this, selectQuery, true).execute(Transaction.current())
-}
+
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
     val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
