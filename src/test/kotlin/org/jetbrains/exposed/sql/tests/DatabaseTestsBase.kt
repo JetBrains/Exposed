@@ -65,6 +65,7 @@ private val postgresSQLProcess by lazy {
 
 abstract class DatabaseTestsBase() {
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
+        if (dbSettings !in TestDB.enabledInTests()) return
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         DateTimeZone.setDefault(DateTimeZone.UTC)
 
