@@ -384,7 +384,10 @@ class EntityCache {
             }
 
             for ((entry, id) in it.zip(ids)) {
-                entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(id)
+                entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
+                    is EntityID<*> -> id._value!!
+                    else -> id
+                })
                 entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
                 entry.storeWrittenValues()
                 EntityCache.getOrCreate(Transaction.current()).store<Any,Entity<Any>>(entry)

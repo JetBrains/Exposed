@@ -288,7 +288,6 @@ class UUIDColumnType() : ColumnType(autoinc = false) {
         is UUID -> value
         is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
-        is EntityID<*> -> valueFromDB(value.value)
         else -> error("Unexpected value of type UUID: $value")
     }
 
