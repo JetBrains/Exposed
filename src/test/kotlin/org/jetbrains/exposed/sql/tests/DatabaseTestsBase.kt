@@ -35,7 +35,17 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                 }
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() })
+            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() });
+
+    companion object {
+        fun enabledInTests(): List<TestDB> {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "").let {
+                if (it == "") return emptyList()
+                else it.split(',').map { it.trim().toUpperCase() }
+            }
+            return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
+        }
+    }
 }
 
 private val registeredOnShutdown = HashSet<TestDB>()
@@ -72,13 +82,13 @@ abstract class DatabaseTestsBase() {
     }
 
     fun withDB(statement: Transaction.() -> Unit) {
-        TestDB.values().forEach {
+        TestDB.enabledInTests().forEach {
             withDb(it, statement)
         }
     }
 
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
-        (TestDB.values().toList() - excludeSettings).forEach {
+        (TestDB.enabledInTests().toList() - excludeSettings).forEach {
             withDb(it) {
                 create(*tables)
                 try {
