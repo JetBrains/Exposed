@@ -415,7 +415,7 @@ class EntityCache {
         }
 
         fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
-            if(this.isEmpty()) return this
+            if(this.count() <= 1) return this
             val canBeReferenced = arrayListOf<Table>()
             do {
                 val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
