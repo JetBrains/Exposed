@@ -6,10 +6,7 @@ import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
 import de.flapdoodle.embed.process.distribution.Platform
 import org.jetbrains.exposed.dao.EntityCache
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
 import ru.yandex.qatools.embed.postgresql.PgSQLServiceUtils
@@ -91,12 +88,12 @@ abstract class DatabaseTestsBase() {
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
         (TestDB.enabledInTests().toList() - excludeSettings).forEach {
             withDb(it) {
-                create(*tables)
+                SchemaUtils.create(*tables)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    drop (*EntityCache.sortTablesByReferences(tables.toList()).reversed().toTypedArray())
+                    SchemaUtils.drop (*EntityCache.sortTablesByReferences(tables.toList()).reversed().toTypedArray())
                 }
             }
         }

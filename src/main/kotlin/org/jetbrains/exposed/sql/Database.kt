@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
-import java.sql.SQLException
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.sql.DataSource
 
@@ -32,55 +31,6 @@ class Database private constructor(val connector: () -> Connection) {
     val vendor: String get() = dialect.name
 
 
-    // Overloading methods instead of default parameters for Java compatibility
-    fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
-
-    fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
-        val outer = Transaction.currentOrNull()
-
-        return if (outer != null) {
-            outer.statement()
-        }
-        else {
-            inTopLevelTransaction(transactionIsolation, repetitionAttempts, statement)
-        }
-    }
-
-    fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
-        var repetitions = 0
-
-        while (true) {
-
-            val transaction = Transaction(this, {
-                val connection = connector()
-                connection.autoCommit = false
-                connection.transactionIsolation = transactionIsolation
-                connection
-            })
-
-            try {
-                val answer = transaction.statement()
-                transaction.commit()
-                return answer
-            }
-            catch (e: SQLException) {
-                exposedLogger.info("Transaction attempt #$repetitions: ${e.message}", e)
-                transaction.rollback()
-                repetitions++
-                if (repetitions >= repetitionAttempts) {
-                    throw e
-                }
-            }
-            catch (e: Throwable) {
-                transaction.rollback()
-                throw e
-            }
-            finally {
-                transaction.close()
-            }
-        }
-    }
-
     companion object {
         private val dialects = CopyOnWriteArrayList<DatabaseDialect>()
 
@@ -94,17 +44,18 @@ class Database private constructor(val connector: () -> Connection) {
             dialects.add(0, dialect)
         }
 
-        fun connect(datasource: DataSource): Database {
-            return Database {
-                datasource.connection!!
+        fun connect(datasource: DataSource, provider: (Database) -> TransactionProvider = { ThreadLocalTransactionProvider(it) }): Database {
+            return Database { datasource.connection!! }.apply {
+                TransactionProvider.provider = provider(this)
             }
         }
 
-        fun connect(url: String, driver: String, user: String = "", password: String = ""): Database {
+        fun connect(url: String, driver: String, user: String = "", password: String = "",
+                    provider: (Database) -> TransactionProvider = { ThreadLocalTransactionProvider(it) }): Database {
             Class.forName(driver).newInstance()
 
-            return Database {
-                DriverManager.getConnection(url, user, password)
+            return Database { DriverManager.getConnection(url, user, password) }.apply {
+                TransactionProvider.provider = provider(this)
             }
         }
     }

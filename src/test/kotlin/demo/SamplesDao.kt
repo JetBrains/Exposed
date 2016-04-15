@@ -5,7 +5,9 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.transaction
 
 object Users : IntIdTable() {
     val name = varchar("name", 50).index()
@@ -35,10 +37,10 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 fun main(args: Array<String>) {
     val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db.transaction {
+    transaction {
         logger.addLogger(StdOutSqlLogger())
 
-        create (Cities, Users)
+        SchemaUtils.create (Cities, Users)
 
         val stPete = City.new {
             name = "St. Petersburg"

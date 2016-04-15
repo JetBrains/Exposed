@@ -16,10 +16,10 @@ object Cities : Table() {
 fun main(args: Array<String>) {
     val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db.transaction {
+    transaction {
         logger.addLogger(StdOutSqlLogger())
 
-        create (Cities, Users)
+        SchemaUtils.create (Cities, Users)
 
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
@@ -108,7 +108,7 @@ fun main(args: Array<String>) {
             }
         }
 
-        drop (Users, Cities)
+        SchemaUtils.drop (Users, Cities)
 
     }
 }

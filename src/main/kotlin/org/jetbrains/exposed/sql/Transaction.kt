@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.StatementType
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.util.*
 
 class Key<T>()
@@ -34,14 +35,9 @@ open class UserDataHolder() {
     }
 }
 
-class Transaction(val db: Database, val connector: ()-> Connection): UserDataHolder() {
-    private var _connection: Connection? = null
-    val connection: Connection get() {
-        if (_connection == null) {
-            _connection = connector()
-        }
-        return _connection!!
-    }
+open class Transaction(internal val transactionImpl: TransactionAbstraction, val db: Database = transactionImpl.db): UserDataHolder() {
+
+    val connection: Connection get() = transactionImpl.connection
 
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
@@ -60,19 +56,15 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
     val statementStats = hashMapOf<String, Pair<Int,Long>>()
-    val outerTransaction = threadLocal.get()
 
     init {
         logger.addLogger(Slf4jSqlLogger())
-        threadLocal.set(this)
     }
 
 
     fun commit() {
         val created = flushCache()
-        _connection?.let {
-            it.commit()
-        }
+        transactionImpl.commit()
         EntityCache.invalidateGlobalCaches(created)
     }
 
@@ -85,9 +77,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
     }
 
     fun rollback() {
-        _connection?. let {
-            if (!it.isClosed) it.rollback()
-        }
+        transactionImpl.rollback()
     }
 
     private fun describeStatement(delta: Long, stmt: String): String {
@@ -142,138 +132,7 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return answer.first?.let { stmt.body(it) }
     }
 
-    fun createStatements (vararg tables: Table) : List<String> {
-        val statements = ArrayList<String>()
-        if (tables.isEmpty())
-            return statements
 
-        val newTables = ArrayList<Table>()
-
-        for (table in EntityCache.sortTablesByReferences(tables.toList())) {
-
-            if(table.exists()) continue else newTables.add(table)
-
-            // create table
-            val ddl = table.ddl
-            statements.add(ddl)
-
-            // create indices
-            for (table_index in table.indices) {
-                statements.add(createIndex(table_index.first, table_index.second))
-            }
-        }
-
-        for (table in newTables) {
-            // foreign keys
-            for (column in table.columns) {
-                if (column.referee != null) {
-                    statements.add(createFKey(column))
-                }
-            }
-        }
-        return statements
-    }
-
-    private fun addMissingColumnsStatements (vararg tables: Table): List<String> {
-        val statements = ArrayList<String>()
-        if (tables.isEmpty())
-            return statements
-
-        val existingTableColumns = logTimeSpent("Extracting table columns") {
-            db.dialect.tableColumns()
-        }
-
-        for (table in tables) {
-            //create columns
-            val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.map { it.first }?.contains(it.name) ?: true }
-            for (column in missingTableColumns) {
-                statements.add(column.ddl)
-            }
-
-            // create indexes with new columns
-            for (table_index in table.indices) {
-                if (table_index.first.any { missingTableColumns.contains(it) }) {
-                    val alterTable = createIndex(table_index.first, table_index.second)
-                    statements.add(alterTable)
-                }
-            }
-
-            // sync nullability of existing columns
-            val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false}
-            for (column in incorrectNullabilityColumns) {
-                statements.add(column.modifyStatement())
-            }
-        }
-
-        val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
-            db.dialect.columnConstraints(*tables)
-        }
-
-        for (table in tables) {
-            for (column in table.columns) {
-                if (column.referee != null) {
-                    val existingConstraint = existingColumnConstraint.get(Pair(table.tableName, column.name))?.firstOrNull()
-                    if (existingConstraint == null) {
-                        statements.add(createFKey(column))
-                    } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
-                            || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
-                        statements.add(existingConstraint.dropStatement())
-                        statements.add(createFKey(column))
-                    }
-                }
-            }
-        }
-
-        return statements
-    }
-
-    fun <T:Table> create(vararg tables: T) {
-        val statements = createStatements(*tables)
-        for (statement in statements) {
-            exec(statement)
-        }
-        db.dialect.resetCaches()
-    }
-
-    fun createMissingTablesAndColumns(vararg tables: Table) {
-        withDataBaseLock {
-            db.dialect.resetCaches()
-            val statements = logTimeSpent("Preparing create statements") {
-                 createStatements(*tables) + addMissingColumnsStatements(*tables)
-            }
-            logTimeSpent("Executing create statements") {
-                for (statement in statements) {
-                    exec(statement)
-                }
-            }
-            logTimeSpent("Checking mapping consistence") {
-                for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
-                    exec(statement)
-                }
-            }
-        }
-    }
-
-    fun <T>withDataBaseLock(body: () -> T) {
-        connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
-        val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
-        if (!isBusy) {
-            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUES (1)")
-            try {
-                body()
-            } finally {
-                connection.createStatement().executeUpdate("DELETE FROM BusyTable")
-                connection.commit()
-            }
-        }
-    }
-
-    fun drop(vararg tables: Table) {
-        for (table in tables) {
-            val ddl = table.dropStatement()
-            exec(ddl)
-        }
-    }
 
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
@@ -302,10 +161,6 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return quoteIfNecessary(column.name)
     }
 
-    fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
-
-    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
-
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
         val flag = if (autoincs != null && autoincs.isNotEmpty())
             java.sql.Statement.RETURN_GENERATED_KEYS
@@ -314,20 +169,128 @@ class Transaction(val db: Database, val connector: ()-> Connection): UserDataHol
         return connection.prepareStatement(sql, flag)!!
     }
 
-    fun close() {
-        threadLocal.set(outerTransaction)
-        _connection?.close()
-    }
+    fun close() = transactionImpl.close()
 
     companion object {
-        val threadLocal = ThreadLocal<Transaction>()
 
-        fun hasTransaction(): Boolean = currentOrNull() != null
+        fun currentOrNew(isolation: Int) = currentOrNull() ?: TransactionProvider.provider.newTransaction(isolation)
 
-        fun currentOrNull(): Transaction? = threadLocal.get()
+        fun currentOrNull() = TransactionProvider.provider.currentOrNull()
 
         fun current(): Transaction {
             return currentOrNull() ?: error("No transaction in context. Use Database.transaction() { ... }")
+        }
+    }
+}
+
+interface TransactionAbstraction {
+
+    val db : Database
+
+    val connection: Connection
+
+    fun commit()
+
+    fun rollback()
+
+    fun close()
+}
+
+interface TransactionProvider {
+
+    fun newTransaction(isolation: Int = Connection.TRANSACTION_REPEATABLE_READ) : Transaction
+
+    fun close()
+
+    fun currentOrNull(): Transaction?
+
+    companion object {
+        internal lateinit var provider: TransactionProvider
+    }
+}
+
+class ThreadLocalTransactionProvider(private val db: Database) : TransactionProvider {
+    override fun newTransaction(isolation: Int): Transaction = Transaction(ExposedTransaction(db, isolation)).apply {
+        threadLocal.set(this)
+    }
+
+    val threadLocal = ThreadLocal<Transaction>()
+
+    fun hasTransaction(): Boolean = currentOrNull() != null
+
+    override fun currentOrNull(): Transaction? = threadLocal.get()
+
+    override fun close() {
+        threadLocal.set((currentOrNull()?.transactionImpl as? ExposedTransaction)?.outerTransaction)
+    }
+
+    private class ExposedTransaction(override val db: Database, isolation: Int) : TransactionAbstraction {
+        override val connection: Connection by lazy(LazyThreadSafetyMode.NONE) {
+            db.connector().apply {
+                autoCommit = false
+                transactionIsolation = isolation
+            }
+        }
+
+        val outerTransaction = TransactionProvider.provider.currentOrNull()
+
+        override fun commit() {
+            connection.commit()
+        }
+
+        override fun rollback() {
+            if (!connection.isClosed) {
+                connection.rollback()
+            }
+        }
+
+        override fun close() {
+            connection.close()
+            TransactionProvider.provider.close()
+        }
+
+    }
+}
+
+fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
+
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
+    val outer = Transaction.currentOrNull()
+
+    return if (outer != null) {
+        outer.statement()
+    }
+    else {
+        inTopLevelTransaction(transactionIsolation, repetitionAttempts, statement)
+    }
+}
+
+fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
+    var repetitions = 0
+
+    while (true) {
+
+        val transaction = Transaction.currentOrNew(transactionIsolation)
+
+        try {
+            val answer = transaction.statement()
+            transaction.commit()
+            return answer
+        }
+        catch (e: SQLException) {
+            exposedLogger.info("Transaction attempt #$repetitions: ${e.message}", e)
+            transaction.rollback()
+            repetitions++
+            if (repetitions >= repetitionAttempts) {
+                throw e
+            }
+        }
+        catch (e: Throwable) {
+            transaction.rollback()
+            throw e
+        }
+        finally {
+            transaction.close()
         }
     }
 }
