@@ -17,6 +17,7 @@ class EntityID<T:Any>(id: T?, val table: IdTable<T>) {
             assert(_value != null) { "Entity must be inserted" }
         }
 
+        @Suppress("UNCHECKED_CAST")
         return _value!! as T
     }
 

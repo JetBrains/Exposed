@@ -20,7 +20,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
 
         return d?.let {
             if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
-            (c as? ExpressionWithColumnType<*>)?.columnType?.valueFromDB(it) ?: it
+            (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it
         } as T
     }
 
