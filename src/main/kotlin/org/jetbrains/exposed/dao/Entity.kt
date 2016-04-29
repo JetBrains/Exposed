@@ -561,10 +561,15 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         }
     }
 
-    fun new(init: T.() -> Unit): T {
-        val prototype: T = createInstance(EntityID(null, table), null)
+    fun new(init: T.() -> Unit) = new(null, init)
+
+    fun new(id: ID?, init: T.() -> Unit): T {
+        val prototype: T = createInstance(EntityID(id, table), null)
         prototype.klass = this
         prototype._readValues = ResultRow.create(dependsOnColumns)
+        if (id != null) {
+            prototype.writeValues.put(table.id as Column<Any?>, id)
+        }
         prototype.init()
         warmCache().scheduleInsert(this, prototype)
         return prototype
