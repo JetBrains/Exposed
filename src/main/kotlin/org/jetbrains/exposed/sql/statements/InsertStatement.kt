@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
 
@@ -21,6 +22,7 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
         transaction.flushCache()
+        EntityCache.getOrCreate(transaction).removeTablesReferrers(listOf(table))
         return executeUpdate().apply {
             if (table.columns.any { it.columnType.autoinc }) {
                 generatedKeys?.let { rs ->

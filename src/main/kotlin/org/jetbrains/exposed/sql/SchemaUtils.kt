@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 object SchemaUtils {
@@ -41,13 +42,13 @@ object SchemaUtils {
     internal fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
-        with(Transaction.current()) {
+        with(TransactionManager.current()) {
             val statements = ArrayList<String>()
             if (tables.isEmpty())
                 return statements
 
             val existingTableColumns = logTimeSpent("Extracting table columns") {
-                Transaction.current().db.dialect.tableColumns()
+                TransactionManager.current().db.dialect.tableColumns()
             }
 
             for (table in tables) {
@@ -97,7 +98,7 @@ object SchemaUtils {
     }
 
     fun <T : Table> create(vararg tables: T) {
-        with(Transaction.current()) {
+        with(TransactionManager.current()) {
             val statements = createStatements(*tables)
             for (statement in statements) {
                 exec(statement)
@@ -107,7 +108,7 @@ object SchemaUtils {
     }
 
     fun createMissingTablesAndColumns(vararg tables: Table) {
-        with(Transaction.current()) {
+        with(TransactionManager.current()) {
             withDataBaseLock {
                 db.dialect.resetCaches()
                 val statements = logTimeSpent("Preparing create statements") {
@@ -144,7 +145,7 @@ object SchemaUtils {
     fun drop(vararg tables: Table) {
         for (table in tables) {
             val ddl = table.dropStatement()
-            Transaction.current().exec(ddl)
+            TransactionManager.current().exec(ddl)
         }
     }
 }

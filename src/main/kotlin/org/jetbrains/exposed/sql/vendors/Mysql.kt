@@ -1,12 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
-
-/**
- * User: Andrey.Tarashevskiy
- * Date: 08.05.2015
- */
 
 internal object MysqlDialect : VendorDialect("mysql") {
 
@@ -14,7 +10,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
 
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = Transaction.current().connection.createStatement().executeQuery(
+        val rs = TransactionManager.current().connection.createStatement().executeQuery(
                 "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
 
         while (rs.next()) {
@@ -39,7 +35,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
             return ""
         }
 
-        val rs = Transaction.current().connection.createStatement().executeQuery(
+        val rs = TransactionManager.current().connection.createStatement().executeQuery(
                 "SELECT\n" +
                         "  rc.CONSTRAINT_NAME,\n" +
                         "  ku.TABLE_NAME,\n" +
@@ -70,7 +66,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
 
         val constraints = HashMap<String, MutableList<Index>>()
 
-        val rs = Transaction.current().connection.createStatement().executeQuery(
+        val rs = TransactionManager.current().connection.createStatement().executeQuery(
                 """SELECT ind.* from (
                         SELECT
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
@@ -97,7 +93,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
     }
 
     override fun getDatabase(): String {
-        return Transaction.current().connection.catalog
+        return TransactionManager.current().connection.catalog
     }
 
 
@@ -130,7 +126,7 @@ internal object MysqlDialect : VendorDialect("mysql") {
         return "ALTER TABLE $tableName DROP INDEX $indexName"
     }
 
-    fun isFractionDateTimeSupported() = Transaction.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
+    fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
 
     override fun dateTimeType(): String = if (isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 }

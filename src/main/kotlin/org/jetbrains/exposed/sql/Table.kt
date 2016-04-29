@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
@@ -277,7 +278,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         get() = createStatement()
 
     override fun createStatement(): String  = buildString {
-        append("CREATE TABLE IF NOT EXISTS ${Transaction.current().identity(this@Table)}")
+        append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table)}")
         if (columns.any()) {
             append(columns.map { it.descriptionDdl() }.joinToString(prefix = " ("))
             var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
@@ -286,15 +287,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             }
             if (pkey.isNotEmpty()) {
                 append(pkey.joinToString(
-                        prefix = ", CONSTRAINT ${Transaction.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
-                    Transaction.current().identity(it)
+                        prefix = ", CONSTRAINT ${TransactionManager.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
+                    TransactionManager.current().identity(it)
                 })
             }
             append(")")
         }
     }
 
-    override fun dropStatement(): String = "DROP TABLE ${Transaction.current().identity(this)}"
+    override fun dropStatement(): String = "DROP TABLE ${TransactionManager.current().identity(this)}"
 
     override fun modifyStatement(): String {
         throw UnsupportedOperationException("Use modify on columns and indices")

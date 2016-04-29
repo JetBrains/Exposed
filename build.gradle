@@ -116,5 +116,6 @@ project(":spring-transaction") {
         compile 'org.springframework:spring-jdbc:4.2.5.RELEASE'
         compile 'org.springframework:spring-context:4.2.5.RELEASE'
         compile rootProject
+        testCompile 'org.springframework:spring-test:4.2.5.RELEASE'
     }
 }

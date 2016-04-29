@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
@@ -9,25 +10,25 @@ inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query 
 }
 
 fun FieldSet.select(where: Op<Boolean>) : Query {
-    return Query(Transaction.current(), this, where)
+    return Query(TransactionManager.current(), this, where)
 }
 
 fun FieldSet.selectAll() : Query {
-    return Query(Transaction.current(), this, null)
+    return Query(TransactionManager.current(), this, null)
 }
 
 fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(Transaction.current(), this@deleteWhere, SqlExpressionBuilder.op())
+    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op())
 
 fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(Transaction.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
+    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
 
 fun Table.deleteAll() =
-    DeleteStatement.all(Transaction.current(), this@deleteAll)
+    DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement = InsertStatement(this).apply {
     body(this)
-    execute(Transaction.current())
+    execute(TransactionManager.current())
 }
 
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Any> {
@@ -37,42 +38,42 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             it.addBatch()
             it.body(element)
         }
-        return it.execute(Transaction.current())!!
+        return it.execute(TransactionManager.current())!!
     }
 }
 
 fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement {
     val answer = InsertStatement(this, isIgnore = true)
     body(answer)
-    answer.execute(Transaction.current())
+    answer.execute(TransactionManager.current())
     return answer
 }
 
 fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement {
     return ReplaceStatement(this).apply {
         body(this)
-        execute(Transaction.current())
+        execute(TransactionManager.current())
     }
 }
 
 fun <T:Table> T.insert(selectQuery: Query) =
-    InsertSelectStatement(this, selectQuery).execute(Transaction.current())
+    InsertSelectStatement(this, selectQuery).execute(TransactionManager.current())
 
 
 fun <T:Table> T.insertIgnore(selectQuery: Query) =
-    InsertSelectStatement(this, selectQuery, true).execute(Transaction.current())
+    InsertSelectStatement(this, selectQuery, true).execute(TransactionManager.current())
 
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
     val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
-    return query.execute(Transaction.current())!!
+    return query.execute(TransactionManager.current())!!
 }
 
 fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(Transaction.current())!!
+    return query.execute(TransactionManager.current())!!
 }
 
 fun Table.exists (): Boolean = currentDialect.tableExists(this)

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
@@ -24,20 +25,20 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     }
 
     override fun toSQL(queryBuilder: QueryBuilder): String {
-        return Transaction.current().fullIdentity(this);
+        return TransactionManager.current().fullIdentity(this);
     }
 
     val ddl: String
         get() = createStatement()
 
-    override fun createStatement(): String = "ALTER TABLE ${Transaction.current().identity(table)} ADD COLUMN ${descriptionDdl()}"
+    override fun createStatement(): String = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD COLUMN ${descriptionDdl()}"
 
-    override fun modifyStatement(): String = "ALTER TABLE ${Transaction.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}"
+    override fun modifyStatement(): String = "ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}"
 
-    override fun dropStatement(): String = Transaction.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
+    override fun dropStatement(): String = TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
 
     fun descriptionDdl(): String {
-        val ddl = StringBuilder(Transaction.current().identity(this)).append(" ")
+        val ddl = StringBuilder(TransactionManager.current().identity(this)).append(" ")
         val colType = columnType
         ddl.append(colType.sqlType())
 

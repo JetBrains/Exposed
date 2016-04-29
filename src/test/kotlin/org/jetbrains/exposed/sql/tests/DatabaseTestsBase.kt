@@ -7,6 +7,7 @@ import com.mysql.management.util.Files
 import de.flapdoodle.embed.process.distribution.Platform
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
 import ru.yandex.qatools.embed.postgresql.PgSQLServiceUtils
@@ -37,7 +38,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
     companion object {
         fun enabledInTests(): List<TestDB> {
             val concreteDialects = System.getProperty("exposed.test.dialects", "").let {
-                if (it == "") return emptyList()
+                if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
             return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
@@ -72,9 +73,9 @@ abstract class DatabaseTestsBase() {
             registeredOnShutdown += dbSettings
         }
 
-        var db = Database.connect(dbSettings.connection, user = "root", driver = dbSettings.driver)
+        Database.connect(dbSettings.connection, user = "root", driver = dbSettings.driver)
 
-        db.transaction {
+        transaction {
             statement()
         }
     }

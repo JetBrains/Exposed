@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 interface DatabaseDialect {
@@ -71,7 +72,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
-        val resultSet = Transaction.current().db.metadata.getTables(null, null, null, arrayOf("TABLE"))
+        val resultSet = TransactionManager.current().db.metadata.getTables(null, null, null, arrayOf("TABLE"))
 
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME"))
@@ -79,14 +80,14 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
         return result
     }
 
-    override fun getDatabase() = Transaction.current().connection.catalog
+    override fun getDatabase() = TransactionManager.current().connection.catalog
 
     override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
 
     override fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
         val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = Transaction.current().db.metadata.getColumns(getDatabase(), null, null, null)
+        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, null, null)
 
         while (rs.next()) {
             val tableName = rs.getString("TABLE_NAME")!!
@@ -103,7 +104,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{it.tableName}) {
             columnConstraintsCache.getOrPut(table, {
-                val rs = Transaction.current().db.metadata.getExportedKeys(getDatabase(), null, table)
+                val rs = TransactionManager.current().db.metadata.getExportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val refereeTableName = rs.getString("FKTABLE_NAME")!!
@@ -128,7 +129,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
         for(table in tables.map {it.tableName}) {
             existingIndicesCache.getOrPut(table, {
-                val rs = Transaction.current().db.metadata.getIndexInfo(getDatabase(), null, table, false, false)
+                val rs = TransactionManager.current().db.metadata.getIndexInfo(getDatabase(), null, table, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
@@ -209,4 +210,4 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 }
 
-internal val currentDialect: DatabaseDialect get() = Transaction.current().db.dialect
+internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect

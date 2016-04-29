@@ -4,23 +4,19 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
-
-/**
- * User: Andrey.Tarashevskiy
- * Date: 05.10.2015
- */
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object H2Dialect: VendorDialect("h2") {
 
     // h2 supports only JDBC API from Java 1.6
     override fun getDatabase(): String {
-        return Transaction.current().connection.catalog
+        return TransactionManager.current().connection.catalog
     }
 
     override fun supportsSelectForUpdate() = false
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        if (!Transaction.current().db.url.contains("MODE=MySQL")) throw UnsupportedOperationException("REPLACE is only supported in MySQL compatibility more for H2")
+        if (!TransactionManager.current().db.url.contains("MODE=MySQL")) throw UnsupportedOperationException("REPLACE is only supported in MySQL compatibility more for H2")
 
         val builder = QueryBuilder(true)
         val values = data.map { builder.registerArgument(it.second, it.first.columnType) }

@@ -22,9 +22,9 @@ object Cities : Table() {
 }
 
 fun main(args: Array<String>) {
-    val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db.transaction {
+    transaction {
         create (Cities, Users)
 
         val saintPetersburgId = Cities.insert {
@@ -186,9 +186,9 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun main(args: Array<String>) {
-    val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db.transaction {
+    transaction {
         logger.addLogger(StdOutSqlLogger())
 
         create (Cities, Users)

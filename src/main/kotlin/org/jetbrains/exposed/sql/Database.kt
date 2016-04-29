@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -12,7 +14,7 @@ import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
 
-    val metadata: DatabaseMetaData get() = Transaction.currentOrNull()?.connection?.metaData ?: with(connector()) {
+    val metadata: DatabaseMetaData get() = TransactionManager.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
             metaData
         }
@@ -44,18 +46,18 @@ class Database private constructor(val connector: () -> Connection) {
             dialects.add(0, dialect)
         }
 
-        fun connect(datasource: DataSource, provider: (Database) -> TransactionProvider = { ThreadLocalTransactionProvider(it) }): Database {
+        fun connect(datasource: DataSource, manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
             return Database { datasource.connection!! }.apply {
-                TransactionProvider.provider = provider(this)
+                TransactionManager.manager = manager(this)
             }
         }
 
         fun connect(url: String, driver: String, user: String = "", password: String = "",
-                    provider: (Database) -> TransactionProvider = { ThreadLocalTransactionProvider(it) }): Database {
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
             Class.forName(driver).newInstance()
 
             return Database { DriverManager.getConnection(url, user, password) }.apply {
-                TransactionProvider.provider = provider(this)
+                TransactionManager.manager = manager(this)
             }
         }
     }

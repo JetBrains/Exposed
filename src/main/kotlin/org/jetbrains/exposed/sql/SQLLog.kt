@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.statements.StatementInterceptor
+import org.jetbrains.exposed.sql.statements.expandArgs
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import java.util.*
@@ -27,7 +30,7 @@ class StdOutSqlLogger : SqlLogger {
 class Slf4jSqlLogger(): SqlLogger {
 
     override fun log (context: StatementContext, transaction: Transaction) {
-        exposedLogger.debug(context.expandArgs(Transaction.current()))
+        exposedLogger.debug(context.expandArgs(TransactionManager.current()))
     }
 }
 

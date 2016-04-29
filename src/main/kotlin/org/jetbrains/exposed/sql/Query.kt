@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -20,7 +21,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
 
         return d?.let {
             if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
-            (c as? ExpressionWithColumnType<*>)?.columnType?.valueFromDB(it) ?: it
+            (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it
         } as T
     }
 
@@ -98,7 +99,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             val tables = set.source.columns.map { it.table }.toSet()
             val fields = LinkedHashSet(set.fields)
             val completeTables = ArrayList<Table>()
-            append(((completeTables.map { Transaction.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(builder)})).joinToString())
+            append(((completeTables.map { TransactionManager.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(builder)})).joinToString())
         }
         append(" FROM ")
         append(set.source.describe(transaction))

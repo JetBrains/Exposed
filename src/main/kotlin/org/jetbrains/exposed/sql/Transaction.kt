@@ -5,10 +5,9 @@ import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
-import java.sql.Connection
+import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.SQLException
 import java.util.*
 
 class Key<T>()
@@ -35,9 +34,7 @@ open class UserDataHolder() {
     }
 }
 
-open class Transaction(internal val transactionImpl: TransactionAbstraction, val db: Database = transactionImpl.db): UserDataHolder() {
-
-    val connection: Connection get() = transactionImpl.connection
+open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
 
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
@@ -62,7 +59,8 @@ open class Transaction(internal val transactionImpl: TransactionAbstraction, val
     }
 
 
-    fun commit() {
+
+    override fun commit() {
         val created = flushCache()
         transactionImpl.commit()
         EntityCache.invalidateGlobalCaches(created)
@@ -74,10 +72,6 @@ open class Transaction(internal val transactionImpl: TransactionAbstraction, val
             flush()
             return newEntities
         }
-    }
-
-    fun rollback() {
-        transactionImpl.rollback()
     }
 
     private fun describeStatement(delta: Long, stmt: String): String {
@@ -168,129 +162,5 @@ open class Transaction(internal val transactionImpl: TransactionAbstraction, val
             java.sql.Statement.NO_GENERATED_KEYS
         return connection.prepareStatement(sql, flag)!!
     }
-
-    fun close() = transactionImpl.close()
-
-    companion object {
-
-        fun currentOrNew(isolation: Int) = currentOrNull() ?: TransactionProvider.provider.newTransaction(isolation)
-
-        fun currentOrNull() = TransactionProvider.provider.currentOrNull()
-
-        fun current(): Transaction {
-            return currentOrNull() ?: error("No transaction in context. Use Database.transaction() { ... }")
-        }
-    }
 }
 
-interface TransactionAbstraction {
-
-    val db : Database
-
-    val connection: Connection
-
-    fun commit()
-
-    fun rollback()
-
-    fun close()
-}
-
-interface TransactionProvider {
-
-    fun newTransaction(isolation: Int = Connection.TRANSACTION_REPEATABLE_READ) : Transaction
-
-    fun close()
-
-    fun currentOrNull(): Transaction?
-
-    companion object {
-        internal lateinit var provider: TransactionProvider
-    }
-}
-
-class ThreadLocalTransactionProvider(private val db: Database) : TransactionProvider {
-    override fun newTransaction(isolation: Int): Transaction = Transaction(ExposedTransaction(db, isolation)).apply {
-        threadLocal.set(this)
-    }
-
-    val threadLocal = ThreadLocal<Transaction>()
-
-    fun hasTransaction(): Boolean = currentOrNull() != null
-
-    override fun currentOrNull(): Transaction? = threadLocal.get()
-
-    override fun close() {
-        threadLocal.set((currentOrNull()?.transactionImpl as? ExposedTransaction)?.outerTransaction)
-    }
-
-    private class ExposedTransaction(override val db: Database, isolation: Int) : TransactionAbstraction {
-        override val connection: Connection by lazy(LazyThreadSafetyMode.NONE) {
-            db.connector().apply {
-                autoCommit = false
-                transactionIsolation = isolation
-            }
-        }
-
-        val outerTransaction = TransactionProvider.provider.currentOrNull()
-
-        override fun commit() {
-            connection.commit()
-        }
-
-        override fun rollback() {
-            if (!connection.isClosed) {
-                connection.rollback()
-            }
-        }
-
-        override fun close() {
-            connection.close()
-            TransactionProvider.provider.close()
-        }
-
-    }
-}
-
-fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
-
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
-    val outer = Transaction.currentOrNull()
-
-    return if (outer != null) {
-        outer.statement()
-    }
-    else {
-        inTopLevelTransaction(transactionIsolation, repetitionAttempts, statement)
-    }
-}
-
-fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
-    var repetitions = 0
-
-    while (true) {
-
-        val transaction = Transaction.currentOrNew(transactionIsolation)
-
-        try {
-            val answer = transaction.statement()
-            transaction.commit()
-            return answer
-        }
-        catch (e: SQLException) {
-            exposedLogger.info("Transaction attempt #$repetitions: ${e.message}", e)
-            transaction.rollback()
-            repetitions++
-            if (repetitions >= repetitionAttempts) {
-                throw e
-            }
-        }
-        catch (e: Throwable) {
-            transaction.rollback()
-            throw e
-        }
-        finally {
-            transaction.close()
-        }
-    }
-}

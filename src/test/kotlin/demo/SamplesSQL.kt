@@ -1,6 +1,7 @@
 package demo.sql
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object Users : Table() {
     val id = varchar("id", 10).primaryKey() // Column<String>
@@ -14,7 +15,7 @@ object Cities : Table() {
 }
 
 fun main(args: Array<String>) {
-    val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
         logger.addLogger(StdOutSqlLogger())
