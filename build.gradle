@@ -97,6 +97,7 @@ allprojects {
         compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
         compile 'joda-time:joda-time:2.5'
         compile 'org.slf4j:slf4j-api:1.7.12'
+        compileOnly 'com.h2database:h2:1.4.186'
 
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
         testCompile 'org.slf4j:slf4j-log4j12:1.7.12'
