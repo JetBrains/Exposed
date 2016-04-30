@@ -22,6 +22,10 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
         initTransaction()
     }
 
+    override fun doCleanupAfterCompletion(transaction: Any) {
+        currentOrNull()?.close()
+    }
+
     override fun newTransaction(isolation: Int): Transaction {
         val tDefinition = if (dataSource.connection.transactionIsolation != isolation) {
                 DefaultTransactionDefinition().apply { isolationLevel = isolation }
