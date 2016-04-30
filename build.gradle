@@ -80,7 +80,7 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "2.7"
+    gradleVersion = "2.12"
 }
 
 
