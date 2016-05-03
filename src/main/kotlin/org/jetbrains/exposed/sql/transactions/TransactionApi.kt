@@ -26,7 +26,7 @@ interface TransactionManager {
     fun currentOrNull(): Transaction?
 
     companion object {
-        internal lateinit var manager: TransactionManager
+        lateinit var manager: TransactionManager
 
         fun currentOrNew(isolation: Int) = currentOrNull() ?: manager.newTransaction(isolation)
 

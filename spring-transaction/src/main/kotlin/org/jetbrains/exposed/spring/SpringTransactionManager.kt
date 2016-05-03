@@ -19,11 +19,22 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
 
     override fun doBegin(transaction: Any?, definition: TransactionDefinition?) {
         super.doBegin(transaction, definition)
-        initTransaction()
+
+        if (TransactionSynchronizationManager.hasResource(dataSource)) {
+            currentOrNull() ?: initTransaction()
+        }
     }
 
     override fun doCleanupAfterCompletion(transaction: Any) {
-        currentOrNull()?.close()
+        super.doCleanupAfterCompletion(transaction)
+        if (!TransactionSynchronizationManager.hasResource(dataSource)) {
+            TransactionSynchronizationManager.unbindResourceIfPossible(this)
+        }
+    }
+
+    override fun doSuspend(transaction: Any?): Any? {
+        TransactionSynchronizationManager.unbindResourceIfPossible(this)
+        return super.doSuspend(transaction)
     }
 
     override fun newTransaction(isolation: Int): Transaction {
@@ -60,10 +71,7 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
             connection.rollback()
         }
 
-        override fun close() {
-            connection.close()
-            TransactionSynchronizationManager.unbindResourceIfPossible(this)
-        }
+        override fun close() { }
 
     }
 
