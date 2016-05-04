@@ -37,9 +37,9 @@ object SchemaUtils {
         return statements
     }
 
-    internal fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
+    fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
 
-    internal fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
+    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {

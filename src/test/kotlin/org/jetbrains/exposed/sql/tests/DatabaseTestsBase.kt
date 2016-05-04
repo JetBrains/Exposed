@@ -4,13 +4,11 @@ import com.mysql.management.MysqldResource
 import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
 import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
-import de.flapdoodle.embed.process.distribution.Platform
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
-import ru.yandex.qatools.embed.postgresql.PgSQLServiceUtils
 import ru.yandex.qatools.embed.postgresql.PostgresStarter
 import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig
 import ru.yandex.qatools.embed.postgresql.config.PostgresConfig
@@ -49,16 +47,12 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-    val config = PostgresConfig(Version.Main.PRODUCTION, AbstractPostgresConfig.Net("localhost", 12346),
+    val config = PostgresConfig(
+            Version.Main.PRODUCTION, AbstractPostgresConfig.Net("localhost", 12346),
             AbstractPostgresConfig.Storage("template1"), AbstractPostgresConfig.Timeout(),
-            AbstractPostgresConfig.Credentials("root", "root"));
-
-
-    if (Platform.detect() == Platform.Windows) {
-        PgSQLServiceUtils.initDB(config)
-    } else {
-        PostgresStarter.getDefaultInstance().prepare(config)
-    }
+            AbstractPostgresConfig.Credentials("root", "root")
+    );
+    PostgresStarter.getDefaultInstance().prepare(config)
 }
 
 abstract class DatabaseTestsBase() {
