@@ -20,13 +20,13 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         val builder = QueryBuilder(true)
         append("UPDATE ${targetsSet.describe(transaction)}")
         append(" SET ")
-        append(firstDataSet.map {
+        append(firstDataSet.joinToString {
             val (col, value) = it
             "${transaction.identity(col)}=" + when (value) {
                 is Expression<*> -> value.toSQL(builder)
                 else -> builder.registerArgument(value, col.columnType)
             }
-        }.joinToString())
+        })
 
         where?.let { append(" WHERE " + it.toSQL(builder)) }
         limit?.let { append(" LIMIT $it")}

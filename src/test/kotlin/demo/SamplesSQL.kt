@@ -2,6 +2,7 @@ package demo.sql
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.test.assertEquals
 
 object Users : Table() {
     val id = varchar("id", 10).primaryKey() // Column<String>
@@ -30,9 +31,12 @@ fun main(args: Array<String>) {
             it[name] = "Munich"
         } get Cities.id
 
-        Cities.insert {
-            it[name] = "Prague"
-        }
+        val pragueId = Cities.insert {
+            it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
+        }[Cities.id]
+
+        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        assertEquals(pragueName, "Pr")
 
         Users.insert {
             it[id] = "andrey"

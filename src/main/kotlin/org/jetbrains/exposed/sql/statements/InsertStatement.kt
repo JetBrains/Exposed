@@ -12,12 +12,16 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
 
     infix operator fun get(column: Column<Int>): Int = generatedKey ?: error("No key generated")
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = listOf(values.map { it.key.columnType to it.value })
-
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
         return transaction.db.dialect.insert(isIgnore, table, values.map { it.key},
-                "VALUES (${values.map { builder.registerArgument(it.value, it.key.columnType) }.joinToString()})", transaction)
+            "VALUES (${values.entries.joinToString {
+                val (col, value) = it
+                when (value) {
+                    is Expression<*> -> value.toSQL(builder)
+                    else -> builder.registerArgument(value, col.columnType)
+                }
+            }})", transaction)
     }
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
@@ -32,5 +36,16 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
                 }
             }
         }
+    }
+
+    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).run {
+        values.forEach {
+            val value = it.value
+            when (value) {
+                is Expression<*> -> value.toSQL(this)
+                else -> this.registerArgument(value, it.key.columnType)
+            }
+        }
+        if (args.isNotEmpty()) listOf(args) else emptyList()
     }
 }
