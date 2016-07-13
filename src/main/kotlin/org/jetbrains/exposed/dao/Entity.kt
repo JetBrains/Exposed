@@ -672,7 +672,7 @@ abstract class ImmutableCachedEntityClass<ID:Any, T: Entity<ID>>(table: IdTable<
             for(r in super.all()) {  /* force iteration to initialize lazy collection */ }
             _cachedValues = transactionCache.data[table]
         } else {
-            transactionCache.data.getOrPut(table) { _cachedValues!! }
+            transactionCache.data[table] = _cachedValues!!
         }
 
         return transactionCache
