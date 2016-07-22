@@ -192,7 +192,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun char(name: String): Column<Char> = registerColumn(name, CharacterColumnType())
 
-    fun decimal(name: String, scale: Int, precision: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(scale, precision))
+    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(precision, scale))
 
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
