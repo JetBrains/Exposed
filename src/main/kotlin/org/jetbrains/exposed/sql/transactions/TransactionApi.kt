@@ -26,12 +26,17 @@ interface TransactionManager {
     fun currentOrNull(): Transaction?
 
     companion object {
-        lateinit var manager: TransactionManager
 
-        fun currentOrNew(isolation: Int) = currentOrNull() ?: manager.newTransaction(isolation)
+        @Volatile lateinit internal var _manager: TransactionManager
 
-        fun currentOrNull() = manager.currentOrNull()
+        var currentThreadManager = object : ThreadLocal<TransactionManager>() {
+            override fun initialValue(): TransactionManager = _manager
+        }
 
-        fun current(): Transaction = currentOrNull() ?: error("No transaction in context.")
+        fun currentOrNew(isolation: Int) = currentOrNull() ?: currentThreadManager.get().newTransaction(isolation)
+
+        fun currentOrNull() = currentThreadManager.get().currentOrNull()
+
+        fun current() = currentOrNull() ?: error("No transaction in context.")
     }
 }

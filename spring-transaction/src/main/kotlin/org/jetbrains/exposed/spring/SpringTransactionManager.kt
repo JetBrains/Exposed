@@ -30,6 +30,7 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
         if (!TransactionSynchronizationManager.hasResource(dataSource)) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
         }
+        TransactionManager.currentThreadManager.remove()
     }
 
     override fun doSuspend(transaction: Any?): Any? {

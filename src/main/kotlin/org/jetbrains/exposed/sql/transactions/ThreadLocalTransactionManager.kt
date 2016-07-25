@@ -63,7 +63,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
 
     while (true) {
 
-        val transaction = TransactionManager.manager.newTransaction(transactionIsolation)
+        val transaction = TransactionManager.currentThreadManager.get().newTransaction(transactionIsolation)
 
         try {
             val answer = transaction.statement()
@@ -84,6 +84,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
         }
         finally {
             transaction.close()
+            TransactionManager.currentThreadManager.remove()
         }
     }
 }
