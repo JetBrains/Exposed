@@ -118,9 +118,9 @@ class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
     }
 }
 
-class DecimalColumnType(val scale: Int, val precision: Int): ColumnType() {
-    override fun sqlType(): String  = "DECIMAL($scale, $precision)"
-    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(precision, RoundingMode.HALF_EVEN) ?: it }
+class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
+    override fun sqlType(): String  = "DECIMAL($precision, $scale)"
+    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(scale, RoundingMode.HALF_EVEN) ?: it }
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
