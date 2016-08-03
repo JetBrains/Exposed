@@ -122,7 +122,9 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
             if (orderByColumns.isNotEmpty()) {
                 append(" ORDER BY ")
-                append((orderByColumns.map { "${it.first.toSQL(builder)} ${if(it.second) "ASC" else "DESC"}" }).joinToString())
+                append(orderByColumns.joinToString {
+                    "${(it.first as? ExpressionAlias<*>)?.alias ?: it.first.toSQL(builder)} ${if(it.second) "ASC" else "DESC"}"
+                })
             }
 
             limit?.let {
