@@ -11,13 +11,9 @@ abstract class Op<T>() : Expression<T>() {
     }
 }
 
-infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> {
-    return AndOp(this, op)
-}
+infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = AndOp(this, op)
 
-infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> {
-    return OrOp(this, op)
-}
+infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = OrOp(this, op)
 
 class IsNullOp(val expr: Expression<*>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
@@ -191,9 +187,5 @@ class TimesOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, overr
 class DivideOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: ColumnType): ExpressionWithColumnType<T>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
         return "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
-    }
-
-    override fun toString(): String {
-        error("!")
     }
 }

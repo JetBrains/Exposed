@@ -60,6 +60,14 @@ class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override val columnType: ColumnType = _columnType
 }
 
+class Avg<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "AVG(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = _columnType
+}
+
 class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUM(${expr.toSQL(queryBuilder)})"

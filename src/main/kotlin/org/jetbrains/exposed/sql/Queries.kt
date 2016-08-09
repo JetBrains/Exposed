@@ -5,17 +5,11 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
-inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query {
-    return select(SqlExpressionBuilder.where())
-}
+inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query = select(SqlExpressionBuilder.where())
 
-fun FieldSet.select(where: Op<Boolean>) : Query {
-    return Query(TransactionManager.current(), this, where)
-}
+fun FieldSet.select(where: Op<Boolean>) : Query = Query(TransactionManager.current(), this, where)
 
-fun FieldSet.selectAll() : Query {
-    return Query(TransactionManager.current(), this, null)
-}
+fun FieldSet.selectAll() : Query = Query(TransactionManager.current(), this, null)
 
 fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op())

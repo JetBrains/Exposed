@@ -16,17 +16,11 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         } ?: false
     }
 
-    override fun hashCode(): Int {
-        return table.hashCode()*31 + name.hashCode()
-    }
+    override fun hashCode(): Int = table.hashCode()*31 + name.hashCode()
 
-    override fun toString(): String {
-        return "${table.javaClass.name}.$name"
-    }
+    override fun toString(): String = "${table.javaClass.name}.$name"
 
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return TransactionManager.current().fullIdentity(this);
-    }
+    override fun toSQL(queryBuilder: QueryBuilder): String = TransactionManager.current().fullIdentity(this)
 
     val ddl: String
         get() = createStatement()
@@ -37,22 +31,22 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 
     override fun dropStatement(): String = TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
 
-    fun descriptionDdl(): String {
-        val ddl = StringBuilder(TransactionManager.current().identity(this)).append(" ")
+    fun descriptionDdl(): String = buildString {
+        append(TransactionManager.current().identity(this@Column))
+        append(" ")
         val colType = columnType
-        ddl.append(colType.sqlType())
+        append(colType.sqlType())
 
         if (colType.nullable) {
-            ddl.append(" NULL")
+            append(" NULL")
         } else {
-            ddl.append(" NOT NULL")
+            append(" NOT NULL")
         }
 
         if (dbDefaultValue != null) {
-            ddl.append (" DEFAULT ${colType.valueToString(dbDefaultValue!!)}")
+            append (" DEFAULT ")
+            append(colType.valueToString(dbDefaultValue!!))
         }
-
-        return ddl.toString()
     }
 
     override fun compareTo(other: Column<*>): Int = compareBy<Column<*>>({it.table.tableName}, {it.name}).compare(this, other)
