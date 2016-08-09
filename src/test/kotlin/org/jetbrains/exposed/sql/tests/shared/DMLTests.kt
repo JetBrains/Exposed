@@ -8,6 +8,8 @@ import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 object DMLTestsData {
     object Cities : Table() {
@@ -305,6 +307,24 @@ class DMLTests() : DatabaseTestsBase() {
                 assertEquals("St. Petersburg", r[it][cities.name])
                 val count = r[it][users.id.count()]
                 assertEquals(1, count)
+            }
+        }
+    }
+
+    @Test fun testGroupBy05() {
+        withCitiesAndUsers { cities, users, userData ->
+            val maxNullableCityId = users.cityId.max()
+
+            users.slice(maxNullableCityId).selectAll()
+                    .map { it[maxNullableCityId] }.let { result ->
+                assertTrue(result.size == 1)
+                assertNotNull(result.single())
+            }
+
+            users.slice(maxNullableCityId).select { users.cityId.isNull() }
+                    .map { it[maxNullableCityId] }.let { result ->
+                assertTrue(result.size == 1)
+                assertNull(result.single())
             }
         }
     }
