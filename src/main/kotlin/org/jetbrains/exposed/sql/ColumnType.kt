@@ -120,7 +120,16 @@ class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
 
 class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
     override fun sqlType(): String  = "DECIMAL($precision, $scale)"
-    override fun valueFromDB(value: Any): Any = super.valueFromDB(value).let { (it as? BigDecimal)?.setScale(scale, RoundingMode.HALF_EVEN) ?: it }
+    override fun valueFromDB(value: Any): Any {
+        val valueFromDB = super.valueFromDB(value)
+        return when (valueFromDB) {
+            is BigDecimal -> valueFromDB.setScale(scale, RoundingMode.HALF_EVEN)
+            is Double -> BigDecimal.valueOf(valueFromDB).setScale(scale, RoundingMode.HALF_EVEN)
+            is Int -> BigDecimal(valueFromDB)
+            is Long -> BigDecimal.valueOf(valueFromDB)
+            else -> valueFromDB
+        }
+    }
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
@@ -166,7 +175,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         if (value is java.sql.Date) {
-            return DateTime(value)
+            return DateTime(value.time)
         }
 
         if (value is java.sql.Timestamp) {
