@@ -38,7 +38,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            val q = identityQuoteString
+            val q = db.identityQuoteString
             assertEquals("CREATE TABLE IF NOT EXISTS ${q}unnamedTableWithQuotesSQL\$TestTable$1$q (id INT NOT NULL, name VARCHAR(42) NOT NULL, CONSTRAINT ${q}pk_unnamedTableWithQuotesSQL\$TestTable$1$q PRIMARY KEY (id))", TestTable.ddl)
         }
     }

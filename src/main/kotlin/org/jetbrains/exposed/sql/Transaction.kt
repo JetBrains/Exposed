@@ -36,10 +36,6 @@ open class UserDataHolder() {
 
 open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
 
-    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { db.metadata.identifierQuoteString!! }
-    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { db.metadata.extraNameCharacters!!}
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { db.metadata.sqlKeywords.split(',') }
-
     val monitor = StatementMonitor()
 
     val logger = CompositeSqlLogger()
@@ -126,21 +122,16 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return answer.first?.let { stmt.body(it) }
     }
 
-
-
-    private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
-    private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
-
-    private fun needQuotes (identity: String) : Boolean {
-        return keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
-    }
-
     internal fun quoteIfNecessary (identity: String) : String {
-        return (identity.split('.').map {quoteTokenIfNecessary(it)}).joinToString(".")
+        if (identity.contains('.'))
+            return identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
+        else {
+            return quoteTokenIfNecessary(identity)
+        }
     }
 
     private fun quoteTokenIfNecessary(token: String) : String {
-        return if (needQuotes(token)) "$identityQuoteString$token$identityQuoteString" else token
+        return if (db.needQuotes(token)) "${db.identityQuoteString}$token${db.identityQuoteString}" else token
     }
 
     fun identity(table: Table): String {

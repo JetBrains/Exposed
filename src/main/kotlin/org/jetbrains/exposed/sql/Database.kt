@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.sql.DataSource
 
@@ -32,6 +33,22 @@ class Database private constructor(val connector: () -> Connection) {
 
     val vendor: String get() = dialect.name
 
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { metadata.sqlKeywords.split(',') }
+    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!! }
+    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
+
+    val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size >= 1000
+    }
+
+    fun needQuotes (identity: String) : Boolean {
+        return checkedIdentities.getOrPut(identity.toLowerCase()) {
+            keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
+        }
+    }
+
+    private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
+    private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     companion object {
         private val dialects = CopyOnWriteArrayList<DatabaseDialect>()
