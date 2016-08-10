@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 import org.joda.time.DateTime
+import java.math.BigDecimal
 import java.util.*
 
 abstract class Function<T>(): ExpressionWithColumnType<T>()
@@ -44,7 +45,7 @@ class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>() {
     override val columnType = StringColumnType()
 }
 
-class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MIN(${expr.toSQL(queryBuilder)})"
     }
@@ -52,7 +53,7 @@ class Min<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override val columnType: ColumnType = _columnType
 }
 
-class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MAX(${expr.toSQL(queryBuilder)})"
     }
@@ -60,12 +61,12 @@ class Max<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
     override val columnType: ColumnType = _columnType
 }
 
-class Avg<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Avg<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "AVG(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: ColumnType = _columnType
+    override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
 class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {

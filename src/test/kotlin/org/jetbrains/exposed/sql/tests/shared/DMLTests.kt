@@ -267,7 +267,7 @@ class DMLTests() : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                     .groupBy(cities.name)
-                    .having{users.id.count() eq cities.id.max()}
+                    .having{users.id.count().eq(cities.id.max())}
                     .orderBy(cities.name)
                     .toList()
 
@@ -323,6 +323,43 @@ class DMLTests() : DatabaseTestsBase() {
 
             users.slice(maxNullableCityId).select { users.cityId.isNull() }
                     .map { it[maxNullableCityId] }.let { result ->
+                assertTrue(result.size == 1)
+                assertNull(result.single())
+            }
+        }
+    }
+
+    @Test fun testGroupBy06() {
+        withCitiesAndUsers { cities, users, userData ->
+            val maxNullableId: Max<Int> = cities.id.max()
+
+            cities.slice(maxNullableId).selectAll()
+                    .map { it[maxNullableId] }.let { result ->
+                assertTrue(result.size == 1)
+                assertNotNull(result.single())
+            }
+
+            cities.slice(maxNullableId).select { cities.id.isNull() }
+                    .map { it[maxNullableId] }.let { result: List<Int?> ->
+                assertTrue(result.size == 1)
+                assertNull(result.single())
+            }
+        }
+    }
+
+    @Test fun testGroupBy07() {
+        withCitiesAndUsers { cities, users, userData ->
+            val avgIdExpr = cities.id.avg()
+            val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id]}.average())
+
+            cities.slice(avgIdExpr).selectAll()
+                    .map { it[avgIdExpr] }.let { result ->
+                assertTrue(result.size == 1)
+                assertTrue(result.single()!!.compareTo(avgId) == 0)
+            }
+
+            cities.slice(avgIdExpr).select { cities.id.isNull() }
+                    .map { it[avgIdExpr] }.let { result ->
                 assertTrue(result.size == 1)
                 assertNull(result.single())
             }

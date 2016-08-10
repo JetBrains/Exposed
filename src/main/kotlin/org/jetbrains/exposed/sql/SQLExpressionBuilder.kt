@@ -17,7 +17,7 @@ fun<T:Any?> Column<T>.min() = Min(this, this.columnType)
 
 fun<T:Any?> Column<T>.max() = Max(this, this.columnType)
 
-fun<T:Any?> Column<T>.avg() = Avg(this, this.columnType)
+fun<T:Any?> Column<T>.avg(scale: Int = 2) = Avg(this, scale)
 
 fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
 
