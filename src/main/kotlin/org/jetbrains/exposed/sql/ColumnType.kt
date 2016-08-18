@@ -29,8 +29,8 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
                 "NULL"
             }
 
-            is List<*> -> {
-                value.map {valueToString(it)}.joinToString(",")
+            is Iterable<*> -> {
+                value.joinToString(","){ valueToString(it) }
             }
 
             else ->  {
@@ -279,6 +279,12 @@ class BlobColumnType(): ColumnType() {
 
 class BooleanColumnType() : ColumnType() {
     override fun sqlType(): String  = "BOOLEAN"
+
+    override fun valueFromDB(value: Any) = when (value) {
+        is Number -> value.toLong() != 0L
+        is String -> value.toBoolean()
+        else -> value.toString().toBoolean()
+    }
 
     override fun nonNullValueToString(value: Any): String = (value as Boolean).toString()
 }
