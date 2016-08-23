@@ -136,7 +136,8 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
 
         val entityCache = EntityCache.getOrCreate(TransactionManager.current())
         entityCache.flush()
-        val existingIds = getValue(o, desc).map { it.id }.toSet()
+        val oldValue = getValue(o, desc)
+        val existingIds = oldValue.map { it.id }.toSet()
         entityCache.clearReferrersCache()
 
         val targetIds = value.map { it.id }.toList()
@@ -144,6 +145,17 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
         table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
             this[sourceRefColumn] = o.id
             this[targetRefColumn] = targetId
+        }
+
+        // current entity updated
+        EntityHook.alertSubscribers(EntityChange(o.klass, o.id, EntityChangeType.Updated))
+
+        // linked entities updated
+        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
+        if (targetClass != null) {
+            existingIds.plus(targetIds).forEach {
+                EntityHook.alertSubscribers(EntityChange(targetClass, it, EntityChangeType.Updated))
+            }
         }
     }
 }
@@ -360,7 +372,7 @@ class EntityCache {
                     }
                     batch.execute(TransactionManager.current())
                     updatedEntities.forEach {
-                        EntityHook.alertSubscribers(it, false)
+                        EntityHook.alertSubscribers(EntityChange(it.klass, it.id, EntityChangeType.Updated))
                     }
                 }
             }
@@ -393,7 +405,7 @@ class EntityCache {
                 entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
                 entry.storeWrittenValues()
                 EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
-                EntityHook.alertSubscribers(entry, true)
+                EntityHook.alertSubscribers(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
             }
         }
     }
