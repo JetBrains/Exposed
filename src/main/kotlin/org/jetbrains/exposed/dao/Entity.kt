@@ -130,7 +130,7 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
         return EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
-    operator fun setValue(o: Entity<*>, desc: KProperty<*>, value: SizedIterable<Target>) {
+    operator fun<SrcID : Any> setValue(o: Entity<SrcID>, desc: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
         val targetRefColumn = getTargetRefColumn()
 
@@ -372,7 +372,7 @@ class EntityCache {
                     }
                     batch.execute(TransactionManager.current())
                     updatedEntities.forEach {
-                        EntityHook.alertSubscribers(EntityChange(it.klass, it.id, EntityChangeType.Updated))
+                        EntityHook.alertSubscribers(EntityChange<Any>(it.klass as EntityClass<Any, Entity<Any>>, it.id as EntityID<Any>, EntityChangeType.Updated))
                     }
                 }
             }
@@ -405,7 +405,7 @@ class EntityCache {
                 entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
                 entry.storeWrittenValues()
                 EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
-                EntityHook.alertSubscribers(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
+                EntityHook.alertSubscribers(EntityChange<Any>(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
             }
         }
     }

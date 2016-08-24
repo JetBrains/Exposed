@@ -19,30 +19,37 @@ enum class EntityChangeType {
 }
 
 
-data class EntityChange(val entityClass: EntityClass<*, Entity<*>>, val id: EntityID<*>, var changeType: EntityChangeType) {
-    fun<ID : Any, T : Entity<ID>> toEntity(klass: EntityClass<ID, T>): T? {
-        return if (entityClass == klass) klass.findById(id as EntityID<ID>) else null
-    }
+data class EntityChange<ID: Any>(val entityClass: EntityClass<ID, Entity<ID>>, val id: EntityID<ID>, var changeType: EntityChangeType) {
+}
+
+fun<ID: Any> EntityChange<ID>.toEntity() : Entity<ID>? {
+    return entityClass.findById(id)
+}
+
+fun<ID: Any,T: Entity<ID>> EntityChange<*>.toEntity(klass: EntityClass<ID, T>) : T? {
+    if (entityClass != klass) return null
+    @Suppress("UNCHECKED_CAST")
+    return toEntity() as? T
 }
 
 object EntityHook {
-    private val entitySubscribers: ArrayList<(EntityChange) -> Unit> = ArrayList()
+    private val entitySubscribers: ArrayList<(EntityChange<*>) -> Unit> = ArrayList()
 
-    fun subscribe (action: (EntityChange) -> Unit): (EntityChange) -> Unit {
+    fun subscribe (action: (EntityChange<*>) -> Unit): (EntityChange<*>) -> Unit {
         entitySubscribers.add(action)
         return action
     }
 
-    fun unsubscribe (action: (EntityChange) -> Unit) {
+    fun unsubscribe (action: (EntityChange<*>) -> Unit) {
         entitySubscribers.remove(action)
     }
 
-    fun alertSubscribers(change: EntityChange) {
+    fun alertSubscribers(change: EntityChange<*>) {
         entitySubscribers.forEach { it(change) }
     }
 }
 
-fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {
+fun <T> withHook(action: (EntityChange<*>) -> Unit, body: ()->T): T {
     EntityHook.subscribe(action)
     try {
         return body()
@@ -52,14 +59,14 @@ fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {
     }
 }
 
-fun<T> transactionWithEntityHook(statement: Transaction.() -> T): Pair<T, Collection<EntityChange>> {
-    val changedEntities = mutableMapOf<EntityID<*>, EntityChange>()
+fun<T> transactionWithEntityHook(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
+    val changedEntities = mutableMapOf<EntityID<*>, EntityChange<*>>()
     val transactionResult = withHook({ change ->
         val existingChange = changedEntities[change.id]
         val newChangeType = existingChange?.changeType?.merge(change.changeType) ?: change.changeType
         changedEntities[change.id] = (existingChange ?: change).apply {
             changeType = newChangeType
-        }
+    }
     })
     {
         transaction {
