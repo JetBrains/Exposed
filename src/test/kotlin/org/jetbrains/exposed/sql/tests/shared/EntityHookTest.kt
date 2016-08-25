@@ -22,8 +22,8 @@ object EntityHookTestData {
     }
 
     object UsersToCities: org.jetbrains.exposed.sql.Table() {
-        val user = reference("user", Users, onDelete = ReferenceOption.CASCADE)
-        val city = reference("city", Cities, onDelete = ReferenceOption.CASCADE)
+        val user = reference("u", Users, onDelete = ReferenceOption.CASCADE)
+        val city = reference("c", Cities, onDelete = ReferenceOption.CASCADE)
     }
 
     class User(id: EntityID<Int>) : IntEntity(id) {
