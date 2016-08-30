@@ -258,6 +258,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere{table.id eq id}
+        EntityHook.alertSubscribers(EntityChange(klass, id, EntityChangeType.Removed))
     }
 
     open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {

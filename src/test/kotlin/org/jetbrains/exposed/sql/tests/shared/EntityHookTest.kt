@@ -71,6 +71,32 @@ class EntityHookTest: DatabaseTestsBase() {
         }
     }
 
+    @Test fun testDeleted01() {
+        withTables(*EntityHookTestData.allTables) {
+            val spbId = transaction {
+                val ru = EntityHookTestData.Country.new {
+                    name = "RU"
+                }
+                val x = EntityHookTestData.City.new {
+                    name = "St. Petersburg"
+                    country = ru
+                }
+
+                flushCache()
+                x.id
+            }
+
+            val entities = transactionWithEntityHook {
+                val spb = EntityHookTestData.City.findById(spbId)!!
+                spb.delete()
+            }
+
+            assertEquals(1, entities.second.count())
+            assertEquals(EntityChangeType.Removed, entities.second.single().changeType)
+            assertEquals(spbId, entities.second.single().id)
+        }
+    }
+
     @Test fun testModifiedSimple01() {
         withTables(*EntityHookTestData.allTables) {
             transaction {
