@@ -83,7 +83,7 @@ abstract class DatabaseTestsBase() {
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
         (TestDB.enabledInTests().toList() - excludeSettings).forEach {
             withDb(it) {
-                SchemaUtils.create(*tables)
+                SchemaUtils.createMissingTablesAndColumns(*tables)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop tables
