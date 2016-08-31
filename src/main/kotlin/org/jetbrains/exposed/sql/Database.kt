@@ -33,7 +33,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     val vendor: String get() = dialect.name
 
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { metadata.sqlKeywords.split(',') }
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { metadata.sqlKeywords.split(',') + dialect.extraKeywords }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
 

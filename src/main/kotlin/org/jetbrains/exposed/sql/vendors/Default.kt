@@ -53,6 +53,8 @@ interface DatabaseDialect {
     fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 
     fun limit(size: Int, offset: Int = 0): String
+
+    val extraKeywords: List<String>
 }
 
 interface MatchMode {
@@ -214,6 +216,9 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun bitValue(value: Int): String {
         return "$value"
     }
+
+    override val extraKeywords: List<String>
+        get() = emptyList()
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
