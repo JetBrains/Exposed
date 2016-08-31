@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -28,6 +29,22 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(TestTable) {
             assertEquals (true, TestTable.exists())
+        }
+    }
+
+    @Test fun testCreateMissingTablesAndColumns01() {
+        val TestTable = object : Table("test") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", length = 42)
+        }
+
+        withDb {
+            SchemaUtils.createMissingTablesAndColumns(TestTable)
+            try {
+                assertEquals (true, TestTable.exists())
+            } finally {
+                SchemaUtils.drop(TestTable)
+            }
         }
     }
 

@@ -13,4 +13,8 @@ internal object PostgreSQLDialect : VendorDialect("postgresql") {
     override fun blobType(): String = "bytea"
 
     override fun binaryType(length: Int): String = "bytea"
+
+    override fun bitValue(value: Int): String {
+        return "CAST($value AS BIT)"
+    }
 }

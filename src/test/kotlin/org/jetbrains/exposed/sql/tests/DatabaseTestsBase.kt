@@ -74,7 +74,7 @@ abstract class DatabaseTestsBase() {
         }
     }
 
-    fun withDB(statement: Transaction.() -> Unit) {
+    fun withDb(statement: Transaction.() -> Unit) {
         TestDB.enabledInTests().forEach {
             withDb(it, statement)
         }
@@ -93,8 +93,8 @@ abstract class DatabaseTestsBase() {
             }
         }
     }
-    fun withTables (vararg tables: Table, statement: Transaction.() -> Unit)
-            = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+
+    fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
     fun Transaction.assertEquals(a: Any?, b: Any?) = kotlin.test.assertEquals(a, b, "Failed on ${currentDialect.name}")
 }

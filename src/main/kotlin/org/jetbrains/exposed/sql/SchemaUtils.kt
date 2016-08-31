@@ -124,6 +124,7 @@ object SchemaUtils {
                         exec(statement)
                     }
                 }
+                db.dialect.resetCaches()
             }
         }
     }
@@ -132,7 +133,7 @@ object SchemaUtils {
         connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
         val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
         if (!isBusy) {
-            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUES (CAST (1 AS BIT))")
+            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUES (${db.dialect.bitValue(1)})")
             try {
                 body()
             } finally {

@@ -38,6 +38,8 @@ interface DatabaseDialect {
     fun blobType(): String
     fun binaryType(length: Int): String
 
+    fun bitValue(value: Int): String
+
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
@@ -208,6 +210,10 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun binaryType(length: Int): String = "VARBINARY($length)"
 
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
+
+    override fun bitValue(value: Int): String {
+        return "$value"
+    }
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
