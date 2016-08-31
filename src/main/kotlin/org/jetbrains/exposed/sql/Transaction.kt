@@ -46,6 +46,10 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var debug = false
     var selectsForUpdate = false
 
+    // currently executing statement. Used to log error properly
+    var  currentStatement: PreparedStatement? = null
+
+
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
     val statementStats = hashMapOf<String, Pair<Int,Long>>()

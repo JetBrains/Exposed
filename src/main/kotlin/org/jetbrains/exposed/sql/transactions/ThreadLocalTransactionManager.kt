@@ -71,7 +71,8 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
             return answer
         }
         catch (e: SQLException) {
-            exposedLogger.info("Transaction attempt #$repetitions: ${e.message}", e)
+            val currentStatement = transaction.currentStatement
+            exposedLogger.info("Transaction attempt #$repetitions: ${e.message}. Statement: $currentStatement", e)
             transaction.rollback()
             repetitions++
             if (repetitions >= repetitionAttempts) {
@@ -83,6 +84,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
             throw e
         }
         finally {
+            transaction.currentStatement = null
             transaction.close()
             TransactionManager.currentThreadManager.remove()
         }

@@ -41,7 +41,10 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
                 statement.addBatch()
             }
 
+            transaction.currentStatement = statement
             val result = statement.executeInternal(transaction)
+            transaction.currentStatement = null
+
             transaction.monitor.notifyAfterExecution(transaction, contexts, statement)
             return result to contexts
         } finally {
