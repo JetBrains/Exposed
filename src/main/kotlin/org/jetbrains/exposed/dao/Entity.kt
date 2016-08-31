@@ -434,10 +434,10 @@ class EntityCache {
             val canBeReferenced = arrayListOf<Table>()
             do {
                 val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
-                if (movable.isEmpty()) error("Cycle references detected, can't sort table references!")
                 canBeReferenced.addAll(movable)
                 this.removeAll(movable)
-            } while (others.isNotEmpty())
+            } while (others.isNotEmpty() && movable.isNotEmpty())
+            canBeReferenced.addAll(this)
             canBeReferenced
         }
 
