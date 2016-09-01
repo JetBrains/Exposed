@@ -74,7 +74,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
 
                 list.map {
                     queryBuilder.registerArgument(it, expr.columnType)
-                }.joinTo(sb)
+                }.sorted().joinTo(sb)
 
                 sb.append(")")
             }
