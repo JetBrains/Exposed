@@ -21,11 +21,12 @@ interface TransactionInterface {
 
 interface TransactionManager {
 
-    fun newTransaction(isolation: Int = Connection.TRANSACTION_REPEATABLE_READ) : Transaction
+    fun newTransaction(isolation: Int = defaultIsolationLevel) : Transaction
 
     fun currentOrNull(): Transaction?
 
     companion object {
+        var defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
 
         @Volatile lateinit internal var _manager: TransactionManager
 
