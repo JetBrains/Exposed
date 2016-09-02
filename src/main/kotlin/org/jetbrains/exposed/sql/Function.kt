@@ -69,7 +69,7 @@ class Avg<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
     override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T>() {
+class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUM(${expr.toSQL(queryBuilder)})"
     }
