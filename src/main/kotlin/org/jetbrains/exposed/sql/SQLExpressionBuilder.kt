@@ -116,6 +116,7 @@ object SqlExpressionBuilder {
 
     fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
         return when (value) {
+            is Boolean -> booleanLiteral(value)
             is Int -> intLiteral(value)
             is Long -> longLiteral(value)
             is String -> stringLiteral(value)

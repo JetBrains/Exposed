@@ -91,11 +91,13 @@ class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T>()
 }
 
 fun <T:Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
+fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType())
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 
+fun booleanLiteral(value: Boolean) : LiteralOp<Boolean> = LiteralOp (BooleanColumnType(), value)
 fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp (IntegerColumnType(), value)
 fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp(LongColumnType(), value)
 fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp(StringColumnType(), value)
