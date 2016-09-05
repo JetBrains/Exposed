@@ -3,6 +3,7 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.lang.IllegalStateException
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty

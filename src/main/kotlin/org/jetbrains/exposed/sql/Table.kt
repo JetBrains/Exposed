@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.joda.time.DateTime
+import java.lang.IllegalArgumentException
+import java.lang.UnsupportedOperationException
 import java.math.BigDecimal
 import java.sql.Blob
 import java.util.*

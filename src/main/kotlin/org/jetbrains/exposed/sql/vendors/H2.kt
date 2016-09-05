@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.lang.UnsupportedOperationException
 
 internal object H2Dialect: VendorDialect("h2") {
 

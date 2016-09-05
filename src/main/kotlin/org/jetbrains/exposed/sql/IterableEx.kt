@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import java.lang.UnsupportedOperationException
+
 interface SizedIterable<out T>: Iterable<T> {
     fun limit(n: Int, offset: Int = 0): SizedIterable<T>
     fun count(): Int

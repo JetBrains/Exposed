@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
+import java.lang.RuntimeException
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
