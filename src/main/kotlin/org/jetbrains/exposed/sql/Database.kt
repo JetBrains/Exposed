@@ -2,10 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.*
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
@@ -33,7 +30,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     val vendor: String get() = dialect.name
 
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { metadata.sqlKeywords.split(',') + dialect.extraKeywords }
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + metadata.sqlKeywords.split(',') }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
 

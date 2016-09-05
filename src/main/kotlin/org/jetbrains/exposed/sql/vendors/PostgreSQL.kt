@@ -17,7 +17,4 @@ internal object PostgreSQLDialect : VendorDialect("postgresql") {
     override fun bitValue(value: Int): String {
         return "CAST($value AS BIT)"
     }
-
-    override val extraKeywords: List<String>
-        get() = listOf("user")
 }
