@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.DatabaseMetaData
 
 interface DdlAware {
@@ -63,8 +63,8 @@ data class Index(val indexName: String, val tableName: String, val columns: List
             assert(columns.isNotEmpty())
             assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
             val s = TransactionManager.current()
-            val indexName = "${s.identity(columns.first().table)}_${columns.map { s.identity(it) }.joinToString("_")}" + (if (unique) "_unique" else "")
-            return Index(indexName, s.identity(columns.first().table), columns.map { s.identity(it) }, unique)
+            val indexName = s.quoteIfNecessary("${columns.first().table.tableName}_${columns.joinToString("_"){it.name}}" + (if (unique) "_unique" else ""))
+            return Index(indexName, s.identity(columns.first().table), columns.map { it.name }, unique)
         }
     }
 
@@ -76,7 +76,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
 
 
     fun onlyNameDiffer(other: Index): Boolean {
-        return indexName != other.indexName && columns.equals(other.columns) && unique == other.unique
+        return indexName != other.indexName && columns == other.columns && unique == other.unique
     }
 
     override fun toString(): String {
