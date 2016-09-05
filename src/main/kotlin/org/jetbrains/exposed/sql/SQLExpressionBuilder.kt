@@ -19,6 +19,14 @@ fun<T:Any?> Column<T>.max() = Max(this, this.columnType)
 
 fun<T:Any?> Column<T>.avg(scale: Int = 2) = Avg(this, scale)
 
+fun<T:Any?> Column<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
+
+fun<T:Any?> Column<T>.stdDevSamp(scale: Int = 2) = StdDevSamp(this, scale)
+
+fun<T:Any?> Column<T>.varPop(scale: Int = 2) = VarPop(this, scale)
+
+fun<T:Any?> Column<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
+
 fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
 
 fun<T:String?> Expression<T>.substring(start: Int, length: Int): Substring {

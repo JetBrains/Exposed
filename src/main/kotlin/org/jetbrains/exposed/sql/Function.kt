@@ -69,6 +69,38 @@ class Avg<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
     override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
+class StdDevPop<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "STDDEV_POP(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
+}
+
+class StdDevSamp<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "STDDEV_SAMP(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
+}
+
+class VarPop<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "VAR_POP(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
+}
+
+class VarSamp<out T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String {
+        return "VAR_SAMP(${expr.toSQL(queryBuilder)})"
+    }
+
+    override val columnType: ColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
+}
+
 class Sum<T>(val expr: Expression<T>, _columnType: ColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "SUM(${expr.toSQL(queryBuilder)})"
