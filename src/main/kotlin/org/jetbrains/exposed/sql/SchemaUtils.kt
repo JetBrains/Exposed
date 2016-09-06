@@ -130,14 +130,17 @@ object SchemaUtils {
     }
 
     fun <T> Transaction.withDataBaseLock(body: () -> T) {
-        connection.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS BusyTable(busy bit unique)")
-        val isBusy = connection.createStatement().executeQuery("SELECT * FROM BusyTable FOR UPDATE").next()
+        val buzyTable = object : Table("Busy") {
+            val busy = bool("busy").uniqueIndex()
+        }
+        create(buzyTable)
+        val isBusy = buzyTable.selectAll().forUpdate().any()
         if (!isBusy) {
-            connection.createStatement().executeUpdate("INSERT INTO BusyTable (busy) VALUES (b'1')")
+            buzyTable.insert { it[buzyTable.busy] = true }
             try {
                 body()
             } finally {
-                connection.createStatement().executeUpdate("DELETE FROM BusyTable")
+                buzyTable.deleteAll()
                 connection.commit()
             }
         }
