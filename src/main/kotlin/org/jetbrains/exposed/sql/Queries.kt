@@ -129,7 +129,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
 
-    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull()?.orEmpty() in fKeyConstraints}
+    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull().orEmpty() in fKeyConstraints}
 
     val allExistingIndices = currentDialect.existingIndices(*tables)
     val missingIndices = HashSet<Index>()

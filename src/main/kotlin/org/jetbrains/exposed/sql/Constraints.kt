@@ -64,7 +64,7 @@ data class Index(val indexName: String, val tableName: String, val columns: List
             assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
             val s = TransactionManager.current()
             val indexName = s.quoteIfNecessary("${columns.first().table.tableName}_${columns.joinToString("_"){it.name}}" + (if (unique) "_unique" else ""))
-            return Index(indexName, s.identity(columns.first().table), columns.map { it.name }, unique)
+            return Index(indexName, s.identity(columns.first().table), columns.map { s.quoteIfNecessary(it.name) }, unique)
         }
     }
 
