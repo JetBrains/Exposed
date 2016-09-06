@@ -181,17 +181,20 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     }
 
     override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
+        val t = TransactionManager.current()
         return buildString {
             append("CREATE ")
             if (unique) append("UNIQUE ")
-            append("INDEX $indexName ON $tableName ")
-            columns.joinTo(this, ", ", "(", ")")
+            append("INDEX ${t.quoteIfNecessary(indexName)} ON ${t.quoteIfNecessary(tableName)} ")
+            columns.joinTo(this, ", ", "(", ")") {
+                t.quoteIfNecessary(it)
+            }
         }
-
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {
-        return "ALTER TABLE $tableName DROP CONSTRAINT $indexName"
+        val t = TransactionManager.current()
+        return "ALTER TABLE ${t.quoteIfNecessary(tableName)} DROP CONSTRAINT ${t.quoteIfNecessary(indexName)}"
     }
 
     override fun supportsSelectForUpdate() = true
