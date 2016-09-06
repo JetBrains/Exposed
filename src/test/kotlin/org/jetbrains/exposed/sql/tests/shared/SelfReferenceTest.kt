@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.EntityCache
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @Suppress("unused")
 class SortByReferenceTest {
@@ -71,20 +72,5 @@ class SortByReferenceTest {
         assert(sortedTables.indexOf(cities) in listOf(3,4,5))
         assert(sortedTables.indexOf(users) in listOf(3,4,5))
         assert(sortedTables.indexOf(strangeTable) in listOf(3,4,5))
-    }
-
-    @Test
-    fun selfReferenceTest() {
-
-        val boards = object : IntIdTable(name = "board") {
-            val name = varchar("name", 255).index(isUnique = true)
-        }
-
-        val posts = object : IntIdTable(name = "posts") {
-            val board = optReference("board", boards)
-            val parent = optReference("parent", this)
-        }
-        assertEquals<List<Table>>(
-            EntityCache.sortTablesByReferences(listOf(posts, boards)), listOf(boards, posts))
     }
 }

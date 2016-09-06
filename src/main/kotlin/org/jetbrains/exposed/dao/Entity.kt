@@ -326,8 +326,8 @@ class EntityCache {
         return getMap(f)[id.value]
     }
 
-    fun <ID:Any, T: Entity<ID>> findAll(f: EntityClass<ID, T>): SizedIterable<T> {
-        return SizedCollection(getMap(f).values)
+    fun <ID:Any, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> {
+        return getMap(f).values
     }
 
     fun <ID:Any, T: Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
@@ -393,22 +393,33 @@ class EntityCache {
 
     fun flushInserts(table: IdTable<*>) {
         inserts.remove(table)?.let {
-            val ids = table.batchInsert(it) { entry ->
-                for ((c, v) in entry.writeValues) {
-                    this[c] = v
+            var toFlush: List<Entity<*>> = it
+            do {
+                val partition = toFlush.partition {
+                    it.writeValues.none {
+                        val (key, value) = it
+                        key.referee == table.id && value is EntityID<*> && value._value == null
+                    }
                 }
-            }
+                toFlush = partition.first
+                val ids = table.batchInsert(toFlush) { entry ->
+                    for ((c, v) in entry.writeValues) {
+                        this[c] = v
+                    }
+                }
 
-            for ((entry, id) in it.zip(ids)) {
-                entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
-                    is EntityID<*> -> id._value!!
-                    else -> id
-                })
-                entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
-                entry.storeWrittenValues()
-                EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
-                EntityHook.alertSubscribers(EntityChange<Any>(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
-            }
+                for ((entry, id) in toFlush.zip(ids)) {
+                    entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
+                        is EntityID<*> -> id._value!!
+                        else -> id
+                    })
+                    entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
+                    entry.storeWrittenValues()
+                    EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
+                    EntityHook.alertSubscribers(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
+                }
+                toFlush = partition.second
+            } while(toFlush.isNotEmpty())
         }
     }
 
@@ -495,7 +506,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         return warmCache().find(this, id)
     }
 
-    fun testCache(cacheCheckCondition: T.()->Boolean): List<T> = warmCache().findAll(this).filter { it.cacheCheckCondition() }
+    fun testCache(cacheCheckCondition: T.()->Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
@@ -552,9 +563,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         return find(SqlExpressionBuilder.op())
     }
 
-    fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
+    fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()->Op<Boolean>): Sequence<T> {
         val cached = testCache(cacheCheckCondition)
-        return if (cached.isNotEmpty()) SizedCollection(cached) else find(op)
+        return if (cached.any()) cached else find(op).asSequence()
     }
 
     open val dependsOnTables: ColumnSet get() = table
@@ -703,7 +714,7 @@ abstract class ImmutableCachedEntityClass<ID:Any, T: Entity<ID>>(table: IdTable<
         return transactionCache
     }
 
-    override fun all(): SizedIterable<T> = warmCache().findAll(this)
+    override fun all(): SizedIterable<T> = SizedCollection(warmCache().findAll(this))
 
     @Synchronized fun expireCache() {
         _cachedValues = null

@@ -2,11 +2,13 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 
 object EntityTestsData {
 
@@ -101,4 +103,73 @@ class EntityTests: DatabaseTestsBase() {
 
         }
     }
+
+    object Boards : IntIdTable(name = "board") {
+        val name = varchar("name", 255).index(isUnique = true)
+    }
+
+    object Posts : IntIdTable(name = "posts") {
+        val board = optReference("board", Boards)
+        val parent = optReference("parent", this)
+    }
+
+    class Board(id: EntityID<Int>): IntEntity(id) {
+        companion object : IntEntityClass<Board>(Boards)
+
+        var name by Boards.name
+    }
+
+    class Post(id: EntityID<Int>): IntEntity(id) {
+        companion object : IntEntityClass<Post>(Posts)
+
+        var board by Board optionalReferencedOn Posts.board
+        var parent by Post optionalReferencedOn Posts.parent
+    }
+
+    @Test
+    fun tableSelfReferenceTest() {
+        assertEquals<List<Table>>(
+                EntityCache.sortTablesByReferences(listOf(Posts, Boards)), listOf(Boards, Posts))
+    }
+
+    @Test
+    fun testInsertChildWithoutFlush() {
+        withTables(Posts) {
+            val parent = Post.new {  }
+            Post.new { this.parent = parent }
+            assertEquals(flushCache().size, 2)
+        }
+    }
+
+    @Test
+    fun testInsertNonChildWithoutFlush() {
+        withTables(Boards, Posts) {
+            val board = Board.new { name = "irrelevant" }
+            Post.new { this.board = board }
+            assertEquals(flushCache().size, 2)
+
+        }
+    }
+
+    @Test
+    fun testInsertChildWithFlush() {
+        withTables(Posts) {
+            val parent = Post.new {  }
+            flushCache()
+            assertNotNull(parent.id._value)
+            Post.new { this.parent = parent }
+            assertEquals(flushCache().size, 1)
+        }
+    }
+
+    @Test
+    fun testInsertChildWithChild() {
+        withTables(Posts) {
+            val parent = Post.new {  }
+            val child1 = Post.new { this.parent = parent }
+            Post.new { this.parent = child1 }
+            flushCache()
+        }
+    }
+
 }
