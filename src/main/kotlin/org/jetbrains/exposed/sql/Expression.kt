@@ -5,13 +5,18 @@ import java.util.*
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<ColumnType, Any?>>()
 
-    fun <T> registerArgument(arg: T, sqlType: ColumnType): String {
-        if (prepared) {
-            args.add(sqlType to arg)
-            return "?"
-        }
-        else {
-            return sqlType.valueToString(arg)
+    fun <T> registerArgument(sqlType: ColumnType, argument: T) = registerArguments(sqlType, listOf(argument)).single()
+
+    fun <T> registerArguments(sqlType: ColumnType, arguments: List<T>): List<String> {
+        val argumentsAndStrings = arguments.map { it to sqlType.valueToString(it) }.sortedBy { it.second }
+
+        return argumentsAndStrings.map {
+            if (prepared) {
+                args.add(sqlType to it.first)
+                "?"
+            } else {
+                it.second
+            }
         }
     }
 }

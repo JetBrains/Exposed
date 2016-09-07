@@ -24,7 +24,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
             val (col, value) = it
             "${transaction.identity(col)}=" + when (value) {
                 is Expression<*> -> value.toSQL(builder)
-                else -> builder.registerArgument(value, col.columnType)
+                else -> builder.registerArgument(col.columnType, value)
             }
         })
 
@@ -38,7 +38,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
             val value = it.value
             when (value) {
                 is Expression<*> -> value.toSQL(this)
-                else -> this.registerArgument(value, it.key.columnType)
+                else -> this.registerArgument(it.key.columnType, value)
             }
         }
         where?.toSQL(this)

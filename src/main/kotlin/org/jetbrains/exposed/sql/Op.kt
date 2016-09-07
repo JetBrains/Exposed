@@ -62,7 +62,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
                     isInList ->  sb.append(" = ")
                     else -> sb.append(" != ")
                 }
-                sb.append(queryBuilder.registerArgument(list.first(), expr.columnType))
+                sb.append(queryBuilder.registerArgument(expr.columnType, list.first()))
             }
 
             else -> {
@@ -72,9 +72,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
                     else -> sb.append(" NOT IN (")
                 }
 
-                list.map {
-                    queryBuilder.registerArgument(it, expr.columnType)
-                }.sorted().joinTo(sb)
+                queryBuilder.registerArguments(expr.columnType, list).joinTo(sb)
 
                 sb.append(")")
             }
@@ -86,7 +84,7 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
 
 class QueryParameter<T>(val value: T, val sqlType: ColumnType) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
-        return queryBuilder.registerArgument(value, sqlType)
+        return queryBuilder.registerArgument(sqlType, value)
     }
 }
 

@@ -22,10 +22,10 @@ internal object H2Dialect: VendorDialect("h2") {
         if (currentMode() != "MySQL") throw UnsupportedOperationException("REPLACE is only supported in MySQL compatibility more for H2")
 
         val builder = QueryBuilder(true)
-        val values = data.map { builder.registerArgument(it.second, it.first.columnType) }
+        val values = data.map { builder.registerArgument(it.first.columnType, it.second) }
 
         val inlineBuilder = QueryBuilder(false)
-        val preparedValues = data.map { transaction.identity(it.first) to inlineBuilder.registerArgument(it.second, it.first.columnType) }
+        val preparedValues = data.map { transaction.identity(it.first) to inlineBuilder.registerArgument(it.first.columnType, it.second) }
 
 
         return "INSERT INTO ${transaction.identity(table)} (${preparedValues.map { it.first }.joinToString()}) VALUES (${values.joinToString()}) ON DUPLICATE KEY UPDATE ${preparedValues.map { "${it.first}=${it.second}" }.joinToString()}"

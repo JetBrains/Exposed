@@ -19,7 +19,7 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
                 val (col, value) = it
                 when (value) {
                     is Expression<*> -> value.toSQL(builder)
-                    else -> builder.registerArgument(value, col.columnType)
+                    else -> builder.registerArgument(col.columnType, value)
                 }
             }})", transaction)
     }
@@ -43,7 +43,7 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
             val value = it.value
             when (value) {
                 is Expression<*> -> value.toSQL(this)
-                else -> this.registerArgument(value, it.key.columnType)
+                else -> this.registerArgument(it.key.columnType, value)
             }
         }
         if (args.isNotEmpty()) listOf(args) else emptyList()
