@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
 object SchemaUtils {
@@ -151,5 +152,6 @@ object SchemaUtils {
             val ddl = table.dropStatement()
             TransactionManager.current().exec(ddl)
         }
+        currentDialect.resetCaches()
     }
 }
