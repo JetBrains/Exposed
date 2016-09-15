@@ -688,6 +688,8 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         }
         return entitiesWithRefs.map { it.second }
     }
+
+    fun <ID : Any, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
 abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>) : EntityClass<ID, T>(table) {

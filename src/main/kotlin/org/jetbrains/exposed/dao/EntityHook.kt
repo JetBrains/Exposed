@@ -27,7 +27,7 @@ fun<ID: Any> EntityChange<ID>.toEntity() : Entity<ID>? {
 }
 
 fun<ID: Any,T: Entity<ID>> EntityChange<*>.toEntity(klass: EntityClass<ID, T>) : T? {
-    if (entityClass != klass) return null
+    if (!entityClass.isAssignableTo(klass)) return null
     @Suppress("UNCHECKED_CAST")
     return toEntity() as? T
 }
