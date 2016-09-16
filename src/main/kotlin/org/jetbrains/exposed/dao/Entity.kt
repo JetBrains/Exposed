@@ -61,6 +61,18 @@ class OptionalReferenceSureNotNull<ID:Any, out Target: Entity<ID>> (val referenc
     }
 }
 
+class BackReference<ID:Any, out Source:Entity<ID>>(reference: Column<EntityID<ID>>, factory: EntityClass<ID, Source>) {
+    private val delegate = Referrers(reference, factory, true)
+
+    operator fun getValue(o: Entity<ID>, desc: KProperty<*>) = delegate.getValue(o, desc).single()
+}
+
+class OptionalBackReference<ID:Any, out Source:Entity<ID>>(reference: Column<EntityID<ID>?>, factory: EntityClass<ID, Source>) {
+    private val delegate = OptionalReferrers(reference, factory, true)
+
+    operator fun getValue(o: Entity<ID>, desc: KProperty<*>) = delegate.getValue(o, desc).singleOrNull()
+}
+
 class Referrers<ID:Any, out Source:Entity<ID>>(val reference: Column<EntityID<ID>>, val factory: EntityClass<ID, Source>, val cache: Boolean) {
     init {
         val refColumn = reference.referee
@@ -611,29 +623,23 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         return prototype
     }
 
-    inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>) : View<T>  = View(SqlExpressionBuilder.op(), this)
+    inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>)  = View(SqlExpressionBuilder.op(), this)
 
-    infix fun referencedOn(column: Column<EntityID<ID>>): Reference<ID, T> {
-        return Reference(column, this)
-    }
+    infix fun referencedOn(column: Column<EntityID<ID>>) = Reference(column, this)
 
-    infix fun optionalReferencedOn(column: Column<EntityID<ID>?>): OptionalReference<ID, T> {
-        return OptionalReference(column, this)
-    }
+    infix fun optionalReferencedOn(column: Column<EntityID<ID>?>) = OptionalReference(column, this)
 
-    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>): OptionalReferenceSureNotNull<ID, T> {
-        return OptionalReferenceSureNotNull(column, this)
-    }
+    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>) = OptionalReferenceSureNotNull(column, this)
+
+    infix fun backReferencedOn(column: Column<EntityID<ID>>) = BackReference(column, this)
+
+    infix fun backReferencedOn(column: Column<EntityID<ID>?>) = OptionalBackReference(column, this)
 
     infix fun referrersOn(column: Column<EntityID<ID>>) = referrersOn(column, false)
 
-    fun referrersOn(column: Column<EntityID<ID>>, cache: Boolean): Referrers<ID, T> {
-        return Referrers(column, this, cache)
-    }
+    fun referrersOn(column: Column<EntityID<ID>>, cache: Boolean) = Referrers(column, this, cache)
 
-    fun optionalReferrersOn(column: Column<EntityID<ID>?>, cache: Boolean = false): OptionalReferrers<ID, T> {
-        return OptionalReferrers(column, this, cache)
-    }
+    fun optionalReferrersOn(column: Column<EntityID<ID>?>, cache: Boolean = false) = OptionalReferrers(column, this, cache)
 
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> {
         return ColumnWithTransform(this, toColumn, toReal)
