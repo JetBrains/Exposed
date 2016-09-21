@@ -297,7 +297,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         }
     }
 
-    override fun dropStatement(): String = "DROP TABLE ${TransactionManager.current().identity(this)}"
+    override fun dropStatement(): String = "DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}"
 
     override fun modifyStatement(): String {
         throw UnsupportedOperationException("Use modify on columns and indices")
