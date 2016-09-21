@@ -84,6 +84,7 @@ class Referrers<ID:Any, out Source:Entity<ID>>(val reference: Column<EntityID<ID
     }
 
     operator fun getValue(o: Entity<ID>, desc: KProperty<*>): SizedIterable<Source> {
+        if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
     }
@@ -99,6 +100,7 @@ class OptionalReferrers<ID:Any, out Source:Entity<ID>>(val reference: Column<Ent
     }
 
     operator fun getValue(o: Entity<ID>, desc: KProperty<*>): SizedIterable<Source> {
+        if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
     }
@@ -132,6 +134,7 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
     }
 
     operator fun getValue(o: Entity<*>, desc: KProperty<*>): SizedIterable<Target> {
+        if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
         val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, getTargetRefColumn())
