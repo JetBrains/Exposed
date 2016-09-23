@@ -77,7 +77,7 @@ fun Table.exists (): Boolean = currentDialect.tableExists(this)
  */
 fun checkMappingConsistence(vararg tables: Table): List<String> {
     checkExcessiveIndices(*tables)
-    return checkMissingIndices(*tables).map{ it.createStatement() }
+    return checkMissingIndices(*tables).flatMap { it.createStatement() }
 }
 
 fun checkExcessiveIndices(vararg tables: Table) {
@@ -92,7 +92,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
             exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.joinToString(", ")}")
         }
 
-        exposedLogger.info("SQL Queries to remove excessive keys:");
+        exposedLogger.info("SQL Queries to remove excessive keys:")
         excessiveConstraints.forEach {
             it.value.take(it.value.size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
@@ -107,7 +107,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
             val (triple, indices) = it
             exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.joinToString(", ")}")
         }
-        exposedLogger.info("SQL Queries to remove excessive indices:");
+        exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {
             it.value.take(it.value.size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")

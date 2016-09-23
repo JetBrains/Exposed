@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import java.lang.UnsupportedOperationException
 
-class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
+
+class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
@@ -13,11 +15,11 @@ class Alias<T:Table>(val delegate: T, val alias: String) : Table() {
 
     override val fields: List<Expression<*>> = columns
 
-    override fun createStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+    override fun createStatement() = throw UnsupportedOperationException("Unsupported for aliases")
 
-    override fun dropStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+    override fun dropStatement() = throw UnsupportedOperationException("Unsupported for aliases")
 
-    override fun modifyStatement(): String = throw UnsupportedOperationException("Unsupported for aliases")
+    override fun modifyStatement() = throw UnsupportedOperationException("Unsupported for aliases")
 
     override fun equals(other: Any?): Boolean {
         if (other !is Alias<*>) return false
@@ -89,3 +91,7 @@ fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinTy
     = Join(this).joinQuery(on, joinType, joinPart)
 
 val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
+
+fun <T:Any> wrapAsExpression(query: Query) = object : Expression<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String = "(" + query.prepareSQL(queryBuilder) + ")"
+}

@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
@@ -22,14 +24,26 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 
     override fun toSQL(queryBuilder: QueryBuilder): String = TransactionManager.current().fullIdentity(this)
 
-    val ddl: String
+    val ddl: List<String>
         get() = createStatement()
 
-    override fun createStatement(): String = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD COLUMN ${descriptionDdl()}"
+    override fun createStatement(): List<String> {
+        val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
+        val (pkDDL, addConstr) = if (indexInPK != null && indexInPK == table.columns.mapNotNull { indexInPK }.max()) {
+                if (currentDialect != H2Dialect) {
+                    ", ADD ${table.primaryKeyConstraint()}" to null
+                } else {
+                    "" to "$alterTablePrefix ${table.primaryKeyConstraint()}"
+                }
+        } else {
+            "" to null
+        }
+        return listOfNotNull("$alterTablePrefix COLUMN ${descriptionDdl()}$pkDDL", addConstr)
+    }
 
-    override fun modifyStatement(): String = "ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}"
+    override fun modifyStatement() = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}")
 
-    override fun dropStatement(): String = TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" }
+    override fun dropStatement() = listOf(TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" })
 
     fun descriptionDdl(): String = buildString {
         append(TransactionManager.current().identity(this@Column))

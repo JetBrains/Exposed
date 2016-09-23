@@ -18,12 +18,11 @@ object SchemaUtils {
             if (table.exists()) continue else newTables.add(table)
 
             // create table
-            val ddl = table.ddl
-            statements.add(ddl)
+            statements.addAll(table.ddl)
 
             // create indices
             for (table_index in table.indices) {
-                statements.add(createIndex(table_index.first, table_index.second))
+                statements.addAll(createIndex(table_index.first, table_index.second))
             }
         }
 
@@ -31,16 +30,16 @@ object SchemaUtils {
             // foreign keys
             for (column in table.columns) {
                 if (column.referee != null) {
-                    statements.add(createFKey(column))
+                    statements.addAll(createFKey(column))
                 }
             }
         }
         return statements
     }
 
-    fun createFKey(reference: Column<*>): String = ForeignKeyConstraint.from(reference).createStatement()
+    fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
-    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean): String = Index.forColumns(*columns, unique = isUnique).createStatement()
+    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = Index.forColumns(*columns, unique = isUnique).createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
@@ -49,29 +48,28 @@ object SchemaUtils {
                 return statements
 
             val existingTableColumns = logTimeSpent("Extracting table columns") {
-                TransactionManager.current().db.dialect.tableColumns()
+                currentDialect.tableColumns(*tables)
             }
 
             for (table in tables) {
                 //create columns
-                val missingTableColumns = table.columns.filterNot { existingTableColumns[table.tableName]?.map { it.first }?.contains(it.name) ?: true }
-                for (column in missingTableColumns) {
-                    statements.add(column.ddl)
-                }
+                val thisTableExistingColumns = existingTableColumns[table].orEmpty()
+                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.first.equals(c.name, true) } }
+                missingTableColumns.flatMapTo(statements) { it.ddl }
 
                 // create indexes with new columns
                 for (table_index in table.indices) {
                     if (table_index.first.any { missingTableColumns.contains(it) }) {
                         val alterTable = createIndex(table_index.first, table_index.second)
-                        statements.add(alterTable)
+                        statements.addAll(alterTable)
                     }
                 }
 
                 // sync nullability of existing columns
-                val incorrectNullabilityColumns = table.columns.filter { existingTableColumns[table.tableName]?.contains(it.name to !it.columnType.nullable) ?: false }
-                for (column in incorrectNullabilityColumns) {
-                    statements.add(column.modifyStatement())
+                val incorrectNullabilityColumns = table.columns.filter { c ->
+                    thisTableExistingColumns.any { c.name.equals(it.first, true) and it.second != c.columnType.nullable }
                 }
+                incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
             }
 
             val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
@@ -81,13 +79,13 @@ object SchemaUtils {
             for (table in tables) {
                 for (column in table.columns) {
                     if (column.referee != null) {
-                        val existingConstraint = existingColumnConstraint.get(Pair(table.tableName, column.name))?.firstOrNull()
+                        val existingConstraint = existingColumnConstraint[Pair(table.tableName, column.name)]?.firstOrNull()
                         if (existingConstraint == null) {
-                            statements.add(createFKey(column))
+                            statements.addAll(createFKey(column))
                         } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
                                 || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
-                            statements.add(existingConstraint.dropStatement())
-                            statements.add(createFKey(column))
+                            statements.addAll(existingConstraint.dropStatement())
+                            statements.addAll(createFKey(column))
                         }
                     }
                 }
@@ -104,6 +102,7 @@ object SchemaUtils {
             for (statement in statements) {
                 exec(statement)
             }
+            commit()
             db.dialect.resetCaches()
         }
     }
@@ -112,18 +111,30 @@ object SchemaUtils {
         with(TransactionManager.current()) {
             withDataBaseLock {
                 db.dialect.resetCaches()
-                val statements = logTimeSpent("Preparing create statements") {
-                    createStatements(*tables) + addMissingColumnsStatements(*tables)
+                val createStatements = logTimeSpent("Preparing create tables statements") {
+                    createStatements(*tables)
                 }
-                logTimeSpent("Executing create statements") {
-                    for (statement in statements) {
+                logTimeSpent("Executing create tables statements") {
+                    for (statement in createStatements) {
                         exec(statement)
                     }
+                    commit()
+                }
+
+                val alterStatements = logTimeSpent("Preparing alter table statements") {
+                    addMissingColumnsStatements(*tables)
+                }
+                logTimeSpent("Executing alter table statements") {
+                    for (statement in alterStatements) {
+                        exec(statement)
+                    }
+                    commit()
                 }
                 logTimeSpent("Checking mapping consistence") {
                     for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
                         exec(statement)
                     }
+                    commit()
                 }
                 db.dialect.resetCaches()
             }
@@ -148,9 +159,8 @@ object SchemaUtils {
     }
 
     fun drop(vararg tables: Table) {
-        for (table in tables) {
-            val ddl = table.dropStatement()
-            TransactionManager.current().exec(ddl)
+        tables.flatMap { it.dropStatement() }.forEach {
+            TransactionManager.current().exec(it)
         }
         currentDialect.resetCaches()
     }

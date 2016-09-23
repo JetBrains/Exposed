@@ -5,9 +5,9 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.DatabaseMetaData
 
 interface DdlAware {
-    fun createStatement(): String
-    fun modifyStatement(): String
-    fun dropStatement(): String
+    fun createStatement(): List<String>
+    fun modifyStatement(): List<String>
+    fun dropStatement(): List<String>
 }
 
 enum class ReferenceOption {
@@ -40,20 +40,19 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         }
     }
 
-    override fun createStatement(): String {
-        val alter = StringBuilder("ALTER TABLE $referencedTable ADD")
-        if (!fkName.isBlank()) alter.append(" CONSTRAINT $fkName")
-        alter.append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
+    override fun createStatement() = listOf(buildString{
+        append("ALTER TABLE $referencedTable ADD")
+        if (fkName.isNotBlank()) append(" CONSTRAINT $fkName")
+        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
 
         deleteRule?.let { onDelete ->
-            alter.append(" ON DELETE $onDelete")
+            append(" ON DELETE $onDelete")
         }
-        return alter.toString()
-    }
+    })
 
-    override fun dropStatement(): String = "ALTER TABLE $refereeTable DROP FOREIGN KEY $fkName"
+    override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP FOREIGN KEY $fkName")
 
-    override fun modifyStatement(): String = "${dropStatement()};\n${createStatement()}"
+    override fun modifyStatement() = dropStatement() + createStatement()
 
 }
 
@@ -67,11 +66,11 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         }
     }
 
-    override fun createStatement(): String = currentDialect.createIndex(unique, tableName, indexName, columns)
-    override fun dropStatement(): String  = currentDialect.dropIndex(tableName, indexName)
+    override fun createStatement() = listOf(currentDialect.createIndex(unique, tableName, indexName, columns))
+    override fun dropStatement() = listOf(currentDialect.dropIndex(tableName, indexName))
 
 
-    override fun modifyStatement() = "${dropStatement()};\n${createStatement()}"
+    override fun modifyStatement() = dropStatement() + createStatement()
 
 
     fun onlyNameDiffer(other: Index): Boolean {

@@ -6,20 +6,13 @@ import java.util.*
 
 internal object MysqlDialect : VendorDialect("mysql") {
 
-    override @Synchronized fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
-
-        val tables = HashMap<String, List<Pair<String, Boolean>>>()
+    override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 
         val rs = TransactionManager.current().connection.createStatement().executeQuery(
                 "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
-
-        while (rs.next()) {
-            val tableName = rs.getString("TABLE_NAME")!!
-            val columnName = rs.getString("COLUMN_NAME")!!
-            val nullable = rs.getBoolean("IS_NULLABLE")
-            tables[tableName] = (tables[tableName]?.plus(listOf(columnName to nullable)) ?: listOf(columnName to nullable))
+        return rs.extractColumns(tables) {
+            Triple(it.getString("TABLE_NAME")!!, it.getString("COLUMN_NAME")!!, it.getBoolean("IS_NULLABLE"))
         }
-        return tables
     }
 
     override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {

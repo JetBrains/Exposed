@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.lang.UnsupportedOperationException
+import java.sql.ResultSet
 import java.util.*
 
 interface DatabaseDialect {
@@ -14,7 +15,7 @@ interface DatabaseDialect {
     /**
      * returns list of pairs (column name + nullable) for every table
      */
-    fun tableColumns(): Map<String, List<Pair<String, Boolean>>> = emptyMap()
+    fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> = emptyMap()
 
     /**
      * returns map of constraint for a table name/column name pair
@@ -70,40 +71,54 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
             return _allTableNames!!
         }
 
+    private val isUpperCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesUpperCaseIdentifiers() }
+    private val isLowerCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesLowerCaseIdentifiers() }
+    private val String.inProperCase: String get() = when {
+        isUpperCaseIdentifiers -> toUpperCase()
+        isLowerCaseIdentifiers -> toLowerCase()
+        else -> this
+    }
+
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
         val resultSet = TransactionManager.current().db.metadata.getTables(null, null, null, arrayOf("TABLE"))
 
         while (resultSet.next()) {
-            result.add(resultSet.getString("TABLE_NAME"))
+            result.add(resultSet.getString("TABLE_NAME").inProperCase)
         }
         return result
     }
 
-    override fun getDatabase() = TransactionManager.current().connection.catalog
+    override fun getDatabase(): String = TransactionManager.current().connection.catalog
 
-    override fun tableExists(table: Table) = allTablesNames.any { it.equals(table.tableName, true) }
+    override fun tableExists(table: Table) = allTablesNames.any { it == table.tableName.inProperCase }
 
-    override fun tableColumns(): Map<String, List<Pair<String, Boolean>>> {
-        val tables = HashMap<String, List<Pair<String, Boolean>>>()
 
-        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, null, null)
+    protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Triple<String, String, Boolean>): Map<Table, List<Pair<String, Boolean>>> {
+        val mapping = tables.associateBy { it.tableName.inProperCase }
+        val result = HashMap<Table, MutableList<Pair<String, Boolean>>>()
 
-        while (rs.next()) {
-            val tableName = rs.getString("TABLE_NAME")!!
-            val columnName = rs.getString("COLUMN_NAME")!!
-            val nullable = rs.getBoolean("NULLABLE")
-            tables[tableName] = (tables[tableName]?.plus(listOf(columnName to nullable)) ?: listOf(columnName to nullable))
+        while (next()) {
+            val (tableName, columnName, nullable) = extract(this)
+            mapping[tableName]?.let { t ->
+                result.getOrPut(t) { arrayListOf() } += columnName to nullable
+            }
         }
-        return tables
+        return result
+    }
+    override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
+        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, null, null)
+        return rs.extractColumns(tables) {
+            Triple(it.getString("TABLE_NAME"), it.getString("COLUMN_NAME")!!, it.getBoolean("NULLABLE"))
+        }
     }
 
     private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
 
     override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-        for (table in tables.map{it.tableName}) {
+        for (table in tables.map{it.tableName.inProperCase }) {
             columnConstraintsCache.getOrPut(table, {
                 val rs = TransactionManager.current().db.metadata.getExportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
@@ -128,7 +143,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     private val existingIndicesCache = HashMap<String, List<Index>>()
 
     override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
-        for(table in tables.map {it.tableName}) {
+        for(table in tables.map {it.tableName.inProperCase }) {
             existingIndicesCache.getOrPut(table, {
                 val rs = TransactionManager.current().db.metadata.getIndexInfo(getDatabase(), null, table, false, false)
 
@@ -141,8 +156,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
                     tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
                 }
                 tmpIndices.filterNot { it.key.first == "PRIMARY" }.map { Index(it.key.first, table, it.value, it.key.second)}
-            }
-            )
+            })
         }
         return HashMap(existingIndicesCache)
     }

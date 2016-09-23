@@ -276,32 +276,37 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun<T> Column<T>.uniqueIndex() : Column<T> = index(true)
 
-    val ddl: String
+    val ddl: List<String>
         get() = createStatement()
 
-    override fun createStatement(): String  = buildString {
+    override fun createStatement() = listOf(buildString {
         append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table)}")
         if (columns.any()) {
-            append(columns.map { it.descriptionDdl() }.joinToString(prefix = " ("))
-            var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
-            if (pkey.isEmpty()) {
-                pkey = columns.filter { it.columnType.autoinc }
-            }
-            if (pkey.isNotEmpty()) {
-                append(pkey.joinToString(
-                        prefix = ", CONSTRAINT ${TransactionManager.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
-                    TransactionManager.current().identity(it)
-                })
+            append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
+            primaryKeyConstraint()?.let {
+                append(", $it")
             }
             append(")")
         }
+    })
+
+    internal fun primaryKeyConstraint(): String? {
+        var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
+        if (pkey.isEmpty()) {
+            pkey = columns.filter { it.columnType.autoinc }
+        }
+        if (pkey.isNotEmpty()) {
+            return pkey.joinToString(
+                    prefix = "CONSTRAINT ${TransactionManager.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
+                TransactionManager.current().identity(it)
+            }
+        }
+        return null
     }
 
-    override fun dropStatement(): String = "DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}"
+    override fun dropStatement() = listOf("DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}")
 
-    override fun modifyStatement(): String {
-        throw UnsupportedOperationException("Use modify on columns and indices")
-    }
+    override fun modifyStatement() = throw UnsupportedOperationException("Use modify on columns and indices")
 
     override fun equals(other: Any?): Boolean {
         if (other !is Table) return false

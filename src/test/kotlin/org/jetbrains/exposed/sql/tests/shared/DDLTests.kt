@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -16,7 +16,7 @@ class DDLTests : DatabaseTestsBase() {
             val name = varchar("name", length = 42)
         }
 
-        withTables() {
+        withTables {
             assertEquals (false, TestTable.exists())
         }
     }
@@ -179,6 +179,31 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals("Hello!", String(bytes))
 
+        }
+    }
+
+    @Test fun addAutoPrimaryKey() {
+        val tableName = "Foo"
+        val initialTable = object : Table(tableName) {
+            val bar = text("bar")
+        }
+        val t = IntIdTable(tableName)
+
+
+        withDb(TestDB.H2) {
+            SchemaUtils.createMissingTablesAndColumns(initialTable)
+            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()} NOT NULL", t.id.ddl.first())
+            assertEquals("ALTER TABLE $tableName ADD CONSTRAINT pk_$tableName PRIMARY KEY (id)", t.id.ddl[1])
+            assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
+            SchemaUtils.createMissingTablesAndColumns(t)
+            assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)
+        }
+
+        withTables(listOf(TestDB.H2), initialTable) {
+            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()} NOT NULL, ADD CONSTRAINT pk_$tableName PRIMARY KEY (id)", t.id.ddl)
+            assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
+            SchemaUtils.createMissingTablesAndColumns(t)
+            assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)
         }
     }
 
