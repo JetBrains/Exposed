@@ -197,7 +197,8 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
         return "ALTER TABLE ${t.quoteIfNecessary(tableName)} DROP CONSTRAINT ${t.quoteIfNecessary(indexName)}"
     }
 
-    override fun supportsSelectForUpdate() = true
+    private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata.supportsSelectForUpdate() }
+    override fun supportsSelectForUpdate() = supportsSelectForUpdate
 
     override fun shortAutoincType() = "INT AUTO_INCREMENT"
 
