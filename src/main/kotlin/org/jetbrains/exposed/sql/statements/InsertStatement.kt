@@ -8,9 +8,10 @@ import java.sql.PreparedStatement
  * isIgnore is supported for mysql only
  */
 open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
-    var generatedKey: Int? = null
+    var generatedKey: Any? = null
 
-    infix operator fun get(column: Column<Int>): Int = generatedKey ?: error("No key generated")
+    @Suppress("UNCHECKED_CAST")
+    infix operator fun <T> get(column: Column<T>): T = if (column.columnType.autoinc) column.columnType.valueFromDB(generatedKey ?: error("No key generated")) as T else error("Column isn't autoInc")
 
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
@@ -31,7 +32,7 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
             if (table.columns.any { it.columnType.autoinc }) {
                 generatedKeys?.let { rs ->
                     if (rs.next()) {
-                        generatedKey = rs.getInt(1)
+                        generatedKey = rs.getObject(1)
                     }
                 }
             }
