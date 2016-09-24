@@ -71,6 +71,7 @@ object EntityTestsData {
 
     class YEntity(id: EntityID<String>) : Entity<String>(id) {
         var x by YTable.x
+        val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
 
         companion object : EntityClass<String, YEntity>(YTable) {
 
@@ -100,7 +101,30 @@ class EntityTests: DatabaseTestsBase() {
             b.y = y
 
             assertFalse (b.y!!.x)
+            assertNotNull(y.b)
 
+        }
+    }
+
+    @Test
+    fun testBackReference01() {
+        withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
+            val y = EntityTestsData.YEntity.new {  }
+            flushCache()
+            val b = EntityTestsData.BEntity.new {  }
+            b.y = y
+            assertEquals(b, y.b)
+        }
+    }
+
+    @Test
+    fun testBackReference02() {
+        withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
+            val b = EntityTestsData.BEntity.new {  }
+            flushCache()
+            val y = EntityTestsData.YEntity.new {  }
+            b.y = y
+            assertEquals(b, y.b)
         }
     }
 

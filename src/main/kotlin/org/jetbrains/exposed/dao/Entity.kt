@@ -61,19 +61,22 @@ class OptionalReferenceSureNotNull<ID:Any, out Target: Entity<ID>> (val referenc
     }
 }
 
-class BackReference<ID:Any, out Source:Entity<ID>>(reference: Column<EntityID<ID>>, factory: EntityClass<ID, Source>) {
+class BackReference<ParentID:Any, out Parent:Entity<ParentID>, ChildID:Any, in Child:Entity<ChildID>>
+                    (reference: Column<EntityID<ChildID>>, factory: EntityClass<ParentID, Parent>) {
     private val delegate = Referrers(reference, factory, true)
 
-    operator fun getValue(o: Entity<ID>, desc: KProperty<*>) = delegate.getValue(o, desc).single()
+    operator fun getValue(o: Child, desc: KProperty<*>) = delegate.getValue(o.apply { o.id.value }, desc).single() // flush entity before to don't miss newly created entities
 }
 
-class OptionalBackReference<ID:Any, out Source:Entity<ID>>(reference: Column<EntityID<ID>?>, factory: EntityClass<ID, Source>) {
+class OptionalBackReference<ParentID:Any, out Parent:Entity<ParentID>, ChildID:Any, in Child:Entity<ChildID>>
+                    (reference: Column<EntityID<ChildID>?>, factory: EntityClass<ParentID, Parent>) {
     private val delegate = OptionalReferrers(reference, factory, true)
 
-    operator fun getValue(o: Entity<ID>, desc: KProperty<*>) = delegate.getValue(o, desc).singleOrNull()
+    operator fun getValue(o: Child, desc: KProperty<*>) = delegate.getValue(o.apply { o.id.value }, desc).singleOrNull()  // flush entity before to don't miss newly created entities
 }
 
-class Referrers<ID:Any, out Source:Entity<ID>>(val reference: Column<EntityID<ID>>, val factory: EntityClass<ID, Source>, val cache: Boolean) {
+class Referrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, out Child:Entity<ChildID>>
+    (val reference: Column<EntityID<ParentID>>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
     init {
         val refColumn = reference.referee
         if (refColumn == null) error("Column $reference is not a reference")
@@ -83,14 +86,15 @@ class Referrers<ID:Any, out Source:Entity<ID>>(val reference: Column<EntityID<ID
         }
     }
 
-    operator fun getValue(o: Entity<ID>, desc: KProperty<*>): SizedIterable<Source> {
+    operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
         if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
     }
 }
 
-class OptionalReferrers<ID:Any, out Source:Entity<ID>>(val reference: Column<EntityID<ID>?>, val factory: EntityClass<ID, Source>, val cache: Boolean) {
+class OptionalReferrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, out Child:Entity<ChildID>>
+(val reference: Column<EntityID<ParentID>?>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
     init {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -99,7 +103,7 @@ class OptionalReferrers<ID:Any, out Source:Entity<ID>>(val reference: Column<Ent
         }
     }
 
-    operator fun getValue(o: Entity<ID>, desc: KProperty<*>): SizedIterable<Source> {
+    operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
         if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
         return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
@@ -634,9 +638,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
 
     infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>) = OptionalReferenceSureNotNull(column, this)
 
-    infix fun backReferencedOn(column: Column<EntityID<ID>>) = BackReference(column, this)
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>>) = BackReference(column, this)
 
-    infix fun backReferencedOn(column: Column<EntityID<ID>?>) = OptionalBackReference(column, this)
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>?>) = OptionalBackReference(column, this)
 
     infix fun referrersOn(column: Column<EntityID<ID>>) = referrersOn(column, false)
 
