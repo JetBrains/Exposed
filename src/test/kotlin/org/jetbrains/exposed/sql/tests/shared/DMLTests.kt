@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -658,6 +659,40 @@ class DMLTests() : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null, BigDecimal("239.42"), null)
+        }
+    }
+
+    @Test fun testGeneratedKey01() {
+        withTables(DMLTestsData.Cities){
+            val id = DMLTestsData.Cities.insert {
+                it[DMLTestsData.Cities.name] = "FooCity"
+            } get DMLTestsData.Cities.id
+            assertEquals(DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.id], id)
+        }
+    }
+
+    @Test fun testGeneratedKey02() {
+        val LongIdTable = object : Table() {
+            val id = long("id").autoIncrement().primaryKey()
+            val name = text("name")
+        }
+        withTables(LongIdTable){
+            val id = LongIdTable.insert {
+                it[LongIdTable.name] = "Foo"
+            } get LongIdTable.id
+            assertEquals(LongIdTable.selectAll().last()[LongIdTable.id], id)
+        }
+    }
+
+    @Test fun testGeneratedKey03() {
+        val IntIdTable = object : IntIdTable() {
+            val name = text("name")
+        }
+        withTables(IntIdTable){
+            val id = IntIdTable.insertAndGetId {
+                it[IntIdTable.name] = "Foo"
+            }
+            assertEquals(IntIdTable.selectAll().last()[IntIdTable.id], id)
         }
     }
 

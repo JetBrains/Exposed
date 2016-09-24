@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -20,9 +22,16 @@ fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
 fun Table.deleteAll() =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
-fun <T:Table> T.insert(body: T.(InsertStatement)->Unit): InsertStatement = InsertStatement(this).apply {
+fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement <Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
+}
+
+
+fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<Key>)->Unit) = InsertStatement<Key>(this).run {
+    body(this)
+    execute(TransactionManager.current())
+    generatedKey?.let { EntityID(it, this@insertAndGetId)}
 }
 
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Any> {
@@ -36,18 +45,20 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     }
 }
 
-fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement {
-    val answer = InsertStatement(this, isIgnore = true)
-    body(answer)
-    answer.execute(TransactionManager.current())
-    return answer
+fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+    body(this)
+    execute(TransactionManager.current())
 }
 
-fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement {
-    return ReplaceStatement(this).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
+fun <Key:Any, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<Key>(this, isIgnore = true).run {
+    body(this)
+    execute(TransactionManager.current())
+    generatedKey?.let { EntityID(it, this@insertIgnoreAndGetId)}
+}
+
+fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
+    body(this)
+    execute(TransactionManager.current())
 }
 
 fun <T:Table> T.insert(selectQuery: Query) =

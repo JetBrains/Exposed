@@ -7,10 +7,10 @@ import java.sql.PreparedStatement
 /**
  * isIgnore is supported for mysql only
  */
-open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
-    var generatedKey: Int? = null
+open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
+    var generatedKey: Key? = null
 
-    infix operator fun get(column: Column<Int>): Int = generatedKey ?: error("No key generated")
+    infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
 
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
@@ -28,10 +28,10 @@ open class InsertStatement(val table: Table, val isIgnore: Boolean = false) : Up
         transaction.flushCache()
         EntityCache.getOrCreate(transaction).removeTablesReferrers(listOf(table))
         return executeUpdate().apply {
-            if (table.columns.any { it.columnType.autoinc }) {
+            table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
                 generatedKeys?.let { rs ->
                     if (rs.next()) {
-                        generatedKey = rs.getInt(1)
+                        generatedKey = column.columnType.readObject(rs, 1) as Key
                     }
                 }
             }
