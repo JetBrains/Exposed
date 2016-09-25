@@ -31,7 +31,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
                 generatedKeys?.let { rs ->
                     if (rs.next()) {
-                        generatedKey = column.columnType.readObject(rs, 1) as Key
+                        generatedKey = column.columnType.valueFromDB(rs.getObject(1)) as Key
                     }
                 }
             }

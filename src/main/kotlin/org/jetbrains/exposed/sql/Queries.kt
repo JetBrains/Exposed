@@ -28,10 +28,10 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 }
 
 
-fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<Key>)->Unit) = InsertStatement<Key>(this).run {
+fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) = InsertStatement<EntityID<Key>>(this).run {
     body(this)
     execute(TransactionManager.current())
-    generatedKey?.let { EntityID(it, this@insertAndGetId)}
+    generatedKey
 }
 
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Any> {
@@ -50,10 +50,10 @@ fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<
     execute(TransactionManager.current())
 }
 
-fun <Key:Any, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<Key>(this, isIgnore = true).run {
+fun <Key:Any, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
     body(this)
     execute(TransactionManager.current())
-    generatedKey?.let { EntityID(it, this@insertIgnoreAndGetId)}
+    generatedKey
 }
 
 fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
