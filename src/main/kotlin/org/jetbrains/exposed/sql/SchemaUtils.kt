@@ -67,7 +67,7 @@ object SchemaUtils {
 
                 // sync nullability of existing columns
                 val incorrectNullabilityColumns = table.columns.filter { c ->
-                    thisTableExistingColumns.any { c.name.equals(it.first, true) and it.second != c.columnType.nullable }
+                    thisTableExistingColumns.any { c.name.equals(it.first, true) && it.second != c.columnType.nullable }
                 }
                 incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
             }
