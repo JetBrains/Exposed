@@ -4,7 +4,30 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
-internal object MysqlDialect : VendorDialect("mysql") {
+
+internal object MysqlDataTypeProvider : DataTypeProvider() {
+    override fun dateTimeType(): String = if (MysqlDialect.isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
+}
+
+internal object MysqlFunctionProvder : FunctionProvider() {
+
+    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
+
+    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode): Op<Boolean>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String {
+            return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
+        }
+    }
+
+    private enum class MysqlMatchMode(val operator: String): FunctionProvider.MatchMode {
+        STRICT("IN BOOLEAN MODE"),
+        NATURAL_LANGUAGE("IN NATURAL LANGUAGE MODE");
+
+        override fun mode() = operator
+    }
+}
+
+internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvder) {
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 
@@ -85,19 +108,6 @@ internal object MysqlDialect : VendorDialect("mysql") {
         return constraints
     }
 
-    override fun getDatabase(): String {
-        return TransactionManager.current().connection.catalog
-    }
-
-
-    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
-
-    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode): Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String {
-            return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
-        }
-    }
-
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val columns = data.map { transaction.identity(it.first) }
@@ -120,13 +130,4 @@ internal object MysqlDialect : VendorDialect("mysql") {
     }
 
     fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
-
-    override fun dateTimeType(): String = if (isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
-}
-
-enum class MysqlMatchMode(val operator: String): MatchMode {
-    STRICT("IN BOOLEAN MODE"),
-    NATURAL_LANGUAGE("IN NATURAL LANGUAGE MODE");
-
-    override fun mode() = operator
 }

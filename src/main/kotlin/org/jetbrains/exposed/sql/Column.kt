@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import kotlin.comparisons.compareBy
 
@@ -29,37 +30,49 @@ open class Column<T>(val table: Table, val name: String, override val columnType
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
-        val (pkDDL, addConstr) = if (indexInPK != null && indexInPK == table.columns.mapNotNull { indexInPK }.max()) {
-                if (currentDialect != H2Dialect) {
-                    ", ADD ${table.primaryKeyConstraint()}" to null
-                } else {
-                    "" to "$alterTablePrefix ${table.primaryKeyConstraint()}"
-                }
-        } else {
-            "" to null
+        val isLastColumnInPK = indexInPK != null && indexInPK == table.columns.mapNotNull { indexInPK }.max()
+        val columnDefinition = when {
+            isOneColumnPK() && currentDialect in listOf(H2Dialect, SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
+            !isOneColumnPK() && isLastColumnInPK && currentDialect != H2Dialect-> ", ADD ${table.primaryKeyConstraint()}"
+            else -> descriptionDdl()
         }
-        return listOfNotNull("$alterTablePrefix COLUMN ${descriptionDdl()}$pkDDL", addConstr)
+
+        val addConstr = if (isLastColumnInPK && currentDialect == H2Dialect) {
+             "$alterTablePrefix ${table.primaryKeyConstraint()}"
+        } else null
+        return listOfNotNull("$alterTablePrefix COLUMN $columnDefinition", addConstr)
     }
 
     override fun modifyStatement() = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}")
 
     override fun dropStatement() = listOf(TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" })
 
+    internal fun isOneColumnPK() = table.columns.filter { it.indexInPK != null }.singleOrNull() == this
+
     fun descriptionDdl(): String = buildString {
         append(TransactionManager.current().identity(this@Column))
         append(" ")
+        val isPKColumn = indexInPK != null
         val colType = columnType
-        append(colType.sqlType())
+        if (currentDialect == SQLiteDialect && isOneColumnPK() && colType.autoinc) {
+            append(colType.sqlType().removeSuffix(" AUTO_INCREMENT")) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
+        } else {
+            append(colType.sqlType())
+        }
 
         if (colType.nullable) {
             append(" NULL")
-        } else {
+        } else if (!isPKColumn) {
             append(" NOT NULL")
         }
 
-        if (dbDefaultValue != null) {
+        if (!isPKColumn && dbDefaultValue != null) {
             append (" DEFAULT ")
             append(colType.valueToString(dbDefaultValue!!))
+        }
+
+        if (isOneColumnPK()) {
+            append(" PRIMARY KEY")
         }
     }
 

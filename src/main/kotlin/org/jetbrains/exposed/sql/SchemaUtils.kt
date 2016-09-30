@@ -26,14 +26,6 @@ object SchemaUtils {
             }
         }
 
-        for (table in newTables) {
-            // foreign keys
-            for (column in table.columns) {
-                if (column.referee != null) {
-                    statements.addAll(createFKey(column))
-                }
-            }
-        }
         return statements
     }
 
@@ -57,35 +49,39 @@ object SchemaUtils {
                 val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.first.equals(c.name, true) } }
                 missingTableColumns.flatMapTo(statements) { it.ddl }
 
-                // create indexes with new columns
-                for (table_index in table.indices) {
-                    if (table_index.first.any { missingTableColumns.contains(it) }) {
-                        val alterTable = createIndex(table_index.first, table_index.second)
-                        statements.addAll(alterTable)
+                if (db.supportsAlterTableWithAddColumn) {
+                    // create indexes with new columns
+                    for (table_index in table.indices) {
+                        if (table_index.first.any { missingTableColumns.contains(it) }) {
+                            val alterTable = createIndex(table_index.first, table_index.second)
+                            statements.addAll(alterTable)
+                        }
                     }
-                }
 
-                // sync nullability of existing columns
-                val incorrectNullabilityColumns = table.columns.filter { c ->
-                    thisTableExistingColumns.any { c.name.equals(it.first, true) && it.second != c.columnType.nullable }
+                    // sync nullability of existing columns
+                    val incorrectNullabilityColumns = table.columns.filter { c ->
+                        thisTableExistingColumns.any { c.name.equals(it.first, true) && it.second != c.columnType.nullable }
+                    }
+                    incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
                 }
-                incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
             }
 
-            val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
-                db.dialect.columnConstraints(*tables)
-            }
+            if (db.supportsAlterTableWithAddColumn) {
+                val existingColumnConstraint = logTimeSpent("Extracting column constraints") {
+                    db.dialect.columnConstraints(*tables)
+                }
 
-            for (table in tables) {
-                for (column in table.columns) {
-                    if (column.referee != null) {
-                        val existingConstraint = existingColumnConstraint[Pair(table.tableName, column.name)]?.firstOrNull()
-                        if (existingConstraint == null) {
-                            statements.addAll(createFKey(column))
-                        } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
-                                || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
-                            statements.addAll(existingConstraint.dropStatement())
-                            statements.addAll(createFKey(column))
+                for (table in tables) {
+                    for (column in table.columns) {
+                        if (column.referee != null) {
+                            val existingConstraint = existingColumnConstraint[Pair(table.tableName, column.name)]?.firstOrNull()
+                            if (existingConstraint == null) {
+                                statements.addAll(createFKey(column))
+                            } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
+                                    || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
+                                statements.addAll(existingConstraint.dropStatement())
+                                statements.addAll(createFKey(column))
+                            }
                         }
                     }
                 }

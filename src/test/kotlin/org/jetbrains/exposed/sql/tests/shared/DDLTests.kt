@@ -4,10 +4,11 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
+import java.sql.SQLException
 import javax.sql.rowset.serial.SerialBlob
+import kotlin.test.assertFalse
 
 class DDLTests : DatabaseTestsBase() {
     @Test fun tableExists01() {
@@ -56,7 +57,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(TestTable) {
             val q = db.identityQuoteString
-            assertEquals("CREATE TABLE IF NOT EXISTS ${q}unnamedTableWithQuotesSQL\$TestTable$1$q (id INT NOT NULL, name VARCHAR(42) NOT NULL, CONSTRAINT ${q}pk_unnamedTableWithQuotesSQL\$TestTable$1$q PRIMARY KEY (id))", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS ${q}unnamedTableWithQuotesSQL\$TestTable$1$q (id INT PRIMARY KEY, name VARCHAR(42) NOT NULL)", TestTable.ddl)
         }
     }
 
@@ -64,12 +65,12 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_named_table") {
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL), tables = TestTable) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.SQLITE), tables = TestTable) {
             assertEquals("CREATE TABLE IF NOT EXISTS test_named_table", TestTable.ddl)
         }
     }
 
-    @Test fun tableWithDifferentColumnTypesSQL() {
+    @Test fun tableWithDifferentColumnTypesSQL01() {
         val TestTable = object : Table("test_table_with_different_column_types") {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42).primaryKey()
@@ -79,7 +80,19 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id ${currentDialect.shortAutoincType()} NOT NULL, name VARCHAR(42) NOT NULL, age INT NULL, CONSTRAINT pk_test_table_with_different_column_types PRIMARY KEY (name))", TestTable.ddl)
+            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, name VARCHAR(42) PRIMARY KEY, age INT NULL)", TestTable.ddl)
+        }
+    }
+
+    @Test fun tableWithDifferentColumnTypesSQL02() {
+        val TestTable = object : Table("test_table_with_different_column_types") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", 42).primaryKey()
+            val age = integer("age").nullable()
+        }
+
+        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
+            assertEquals("CREATE TABLE IF NOT EXISTS test_table_with_different_column_types (id INT, name VARCHAR(42), age INT NULL, CONSTRAINT pk_test_table_with_different_column_types PRIMARY KEY (id, name))", TestTable.ddl)
         }
     }
 
@@ -147,13 +160,12 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val blob = if (currentDialect != PostgreSQLDialect) {
-                connection.createBlob().apply {
-                    setBytes(1, "Hello there!".toByteArray())
+            val bytes = "Hello there!".toByteArray()
+            val blob = if (currentDialect.dataTypeProvider.blobAsStream) {
+                    SerialBlob(bytes)
+                } else connection.createBlob().apply {
+                    setBytes(1, bytes)
                 }
-            } else {
-                SerialBlob("Hello there!".toByteArray())
-            }
 
             val id = t.insert {
                 it[t.b] = blob
@@ -192,15 +204,24 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(initialTable)
-            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()} NOT NULL", t.id.ddl.first())
+            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()}", t.id.ddl.first())
             assertEquals("ALTER TABLE $tableName ADD CONSTRAINT pk_$tableName PRIMARY KEY (id)", t.id.ddl[1])
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)
         }
 
-        withTables(listOf(TestDB.H2), initialTable) {
-            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()} NOT NULL, ADD CONSTRAINT pk_$tableName PRIMARY KEY (id)", t.id.ddl)
+        withDb(TestDB.SQLITE) {
+            try {
+                SchemaUtils.createMissingTablesAndColumns(t)
+                assertFalse(db.supportsAlterTableWithAddColumn)
+            } catch (e: SQLException) {
+                // SQLite doesn't support
+            }
+        }
+
+        withTables(listOf(TestDB.H2, TestDB.SQLITE), initialTable) {
+            assertEquals("ALTER TABLE $tableName ADD COLUMN id ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)

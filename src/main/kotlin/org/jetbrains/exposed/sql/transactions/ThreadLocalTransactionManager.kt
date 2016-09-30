@@ -85,6 +85,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
         }
         finally {
             transaction.currentStatement = null
+            transaction.lastExecutedStatement = null
             transaction.close()
             TransactionManager.currentThreadManager.remove()
         }

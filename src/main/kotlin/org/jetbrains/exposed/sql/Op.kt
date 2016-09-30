@@ -47,38 +47,31 @@ class NoOpConversion<T, S>(val expr: Expression<T>, override val columnType: Col
 
 class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: List<T>, val isInList: Boolean = true): Op<Boolean>() {
 
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        val sb = StringBuilder()
-
+    override fun toSQL(queryBuilder: QueryBuilder): String = buildString{
         when (list.size) {
-            0 -> when {
-                isInList ->  sb.append(" FALSE")
-                else -> sb.append(" TRUE")
-            }
+            0 -> append(booleanLiteral(!isInList).toSQL(queryBuilder))
 
             1 -> {
-                sb.append(expr.toSQL(queryBuilder))
+                append(expr.toSQL(queryBuilder))
                 when {
-                    isInList ->  sb.append(" = ")
-                    else -> sb.append(" != ")
+                    isInList ->  append(" = ")
+                    else -> append(" != ")
                 }
-                sb.append(queryBuilder.registerArgument(expr.columnType, list.first()))
+                append(queryBuilder.registerArgument(expr.columnType, list.first()))
             }
 
             else -> {
-                sb.append(expr.toSQL(queryBuilder))
+                append(expr.toSQL(queryBuilder))
                 when {
-                    isInList -> sb.append(" IN (")
-                    else -> sb.append(" NOT IN (")
+                    isInList -> append(" IN (")
+                    else -> append(" NOT IN (")
                 }
 
-                queryBuilder.registerArguments(expr.columnType, list).joinTo(sb)
+                queryBuilder.registerArguments(expr.columnType, list).joinTo(this)
 
-                sb.append(")")
+                append(")")
             }
         }
-
-        return sb.toString()
     }
 }
 

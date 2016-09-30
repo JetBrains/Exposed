@@ -283,9 +283,17 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table)}")
         if (columns.any()) {
             append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-            primaryKeyConstraint()?.let {
-                append(", $it")
+            if (columns.none { it.isOneColumnPK() }) {
+                primaryKeyConstraint()?.let {
+                    append(", $it")
+                }
             }
+            columns.filter { it.referee != null }.let { references ->
+                if (references.isNotEmpty()) {
+                    append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
+                }
+            }
+
             append(")")
         }
     })

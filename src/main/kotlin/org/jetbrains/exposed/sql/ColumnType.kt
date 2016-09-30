@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -95,7 +94,7 @@ class CharacterColumnType() : ColumnType() {
 }
 
 class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.shortAutoincType() else "INT"
+    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.shortAutoincType() else "INT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -107,7 +106,7 @@ class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc)
 }
 
 class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.longAutoincType() else "BIGINT"
+    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.longAutoincType() else "BIGINT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -152,7 +151,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 }
 
 class DateColumnType(val time: Boolean): ColumnType() {
-    override fun sqlType(): String  = if (time) currentDialect.dateTimeType() else "DATE"
+    override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
@@ -169,20 +168,15 @@ class DateColumnType(val time: Boolean): ColumnType() {
             return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
         } else {
             val date = Date (dateTime.millis)
-            return "'${date.toString()}'"
+            return "'$date'"
         }
     }
 
-    override fun valueFromDB(value: Any): Any {
-        if (value is java.sql.Date) {
-            return DateTime(value.time)
-        }
-
-        if (value is java.sql.Timestamp) {
-            return DateTime(value.time)
-        }
-
-        return value
+    override fun valueFromDB(value: Any): Any = when(value) {
+        is java.sql.Date ->  DateTime(value.time)
+        is java.sql.Timestamp -> DateTime(value.time)
+        is Long -> DateTime(value)
+        else -> value
     }
 
     override fun notNullValueToDB(value: Any): Any {
@@ -244,25 +238,25 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
 }
 
 class BinaryColumnType(val length: Int) : ColumnType() {
-    override fun sqlType(): String  = currentDialect.binaryType(length)
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 }
 
 class BlobColumnType(): ColumnType() {
-    override fun sqlType(): String  = currentDialect.blobType()
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.blobType()
 
     override fun nonNullValueToString(value: Any): String {
         return "?"
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        if (currentDialect == PostgreSQLDialect)
+        if (currentDialect.dataTypeProvider.blobAsStream)
             return SerialBlob(rs.getBytes(index))
         else
             return rs.getBlob(index)
     }
 
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
-        if (currentDialect == PostgreSQLDialect && value is InputStream) {
+        if (currentDialect.dataTypeProvider.blobAsStream && value is InputStream) {
             stmt.setBinaryStream(index, value, value.available())
         } else {
             super.setParameter(stmt, index, value)
@@ -270,7 +264,7 @@ class BlobColumnType(): ColumnType() {
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        if (currentDialect == PostgreSQLDialect)
+        if (currentDialect.dataTypeProvider.blobAsStream)
             return (value as Blob).binaryStream
         else
             return value
@@ -286,11 +280,11 @@ class BooleanColumnType() : ColumnType() {
         else -> value.toString().toBoolean()
     }
 
-    override fun nonNullValueToString(value: Any): String = (value as Boolean).toString()
+    override fun nonNullValueToString(value: Any) = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
 }
 
 class UUIDColumnType() : ColumnType(autoinc = false) {
-    override fun sqlType(): String = currentDialect.uuidType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is UUID -> ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()

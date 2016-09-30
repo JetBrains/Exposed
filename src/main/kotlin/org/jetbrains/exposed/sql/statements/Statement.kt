@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
-abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
+abstract class Statement<out T>(val type: StatementType, val targets: List<Table>) {
 
     abstract fun PreparedStatement.executeInternal(transaction: Transaction): T?
 
@@ -36,14 +36,17 @@ abstract class Statement<T>(val type: StatementType, val targets: List<Table>) {
             }
 
             val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it)})
-            contexts.forEach { context ->
+            contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
-                statement.addBatch()
+                if(i != contexts.size - 1) statement.addBatch()
             }
-
+            transaction.lastExecutedStatement?.run {
+                if (!isClosed && !transaction.db.supportsMultipleOpenResults) close()
+            }
             transaction.currentStatement = statement
             val result = statement.executeInternal(transaction)
             transaction.currentStatement = null
+            transaction.lastExecutedStatement = statement
 
             transaction.monitor.notifyAfterExecution(transaction, contexts, statement)
             return result to contexts

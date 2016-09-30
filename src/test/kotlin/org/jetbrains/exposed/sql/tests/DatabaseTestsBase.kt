@@ -18,6 +18,7 @@ import kotlin.concurrent.thread
 
 enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val beforeConnection: () -> Any, val afterConnection: () -> Unit) {
     H2(H2Dialect, "jdbc:h2:mem:", "org.h2.Driver", {Unit}, {}),
+    SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC", {Unit}, {}),
     MYSQL(MysqlDialect, "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
             afterConnection = {
@@ -67,9 +68,9 @@ abstract class DatabaseTestsBase() {
             registeredOnShutdown += dbSettings
         }
 
-        Database.connect(dbSettings.connection, user = "root", driver = dbSettings.driver)
+        val database = Database.connect(dbSettings.connection, user = "root", driver = dbSettings.driver)
 
-        transaction {
+        transaction(database.metadata.defaultTransactionIsolation, 1) {
             statement()
         }
     }

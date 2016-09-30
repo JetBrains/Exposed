@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-internal object PostgreSQLDialect : VendorDialect("postgresql") {
+internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
 
     override fun shortAutoincType(): String = "SERIAL"
 
@@ -14,4 +14,7 @@ internal object PostgreSQLDialect : VendorDialect("postgresql") {
 
     override fun binaryType(length: Int): String = "bytea"
 
+    override val blobAsStream: Boolean = true
 }
+
+internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider)

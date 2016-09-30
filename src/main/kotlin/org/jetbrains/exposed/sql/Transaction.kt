@@ -48,7 +48,8 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var selectsForUpdate = false
 
     // currently executing statement. Used to log error properly
-    var  currentStatement: PreparedStatement? = null
+    var currentStatement: PreparedStatement? = null
+    internal var lastExecutedStatement: PreparedStatement? = null
 
 
     val statements = StringBuilder()

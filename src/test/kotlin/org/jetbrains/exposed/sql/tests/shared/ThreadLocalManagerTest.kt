@@ -11,16 +11,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class ThreadLocalManagerTest : DatabaseTestsBase() {
-
-
-
     @Test
     fun testReconnection() {
-        var firstThreadTm: TransactionManager?
         var secondThreadTm: TransactionManager? = null
+        var isMysql = false
         withDb(TestDB.MYSQL) {
+            isMysql = true
             SchemaUtils.create(DMLTestsData.Cities)
-            firstThreadTm = TransactionManager.currentThreadManager.get()
+            val firstThreadTm = TransactionManager.currentThreadManager.get()
             thread {
                 withDb(TestDB.MYSQL) {
                     DMLTestsData.Cities.selectAll().toList()
@@ -30,7 +28,9 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
             }.join()
             assertEquals(firstThreadTm, TransactionManager.currentThreadManager.get())
         }
-        assertEquals(secondThreadTm, TransactionManager.currentThreadManager.get())
+        if (isMysql) {
+            assertEquals(secondThreadTm, TransactionManager.currentThreadManager.get())
+        }
     }
 
 }

@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.sql
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.*
@@ -119,7 +120,7 @@ class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alternate:
 
 class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "SUBSTRING(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
+        return "${currentDialect.functionProvider.substring}(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
     }
 
     override val columnType: ColumnType = StringColumnType()

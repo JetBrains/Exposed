@@ -202,6 +202,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
         override fun hasNext(): Boolean {
             if (hasNext == null) hasNext = rs.next()
+            if (hasNext == false) rs.close()
             return hasNext!!
         }
     }

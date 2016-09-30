@@ -40,15 +40,16 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         }
     }
 
-    override fun createStatement() = listOf(buildString{
-        append("ALTER TABLE $referencedTable ADD")
-        if (fkName.isNotBlank()) append(" CONSTRAINT $fkName")
+    internal val foreignKeyPart = buildString {
         append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
 
         deleteRule?.let { onDelete ->
             append(" ON DELETE $onDelete")
         }
-    })
+    }
+
+    override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD"
+            + if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "") + foreignKeyPart
 
     override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP FOREIGN KEY $fkName")
 

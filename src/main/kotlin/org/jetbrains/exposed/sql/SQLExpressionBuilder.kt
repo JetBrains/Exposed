@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.vendors.MatchMode
+import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -137,8 +137,8 @@ object SqlExpressionBuilder {
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): ExpressionWithColumnType<BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
 
-    fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> {
-        return with(currentDialect) {
+    fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: FunctionProvider.MatchMode?): Op<Boolean> {
+        return with(currentDialect.functionProvider) {
             this@match.match(pattern, mode)
         }
     }

@@ -6,8 +6,39 @@ import java.lang.UnsupportedOperationException
 import java.sql.ResultSet
 import java.util.*
 
+open class DataTypeProvider() {
+    open fun shortAutoincType() = "INT AUTO_INCREMENT"
+
+    open fun longAutoincType() = "BIGINT AUTO_INCREMENT"
+
+    open fun uuidType() = "BINARY(16)"
+
+    open fun dateTimeType() = "DATETIME"
+
+    open fun blobType(): String = "BLOB"
+
+    open fun binaryType(length: Int): String = "VARBINARY($length)"
+
+    open fun booleanToStatementString(bool: Boolean) = bool.toString()
+
+    open val blobAsStream = false
+}
+
+open class FunctionProvider() {
+
+    open val substring = "SUBSTRING"
+
+    open fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
+
+    interface MatchMode {
+        fun mode() : String
+    }
+}
+
 interface DatabaseDialect {
     val name: String
+    val dataTypeProvider: DataTypeProvider
+    val functionProvider: FunctionProvider
 
     fun getDatabase(): String
 
@@ -29,16 +60,12 @@ interface DatabaseDialect {
 
     fun tableExists(table: Table): Boolean
 
+    fun checkTableMapping(table: Table) = true
+
     fun resetCaches()
 
     fun supportsSelectForUpdate(): Boolean
-
-    fun shortAutoincType(): String
-    fun longAutoincType(): String
-    fun uuidType(): String
-    fun dateTimeType(): String
-    fun blobType(): String
-    fun binaryType(length: Int): String
+    val supportsMultipleGeneratedKeys: Boolean
 
     // Specific SQL statements
 
@@ -49,17 +76,12 @@ interface DatabaseDialect {
     fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
     fun dropIndex(tableName: String, indexName: String): String
 
-    // Specific functions
-    fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
-
     fun limit(size: Int, offset: Int = 0): String
 }
 
-interface MatchMode {
-    fun mode() : String
-}
-
-internal abstract class VendorDialect(override val name: String) : DatabaseDialect {
+internal abstract class VendorDialect(override val name: String,
+                                      override val dataTypeProvider: DataTypeProvider,
+                                      override val functionProvider: FunctionProvider = FunctionProvider()) : DatabaseDialect {
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
@@ -93,7 +115,6 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     override fun getDatabase(): String = TransactionManager.current().connection.catalog
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.tableName.inProperCase }
-
 
     protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Triple<String, String, Boolean>): Map<Table, List<Pair<String, Boolean>>> {
         val mapping = tables.associateBy { it.tableName.inProperCase }
@@ -214,17 +235,7 @@ internal abstract class VendorDialect(override val name: String) : DatabaseDiale
     private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata.supportsSelectForUpdate() }
     override fun supportsSelectForUpdate() = supportsSelectForUpdate
 
-    override fun shortAutoincType() = "INT AUTO_INCREMENT"
-
-    override fun longAutoincType() = "BIGINT AUTO_INCREMENT"
-
-    override fun uuidType() = "BINARY(16)"
-
-    override fun dateTimeType() = "DATETIME"
-
-    override fun blobType(): String = "BLOB"
-
-    override fun binaryType(length: Int): String = "VARBINARY($length)"
+    override val supportsMultipleGeneratedKeys: Boolean = true
 
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
