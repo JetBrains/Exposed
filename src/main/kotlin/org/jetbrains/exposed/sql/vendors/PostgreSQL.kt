@@ -17,4 +17,6 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override val blobAsStream: Boolean = true
 }
 
-internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider)
+internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider) {
+    override val supportsExpressionsAsDefault: Boolean = true
+}

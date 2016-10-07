@@ -11,7 +11,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     internal var indexInPK: Int? = null
     internal var onDelete: ReferenceOption? = null
     internal var defaultValueFun: (() -> T)? = null
-    internal var dbDefaultValue: T? = null
+    internal var dbDefaultValue: Expression<T>? = null
 
     override fun equals(other: Any?): Boolean {
         return (other as? Column<*>)?.let {
@@ -60,15 +60,19 @@ open class Column<T>(val table: Table, val name: String, override val columnType
             append(colType.sqlType())
         }
 
-        if (colType.nullable) {
+        if (colType.nullable || (dbDefaultValue != null && defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault)) {
             append(" NULL")
         } else if (!isPKColumn) {
             append(" NOT NULL")
         }
 
         if (!isPKColumn && dbDefaultValue != null) {
-            append (" DEFAULT ")
-            append(colType.valueToString(dbDefaultValue!!))
+            if (defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault) {
+                exposedLogger.error("${currentDialect.name} doesn't support expressions as default value. Only constants allowed.")
+            } else {
+                append(" DEFAULT ")
+                append(dbDefaultValue!!.toSQL(QueryBuilder(false)))
+            }
         }
 
         if (isOneColumnPK()) {

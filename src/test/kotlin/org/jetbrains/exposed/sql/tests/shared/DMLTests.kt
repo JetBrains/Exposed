@@ -902,6 +902,34 @@ class DMLTests() : DatabaseTestsBase() {
             assertNotNull(query.slice(users.columns + innerExp).selectAll().first().get(innerExp))
         }
     }
+
+    @Test fun testDefaultExpressions01() {
+
+        fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
+            override fun toSQL(queryBuilder: QueryBuilder): String {
+                return "ABS($value)"
+            }
+
+            override val columnType: ColumnType = IntegerColumnType()
+        }
+
+        val foo = object : IntIdTable() {
+            val name = text("name")
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
+        }
+
+        withTables(foo) {
+            val id = foo.insertAndGetId {
+                it[foo.name] = "bar"
+            }
+            val result = foo.select { foo.id eq id!! }.single()
+
+            assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
+            assertEquals(100, result[foo.defaultInt])
+        }
+    }
+
 }
 
 
@@ -927,4 +955,4 @@ class FooTests {
     }
 }
 
-val today = DateTime.now().withTimeAtStartOfDay()
+val today: DateTime = DateTime.now().withTimeAtStartOfDay()

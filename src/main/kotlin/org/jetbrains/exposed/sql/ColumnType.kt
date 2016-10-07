@@ -2,9 +2,13 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.ISODateTimeFormat
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -27,6 +31,8 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
                 if (!nullable) error("NULL in non-nullable column")
                 "NULL"
             }
+
+            DefaultValueMarker -> "DEFAULT"
 
             is Iterable<*> -> {
                 value.joinToString(","){ valueToString(it) }
@@ -150,6 +156,9 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     }
 }
 
+private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
+private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
+private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 class DateColumnType(val time: Boolean): ColumnType() {
     override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
 
@@ -176,7 +185,20 @@ class DateColumnType(val time: Boolean): ColumnType() {
         is java.sql.Date ->  DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
         is Long -> DateTime(value)
+        is String -> when {
+            currentDialect == SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
+            currentDialect == SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
+            else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
+        }
         else -> value
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return if (currentDialect != SQLiteDialect) {
+            if (time) rs.getTimestamp(index) else rs.getDate(index)
+        } else {
+            rs.getObject(index)
+        }
     }
 
     override fun notNullValueToDB(value: Any): Any {

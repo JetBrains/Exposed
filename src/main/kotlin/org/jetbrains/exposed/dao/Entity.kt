@@ -427,12 +427,17 @@ class EntityCache {
                     }
                 }
 
-                for ((entry, id) in toFlush.zip(ids)) {
+                for ((entry, genValues) in toFlush.zip(ids)) {
+                    val id = genValues[table.id]!!
                     entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
                         is EntityID<*> -> id._value!!
                         else -> id
                     })
-                    entry.writeValues.set(entry.klass.table.id as Column<Any?>, id)
+                    entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                    genValues.forEach {
+                        entry.writeValues[it.key as Column<Any?>] = it.value
+                    }
+
                     entry.storeWrittenValues()
                     EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
                     EntityHook.alertSubscribers(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))

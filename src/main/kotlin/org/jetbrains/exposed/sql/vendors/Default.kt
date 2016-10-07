@@ -66,6 +66,7 @@ interface DatabaseDialect {
 
     fun supportsSelectForUpdate(): Boolean
     val supportsMultipleGeneratedKeys: Boolean
+    val supportsExpressionsAsDefault: Boolean get() = false
 
     // Specific SQL statements
 
@@ -197,7 +198,7 @@ internal abstract class VendorDialect(override val name: String,
             throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
         }
 
-        return "INSERT INTO ${transaction.identity(table)} (${columns.map { transaction.identity(it) }.joinToString()}) $expr"
+        return "INSERT INTO ${transaction.identity(table)} (${columns.joinToString { transaction.identity(it) }}) $expr"
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {

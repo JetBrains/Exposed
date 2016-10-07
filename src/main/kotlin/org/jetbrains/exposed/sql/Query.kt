@@ -21,7 +21,14 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
 
         return d?.let {
             if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
-            (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it
+            (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it ?: run {
+                val column = c as? Column<T>
+                if (column?.dbDefaultValue != null && column?.columnType?.nullable == false) {
+                    exposedLogger.warn("Column ${TransactionManager.current().identity(column!!)} is marked as not null, " +
+                            "has default db value, but returns null. Possible have to re-read it from DB.")
+                }
+                null
+            }
         } as T
     }
 

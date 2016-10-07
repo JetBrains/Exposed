@@ -22,6 +22,11 @@ class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
     override val columnType: ColumnType = DateColumnType(false);
 }
 
+class CurrentDateTime(): Function<DateTime>() {
+    override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
+    override val columnType: ColumnType = DateColumnType(false)
+}
+
 class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MONTH(${expr.toSQL(queryBuilder)})"

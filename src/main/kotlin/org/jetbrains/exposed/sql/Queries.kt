@@ -34,7 +34,7 @@ fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityI
     generatedKey
 }
 
-fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Any> {
+fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Map<Column<*>, Any>> {
     if (data.count() == 0) return emptyList()
     BatchInsertStatement(this, ignore).let {
         for (element in data) {

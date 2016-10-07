@@ -256,13 +256,24 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {
-        this.dbDefaultValue = defaultValue
+        this.dbDefaultValue = object : Expression<T>() {
+            override fun toSQL(queryBuilder: QueryBuilder): String {
+                return columnType.valueToString(defaultValue)
+            }
+        }
         this.defaultValueFun = { defaultValue }
+        return this
+    }
+
+    fun <T:Any> Column<T>.defaultExpression(defaultValue: Expression<T>): Column<T> {
+        this.dbDefaultValue = defaultValue
+        this.defaultValueFun = null
         return this
     }
 
     fun <T:Any> Column<T>.clientDefault(defaultValue: () -> T): Column<T> {
         this.defaultValueFun = defaultValue
+        this.dbDefaultValue = null
         return this
     }
 

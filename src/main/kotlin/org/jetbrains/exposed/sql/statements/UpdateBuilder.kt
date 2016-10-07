@@ -9,7 +9,7 @@ import java.util.*
  * @author max
  */
 
-abstract class UpdateBuilder<T>(type: StatementType, targets: List<Table>): Statement<T>(type, targets) {
+abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): Statement<T>(type, targets) {
     protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     operator fun <S> set(column: Column<S>, value: S?) {

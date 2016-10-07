@@ -6,6 +6,11 @@ import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
+
+internal object DefaultValueMarker {
+    override fun toString(): String = "DEFAULT"
+}
+
 abstract class Statement<out T>(val type: StatementType, val targets: List<Table>) {
 
     abstract fun PreparedStatement.executeInternal(transaction: Transaction): T?
@@ -97,6 +102,15 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
         if (lastPos < sql.length)
             append(sql.substring(lastPos))
     }
+}
+
+private fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
+    args.forEachIndexed {index, pair ->
+        val (c, v) = pair
+        c.setParameter(this, index + 1, c.valueToDB(v))
+    }
+
+    return args.count() + 1
 }
 
 enum class StatementGroup {
