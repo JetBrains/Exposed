@@ -43,7 +43,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it)})
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
-                if(i != contexts.size - 1) statement.addBatch()
+                if(contexts.size > 1) statement.addBatch()
             }
             transaction.lastExecutedStatement?.run {
                 if (!isClosed && !transaction.db.supportsMultipleOpenResults) close()
@@ -104,7 +104,7 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
     }
 }
 
-private fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
+fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
     args.forEachIndexed {index, pair ->
         val (c, v) = pair
         c.setParameter(this, index + 1, c.valueToDB(v))

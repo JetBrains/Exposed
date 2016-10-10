@@ -174,7 +174,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
 
         if (time) {
             val zonedTime = dateTime.toDateTime(DateTimeZone.UTC)
-            return "'${zonedTime.toString("YYYY-MM-dd HH:mm:ss.SSS", Locale.ROOT)}'"
+            return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(zonedTime)}'"
         } else {
             val date = Date (dateTime.millis)
             return "'$date'"
@@ -188,17 +188,9 @@ class DateColumnType(val time: Boolean): ColumnType() {
         is String -> when {
             currentDialect == SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
             currentDialect == SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
-            else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
+            else -> value
         }
         else -> value
-    }
-
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return if (currentDialect != SQLiteDialect) {
-            if (time) rs.getTimestamp(index) else rs.getDate(index)
-        } else {
-            rs.getObject(index)
-        }
     }
 
     override fun notNullValueToDB(value: Any): Any {
