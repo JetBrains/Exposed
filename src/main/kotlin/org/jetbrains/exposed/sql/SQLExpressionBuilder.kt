@@ -38,8 +38,6 @@ fun<T:String?> Expression<T>.trim() =Trim(this)
 fun <T:String?> Expression<T>.lowerCase() = LowerCase(this)
 fun <T:String?> Expression<T>.upperCase() = UpperCase(this)
 
-fun <T> Column<T>.distinct() = Distinct(this, this.columnType)
-
 fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat {
     return GroupConcat(this, separator, distinct, *orderBy)
 }

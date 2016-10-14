@@ -77,13 +77,14 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
 }
 
 open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
-    val groupedByColumns = ArrayList<Expression<*>>();
-    val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
-    var having: Op<Boolean>? = null;
-    var limit: Int? = null
-    var offset: Int = 0
-    var count: Boolean = false
-    var forUpdate: Boolean? = null
+    private val groupedByColumns = ArrayList<Expression<*>>()
+    private val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
+    private var having: Op<Boolean>? = null;
+    private var limit: Int? = null
+    private var offset: Int = 0
+    internal var distinct: Boolean = false
+    private var count: Boolean = false
+    private var forUpdate: Boolean? = null
 
     fun isForUpdate() = (forUpdate ?: transaction.selectsForUpdate) && transaction.db.dialect.supportsSelectForUpdate()
 
@@ -103,6 +104,9 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             append("COUNT(*)")
         }
         else {
+            if (distinct) {
+                append("DISTINCT ")
+            }
             val tables = set.source.columns.map { it.table }.toSet()
             val fields = LinkedHashSet(set.fields)
             val completeTables = ArrayList<Table>()
@@ -227,6 +231,10 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
     override fun count(): Int {
         flushEntities()
+
+        if (distinct) {
+            return this.alias("subq").selectAll().count()
+        }
 
         return try {
             count = true
