@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
 
 /**
@@ -14,12 +13,10 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
 
     protected fun valuesAndDefaults(): Map<Column<*>, Any?> {
-        if(!currentDialect.supportsExpressionsAsDefault) {
-            val dbColumns = targets.flatMap { it.columns }.filter {
-                it.dbDefaultValue != null && !it.columnType.nullable && it !in values.keys
-            }
-            return values + dbColumns.map { it to DefaultValueMarker }
-        } else return values
+        val columnsWithNotNullDefault = targets.flatMap { it.columns }.filter {
+            (it.dbDefaultValue != null || it.defaultValueFun != null) && !it.columnType.nullable && it !in values.keys
+        }
+        return values + columnsWithNotNullDefault.map { it to (it.defaultValueFun?.invoke() ?: DefaultValueMarker) }
     }
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
