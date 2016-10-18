@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
@@ -50,7 +51,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
     internal fun isOneColumnPK() = table.columns.filter { it.indexInPK != null }.singleOrNull() == this
 
     fun descriptionDdl(): String = buildString {
-        append(TransactionManager.current().identity(this@Column))
+        append(TransactionManager.current().identity(this@Column).inProperCase())
         append(" ")
         val isPKColumn = indexInPK != null
         val colType = columnType

@@ -3,9 +3,8 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import org.joda.time.DateTime
-import java.lang.IllegalArgumentException
-import java.lang.UnsupportedOperationException
 import java.math.BigDecimal
 import java.sql.Blob
 import java.util.*
@@ -125,7 +124,9 @@ class Join (val table: ColumnSet) : ColumnSet() {
 }
 
 open class Table(name: String = ""): ColumnSet(), DdlAware {
-    open val tableName = if (name.length > 0) name else this.javaClass.simpleName.removeSuffix("Table")
+    open val tableName = (if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table"))
+
+    fun nameInDatabaseCase() = tableName.inProperCase()
 
     private val _columns = ArrayList<Column<*>>()
     override val columns: List<Column<*>> = _columns
@@ -291,7 +292,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         get() = createStatement()
 
     override fun createStatement() = listOf(buildString {
-        append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table)}")
+        append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table).inProperCase()}")
         if (columns.any()) {
             append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
             if (columns.none { it.isOneColumnPK() }) {

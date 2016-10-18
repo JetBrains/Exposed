@@ -78,9 +78,11 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
         return constraints
     }
 
-    override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
+    override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
 
-        val constraints = HashMap<String, MutableList<Index>>()
+        val constraints = HashMap<Table, MutableList<Index>>()
+
+        val tableNames = tables.associateBy { it.nameInDatabaseCase() }
 
         val rs = TransactionManager.current().connection.createStatement().executeQuery(
                 """SELECT ind.* from (
@@ -99,10 +101,12 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
 
         while (rs.next()) {
             val tableName = rs.getString("TABLE_NAME")!!
-            val indexName = rs.getString("INDEX_NAME")!!
-            val columnsInIndex = rs.getString("COLUMNS")!!.split(',')
-            val isUnique = rs.getInt("NON_UNIQUE") == 0
-            constraints.getOrPut(tableName, { arrayListOf() }).add(Index(indexName, tableName, columnsInIndex, isUnique))
+            if (tableName in tableNames.keys) {
+                val indexName = rs.getString("INDEX_NAME")!!
+                val columnsInIndex = rs.getString("COLUMNS")!!.split(',')
+                val isUnique = rs.getInt("NON_UNIQUE") == 0
+                constraints.getOrPut(tableNames[tableName]!!, { arrayListOf() }).add(Index(indexName, tableName, columnsInIndex, isUnique))
+            }
         }
 
         return constraints

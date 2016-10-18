@@ -145,12 +145,11 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull().orEmpty() in fKeyConstraints}
 
-    val allExistingIndices = currentDialect.existingIndices(*tables)
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
     for (table in tables) {
-        val existingTableIndices = allExistingIndices[table.tableName].orEmpty().filterFKeys()
+        val existingTableIndices = currentDialect.existingIndices(table)[table].orEmpty().filterFKeys()
         val mappedIndices = table.indices.map { Index.forColumns(*it.first, unique = it.second)}.filterFKeys()
 
         existingTableIndices.forEach { index ->
@@ -161,7 +160,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
             }
         }
 
-        notMappedIndices.getOrPut(table.javaClass.simpleName, {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
+        notMappedIndices.getOrPut(table.nameInDatabaseCase(), {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
 
         missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
     }

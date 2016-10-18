@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.lang.UnsupportedOperationException
 import java.sql.ResultSet
 import java.util.*
 
@@ -56,7 +55,7 @@ interface DatabaseDialect {
     /**
      * return set of indices for each table
      */
-    fun existingIndices(vararg tables: Table): Map<String, List<Index>> = emptyMap()
+    fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
 
     fun tableExists(table: Table): Boolean
 
@@ -96,7 +95,7 @@ internal abstract class VendorDialect(override val name: String,
 
     private val isUpperCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesUpperCaseIdentifiers() }
     private val isLowerCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesLowerCaseIdentifiers() }
-    private val String.inProperCase: String get() = when {
+    val String.inProperCase: String get() = when {
         isUpperCaseIdentifiers -> toUpperCase()
         isLowerCaseIdentifiers -> toLowerCase()
         else -> this
@@ -115,10 +114,10 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun getDatabase(): String = TransactionManager.current().connection.catalog
 
-    override fun tableExists(table: Table) = allTablesNames.any { it == table.tableName.inProperCase }
+    override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
     protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Triple<String, String, Boolean>): Map<Table, List<Pair<String, Boolean>>> {
-        val mapping = tables.associateBy { it.tableName.inProperCase }
+        val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<Pair<String, Boolean>>>()
 
         while (next()) {
@@ -140,7 +139,7 @@ internal abstract class VendorDialect(override val name: String,
 
     override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-        for (table in tables.map{it.tableName.inProperCase }) {
+        for (table in tables.map{ it.nameInDatabaseCase() }) {
             columnConstraintsCache.getOrPut(table, {
                 val rs = TransactionManager.current().db.metadata.getExportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
@@ -162,12 +161,13 @@ internal abstract class VendorDialect(override val name: String,
         return constraints
     }
 
-    private val existingIndicesCache = HashMap<String, List<Index>>()
+    private val existingIndicesCache = HashMap<Table, List<Index>>()
 
-    override @Synchronized fun existingIndices(vararg tables: Table): Map<String, List<Index>> {
-        for(table in tables.map {it.tableName.inProperCase }) {
+    override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
+        for(table in tables) {
+            val tableName = table.nameInDatabaseCase()
             existingIndicesCache.getOrPut(table, {
-                val rs = TransactionManager.current().db.metadata.getIndexInfo(getDatabase(), null, table, false, false)
+                val rs = TransactionManager.current().db.metadata.getIndexInfo(getDatabase(), null, tableName, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
@@ -177,7 +177,7 @@ internal abstract class VendorDialect(override val name: String,
                     val isUnique = !rs.getBoolean("NON_UNIQUE")
                     tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
                 }
-                tmpIndices.filterNot { it.key.first == "PRIMARY" }.map { Index(it.key.first, table, it.value, it.key.second)}
+                tmpIndices.filterNot { it.key.first == "PRIMARY" }.map { Index(it.key.first, tableName, it.value, it.key.second)}
             })
         }
         return HashMap(existingIndicesCache)
@@ -198,7 +198,7 @@ internal abstract class VendorDialect(override val name: String,
             throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
         }
 
-        return "INSERT INTO ${transaction.identity(table)} (${columns.joinToString { transaction.identity(it) }}) $expr"
+        return "INSERT INTO ${transaction.identity(table)} (${columns.joinToString { transaction.identity(it).inProperCase }}) $expr"
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
@@ -243,3 +243,9 @@ internal abstract class VendorDialect(override val name: String,
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
+
+internal fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->
+    (currentDialect as? VendorDialect)?.run {
+        this@inProperCase.inProperCase
+    }
+} ?: this

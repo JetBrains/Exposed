@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
-import java.lang.RuntimeException
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -141,15 +141,15 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     fun identity(table: Table): String {
-        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName)
+        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
     }
 
     fun fullIdentity(column: Column<*>): String {
-        return "${quoteIfNecessary(column.table.tableName)}.${quoteIfNecessary(column.name)}"
+        return "${quoteIfNecessary(column.table.tableName.inProperCase())}.${quoteIfNecessary(column.name.inProperCase())}"
     }
 
     fun identity(column: Column<*>): String {
-        return quoteIfNecessary(column.name)
+        return quoteIfNecessary(column.name.inProperCase())
     }
 
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
