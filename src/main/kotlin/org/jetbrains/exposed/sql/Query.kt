@@ -86,6 +86,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     private var count: Boolean = false
     private var forUpdate: Boolean? = null
 
+    fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: transaction.selectsForUpdate) && transaction.db.dialect.supportsSelectForUpdate()
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
