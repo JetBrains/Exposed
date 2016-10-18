@@ -2,12 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.h2.engine.Session
 import org.h2.jdbc.JdbcConnection
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.lang.UnsupportedOperationException
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
@@ -32,5 +28,9 @@ internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
 
     private fun currentMode(): String {
         return ((TransactionManager.current().connection as? JdbcConnection)?.session as? Session)?.database?.mode?.name ?: ""
+    }
+
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
+        return super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
     }
 }

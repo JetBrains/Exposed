@@ -166,8 +166,17 @@ internal abstract class VendorDialect(override val name: String,
     override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
+            val metadata = TransactionManager.current().db.metadata
+
             existingIndicesCache.getOrPut(table, {
-                val rs = TransactionManager.current().db.metadata.getIndexInfo(getDatabase(), null, tableName, false, false)
+                val pkNames = metadata.getPrimaryKeys(getDatabase(), null, tableName).let { rs ->
+                    val names = arrayListOf<String>()
+                    while(rs.next()) {
+                        rs.getString("PK_NAME")?.let { names += it }
+                    }
+                    names
+                }
+                val rs = metadata.getIndexInfo(getDatabase(), null, tableName, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
@@ -177,7 +186,7 @@ internal abstract class VendorDialect(override val name: String,
                     val isUnique = !rs.getBoolean("NON_UNIQUE")
                     tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
                 }
-                tmpIndices.filterNot { it.key.first == "PRIMARY" }.map { Index(it.key.first, tableName, it.value, it.key.second)}
+                tmpIndices.filterNot { it.key.first in pkNames }.map { Index(it.key.first, tableName, it.value, it.key.second)}
             })
         }
         return HashMap(existingIndicesCache)
