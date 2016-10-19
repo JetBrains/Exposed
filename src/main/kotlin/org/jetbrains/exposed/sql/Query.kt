@@ -82,7 +82,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     private var having: Op<Boolean>? = null;
     private var limit: Int? = null
     private var offset: Int = 0
-    internal var distinct: Boolean = false
+    private var distinct: Boolean = false
     private var count: Boolean = false
     private var forUpdate: Boolean? = null
 
@@ -157,6 +157,11 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
     override fun notForUpdate(): Query {
         forUpdate = false
+        return this
+    }
+
+    fun withDistinct() : Query {
+        distinct = true
         return this
     }
 

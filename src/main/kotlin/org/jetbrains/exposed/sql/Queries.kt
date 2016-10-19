@@ -9,9 +9,6 @@ import java.util.*
 
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query = select(SqlExpressionBuilder.where())
 
-fun FieldSet.selectDistinct(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null) : Query =
-        Query(TransactionManager.current(), this, where?.let { SqlExpressionBuilder.let(it)}).apply { distinct = true }
-
 fun FieldSet.select(where: Op<Boolean>) : Query = Query(TransactionManager.current(), this, where)
 
 fun FieldSet.selectAll() : Query = Query(TransactionManager.current(), this, null)

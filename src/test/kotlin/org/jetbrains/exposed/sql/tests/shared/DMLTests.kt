@@ -721,9 +721,9 @@ class DMLTests() : DatabaseTestsBase() {
             tbl.insert { it[tbl.name] = "test" }
 
             assertEquals(2, tbl.selectAll().count())
-            assertEquals(2, tbl.selectDistinct().count())
-            assertEquals(1, tbl.slice(tbl.name).selectDistinct().count())
-            assertEquals("test", tbl.slice(tbl.name).selectDistinct().single()[tbl.name])
+            assertEquals(2, tbl.selectAll().withDistinct().count())
+            assertEquals(1, tbl.slice(tbl.name).selectAll().withDistinct().count())
+            assertEquals("test", tbl.slice(tbl.name).selectAll().withDistinct().single()[tbl.name])
         }
     }
 
