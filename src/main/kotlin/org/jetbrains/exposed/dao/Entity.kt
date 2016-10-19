@@ -3,7 +3,6 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.lang.IllegalStateException
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -428,6 +427,7 @@ class EntityCache {
                 }
 
                 for ((entry, genValues) in toFlush.zip(ids)) {
+                    if (entry.id._value != null) continue
                     val id = genValues[table.id]!!
                     entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
                         is EntityID<*> -> id._value!!

@@ -4,8 +4,10 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -30,7 +32,20 @@ object EntityTestsData {
         var b1 by XTable.b1
         var b2 by XTable.b2
 
-        companion object : EntityClass<Int, XEntity>(XTable) {
+        companion object : EntityClass<Int, XEntity>(XTable)
+    }
+
+    object NotAutoIntIdTable : IdTable<Int>("") {
+        override val id: Column<EntityID<Int>> = integer("id").entityId()
+        val b1 = XTable.bool("b1")
+    }
+
+    class NotAutoEntity(id: EntityID<Int>) : Entity<Int>(id) {
+        var b1 by NotAutoIntIdTable.b1
+
+        companion object : EntityClass<Int, NotAutoEntity>(NotAutoIntIdTable) {
+            val lastId = AtomicInteger(0)
+            fun new(b: Boolean) = new(lastId.incrementAndGet()) { b1 = b }
         }
     }
 
@@ -85,6 +100,20 @@ class EntityTests: DatabaseTestsBase() {
             val x = EntityTestsData.XEntity.new {  }
             assertEquals (x.b1, true, "b1 mismatched")
             assertEquals (x.b2, false, "b2 mismatched")
+        }
+    }
+
+
+    @Test fun testNotAutoIncTable() {
+        withTables(EntityTestsData.NotAutoIntIdTable) {
+            val e1 = EntityTestsData.NotAutoEntity.new(true)
+            val e2 = EntityTestsData.NotAutoEntity.new(false)
+
+            TransactionManager.current().flushCache()
+
+            val all = EntityTestsData.NotAutoEntity.all()
+            assert(all.any { it.id == e1.id })
+            assert(all.any { it.id == e2.id })
         }
     }
 
