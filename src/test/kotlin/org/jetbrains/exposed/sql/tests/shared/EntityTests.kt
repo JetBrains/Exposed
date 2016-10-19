@@ -37,7 +37,7 @@ object EntityTestsData {
 
     object NotAutoIntIdTable : IdTable<Int>("") {
         override val id: Column<EntityID<Int>> = integer("id").entityId()
-        val b1 = XTable.bool("b1")
+        val b1 = bool("b1")
     }
 
     class NotAutoEntity(id: EntityID<Int>) : Entity<Int>(id) {
