@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
 
@@ -8,7 +7,7 @@ class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIg
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
         transaction.flushCache()
-        EntityCache.getOrCreate(transaction).removeTablesReferrers(listOf(table))
+        transaction.entityCache.removeTablesReferrers(listOf(table))
         return executeUpdate()
     }
 

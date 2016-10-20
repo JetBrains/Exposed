@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
 
@@ -12,7 +11,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         if (values.isEmpty()) return 0
         transaction.flushCache()
         return executeUpdate().apply {
-            EntityCache.getOrCreate(transaction).removeTablesReferrers(targetsSet.targetTables())
+            transaction.entityCache.removeTablesReferrers(targetsSet.targetTables())
         }
     }
 

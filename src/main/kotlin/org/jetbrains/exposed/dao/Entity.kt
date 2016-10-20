@@ -14,7 +14,7 @@ class EntityID<T:Any>(id: T?, val table: IdTable<T>) {
     var _value: Any? = id
     val value: T get() {
         if (_value == null) {
-            EntityCache.getOrCreate(TransactionManager.current()).flushInserts(table)
+            TransactionManager.current().entityCache.flushInserts(table)
             assert(_value != null) { "Entity must be inserted" }
         }
 
@@ -88,7 +88,7 @@ class Referrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, out Child
     operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
         if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
-        return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
+        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(o.id, reference, query) else query()
     }
 }
 
@@ -105,7 +105,7 @@ class OptionalReferrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, o
     operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
         if (o.id._value == null) return emptySized()
         val query = {factory.find{reference eq o.id}}
-        return if (cache) EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, reference, query)  else query()
+        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(o.id, reference, query)  else query()
     }
 }
 
@@ -146,14 +146,14 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
             - sourceRefColumn).distinct() + sourceRefColumn
 
         val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
-        return EntityCache.getOrCreate(TransactionManager.current()).getOrPutReferrers(o.id, sourceRefColumn, query)
+        return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
     operator fun<SrcID : Any> setValue(o: Entity<SrcID>, desc: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
         val targetRefColumn = getTargetRefColumn()
 
-        val entityCache = EntityCache.getOrCreate(TransactionManager.current())
+        val entityCache = TransactionManager.current().entityCache
         entityCache.flush()
         val oldValue = getValue(o, desc)
         val existingIds = oldValue.map { it.id }.toSet()
@@ -246,14 +246,14 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     operator fun <T> Column<T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
         if (writeValues.containsKey(this as Column<out Any?>) || _readValues?.tryGet(this) != value) {
             if (referee != null) {
-                EntityCache.getOrCreate(TransactionManager.current()).referrers.run {
+                TransactionManager.current().entityCache.referrers.run {
                     filterKeys { it == value }.forEach {
                         if (it.value.keys.any { it == this@setValue } ) {
                             this.remove(it.key)
                         }
                     }
                 }
-                EntityCache.getOrCreate(TransactionManager.current()).removeTablesReferrers(listOf(referee!!.table))
+                TransactionManager.current().entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues.set(this as Column<Any?>, value)
         }
@@ -366,7 +366,7 @@ class EntityCache {
     }
 
     fun flush() {
-        flush((inserts.keys + data.keys).toSet())
+        flush(inserts.keys + data.keys)
     }
 
     fun flush(tables: Iterable<IdTable<*>>) {
@@ -392,7 +392,7 @@ class EntityCache {
                     }
                     batch.execute(TransactionManager.current())
                     updatedEntities.forEach {
-                        EntityHook.alertSubscribers(EntityChange<Any>(it.klass as EntityClass<Any, Entity<Any>>, it.id as EntityID<Any>, EntityChangeType.Updated))
+                        EntityHook.alertSubscribers(EntityChange(it.klass as EntityClass<Any, Entity<Any>>, it.id as EntityID<Any>, EntityChangeType.Updated))
                     }
                 }
             }
@@ -439,7 +439,7 @@ class EntityCache {
                     }
 
                     entry.storeWrittenValues()
-                    EntityCache.getOrCreate(TransactionManager.current()).store<Any,Entity<Any>>(entry)
+                    TransactionManager.current().entityCache.store<Any,Entity<Any>>(entry)
                     EntityHook.alertSubscribers(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
                 }
                 toFlush = partition.second
@@ -452,17 +452,11 @@ class EntityCache {
     }
 
     companion object {
-        val key = Key<EntityCache>()
-        val newCache = { EntityCache()}
 
         fun invalidateGlobalCaches(created: List<Entity<*>>) {
             created.map { it.klass }.filterNotNull().filterIsInstance<ImmutableCachedEntityClass<*,*>>().toSet().forEach {
                 it.expireCache()
             }
-        }
-
-        fun getOrCreate(s: Transaction): EntityCache {
-            return s.getOrCreate(key, newCache)
         }
 
         fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
@@ -511,7 +505,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         return findById(id) ?: error("Entity not found in database")
     }
 
-    open protected fun warmCache(): EntityCache = EntityCache.getOrCreate(TransactionManager.current())
+    open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
     fun findById(id: ID): T? {
         return findById(EntityID(id, table))
@@ -611,11 +605,10 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?, s: Transaction): T {
-        val cache = EntityCache.getOrCreate(s)
-        return cache.find(this, id) ?: run {
+        return s.entityCache.find(this, id) ?: run {
             val new = createInstance(id, row)
             new.klass = this
-            cache.store(this, new)
+            s.entityCache.store(this, new)
 
             new
         }
@@ -676,10 +669,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
         if (references.isEmpty()) return emptyList()
         checkReference(refColumn, references.first().table)
         val entities = find { refColumn inList references }.toList()
-        val cache = EntityCache.getOrCreate(TransactionManager.current())
         val groupedBySourceId = entities.groupBy { it.readValues[refColumn] }
         references.forEach {
-            cache.getOrPutReferrers(it, refColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+            TransactionManager.current().entityCache.getOrPutReferrers(it, refColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
         }
         return entities
     }
@@ -700,9 +692,8 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
 
         val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map {it.second} }
 
-        val cache = EntityCache.getOrCreate(transaction)
         references.forEach {
-            cache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+            transaction.entityCache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
         }
         return entitiesWithRefs.map { it.second }
     }

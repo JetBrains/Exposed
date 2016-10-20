@@ -9,12 +9,12 @@ import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class Key<T>()
 @Suppress("UNCHECKED_CAST")
 open class UserDataHolder() {
-    private val userdata = HashMap<Key<*>, Any?>()
+    protected val userdata = ConcurrentHashMap<Key<*>, Any?>()
 
     fun <T:Any> putUserData(key: Key<T>, value: T?) {
         userdata[key] = value
@@ -25,13 +25,7 @@ open class UserDataHolder() {
     }
 
     fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
-        if (userdata.containsKey(key)) {
-            return userdata[key] as T
-        }
-
-        val new = init()
-        userdata[key] = new
-        return new
+        return userdata.getOrPut(key, init) as T
     }
 }
 
@@ -46,6 +40,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var warnLongQueriesDuration: Long = 2000
     var debug = false
     var selectsForUpdate = false
+    val entityCache = EntityCache()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatement? = null
@@ -60,16 +55,15 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         logger.addLogger(Slf4jSqlLogger())
     }
 
-
-
     override fun commit() {
         val created = flushCache()
         transactionImpl.commit()
+        userdata.clear()
         EntityCache.invalidateGlobalCaches(created)
     }
 
     fun flushCache(): List<Entity<*>> {
-        with(EntityCache.getOrCreate(this)) {
+        with(entityCache) {
             val newEntities = inserts.flatMap { it.value }
             flush()
             return newEntities

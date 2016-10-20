@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -227,7 +226,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     private fun flushEntities() {
         // Flush data before executing query or results may be unpredictable
         val tables = set.source.columns.map { it.table }.filterIsInstance(IdTable::class.java).toSet()
-        EntityCache.getOrCreate(transaction).flush(tables)
+        transaction.entityCache.flush(tables)
     }
 
     operator override fun iterator(): Iterator<ResultRow> {
