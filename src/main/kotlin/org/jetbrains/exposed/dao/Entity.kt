@@ -463,7 +463,9 @@ class EntityCache {
             if(this.count() <= 1) return this
             val canBeReferenced = arrayListOf<Table>()
             do {
-                val (movable, others) = partition { it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) } }
+                val (movable, others) = partition {
+                    it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) || it.referee!!.table == it.table}
+                }
                 canBeReferenced.addAll(movable)
                 this.removeAll(movable)
             } while (others.isNotEmpty() && movable.isNotEmpty())
