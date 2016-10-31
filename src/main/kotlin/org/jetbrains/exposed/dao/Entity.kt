@@ -1,9 +1,33 @@
 package org.jetbrains.exposed.dao
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnSet
+import org.jetbrains.exposed.sql.EntityIDColumnType
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.LazySizedCollection
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.emptySized
+import org.jetbrains.exposed.sql.mapLazy
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.*
+import org.jetbrains.exposed.sql.update
+import java.util.HashMap
+import java.util.HashSet
+import java.util.LinkedHashMap
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -34,8 +58,7 @@ class EntityID<T:Any>(id: T?, val table: IdTable<T>) {
 }
 
 private fun <T:EntityID<*>?>checkReference(reference: Column<T>, factoryTable: IdTable<*>) {
-    val refColumn = reference.referee
-    if (refColumn == null) error("Column $reference is not a reference")
+    val refColumn = reference.referee ?: error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factoryTable != targetTable) {
         error("Column and factory point to different tables")
@@ -77,8 +100,7 @@ class OptionalBackReference<ParentID:Any, out Parent:Entity<ParentID>, ChildID:A
 class Referrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, out Child:Entity<ChildID>>
     (val reference: Column<EntityID<ParentID>>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
     init {
-        val refColumn = reference.referee
-        if (refColumn == null) error("Column $reference is not a reference")
+        reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
             error("Column and factory point to different tables")

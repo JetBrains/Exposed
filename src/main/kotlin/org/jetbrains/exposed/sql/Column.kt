@@ -41,7 +41,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         val addConstr = if (isLastColumnInPK && currentDialect == H2Dialect) {
              "$alterTablePrefix ${table.primaryKeyConstraint()}"
         } else null
-        return listOfNotNull("$alterTablePrefix COLUMN $columnDefinition", addConstr)
+        return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
     override fun modifyStatement() = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}")
@@ -61,12 +61,6 @@ open class Column<T>(val table: Table, val name: String, override val columnType
             append(colType.sqlType())
         }
 
-        if (colType.nullable || (dbDefaultValue != null && defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault)) {
-            append(" NULL")
-        } else if (!isPKColumn) {
-            append(" NOT NULL")
-        }
-
         if (!isPKColumn && dbDefaultValue != null) {
             if (defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault) {
                 exposedLogger.error("${currentDialect.name} doesn't support expressions as default value. Only constants allowed.")
@@ -75,6 +69,13 @@ open class Column<T>(val table: Table, val name: String, override val columnType
                 append(dbDefaultValue!!.toSQL(QueryBuilder(false)))
             }
         }
+
+        if (colType.nullable || (dbDefaultValue != null && defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault)) {
+            append(" NULL")
+        } else if (!isPKColumn) {
+            append(" NOT NULL")
+        }
+
 
         if (isOneColumnPK()) {
             append(" PRIMARY KEY")

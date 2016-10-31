@@ -27,7 +27,7 @@ class IsNotNullOp(val expr: Expression<*>): Op<Boolean>() {
     }
 }
 
-class LiteralOp<T>(override val columnType: ColumnType, val value: Any): ExpressionWithColumnType<T>() {
+open class LiteralOp<T>(override val columnType: ColumnType, val value: Any): ExpressionWithColumnType<T>() {
     override fun toSQL(queryBuilder: QueryBuilder):String {
         return columnType.valueToString(value)
     }
@@ -49,7 +49,11 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Li
 
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString{
         when (list.size) {
-            0 -> append(booleanLiteral(!isInList).toSQL(queryBuilder))
+            0 -> {
+                append(booleanLiteral(!isInList).toSQL(queryBuilder))
+                append(" = ")
+                append(booleanLiteral(true).toSQL(queryBuilder))
+            }
 
             1 -> {
                 append(expr.toSQL(queryBuilder))

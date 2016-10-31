@@ -1,5 +1,10 @@
 package org.jetbrains.exposed.sql.vendors
 
+val VENDORS_KEYWORDS = setOf(
+        "COMMENT",
+        "NUMBER"
+)
+
 val ANSI_SQL_2003_KEYWORDS = setOf(
         "ADD",
         "ALL",

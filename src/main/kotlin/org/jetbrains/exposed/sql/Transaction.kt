@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -130,12 +131,14 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         }
     }
 
+    internal fun cutIfNecessary (identity: String) = identity.substring(0, Math.min(currentDialect.identifierLengthLimit, identity.length))
+
     private fun quoteTokenIfNecessary(token: String) : String {
         return if (db.needQuotes(token)) "${db.identityQuoteString}$token${db.identityQuoteString}" else token
     }
 
     fun identity(table: Table): String {
-        return (table as? Alias<*>)?.let { "${identity(it.delegate)} AS ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
+        return (table as? Alias<*>)?.let { "${identity(it.delegate)} ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
     }
 
     fun fullIdentity(column: Column<*>): String {
@@ -147,11 +150,12 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
-        val flag = if (autoincs != null && autoincs.isNotEmpty())
-            java.sql.Statement.RETURN_GENERATED_KEYS
-        else
-            java.sql.Statement.NO_GENERATED_KEYS
-        return connection.prepareStatement(sql, flag)!!
+        if (autoincs != null && autoincs.isNotEmpty()) {
+            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+            return connection.prepareStatement(sql, autoincs.toTypedArray())!!
+        } else {
+            return connection.prepareStatement(sql, java.sql.PreparedStatement.NO_GENERATED_KEYS)!!
+        }
     }
 }
 

@@ -3,11 +3,13 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
-import java.util.*
+import java.util.ArrayList
+import java.util.UUID
 import kotlin.reflect.memberProperties
 import kotlin.reflect.primaryConstructor
 
@@ -130,6 +132,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     private val _columns = ArrayList<Column<*>>()
     override val columns: List<Column<*>> = _columns
+
+    fun autoIncSeq() = columns.map { it.columnType.autoincSeq }.firstOrNull()
+
     override fun describe(s: Transaction): String = s.identity(this)
 
     val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
@@ -215,8 +220,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, StringColumnType(length, collate))
 
-    fun <N:Number, C:Column<N>> C.autoIncrement(): C {
+    fun <N:Number, C:Column<N>> C.autoIncrement(idSeqName: String? = tableName + "_seq"): C {
         columnType.autoinc = true
+        columnType.autoincSeq = idSeqName
         return this
     }
 
@@ -292,7 +298,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         get() = createStatement()
 
     override fun createStatement() = listOf(buildString {
-        append("CREATE TABLE IF NOT EXISTS ${TransactionManager.current().identity(this@Table).inProperCase()}")
+        append("CREATE TABLE ")
+        if (currentDialect.supportsIfNotExists) {
+            append("IF NOT EXISTS ")
+        }
+        append(TransactionManager.current().identity(this@Table).inProperCase())
         if (columns.any()) {
             append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
             if (columns.none { it.isOneColumnPK() }) {
@@ -324,7 +334,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return null
     }
 
-    override fun dropStatement() = listOf("DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}")
+    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}")
 
     override fun modifyStatement() = throw UnsupportedOperationException("Use modify on columns and indices")
 
@@ -334,6 +344,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+}
+
+data class Seq(private val name: String) {
+    fun createStatement() = listOf("CREATE SEQUENCE $name")
+    fun dropStatement() = listOf("DROP SEQUENCE $name")
 }
 
 fun ColumnSet.targetTables(): List<Table> = when (this) {

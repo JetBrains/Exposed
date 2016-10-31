@@ -1,12 +1,19 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -14,7 +21,7 @@ import kotlin.test.assertNotNull
 
 object EntityTestsData {
 
-    object YTable: IdTable<String>("") {
+    object YTable: IdTable<String>("YTable") {
         override val id: Column<EntityID<String>> = varchar("uuid", 36).primaryKey().entityId().clientDefault {
             EntityID(UUID.randomUUID().toString(), YTable)
         }
@@ -22,7 +29,7 @@ object EntityTestsData {
         val x = bool("x").default(true)
     }
 
-    object XTable: IntIdTable() {
+    object XTable: IntIdTable("XTable") {
         val b1 = bool("b1").default(true)
         val b2 = bool("b2").default(false)
         val y1 = optReference("y1", YTable)

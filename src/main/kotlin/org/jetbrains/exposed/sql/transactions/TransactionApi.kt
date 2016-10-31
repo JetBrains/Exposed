@@ -21,7 +21,7 @@ interface TransactionInterface {
 
 interface TransactionManager {
 
-    fun newTransaction(isolation: Int = Connection.TRANSACTION_REPEATABLE_READ) : Transaction
+    fun newTransaction(isolation: Int = Connection.TRANSACTION_READ_COMMITTED) : Transaction
 
     fun currentOrNull(): Transaction?
 

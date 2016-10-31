@@ -1,24 +1,41 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ExpressionWithColumnType
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
 
 open class DataTypeProvider() {
     open fun shortAutoincType() = "INT AUTO_INCREMENT"
 
+    open fun shortType() = "INT"
+
     open fun longAutoincType() = "BIGINT AUTO_INCREMENT"
+
+    open fun longType() = "BIGINT"
 
     open fun uuidType() = "BINARY(16)"
 
-    open fun dateTimeType() = "DATETIME"
+    open fun dateTimeType() = "TIMESTAMP"
 
     open fun blobType(): String = "BLOB"
 
     open fun binaryType(length: Int): String = "VARBINARY($length)"
 
+    open fun booleanType(): String = "BOOLEAN"
+
     open fun booleanToStatementString(bool: Boolean) = bool.toString()
+
+    open fun textType() = "TEXT"
 
     open val blobAsStream = false
 }
@@ -66,6 +83,11 @@ interface DatabaseDialect {
     fun supportsSelectForUpdate(): Boolean
     val supportsMultipleGeneratedKeys: Boolean
     val supportsExpressionsAsDefault: Boolean get() = false
+    val supportsIfNotExists: Boolean get() = true
+    val needsSequenceToAutoInc: Boolean get() = false
+    val needsQuotesWhenSymbolsInNames: Boolean get() = true
+    val identifierLengthLimit: Int get() = 100
+    fun catalog(transaction: Transaction): String = transaction.connection.catalog
 
     // Specific SQL statements
 
@@ -112,7 +134,7 @@ internal abstract class VendorDialect(override val name: String,
         return result
     }
 
-    override fun getDatabase(): String = TransactionManager.current().connection.catalog
+    override fun getDatabase(): String = currentDialect.catalog(TransactionManager.current())
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
@@ -181,10 +203,11 @@ internal abstract class VendorDialect(override val name: String,
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
                 while (rs.next()) {
-                    val indexName = rs.getString("INDEX_NAME")!!
-                    val column = rs.getString("COLUMN_NAME")!!
-                    val isUnique = !rs.getBoolean("NON_UNIQUE")
-                    tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
+                    rs.getString("INDEX_NAME")?.let {
+                        val column = rs.getString("COLUMN_NAME")!!
+                        val isUnique = !rs.getBoolean("NON_UNIQUE")
+                        tmpIndices.getOrPut(it to isUnique, { arrayListOf() }).add(column)
+                    }
                 }
                 tmpIndices.filterNot { it.key.first in pkNames }.map { Index(it.key.first, tableName, it.value, it.key.second)}
             })
@@ -230,7 +253,7 @@ internal abstract class VendorDialect(override val name: String,
         return buildString {
             append("CREATE ")
             if (unique) append("UNIQUE ")
-            append("INDEX ${t.quoteIfNecessary(indexName)} ON ${t.quoteIfNecessary(tableName)} ")
+            append("INDEX ${t.quoteIfNecessary(t.cutIfNecessary(indexName))} ON ${t.quoteIfNecessary(tableName)} ")
             columns.joinTo(this, ", ", "(", ")") {
                 t.quoteIfNecessary(it)
             }

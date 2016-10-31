@@ -4,10 +4,15 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
-import java.util.*
+import java.util.UUID
 
 open class UUIDTable(name: String = "") : IdTable<UUID>(name) {
     override val id: Column<EntityID<UUID>> = uuid("id").clientDefault { UUID.randomUUID() }.primaryKey().entityId()
@@ -19,8 +24,8 @@ object ViaTestData {
     }
 
     object StringsTable: IdTable<Long>("") {
-        override val id: Column<EntityID<Long>> =long("id").autoIncrement().primaryKey().entityId()
-        val text =varchar("text", 10)
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement().primaryKey().entityId()
+        val text = varchar("text", 10)
     }
 
     object ConnectionTable: Table() {

@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.util.*
+import java.util.ArrayList
 
 object SchemaUtils {
     fun createStatements(vararg tables: Table): List<String> {
@@ -24,10 +24,19 @@ object SchemaUtils {
             for (table_index in table.indices) {
                 statements.addAll(createIndex(table_index.first, table_index.second))
             }
+
+            // create sequence
+            if (currentDialect.needsSequenceToAutoInc) {
+                table.autoIncSeq()?.let {
+                    statements.addAll(createSequence(it))
+                }
+            }
         }
 
         return statements
     }
+
+    fun createSequence(name: String) = Seq(name).createStatement()
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
@@ -149,14 +158,20 @@ object SchemaUtils {
                 body()
             } finally {
                 buzyTable.deleteAll()
+                drop(buzyTable)
                 connection.commit()
             }
         }
     }
 
     fun drop(vararg tables: Table) {
-        tables.flatMap { it.dropStatement() }.forEach {
+        tables.flatMap(Table::dropStatement).forEach {
             TransactionManager.current().exec(it)
+        }
+        if (currentDialect.needsSequenceToAutoInc) {
+            tables.flatMap { table ->
+                table.autoIncSeq()?.let { Seq(it).dropStatement() } ?: emptyList()
+            }.forEach { TransactionManager.current().exec(it) }
         }
         currentDialect.resetCaches()
     }

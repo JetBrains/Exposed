@@ -17,10 +17,11 @@ import java.sql.Blob
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 import javax.sql.rowset.serial.SerialBlob
 
-abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
+abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false, var autoincSeq: String? = null) {
     abstract fun sqlType(): String
 
     open fun valueFromDB(value: Any): Any  = value
@@ -63,7 +64,8 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
     }
 }
 
-class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idColumn.columnType.autoinc): ColumnType(autoinc = autoinc) {
+class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idColumn.columnType.autoinc,
+                                autoincSeq: String? = idColumn.columnType.autoincSeq) : ColumnType(autoinc = autoinc, autoincSeq = autoincSeq) {
 
     init {
         assert(idColumn.table is IdTable<*>){"EntityId supported only for IdTables"}
@@ -100,7 +102,7 @@ class CharacterColumnType() : ColumnType() {
 }
 
 class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.shortAutoincType() else "INT"
+    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.shortAutoincType() else currentDialect.dataTypeProvider.shortType()
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -112,7 +114,7 @@ class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc)
 }
 
 class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.longAutoincType() else "BIGINT"
+    override fun sqlType(): String = if (autoinc) currentDialect.dataTypeProvider.longAutoincType() else currentDialect.dataTypeProvider.longType()
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -143,6 +145,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
             is Int -> value
+            is BigDecimal -> value.toInt()
             is Enum<*> -> value.ordinal
             else -> error("$value is not valid for enum ${klass.name}")
         }
@@ -150,13 +153,16 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): Any {
-        if (value is Enum<*>)
-            return value as Enum<T>
-        return klass.enumConstants!![value as Int]
+        return when (value) {
+            is Enum<*> -> value as Enum<T>
+            is Int -> klass.enumConstants!![value]
+            is BigDecimal -> klass.enumConstants!![value.toInt()]
+            else -> klass.enumConstants!![value as Int]
+        }
     }
 }
 
-private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
+private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 class DateColumnType(val time: Boolean): ColumnType() {
@@ -190,7 +196,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
             currentDialect == SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> value
         }
-        else -> value
+        else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any {
@@ -213,7 +219,7 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
 
         ddl.append(when (length) {
             in 1..255 -> "VARCHAR($length)"
-            else -> "TEXT"
+            else -> currentDialect.dataTypeProvider.textType()
         })
 
         if (collate != null) {
@@ -253,6 +259,13 @@ class StringColumnType(val length: Int = 65535, val collate: String? = null): Co
 
 class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
+
+    override fun valueFromDB(value: Any): Any {
+        if (value is java.sql.Blob) {
+            return value.binaryStream.readBytes()
+        }
+        return value
+    }
 }
 
 class BlobColumnType(): ColumnType() {
@@ -286,7 +299,7 @@ class BlobColumnType(): ColumnType() {
 }
 
 class BooleanColumnType() : ColumnType() {
-    override fun sqlType(): String  = "BOOLEAN"
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.booleanType()
 
     override fun valueFromDB(value: Any) = when (value) {
         is Number -> value.toLong() != 0L

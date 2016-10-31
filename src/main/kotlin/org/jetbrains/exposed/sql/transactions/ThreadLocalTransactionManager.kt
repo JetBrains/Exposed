@@ -45,7 +45,7 @@ class ThreadLocalTransactionManager(private val db: Database) : TransactionManag
     }
 }
 
-fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_REPEATABLE_READ, 3, statement)
+fun <T> transaction(statement: Transaction.() -> T): T = transaction(Connection.TRANSACTION_READ_COMMITTED, 3, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
     val outer = TransactionManager.currentOrNull()

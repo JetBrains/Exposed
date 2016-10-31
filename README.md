@@ -6,6 +6,15 @@ It does have two layers of database access: typesafe SQL wrapping DSL and lightw
 
 Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed/exposed/view#
 
+## Dialects
+
+Currently supported database dialects:
+* PostgreSQL
+* MySQL
+* [Oracle](ORACLE.md)
+* SQLite
+* H2
+
 ## SQL DSL sample:
 ```kotlin
 import org.jetbrains.exposed.sql.*
