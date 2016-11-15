@@ -37,7 +37,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     var statementCount: Int = 0
     var duration: Long = 0
-    var warnLongQueriesDuration: Long = 2000
+    var warnLongQueriesDuration: Long? = null
     var debug = false
     var selectsForUpdate = false
     val entityCache = EntityCache()
@@ -115,7 +115,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
             }
         }
 
-        if (delta > warnLongQueriesDuration) {
+        if (delta > warnLongQueriesDuration ?: Long.MAX_VALUE) {
             exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", RuntimeException())
         }
 
