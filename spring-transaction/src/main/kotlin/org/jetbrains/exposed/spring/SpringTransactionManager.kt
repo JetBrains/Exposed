@@ -15,7 +15,7 @@ import javax.sql.DataSource
 
 class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionManager(dataSource), TransactionManager {
 
-    private val db = Database.connect(dataSource, { this } )
+    private val db = Database.connect(dataSource) { this }
 
     override fun doBegin(transaction: Any?, definition: TransactionDefinition?) {
         super.doBegin(transaction, definition)

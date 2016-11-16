@@ -63,17 +63,21 @@ class Database private constructor(val connector: () -> Connection) {
             dialects.add(0, dialect)
         }
 
-        fun connect(datasource: DataSource, manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
-            return Database { datasource.connection!! }.apply {
+        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {}, manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
+            return Database {
+                datasource.connection!!.apply { setupConnection(this) }
+            }.apply {
                 TransactionManager._manager = manager(this)
             }
         }
 
-        fun connect(url: String, driver: String, user: String = "", password: String = "",
+        fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
             Class.forName(driver).newInstance()
 
-            return Database { DriverManager.getConnection(url, user, password) }.apply {
+            return Database {
+                DriverManager.getConnection(url, user, password).apply { setupConnection(this) }
+            }.apply {
                 TransactionManager._manager = manager(this)
             }
         }
