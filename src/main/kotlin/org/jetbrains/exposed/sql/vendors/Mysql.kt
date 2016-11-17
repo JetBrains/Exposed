@@ -85,7 +85,7 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
         val tableNames = tables.associateBy { it.nameInDatabaseCase() }
 
         val rs = TransactionManager.current().connection.createStatement().executeQuery(
-                """SELECT ind.* from (
+                """SELECT DISTINCT ind.* from (
                         SELECT
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
                             FROM INFORMATION_SCHEMA.STATISTICS s
@@ -96,7 +96,7 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
                         and kcu.COLUMN_NAME = ind.columns
                         and TABLE_SCHEMA = '${getDatabase()}'
                         and kcu.REFERENCED_TABLE_NAME is not NULL
-                WHERE kcu.COLUMN_NAME is NULL;
+                WHERE kcu.COLUMN_NAME is NULL OR ind.NON_UNIQUE is FALSE;
         """)
 
         while (rs.next()) {
