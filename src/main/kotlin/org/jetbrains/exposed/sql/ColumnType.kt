@@ -191,7 +191,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
         }
 
         if (time) {
-            val zonedTime = dateTime.toDateTime(DateTimeZone.UTC)
+            val zonedTime = dateTime.toDateTime(DateTimeZone.getDefault())
             return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(zonedTime)}'"
         } else {
             val date = Date (dateTime.millis)
