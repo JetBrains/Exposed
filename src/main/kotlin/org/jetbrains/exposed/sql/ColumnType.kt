@@ -148,11 +148,29 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): Any {
-        if (value is Enum<*>)
-            return value as Enum<T>
-        return klass.enumConstants!![value as Int]
+        return when (value) {
+            is Int ->  klass.enumConstants!![value]
+            is Enum<*> -> value
+            else -> error("$value is not valid for enum ${klass.name}")
+        }
+    }
+}
+
+class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): StringColumnType(length) {
+    override fun notNullValueToDB(value: Any): Any {
+        return when (value) {
+            is String -> value
+            is Enum<*> -> value.name
+            else -> error("$value is not valid for enum ${klass.name}")
+        }
+    }
+    override fun valueFromDB(value: Any): Any {
+        return when (value) {
+            is String ->  klass.enumConstants!!.first { it.name == value }
+            is Enum<*> -> value
+            else -> error("$value is not valid for enum ${klass.name}")
+        }
     }
 }
 
@@ -207,7 +225,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
     }
 }
 
-class StringColumnType(val length: Int = 65535, val collate: String? = null): ColumnType() {
+open class StringColumnType(val length: Int = 65535, val collate: String? = null): ColumnType() {
     override fun sqlType(): String  {
         val ddl = StringBuilder()
 

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 /**
@@ -109,8 +110,7 @@ class OptionalReferrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, o
     }
 }
 
-open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal) {
-}
+open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal)
 
 class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
     override fun limit(n: Int, offset: Int): SizedIterable<Target> = factory.find(op).limit(n, offset)
@@ -632,35 +632,29 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
 
     inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>)  = View(SqlExpressionBuilder.op(), this)
 
-    infix fun referencedOn(column: Column<EntityID<ID>>) = Reference(column, this)
+    private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
 
-    infix fun optionalReferencedOn(column: Column<EntityID<ID>?>) = OptionalReference(column, this)
+    inline private fun <reified R: Any>registerRefRule(column: Column<*>, ref:()-> R):R {
+        return refDefinitions.getOrPut(column to R::class, ref) as R
+    }
 
-    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>) = OptionalReferenceSureNotNull(column, this)
+    infix fun referencedOn(column: Column<EntityID<ID>>) = registerRefRule(column) { Reference(column, this) }
 
-    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>>) = BackReference(column, this)
+    infix fun optionalReferencedOn(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalReference(column, this) }
 
-    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>?>) = OptionalBackReference(column, this)
+    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalReferenceSureNotNull(column, this) }
+
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>>) = registerRefRule(column) { BackReference(column, this) }
+
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalBackReference(column, this) }
 
     infix fun referrersOn(column: Column<EntityID<ID>>) = referrersOn(column, false)
 
-    fun referrersOn(column: Column<EntityID<ID>>, cache: Boolean) = Referrers(column, this, cache)
+    fun referrersOn(column: Column<EntityID<ID>>, cache: Boolean) = registerRefRule(column) { Referrers(column, this, cache) }
 
-    fun optionalReferrersOn(column: Column<EntityID<ID>?>, cache: Boolean = false) = OptionalReferrers(column, this, cache)
+    fun optionalReferrersOn(column: Column<EntityID<ID>?>, cache: Boolean = false) =  registerRefRule(column) { OptionalReferrers(column, this, cache) }
 
-    fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> {
-        return ColumnWithTransform(this, toColumn, toReal)
-    }
-
-    fun<TReal: Enum<TReal>> Column<String?>.byEnumNullable(clazz : Class<TReal>): ColumnWithTransform<String?, TReal?> {
-        return ColumnWithTransform(this, { it?.name }, {it?.let{clazz.findValue(it)}})
-    }
-
-    fun<TReal: Enum<TReal>> Column<String>.byEnum(clazz : Class<TReal>): ColumnWithTransform<String, TReal> {
-        return ColumnWithTransform(this, { it.name }, {clazz.findValue(it)})
-    }
-
-    fun <T: Enum<T>> Class<T>.findValue(name: String) = enumConstants.first { it.name == name }
+    fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*,*>) this.notForUpdate() else this
 
