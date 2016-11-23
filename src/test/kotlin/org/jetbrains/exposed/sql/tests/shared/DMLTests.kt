@@ -547,6 +547,17 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInsertSelect03() {
+        withCitiesAndUsers(exclude = listOf(TestDB.MYSQL, TestDB.POSTGRESQL)) { cities, users, userData ->
+            val userCount = users.slice().selectAll().apply { count = true }.count()
+
+            users.insert(users.slice(stringParam("Foo"), stringParam("Foo"), intParam(1)).selectAll())
+
+            val r = users.select {users.id eq "Foo"}.orderBy(users.id).toList()
+            assertEquals(userCount + 1, r.size)
+        }
+    }
+
     @Test fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
             val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
