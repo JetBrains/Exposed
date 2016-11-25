@@ -123,12 +123,24 @@ class Coalesce<T:Any>(val expr: ExpressionWithColumnType<out T?>, val alternate:
     override val columnType: ColumnType = alternate.columnType
 }
 
-class Substring(val expr: Expression<*>, val start: Expression<Int>, val length: Expression<Int>): Function<String>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "${currentDialect.functionProvider.substring}(${expr.toSQL(queryBuilder)}, ${start.toSQL(queryBuilder)}, ${length.toSQL(queryBuilder)})"
-    }
+class Substring(val expr: Expression<String?>, val start: ExpressionWithColumnType<Int>, val length: ExpressionWithColumnType<Int>): Function<String>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String
+            = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
 
     override val columnType: ColumnType = StringColumnType()
+}
+
+
+class Random(val seed: Int? = null) : Function<BigDecimal>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String
+            = currentDialect.functionProvider.random(seed)
+
+    override val columnType: ColumnType = DecimalColumnType(38, 20)
+}
+
+class Cast<OUT:Any>(val expr: Expression<*>, override val columnType: ColumnType) : Function<OUT?>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String
+            = currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
 }
 
 class Trim(val expr: Expression<*>): Function<String>() {

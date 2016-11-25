@@ -9,7 +9,18 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = if (MysqlDialect.isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 }
 
-internal object MysqlFunctionProvder : FunctionProvider() {
+internal object MysqlFunctionProvider : FunctionProvider() {
+
+    private object CharColumnType : StringColumnType() {
+        override fun sqlType(): String = "CHAR"
+    }
+
+    override fun cast(expr: Expression<*>, type: ColumnType, builder: QueryBuilder) = when (type) {
+        is StringColumnType -> super.cast(expr, CharColumnType, builder)
+        else -> super.cast(expr, type, builder)
+    }
+
+    override fun random(seed: Int?) = "RAND(${seed?.toString().orEmpty()})"
 
     override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
@@ -27,7 +38,7 @@ internal object MysqlFunctionProvder : FunctionProvider() {
     }
 }
 
-internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvder) {
+internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvider) {
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 

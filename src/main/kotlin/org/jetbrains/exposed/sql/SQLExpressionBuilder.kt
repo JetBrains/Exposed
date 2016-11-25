@@ -29,6 +29,8 @@ fun<T:Any?> Column<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
 
 fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
 
+fun <R:Any> Expression<*>.castTo(columnType: ColumnType) = Cast<R>(this, columnType)
+
 fun<T:String?> Expression<T>.substring(start: Int, length: Int): Substring {
     return Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 }

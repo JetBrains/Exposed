@@ -23,9 +23,15 @@ open class DataTypeProvider() {
     open val blobAsStream = false
 }
 
-open class FunctionProvider() {
+open class FunctionProvider {
 
-    open val substring = "SUBSTRING"
+    open fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder) : String {
+        return "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
+    }
+
+    open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
+
+    open fun cast(expr: Expression<*>, type: ColumnType, builder: QueryBuilder) = "CAST(${expr.toSQL(builder)} AS ${type.sqlType()})"
 
     open fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 
