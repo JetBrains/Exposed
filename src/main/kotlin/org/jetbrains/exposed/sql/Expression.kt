@@ -7,7 +7,7 @@ class QueryBuilder(val prepared: Boolean) {
 
     fun <T> registerArgument(sqlType: ColumnType, argument: T) = registerArguments(sqlType, listOf(argument)).single()
 
-    fun <T> registerArguments(sqlType: ColumnType, arguments: List<T>): List<String> {
+    fun <T> registerArguments(sqlType: ColumnType, arguments: Iterable<T>): List<String> {
         val argumentsAndStrings = arguments.map { it to sqlType.valueToString(it) }.sortedBy { it.second }
 
         return argumentsAndStrings.map {

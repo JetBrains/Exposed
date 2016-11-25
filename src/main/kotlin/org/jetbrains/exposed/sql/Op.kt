@@ -45,31 +45,32 @@ class NoOpConversion<T, S>(val expr: Expression<T>, override val columnType: Col
     }
 }
 
-class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: List<T>, val isInList: Boolean = true): Op<Boolean>() {
+class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: Iterable<T>, val isInList: Boolean = true): Op<Boolean>() {
 
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString{
-        when (list.size) {
-            0 -> append(booleanLiteral(!isInList).toSQL(queryBuilder))
+        list.iterator().let { i ->
+            if (!i.hasNext()) {
+                append(booleanLiteral(!isInList).toSQL(queryBuilder))
+            } else {
+                val first = i.next()
+                if (!i.hasNext()){
+                    append(expr.toSQL(queryBuilder))
+                    when {
+                        isInList ->  append(" = ")
+                        else -> append(" != ")
+                    }
+                    append(queryBuilder.registerArgument(expr.columnType, first))
+                } else {
+                    append(expr.toSQL(queryBuilder))
+                    when {
+                        isInList -> append(" IN (")
+                        else -> append(" NOT IN (")
+                    }
 
-            1 -> {
-                append(expr.toSQL(queryBuilder))
-                when {
-                    isInList ->  append(" = ")
-                    else -> append(" != ")
+                    queryBuilder.registerArguments(expr.columnType, list).joinTo(this)
+
+                    append(")")
                 }
-                append(queryBuilder.registerArgument(expr.columnType, list.first()))
-            }
-
-            else -> {
-                append(expr.toSQL(queryBuilder))
-                when {
-                    isInList -> append(" IN (")
-                    else -> append(" NOT IN (")
-                }
-
-                queryBuilder.registerArguments(expr.columnType, list).joinTo(this)
-
-                append(")")
             }
         }
     }
