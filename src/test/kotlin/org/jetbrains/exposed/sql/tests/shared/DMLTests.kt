@@ -547,6 +547,24 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInsertSelect03() {
+        withCitiesAndUsers { cities, users, userData ->
+            val userCount = users.selectAll().count()
+            users.insert(users.slice(Random().castTo<String>(StringColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
+            val r = users.select {users.name eq "Foo"}.toList()
+            assertEquals(userCount, r.size)
+        }
+    }
+
+    @Test fun testInsertSelect04() {
+        withCitiesAndUsers { cities, users, userData ->
+            val userCount = users.selectAll().count()
+            users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(StringColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
+            val r = users.select {users.name eq "Foo"}.toList()
+            assertEquals(userCount, r.size)
+        }
+    }
+
     @Test fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
             val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
@@ -961,26 +979,19 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
-}
+    @Test fun testRandomFunction01() {
+        val t = DMLTestsData.Cities
+        withTables(t) {
+            if (t.selectAll().count() == 0) {
+                t.insert { it[t.name] = "city-1" }
+            }
 
-
-interface Foo<out T>
-
-open class F<out T> : Foo<T>
-
-interface Foo2<out T> : Foo<T>
-
-fun<T> Foo2<T>.test() : String {
-    return "test"
-}
-
-class FooImpl<out T> : F<T>(), Foo2<T>
-
-class FooTests {
-    @Test fun test01() {
-        val foo = FooImpl<Int>()
-        assertEquals("test", foo.test())
+            val rand = Random()
+            val resultRow = t.slice(rand).selectAll().limit(1).single()
+            assert(resultRow[rand] is BigDecimal)
+            println(resultRow[rand])
+        }
     }
 }
 
-val today: DateTime = DateTime.now().withTimeAtStartOfDay()
+private val today: DateTime = DateTime.now().withTimeAtStartOfDay()

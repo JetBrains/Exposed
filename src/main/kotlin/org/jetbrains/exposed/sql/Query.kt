@@ -107,10 +107,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             if (distinct) {
                 append("DISTINCT ")
             }
-            val tables = set.source.columns.map { it.table }.toSet()
-            val fields = LinkedHashSet(set.fields)
-            val completeTables = ArrayList<Table>()
-            append(((completeTables.map { TransactionManager.current().identity(it) + ".*"} ) + (fields.map {it.toSQL(builder)})).joinToString())
+            append(set.fields.joinToString {it.toSQL(builder)})
         }
         append(" FROM ")
         append(set.source.describe(transaction))

@@ -61,12 +61,12 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long
     execute(TransactionManager.current())
 }
 
-fun <T:Table> T.insert(selectQuery: Query) =
-    InsertSelectStatement(this, selectQuery).execute(TransactionManager.current())
+fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.autoinc }) =
+    InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 
-fun <T:Table> T.insertIgnore(selectQuery: Query) =
-    InsertSelectStatement(this, selectQuery, true).execute(TransactionManager.current())
+fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.autoinc }) =
+    InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 
 fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
