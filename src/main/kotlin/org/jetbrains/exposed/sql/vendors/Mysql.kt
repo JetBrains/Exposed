@@ -101,7 +101,7 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
                             FROM INFORMATION_SCHEMA.STATISTICS s
                             WHERE table_schema = '${getDatabase()}' and INDEX_NAME <> 'PRIMARY'
-                            GROUP BY 1, 2) ind
+                            GROUP BY 1, 2, 4) ind
                 LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
                     on kcu.TABLE_NAME = ind.TABLE_NAME
                         and kcu.COLUMN_NAME = ind.columns
