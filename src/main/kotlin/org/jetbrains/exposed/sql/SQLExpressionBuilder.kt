@@ -118,9 +118,9 @@ object SqlExpressionBuilder {
 
     infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = NotRegexpOp(this, QueryParameter(pattern, columnType))
 
-    infix fun<T> ExpressionWithColumnType<T>.inList(list: List<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
+    infix fun<T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
 
-    infix fun<T> ExpressionWithColumnType<T>.notInList(list: List<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
+    infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 
     fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
         return when (value) {
