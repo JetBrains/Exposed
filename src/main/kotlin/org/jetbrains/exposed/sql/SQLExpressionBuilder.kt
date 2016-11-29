@@ -128,7 +128,7 @@ object SqlExpressionBuilder {
             is Int -> intLiteral(value)
             is Long -> longLiteral(value)
             is String -> stringLiteral(value)
-            is DateTime -> dateTimeLiteral(value)
+            is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
             else -> LiteralOp<T>(columnType, value)
         }
     }
