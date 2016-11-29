@@ -29,6 +29,12 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 
+    override fun booleanFromStringToBoolean(value: String): Boolean = try {
+        value.toLong() != 0L
+    } catch (ex: NumberFormatException) {
+        error("Unexpected value of type Boolean: $value")
+    }
+
     override val blobAsStream = true
 }
 

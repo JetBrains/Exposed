@@ -35,8 +35,10 @@ open class DataTypeProvider() {
 
     open fun booleanToStatementString(bool: Boolean) = bool.toString()
 
-    open fun textType() = "TEXT"
+    open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
+
+    open fun textType() = "TEXT"
     open val blobAsStream = false
 }
 
