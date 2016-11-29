@@ -173,7 +173,7 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): St
         }
     }
 }
-
+private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
@@ -190,13 +190,10 @@ class DateColumnType(val time: Boolean): ColumnType() {
             else -> error("Unexpected value: $value")
         }
 
-        if (time) {
-            val zonedTime = dateTime.toDateTime(DateTimeZone.getDefault())
-            return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(zonedTime)}'"
-        } else {
-            val date = Date (dateTime.millis)
-            return "'$date'"
-        }
+        return if (time)
+            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+        else
+            "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when(value) {
@@ -218,7 +215,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
                 return java.sql.Timestamp(millis)
             }
             else {
-                return java.sql.Date(millis)
+                return Date(millis)
             }
         }
         return value
