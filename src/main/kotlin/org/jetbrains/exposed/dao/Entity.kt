@@ -35,8 +35,7 @@ class EntityID<T:Any>(id: T?, val table: IdTable<T>) {
 }
 
 private fun <T:EntityID<*>?>checkReference(reference: Column<T>, factoryTable: IdTable<*>) {
-    val refColumn = reference.referee
-    if (refColumn == null) error("Column $reference is not a reference")
+    val refColumn = reference.referee ?: error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factoryTable != targetTable) {
         error("Column and factory point to different tables")
@@ -78,8 +77,7 @@ class OptionalBackReference<ParentID:Any, out Parent:Entity<ParentID>, ChildID:A
 class Referrers<ParentID:Any, in Parent:Entity<ParentID>, ChildID:Any, out Child:Entity<ChildID>>
     (val reference: Column<EntityID<ParentID>>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
     init {
-        val refColumn = reference.referee
-        if (refColumn == null) error("Column $reference is not a reference")
+        reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
             error("Column and factory point to different tables")
@@ -159,7 +157,7 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
         val existingIds = oldValue.map { it.id }.toSet()
         entityCache.clearReferrersCache()
 
-        val targetIds = value.map { it.id }.toList()
+        val targetIds = value.map { it.id }
         table.deleteWhere { (sourceRefColumn eq o.id) and (targetRefColumn notInList targetIds) }
         table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
             this[sourceRefColumn] = o.id
@@ -167,13 +165,13 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
         }
 
         // current entity updated
-        EntityHook.alertSubscribers(EntityChange(o.klass, o.id, EntityChangeType.Updated))
+        EntityHook.registerChange(EntityChange(o.klass, o.id, EntityChangeType.Updated))
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
-                EntityHook.alertSubscribers(EntityChange(targetClass, it, EntityChangeType.Updated))
+                EntityHook.registerChange(EntityChange(targetClass, it, EntityChangeType.Updated))
             }
         }
     }

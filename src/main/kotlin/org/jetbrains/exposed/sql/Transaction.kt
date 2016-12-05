@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementMonitor
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -57,9 +58,11 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     override fun commit() {
         val created = flushCache()
+        EntityHook.alertSubscribers()
+        val createdByHooks = flushCache()
         transactionImpl.commit()
         userdata.clear()
-        EntityCache.invalidateGlobalCaches(created)
+        EntityCache.invalidateGlobalCaches(created + createdByHooks)
     }
 
     fun flushCache(): List<Entity<*>> {

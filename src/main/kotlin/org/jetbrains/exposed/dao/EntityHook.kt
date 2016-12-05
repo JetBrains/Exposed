@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.dao
 
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transactionScope
+import java.util.concurrent.CopyOnWriteArrayList
 
 enum class EntityChangeType {
     Created,
@@ -19,8 +19,7 @@ enum class EntityChangeType {
 }
 
 
-data class EntityChange<ID: Any>(val entityClass: EntityClass<ID, Entity<ID>>, val id: EntityID<ID>, var changeType: EntityChangeType) {
-}
+data class EntityChange<ID: Any>(val entityClass: EntityClass<ID, Entity<ID>>, val id: EntityID<ID>, var changeType: EntityChangeType)
 
 fun<ID: Any> EntityChange<ID>.toEntity() : Entity<ID>? {
     return entityClass.findById(id)
@@ -33,7 +32,11 @@ fun<ID: Any,T: Entity<ID>> EntityChange<*>.toEntity(klass: EntityClass<ID, T>) :
 }
 
 object EntityHook {
-    private val entitySubscribers: ArrayList<(EntityChange<*>) -> Unit> = ArrayList()
+    private val entitySubscribers = CopyOnWriteArrayList<(EntityChange<*>) -> Unit>()
+
+    private val events by transactionScope { arrayListOf<EntityChange<*>>() }
+
+    val registeredEvents: List<EntityChange<*>> get() = events.toList()
 
     fun subscribe (action: (EntityChange<*>) -> Unit): (EntityChange<*>) -> Unit {
         entitySubscribers.add(action)
@@ -44,36 +47,30 @@ object EntityHook {
         entitySubscribers.remove(action)
     }
 
-    fun alertSubscribers(change: EntityChange<*>) {
-        entitySubscribers.forEach { it(change) }
+    fun registerChange(change: EntityChange<*>) {
+        if (events.lastOrNull() != change) {
+            events.add(change)
+        }
+    }
+
+    fun alertSubscribers() {
+        events.forEach { e ->
+            entitySubscribers.forEach {
+                it(e)
+            }
+        }
+        events.clear()
     }
 }
 
 fun <T> withHook(action: (EntityChange<*>) -> Unit, body: ()->T): T {
     EntityHook.subscribe(action)
     try {
-        return body()
+        return body().apply {
+            TransactionManager.current().commit()
+        }
     }
     finally {
         EntityHook.unsubscribe(action)
     }
-}
-
-fun<T> transactionWithEntityHook(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
-    val changedEntities = mutableMapOf<EntityID<*>, EntityChange<*>>()
-    val transactionResult = withHook({ change ->
-        val existingChange = changedEntities[change.id]
-        val newChangeType = existingChange?.changeType?.merge(change.changeType) ?: change.changeType
-        changedEntities[change.id] = (existingChange ?: change).apply {
-            changeType = newChangeType
-    }
-    })
-    {
-        transaction {
-            val result = statement()
-            flushCache()
-            result
-        }
-    }
-    return transactionResult to changedEntities.values
 }

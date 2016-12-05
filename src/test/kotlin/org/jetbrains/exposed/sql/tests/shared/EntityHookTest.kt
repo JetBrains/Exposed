@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
@@ -53,6 +55,24 @@ object EntityHookTestData {
 }
 
 class EntityHookTest: DatabaseTestsBase() {
+
+    private fun<T> transactionWithEntityHook(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
+        val changedEntities = mutableMapOf<EntityID<*>, EntityChange<*>>()
+        return transaction {
+            withHook({ change ->
+                val existingChange = changedEntities[change.id]
+                val newChangeType = existingChange?.changeType?.merge(change.changeType) ?: change.changeType
+                changedEntities[change.id] = (existingChange ?: change).apply {
+                    changeType = newChangeType
+                }
+            }) {
+                val result = statement()
+                flushCache()
+                result to EntityHook.registeredEvents
+            }
+        }
+    }
+
     @Test fun testCreated01() {
         withTables(*EntityHookTestData.allTables) {
             val entities = transactionWithEntityHook {
