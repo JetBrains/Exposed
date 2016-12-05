@@ -193,17 +193,13 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         }
     }
 
-    /*private val cachedData = LinkedHashMap<String, Any>()
-    public fun<T> getOrCreate(key: String, evaluate: ()->T) : T {
-        return cachedData.getOrPut(key, evaluate) as T
-    }*/
-
     operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
     operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+        value.id.value // flush before creating reference on it
         reference.setValue(o, desc, value.id)
     }
 
@@ -212,6 +208,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     }
 
     operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
+        value?.id?.value // flush before creating reference on it
         reference.setValue(o, desc, value?.id)
     }
 
@@ -221,6 +218,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     }
 
     operator fun <ID:Any, T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+        value.id.value // flush before creating reference on it
         reference.setValue(o, desc, value.id)
     }
 
@@ -277,7 +275,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere{table.id eq id}
-        EntityHook.alertSubscribers(EntityChange(klass, id, EntityChangeType.Removed))
+        EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
     }
 
     open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
@@ -392,7 +390,7 @@ class EntityCache {
                     }
                     batch.execute(TransactionManager.current())
                     updatedEntities.forEach {
-                        EntityHook.alertSubscribers(EntityChange(it.klass as EntityClass<Any, Entity<Any>>, it.id as EntityID<Any>, EntityChangeType.Updated))
+                        EntityHook.registerChange(EntityChange(it.klass as EntityClass<Any, Entity<Any>>, it.id as EntityID<Any>, EntityChangeType.Updated))
                     }
                 }
             }
@@ -440,7 +438,7 @@ class EntityCache {
 
                     entry.storeWrittenValues()
                     TransactionManager.current().entityCache.store<Any,Entity<Any>>(entry)
-                    EntityHook.alertSubscribers(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
+                    EntityHook.registerChange(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
                 }
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())
