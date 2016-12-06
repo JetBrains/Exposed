@@ -34,7 +34,7 @@ fun<ID: Any,T: Entity<ID>> EntityChange<*>.toEntity(klass: EntityClass<ID, T>) :
 object EntityHook {
     private val entitySubscribers = CopyOnWriteArrayList<(EntityChange<*>) -> Unit>()
 
-    private val events by transactionScope { arrayListOf<EntityChange<*>>() }
+    private val events by transactionScope { CopyOnWriteArrayList<EntityChange<*>>() }
 
     val registeredEvents: List<EntityChange<*>> get() = events.toList()
 
