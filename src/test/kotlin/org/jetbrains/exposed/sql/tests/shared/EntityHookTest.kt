@@ -56,26 +56,18 @@ object EntityHookTestData {
 
 class EntityHookTest: DatabaseTestsBase() {
 
-    private fun<T> transactionWithEntityHook(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
-        val changedEntities = mutableMapOf<EntityID<*>, EntityChange<*>>()
+    private fun<T> trackChanges(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
+        val alreadyChanged = EntityHook.registeredEvents.size
         return transaction {
-            withHook({ change ->
-                val existingChange = changedEntities[change.id]
-                val newChangeType = existingChange?.changeType?.merge(change.changeType) ?: change.changeType
-                changedEntities[change.id] = (existingChange ?: change).apply {
-                    changeType = newChangeType
-                }
-            }) {
                 val result = statement()
                 flushCache()
-                result to EntityHook.registeredEvents
-            }
+                result to EntityHook.registeredEvents.drop(alreadyChanged)
         }
     }
 
     @Test fun testCreated01() {
         withTables(*EntityHookTestData.allTables) {
-            val entities = transactionWithEntityHook {
+            val entities = trackChanges {
                 val ru = EntityHookTestData.Country.new {
                     name = "RU"
                 }
@@ -106,7 +98,7 @@ class EntityHookTest: DatabaseTestsBase() {
                 x.id
             }
 
-            val entities = transactionWithEntityHook {
+            val entities = trackChanges {
                 val spb = EntityHookTestData.City.findById(spbId)!!
                 spb.delete()
             }
@@ -131,7 +123,7 @@ class EntityHookTest: DatabaseTestsBase() {
                 flushCache()
             }
 
-            val entities = transactionWithEntityHook {
+            val entities = trackChanges {
                 val de = EntityHookTestData.Country.new {
                     name = "DE"
                 }
@@ -171,9 +163,9 @@ class EntityHookTest: DatabaseTestsBase() {
                 flushCache()
             }
 
-            val entities = transactionWithEntityHook {
+            val entities = trackChanges {
                 val spb = EntityHookTestData.City.find({ EntityHookTestData.Cities.name eq "St. Petersburg" }).single()
-                var john = EntityHookTestData.User.all().single()
+                val john = EntityHookTestData.User.all().single()
                 john.cities = SizedCollection(listOf(spb))
             }
 
@@ -209,9 +201,9 @@ class EntityHookTest: DatabaseTestsBase() {
                 flushCache()
             }
 
-            val entities = transactionWithEntityHook {
+            val entities = trackChanges {
                 val spb = EntityHookTestData.City.find({ EntityHookTestData.Cities.name eq "St. Petersburg" }).single()
-                var john = EntityHookTestData.User.all().single()
+                val john = EntityHookTestData.User.all().single()
                 john.cities = SizedCollection(listOf(spb))
             }
 
@@ -247,8 +239,8 @@ class EntityHookTest: DatabaseTestsBase() {
                 flushCache()
             }
 
-            val entities = transactionWithEntityHook {
-                var john = EntityHookTestData.User.all().single()
+            val entities = trackChanges {
+                val john = EntityHookTestData.User.all().single()
                 john.cities = SizedCollection(emptyList())
             }
 

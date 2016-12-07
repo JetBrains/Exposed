@@ -189,8 +189,8 @@ class EntityTests: DatabaseTestsBase() {
     fun testInsertChildWithoutFlush() {
         withTables(Posts) {
             val parent = Post.new {  }
-            Post.new { this.parent = parent }
-            assertEquals(flushCache().size, 2)
+            Post.new { this.parent = parent } // first flush before referencing
+            assertEquals(1, flushCache().size)
         }
     }
 
@@ -198,8 +198,8 @@ class EntityTests: DatabaseTestsBase() {
     fun testInsertNonChildWithoutFlush() {
         withTables(Boards, Posts) {
             val board = Board.new { name = "irrelevant" }
-            Post.new { this.board = board }
-            assertEquals(flushCache().size, 2)
+            Post.new { this.board = board } // first flush before referencing
+            assertEquals(1, flushCache().size)
 
         }
     }
@@ -211,7 +211,7 @@ class EntityTests: DatabaseTestsBase() {
             flushCache()
             assertNotNull(parent.id._value)
             Post.new { this.parent = parent }
-            assertEquals(flushCache().size, 1)
+            assertEquals(1, flushCache().size)
         }
     }
 

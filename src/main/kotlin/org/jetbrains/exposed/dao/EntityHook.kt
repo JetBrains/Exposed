@@ -7,15 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 enum class EntityChangeType {
     Created,
     Updated,
-    Removed; // Not supported still
-
-    fun merge(type: EntityChangeType): EntityChangeType {
-        return when (this) {
-            EntityChangeType.Created -> if (type == EntityChangeType.Removed) type else this
-            EntityChangeType.Updated -> if (type != EntityChangeType.Updated) type else this
-            EntityChangeType.Removed -> this
-        }
-    }
+    Removed;
 }
 
 
