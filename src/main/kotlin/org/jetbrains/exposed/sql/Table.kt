@@ -227,15 +227,17 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return this
     }
 
-    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C {
-        referee = ref
-        return this
+    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption): C {
+        return this.apply {
+            referee = ref
+            this.onDelete = onDelete
+        }
     }
 
-    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> {
-        val column = entityId(name, foreign) references foreign.id
-        column.onDelete = onDelete
-        return column
+    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, ReferenceOption.RESTRICT)
+
+    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption = ReferenceOption.RESTRICT): Column<EntityID<T>> {
+        return entityId(name, foreign).references(foreign.id, onDelete)
     }
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
@@ -243,15 +245,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         this._columns.add(column)
         return column
     }
-    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> {
-        val column = reference(name, foreign).nullable()
-        column.onDelete = onDelete
-        return column
+
+    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption = ReferenceOption.RESTRICT): Column<EntityID<T>?> {
+        return entityId(name, foreign).references(foreign.id, onDelete).nullable()
     }
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
+        newColumn.onDelete = onDelete
         newColumn.defaultValueFun = defaultValueFun
         newColumn.dbDefaultValue = dbDefaultValue
         newColumn.columnType.nullable = true

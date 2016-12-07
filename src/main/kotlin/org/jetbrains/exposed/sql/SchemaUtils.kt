@@ -78,7 +78,7 @@ object SchemaUtils {
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
                             } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
-                                    || (column.onDelete ?: ReferenceOption.RESTRICT) != existingConstraint.deleteRule) {
+                                    || column.onDelete != existingConstraint.deleteRule) {
                                 statements.addAll(existingConstraint.dropStatement())
                                 statements.addAll(createFKey(column))
                             }

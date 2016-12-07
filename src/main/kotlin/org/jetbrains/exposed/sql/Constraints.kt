@@ -31,22 +31,18 @@ enum class ReferenceOption {
 }
 
 data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, val refereeColumn:String,
-                           val referencedTable: String, val referencedColumn: String, var deleteRule: ReferenceOption?) : DdlAware {
+                           val referencedTable: String, val referencedColumn: String, var deleteRule: ReferenceOption) : DdlAware {
 
     companion object {
         fun from(column: Column<*>): ForeignKeyConstraint {
-            assert(column.referee !== null) { "$column does not reference anything" }
+            assert(column.referee != null && column.onDelete != null) { "$column does not reference anything" }
             val s = TransactionManager.current()
-            return ForeignKeyConstraint("", s.identity(column.referee!!.table).inProperCase(), s.identity(column.referee!!).inProperCase(), s.identity(column.table).inProperCase(), s.identity(column).inProperCase(), column.onDelete)
+            return ForeignKeyConstraint("", s.identity(column.referee!!.table).inProperCase(), s.identity(column.referee!!).inProperCase(), s.identity(column.table).inProperCase(), s.identity(column).inProperCase(), column.onDelete!!)
         }
     }
 
     internal val foreignKeyPart = buildString {
-        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
-
-        deleteRule?.let { onDelete ->
-            append(" ON DELETE $onDelete")
-        }
+        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn) ON DELETE $deleteRule")
     }
 
     override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "" + foreignKeyPart)

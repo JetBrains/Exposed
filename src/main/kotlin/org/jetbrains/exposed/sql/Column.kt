@@ -9,8 +9,8 @@ import kotlin.comparisons.compareBy
 
 open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
-    internal var indexInPK: Int? = null
     internal var onDelete: ReferenceOption? = null
+    internal var indexInPK: Int? = null
     internal var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
 
