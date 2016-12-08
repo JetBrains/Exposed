@@ -25,7 +25,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         try {
             transaction.monitor.register(transaction.logger)
 
-            val autoInc = if (type == StatementType.INSERT) targets.first().columns.filter { it.columnType.autoinc } else null
+            val autoInc = if (type == StatementType.INSERT) targets.flatMap { it.columns }.filter { it.columnType.autoinc } else null
 
             val arguments = arguments()
             val contexts = if (arguments.count() > 0) {
