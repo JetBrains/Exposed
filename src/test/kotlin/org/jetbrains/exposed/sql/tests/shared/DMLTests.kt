@@ -58,6 +58,7 @@ object DMLTestsData {
         val dc = decimal("dc", 12, 2)
         val dcn = decimal("dcn", 12, 2).nullable()
 
+        val char = char("char").nullable()
     }
 }
 
@@ -608,10 +609,12 @@ class DMLTests() : DatabaseTestsBase() {
                 it[es] = DMLTestsData.E.ONE
                 it[s] = "test"
                 it[dc] = BigDecimal("239.42")
+                it[char] = '('
             }
 
             val row = tbl.selectAll().single()
             tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, "test", null, BigDecimal("239.42"), null)
+            assertEquals('(', row[tbl.char])
         }
     }
 
