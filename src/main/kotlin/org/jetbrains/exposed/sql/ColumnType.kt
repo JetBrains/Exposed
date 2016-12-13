@@ -98,6 +98,10 @@ class CharacterColumnType() : ColumnType() {
             else -> error("Unexpected value of type Char: $value")
         }
     }
+
+    override fun notNullValueToDB(value: Any): Any {
+        return valueFromDB(value).toString()
+    }
 }
 
 class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
