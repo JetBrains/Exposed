@@ -4,7 +4,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
 
     override fun shortAutoincType(): String = "SERIAL"
 
-    override fun longAutoincType(): String = "SERIAL"
+    override fun longAutoincType(): String = "BIGSERIAL"
 
     override fun dateTimeType(): String = "TIMESTAMP"
 
