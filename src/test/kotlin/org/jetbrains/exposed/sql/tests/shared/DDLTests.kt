@@ -305,7 +305,21 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(2, UserToRepo.selectAll().count())
         }
-    } 
+    }
+
+    @Test fun testUUIDColumnType() {
+        val Node = object: Table("node") {
+            val uuid = uuid("uuid").primaryKey()
+        }
+
+        withTables(Node){
+            val key: UUID = UUID.randomUUID()
+            Node.insert { it[uuid] = key }
+            val result = Node.select { Node.uuid.eq(key) }.toList()
+            assertEquals(1, result.size)
+            assertEquals(key, result.single()[Node.uuid])
+        }
+    }
     
 }
 

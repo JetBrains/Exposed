@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.nio.ByteBuffer
 import java.sql.ResultSet
 import java.util.*
 
@@ -19,6 +20,9 @@ open class DataTypeProvider() {
     open fun binaryType(length: Int): String = "VARBINARY($length)"
 
     open fun booleanToStatementString(bool: Boolean) = bool.toString()
+
+    open fun uuidToDB(value: UUID) : Any =
+            ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
 
     open val blobAsStream = false
 }

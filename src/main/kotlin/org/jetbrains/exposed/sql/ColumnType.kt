@@ -320,12 +320,12 @@ class BooleanColumnType() : ColumnType() {
 class UUIDColumnType() : ColumnType(autoinc = false) {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
-    override fun notNullValueToDB(value: Any): Any = when (value) {
-        is UUID -> ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
-        is String -> value.toByteArray()
-        is ByteArray -> value
+    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(when (value) {
+        is UUID -> value
+        is String -> UUID.fromString(value)
+        is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long )}
         else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
-    }
+    })
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is UUID -> value
