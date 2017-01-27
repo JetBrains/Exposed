@@ -4,7 +4,6 @@ import com.mysql.management.MysqldResource
 import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
 import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
-import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
@@ -56,7 +55,7 @@ private val postgresSQLProcess by lazy {
     PostgresStarter.getDefaultInstance().prepare(config)
 }
 
-abstract class DatabaseTestsBase() {
+abstract class DatabaseTestsBase {
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) return
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -89,7 +88,7 @@ abstract class DatabaseTestsBase() {
                     statement()
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    SchemaUtils.drop (*EntityCache.sortTablesByReferences(tables.toList()).reversed().toTypedArray())
+                    SchemaUtils.drop (*tables)
                 }
             }
         }
@@ -97,6 +96,6 @@ abstract class DatabaseTestsBase() {
 
     fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
-    fun <T>Transaction.assertEquals(a: T, b: T) = kotlin.test.assertEquals(a, b, "Failed on ${currentDialect.name}")
-    fun <T>Transaction.assertEquals(a: T, b: List<T>) = kotlin.test.assertEquals(a, b.single(), "Failed on ${currentDialect.name}")
+    fun <T>Transaction.assertEquals(exp: T, act: T) = kotlin.test.assertEquals(exp, act, "Failed on ${currentDialect.name}")
+    fun <T>Transaction.assertEquals(exp: T, act: List<T>) = kotlin.test.assertEquals(exp, act.single(), "Failed on ${currentDialect.name}")
 }
