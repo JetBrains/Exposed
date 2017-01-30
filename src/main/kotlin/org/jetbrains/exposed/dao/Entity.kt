@@ -54,12 +54,6 @@ class OptionalReference<ID:Any, out Target: Entity<ID>> (val reference: Column<E
     }
 }
 
-class OptionalReferenceSureNotNull<ID:Any, out Target: Entity<ID>> (val reference: Column<EntityID<ID>?>, val factory: EntityClass<ID, Target>) {
-    init {
-        checkReference(reference, factory.table)
-    }
-}
-
 class BackReference<ParentID:Any, out Parent:Entity<ParentID>, ChildID:Any, in Child:Entity<ChildID>>
                     (reference: Column<EntityID<ChildID>>, factory: EntityClass<ParentID, Parent>) {
     private val delegate = Referrers(reference, factory, true)
@@ -208,16 +202,6 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
         value?.id?.value // flush before creating reference on it
         reference.setValue(o, desc, value?.id)
-    }
-
-    operator fun <ID:Any, T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
-        val id = reference.getValue(o, desc) ?: error("${o.id}.$desc is null")
-        return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
-    }
-
-    operator fun <ID:Any, T: Entity<ID>> OptionalReferenceSureNotNull<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
-        value.id.value // flush before creating reference on it
-        reference.setValue(o, desc, value.id)
     }
 
     operator fun <T> Column<T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
@@ -630,7 +614,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
 
     private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
 
-    inline private fun <reified R: Any>registerRefRule(column: Column<*>, ref:()-> R):R {
+    inline private fun <reified R: Any> registerRefRule(column: Column<*>, ref:()-> R): R {
         return refDefinitions.getOrPut(column to R::class, ref) as R
     }
 
@@ -638,11 +622,19 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
 
     infix fun optionalReferencedOn(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalReference(column, this) }
 
-    infix fun optionalReferencedOnSureNotNull(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalReferenceSureNotNull(column, this) }
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>>)
+            = registerRefRule(column) { BackReference(column, this) }
 
-    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>>) = registerRefRule(column) { BackReference(column, this) }
+    @JvmName("backReferencedOnOpt")
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>?>)
+            = registerRefRule(column) { BackReference(column as Column<EntityID<ID>>, this) }
 
-    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<EntityID<ID>?>) = registerRefRule(column) { OptionalBackReference(column, this) }
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<EntityID<ID>>)
+            = registerRefRule(column) { OptionalBackReference(column as Column<EntityID<ID>?>, this) }
+
+    @JvmName("optionalBackReferencedOnOpt")
+    infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<EntityID<ID>?>)
+            = registerRefRule(column) { OptionalBackReference(column, this) }
 
     infix fun referrersOn(column: Column<EntityID<ID>>) = referrersOn(column, false)
 
