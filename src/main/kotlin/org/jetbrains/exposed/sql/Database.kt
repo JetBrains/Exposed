@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -63,22 +64,24 @@ class Database private constructor(val connector: () -> Connection) {
             dialects.add(0, dialect)
         }
 
-        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {}, manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
+        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+        ): Database {
             return Database {
                 datasource.connection!!.apply { setupConnection(this) }
             }.apply {
-                TransactionManager._manager = manager(this)
+                TransactionManager.manager = manager(this)
             }
         }
 
         fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }): Database {
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }): Database {
             Class.forName(driver).newInstance()
 
             return Database {
                 DriverManager.getConnection(url, user, password).apply { setupConnection(this) }
             }.apply {
-                TransactionManager._manager = manager(this)
+                TransactionManager.manager = manager(this)
             }
         }
     }

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.jdbc.datasource.ConnectionHolder
@@ -13,7 +14,9 @@ import java.sql.Connection
 import javax.sql.DataSource
 
 
-class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionManager(dataSource), TransactionManager {
+class SpringTransactionManager(dataSource: DataSource,
+                               @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL
+) : DataSourceTransactionManager(dataSource), TransactionManager {
 
     private val db = Database.connect(dataSource) { this }
 
@@ -30,7 +33,7 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
         if (!TransactionSynchronizationManager.hasResource(dataSource)) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
         }
-        TransactionManager.currentThreadManager.remove()
+        TransactionManager.removeCurrent()
     }
 
     override fun doSuspend(transaction: Any?): Any? {
@@ -40,8 +43,8 @@ class SpringTransactionManager(dataSource: DataSource) : DataSourceTransactionMa
 
     override fun newTransaction(isolation: Int): Transaction {
         val tDefinition = if (dataSource.connection.transactionIsolation != isolation) {
-                DefaultTransactionDefinition().apply { isolationLevel = isolation }
-            } else null
+            DefaultTransactionDefinition().apply { isolationLevel = isolation }
+        } else null
 
         getTransaction(tDefinition)
 

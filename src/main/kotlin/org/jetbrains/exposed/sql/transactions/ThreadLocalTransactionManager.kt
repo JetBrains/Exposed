@@ -6,7 +6,8 @@ import org.jetbrains.exposed.sql.exposedLogger
 import java.sql.Connection
 import java.sql.SQLException
 
-class ThreadLocalTransactionManager(private val db: Database) : TransactionManager {
+class ThreadLocalTransactionManager(private val db: Database,
+                                    @Volatile override var defaultIsolationLevel: Int) : TransactionManager {
 
     val threadLocal = ThreadLocal<Transaction>()
 
@@ -45,7 +46,7 @@ class ThreadLocalTransactionManager(private val db: Database) : TransactionManag
     }
 }
 
-fun <T> transaction(statement: Transaction.() -> T): T = transaction(TransactionManager.defaultIsolationLevel, 3, statement)
+fun <T> transaction(statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, 3, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, statement: Transaction.() -> T): T {
     val outer = TransactionManager.currentOrNull()
@@ -63,7 +64,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
 
     while (true) {
 
-        val transaction = TransactionManager.currentThreadManager.get().newTransaction(transactionIsolation)
+        val transaction = TransactionManager.manager.newTransaction(transactionIsolation)
 
         try {
             val answer = transaction.statement()
@@ -84,10 +85,10 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
             throw e
         }
         finally {
+            TransactionManager.removeCurrent()
             transaction.currentStatement = null
             transaction.lastExecutedStatement = null
             transaction.close()
-            TransactionManager.currentThreadManager.remove()
         }
     }
 }

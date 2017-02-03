@@ -19,24 +19,36 @@ interface TransactionInterface {
     fun close()
 }
 
+const val DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_REPEATABLE_READ
+
 interface TransactionManager {
+
+    var defaultIsolationLevel: Int
 
     fun newTransaction(isolation: Int = defaultIsolationLevel) : Transaction
 
     fun currentOrNull(): Transaction?
 
     companion object {
-        var defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
 
-        @Volatile lateinit internal var _manager: TransactionManager
+        @Volatile lateinit private var _manager: TransactionManager
 
-        var currentThreadManager = object : ThreadLocal<TransactionManager>() {
+        internal var currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = _manager
         }
 
-        fun currentOrNew(isolation: Int) = currentOrNull() ?: currentThreadManager.get().newTransaction(isolation)
+        var manager: TransactionManager
+            get() = currentThreadManager.get()
+            set(value) {
+                _manager = value
+                removeCurrent()
+            }
 
-        fun currentOrNull() = currentThreadManager.get().currentOrNull()
+        fun removeCurrent() = currentThreadManager.remove()
+
+        fun currentOrNew(isolation: Int) = currentOrNull() ?: manager.newTransaction(isolation)
+
+        fun currentOrNull() = manager.currentOrNull()
 
         fun current() = currentOrNull() ?: error("No transaction in context.")
     }
