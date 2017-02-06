@@ -35,7 +35,7 @@ class Database private constructor(val connector: () -> Connection) {
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
     val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn()}
-    val supportsMultipleOpenResults by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleOpenResults()}
+    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleResultSets()}
 
     val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size >= 1000
