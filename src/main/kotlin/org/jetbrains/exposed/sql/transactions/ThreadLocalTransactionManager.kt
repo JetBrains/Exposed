@@ -86,8 +86,14 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
         }
         finally {
             TransactionManager.removeCurrent()
-            transaction.currentStatement = null
-            transaction.lastExecutedStatement = null
+            transaction.currentStatement?.let {
+                if(!it.isClosed) it.close()
+                transaction.currentStatement = null
+            }
+            transaction.lastExecutedStatement?.let {
+                if(!it.isClosed) it.close()
+                transaction.lastExecutedStatement = null
+            }
             transaction.close()
         }
     }
