@@ -8,6 +8,8 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
 import java.util.*
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 import kotlin.reflect.memberProperties
 import kotlin.reflect.primaryConstructor
 
@@ -16,10 +18,10 @@ interface FieldSet {
     val source: ColumnSet
 }
 
-abstract class ColumnSet(): FieldSet {
+abstract class ColumnSet : FieldSet {
     abstract val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
-    override val source = this
+    override val source : ColumnSet get() = this
 
     abstract fun describe(s: Transaction): String
 
@@ -178,15 +180,18 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun <ID:Any> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
-        val copy = originalColumn.columnType.clone().apply { autoinc = false }
-        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column(table, name, copy), false))
+        val columnTypeCopy = originalColumn.columnType.let { (it as? AutoIncColumnType)?.delegate ?: it }.clone()
+        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column(table, name, columnTypeCopy)))
         _columns.add(answer)
         return answer
     }
 
-    private fun <T:Any> T.clone() = javaClass.kotlin.run {
-        val allParams = memberProperties.map { it.name to it.get(this@clone) }.toMap()
-        primaryConstructor!!.callBy(primaryConstructor!!.parameters.map { it to allParams[it.name] }.toMap())
+    private fun <T:Any> T.clone(replaceArgs: Map<KProperty1<T,*>, Any> = emptyMap()) = javaClass.kotlin.run {
+        val consParams = primaryConstructor!!.parameters
+        val allParams = memberProperties
+                .filter { it is KMutableProperty1<T, *> || it.name in consParams.map { it.name } }
+                .associate { it.name to (replaceArgs[it] ?: it.get(this@clone)) }
+        primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
     fun <T:Enum<T>> enumeration(name: String, klass: Class<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
@@ -217,15 +222,21 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, StringColumnType(length, collate))
 
-    fun <N:Number, C:Column<N>> C.autoIncrement(): C {
-        columnType.autoinc = true
-        return this
+    private fun <T> Column<T>.cloneWithAutoInc() : Column<T> = when(columnType) {
+        is AutoIncColumnType -> this
+        is ColumnType -> this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType)))
+        else -> error("Unsupported column type for auto-increment $columnType")
     }
 
-    fun <N:Number, C:Column<EntityID<N>>> C.autoinc(): C {
-        (columnType as EntityIDColumnType<*>).autoinc = true
-        return this
+    fun <N:Number> Column<N>.autoIncrement(): Column<N> = cloneWithAutoInc().apply {
+        replaceColumn(this@autoIncrement, this)
     }
+
+
+    fun <N:Number> Column<EntityID<N>>.autoinc(): Column<EntityID<N>> = cloneWithAutoInc().apply {
+        replaceColumn(this@autoinc, this)
+    }
+
 
     fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption): C {
         return this.apply {
@@ -317,7 +328,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     internal fun primaryKeyConstraint(): String? {
         var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
         if (pkey.isEmpty()) {
-            pkey = columns.filter { it.columnType.autoinc }
+            pkey = columns.filter { it.columnType.isAutoInc }
         }
         if (pkey.isNotEmpty()) {
             return pkey.joinToString(

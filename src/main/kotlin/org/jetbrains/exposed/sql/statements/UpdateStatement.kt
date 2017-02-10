@@ -32,7 +32,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     }
 
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).run {
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         values.forEach {
             val value = it.value
             when (value) {

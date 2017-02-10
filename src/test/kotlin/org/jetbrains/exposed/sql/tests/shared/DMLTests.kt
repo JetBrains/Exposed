@@ -62,7 +62,7 @@ object DMLTestsData {
     }
 }
 
-class DMLTests() : DatabaseTestsBase() {
+class DMLTests : DatabaseTestsBase() {
     fun withCitiesAndUsers(exclude: List<TestDB> = emptyList(), statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
         val Users = DMLTestsData.Users
         val Cities = DMLTestsData.Cities
@@ -962,7 +962,7 @@ class DMLTests() : DatabaseTestsBase() {
                 return "ABS($value)"
             }
 
-            override val columnType: ColumnType = IntegerColumnType()
+            override val columnType: IColumnType = IntegerColumnType()
         }
 
         val foo = object : IntIdTable() {

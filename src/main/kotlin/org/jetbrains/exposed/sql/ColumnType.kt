@@ -20,10 +20,11 @@ import java.sql.ResultSet
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
 
-abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = false) {
-    abstract fun sqlType(): String
+interface IColumnType {
+    var nullable: Boolean
+    fun sqlType(): String
 
-    open fun valueFromDB(value: Any): Any  = value
+    fun valueFromDB(value: Any): Any  = value
 
     fun valueToString(value: Any?) : String {
         return when (value) {
@@ -44,26 +45,40 @@ abstract class ColumnType(var nullable: Boolean = false, var autoinc: Boolean = 
         }
     }
 
-    fun valueToDB(value: Any?): Any? = if (value != null) notNullValueToDB(value) else null
+    fun valueToDB(value: Any?): Any? = value?.let { notNullValueToDB(it) }
 
-    open fun notNullValueToDB(value: Any): Any  = value
+    fun notNullValueToDB(value: Any): Any  = value
 
-    protected open fun nonNullValueToString(value: Any) : String {
+    fun nonNullValueToString(value: Any) : String {
         return notNullValueToDB(value).toString()
     }
 
-    open fun readObject(rs: ResultSet, index: Int) = rs.getObject(index)
+    fun readObject(rs: ResultSet, index: Int) = rs.getObject(index)
 
-    open fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
+    fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
         stmt.setObject(index, value)
-    }
-
-    override fun toString(): String {
-        return sqlType()
     }
 }
 
-class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idColumn.columnType.autoinc): ColumnType(autoinc = autoinc) {
+abstract class ColumnType(override var nullable: Boolean = false) : IColumnType {
+    override fun toString(): String = sqlType()
+}
+
+open class AutoIncColumnType(val delegate: ColumnType) : IColumnType by delegate {
+
+    private fun resolveAutIncType(columnType: IColumnType) : String = when (columnType) {
+        is EntityIDColumnType<*> -> resolveAutIncType(columnType.idColumn.columnType)
+        is IntegerColumnType -> currentDialect.dataTypeProvider.shortAutoincType()
+        is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
+        else -> error("Unsupported type $delegate for auto-increment")
+    }
+
+    final override fun sqlType(): String = resolveAutIncType(delegate)
+}
+
+val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+
+class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
 
     init {
         assert(idColumn.table is IdTable<*>){"EntityId supported only for IdTables"}
@@ -87,7 +102,7 @@ class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idCo
     }
 }
 
-class CharacterColumnType() : ColumnType() {
+class CharacterColumnType : ColumnType() {
     override fun sqlType(): String  = "CHAR"
 
     override fun valueFromDB(value: Any): Any {
@@ -104,8 +119,8 @@ class CharacterColumnType() : ColumnType() {
     }
 }
 
-class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.shortAutoincType() else "INT"
+class IntegerColumnType : ColumnType() {
+    override fun sqlType(): String = "INT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -116,8 +131,8 @@ class IntegerColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc)
     }
 }
 
-class LongColumnType(autoinc: Boolean = false): ColumnType(autoinc = autoinc) {
-    override fun sqlType(): String  = if (autoinc) currentDialect.dataTypeProvider.longAutoincType() else "BIGINT"
+class LongColumnType : ColumnType() {
+    override fun sqlType(): String = "BIGINT"
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -155,7 +170,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         return when (value) {
-            is Int ->  klass.enumConstants!![value]
+            is Int -> klass.enumConstants!![value]
             is Enum<*> -> value
             else -> error("$value is not valid for enum ${klass.name}")
         }
@@ -182,6 +197,7 @@ private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-d
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
+
 class DateColumnType(val time: Boolean): ColumnType() {
     override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
 
@@ -275,7 +291,7 @@ class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 }
 
-class BlobColumnType(): ColumnType() {
+class BlobColumnType : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.blobType()
 
     override fun nonNullValueToString(value: Any): String {
@@ -305,7 +321,7 @@ class BlobColumnType(): ColumnType() {
     }
 }
 
-class BooleanColumnType() : ColumnType() {
+class BooleanColumnType : ColumnType() {
     override fun sqlType(): String  = "BOOLEAN"
 
     override fun valueFromDB(value: Any) = when (value) {
@@ -317,7 +333,7 @@ class BooleanColumnType() : ColumnType() {
     override fun nonNullValueToString(value: Any) = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
 }
 
-class UUIDColumnType() : ColumnType(autoinc = false) {
+class UUIDColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
     override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(when (value) {

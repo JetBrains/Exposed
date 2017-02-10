@@ -17,7 +17,7 @@ class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query
     operator fun get(column: Column<Int>): Int = generatedKey ?: error("Statement is not executed or table has not any auto-generated fields")
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int? = executeUpdate().apply {
-        if (targets.single().columns.any { it.columnType.autoinc }) {
+        if (targets.single().columns.any { it.columnType.isAutoInc }) {
             generatedKey = generatedKeys?.let { rs ->
                 if (rs.next()) {
                     return rs.getInt(1)
@@ -30,7 +30,7 @@ class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query
         }
     }
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = emptyList()
 
     override fun prepareSQL(transaction: Transaction): String {
         return transaction.db.dialect.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(QueryBuilder(false)), transaction)

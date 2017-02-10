@@ -35,7 +35,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
         return executeUpdate().apply {
-            table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
+            table.columns.firstOrNull { it.columnType.isAutoInc }?.let { column ->
                 generatedKeys?.let { rs ->
                     if (rs.next()) {
                         generatedKey = column.columnType.valueFromDB(rs.getObject(1)) as Key
@@ -45,7 +45,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).run {
+    override fun arguments() = QueryBuilder(true).run {
         valuesAndDefaults().forEach {
             val value = it.value
             when (value) {

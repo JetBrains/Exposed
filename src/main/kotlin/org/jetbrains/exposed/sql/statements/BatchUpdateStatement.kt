@@ -4,10 +4,7 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnType
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
 import java.util.*
 
@@ -33,7 +30,8 @@ class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) 
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = data.map { it.second.map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
+            = data.map { it.second.map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
 }
 
 class EntityBatchUpdate<ID:Any>(val klass: EntityClass<in ID, Entity<in ID>>) {

@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import kotlin.comparisons.compareBy
 
-open class Column<T>(val table: Table, val name: String, override val columnType: ColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
+class Column<T>(val table: Table, val name: String, override val columnType: IColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
     internal var onDelete: ReferenceOption? = null
     internal var indexInPK: Int? = null
@@ -55,7 +55,7 @@ open class Column<T>(val table: Table, val name: String, override val columnType
         append(" ")
         val isPKColumn = indexInPK != null
         val colType = columnType
-        if (currentDialect == SQLiteDialect && isOneColumnPK() && colType.autoinc) {
+        if (currentDialect == SQLiteDialect && isOneColumnPK() && colType.isAutoInc) {
             append(colType.sqlType().removeSuffix(" AUTO_INCREMENT")) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
         } else {
             append(colType.sqlType())

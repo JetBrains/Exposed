@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.isAutoInc
 import java.sql.PreparedStatement
 import java.util.*
 
@@ -17,7 +18,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     abstract fun prepareSQL(transaction: Transaction): String
 
-    abstract fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>>
+    abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
     fun execute(transaction: Transaction): T? = transaction.exec(this)
 
@@ -25,7 +26,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         try {
             transaction.monitor.register(transaction.logger)
 
-            val autoInc = if (type == StatementType.INSERT) targets.flatMap { it.columns }.filter { it.columnType.autoinc } else null
+            val autoInc = if (type == StatementType.INSERT) targets.flatMap { it.columns }.filter { it.columnType.isAutoInc } else null
 
             val arguments = arguments()
             val contexts = if (arguments.count() > 0) {
@@ -61,7 +62,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
     }
 }
 
-class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<ColumnType, Any?>>) {
+class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<IColumnType, Any?>>) {
     fun sql(transaction: Transaction) = statement.prepareSQL(transaction)
 }
 
@@ -104,7 +105,7 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
     }
 }
 
-fun PreparedStatement.fillParameters(args: Iterable<Pair<ColumnType, Any?>>): Int {
+fun PreparedStatement.fillParameters(args: Iterable<Pair<IColumnType, Any?>>): Int {
     args.forEachIndexed {index, pair ->
         val (c, v) = pair
         c.setParameter(this, index + 1, c.valueToDB(v))

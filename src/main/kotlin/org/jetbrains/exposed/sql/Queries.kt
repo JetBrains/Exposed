@@ -61,11 +61,11 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long
     execute(TransactionManager.current())
 }
 
-fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.autoinc }) =
+fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 
-fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.autoinc }) =
+fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 
@@ -81,7 +81,7 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
     return query.execute(TransactionManager.current())!!
 }
 
-fun Table.exists (): Boolean = currentDialect.tableExists(this)
+fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
 /**
  * Log entity <-> database mapping problems and returns DDL Statements to fix them

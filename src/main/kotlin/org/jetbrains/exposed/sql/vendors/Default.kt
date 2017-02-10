@@ -35,7 +35,7 @@ open class FunctionProvider {
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
-    open fun cast(expr: Expression<*>, type: ColumnType, builder: QueryBuilder) = "CAST(${expr.toSQL(builder)} AS ${type.sqlType()})"
+    open fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = "CAST(${expr.toSQL(builder)} AS ${type.sqlType()})"
 
     open fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 

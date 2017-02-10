@@ -90,7 +90,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
 
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = QueryBuilder(true).let {
+    override fun arguments() = QueryBuilder(true).let {
         prepareSQL(it)
         if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
     }

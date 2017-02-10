@@ -3,11 +3,11 @@ package org.jetbrains.exposed.sql
 import java.util.*
 
 class QueryBuilder(val prepared: Boolean) {
-    val args = ArrayList<Pair<ColumnType, Any?>>()
+    val args = ArrayList<Pair<IColumnType, Any?>>()
 
-    fun <T> registerArgument(sqlType: ColumnType, argument: T) = registerArguments(sqlType, listOf(argument)).single()
+    fun <T> registerArgument(sqlType: IColumnType, argument: T) = registerArguments(sqlType, listOf(argument)).single()
 
-    fun <T> registerArguments(sqlType: ColumnType, arguments: Iterable<T>): List<String> {
+    fun <T> registerArguments(sqlType: IColumnType, arguments: Iterable<T>): List<String> {
         val argumentsAndStrings = arguments.map { it to sqlType.valueToString(it) }.sortedBy { it.second }
 
         return argumentsAndStrings.map {
@@ -21,7 +21,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 }
 
-abstract class Expression<out T>() {
+abstract class Expression<out T> {
     private val _hashCode by lazy {
         toString().hashCode()
     }
@@ -47,7 +47,7 @@ abstract class Expression<out T>() {
     }
 }
 
-abstract class ExpressionWithColumnType<T> : Expression<T>() {
+abstract class ExpressionWithColumnType<out T> : Expression<T>() {
     // used for operations with literals
-    abstract val columnType: ColumnType;
+    abstract val columnType: IColumnType
 }

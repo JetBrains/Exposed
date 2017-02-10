@@ -15,7 +15,7 @@ internal object MysqlFunctionProvider : FunctionProvider() {
         override fun sqlType(): String = "CHAR"
     }
 
-    override fun cast(expr: Expression<*>, type: ColumnType, builder: QueryBuilder) = when (type) {
+    override fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = when (type) {
         is StringColumnType -> super.cast(expr, CharColumnType, builder)
         else -> super.cast(expr, type, builder)
     }

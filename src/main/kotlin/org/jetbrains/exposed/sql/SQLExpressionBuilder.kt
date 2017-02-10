@@ -45,7 +45,7 @@ fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean 
 }
 
 object SqlExpressionBuilder {
-    fun <T:Any> coalesce(expr: ExpressionWithColumnType<out T?>, alternate: ExpressionWithColumnType<out T>): ExpressionWithColumnType<T> {
+    fun <T:Any> coalesce(expr: ExpressionWithColumnType<T?>, alternate: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
         return Coalesce(expr, alternate)
     }
 
