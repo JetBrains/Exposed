@@ -225,4 +225,43 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+
+    object Humans : IntIdTable("human") {
+        val h = text("h")
+    }
+
+    object Users : IdTable<Int>("user") {
+        override val id: Column<EntityID<Int>> = reference("id", Humans)
+        val name = text("name")
+    }
+
+    open class Human (id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Human>(Humans)
+        var h by Humans.h
+    }
+
+    class User(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<User>(Users){
+            fun create(name: String): User {
+                val h = Human.new { h = name.take(2) }
+                return User.new(h.id.value) {
+                    this.name = name
+                }
+            }
+        }
+
+        var human by Human referencedOn Users.id
+        var name by Users.name
+    }
+
+    @Test
+    fun testOneToOneReference() {
+        withTables(Humans, Users) {
+            val user = User.create("testUser")
+            assertEquals("te", user.human.h)
+            assertEquals("testUser", user.name)
+            assertEquals(user.id.value, user.human.id.value)
+        }
+    }
+
 }
