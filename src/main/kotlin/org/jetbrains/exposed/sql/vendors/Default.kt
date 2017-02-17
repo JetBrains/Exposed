@@ -6,10 +6,14 @@ import java.nio.ByteBuffer
 import java.sql.ResultSet
 import java.util.*
 
-open class DataTypeProvider() {
+open class DataTypeProvider {
     open fun shortAutoincType() = "INT AUTO_INCREMENT"
 
+    open fun shortType() = "INT"
+
     open fun longAutoincType() = "BIGINT AUTO_INCREMENT"
+
+    open fun longType() = "BIGINT"
 
     open fun uuidType() = "BINARY(16)"
 
@@ -19,11 +23,17 @@ open class DataTypeProvider() {
 
     open fun binaryType(length: Int): String = "VARBINARY($length)"
 
+    open fun booleanType(): String = "BOOLEAN"
+
     open fun booleanToStatementString(bool: Boolean) = bool.toString()
 
     open fun uuidToDB(value: UUID) : Any =
             ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
 
+    open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
+
+
+    open fun textType() = "TEXT"
     open val blobAsStream = false
 }
 
@@ -77,6 +87,14 @@ interface DatabaseDialect {
     val supportsMultipleGeneratedKeys: Boolean
     val supportsExpressionsAsDefault: Boolean get() = false
 
+    // --> REVIEW
+    val supportsIfNotExists: Boolean get() = true
+    val needsSequenceToAutoInc: Boolean get() = false
+    val needsQuotesWhenSymbolsInNames: Boolean get() = true
+    val identifierLengthLimit: Int get() = 100
+    fun catalog(transaction: Transaction): String = transaction.connection.catalog
+    // <-- REVIEW
+
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
@@ -122,7 +140,7 @@ internal abstract class VendorDialect(override val name: String,
         return result
     }
 
-    override fun getDatabase(): String = TransactionManager.current().connection.catalog
+    override fun getDatabase(): String = currentDialect.catalog(TransactionManager.current())
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
@@ -191,10 +209,11 @@ internal abstract class VendorDialect(override val name: String,
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
                 while (rs.next()) {
-                    val indexName = rs.getString("INDEX_NAME")!!
-                    val column = rs.getString("COLUMN_NAME")!!
-                    val isUnique = !rs.getBoolean("NON_UNIQUE")
-                    tmpIndices.getOrPut(indexName to isUnique, { arrayListOf() }).add(column)
+                    rs.getString("INDEX_NAME")?.let {
+                        val column = rs.getString("COLUMN_NAME")!!
+                        val isUnique = !rs.getBoolean("NON_UNIQUE")
+                        tmpIndices.getOrPut(it to isUnique, { arrayListOf() }).add(column)
+                    }
                 }
                 tmpIndices.filterNot { it.key.first in pkNames }.map { Index(it.key.first, tableName, it.value, it.key.second)}
             })
@@ -240,7 +259,8 @@ internal abstract class VendorDialect(override val name: String,
         return buildString {
             append("CREATE ")
             if (unique) append("UNIQUE ")
-            append("INDEX ${t.quoteIfNecessary(indexName)} ON ${t.quoteIfNecessary(tableName)} ")
+            // REVIEW
+            append("INDEX ${t.quoteIfNecessary(t.cutIfNecessary(indexName))} ON ${t.quoteIfNecessary(tableName)} ")
             columns.joinTo(this, ", ", "(", ")") {
                 t.quoteIfNecessary(it)
             }

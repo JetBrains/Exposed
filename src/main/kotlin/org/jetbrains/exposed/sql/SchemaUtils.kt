@@ -24,10 +24,20 @@ object SchemaUtils {
             for (table_index in table.indices) {
                 statements.addAll(createIndex(table_index.first, table_index.second))
             }
+
+            // REVIEW
+            // create sequence
+            if (currentDialect.needsSequenceToAutoInc) {
+                table.autoIncSeq()?.let {
+                    statements.addAll(createSequence(it))
+                }
+            }
         }
 
         return statements
     }
+
+    fun createSequence(name: String) = Seq(name).createStatement()
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
@@ -157,6 +167,12 @@ object SchemaUtils {
     fun drop(vararg tables: Table) {
         EntityCache.sortTablesByReferences(tables.toList()).reversed().filter { it in tables}.flatMap { it.dropStatement() }.forEach {
             TransactionManager.current().exec(it)
+        }
+        // REVIEW
+        if (currentDialect.needsSequenceToAutoInc) {
+            tables.flatMap { table ->
+                table.autoIncSeq()?.let { Seq(it).dropStatement() } ?: emptyList()
+            }.forEach { TransactionManager.current().exec(it) }
         }
         currentDialect.resetCaches()
     }

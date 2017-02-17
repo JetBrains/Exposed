@@ -21,6 +21,7 @@ plugins {
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
+apply plugin: 'maven'
 apply plugin: "maven-publish"
 
 sourceCompatibility = 1.6
@@ -38,6 +39,7 @@ artifacts {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         url 'http://oss.sonatype.org/content/repositories/snapshots'
@@ -53,10 +55,16 @@ dependencies {
     testCompile 'org.postgresql:postgresql:9.4.1208.jre7'
     testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.16'
     testCompile 'org.xerial:sqlite-jdbc:3.14.2'
+    //    testCompile 'com.oracle:ojdbc6:12.1.0.2'
 }
 
 test {
     jvmArgs "-XX:MaxPermSize=256m"
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
 }
 
 publishing {
@@ -124,7 +132,6 @@ allprojects {
 
 project(":spring-transaction") {
     apply plugin: 'kotlin'
-
 
     dependencies {
         compile 'org.springframework:spring-jdbc:4.2.5.RELEASE'

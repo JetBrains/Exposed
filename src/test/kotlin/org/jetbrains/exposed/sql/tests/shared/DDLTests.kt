@@ -3,7 +3,13 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -11,7 +17,7 @@ import org.jetbrains.exposed.sql.vendors.VendorDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.sql.SQLException
-import java.util.*
+import java.util.UUID
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertFalse
 
@@ -39,7 +45,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun testCreateMissingTablesAndColumns01() {
-        val TestTable = object : Table("test") {
+        val TestTable = object : Table("test_table") {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
         }
@@ -73,16 +79,17 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun unnamedTableWithQuotesSQL() {
-        val TestTable = object : Table() {
-            val id = integer("id").primaryKey()
-            val name = varchar("name", length = 42)
-        }
+    val UnnamedTable = object : Table() {
+        val id = integer("id").primaryKey()
+        val name = varchar("name", length = 42)
+    }
 
-        withTables(TestTable) {
+    @Test fun unnamedTableWithQuotesSQL() {
+        withTables(UnnamedTable) {
             val q = db.identityQuoteString
-            assertEquals("CREATE TABLE IF NOT EXISTS $q${"unnamedTableWithQuotesSQL".inProperCase()}\$${"TestTable".inProperCase()}$1$q " +
-                    "(${"id".inProperCase()} INT PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", TestTable.ddl)
+            val tableName = if (db.dialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
+            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
+                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -90,13 +97,13 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_named_table") {
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.SQLITE), tables = TestTable) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.SQLITE, TestDB.ORACLE), tables = TestTable) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", TestTable.ddl)
         }
     }
 
     @Test fun tableWithDifferentColumnTypesSQL01() {
-        val TestTable = object : Table("test_table_with_different_column_types") {
+        val TestTable = object : Table("different_column_types") {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42).primaryKey()
             val age = integer("age").nullable()
@@ -105,23 +112,23 @@ class DDLTests : DatabaseTestsBase() {
         }
 
          withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS ${"test_table_with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
-                    "${"age".inProperCase()} INT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
+                    "${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
         }
     }
 
     @Test fun tableWithDifferentColumnTypesSQL02() {
-        val TestTable = object : Table("test_table_with_different_column_types") {
+        val TestTable = object : Table("with_different_column_types") {
             val id = integer("id").primaryKey()
             val name = varchar("name", 42).primaryKey()
             val age = integer("age").nullable()
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS ${"test_table_with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} INT, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} INT NULL, " +
-                    "CONSTRAINT pk_test_table_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
+                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
         }
     }
 
@@ -132,8 +139,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE IF NOT EXISTS ${"t".inProperCase()} (${"s".inProperCase()} VARCHAR(100) NOT NULL DEFAULT 'test', " +
-                    "${"l".inProperCase()} BIGINT NOT NULL DEFAULT 42)", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"t".inProperCase()} (${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
+                    "${"l".inProperCase()} ${db.dialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL)", TestTable.ddl)
         }
     }
 
@@ -186,7 +193,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testBlob() {
         val t = object: Table("t1") {
-            val id = integer("id").autoIncrement().primaryKey()
+            val id = integer("id").autoIncrement("t1_seq").primaryKey()
             val b = blob("blob")
         }
 
@@ -235,7 +242,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(initialTable)
-            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD COLUMN ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
+            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})", t.id.ddl[1])
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
@@ -252,7 +259,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.H2, TestDB.SQLITE), tables = initialTable) {
-            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD COLUMN id ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
+            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)

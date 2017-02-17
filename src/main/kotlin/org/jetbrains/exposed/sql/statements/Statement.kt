@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.isAutoInc
 import java.sql.PreparedStatement
-import java.util.*
+import java.util.Stack
 
 
 internal object DefaultValueMarker {
@@ -19,6 +19,8 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
     abstract fun prepareSQL(transaction: Transaction): String
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
+
+    open val isAlwaysBatch: Boolean get() = false
 
     fun execute(transaction: Transaction): T? = transaction.exec(this)
 
@@ -41,10 +43,10 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 listOf(context)
             }
 
-            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it)})
+            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it) })
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
-                if(contexts.size > 1) statement.addBatch()
+                if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
             }
             transaction.lastExecutedStatement?.run {
                 if (!isClosed && !transaction.db.supportsMultipleResultSets) close()

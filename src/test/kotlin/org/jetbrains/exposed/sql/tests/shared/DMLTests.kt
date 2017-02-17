@@ -1,9 +1,43 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.CurrentDateTime
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ExpressionWithColumnType
+import org.jetbrains.exposed.sql.IntegerColumnType
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.Max
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Sum
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.avg
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.intParam
+import org.jetbrains.exposed.sql.joinQuery
+import org.jetbrains.exposed.sql.lastQueryAlias
+import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.stringLiteral
+import org.jetbrains.exposed.sql.substring
+import org.jetbrains.exposed.sql.sum
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.upperCase
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
@@ -14,7 +48,7 @@ import kotlin.test.assertTrue
 
 object DMLTestsData {
     object Cities : Table() {
-        val id = integer("id").autoIncrement().primaryKey() // PKColumn<Int>
+        val id = integer("id").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
         val name = varchar("name", 50) // Column<String>
     }
 
@@ -128,6 +162,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[comment] = "Comment for Sergey"
                 it[value] = 30
             }
+            commit()
             statement (Cities, Users, UserData)
         }
     }
@@ -384,7 +419,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy02() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -396,7 +431,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy03() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -528,7 +563,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun testInsertSelect01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val substring = users.name.substring(1, 2)
             cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
 
@@ -703,11 +738,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    object LongIdTable : Table() {
+        val id = long("id").autoIncrement("long_id_seq").primaryKey()
+        val name = text("name")
+    }
+
     @Test fun testGeneratedKey02() {
-        val LongIdTable = object : Table() {
-            val id = long("id").autoIncrement().primaryKey()
-            val name = text("name")
-        }
         withTables(LongIdTable){
             val id = LongIdTable.insert {
                 it[LongIdTable.name] = "Foo"
@@ -716,15 +752,16 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    object IntIdTestTable : IntIdTable() {
+        val name = text("name")
+    }
+
     @Test fun testGeneratedKey03() {
-        val IntIdTable = object : IntIdTable() {
-            val name = text("name")
-        }
-        withTables(IntIdTable){
-            val id = IntIdTable.insertAndGetId {
-                it[IntIdTable.name] = "Foo"
+        withTables(IntIdTestTable){
+            val id = IntIdTestTable.insertAndGetId {
+                it[IntIdTestTable.name] = "Foo"
             }
-            assertEquals(IntIdTable.selectAll().last()[IntIdTable.id], id)
+            assertEquals(IntIdTestTable.selectAll().last()[IntIdTestTable.id], id)
         }
     }
 
@@ -965,7 +1002,7 @@ class DMLTests : DatabaseTestsBase() {
             override val columnType: IColumnType = IntegerColumnType()
         }
 
-        val foo = object : IntIdTable() {
+        val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))

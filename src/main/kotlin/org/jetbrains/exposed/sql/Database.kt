@@ -3,11 +3,18 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.ANSI_SQL_2003_KEYWORDS
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.VENDORS_KEYWORDS
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
-import java.util.*
+import java.util.LinkedHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.sql.DataSource
 
@@ -31,7 +38,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     val vendor: String get() = dialect.name
 
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + metadata.sqlKeywords.split(',') }
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS + metadata.sqlKeywords.split(',') }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!! }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
     val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn()}
@@ -58,6 +65,7 @@ class Database private constructor(val connector: () -> Connection) {
             registerDialect(MysqlDialect)
             registerDialect(PostgreSQLDialect)
             registerDialect(SQLiteDialect)
+            registerDialect(OracleDialect)
         }
 
         fun registerDialect(dialect: DatabaseDialect) {

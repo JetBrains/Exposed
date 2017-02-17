@@ -14,7 +14,6 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
-import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -64,7 +63,7 @@ abstract class ColumnType(override var nullable: Boolean = false) : IColumnType 
     override fun toString(): String = sqlType()
 }
 
-open class AutoIncColumnType(val delegate: ColumnType) : IColumnType by delegate {
+open class AutoIncColumnType(val delegate: ColumnType, val autoincSeq: String? = null) : IColumnType by delegate {
 
     private fun resolveAutIncType(columnType: IColumnType) : String = when (columnType) {
         is EntityIDColumnType<*> -> resolveAutIncType(columnType.idColumn.columnType)
@@ -120,7 +119,7 @@ class CharacterColumnType : ColumnType() {
 }
 
 class IntegerColumnType : ColumnType() {
-    override fun sqlType(): String = "INT"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.shortType()
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -132,7 +131,7 @@ class IntegerColumnType : ColumnType() {
 }
 
 class LongColumnType : ColumnType() {
-    override fun sqlType(): String = "BIGINT"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
     override fun valueFromDB(value: Any): Any {
         return when(value) {
@@ -193,8 +192,9 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): St
         }
     }
 }
+
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
-private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
+private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 
@@ -226,7 +226,8 @@ class DateColumnType(val time: Boolean): ColumnType() {
             currentDialect == SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> value
         }
-        else -> value
+        // REVIEW
+        else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any {
@@ -236,7 +237,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
                 return java.sql.Timestamp(millis)
             }
             else {
-                return Date(millis)
+                return java.sql.Date(millis)
             }
         }
         return value
@@ -249,7 +250,7 @@ open class StringColumnType(val length: Int = 65535, val collate: String? = null
 
         ddl.append(when (length) {
             in 1..255 -> "VARCHAR($length)"
-            else -> "TEXT"
+            else -> currentDialect.dataTypeProvider.textType()
         })
 
         if (collate != null) {
@@ -289,6 +290,14 @@ open class StringColumnType(val length: Int = 65535, val collate: String? = null
 
 class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
+
+    // REVIEW
+    override fun valueFromDB(value: Any): Any {
+        if (value is java.sql.Blob) {
+            return value.binaryStream.readBytes()
+        }
+        return value
+    }
 }
 
 class BlobColumnType : ColumnType() {
@@ -322,11 +331,12 @@ class BlobColumnType : ColumnType() {
 }
 
 class BooleanColumnType : ColumnType() {
-    override fun sqlType(): String  = "BOOLEAN"
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.booleanType()
 
     override fun valueFromDB(value: Any) = when (value) {
         is Number -> value.toLong() != 0L
-        is String -> value.toBoolean()
+        // REVIEW
+        is String -> currentDialect.dataTypeProvider.booleanFromStringToBoolean(value)
         else -> value.toString().toBoolean()
     }
 

@@ -15,9 +15,10 @@ import ru.yandex.qatools.embed.postgresql.distribution.Version
 import java.util.*
 import kotlin.concurrent.thread
 
-enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val beforeConnection: () -> Any, val afterConnection: () -> Unit) {
-    H2(H2Dialect, "jdbc:h2:mem:", "org.h2.Driver", {Unit}, {}),
-    SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC", {Unit}, {}),
+enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val user: String = "root", val pass: String = "",
+                  val beforeConnection: () -> Any = {Unit}, val afterConnection: () -> Unit = {}) {
+    H2(H2Dialect, "jdbc:h2:mem:", "org.h2.Driver"),
+    SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
     MYSQL(MysqlDialect, "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
             afterConnection = {
@@ -31,11 +32,13 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                 }
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() });
+            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() }),
+    ORACLE(OracleDialect, "jdbc:oracle:thin://@localhost:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver",
+            user = "EXPOSED", pass = "exposed123");
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects", "").let {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,sqlite,mysql,postgresql").let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
@@ -67,7 +70,7 @@ abstract class DatabaseTestsBase {
             registeredOnShutdown += dbSettings
         }
 
-        val database = Database.connect(dbSettings.connection, user = "root", driver = dbSettings.driver)
+        val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
 
         transaction(database.metadata.defaultTransactionIsolation, 1) {
             statement()
