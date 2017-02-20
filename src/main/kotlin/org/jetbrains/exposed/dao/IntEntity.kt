@@ -8,4 +8,4 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
 
 abstract class IntEntity(id: EntityID<Int>) : Entity<Int>(id)
 
-abstract class IntEntityClass<E:IntEntity>(table: IdTable<Int>) : EntityClass<Int, E> (table)
+abstract class IntEntityClass<out E:IntEntity>(table: IdTable<Int>, entityType: Class<E>? = null) : EntityClass<Int, E> (table, entityType)
