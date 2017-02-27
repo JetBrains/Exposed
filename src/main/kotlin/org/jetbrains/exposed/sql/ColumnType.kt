@@ -63,7 +63,9 @@ abstract class ColumnType(override var nullable: Boolean = false) : IColumnType 
     override fun toString(): String = sqlType()
 }
 
-open class AutoIncColumnType(val delegate: ColumnType, val autoincSeq: String? = null) : IColumnType by delegate {
+class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: String) : IColumnType by delegate {
+
+    val autoincSeq : String? get() = if (currentDialect.needsSequenceToAutoInc) _autoincSeq else null
 
     private fun resolveAutIncType(columnType: IColumnType) : String = when (columnType) {
         is EntityIDColumnType<*> -> resolveAutIncType(columnType.idColumn.columnType)
@@ -76,6 +78,10 @@ open class AutoIncColumnType(val delegate: ColumnType, val autoincSeq: String? =
 }
 
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+val Column<*>.autoIncSeqName : String? get() {
+        return (columnType as? AutoIncColumnType)?.autoincSeq
+            ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.autoIncSeqName
+}
 
 class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
 
@@ -157,7 +163,7 @@ class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
-    override fun sqlType(): String  = "INT"
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.shortType()
 
     override fun notNullValueToDB(value: Any): Any {
         return when (value) {
@@ -169,7 +175,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         return when (value) {
-            is Int -> klass.enumConstants!![value]
+            is Number -> klass.enumConstants!![value.toInt()]
             is Enum<*> -> value
             else -> error("$value is not valid for enum ${klass.name}")
         }
@@ -244,7 +250,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
     }
 }
 
-open class StringColumnType(val length: Int = 65535, val collate: String? = null): ColumnType() {
+open class StringColumnType(val length: Int = 255, val collate: String? = null): ColumnType() {
     override fun sqlType(): String  {
         val ddl = StringBuilder()
 
@@ -260,7 +266,7 @@ open class StringColumnType(val length: Int = 65535, val collate: String? = null
         return ddl.toString()
     }
 
-    val charactersToEscape = hashMapOf(
+    val charactersToEscape = mapOf(
             '\'' to "\'\'",
 //            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
             '\r' to "\\r",
@@ -336,7 +342,7 @@ class BooleanColumnType : ColumnType() {
     override fun valueFromDB(value: Any) = when (value) {
         is Number -> value.toLong() != 0L
         // REVIEW
-        is String -> currentDialect.dataTypeProvider.booleanFromStringToBoolean(value)
+//        is String -> currentDialect.dataTypeProvider.booleanFromStringToBoolean(value)
         else -> value.toString().toBoolean()
     }
 

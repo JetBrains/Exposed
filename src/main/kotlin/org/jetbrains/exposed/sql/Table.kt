@@ -134,7 +134,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     private val _columns = ArrayList<Column<*>>()
     override val columns: List<Column<*>> = _columns
 
-    fun autoIncSeq() = columns.map { it.columnType.autoincSeq }.firstOrNull()
+    val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
     override fun describe(s: Transaction): String = s.identity(this)
 
@@ -226,9 +226,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, StringColumnType(length, collate))
 
-    private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String? = null) : Column<T> = when(columnType) {
+    private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?) : Column<T> = when(columnType) {
         is AutoIncColumnType -> this
-        is ColumnType -> this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName)))
+        is ColumnType -> this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName ?: "${name}_seq")))
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
@@ -242,16 +242,16 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
 
-    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption): C {
+    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption?): C {
         return this.apply {
             referee = ref
             this.onDelete = onDelete
         }
     }
 
-    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, ReferenceOption.RESTRICT)
+    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null)
 
-    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption = ReferenceOption.RESTRICT): Column<EntityID<T>> {
+    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> {
         return entityId(name, foreign).references(foreign.id, onDelete)
     }
 
@@ -261,7 +261,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return column
     }
 
-    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption = ReferenceOption.RESTRICT): Column<EntityID<T>?> {
+    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> {
         return entityId(name, foreign).references(foreign.id, onDelete).nullable()
     }
 
@@ -310,28 +310,35 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     val ddl: List<String>
         get() = createStatement()
 
-    override fun createStatement() = listOf(buildString {
-        append("CREATE TABLE ")
-        if (currentDialect.supportsIfNotExists) {
-            append("IF NOT EXISTS ")
-        }
-        append(TransactionManager.current().identity(this@Table).inProperCase())
-        if (columns.any()) {
-            append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-            if (columns.none { it.isOneColumnPK() }) {
-                primaryKeyConstraint()?.let {
-                    append(", $it")
-                }
-            }
-            columns.filter { it.referee != null }.let { references ->
-                if (references.isNotEmpty()) {
-                    append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
-                }
-            }
+    override fun createStatement(): List<String> {
+        val seqDDL = autoIncColumn?.autoIncSeqName?.let {
+            Seq(it).createStatement()
+        }.orEmpty()
 
-            append(")")
+        val createTableDDL = buildString {
+            append("CREATE TABLE ")
+            if (currentDialect.supportsIfNotExists) {
+                append("IF NOT EXISTS ")
+            }
+            append(TransactionManager.current().identity(this@Table).inProperCase())
+            if (columns.any()) {
+                append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
+                if (columns.none { it.isOneColumnPK() }) {
+                    primaryKeyConstraint()?.let {
+                        append(", $it")
+                    }
+                }
+                columns.filter { it.referee != null }.let { references ->
+                    if (references.isNotEmpty()) {
+                        append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
+                    }
+                }
+
+                append(")")
+            }
         }
-    })
+        return seqDDL + createTableDDL
+    }
 
     internal fun primaryKeyConstraint(): String? {
         var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
@@ -347,7 +354,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return null
     }
 
-    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}")
+    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}") +
+        autoIncColumn?.autoIncSeqName?.let { Seq(it).dropStatement() }.orEmpty()
 
     override fun modifyStatement() = throw UnsupportedOperationException("Use modify on columns and indices")
 

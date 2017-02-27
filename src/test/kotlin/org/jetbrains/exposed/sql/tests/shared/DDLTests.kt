@@ -3,13 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -17,7 +11,7 @@ import org.jetbrains.exposed.sql.vendors.VendorDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.sql.SQLException
-import java.util.UUID
+import java.util.*
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertFalse
 
@@ -79,6 +73,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    // Placed outside test function to shorten generated name
     val UnnamedTable = object : Table() {
         val id = integer("id").primaryKey()
         val name = varchar("name", length = 42)
@@ -111,7 +106,7 @@ class DDLTests : DatabaseTestsBase() {
             //            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
-         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
+         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = TestTable) {
             assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
                     "${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)

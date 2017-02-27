@@ -33,8 +33,8 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() }),
-    ORACLE(OracleDialect, "jdbc:oracle:thin://@localhost:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver",
-            user = "EXPOSED", pass = "exposed123");
+    ORACLE(OracleDialect, "jdbc:oracle:thin:@//192.168.99.100:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver",
+            user = "system", pass = "oracle");
 
     companion object {
         fun enabledInTests(): List<TestDB> {

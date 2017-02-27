@@ -14,7 +14,8 @@ interface DdlAware {
 enum class ReferenceOption {
     CASCADE,
     SET_NULL,
-    RESTRICT; //default
+    RESTRICT,
+    NO_ACTION;
 
     override fun toString(): String {
         return this.name.replace("_"," ")
@@ -25,7 +26,8 @@ enum class ReferenceOption {
             DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
             DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
             DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
-            else -> ReferenceOption.RESTRICT
+            DatabaseMetaData.importedKeyNoAction -> ReferenceOption.NO_ACTION
+            else -> currentDialect.defaultReferenceOption
         }
     }
 }
@@ -42,7 +44,10 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
     }
 
     internal val foreignKeyPart = buildString {
-        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn) ON DELETE $deleteRule")
+        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
+        if (deleteRule != ReferenceOption.NO_ACTION) {
+            append(" ON DELETE $deleteRule")
+        }
     }
 
     override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "" + foreignKeyPart)

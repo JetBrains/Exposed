@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
@@ -40,7 +38,12 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
 internal object OracleFunctionProvider : FunctionProvider() {
 
-    override val substring = "SUBSTR"
+    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String {
+        return super.substring(expr, start, length, builder).replace("SUBSTRING", "SUBSTR")
+    }
+
+    /* seed is ignored. You have to use dbms_random.seed function manually */
+    override fun random(seed: Int?): String = "dbms_random.value"
 }
 
 internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, OracleFunctionProvider) {
@@ -51,17 +54,15 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
     override val needsQuotesWhenSymbolsInNames = false
     override val identifierLengthLimit = 30
 
+    override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
+
     override fun catalog(transaction: Transaction) : String = transaction.connection.metaData.userName
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        val autoInc = table.columns.find { it.columnType.autoinc }
-
-        autoInc?.let {
-            val autoincSeq = autoInc.columnType.autoincSeq ?:
-                    throw UnsupportedOperationException("You must provide auto-increment sequence name as argument to autoIncrement()")
-            val nextValExpr = expr.replace("VALUES (", "VALUES ($autoincSeq.NEXTVAL, ")
-            return "INSERT INTO ${transaction.identity(table)} (${autoInc.name}, ${columns.map { transaction.identity(it) }.joinToString()}) $nextValExpr"
-        } ?: return super.insert(ignore, table, columns, expr, transaction)
+        return table.autoIncColumn?.let {
+            val nextValExpr = expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
+            return "INSERT INTO ${transaction.identity(table)} (${it.name}, ${columns.joinToString { transaction.identity(it) }}) $nextValExpr"
+        } ?: super.insert(ignore, table, columns, expr, transaction)
     }
 
     override fun limit(size: Int, offset: Int) = if (offset > 0) " OFFSET $offset" else "" + " FETCH FIRST $size ROWS ONLY"

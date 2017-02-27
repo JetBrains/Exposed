@@ -1,43 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.ColumnType
-import org.jetbrains.exposed.sql.CurrentDateTime
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.IntegerColumnType
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Max
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Sum
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.avg
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.intParam
-import org.jetbrains.exposed.sql.joinQuery
-import org.jetbrains.exposed.sql.lastQueryAlias
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.substring
-import org.jetbrains.exposed.sql.sum
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.upperCase
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
@@ -162,7 +128,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[comment] = "Comment for Sergey"
                 it[value] = 30
             }
-            commit()
+//            commit()
             statement (Cities, Users, UserData)
         }
     }

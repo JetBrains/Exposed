@@ -21,6 +21,14 @@ interface TransactionInterface {
 
 const val DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_REPEATABLE_READ
 
+private object NotInitializedManager : TransactionManager {
+    override var defaultIsolationLevel: Int = -1
+
+    override fun newTransaction(isolation: Int): Transaction = TODO()
+
+    override fun currentOrNull(): Transaction? = TODO()
+}
+
 interface TransactionManager {
 
     var defaultIsolationLevel: Int
@@ -31,7 +39,7 @@ interface TransactionManager {
 
     companion object {
 
-        @Volatile lateinit private var _manager: TransactionManager
+        @Volatile private var _manager: TransactionManager = NotInitializedManager
 
         internal var currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = _manager
@@ -51,5 +59,7 @@ interface TransactionManager {
         fun currentOrNull() = manager.currentOrNull()
 
         fun current() = currentOrNull() ?: error("No transaction in context.")
+
+        fun isInitialized() = _manager != NotInitializedManager
     }
 }

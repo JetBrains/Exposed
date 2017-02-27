@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.isAutoInc
 import java.sql.PreparedStatement
-import java.util.Stack
+import java.util.*
 
 
 internal object DefaultValueMarker {
@@ -46,6 +46,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it) })
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
+                // REVIEW
                 if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
             }
             transaction.lastExecutedStatement?.run {

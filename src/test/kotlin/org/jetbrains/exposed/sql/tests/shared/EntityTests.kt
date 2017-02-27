@@ -1,19 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityCache
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -233,3 +226,4 @@ class EntityTests: DatabaseTestsBase() {
     }
 
 }
+                                                            

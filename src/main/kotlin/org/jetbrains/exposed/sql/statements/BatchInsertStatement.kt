@@ -32,14 +32,14 @@ class BatchInsertStatement(val table: Table, val _ignore: Boolean = false): Stat
         get() {
             return field ?: data.map { single ->
                 table.columns.filterNot { it.columnType.isAutoInc }.map {
-                    it to (single[it] ?: it.defaultValueFun?.invoke() ?: it.dbDefaultValue)
+                    it to (single[it] ?: it.defaultValueFun?.invoke() ?: it.dbDefaultValue?.let { DefaultValueMarker })
                 }
             }.apply { field = this }
         }
 
     // REVIEW
-    override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> {
-        return arguments!!.map { it.map { it.first.columnType to it.second } }
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> {
+        return arguments!!.map { it.map { it.first.columnType to it.second }.filter { it.second != DefaultValueMarker} }
     }
 
     override fun prepareSQL(transaction: Transaction): String {
@@ -49,7 +49,7 @@ class BatchInsertStatement(val table: Table, val _ignore: Boolean = false): Stat
             val values = buildString {
                 append("VALUES ")
 
-                val args = arguments!!.singleOrNull().orEmpty()
+                val args = arguments!!.firstOrNull().orEmpty()
                 val firstCol = columns.first()
                 val lastCol = columns.last()
                 val lastIndex = args.count() - 1

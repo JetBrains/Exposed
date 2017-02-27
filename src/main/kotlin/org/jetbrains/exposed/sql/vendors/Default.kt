@@ -95,6 +95,8 @@ interface DatabaseDialect {
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
     // <-- REVIEW
 
+    val defaultReferenceOption : ReferenceOption get() = ReferenceOption.RESTRICT
+
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
@@ -283,8 +285,12 @@ internal abstract class VendorDialect(override val name: String,
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
 
-internal fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->
-    (currentDialect as? VendorDialect)?.run {
-        this@inProperCase.inProperCase
-    }
+internal val currentDialectIfAvailable : DatabaseDialect? get() {
+    return if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+        currentDialect
+    } else null
+}
+
+internal fun String.inProperCase(): String = (currentDialectIfAvailable as? VendorDialect)?.run {
+    this@inProperCase.inProperCase
 } ?: this

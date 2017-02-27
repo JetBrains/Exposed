@@ -134,6 +134,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         }
     }
 
+    // REVIEW
     internal fun cutIfNecessary (identity: String) = identity.substring(0, Math.min(currentDialect.identifierLengthLimit, identity.length))
 
     private fun quoteTokenIfNecessary(token: String) : String {

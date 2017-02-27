@@ -1,15 +1,13 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
+import org.jetbrains.exposed.sql.vendors.*
 import kotlin.comparisons.compareBy
 
 class Column<T>(val table: Table, val name: String, override val columnType: IColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
     internal var onDelete: ReferenceOption? = null
+                get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
     internal var indexInPK: Int? = null
     internal var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
