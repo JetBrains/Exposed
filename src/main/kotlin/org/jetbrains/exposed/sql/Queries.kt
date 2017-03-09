@@ -41,7 +41,8 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             it.addBatch()
             it.body(element)
         }
-        return it.execute(TransactionManager.current())!!
+        it.execute(TransactionManager.current())
+        return it.generatedKey!!
     }
 }
 

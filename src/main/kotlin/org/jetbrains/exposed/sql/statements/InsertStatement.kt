@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 
 /**
  * isIgnore is supported for mysql only
@@ -10,6 +11,15 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     var generatedKey: Key? = null
 
     infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
+
+    open protected fun generatedKeyFun(rs: ResultSet, inserted: Int) : Key? {
+        return table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
+            if (rs.next()) {
+                @Suppress("UNCHECKED_CAST")
+                column.columnType.valueFromDB(rs.getObject(1)) as? Key
+            } else null
+        }
+    }
 
     protected fun valuesAndDefaults(): Map<Column<*>, Any?> {
         val columnsWithNotNullDefault = targets.flatMap { it.columns }.filter {
@@ -20,27 +30,25 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val values = valuesAndDefaults()
-        return transaction.db.dialect.insert(isIgnore, table, values.map { it.key},
-            "VALUES (${values.entries.joinToString {
-                val (col, value) = it
-                when (value) {
-                    is Expression<*> -> value.toSQL(builder)
-                    DefaultValueMarker -> col.dbDefaultValue!!.toSQL(builder)
-                    else -> builder.registerArgument(col.columnType, value)
-                }
-            }})", transaction)
+        val sql = if(values.isEmpty()) ""
+        else values.entries.joinToString(prefix = "VALUES (", postfix = ")") {
+            val (col, value) = it
+            when (value) {
+                is Expression<*> -> value.toSQL(builder)
+                DefaultValueMarker -> col.dbDefaultValue!!.toSQL(builder)
+                else -> builder.registerArgument(col.columnType, value)
+            }
+        }
+        return transaction.db.dialect.insert(isIgnore, table, values.map { it.key }, sql, transaction)
     }
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
         transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
-        return executeUpdate().apply {
-            table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
-                generatedKeys?.let { rs ->
-                    if (rs.next()) {
-                        generatedKey = column.columnType.valueFromDB(rs.getObject(1)) as Key
-                    }
-                }
+        val inserted = if (arguments().count() > 1) executeBatch().sum() else executeUpdate()
+        return inserted.apply {
+            generatedKeys?.let {
+                generatedKey = generatedKeyFun(it, this)
             }
         }
     }

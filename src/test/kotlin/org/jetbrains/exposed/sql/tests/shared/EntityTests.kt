@@ -103,20 +103,6 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-
-    @Test fun testNotAutoIncTable() {
-        withTables(EntityTestsData.NotAutoIntIdTable) {
-            val e1 = EntityTestsData.NotAutoEntity.new(true)
-            val e2 = EntityTestsData.NotAutoEntity.new(false)
-
-            TransactionManager.current().flushCache()
-
-            val all = EntityTestsData.NotAutoEntity.all()
-            assert(all.any { it.id == e1.id })
-            assert(all.any { it.id == e2.id })
-        }
-    }
-
     @Test fun testDefaults02() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val a: EntityTestsData.AEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.A)
@@ -132,6 +118,33 @@ class EntityTests: DatabaseTestsBase() {
             assertFalse (b.y!!.x)
             assertNotNull(y.b)
 
+        }
+    }
+
+    @Test fun testNotAutoIncTable() {
+        withTables(EntityTestsData.NotAutoIntIdTable) {
+            val e1 = EntityTestsData.NotAutoEntity.new(true)
+            val e2 = EntityTestsData.NotAutoEntity.new(false)
+
+            TransactionManager.current().flushCache()
+
+            val all = EntityTestsData.NotAutoEntity.all()
+            assert(all.any { it.id == e1.id })
+            assert(all.any { it.id == e2.id })
+        }
+    }
+
+    internal object OneAutoFieldTable : IntIdTable("single")
+    internal class SingleFieldEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
+    }
+
+    //GitHub issue #95: Dao new{ } with no values problem "NoSuchElementException: List is empty"
+    @Test
+    fun testOneFieldEntity() {
+        withTables(OneAutoFieldTable) {
+            val new = SingleFieldEntity.new { }
+            commit()
         }
     }
 

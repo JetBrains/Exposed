@@ -130,6 +130,8 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
         return "REPLACE INTO ${transaction.identity(table)} (${columns.joinToString()}) VALUES (${values.joinToString()})"
     }
 
+    override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
+
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def

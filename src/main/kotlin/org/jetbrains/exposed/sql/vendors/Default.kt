@@ -212,12 +212,18 @@ internal abstract class VendorDialect(override val name: String,
         throw UnsupportedOperationException("There's no generic SQL for replace. There must be vendor specific implementation")
     }
 
+    protected open val DEFAULT_VALUE_EXPRESSION = "DEFAULT VALUES"
+
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         if (ignore) {
             throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
         }
 
-        return "INSERT INTO ${transaction.identity(table)} (${columns.joinToString { transaction.identity(it).inProperCase }}) $expr"
+        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
+            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it).inProperCase } to expr
+        } else "" to DEFAULT_VALUE_EXPRESSION
+
+        return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
