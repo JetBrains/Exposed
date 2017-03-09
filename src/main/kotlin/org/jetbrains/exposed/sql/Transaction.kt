@@ -149,8 +149,8 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return quoteIfNecessary(column.name.inProperCase())
     }
 
-    fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
-        val flag = if (autoincs != null && autoincs.isNotEmpty())
+    fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatement {
+        val flag = if (returnKeys)
             java.sql.Statement.RETURN_GENERATED_KEYS
         else
             java.sql.Statement.NO_GENERATED_KEYS

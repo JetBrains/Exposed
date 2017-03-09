@@ -25,8 +25,6 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         try {
             transaction.monitor.register(transaction.logger)
 
-            val autoInc = if (type == StatementType.INSERT) targets.flatMap { it.columns }.filter { it.columnType.autoinc } else null
-
             val arguments = arguments()
             val contexts = if (arguments.count() > 0) {
                 arguments.map { args ->
@@ -40,7 +38,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 listOf(context)
             }
 
-            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc?.map { transaction.identity(it)})
+            val statement = transaction.prepareStatement(prepareSQL(transaction), type == StatementType.INSERT)
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
                 if(contexts.size > 1) statement.addBatch()
