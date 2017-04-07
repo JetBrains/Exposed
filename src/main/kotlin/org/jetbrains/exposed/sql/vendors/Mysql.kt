@@ -125,9 +125,9 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
-        val columns = data.map { transaction.identity(it.first) }
-        val values = data.map { builder.registerArgument(it.first.columnType, it.second) }
-        return "REPLACE INTO ${transaction.identity(table)} (${columns.joinToString()}) VALUES (${values.joinToString()})"
+        val columns = data.joinToString { transaction.identity(it.first) }
+        val values = data.joinToString { builder.registerArgument(it.first.columnType, it.second) }
+        return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
     }
 
     override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"

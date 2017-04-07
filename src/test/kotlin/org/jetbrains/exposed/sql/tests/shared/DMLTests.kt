@@ -955,6 +955,17 @@ class DMLTests() : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testJoinWithAdditionalConstraint() {
+        withCitiesAndUsers { cities, users, userData ->
+            val usersAlias = users.alias("name")
+            val join = cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
+                cities.id greater 1 and (cities.name.neq(usersAlias[users.name]))
+            }
+
+            assertEquals(2, join.selectAll().count())
+        }
+    }
+
     @Test fun testDefaultExpressions01() {
 
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
@@ -993,6 +1004,23 @@ class DMLTests() : DatabaseTestsBase() {
             val resultRow = t.slice(rand).selectAll().limit(1).single()
             assert(resultRow[rand] is BigDecimal)
             println(resultRow[rand])
+        }
+    }
+
+    // GitHub issue #98: Parameter index out of range when using Table.replace
+    @Test fun testReplace01() {
+        val NewAuth = object : Table() {
+            val username = varchar("username", 16).primaryKey()
+            val session = binary("session", 64)
+            val timestamp = long("timestamp").default(0)
+            val serverID = varchar("serverID", 64).default("")
+        }
+        // Only MySQL supp
+        withTables(TestDB.values().toList() - TestDB.MYSQL, NewAuth) {
+            NewAuth.replace {
+                it[username] = "username"
+                it[session] = "session".toByteArray()
+            }
         }
     }
 }
