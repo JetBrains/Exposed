@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import java.sql.ResultSet
 import java.util.*
 
-open class DataTypeProvider() {
+open class DataTypeProvider {
     open fun shortAutoincType() = "INT AUTO_INCREMENT"
 
     open fun longAutoincType() = "BIGINT AUTO_INCREMENT"

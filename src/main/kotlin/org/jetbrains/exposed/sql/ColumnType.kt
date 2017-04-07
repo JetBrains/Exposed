@@ -87,7 +87,7 @@ class EntityIDColumnType<T:Any>(val idColumn: Column<T>, autoinc: Boolean = idCo
     }
 }
 
-class CharacterColumnType() : ColumnType() {
+class CharacterColumnType : ColumnType() {
     override fun sqlType(): String  = "CHAR"
 
     override fun valueFromDB(value: Any): Any {
@@ -275,7 +275,7 @@ class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 }
 
-class BlobColumnType(): ColumnType() {
+class BlobColumnType : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.blobType()
 
     override fun nonNullValueToString(value: Any): String {
@@ -305,7 +305,7 @@ class BlobColumnType(): ColumnType() {
     }
 }
 
-class BooleanColumnType() : ColumnType() {
+class BooleanColumnType : ColumnType() {
     override fun sqlType(): String  = "BOOLEAN"
 
     override fun valueFromDB(value: Any) = when (value) {
@@ -317,7 +317,7 @@ class BooleanColumnType() : ColumnType() {
     override fun nonNullValueToString(value: Any) = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
 }
 
-class UUIDColumnType() : ColumnType(autoinc = false) {
+class UUIDColumnType : ColumnType(autoinc = false) {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
     override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(when (value) {

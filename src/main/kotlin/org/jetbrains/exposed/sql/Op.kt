@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.joda.time.DateTime
 
-abstract class Op<T>() : Expression<T>() {
+abstract class Op<T> : Expression<T>() {
     companion object {
         inline fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
             return SqlExpressionBuilder.op()

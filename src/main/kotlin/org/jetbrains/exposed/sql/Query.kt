@@ -22,8 +22,8 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
             if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
             (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it ?: run {
                 val column = c as? Column<T>
-                if (column?.dbDefaultValue != null && column?.columnType?.nullable == false) {
-                    exposedLogger.warn("Column ${TransactionManager.current().identity(column!!)} is marked as not null, " +
+                if (column?.dbDefaultValue != null && column.columnType.nullable == false) {
+                    exposedLogger.warn("Column ${TransactionManager.current().identity(column)} is marked as not null, " +
                             "has default db value, but returns null. Possible have to re-read it from DB.")
                 }
                 null
@@ -37,7 +37,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     }
 
     fun<T> hasValue (c: Expression<T>) : Boolean {
-        return fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false;
+        return fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
     }
 
     fun <T> tryGet(c: Expression<T>): T? {
@@ -53,7 +53,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         return fieldIndex.map { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }.joinToString()
     }
 
-    internal object NotInitializedValue;
+    internal object NotInitializedValue
 
     companion object {
         fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>) : ResultRow {
@@ -77,8 +77,8 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
 
 open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
     private val groupedByColumns = ArrayList<Expression<*>>()
-    private val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>();
-    private var having: Op<Boolean>? = null;
+    private val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>()
+    private var having: Op<Boolean>? = null
     private var limit: Int? = null
     private var offset: Int = 0
     private var distinct: Boolean = false
@@ -174,8 +174,8 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
             val fake = QueryBuilder(false)
             error ("HAVING clause is specified twice. Old value = '${having!!.toSQL(fake)}', new value = '${oop.toSQL(fake)}'")
         }
-        having = oop;
-        return this;
+        having = oop
+        return this
     }
 
     fun orderBy (column: Expression<*>, isAsc: Boolean = true) : Query {

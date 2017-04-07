@@ -4,14 +4,14 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.*
 
-abstract class Function<T>(): ExpressionWithColumnType<T>()
+abstract class Function<T> : ExpressionWithColumnType<T>()
 
 class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: ColumnType = IntegerColumnType();
+    override val columnType: ColumnType = IntegerColumnType()
 }
 
 class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
@@ -19,10 +19,10 @@ class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: ColumnType = DateColumnType(false);
+    override val columnType: ColumnType = DateColumnType(false)
 }
 
-class CurrentDateTime(): Function<DateTime>() {
+class CurrentDateTime : Function<DateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
     override val columnType: ColumnType = DateColumnType(false)
 }
@@ -32,7 +32,7 @@ class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: ColumnType = DateColumnType(false);
+    override val columnType: ColumnType = DateColumnType(false)
 }
 
 class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>() {

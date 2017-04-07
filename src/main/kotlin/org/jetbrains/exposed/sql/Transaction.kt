@@ -12,9 +12,9 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
-class Key<T>()
+class Key<T>
 @Suppress("UNCHECKED_CAST")
-open class UserDataHolder() {
+open class UserDataHolder {
     protected val userdata = ConcurrentHashMap<Key<*>, Any?>()
 
     fun <T:Any> putUserData(key: Key<T>, value: T?) {

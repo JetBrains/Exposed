@@ -21,7 +21,7 @@ class QueryBuilder(val prepared: Boolean) {
     }
 }
 
-abstract class Expression<out T>() {
+abstract class Expression<out T> {
     private val _hashCode by lazy {
         toString().hashCode()
     }
@@ -49,5 +49,5 @@ abstract class Expression<out T>() {
 
 abstract class ExpressionWithColumnType<T> : Expression<T>() {
     // used for operations with literals
-    abstract val columnType: ColumnType;
+    abstract val columnType: ColumnType
 }

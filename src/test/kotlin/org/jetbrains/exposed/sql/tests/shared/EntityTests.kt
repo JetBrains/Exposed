@@ -88,9 +88,7 @@ object EntityTestsData {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
 
-        companion object : EntityClass<String, YEntity>(YTable) {
-
-        }
+        companion object : EntityClass<String, YEntity>(YTable)
     }
 }
 
