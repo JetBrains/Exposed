@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 object SchemaUtils {
@@ -76,10 +77,10 @@ object SchemaUtils {
                 for (table in tables) {
                     for (column in table.columns) {
                         if (column.referee != null) {
-                            val existingConstraint = existingColumnConstraint[Pair(table.tableName, column.name)]?.firstOrNull()
+                            val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to column.name.inProperCase()]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.referencedTable != column.referee!!.table.tableName
+                            } else if (existingConstraint.referencedTable != column.referee!!.table.tableName.inProperCase()
                                     || column.onDelete != existingConstraint.deleteRule) {
                                 statements.addAll(existingConstraint.dropStatement())
                                 statements.addAll(createFKey(column))

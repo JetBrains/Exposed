@@ -3,7 +3,9 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -228,7 +230,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?) : Column<T> = when(columnType) {
         is AutoIncColumnType -> this
-        is ColumnType -> this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName ?: "${name}_seq")))
+        is ColumnType ->
+            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName ?: "${tableName}_${name}_seq")))
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
@@ -354,7 +357,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return null
     }
 
-    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}") +
+    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}" +
+        if (currentDialectIfAvailable == OracleDialect) { " CASCADE CONSTRAINTS" } else "") +
         autoIncColumn?.autoIncSeqName?.let { Seq(it).dropStatement() }.orEmpty()
 
     override fun modifyStatement() = throw UnsupportedOperationException("Use modify on columns and indices")

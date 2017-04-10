@@ -7,7 +7,6 @@ import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.EntityHookTestData.UsersToCities.city
 import org.junit.Test
 
 object LongIdTables {
@@ -32,7 +31,7 @@ class LongIdTableEntityTest : DatabaseTestsBase() {
 
     @Test fun `create tables`() {
         withDb {
-            SchemaUtils.createMissingTablesAndColumns(LongIdTables.Cities, LongIdTables.People)
+            SchemaUtils.create(LongIdTables.Cities, LongIdTables.People)
             try {
                 assertEquals(true, LongIdTables.Cities.exists())
                 assertEquals(true, LongIdTables.People.exists())

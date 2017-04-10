@@ -16,12 +16,12 @@ import java.util.*
 import kotlin.concurrent.thread
 
 enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val user: String = "root", val pass: String = "",
-                  val beforeConnection: () -> Any = {Unit}, val afterConnection: () -> Unit = {}) {
+                  val beforeConnection: () -> Any = {Unit}, val afterTestFinished: () -> Unit = {}) {
     H2(H2Dialect, "jdbc:h2:mem:", "org.h2.Driver"),
     SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
     MYSQL(MysqlDialect, "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
-            afterConnection = {
+            afterTestFinished = {
                 try {
                     val baseDir = Files().tmp(MysqldResource.MYSQL_C_MXJ)
                     ServerLauncherSocketFactory.shutdown(baseDir, null)
@@ -32,9 +32,23 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                 }
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess.start() }, afterConnection = { postgresSQLProcess.stop() }),
-    ORACLE(OracleDialect, "jdbc:oracle:thin:@//192.168.99.100:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver",
-            user = "system", pass = "oracle");
+            beforeConnection = { postgresSQLProcess.start() }, afterTestFinished = { postgresSQLProcess.stop() }),
+    ORACLE(OracleDialect, "jdbc:oracle:thin:@//192.168.99.100:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+            beforeConnection = {
+                Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
+                transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1) {
+                    try {
+                        exec("DROP USER ExposedTest CASCADE")
+                    } catch (e: Exception) { // ignore
+                        exposedLogger.warn("Exception on deleting ExposedTest user", e)
+                    }
+
+                    exec("CREATE USER ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
+                    exec("grant all privileges to ExposedTest IDENTIFIED BY 12345")
+                    exec("grant dba to ExposedTest IDENTIFIED BY 12345")
+                }
+                Unit
+            });
 
     companion object {
         fun enabledInTests(): List<TestDB> {
@@ -66,7 +80,7 @@ abstract class DatabaseTestsBase {
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
-            Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterConnection() })
+            Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
         }
 

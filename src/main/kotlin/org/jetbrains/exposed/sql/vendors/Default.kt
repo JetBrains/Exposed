@@ -134,7 +134,8 @@ internal abstract class VendorDialect(override val name: String,
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
-        val resultSet = TransactionManager.current().db.metadata.getTables(null, null, null, arrayOf("TABLE"))
+        val tr = TransactionManager.current()
+        val resultSet = tr.db.metadata.getTables(null, catalog(tr), null, arrayOf("TABLE"))
 
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME").inProperCase)

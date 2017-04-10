@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.VendorDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.sql.SQLException
 import java.util.*
@@ -46,11 +47,8 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
-            try {
-                assertEquals (true, TestTable.exists())
-            } finally {
-                SchemaUtils.drop(TestTable)
-            }
+            assertTrue(TestTable.exists())
+            SchemaUtils.drop(TestTable)
         }
     }
 
@@ -64,8 +62,8 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
+            assertTrue(TestTable.exists())
             try {
-                assertEquals (true, TestTable.exists())
                 SchemaUtils.createMissingTablesAndColumns(TestTable)
             } finally {
                 SchemaUtils.drop(TestTable)
