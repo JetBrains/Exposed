@@ -13,7 +13,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
 
     open protected fun generatedKeyFun(rs: ResultSet, inserted: Int) : Key? {
-        return table.columns.firstOrNull { it.columnType.autoinc }?.let { column ->
+        return table.columns.firstOrNull { it.columnType.isAutoInc }?.let { column ->
             if (rs.next()) {
                 @Suppress("UNCHECKED_CAST")
                 column.columnType.valueFromDB(rs.getObject(1)) as? Key
@@ -45,7 +45,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
         transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
-        val inserted = if (arguments().count() > 1) executeBatch().sum() else executeUpdate()
+        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         return inserted.apply {
             generatedKeys?.let {
                 generatedKey = generatedKeyFun(it, this)
@@ -59,9 +59,9 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             when (value) {
                 is Expression<*> -> value.toSQL(this)
                 DefaultValueMarker -> {}
-                else -> this.registerArgument(it.key.columnType, value)
+                else -> registerArgument(it.key.columnType, value)
             }
         }
-        if (args.isNotEmpty()) listOf(args) else emptyList()
+        if (args.isNotEmpty()) listOf(args.toList()) else emptyList()
     }
 }

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.util.*
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
 
@@ -60,8 +61,13 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         return table.autoIncColumn?.let {
-            val nextValExpr = expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
-            return "INSERT INTO ${transaction.identity(table)} (${it.name}, ${columns.joinToString { transaction.identity(it) }}) $nextValExpr"
+            val newExpr = if (expr.isBlank()) {
+                "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
+            } else {
+                expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
+            }
+
+            super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
         } ?: super.insert(ignore, table, columns, expr, transaction)
     }
 
@@ -70,9 +76,20 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 
         val rs = TransactionManager.current().connection.createStatement().executeQuery(
-                "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, NULLABLE FROM DBA_TAB_COLS WHERE OWNER = '${OracleDialect.getDatabase()}'")
+                "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, NULLABLE FROM DBA_TAB_COLS WHERE OWNER = '${getDatabase()}'")
         return rs.extractColumns(tables) {
             Triple(it.getString("TABLE_NAME")!!, it.getString("COLUMN_NAME")!!, it.getBoolean("NULLABLE"))
         }
+    }
+
+    override fun allTablesNames(): List<String> {
+        val result = ArrayList<String>()
+        val tr = TransactionManager.current()
+        val resultSet = tr.db.metadata.getTables(null, getDatabase(), null, arrayOf("TABLE"))
+
+        while (resultSet.next()) {
+            result.add(resultSet.getString("TABLE_NAME").inProperCase)
+        }
+        return result
     }
 }

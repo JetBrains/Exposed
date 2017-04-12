@@ -153,21 +153,13 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return quoteIfNecessary(column.name.inProperCase())
     }
 
-    fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatement {
-        val flag = if (returnKeys)
-            java.sql.Statement.RETURN_GENERATED_KEYS
-        else
-            java.sql.Statement.NO_GENERATED_KEYS
-        return connection.prepareStatement(sql, flag)!!
-    }
-
-    /*    fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
+    fun prepareStatement(sql: String, autoincs: List<Column<*>>? = null): PreparedStatement {
         if (autoincs != null && autoincs.isNotEmpty()) {
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            return connection.prepareStatement(sql, autoincs.toTypedArray())!!
+            return connection.prepareStatement(sql, autoincs.map { identity(it) }.toTypedArray())!!
         } else {
             return connection.prepareStatement(sql, java.sql.PreparedStatement.NO_GENERATED_KEYS)!!
         }
-    }*/
+    }
 }
 

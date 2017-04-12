@@ -40,8 +40,8 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 transaction.monitor.notifyBeforeExecution(transaction, context)
                 listOf(context)
             }
-
-            val statement = transaction.prepareStatement(prepareSQL(transaction), type == StatementType.INSERT)
+            val autoInc = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }.takeIf { type == StatementType.INSERT }
+            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc)
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
                 // REVIEW
