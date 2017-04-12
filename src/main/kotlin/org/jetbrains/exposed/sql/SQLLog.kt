@@ -8,7 +8,7 @@ import java.sql.PreparedStatement
 import java.util.*
 
 interface SqlLogger {
-    fun log (context: StatementContext, transaction: Transaction);
+    fun log (context: StatementContext, transaction: Transaction)
 }
 
 val exposedLogger = LoggerFactory.getLogger("Exposed")!!
@@ -27,14 +27,14 @@ class StdOutSqlLogger : SqlLogger {
     }
 }
 
-class Slf4jSqlLogger(): SqlLogger {
+class Slf4jSqlLogger : SqlLogger {
 
     override fun log (context: StatementContext, transaction: Transaction) {
         exposedLogger.debug(context.expandArgs(TransactionManager.current()))
     }
 }
 
-class CompositeSqlLogger() : SqlLogger, StatementInterceptor {
+class CompositeSqlLogger : SqlLogger, StatementInterceptor {
     private val loggers: ArrayList<SqlLogger> = ArrayList()
 
     fun addLogger (logger: SqlLogger) {

@@ -13,9 +13,9 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
-class Key<T>()
+class Key<T>
 @Suppress("UNCHECKED_CAST")
-open class UserDataHolder() {
+open class UserDataHolder {
     protected val userdata = ConcurrentHashMap<Key<*>, Any?>()
 
     fun <T:Any> putUserData(key: Key<T>, value: T?) {
@@ -153,13 +153,21 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return quoteIfNecessary(column.name.inProperCase())
     }
 
-    fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
+    fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatement {
+        val flag = if (returnKeys)
+            java.sql.Statement.RETURN_GENERATED_KEYS
+        else
+            java.sql.Statement.NO_GENERATED_KEYS
+        return connection.prepareStatement(sql, flag)!!
+    }
+
+    /*    fun prepareStatement(sql: String, autoincs: List<String>? = null): PreparedStatement {
         if (autoincs != null && autoincs.isNotEmpty()) {
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
             return connection.prepareStatement(sql, autoincs.toTypedArray())!!
         } else {
             return connection.prepareStatement(sql, java.sql.PreparedStatement.NO_GENERATED_KEYS)!!
         }
-    }
+    }*/
 }
 

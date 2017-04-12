@@ -475,8 +475,8 @@ class EntityCache {
 }
 
 @Suppress("UNCHECKED_CAST")
-abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) {
-    private val klass = javaClass.enclosingClass!!
+abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
+    internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.constructors[0]
 
     operator fun get(id: EntityID<ID>): T {
@@ -599,11 +599,12 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
     fun new(init: T.() -> Unit) = new(null, init)
 
     fun new(id: ID?, init: T.() -> Unit): T {
-        val prototype: T = createInstance(EntityID(id, table), null)
+        val entityId = EntityID(id, table)
+        val prototype: T = createInstance(entityId, null)
         prototype.klass = this
         prototype._readValues = ResultRow.create(dependsOnColumns)
         if (id != null) {
-            prototype.writeValues.put(table.id as Column<Any?>, id)
+            prototype.writeValues.put(table.id as Column<Any?>, entityId)
         }
         prototype.init()
         warmCache().scheduleInsert(this, prototype)
@@ -685,7 +686,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>) 
     fun <ID : Any, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
-abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>) : EntityClass<ID, T>(table) {
+abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T?) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
@@ -693,7 +694,7 @@ abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID
     }
 }
 
-abstract class ImmutableCachedEntityClass<ID:Any, T: Entity<ID>>(table: IdTable<ID>) : ImmutableEntityClass<ID, T>(table) {
+abstract class ImmutableCachedEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
     private var _cachedValues: MutableMap<Any, Entity<Any>>? = null
 

@@ -68,7 +68,7 @@ private val postgresSQLProcess by lazy {
             Version.Main.PRODUCTION, AbstractPostgresConfig.Net("localhost", 12346),
             AbstractPostgresConfig.Storage("template1"), AbstractPostgresConfig.Timeout(),
             AbstractPostgresConfig.Credentials("root", "root")
-    );
+    )
     PostgresStarter.getDefaultInstance().prepare(config)
 }
 

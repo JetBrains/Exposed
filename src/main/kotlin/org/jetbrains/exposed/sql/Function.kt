@@ -11,7 +11,7 @@ class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<In
         return "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: IColumnType = IntegerColumnType();
+    override val columnType: IColumnType = IntegerColumnType()
 }
 
 class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
@@ -19,7 +19,7 @@ class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: IColumnType = DateColumnType(false);
+    override val columnType: IColumnType = DateColumnType(false)
 }
 
 class CurrentDateTime : Function<DateTime>() {
@@ -32,7 +32,7 @@ class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: IColumnType = DateColumnType(false);
+    override val columnType: IColumnType = DateColumnType(false)
 }
 
 class LowerCase<out T: String?>(val expr: Expression<T>) : Function<T>() {
@@ -115,7 +115,7 @@ class Sum<out T>(val expr: Expression<T>, _columnType: IColumnType): Function<T?
     override val columnType: IColumnType = _columnType
 }
 
-class Coalesce<out T>(val expr: ExpressionWithColumnType<out T?>, val alternate: ExpressionWithColumnType<out T>): Function<T>() {
+class Coalesce<out T>(val expr: ExpressionWithColumnType<T?>, val alternate: ExpressionWithColumnType<out T>): Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "COALESCE(${expr.toSQL(queryBuilder)}, ${alternate.toSQL(queryBuilder)})"
     }

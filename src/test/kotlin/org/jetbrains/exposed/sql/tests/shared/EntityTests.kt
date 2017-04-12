@@ -88,9 +88,7 @@ object EntityTestsData {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
 
-        companion object : EntityClass<String, YEntity>(YTable) {
-
-        }
+        companion object : EntityClass<String, YEntity>(YTable)
     }
 }
 
@@ -100,20 +98,6 @@ class EntityTests: DatabaseTestsBase() {
             val x = EntityTestsData.XEntity.new {  }
             assertEquals (x.b1, true, "b1 mismatched")
             assertEquals (x.b2, false, "b2 mismatched")
-        }
-    }
-
-
-    @Test fun testNotAutoIncTable() {
-        withTables(EntityTestsData.NotAutoIntIdTable) {
-            val e1 = EntityTestsData.NotAutoEntity.new(true)
-            val e2 = EntityTestsData.NotAutoEntity.new(false)
-
-            TransactionManager.current().flushCache()
-
-            val all = EntityTestsData.NotAutoEntity.all()
-            assert(all.any { it.id == e1.id })
-            assert(all.any { it.id == e2.id })
         }
     }
 
@@ -132,6 +116,33 @@ class EntityTests: DatabaseTestsBase() {
             assertFalse (b.y!!.x)
             assertNotNull(y.b)
 
+        }
+    }
+
+    @Test fun testNotAutoIncTable() {
+        withTables(EntityTestsData.NotAutoIntIdTable) {
+            val e1 = EntityTestsData.NotAutoEntity.new(true)
+            val e2 = EntityTestsData.NotAutoEntity.new(false)
+
+            TransactionManager.current().flushCache()
+
+            val all = EntityTestsData.NotAutoEntity.all()
+            assert(all.any { it.id == e1.id })
+            assert(all.any { it.id == e2.id })
+        }
+    }
+
+    internal object OneAutoFieldTable : IntIdTable("single")
+    internal class SingleFieldEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
+    }
+
+    //GitHub issue #95: Dao new{ } with no values problem "NoSuchElementException: List is empty"
+    @Test
+    fun testOneFieldEntity() {
+        withTables(OneAutoFieldTable) {
+            val new = SingleFieldEntity.new { }
+            commit()
         }
     }
 
@@ -222,6 +233,45 @@ class EntityTests: DatabaseTestsBase() {
             val child1 = Post.new { this.parent = parent }
             Post.new { this.parent = child1 }
             flushCache()
+        }
+    }
+
+
+    object Humans : IntIdTable("human") {
+        val h = text("h")
+    }
+
+    object Users : IdTable<Int>("user") {
+        override val id: Column<EntityID<Int>> = reference("id", Humans)
+        val name = text("name")
+    }
+
+    open class Human (id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Human>(Humans)
+        var h by Humans.h
+    }
+
+    class User(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<User>(Users){
+            fun create(name: String): User {
+                val h = Human.new { h = name.take(2) }
+                return User.new(h.id.value) {
+                    this.name = name
+                }
+            }
+        }
+
+        var human by Human referencedOn Users.id
+        var name by Users.name
+    }
+
+    @Test
+    fun testOneToOneReference() {
+        withTables(Humans, Users) {
+            val user = User.create("testUser")
+            assertEquals("te", user.human.h)
+            assertEquals("testUser", user.name)
+            assertEquals(user.id.value, user.human.id.value)
         }
     }
 

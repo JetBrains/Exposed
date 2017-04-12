@@ -13,8 +13,8 @@ import java.sql.Blob
 import java.util.*
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
-import kotlin.reflect.memberProperties
-import kotlin.reflect.primaryConstructor
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 interface FieldSet {
     val fields: List<Expression<*>>
@@ -24,7 +24,7 @@ interface FieldSet {
 abstract class ColumnSet : FieldSet {
     abstract val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
-    override val source : ColumnSet get() = this
+    override val source get() = this
 
     abstract fun describe(s: Transaction): String
 
@@ -67,7 +67,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
         }
     }
 
-    val joinParts: ArrayList<JoinPart> = ArrayList();
+    val joinParts: ArrayList<JoinPart> = ArrayList()
 
     override infix fun innerJoin(otherTable: ColumnSet): Join {
         return join(otherTable, JoinType.INNER)
@@ -84,7 +84,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
                 error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
             fkKeys.count() > 1 || fkKeys.any { it.second.count() > 1 } ->  {
-                val references = fkKeys.map { "${it.first.toString()} -> ${it.second.joinToString { it.toString() }}" }.joinToString(" & ")
+                val references = fkKeys.map { "${it.first} -> ${it.second.joinToString { it.toString() }}" }.joinToString(" & ")
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
             else -> return join(otherTable, joinType, fkKeys.singleOrNull()?.first, fkKeys.singleOrNull()?.second?.single(), additionalConstraint)

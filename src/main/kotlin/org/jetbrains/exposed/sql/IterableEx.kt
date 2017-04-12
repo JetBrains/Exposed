@@ -20,7 +20,7 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
     }
 
     override fun limit(n: Int, offset: Int): SizedIterable<T> {
-        return this;
+        return this
     }
 
     override fun empty(): Boolean {
@@ -36,7 +36,7 @@ class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
     }
 
     override fun hasNext(): Boolean {
-        return false;
+        return false
     }
 }
 

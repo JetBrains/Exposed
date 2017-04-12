@@ -153,7 +153,7 @@ class DDLTests : DatabaseTestsBase() {
         val t = object : Table("t2") {
             val id = integer("id").primaryKey()
             val lvalue = integer("lvalue")
-            val rvalue = integer("rvalue");
+            val rvalue = integer("rvalue")
             val name = varchar("name", 255).index()
 
             init {
