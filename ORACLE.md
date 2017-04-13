@@ -3,7 +3,6 @@
 ### Limitations
 
 * Only Oracle 12 supported (limit with `FETCH ... ROWS ONLY`)
-* `IF NOT EXISTS` not supported, so `create` will fail if tables already exist
 * `autoinc` columns supported by sequences, need an argument with sequence name
 * `insert` with `select` with `limit` not supported (`DMLTests.testInsertSelect01`)
 

@@ -152,14 +152,5 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     fun identity(column: Column<*>): String {
         return quoteIfNecessary(column.name.inProperCase())
     }
-
-    fun prepareStatement(sql: String, autoincs: List<Column<*>>? = null): PreparedStatement {
-        if (autoincs != null && autoincs.isNotEmpty()) {
-            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            return connection.prepareStatement(sql, autoincs.map { identity(it) }.toTypedArray())!!
-        } else {
-            return connection.prepareStatement(sql, java.sql.PreparedStatement.NO_GENERATED_KEYS)!!
-        }
-    }
 }
 

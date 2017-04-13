@@ -12,23 +12,8 @@ class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query
         if (columns.size != selectQuery.set.fields.size) error("Columns count doesn't equal to query columns count")
     }
 
-    var generatedKey: Int? = null
 
-    operator fun get(column: Column<Int>): Int = generatedKey ?: error("Statement is not executed or table has not any auto-generated fields")
-
-    override fun PreparedStatement.executeInternal(transaction: Transaction): Int? = executeUpdate().apply {
-        if (targets.single().columns.any { it.columnType.isAutoInc }) {
-            generatedKey = generatedKeys?.let { rs ->
-                if (rs.next()) {
-                    return rs.getInt(1)
-                } else if (!isIgnore) {
-                    throw IllegalStateException("No key generated after statement: ${prepareSQL(transaction)}")
-                } else {
-                    null
-                }
-            }
-        }
-    }
+    override fun PreparedStatement.executeInternal(transaction: Transaction): Int? = executeUpdate()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = emptyList()
 

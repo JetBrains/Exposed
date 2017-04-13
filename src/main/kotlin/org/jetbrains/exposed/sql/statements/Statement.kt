@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.isAutoInc
 import java.sql.PreparedStatement
 import java.util.*
 
@@ -19,6 +18,10 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
     abstract fun prepareSQL(transaction: Transaction): String
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
+
+    open fun prepared(transaction: Transaction, sql: String) : PreparedStatement {
+        return transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!
+    }
 
     open val isAlwaysBatch: Boolean get() = false
 
@@ -40,8 +43,8 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 transaction.monitor.notifyBeforeExecution(transaction, context)
                 listOf(context)
             }
-            val autoInc = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }.takeIf { type == StatementType.INSERT }
-            val statement = transaction.prepareStatement(prepareSQL(transaction), autoInc)
+
+            val statement = prepared(transaction, prepareSQL(transaction))
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
                 // REVIEW

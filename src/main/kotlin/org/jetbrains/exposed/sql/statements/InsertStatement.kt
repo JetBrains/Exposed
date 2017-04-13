@@ -53,6 +53,16 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
+    override fun prepared(transaction: Transaction, sql: String): PreparedStatement {
+        val autoincs = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }
+        return if (autoincs.isNotEmpty()) {
+            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
+            transaction.connection.prepareStatement(sql, autoincs.map { transaction.identity(it) }.toTypedArray())!!
+        } else {
+            transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
+        }
+    }
+
     override fun arguments() = QueryBuilder(true).run {
         valuesAndDefaults().forEach {
             val value = it.value
