@@ -15,8 +15,8 @@ buildscript {
 }
 
 plugins {
-    id "com.jfrog.bintray" version "1.6"
-    id 'net.researchgate.release' version '2.3.4'
+    id "com.jfrog.bintray" version "1.7.3"
+    id 'net.researchgate.release' version '2.6.0'
 }
 
 apply plugin: 'java'
@@ -50,11 +50,11 @@ repositories {
 }
 
 dependencies {
-    testCompile "mysql:mysql-connector-java:5.1.39"
+    testCompile "mysql:mysql-connector-java:5.1.41"
     testCompile "mysql:mysql-connector-mxj:5.0.12"
-    testCompile 'org.postgresql:postgresql:9.4.1208.jre7'
-    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.20'
-    testCompile 'org.xerial:sqlite-jdbc:3.14.2'
+    testCompile 'org.postgresql:postgresql:9.4.1212.jre6'
+    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.13'
+    testCompile 'org.xerial:sqlite-jdbc:3.16.1'
     testCompile files('libs/ojdbc6-12.1.0.2.jar')
 //    #com.hynnet:oracle-driver-ojdbc6:12.1.0.1'''
 }
@@ -100,7 +100,7 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "2.14.1"
+    gradleVersion = "3.5"
 }
 
 
@@ -117,15 +117,15 @@ allprojects {
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-        compile 'joda-time:joda-time:2.5'
-        compile 'org.slf4j:slf4j-api:1.7.12'
-        compileOnly 'com.h2database:h2:1.4.186'
+        compile 'joda-time:joda-time:2.9.9'
+        compile 'org.slf4j:slf4j-api:1.7.25'
+        compileOnly 'com.h2database:h2:1.4.194'
 
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-        testCompile 'org.slf4j:slf4j-log4j12:1.7.12'
+        testCompile 'org.slf4j:slf4j-log4j12:1.7.25'
         testCompile 'log4j:log4j:1.2.17'
-        testCompile 'junit:junit:4.11'
-        testCompile 'com.h2database:h2:1.4.186'
+        testCompile 'junit:junit:4.12'
+        testCompile 'com.h2database:h2:1.4.194'
 
     }
 }
@@ -135,9 +135,9 @@ project(":spring-transaction") {
     apply plugin: 'kotlin'
 
     dependencies {
-        compile 'org.springframework:spring-jdbc:4.2.5.RELEASE'
-        compile 'org.springframework:spring-context:4.2.5.RELEASE'
+        compile 'org.springframework:spring-jdbc:4.3.7.RELEASE'
+        compile 'org.springframework:spring-context:4.3.7.RELEASE'
         compile rootProject
-        testCompile 'org.springframework:spring-test:4.2.5.RELEASE'
+        testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
     }
 }
