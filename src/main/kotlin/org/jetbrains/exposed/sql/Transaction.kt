@@ -80,7 +80,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     fun exec(stmt: String) = exec(stmt, { })
 
     fun <T:Any> exec(stmt: String, transform: (ResultSet) -> T): T? {
-        val type = StatementType.values().first { stmt.startsWith(it.name, true) }
+        val type = StatementType.values().find {
+            stmt.trim().startsWith(it.name, true)
+        } ?: StatementType.OTHER
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
                 when (type) {
