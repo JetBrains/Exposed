@@ -20,22 +20,24 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
     return answer
 }
 
-class StdOutSqlLogger : SqlLogger {
+object StdOutSqlLogger : SqlLogger {
 
     override fun log (context: StatementContext, transaction: Transaction) {
         System.out.println("SQL: ${context.expandArgs(transaction)}")
     }
 }
 
-class Slf4jSqlLogger : SqlLogger {
+object Slf4jSqlLogger : SqlLogger {
 
     override fun log (context: StatementContext, transaction: Transaction) {
-        exposedLogger.debug(context.expandArgs(TransactionManager.current()))
+        if (exposedLogger.isDebugEnabled) {
+            exposedLogger.debug(context.expandArgs(TransactionManager.current()))
+        }
     }
 }
 
 class CompositeSqlLogger : SqlLogger, StatementInterceptor {
-    private val loggers: ArrayList<SqlLogger> = ArrayList()
+    private val loggers: ArrayList<SqlLogger> = ArrayList(2)
 
     fun addLogger (logger: SqlLogger) {
         loggers.add(logger)
