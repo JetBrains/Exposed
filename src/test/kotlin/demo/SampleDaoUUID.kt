@@ -17,7 +17,7 @@ object Cities: UUIDTable("cities") {
   val name = varchar("name", 50)
 }
 
-class User(id: EntityID<UUID>) : UUIDEntity(id) {
+class User(id: EntityID<String>) : UUIDEntity(id) {
   companion object : UUIDEntityClass<User>(Users)
 
   var name by Users.name
@@ -25,7 +25,7 @@ class User(id: EntityID<UUID>) : UUIDEntity(id) {
   var age by Users.age
 }
 
-class City(id: EntityID<UUID>) : UUIDEntity(id) {
+class City(id: EntityID<String>) : UUIDEntity(id) {
   companion object : UUIDEntityClass<City>(Cities)
 
   var name by Cities.name
