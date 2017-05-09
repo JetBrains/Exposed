@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import java.util.UUID
 
 open class UUIDTable(name: String = "", columName: String = "id") : IdTable<String>(name) {
-  override val id: Column<EntityID<String>> = varchar(columName, 36).primaryKey().clientDefault { UUID.randomUUID().toString() }.entityId()
+  override val id: Column<EntityID<String>> = varchar(columName, 36).primaryKey().clientDefault { UUID.randomUUID().toString().toUpperCase() }.entityId()
 }
 
 abstract class UUIDEntity(id: EntityID<String>) : Entity<String>(id)
