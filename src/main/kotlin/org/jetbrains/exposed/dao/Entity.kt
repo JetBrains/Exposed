@@ -389,7 +389,7 @@ class EntityCache {
         }
     }
 
-    fun flushInserts(table: IdTable<*>) {
+    internal fun flushInserts(table: IdTable<*>) {
         inserts.remove(table)?.let {
             var toFlush: List<Entity<*>> = it
             do {
@@ -434,7 +434,7 @@ class EntityCache {
     companion object {
 
         fun invalidateGlobalCaches(created: List<Entity<*>>) {
-            created.map { it.klass }.filterNotNull().filterIsInstance<ImmutableCachedEntityClass<*,*>>().toSet().forEach {
+            created.mapNotNull { it.klass }.filterIsInstance<ImmutableCachedEntityClass<*,*>>().distinct().forEach {
                 it.expireCache()
             }
         }

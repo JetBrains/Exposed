@@ -8,6 +8,7 @@ import java.sql.ResultSet
  * isIgnore is supported for mysql only
  */
 open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
+    open protected val flushCache = true
     var generatedKey: Key? = null
 
     infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
@@ -43,7 +44,8 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
-        transaction.flushCache()
+        if (flushCache)
+            transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         return inserted.apply {
