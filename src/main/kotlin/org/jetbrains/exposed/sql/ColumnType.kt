@@ -201,11 +201,12 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): St
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
+private val DEFAULT_DATE_TIME_ZONE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSSZ").withLocale(Locale.ROOT)
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 
-class DateColumnType(val time: Boolean): ColumnType() {
-    override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
+class DateColumnType(val time: Boolean, val withTimezone: Boolean): ColumnType() {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.dateTimeType(withTimezone)
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
@@ -218,12 +219,17 @@ class DateColumnType(val time: Boolean): ColumnType() {
         }
 
         return if (time)
-            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+            if (withTimezone) {
+                "'${DEFAULT_DATE_TIME_ZONE_STRING_FORMATTER.print(dateTime)}'"
+            } else {
+                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+            }
         else
             "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when(value) {
+        is DateTime -> value
         is java.sql.Date ->  DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
         is Long -> DateTime(value)

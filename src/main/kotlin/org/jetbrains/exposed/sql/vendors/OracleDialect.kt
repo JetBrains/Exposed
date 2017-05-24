@@ -14,7 +14,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun longType() = "NUMBER(19)"
 
-    override fun dateTimeType() = "TIMESTAMP"
+    override fun dateTimeType(withTimezone: Boolean) = if (withTimezone) "TIMESTAMP WITH TIME ZONE" else "TIMESTAMP"
 
     override fun uuidType() = "RAW(16)"
 

@@ -212,11 +212,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
-    fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+    fun date(name: String, withTimezone: Boolean = false): Column<DateTime> = registerColumn(name, DateColumnType(false, withTimezone))
 
     fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
 
-    fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+    fun datetime(name: String, withTimezone: Boolean = false): Column<DateTime> = registerColumn(name, DateColumnType(true, withTimezone))
 
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 

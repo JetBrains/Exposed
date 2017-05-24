@@ -8,7 +8,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType(): String = "INTEGER AUTO_INCREMENT"
     override fun longAutoincType(): String = "INTEGER AUTO_INCREMENT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
-    override fun dateTimeType(): String  = "NUMERIC"
+    override fun dateTimeType(withTimezone: Boolean): String  = "NUMERIC"
     override val blobAsStream: Boolean = true
 }
 
