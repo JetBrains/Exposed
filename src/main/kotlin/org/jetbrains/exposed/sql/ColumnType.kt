@@ -226,6 +226,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
     override fun valueFromDB(value: Any): Any = when(value) {
         is java.sql.Date ->  DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
+        is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
         is String -> when {
             currentDialect == SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
