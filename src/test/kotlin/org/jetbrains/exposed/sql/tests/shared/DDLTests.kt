@@ -320,6 +320,21 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(key, result.single()[Node.uuid])
         }
     }
+
+    @Test fun testBooleanColumnType() {
+        val BoolTable = object: Table("booleanTable") {
+            val bool = bool("bool")
+        }
+
+        withTables(BoolTable){
+            BoolTable.insert {
+                it[bool] = true
+            }
+            val result = BoolTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(true, result.single()[BoolTable.bool])
+        }
+    }
     
 }
 

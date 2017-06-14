@@ -342,9 +342,7 @@ class BooleanColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any) = when (value) {
         is Number -> value.toLong() != 0L
-        is String -> value.toBoolean()
-    // REVIEW
-//        is String -> currentDialect.dataTypeProvider.booleanFromStringToBoolean(value)
+        is String -> currentDialect.dataTypeProvider.booleanFromStringToBoolean(value)
         else -> value.toString().toBoolean()
     }
 
