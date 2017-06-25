@@ -184,6 +184,21 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testUniqueMultiColumnIndex() {
+        val t = object : Table("t1") {
+            val type = varchar("type", 255)
+            val name = varchar("name", 255)
+            init {
+                uniqueIndex(type, name)
+            }
+        }
+
+        withTables(t) {
+            val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
+            assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", alter)
+        }
+    }
+
     @Test fun testBlob() {
         val t = object: Table("t1") {
             val id = integer("id").autoIncrement("t1_seq").primaryKey()

@@ -310,6 +310,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun<T> Column<T>.uniqueIndex() : Column<T> = index(true)
 
+    fun uniqueIndex(vararg columns: Column<*>) {
+        index(true, *columns)
+    }
+
     val ddl: List<String>
         get() = createStatement()
 
