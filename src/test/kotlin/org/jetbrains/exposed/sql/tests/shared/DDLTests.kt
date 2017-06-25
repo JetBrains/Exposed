@@ -184,18 +184,21 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testUniqueMultiColumnIndex() {
+    @Test fun testMultiColumnIndex() {
         val t = object : Table("t1") {
             val type = varchar("type", 255)
             val name = varchar("name", 255)
             init {
+                index(false, name, type)
                 uniqueIndex(type, name)
             }
         }
 
         withTables(t) {
-            val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
-            assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", alter)
+            val indexAlter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
+            assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
+            assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
         }
     }
 
