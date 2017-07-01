@@ -224,6 +224,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
     }
 
     override fun valueFromDB(value: Any): Any = when(value) {
+        is DateTime -> value
         is java.sql.Date ->  DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
         is Int -> DateTime(value.toLong())
