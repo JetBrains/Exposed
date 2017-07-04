@@ -24,7 +24,8 @@ interface FieldSet {
 abstract class ColumnSet : FieldSet {
     abstract val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
-    override val source get() = this
+    override val source
+        get() = this
 
     abstract fun describe(s: Transaction): String
 
@@ -220,7 +221,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 
-    fun text(name: String): Column<String> = registerColumn(name, StringColumnType())
+    fun text(name: String): Column<String> = registerColumn(name, StringColumnType(length = 65535))
 
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 

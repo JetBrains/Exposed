@@ -75,15 +75,48 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     }
 }
 
-open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
-    private val groupedByColumns = ArrayList<Expression<*>>()
-    private val orderByColumns = ArrayList<Pair<Expression<*>, Boolean>>()
-    private var having: Op<Boolean>? = null
-    private var limit: Int? = null
-    private var offset: Int = 0
-    private var distinct: Boolean = false
-    private var count: Boolean = false
+open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
+    var groupedByColumns: List<Expression<*>> = mutableListOf()
+        private set
+    var orderByColumns: List<Pair<Expression<*>, Boolean>> = mutableListOf()
+        private set
+    var having: Op<Boolean>? = null
+        private set
+    var distinct: Boolean = false
+        private set
     private var forUpdate: Boolean? = null
+    var set: FieldSet = set
+        private set
+    var where: Op<Boolean>? = where
+        private set
+    var limit: Int? = null
+        private set
+    var offset: Int = 0
+        private set
+
+    /**
+     * Changes [set.fields] field of a Query, [set.source] will be preserved
+     * @param body builder for new column set, current [set.source] used as a receiver, you are expected to slice it
+     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQuerySlice
+     */
+    fun adjustSlice(body: ColumnSet.() -> FieldSet): Query = apply { set = set.source.body() }
+
+    /**
+     * Changes [set.source] field of a Query, [set.fields] will be preserved
+     * @param body builder for new column set, previous value used as a receiver
+     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryColumnSet
+     */
+    fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
+        val oldSlice = set.fields
+        return adjustSlice { body().slice(oldSlice) }
+    }
+
+    /**
+     * Changes [where] field of a Query.
+     * @param body new WHERE condition builder, previous value used as a receiver
+     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryWhere
+     */
+    fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: transaction.selectsForUpdate) && transaction.db.dialect.supportsSelectForUpdate()
@@ -112,9 +145,9 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         append(" FROM ")
         append(set.source.describe(transaction))
 
-        if (where != null) {
+        where?.let {
             append(" WHERE ")
-            append(where.toSQL(builder))
+            append(it.toSQL(builder))
         }
 
         if (!count) {
@@ -156,14 +189,14 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         return this
     }
 
-    fun withDistinct() : Query {
-        distinct = true
+    fun withDistinct(value: Boolean = true) : Query {
+        distinct = value
         return this
     }
 
     fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
-            groupedByColumns.add(column)
+            (groupedByColumns as MutableList).add(column)
         }
         return this
     }
@@ -179,13 +212,13 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
     }
 
     fun orderBy (column: Expression<*>, isAsc: Boolean = true) : Query {
-        orderByColumns.add(column to isAsc)
+        (orderByColumns as MutableList).add(column to isAsc)
         return this
     }
 
     fun orderBy (vararg columns: Pair<Column<*>,Boolean>) : Query {
         for (pair in columns) {
-            orderByColumns.add(pair)
+            (orderByColumns as MutableList).add(pair)
         }
         return this
     }
@@ -231,6 +264,7 @@ open class Query(val transaction: Transaction, val set: FieldSet, val where: Op<
         return ResultIterator(transaction.exec(this)!!)
     }
 
+    private var count: Boolean = false
     override fun count(): Int {
         flushEntities()
 

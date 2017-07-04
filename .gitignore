@@ -2,3 +2,4 @@
 .gradle
 build
 classes
+out/test/resources

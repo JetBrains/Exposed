@@ -125,8 +125,8 @@ allprojects {
         testCompile 'org.slf4j:slf4j-log4j12:1.7.25'
         testCompile 'log4j:log4j:1.2.17'
         testCompile 'junit:junit:4.12'
+        testCompile 'org.hamcrest:hamcrest-library:1.3'
         testCompile 'com.h2database:h2:1.4.194'
-
     }
 }
 

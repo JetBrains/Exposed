@@ -158,9 +158,12 @@ object SchemaUtils {
     }
 
     fun drop(vararg tables: Table) {
-        EntityCache.sortTablesByReferences(tables.toList()).reversed().filter { it in tables}.flatMap { it.dropStatement() }.forEach {
-            TransactionManager.current().exec(it)
-        }
+        EntityCache.sortTablesByReferences(tables.toList()).reversed()
+                .filter { it in tables && it.exists() }
+                .flatMap { it.dropStatement() }
+                .forEach {
+                    TransactionManager.current().exec(it)
+                }
         currentDialect.resetCaches()
     }
 }

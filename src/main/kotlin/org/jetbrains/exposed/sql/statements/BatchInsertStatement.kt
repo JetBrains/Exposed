@@ -8,7 +8,7 @@ import java.sql.ResultSet
 import java.util.*
 
 
-class  BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<Map<Column<*>, Any>>>(table, ignore) {
+open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<Map<Column<*>, Any>>>(table, ignore) {
 
     override val flushCache: Boolean = false
     // REVIEW
