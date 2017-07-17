@@ -242,7 +242,7 @@ internal abstract class VendorDialect(override val name: String,
         }
 
         val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
-            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it).inProperCase } to expr
+            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
         } else "" to DEFAULT_VALUE_EXPRESSION
 
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
@@ -271,7 +271,7 @@ internal abstract class VendorDialect(override val name: String,
             // REVIEW
             append("INDEX ${t.quoteIfNecessary(t.cutIfNecessary(indexName))} ON ${t.quoteIfNecessary(tableName)} ")
             columns.joinTo(this, ", ", "(", ")") {
-                t.quoteIfNecessary(it)
+                it
             }
         }
     }

@@ -39,7 +39,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         fun from(column: Column<*>): ForeignKeyConstraint {
             assert(column.referee != null && column.onDelete != null) { "$column does not reference anything" }
             val s = TransactionManager.current()
-            return ForeignKeyConstraint("", s.identity(column.referee!!.table).inProperCase(), s.identity(column.referee!!).inProperCase(), s.identity(column.table).inProperCase(), s.identity(column).inProperCase(), column.onDelete!!)
+            return ForeignKeyConstraint("", s.identity(column.referee!!.table), s.identity(column.referee!!), s.identity(column.table), s.identity(column), column.onDelete!!)
         }
     }
 
@@ -63,8 +63,9 @@ data class Index(val indexName: String, val tableName: String, val columns: List
         fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
             assert(columns.isNotEmpty())
             assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
+            val t = TransactionManager.current()
             val indexName = "${columns.first().table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
-            return Index(indexName, columns.first().table.nameInDatabaseCase(), columns.map { it.name.inProperCase() }, unique)
+            return Index(indexName, columns.first().table.nameInDatabaseCase(), columns.map { t.identity(it) }, unique)
         }
     }
 

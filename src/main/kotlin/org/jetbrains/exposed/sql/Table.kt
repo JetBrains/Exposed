@@ -328,7 +328,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table).inProperCase())
+            append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
                 if (columns.none { it.isOneColumnPK() }) {

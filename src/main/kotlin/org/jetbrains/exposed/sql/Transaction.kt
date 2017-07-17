@@ -140,7 +140,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     internal fun cutIfNecessary (identity: String) = identity.substring(0, Math.min(currentDialect.identifierLengthLimit, identity.length))
 
     private fun quoteTokenIfNecessary(token: String) : String {
-        return if (db.needQuotes(token)) "${db.identityQuoteString}$token${db.identityQuoteString}" else token
+        return if (db.needQuotes(token)) token.quoted else token
     }
 
     fun identity(table: Table): String {
@@ -148,11 +148,16 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     fun fullIdentity(column: Column<*>): String {
-        return "${quoteIfNecessary(column.table.tableName.inProperCase())}.${quoteIfNecessary(column.name.inProperCase())}"
+        return "${quoteIfNecessary(column.table.tableName.inProperCase())}.${identity(column)}"
     }
 
     fun identity(column: Column<*>): String {
-        return quoteIfNecessary(column.name.inProperCase())
+        val nameInProperCase = column.name.inProperCase()
+        return if (db.shouldQuoteIdentifiers && nameInProperCase != column.name)
+            column.name.quoted
+        else quoteIfNecessary(nameInProperCase)
     }
+
+    private val String.quoted get() = "${db.identityQuoteString}$this${db.identityQuoteString}".trim()
 }
 
