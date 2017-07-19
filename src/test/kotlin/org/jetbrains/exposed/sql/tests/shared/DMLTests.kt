@@ -694,6 +694,29 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testBatchInsert01() {
+        withCitiesAndUsers { cities, users, _ ->
+            val cityNames = listOf("Paris", "Moscow", "Helsinki")
+            val allCitiesID = cities.batchInsert(cityNames) { name ->
+                this[cities.name] = name
+            }
+            assertEquals(cityNames.size, allCitiesID.size)
+
+            val userNamesWithCityIds = allCitiesID.mapIndexed { index, id ->
+                "UserFrom${cityNames[index]}" to id[cities.id] as Number
+            }
+
+            val generatedIds = users.batchInsert(userNamesWithCityIds) { (userName, cityId) ->
+                this[users.id] = java.util.Random().nextInt().toString().take(6)
+                this[users.name] = userName
+                this[users.cityId] = cityId.toInt()
+            }
+
+            assertEquals(userNamesWithCityIds.size, generatedIds.size)
+            assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map{it.first} }.count())
+        }
+    }
+
     @Test fun testGeneratedKey01() {
         withTables(DMLTestsData.Cities){
             val id = DMLTestsData.Cities.insert {
