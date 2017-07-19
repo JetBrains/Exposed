@@ -129,11 +129,16 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("t") {
             val s = varchar("s", 100).default("test")
             val l = long("l").default(42)
+            val c = char("c").default('X')
         }
 
         withTables(TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"t".inProperCase()} (${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                    "${"l".inProperCase()} ${db.dialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
+                    "${"t".inProperCase()} (" +
+                    "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
+                    "${"l".inProperCase()} ${db.dialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
+                    "${"c".inProperCase()} CHAR DEFAULT 'X' NOT NULL" +
+                ")", TestTable.ddl)
         }
     }
 

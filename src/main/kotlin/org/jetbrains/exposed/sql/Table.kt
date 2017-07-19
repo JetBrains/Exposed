@@ -85,7 +85,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
                 error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
             fkKeys.count() > 1 || fkKeys.any { it.second.count() > 1 } ->  {
-                val references = fkKeys.map { "${it.first} -> ${it.second.joinToString { it.toString() }}" }.joinToString(" & ")
+                val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString { it.toString() }}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
             else -> return join(otherTable, joinType, fkKeys.singleOrNull()?.first, fkKeys.singleOrNull()?.second?.single(), additionalConstraint)

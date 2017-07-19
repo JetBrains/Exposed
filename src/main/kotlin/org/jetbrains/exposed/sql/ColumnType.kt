@@ -110,18 +110,16 @@ class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
 class CharacterColumnType : ColumnType() {
     override fun sqlType(): String  = "CHAR"
 
-    override fun valueFromDB(value: Any): Any {
-        return when(value) {
-            is Char -> value
-            is Number -> value.toInt().toChar()
-            is String -> value.single()
-            else -> error("Unexpected value of type Char: $value")
-        }
+    override fun valueFromDB(value: Any): Any = when(value) {
+        is Char -> value
+        is Number -> value.toInt().toChar()
+        is String -> value.single()
+        else -> error("Unexpected value of type Char: $value")
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        return valueFromDB(value).toString()
-    }
+    override fun notNullValueToDB(value: Any): Any = valueFromDB(value).toString()
+
+    override fun nonNullValueToString(value: Any): String = "'$value'"
 }
 
 class IntegerColumnType : ColumnType() {
@@ -274,18 +272,12 @@ open class StringColumnType(val length: Int = 255, val collate: String? = null):
             '\r' to "\\r",
             '\n' to "\\n")
 
-    override fun nonNullValueToString(value: Any): String {
-        val beforeEscaping = value.toString()
-        val sb = StringBuilder(beforeEscaping.length +2)
-        sb.append('\'')
-        for (c in beforeEscaping) {
-            if (charactersToEscape.containsKey(c))
-                sb.append(charactersToEscape[c])
-            else
-                sb.append(c)
+    override fun nonNullValueToString(value: Any): String = buildString {
+        append('\'')
+        value.toString().forEach {
+            append(charactersToEscape[it] ?: it)
         }
-        sb.append('\'')
-        return sb.toString()
+        append('\'')
     }
 
     override fun valueFromDB(value: Any): Any {
