@@ -6,6 +6,8 @@ It does have two layers of database access: typesafe SQL wrapping DSL and lightw
 
 Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed/exposed/view#
 
+[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)  [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed/_latestVersion)
+
 ## Dialects
 
 Currently supported database dialects:
