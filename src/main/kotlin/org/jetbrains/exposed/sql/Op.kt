@@ -152,15 +152,11 @@ class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolea
 }
 
 class exists(val query: Query) : Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "EXISTS (${query.prepareSQL(QueryBuilder(false))})"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder): String = "EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 
 class notExists(val query: Query) : Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "NOT EXISTS (${query.prepareSQL(QueryBuilder(false))})"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder): String = "NOT EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 
 class PlusOp<out T, out S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {

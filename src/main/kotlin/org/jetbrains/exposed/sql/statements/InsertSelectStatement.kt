@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 
 class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query, val isIgnore: Boolean = false): Statement<Int>(StatementType.INSERT, listOf(columns.first().table)) {
@@ -15,9 +18,9 @@ class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int? = executeUpdate()
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = emptyList()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = selectQuery.arguments()
 
     override fun prepareSQL(transaction: Transaction): String {
-        return transaction.db.dialect.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(QueryBuilder(false)), transaction)
+        return transaction.db.dialect.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction), transaction)
     }
 }
