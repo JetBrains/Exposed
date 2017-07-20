@@ -128,7 +128,10 @@ object SqlExpressionBuilder {
             is Int -> intLiteral(value)
             is Long -> longLiteral(value)
             is String -> stringLiteral(value)
-            is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
+            is DateTime -> {
+                val dateColumnType = columnType as DateColumnType
+                if (dateColumnType.time) dateTimeLiteral(value, dateColumnType.withTimezone) else dateLiteral(value, dateColumnType.withTimezone)
+            }
             else -> LiteralOp<T>(columnType, value)
         }
     }

@@ -7,6 +7,8 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
+
+    override fun dateTimeType(withTimezone: Boolean): String = if (withTimezone) "TIMESTAMP WITH TIME ZONE" else "TIMESTAMP"
 }
 
 internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
