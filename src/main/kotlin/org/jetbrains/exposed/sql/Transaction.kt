@@ -22,13 +22,9 @@ open class UserDataHolder {
         userdata[key] = value
     }
 
-    fun <T:Any> getUserData(key: Key<T>) : T? {
-        return userdata[key] as T?
-    }
+    fun <T:Any> getUserData(key: Key<T>) : T? = userdata[key] as T?
 
-    fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T {
-        return userdata.getOrPut(key, init) as T
-    }
+    fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T = userdata.getOrPut(key, init) as T
 }
 
 open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
@@ -74,9 +70,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         }
     }
 
-    private fun describeStatement(delta: Long, stmt: String): String {
-        return "[${delta}ms] ${stmt.take(1024)}\n\n"
-    }
+    private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
     fun exec(stmt: String) = exec(stmt, { })
 
@@ -116,8 +110,8 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
         if (debug) {
             statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value, { 0 to 0L }).let { pair ->
-                statementStats[lazySQL.value] = (pair.first + 1) to (pair.second + delta)
+            statementStats.getOrPut(lazySQL.value, { 0 to 0L }).let { (count, time) ->
+                statementStats[lazySQL.value] = (count + 1) to (time + delta)
             }
         }
 
@@ -139,17 +133,13 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     // REVIEW
     internal fun cutIfNecessary (identity: String) = identity.substring(0, Math.min(currentDialect.identifierLengthLimit, identity.length))
 
-    private fun quoteTokenIfNecessary(token: String) : String {
-        return if (db.needQuotes(token)) token.quoted else token
-    }
+    private fun quoteTokenIfNecessary(token: String) : String = if (db.needQuotes(token)) token.quoted else token
 
-    fun identity(table: Table): String {
-        return (table as? Alias<*>)?.let { "${identity(it.delegate)} ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
-    }
+    fun identity(table: Table): String =
+            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
 
-    fun fullIdentity(column: Column<*>): String {
-        return "${quoteIfNecessary(column.table.tableName.inProperCase())}.${identity(column)}"
-    }
+    fun fullIdentity(column: Column<*>): String =
+            "${quoteIfNecessary(column.table.tableName.inProperCase())}.${identity(column)}"
 
     fun identity(column: Column<*>): String {
         val nameInProperCase = column.name.inProperCase()

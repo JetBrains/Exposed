@@ -10,40 +10,26 @@ interface SizedIterable<out T>: Iterable<T> {
     fun notForUpdate(): SizedIterable<T> = this
 }
 
-fun <T> emptySized() : SizedIterable<T> {
-    return EmptySizedIterable()
-}
+fun <T> emptySized() : SizedIterable<T> = EmptySizedIterable()
 
-class EmptySizedIterable<T> : SizedIterable<T>, Iterator<T> {
-    override fun count(): Int {
-        return 0
-    }
+class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
+    override fun count(): Int = 0
 
-    override fun limit(n: Int, offset: Int): SizedIterable<T> {
-        return this
-    }
+    override fun limit(n: Int, offset: Int): SizedIterable<T> = this
 
-    override fun empty(): Boolean {
-        return true
-    }
+    override fun empty(): Boolean = true
 
-    operator override fun iterator(): Iterator<T> {
-        return this
-    }
+    operator override fun iterator(): Iterator<T> = this
 
     operator override fun next(): T {
         throw UnsupportedOperationException()
     }
 
-    override fun hasNext(): Boolean {
-        return false
-    }
+    override fun hasNext(): Boolean = false
 }
 
 class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
-    override fun limit(n: Int, offset: Int): SizedIterable<T> {
-        return SizedCollection(delegate.drop(offset).take(n))
-    }
+    override fun limit(n: Int, offset: Int): SizedIterable<T> = SizedCollection(delegate.drop(offset).take(n))
 
     operator override fun iterator() = delegate.iterator()
     override fun count() = delegate.size
@@ -99,13 +85,9 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
         operator override fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
             return object: Iterator<R> {
-                operator override fun next(): R {
-                    return f(sourceIterator.next())
-                }
+                operator override fun next(): R = f(sourceIterator.next())
 
-                override fun hasNext(): Boolean {
-                    return sourceIterator.hasNext()
-                }
+                override fun hasNext(): Boolean = sourceIterator.hasNext()
             }
 
         }

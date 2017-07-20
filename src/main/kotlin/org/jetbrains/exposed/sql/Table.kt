@@ -70,13 +70,9 @@ class Join (val table: ColumnSet) : ColumnSet() {
 
     val joinParts: ArrayList<JoinPart> = ArrayList()
 
-    override infix fun innerJoin(otherTable: ColumnSet): Join {
-        return join(otherTable, JoinType.INNER)
-    }
+    override infix fun innerJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet): Join {
-        return join(otherTable, JoinType.LEFT)
-    }
+    override infix fun leftJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.LEFT)
 
     private fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
         val fkKeys = findKeys (this, otherTable) ?: findKeys (otherTable, this) ?: emptyList()
@@ -146,22 +142,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override val fields: List<Expression<*>>
         get() = columns
 
-    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join {
-        return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
-    }
+    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join
+            = Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
     @Deprecated("Just an alias to innerJoin", replaceWith = ReplaceWith("this innerJoin otherTable"))
-    infix fun join(otherTable: ColumnSet) : Join {
-        return Join (this, otherTable, JoinType.INNER)
-    }
+    infix fun join(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
-    override infix fun innerJoin(otherTable: ColumnSet) : Join {
-        return Join (this, otherTable, JoinType.INNER)
-    }
+    override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet) : Join {
-        return Join (this, otherTable, JoinType.LEFT)
-    }
+    override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
 
     fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
         _columns.add(this)
@@ -246,18 +235,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
 
-    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption?): C {
-        return this.apply {
-            referee = ref
-            this.onDelete = onDelete
-        }
+    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption?): C = apply {
+        referee = ref
+        this.onDelete = onDelete
     }
 
     infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null)
 
-    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> {
-        return entityId(name, foreign).references(foreign.id, onDelete)
-    }
+    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> =
+            entityId(name, foreign).references(foreign.id, onDelete)
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
         val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
@@ -265,9 +251,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return column
     }
 
-    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> {
-        return entityId(name, foreign).references(foreign.id, onDelete).nullable()
-    }
+    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> =
+            entityId(name, foreign).references(foreign.id, onDelete).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
@@ -281,9 +266,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {
         this.dbDefaultValue = object : Expression<T>() {
-            override fun toSQL(queryBuilder: QueryBuilder): String {
-                return columnType.valueToString(defaultValue)
-            }
+            override fun toSQL(queryBuilder: QueryBuilder): String = columnType.valueToString(defaultValue)
         }
         this.defaultValueFun = { defaultValue }
         return this

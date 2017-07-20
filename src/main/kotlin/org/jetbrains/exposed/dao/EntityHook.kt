@@ -13,9 +13,7 @@ enum class EntityChangeType {
 
 data class EntityChange<ID: Any>(val entityClass: EntityClass<ID, Entity<ID>>, val id: EntityID<ID>, var changeType: EntityChangeType)
 
-fun<ID: Any> EntityChange<ID>.toEntity() : Entity<ID>? {
-    return entityClass.findById(id)
-}
+fun<ID: Any> EntityChange<ID>.toEntity() : Entity<ID>? = entityClass.findById(id)
 
 fun<ID: Any,T: Entity<ID>> EntityChange<*>.toEntity(klass: EntityClass<ID, T>) : T? {
     if (!entityClass.isAssignableTo(klass)) return null

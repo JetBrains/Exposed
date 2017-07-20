@@ -91,16 +91,4 @@ class Database private constructor(val connector: () -> Connection) {
     }
 }
 
-val Database.name : String get() {
-    return url.let {
-        val query = it.substring(it.lastIndexOf("/")+1)
-        val params = query.indexOf('?')
-        if (params > 0) {
-            query.substring(0, params)
-        }
-        else {
-            query
-        }
-    }
-}
-
+val Database.name : String get() = url.substringAfterLast('/').substringBefore('?')

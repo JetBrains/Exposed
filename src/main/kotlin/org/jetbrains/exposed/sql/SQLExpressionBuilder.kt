@@ -31,23 +31,20 @@ fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
 
 fun <R:Any> Expression<*>.castTo(columnType: ColumnType) = Cast<R>(this, columnType)
 
-fun<T:String?> Expression<T>.substring(start: Int, length: Int): Substring {
-    return Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
-}
+fun<T:String?> Expression<T>.substring(start: Int, length: Int): Substring =
+        Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 
 fun<T:String?> Expression<T>.trim() =Trim(this)
 
 fun <T:String?> Expression<T>.lowerCase() = LowerCase(this)
 fun <T:String?> Expression<T>.upperCase() = UpperCase(this)
 
-fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat {
-    return GroupConcat(this, separator, distinct, *orderBy)
-}
+fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat =
+        GroupConcat(this, separator, distinct, *orderBy)
 
 object SqlExpressionBuilder {
-    fun <T:Any> coalesce(expr: ExpressionWithColumnType<T?>, alternate: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
-        return Coalesce(expr, alternate)
-    }
+    fun <T:Any> coalesce(expr: ExpressionWithColumnType<T?>, alternate: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> =
+            Coalesce(expr, alternate)
 
     fun case(value: Expression<*>? = null) = Case(value)
 
@@ -122,15 +119,13 @@ object SqlExpressionBuilder {
 
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 
-    fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
-        return when (value) {
-            is Boolean -> booleanLiteral(value)
-            is Int -> intLiteral(value)
-            is Long -> longLiteral(value)
-            is String -> stringLiteral(value)
-            is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
-            else -> LiteralOp<T>(columnType, value)
-        }
+    fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> = when (value) {
+        is Boolean -> booleanLiteral(value)
+        is Int -> intLiteral(value)
+        is Long -> longLiteral(value)
+        is String -> stringLiteral(value)
+        is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
+        else -> LiteralOp<T>(columnType, value)
     }
 
     fun<T, S: Any> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> = Between(this, asLiteral(from), asLiteral(to))

@@ -19,9 +19,8 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
-    open fun prepared(transaction: Transaction, sql: String) : PreparedStatement {
-        return transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!
-    }
+    open fun prepared(transaction: Transaction, sql: String) : PreparedStatement =
+        transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!
 
     open val isAlwaysBatch: Boolean get() = false
 
@@ -110,8 +109,7 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
 }
 
 fun PreparedStatement.fillParameters(args: Iterable<Pair<IColumnType, Any?>>): Int {
-    args.forEachIndexed {index, pair ->
-        val (c, v) = pair
+    args.forEachIndexed { index, (c, v) ->
         c.setParameter(this, index + 1, c.valueToDB(v))
     }
 

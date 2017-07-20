@@ -13,9 +13,8 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
-    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String {
-        return super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
-    }
+    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String =
+            super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
 }
 
 internal object SQLiteDialect : VendorDialect("sqlite", SQLiteDataTypeProvider, SQLiteFunctionProvider) {

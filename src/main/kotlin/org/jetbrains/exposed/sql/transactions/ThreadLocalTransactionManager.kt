@@ -26,7 +26,7 @@ class ThreadLocalTransactionManager(private val db: Database,
             }
         }
 
-        override val outerTransaction = threadLocal.get()
+        override val outerTransaction: Transaction = threadLocal.get()
 
         override fun commit() {
             connection.commit()

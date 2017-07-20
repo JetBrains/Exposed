@@ -33,23 +33,17 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 }
 
 
-class ExpressionAlias<T: Expression<Any?>>(val delegate: T, val alias: String) : Expression<Any?>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return "${delegate.toSQL(queryBuilder)} $alias"
-    }
+class ExpressionAlias<out T: Any?>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String = "${delegate.toSQL(queryBuilder)} $alias"
 
-    fun aliasOnlyExpression() = object: Expression<Any?>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String {
-            return alias
-        }
+    fun aliasOnlyExpression() = object: Expression<T>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String = alias
     }
 }
 
 class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
-    override fun describe(s: Transaction): String {
-        return "(${query.prepareSQL(QueryBuilder(false))}) $alias"
-    }
+    override fun describe(s: Transaction): String = "(${query.prepareSQL(QueryBuilder(false))}) $alias"
 
     override val columns: List<Column<*>>
         get() =  query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
@@ -62,20 +56,15 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
             let { it.clone() as? Column<T> } ?: error("Column not found in original table")
 
     @Suppress("UNCHECKED_CAST")
-    operator fun get(original: Expression<*>): Expression<*> = (query.set.fields.find { it == original } as? ExpressionAlias<*>)?.aliasOnlyExpression()
+    operator fun <T: Any?>  get(original: Expression<T>): Expression<T> = (query.set.fields.find { it == original } as? ExpressionAlias<T>)?.aliasOnlyExpression()
             ?: error("Field not found in original table fields")
 
-    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join {
-        return Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
-    }
+    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
+            Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun innerJoin(otherTable: ColumnSet) : Join {
-        return Join (this, otherTable, JoinType.INNER)
-    }
+    override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet) : Join {
-        return Join (this, otherTable, JoinType.LEFT)
-    }
+    override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)

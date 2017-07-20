@@ -17,9 +17,7 @@ enum class ReferenceOption {
     RESTRICT,
     NO_ACTION;
 
-    override fun toString(): String {
-        return this.name.replace("_"," ")
-    }
+    override fun toString(): String = this.name.replace("_"," ")
 
     companion object {
         fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
@@ -76,11 +74,9 @@ data class Index(val indexName: String, val tableName: String, val columns: List
     override fun modifyStatement() = dropStatement() + createStatement()
 
 
-    fun onlyNameDiffer(other: Index): Boolean {
-        return indexName != other.indexName && columns == other.columns && unique == other.unique
-    }
+    fun onlyNameDiffer(other: Index): Boolean =
+            indexName != other.indexName && columns == other.columns && unique == other.unique
 
-    override fun toString(): String {
-        return "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.joinToString(", ")}"
-    }
+    override fun toString(): String =
+            "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.joinToString(", ")}"
 }

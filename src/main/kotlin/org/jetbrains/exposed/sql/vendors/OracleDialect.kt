@@ -39,9 +39,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
 internal object OracleFunctionProvider : FunctionProvider() {
 
-    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String {
-        return super.substring(expr, start, length, builder).replace("SUBSTRING", "SUBSTR")
-    }
+    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String =
+            super.substring(expr, start, length, builder).replace("SUBSTRING", "SUBSTR")
 
     /* seed is ignored. You have to use dbms_random.seed function manually */
     override fun random(seed: Int?): String = "dbms_random.value"

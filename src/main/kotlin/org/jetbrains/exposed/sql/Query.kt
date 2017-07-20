@@ -36,22 +36,16 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         data[index] = value
     }
 
-    fun<T> hasValue (c: Expression<T>) : Boolean {
-        return fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
-    }
+    fun<T> hasValue (c: Expression<T>) : Boolean = fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
 
-    fun <T> tryGet(c: Expression<T>): T? {
-        return if (hasValue(c)) get(c) else null
-    }
+    fun <T> tryGet(c: Expression<T>): T? = if (hasValue(c)) get(c) else null
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> getRaw(c: Expression<T>): T? {
-        return data[fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")] as T?
-    }
+    private fun <T> getRaw(c: Expression<T>): T? =
+            data[fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")] as T?
 
-    override fun toString(): String {
-        return fieldIndex.map { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }.joinToString()
-    }
+    override fun toString(): String =
+            fieldIndex.joinToString { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }
 
     internal object NotInitializedValue
 

@@ -28,22 +28,15 @@ abstract class Expression<out T> {
 
     abstract fun toSQL(queryBuilder: QueryBuilder): String
 
-    override fun equals(other: Any?): Boolean {
-        return (other as? Expression<*>)?.toString() == toString()
-    }
+    override fun equals(other: Any?): Boolean = (other as? Expression<*>)?.toString() == toString()
 
-    override fun hashCode(): Int {
-        return _hashCode
-    }
+    override fun hashCode(): Int = _hashCode
 
-    override fun toString(): String {
-        return toSQL(QueryBuilder(false))
-    }
+    override fun toString(): String = toSQL(QueryBuilder(false))
 
     companion object {
-        inline fun <T> build(builder: SqlExpressionBuilder.()->Expression<T>): Expression<T> {
-            return SqlExpressionBuilder.builder()
-        }
+        inline fun <T> build(builder: SqlExpressionBuilder.()->Expression<T>): Expression<T> =
+                SqlExpressionBuilder.builder()
     }
 }
 

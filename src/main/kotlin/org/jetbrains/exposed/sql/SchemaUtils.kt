@@ -22,8 +22,8 @@ object SchemaUtils {
             statements.addAll(table.ddl)
 
             // create indices
-            for (table_index in table.indices) {
-                statements.addAll(createIndex(table_index.first, table_index.second))
+            for ((columns, isUnique) in table.indices) {
+                statements.addAll(createIndex(columns, isUnique))
             }
         }
 
@@ -54,10 +54,9 @@ object SchemaUtils {
 
                 if (db.supportsAlterTableWithAddColumn) {
                     // create indexes with new columns
-                    for (table_index in table.indices) {
-                        if (table_index.first.any { missingTableColumns.contains(it) }) {
-                            val alterTable = createIndex(table_index.first, table_index.second)
-                            statements.addAll(alterTable)
+                    for ((columns, isUnique) in table.indices) {
+                        if (columns.any { missingTableColumns.contains(it) }) {
+                            statements.addAll(createIndex(columns, isUnique))
                         }
                     }
 

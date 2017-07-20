@@ -89,7 +89,7 @@ class MultipleDatabaseBugTest {
         // which first calls TransactionManager.currentOrNull which initializes the
         // TransactionManager.currentThreadManager ThreadLocal value which is never removed if
         // there is no subsequent transaction
-        println("test${test} url: ${db?.url}")
+        println("test$test url: ${db?.url}")
     }
 
     private fun initDb() {
