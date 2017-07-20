@@ -45,7 +45,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
             data[fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")] as T?
 
     override fun toString(): String =
-            fieldIndex.joinToString { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }
+            fieldIndex.entries.joinToString { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }
 
     internal object NotInitializedValue
 
