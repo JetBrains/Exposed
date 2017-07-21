@@ -5,9 +5,7 @@ import org.joda.time.DateTime
 
 abstract class Op<out T> : Expression<T>() {
     companion object {
-        inline fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> {
-            return SqlExpressionBuilder.op()
-        }
+        inline fun <T> build(op: SqlExpressionBuilder.()-> Op<T>): Op<T> = SqlExpressionBuilder.op()
     }
 }
 
@@ -16,33 +14,24 @@ infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = AndOp(this, op
 infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = OrOp(this, op)
 
 class IsNullOp(val expr: Expression<*>): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "${expr.toSQL(queryBuilder)} IS NULL"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String = "${expr.toSQL(queryBuilder)} IS NULL"
 }
 
 class IsNotNullOp(val expr: Expression<*>): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "${expr.toSQL(queryBuilder)} IS NOT NULL"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String = "${expr.toSQL(queryBuilder)} IS NOT NULL"
 }
 
 class LiteralOp<out T>(override val columnType: IColumnType, val value: Any): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return columnType.valueToString(value)
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String = columnType.valueToString(value)
 }
 
 class Between(val expr: Expression<*>, val from: LiteralOp<*>, val to: LiteralOp<*> ): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "${expr.toSQL(queryBuilder)} BETWEEN ${from.toSQL(queryBuilder)} AND ${to.toSQL(queryBuilder)}"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String =
+            "${expr.toSQL(queryBuilder)} BETWEEN ${from.toSQL(queryBuilder)} AND ${to.toSQL(queryBuilder)}"
 }
 
 class NoOpConversion<out T, out S>(val expr: Expression<T>, override val columnType: IColumnType): ExpressionWithColumnType<S>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return expr.toSQL(queryBuilder)
-    }
+    override fun toSQL(queryBuilder: QueryBuilder): String = expr.toSQL(queryBuilder)
 }
 
 class InListOrNotInListOp<out T>(val expr: ExpressionWithColumnType<T>, val list: Iterable<T>, val isInList: Boolean = true): Op<Boolean>() {
@@ -78,9 +67,7 @@ class InListOrNotInListOp<out T>(val expr: ExpressionWithColumnType<T>, val list
 }
 
 class QueryParameter<out T>(val value: T, val sqlType: IColumnType) : Expression<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String {
-        return queryBuilder.registerArgument(sqlType, value)
-    }
+    override fun toSQL(queryBuilder: QueryBuilder): String = queryBuilder.registerArgument(sqlType, value)
 }
 
 fun <T:Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
@@ -99,20 +86,18 @@ fun dateLiteral(value: DateTime) : LiteralOp<DateTime> = LiteralOp(DateColumnTyp
 fun dateTimeLiteral(value: DateTime) : LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
 abstract class ComparisonOp(val expr1: Expression<*>, val expr2: Expression<*>, val opSign: String): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        val sb = StringBuilder()
+    override fun toSQL(queryBuilder: QueryBuilder) = buildString {
         if (expr1 is OrOp<*>) {
-            sb.append("(").append(expr1.toSQL(queryBuilder)).append(")")
+            append("(").append(expr1.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr1.toSQL(queryBuilder))
+            append(expr1.toSQL(queryBuilder))
         }
-        sb.append(" $opSign ")
+        append(" $opSign ")
         if (expr2 is OrOp<*>) {
-            sb.append("(").append(expr2.toSQL(queryBuilder)).append(")")
+            append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr2.toSQL(queryBuilder))
+            append(expr2.toSQL(queryBuilder))
         }
-        return sb.toString()
     }
 }
 
@@ -128,57 +113,46 @@ class RegexpOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, 
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>): ComparisonOp(expr1, expr2, "NOT REGEXP")
 
 class AndOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        val sb = StringBuilder()
+    override fun toSQL(queryBuilder: QueryBuilder):String = buildString {
         if (expr1 is OrOp<*>) {
-            sb.append("(").append(expr1.toSQL(queryBuilder)).append(")")
+            append("(").append(expr1.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr1.toSQL(queryBuilder))
+            append(expr1.toSQL(queryBuilder))
         }
-        sb.append(" and ")
+        append(" and ")
         if (expr2 is OrOp<*>) {
-            sb.append("(").append(expr2.toSQL(queryBuilder)).append(")")
+            append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
-            sb.append(expr2.toSQL(queryBuilder))
+            append(expr2.toSQL(queryBuilder))
         }
-        return sb.toString()
     }
 }
 
 class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "(" + expr1.toSQL(queryBuilder) + ") or (" + expr2.toSQL(queryBuilder) + ")"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder) = "(${expr1.toSQL(queryBuilder)}) OR (${expr2.toSQL(queryBuilder)})"
 }
 
 class exists(val query: Query) : Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "EXISTS (${query.prepareSQL(queryBuilder)})"
+    override fun toSQL(queryBuilder: QueryBuilder) = "EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 
 class notExists(val query: Query) : Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "NOT EXISTS (${query.prepareSQL(queryBuilder)})"
+    override fun toSQL(queryBuilder: QueryBuilder) = "NOT EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 
 class PlusOp<out T, out S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return expr1.toSQL(queryBuilder) + "+" + expr2.toSQL(queryBuilder)
-    }
+    override fun toSQL(queryBuilder: QueryBuilder) = "${expr1.toSQL(queryBuilder)}+${expr2.toSQL(queryBuilder)}"
 }
 
 class MinusOp<out T, out S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return expr1.toSQL(queryBuilder) + "-" + expr2.toSQL(queryBuilder)
-    }
+    override fun toSQL(queryBuilder: QueryBuilder) = "${expr1.toSQL(queryBuilder)}-${expr2.toSQL(queryBuilder)}"
 }
 
 class TimesOp<out T, out S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "(${expr1.toSQL(queryBuilder)}) * (${expr2.toSQL(queryBuilder)})"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String = "(${expr1.toSQL(queryBuilder)}) * (${expr2.toSQL(queryBuilder)})"
 }
 
 class DivideOp<out T, out S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String {
-        return "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
-    }
+    override fun toSQL(queryBuilder: QueryBuilder):String =
+            "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
 }

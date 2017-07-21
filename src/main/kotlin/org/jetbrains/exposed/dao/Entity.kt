@@ -177,12 +177,10 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
-    get() {
-        return _readValues ?: run {
-            val table = klass.table
-            _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
-            _readValues!!
-        }
+    get() = _readValues ?: run {
+        val table = klass.table
+        _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
+        _readValues!!
     }
 
     operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
@@ -195,18 +193,15 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         reference.setValue(o, desc, value.id)
     }
 
-    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T? {
-        return reference.getValue(o, desc)?.let{factory.findById(it)}
-    }
+    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T? =
+            reference.getValue(o, desc)?.let{factory.findById(it)}
 
     operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
         value?.id?.value // flush before creating reference on it
         reference.setValue(o, desc, value?.id)
     }
 
-    operator fun <T> Column<T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
-        return lookup()
-    }
+    operator fun <T> Column<T>.getValue(o: Entity<*>, desc: KProperty<*>): T = lookup()
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? {
@@ -218,7 +213,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
-        writeValues.containsKey(this as Column<out Any?>) -> writeValues.get(this as Column<out Any?>) as T
+        writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
         else -> readValues[this]
     }
@@ -235,21 +230,19 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
                 }
                 TransactionManager.current().entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
-            writeValues.set(this as Column<Any?>, value)
+            writeValues[this as Column<Any?>] = value
         }
     }
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<*>, desc: KProperty<*>): TReal {
-        return toReal(column.getValue(o, desc))
-    }
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<*>, desc: KProperty<*>): TReal =
+            toReal(column.getValue(o, desc))
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<*>, desc: KProperty<*>, value: TReal) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix fun <ID:Any, Target:Entity<ID>> EntityClass<ID, Target>.via(table: Table): InnerTableLink<ID, Target> {
-        return InnerTableLink(table, this@via)
-    }
+    infix fun <ID:Any, Target:Entity<ID>> EntityClass<ID, Target>.via(table: Table): InnerTableLink<ID, Target> =
+            InnerTableLink(table, this@via)
 
     fun <T: Entity<*>> s(c: EntityClass<T, *>): EntityClass<T, *> = c
 
@@ -287,7 +280,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         // move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
-                _readValues!!.set(c, v?.let { c.columnType.valueFromDB(c.columnType.valueToDB(it)!!)})
+                _readValues!![c] = v?.let { c.columnType.valueFromDB(c.columnType.valueToDB(it)!!)}
             }
             if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) } ) {
                 _readValues = null
@@ -304,9 +297,7 @@ class EntityCache {
     val inserts = HashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
-    private fun <ID:Any, T: Entity<ID>> getMap(f: EntityClass<ID, T>) : MutableMap<ID, T> {
-        return getMap(f.table)
-    }
+    private fun <ID:Any, T: Entity<ID>> getMap(f: EntityClass<ID, T>) : MutableMap<ID, T> = getMap(f.table)
 
     private fun <ID:Any, T: Entity<ID>> getMap(table: IdTable<ID>) : MutableMap<ID, T> {
         val answer = data.getOrPut(table, {
@@ -316,17 +307,12 @@ class EntityCache {
         return answer
     }
 
-    fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
-        return referrers.getOrPut(sourceId, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
-    }
+    fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
+            referrers.getOrPut(sourceId, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
 
-    fun <ID:Any, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? {
-        return getMap(f)[id.value]
-    }
+    fun <ID:Any, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value]
 
-    fun <ID:Any, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> {
-        return getMap(f).values
-    }
+    fun <ID:Any, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values
 
     fun <ID:Any, T: Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
         getMap(f).put(o.id.value, o)
@@ -434,7 +420,7 @@ class EntityCache {
     companion object {
 
         fun invalidateGlobalCaches(created: List<Entity<*>>) {
-            created.mapNotNull { it.klass }.filterIsInstance<ImmutableCachedEntityClass<*,*>>().distinct().forEach {
+            created.map { it.klass }.filterIsInstance<ImmutableCachedEntityClass<*,*>>().distinct().forEach {
                 it.expireCache()
             }
         }
@@ -459,9 +445,8 @@ class EntityCache {
             fun checkTable(table: Table) {
                 if (workset.add(table)) {
                     for (c in table.columns) {
-                        val referee = c.referee
-                        if (referee != null) {
-                            if (referee.table is IdTable<*>) checkTable(referee.table)
+                        (c.referee?.table as? IdTable<*>)?.let {
+                            checkTable(it)
                         }
                     }
                 }
@@ -479,32 +464,22 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.constructors[0]
 
-    operator fun get(id: EntityID<ID>): T {
-        return findById(id) ?: error("Entity not found in database")
-    }
+    operator fun get(id: EntityID<ID>): T = findById(id) ?: error("Entity not found in database")
 
-    operator fun get(id: ID): T {
-        return findById(id) ?: error("Entity not found in database")
-    }
+    operator fun get(id: ID): T = findById(id) ?: error("Entity not found in database")
 
     open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
-    fun findById(id: ID): T? {
-        return findById(EntityID(id, table))
-    }
+    fun findById(id: ID): T? = findById(EntityID(id, table))
 
-    open fun findById(id: EntityID<ID>): T? {
-        return testCache(id) ?: find{table.id eq id}.firstOrNull()
-    }
+    open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find{table.id eq id}.firstOrNull()
 
     fun reload(entity: Entity<ID>): T? {
         removeFromCache(entity)
         return find { table.id eq entity.id }.firstOrNull()
     }
 
-    fun testCache(id: EntityID<ID>): T? {
-        return warmCache().find(this, id)
-    }
+    fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
     fun testCache(cacheCheckCondition: T.()->Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
@@ -571,17 +546,14 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     open val dependsOnTables: ColumnSet get() = table
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
-    open fun searchQuery(op: Op<Boolean>): Query {
-        return dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
-    }
+    open fun searchQuery(op: Op<Boolean>): Query =
+            dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
 
-    fun count(op: Op<Boolean>? = null): Int {
-        return with (TransactionManager.current()) {
-            val query = table.slice(table.id.count())
-            (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
-                table.id.count()
-            ]
-        }
+    fun count(op: Op<Boolean>? = null): Int = with(TransactionManager.current()) {
+        val query = table.slice(table.id.count())
+        (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
+            table.id.count()
+        ]
     }
 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
@@ -615,9 +587,8 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
 
-    inline private fun <reified R: Any> registerRefRule(column: Column<*>, ref:()-> R): R {
-        return refDefinitions.getOrPut(column to R::class, ref) as R
-    }
+    inline private fun <reified R: Any> registerRefRule(column: Column<*>, ref:()-> R): R =
+            refDefinitions.getOrPut(column to R::class, ref) as R
 
     infix fun referencedOn(column: Column<EntityID<ID>>) = registerRefRule(column) { Reference(column, this) }
 

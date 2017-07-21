@@ -48,7 +48,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
     override fun dropStatement() = listOf(TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" })
 
-    internal fun isOneColumnPK() = table.columns.filter { it.indexInPK != null }.singleOrNull() == this
+    internal fun isOneColumnPK() = table.columns.singleOrNull { it.indexInPK != null } == this
 
     fun descriptionDdl(): String = buildString {
         append(TransactionManager.current().identity(this@Column))

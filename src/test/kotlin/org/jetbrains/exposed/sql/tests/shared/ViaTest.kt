@@ -4,15 +4,10 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
-import java.util.UUID
+import java.util.*
 
 open class UUIDTable(name: String = "") : IdTable<UUID>(name) {
     override val id: Column<EntityID<UUID>> = uuid("id").clientDefault { UUID.randomUUID() }.primaryKey().entityId()
@@ -90,8 +85,8 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection<VString>(listOf(s1, s2))
-            n2.connectedStrings = SizedCollection<VString>(listOf(s1, s2))
+            n1.connectedStrings = SizedCollection(listOf(s1, s2))
+            n2.connectedStrings = SizedCollection(listOf(s1, s2))
 
             run {
                 val row = ViaTestData.ConnectionTable.selectAll().toList()
@@ -121,8 +116,8 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection<VString>(listOf(s1, s2))
-            n2.connectedStrings = SizedCollection<VString>(listOf(s1, s2))
+            n1.connectedStrings = SizedCollection(listOf(s1, s2))
+            n2.connectedStrings = SizedCollection(listOf(s1, s2))
 
             run {
                 val row = ViaTestData.ConnectionTable.selectAll().toList()
@@ -131,7 +126,7 @@ class ViaTests : DatabaseTestsBase() {
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
-            n1.connectedStrings = SizedCollection<VString>(listOf(s1))
+            n1.connectedStrings = SizedCollection(listOf(s1))
 
             run {
                 val row = ViaTestData.ConnectionTable.selectAll().toList()

@@ -977,7 +977,7 @@ class DMLTests : DatabaseTestsBase() {
 
             assertEquals("q0", query.lastQueryAlias?.alias)
             assertEquals(3, query.selectAll().count())
-            assertNotNull(query.slice(users.columns + innerExp).selectAll().first().get(innerExp))
+            assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
         }
     }
 
@@ -995,9 +995,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testDefaultExpressions01() {
 
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
-            override fun toSQL(queryBuilder: QueryBuilder): String {
-                return "ABS($value)"
-            }
+            override fun toSQL(queryBuilder: QueryBuilder): String = "ABS($value)"
 
             override val columnType: IColumnType = IntegerColumnType()
         }

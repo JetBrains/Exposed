@@ -4,7 +4,10 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
@@ -24,9 +27,8 @@ class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) 
 
     override fun <S> update(column: Column<S>, value: Expression<S>) = error("Expressions unsupported in batch update")
 
-    override fun prepareSQL(transaction: Transaction): String {
-        return super.prepareSQL(transaction) + " WHERE ${transaction.identity(table.id)} = ?"
-    }
+    override fun prepareSQL(transaction: Transaction): String =
+         "${super.prepareSQL(transaction)} WHERE ${transaction.identity(table.id)} = ?"
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 

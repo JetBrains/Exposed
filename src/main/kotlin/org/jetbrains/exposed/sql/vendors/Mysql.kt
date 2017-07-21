@@ -25,9 +25,8 @@ internal object MysqlFunctionProvider : FunctionProvider() {
     override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
     private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode): Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String {
-            return "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
-        }
+        override fun toSQL(queryBuilder: QueryBuilder): String =
+                "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
     }
 
     private enum class MysqlMatchMode(val operator: String): FunctionProvider.MatchMode {
@@ -142,9 +141,8 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
-    override fun dropIndex(tableName: String, indexName: String): String {
-        return "ALTER TABLE $tableName DROP INDEX $indexName"
-    }
+    override fun dropIndex(tableName: String, indexName: String): String =
+            "ALTER TABLE $tableName DROP INDEX $indexName"
 
     fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
 }

@@ -39,9 +39,8 @@ open class DataTypeProvider {
 
 open class FunctionProvider {
 
-    open fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder) : String {
-        return "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
-    }
+    open fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder) : String =
+            "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
@@ -292,11 +291,10 @@ internal abstract class VendorDialect(override val name: String,
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
 
-internal val currentDialectIfAvailable : DatabaseDialect? get() {
-    return if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+internal val currentDialectIfAvailable : DatabaseDialect? get() =
+    if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
         currentDialect
     } else null
-}
 
 internal fun String.inProperCase(): String = (currentDialectIfAvailable as? VendorDialect)?.run {
     this@inProperCase.inProperCase

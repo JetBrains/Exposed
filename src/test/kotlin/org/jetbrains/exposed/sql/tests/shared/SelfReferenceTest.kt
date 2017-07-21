@@ -2,10 +2,8 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @Suppress("unused")
 class SortByReferenceTest {

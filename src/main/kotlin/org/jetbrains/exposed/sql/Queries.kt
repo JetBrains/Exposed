@@ -133,7 +133,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
         excessiveConstraints.forEach {
             val (pair, fk) = it
             val constraint = fk.first()
-            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.map{it.fkName}.joinToString(", ")}")
+            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.referencedTable}'.'${constraint.referencedColumn}':\t${fk.joinToString(", ") {it.fkName}}")
         }
 
         exposedLogger.info("SQL Queries to remove excessive keys:")
@@ -149,7 +149,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach {
             val (triple, indices) = it
-            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.map{it.indexName}.joinToString(", ")}")
+            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {

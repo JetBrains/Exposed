@@ -78,8 +78,8 @@ class EntityHookTest: DatabaseTestsBase() {
             }
 
             assertEquals(2, entities.second.count())
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.City)?.name }.filterNotNull(), "St. Petersburg")
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.Country)?.name }.filterNotNull(), "RU")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "RU")
         }
     }
 
@@ -133,8 +133,8 @@ class EntityHookTest: DatabaseTestsBase() {
             }
             // TODO: one may expect change for RU but we do not send it due to performance reasons
             assertEquals(2, entities.second.count())
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.City)?.name }.filterNotNull(), "Munich")
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.Country)?.name }.filterNotNull(), "DE")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
         }
     }
 
@@ -170,8 +170,8 @@ class EntityHookTest: DatabaseTestsBase() {
             }
 
             assertEquals(2, entities.second.count())
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.City)?.name }.filterNotNull(), "St. Petersburg")
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.User)?.name }.filterNotNull(), "John")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
         }
     }
 
@@ -208,8 +208,8 @@ class EntityHookTest: DatabaseTestsBase() {
             }
 
             assertEquals(3, entities.second.count())
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.City)?.name }.filterNotNull(), "St. Petersburg", "Munich")
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.User)?.name }.filterNotNull(), "John")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg", "Munich")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
         }
     }
 
@@ -245,8 +245,8 @@ class EntityHookTest: DatabaseTestsBase() {
             }
 
             assertEquals(2, entities.second.count())
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.City)?.name }.filterNotNull(), "St. Petersburg")
-            assertEqualCollections(entities.second.map { it.toEntity(EntityHookTestData.User)?.name }.filterNotNull(), "John")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
+            assertEqualCollections(entities.second.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
         }
     }
 }
