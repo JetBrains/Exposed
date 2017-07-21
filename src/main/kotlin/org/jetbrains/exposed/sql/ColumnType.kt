@@ -236,8 +236,9 @@ class DateColumnType(val time: Boolean): ColumnType() {
 
 open class StringColumnType(val length: Int = 255, val collate: String? = null): ColumnType() {
     override fun sqlType(): String = buildString {
-        append(when (length) {
-            in 1..255 -> "VARCHAR($length)"
+        val colLength = this@StringColumnType.length
+        append(when (colLength) {
+            in 1..255 -> "VARCHAR($colLength)"
             else -> currentDialect.dataTypeProvider.textType()
         })
 
