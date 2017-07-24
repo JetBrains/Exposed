@@ -94,7 +94,8 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
 
         val tableNames = tables.associateBy { it.nameInDatabaseCase() }
 
-        val rs = TransactionManager.current().connection.createStatement().executeQuery(
+        val transaction = TransactionManager.current()
+        val rs = transaction.connection.createStatement().executeQuery(
                 """SELECT DISTINCT ind.* from (
                         SELECT
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
@@ -113,7 +114,7 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
             val tableName = rs.getString("TABLE_NAME")!!
             if (tableName in tableNames.keys) {
                 val indexName = rs.getString("INDEX_NAME")!!
-                val columnsInIndex = rs.getString("COLUMNS")!!.split(',')
+                val columnsInIndex = rs.getString("COLUMNS")!!.split(',').map { transaction.quoteIfNecessary(it) }
                 val isUnique = rs.getInt("NON_UNIQUE") == 0
                 constraints.getOrPut(tableNames[tableName]!!, { arrayListOf() }).add(Index(indexName, tableName, columnsInIndex, isUnique))
             }

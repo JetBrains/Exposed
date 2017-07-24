@@ -43,6 +43,7 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_table") {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
+            val time = datetime("time").uniqueIndex()
         }
 
         withDb {

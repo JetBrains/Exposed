@@ -196,7 +196,8 @@ internal abstract class VendorDialect(override val name: String,
     override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
-            val metadata = TransactionManager.current().db.metadata
+            val transaction = TransactionManager.current()
+            val metadata = transaction.db.metadata
 
             existingIndicesCache.getOrPut(table, {
                 val pkNames = metadata.getPrimaryKeys(getDatabase(), null, tableName).let { rs ->
@@ -212,7 +213,7 @@ internal abstract class VendorDialect(override val name: String,
 
                 while (rs.next()) {
                     rs.getString("INDEX_NAME")?.let {
-                        val column = rs.getString("COLUMN_NAME")!!
+                        val column = transaction.quoteIfNecessary(rs.getString("COLUMN_NAME")!!)
                         val isUnique = !rs.getBoolean("NON_UNIQUE")
                         tmpIndices.getOrPut(it to isUnique, { arrayListOf() }).add(column)
                     }
