@@ -45,11 +45,12 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
-fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) = InsertStatement<EntityID<Key>>(this).run {
-    body(this)
-    execute(TransactionManager.current())
-    generatedKey
-}
+fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T.(InsertStatement<EntityID<Key>>)->Unit) =
+    InsertStatement<EntityID<Key>>(this, ignore).run {
+        body(this)
+        execute(TransactionManager.current())
+        generatedKey
+    }
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
