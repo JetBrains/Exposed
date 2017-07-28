@@ -50,7 +50,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
             }
             transaction.lastExecutedStatement?.run {
-                if (!isClosed && !transaction.db.supportsMultipleResultSets) close()
+                if (!isClosed) close()
             }
             transaction.currentStatement = statement
             val result = statement.executeInternal(transaction)
