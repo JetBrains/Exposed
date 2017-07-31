@@ -42,8 +42,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatement? = null
-    internal var lastExecutedStatement: PreparedStatement? = null
-
+    internal val executedStatements: MutableList<PreparedStatement> = arrayListOf()
 
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
@@ -146,6 +145,13 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return if (db.shouldQuoteIdentifiers && nameInProperCase != column.name)
             column.name.quoted
         else quoteIfNecessary(nameInProperCase)
+    }
+
+    fun closeExecutedStatements() {
+        executedStatements.forEach {
+            if (!it.isClosed) it.close()
+        }
+        executedStatements.clear()
     }
 
     private val String.quoted get() = "${db.identityQuoteString}$this${db.identityQuoteString}".trim()

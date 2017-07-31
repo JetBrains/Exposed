@@ -90,10 +90,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
                 if(!it.isClosed) it.close()
                 transaction.currentStatement = null
             }
-            transaction.lastExecutedStatement?.let {
-                if(!it.isClosed) it.close()
-                transaction.lastExecutedStatement = null
-            }
+            transaction.closeExecutedStatements()
             transaction.close()
         }
     }

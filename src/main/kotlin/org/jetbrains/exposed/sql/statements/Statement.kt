@@ -49,13 +49,12 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 // REVIEW
                 if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
             }
-            transaction.lastExecutedStatement?.run {
-                if (!isClosed) close()
-            }
+            if (!transaction.db.supportsMultipleResultSets) transaction.closeExecutedStatements()
+
             transaction.currentStatement = statement
             val result = statement.executeInternal(transaction)
             transaction.currentStatement = null
-            transaction.lastExecutedStatement = statement
+            transaction.executedStatements.add(statement)
 
             transaction.monitor.notifyAfterExecution(transaction, contexts, statement)
             return result to contexts
