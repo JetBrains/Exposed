@@ -19,7 +19,8 @@ open class UserDataHolder {
     protected val userdata = ConcurrentHashMap<Key<*>, Any?>()
 
     fun <T:Any> putUserData(key: Key<T>, value: T?) {
-        userdata[key] = value
+        if (value == null) userdata.remove(key)
+        else userdata[key] = value
     }
 
     fun <T:Any> getUserData(key: Key<T>) : T? = userdata[key] as T?
