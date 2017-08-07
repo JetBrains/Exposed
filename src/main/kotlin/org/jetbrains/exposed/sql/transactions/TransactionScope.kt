@@ -19,6 +19,11 @@ class TransactionStore<T:Any>(val init: (() -> T)? = null) : ReadWriteProperty<A
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-        TransactionManager.currentOrNull()?.putUserData(key, value)
+        TransactionManager.currentOrNull()?.let{
+            if (value == null)
+                it.removeUserData(key)
+            else
+                it.putUserData(key, value)
+        }
     }
 }
