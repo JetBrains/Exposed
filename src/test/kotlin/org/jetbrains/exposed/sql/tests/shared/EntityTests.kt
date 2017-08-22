@@ -172,7 +172,7 @@ class EntityTests: DatabaseTestsBase() {
         val name = varchar("name", 255).index(isUnique = true)
     }
 
-    object Posts : IntIdTable(name = "posts") {
+    object Posts : LongIdTable(name = "posts") {
         val board = optReference("board", Boards)
         val parent = optReference("parent", this)
     }
@@ -181,10 +181,11 @@ class EntityTests: DatabaseTestsBase() {
         companion object : IntEntityClass<Board>(Boards)
 
         var name by Boards.name
+        val posts by Post.optionalReferrersOn(Posts.board)
     }
 
-    class Post(id: EntityID<Int>): IntEntity(id) {
-        companion object : IntEntityClass<Post>(Posts)
+    class Post(id: EntityID<Long>): LongEntity(id) {
+        companion object : LongEntityClass<Post>(Posts)
 
         var board by Board optionalReferencedOn Posts.board
         var parent by Post optionalReferencedOn Posts.parent
@@ -211,7 +212,6 @@ class EntityTests: DatabaseTestsBase() {
             val board = Board.new { name = "irrelevant" }
             Post.new { this.board = board } // first flush before referencing
             assertEquals(1, flushCache().size)
-
         }
     }
 
@@ -233,6 +233,19 @@ class EntityTests: DatabaseTestsBase() {
             val child1 = Post.new { this.parent = parent }
             Post.new { this.parent = child1 }
             flushCache()
+        }
+    }
+
+    @Test
+    fun testOptionalReferrersWithDifferentKeys() {
+        withTables(Boards, Posts) {
+            val board = Board.new { name = "irrelevant" }
+            val post1 = Post.new { this.board = board }
+            assertEquals(1, board.posts.count())
+            assertEquals(post1, board.posts.single())
+
+            Post.new { this.board = board }
+            assertEquals(2, board.posts.count())
         }
     }
 

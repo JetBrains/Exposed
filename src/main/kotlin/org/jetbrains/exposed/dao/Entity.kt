@@ -608,11 +608,11 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     infix fun <TargetID: Any, Target:Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<EntityID<ID>?>)
             = registerRefRule(column) { OptionalBackReference(column, this) }
 
-    infix fun referrersOn(column: Column<EntityID<ID>>) = referrersOn(column, false)
+    infix fun <TargetID: Any> referrersOn(column: Column<EntityID<TargetID>>) = referrersOn(column, false)
 
-    fun referrersOn(column: Column<EntityID<ID>>, cache: Boolean) = registerRefRule(column) { Referrers(column, this, cache) }
+    fun <TargetID: Any> referrersOn(column: Column<EntityID<TargetID>>, cache: Boolean) = registerRefRule(column) { Referrers(column, this, cache) }
 
-    fun optionalReferrersOn(column: Column<EntityID<ID>?>, cache: Boolean = false) =  registerRefRule(column) { OptionalReferrers(column, this, cache) }
+    fun <TargetID: Any> optionalReferrersOn(column: Column<EntityID<TargetID>?>, cache: Boolean = false) =  registerRefRule(column) { OptionalReferrers(column, this, cache) }
 
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
 
