@@ -34,6 +34,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
                 }
             }.join()
             assertEquals(firstThreadTm, TransactionManager.manager)
+            SchemaUtils.drop(DMLTestsData.Cities)
         }
         if (isMysql) {
             assertEquals(secondThreadTm, TransactionManager.manager)
