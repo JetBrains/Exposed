@@ -1,3 +1,6 @@
+[![JetBrains team project](http://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
+[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)  [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed/_latestVersion)
+
 Kotlin SQL Library
 ==================
 
@@ -5,8 +8,6 @@ _Exposed_ is a prototype for a lightweight SQL library written over JDBC driver 
 It does have two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects
 
 Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed/exposed/view#
-
-[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)  [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed/_latestVersion)
 
 ## Dialects
 
