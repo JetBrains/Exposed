@@ -288,9 +288,16 @@ class BlobColumnType : ColumnType() {
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         return if (currentDialect.dataTypeProvider.blobAsStream)
-            SerialBlob(rs.getBytes(index))
+            rs.getBytes(index)?.let { SerialBlob(it) }         
         else
             rs.getBlob(index)
+    }
+
+    override fun valueFromDB(value: Any): Any = when {
+        value is Blob -> value
+        value is InputStream -> SerialBlob(value.readBytes())
+        value is ByteArray -> SerialBlob(value)
+        else -> error("Unknown type for blob column :${value.javaClass}")
     }
 
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {

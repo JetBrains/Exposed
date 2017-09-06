@@ -8,9 +8,11 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
+import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 object EntityTestsData {
 
@@ -20,6 +22,7 @@ object EntityTestsData {
         }
 
         val x = bool("x").default(true)
+        val blob = blob("content").nullable()
     }
 
     object XTable: IntIdTable("XTable") {
@@ -87,7 +90,7 @@ object EntityTestsData {
     class YEntity(id: EntityID<String>) : Entity<String>(id) {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
-
+        var content by YTable.blob
         companion object : EntityClass<String, YEntity>(YTable)
     }
 }
@@ -115,7 +118,24 @@ class EntityTests: DatabaseTestsBase() {
 
             assertFalse (b.y!!.x)
             assertNotNull(y.b)
+        }
+    }
 
+    @Test fun testBlobField() {
+        withTables(EntityTestsData.YTable) {
+            val y1 = EntityTestsData.YEntity.new {
+                x = false
+                content = SerialBlob("foo".toByteArray())
+            }
+
+            flushCache()
+            var y2 = EntityTestsData.YEntity.reload(y1)!!
+            assertEquals(String(y2.content!!.binaryStream.readBytes()), "foo")
+
+            y2.content = null
+            flushCache()
+            y2 = EntityTestsData.YEntity.reload(y1)!!
+            assertNull(y2.content)
         }
     }
 
