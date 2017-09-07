@@ -4,14 +4,12 @@ import com.mysql.management.MysqldResource
 import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
 import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
+import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import com.sun.javafx.PlatformUtil
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
-import ru.yandex.qatools.embed.postgresql.PostgresStarter
-import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig
-import ru.yandex.qatools.embed.postgresql.config.PostgresConfig
-import ru.yandex.qatools.embed.postgresql.distribution.Version
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -31,8 +29,8 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                     Files().cleanTestDir()
                 }
             }),
-    POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=root&password=root", "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess.start() }, afterTestFinished = { postgresSQLProcess.stop() }),
+    POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
+            beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(OracleDialect, "jdbc:oracle:thin:@//192.168.99.100:1521/xe.oracle.docker", "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
             beforeConnection = {
                 Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
@@ -64,12 +62,8 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-    val config = PostgresConfig(
-            Version.Main.PRODUCTION, AbstractPostgresConfig.Net("localhost", 12346),
-            AbstractPostgresConfig.Storage("template1"), AbstractPostgresConfig.Timeout(),
-            AbstractPostgresConfig.Credentials("root", "root")
-    )
-    PostgresStarter.getDefaultInstance().prepare(config)
+    val locale = if (PlatformUtil.isWindows()) "american_usa" else "en_US.UTF-8"
+    EmbeddedPostgres.builder().setLocaleConfig("locale", locale).setPort(12346).start()
 }
 
 abstract class DatabaseTestsBase {

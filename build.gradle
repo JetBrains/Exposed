@@ -50,11 +50,11 @@ repositories {
 }
 
 dependencies {
-    testCompile "mysql:mysql-connector-java:5.1.41"
+    testCompile "mysql:mysql-connector-java:5.1.44"
     testCompile "mysql:mysql-connector-mxj:5.0.12"
     testCompile 'org.postgresql:postgresql:9.4.1212.jre6'
-    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.13'
-    testCompile 'org.xerial:sqlite-jdbc:3.16.1'
+    testCompile'com.opentable.components:otj-pg-embedded:0.9.0'
+    testCompile 'org.xerial:sqlite-jdbc:3.20.0'
     testCompile files('libs/ojdbc6-12.1.0.2.jar')
 //    #com.hynnet:oracle-driver-ojdbc6:12.1.0.1'''
 }
@@ -100,7 +100,7 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "3.5"
+    gradleVersion = "4.1"
 }
 
 
@@ -109,6 +109,9 @@ allprojects {
     apply plugin: 'maven-publish'
 
     group = 'org.jetbrains.exposed'
+
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
 
     repositories {
         mavenCentral()
@@ -119,14 +122,14 @@ allprojects {
         compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
         compile 'joda-time:joda-time:2.9.9'
         compile 'org.slf4j:slf4j-api:1.7.25'
-        compileOnly 'com.h2database:h2:1.4.194'
+        compileOnly 'com.h2database:h2:1.4.196'
 
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
         testCompile 'org.slf4j:slf4j-log4j12:1.7.25'
         testCompile 'log4j:log4j:1.2.17'
         testCompile 'junit:junit:4.12'
         testCompile 'org.hamcrest:hamcrest-library:1.3'
-        testCompile 'com.h2database:h2:1.4.194'
+        testCompile 'com.h2database:h2:1.4.196'
     }
 }
 
@@ -135,9 +138,9 @@ project(":spring-transaction") {
     apply plugin: 'kotlin'
 
     dependencies {
-        compile 'org.springframework:spring-jdbc:4.3.7.RELEASE'
-        compile 'org.springframework:spring-context:4.3.7.RELEASE'
+        compile "org.springframework:spring-jdbc:$spring_version"
+        compile "org.springframework:spring-context:$spring_version"
         compile rootProject
-        testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
+        testCompile "org.springframework:spring-test:$spring_version"
     }
 }
