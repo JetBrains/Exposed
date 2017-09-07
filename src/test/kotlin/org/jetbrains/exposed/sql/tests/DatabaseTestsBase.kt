@@ -63,7 +63,11 @@ private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
     val locale = if (PlatformUtil.isWindows()) "american_usa" else "en_US.UTF-8"
-    EmbeddedPostgres.builder().setLocaleConfig("locale", locale).setPort(12346).start()
+    EmbeddedPostgres.builder()
+        .setPgBinaryResolver{ system, _ ->
+            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
+        }.setLocaleConfig("locale", locale)
+        .setPort(12346).start()
 }
 
 abstract class DatabaseTestsBase {
