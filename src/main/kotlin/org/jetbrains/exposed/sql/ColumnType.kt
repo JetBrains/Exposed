@@ -293,10 +293,10 @@ class BlobColumnType : ColumnType() {
             rs.getBlob(index)
     }
 
-    override fun valueFromDB(value: Any): Any = when {
-        value is Blob -> value
-        value is InputStream -> SerialBlob(value.readBytes())
-        value is ByteArray -> SerialBlob(value)
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is Blob -> value
+        is InputStream -> SerialBlob(value.readBytes())
+        is ByteArray -> SerialBlob(value)
         else -> error("Unknown type for blob column :${value.javaClass}")
     }
 
@@ -310,7 +310,7 @@ class BlobColumnType : ColumnType() {
 
     override fun notNullValueToDB(value: Any): Any {
         return if (currentDialect.dataTypeProvider.blobAsStream)
-            (value as Blob).binaryStream
+            (value as? Blob)?.binaryStream ?: value
         else
             value
     }

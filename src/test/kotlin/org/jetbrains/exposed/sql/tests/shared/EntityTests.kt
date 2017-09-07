@@ -136,6 +136,9 @@ class EntityTests: DatabaseTestsBase() {
             flushCache()
             y2 = EntityTestsData.YEntity.reload(y1)!!
             assertNull(y2.content)
+
+            y2.content = SerialBlob("foo2".toByteArray())
+            flushCache()
         }
     }
 
