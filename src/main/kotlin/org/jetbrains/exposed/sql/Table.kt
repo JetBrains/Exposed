@@ -208,6 +208,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
 
+    /**
+     * @sample org.jetbrains.exposed.sql.tests.shared.EntityTests.testBlobField
+     */
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 
     fun text(name: String): Column<String> = registerColumn(name, StringColumnType(length = 65535))
