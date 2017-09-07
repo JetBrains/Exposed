@@ -5,7 +5,6 @@ import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
 import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import com.sun.javafx.PlatformUtil
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
@@ -62,11 +61,11 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-    val locale = if (PlatformUtil.isWindows()) "american_usa" else "en_US.UTF-8"
+//    val locale = if (PlatformUtil.isWindows()) "american_usa" else "en_US.UTF-8"
     EmbeddedPostgres.builder()
         .setPgBinaryResolver{ system, _ ->
             EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-        }.setLocaleConfig("locale", locale)
+        }/*.setLocaleConfig("locale", locale)*/
         .setPort(12346).start()
 }
 
