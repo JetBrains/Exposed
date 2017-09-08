@@ -348,7 +348,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return null
     }
 
-    override fun dropStatement() = listOf("DROP TABLE ${TransactionManager.current().identity(this)}" +
+    override fun dropStatement() = listOf("DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}" +
         if (currentDialectIfAvailable == OracleDialect) { " CASCADE CONSTRAINTS" } else "") +
         autoIncColumn?.autoIncSeqName?.let { Seq(it).dropStatement() }.orEmpty()
 
