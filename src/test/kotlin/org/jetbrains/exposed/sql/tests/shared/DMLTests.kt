@@ -243,6 +243,25 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    // cross join
+    @Test fun testJoin05() {
+        withCitiesAndUsers { cities, users, _ ->
+            val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).
+            select{cities.name.eq("St. Petersburg")}.map {
+                it[users.name] to it[cities.name]
+            }
+            val allUsers = setOf(
+                "Andrey",
+                "Sergey",
+                "Eugene",
+                "Alex",
+                "Something"
+            )
+            assertTrue(allUsersToStPetersburg.all { it.second == "St. Petersburg" })
+            assertEquals(allUsers, allUsersToStPetersburg.map { it.first }.toSet())
+        }
+    }
+
     @Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
             ((cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {

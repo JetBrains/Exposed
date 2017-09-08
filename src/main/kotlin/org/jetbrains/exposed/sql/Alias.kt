@@ -65,6 +65,8 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
     override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
+
+    override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)
