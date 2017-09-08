@@ -32,6 +32,7 @@ abstract class ColumnSet : FieldSet {
     abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
     abstract fun innerJoin(otherTable: ColumnSet): Join
     abstract fun leftJoin(otherTable: ColumnSet) : Join
+    abstract fun crossJoin(otherTable: ColumnSet) : Join
 
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, listOf(*columns))
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
@@ -47,7 +48,8 @@ enum class JoinType {
     INNER,
     LEFT,
     RIGHT,
-    FULL
+    FULL,
+    CROSS
 }
 
 class Join (val table: ColumnSet) : ColumnSet() {
@@ -73,6 +75,8 @@ class Join (val table: ColumnSet) : ColumnSet() {
     override infix fun innerJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.LEFT)
+
+    override infix fun crossJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.CROSS)
 
     private fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
         val fkKeys = findKeys (this, otherTable) ?: findKeys (otherTable, this) ?: emptyList()
@@ -107,14 +111,17 @@ class Join (val table: ColumnSet) : ColumnSet() {
     override fun describe(s: Transaction): String = buildString {
         append(table.describe(s))
         for (p in joinParts) {
-            append(" ${p.joinType} JOIN ${p.joinPart.describe(s)} ON ")
-            val queryBuilder = QueryBuilder(false)
-            if (p.pkColumn != null && p.fkColumn != null) {
-                append("${p.pkColumn.toSQL(queryBuilder)} = ${p.fkColumn.toSQL(queryBuilder)}")
-                if (p.additionalConstraint != null) append(" and ")
+            append(" ${p.joinType} JOIN ${p.joinPart.describe(s)}")
+            if (p.joinType != JoinType.CROSS) {
+                append(" ON ")
+                val queryBuilder = QueryBuilder(false)
+                if (p.pkColumn != null && p.fkColumn != null) {
+                    append("${p.pkColumn.toSQL(queryBuilder)} = ${p.fkColumn.toSQL(queryBuilder)}")
+                    if (p.additionalConstraint != null) append(" and ")
+                }
+                if (p.additionalConstraint != null)
+                    append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(queryBuilder)})")
             }
-            if (p.additionalConstraint != null)
-                append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(queryBuilder)})")
         }
     }
 
@@ -151,6 +158,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
+
+    override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 
     fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
         _columns.add(this)
