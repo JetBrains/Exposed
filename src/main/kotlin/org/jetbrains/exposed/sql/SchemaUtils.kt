@@ -140,7 +140,7 @@ object SchemaUtils {
     }
 
     fun <T> Transaction.withDataBaseLock(body: () -> T) {
-        val buzyTable = object : Table("Busy") {
+        val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()
         }
         create(buzyTable)
