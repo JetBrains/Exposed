@@ -256,8 +256,8 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     open fun beforeInit(){}
     
     open fun afterInit(){}
-	
-	open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
+    
+    open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
         if (!writeValues.isEmpty()) {
             if (batch == null) {
                 val table = klass.table
