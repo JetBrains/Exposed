@@ -252,6 +252,8 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         table.deleteWhere{table.id eq id}
         EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
     }
+    
+    open fun initialize() {}
 
     open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
         if (!writeValues.isEmpty()) {
@@ -578,6 +580,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         if (id != null) {
             prototype.writeValues.put(table.id as Column<Any?>, entityId)
         }
+        prototype.initialize()
         prototype.init()
         warmCache().scheduleInsert(this, prototype)
         return prototype
