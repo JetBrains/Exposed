@@ -253,9 +253,11 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
     }
     
-    open fun initialize() {}
-
-    open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
+    open fun beforeInit(){}
+    
+    open fun afterInit(){}
+	
+	open fun flush(batch: EntityBatchUpdate<ID>? = null): Boolean {
         if (!writeValues.isEmpty()) {
             if (batch == null) {
                 val table = klass.table
@@ -580,8 +582,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         if (id != null) {
             prototype.writeValues.put(table.id as Column<Any?>, entityId)
         }
-        prototype.initialize()
+        prototype.beforeInit()
         prototype.init()
+        prototype.afterInit()
         warmCache().scheduleInsert(this, prototype)
         return prototype
     }
