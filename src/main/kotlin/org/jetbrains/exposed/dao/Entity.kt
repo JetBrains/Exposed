@@ -584,8 +584,8 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         }
         prototype.beforeInit()
         prototype.init()
-        prototype.afterInit()
         warmCache().scheduleInsert(this, prototype)
+        prototype.afterInit()
         return prototype
     }
 
