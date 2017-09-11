@@ -157,11 +157,18 @@ object SchemaUtils {
     }
 
     fun drop(vararg tables: Table) {
-        EntityCache.sortTablesByReferences(tables.toList()).reversed()
+        var tablesForDeletion = EntityCache
+                .sortTablesByReferences(tables.toList())
+                .reversed()
                 .filter { it in tables }
+        val transactionManager = TransactionManager.current()
+        if (!transactionManager.db.dialect.supportsIfNotExists) {
+            tablesForDeletion = tables.filter { it.exists()}
+        }
+        tablesForDeletion
                 .flatMap { it.dropStatement() }
                 .forEach {
-                    TransactionManager.current().exec(it)
+                    transactionManager.exec(it)
                 }
         currentDialect.resetCaches()
     }
