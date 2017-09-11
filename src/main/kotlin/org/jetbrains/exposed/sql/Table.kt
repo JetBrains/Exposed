@@ -357,9 +357,23 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return null
     }
 
-    override fun dropStatement() = listOf("DROP TABLE IF EXISTS ${TransactionManager.current().identity(this)}" +
-        if (currentDialectIfAvailable == OracleDialect) { " CASCADE CONSTRAINTS" } else "") +
-        autoIncColumn?.autoIncSeqName?.let { Seq(it).dropStatement() }.orEmpty()
+    override fun dropStatement() : List<String> {
+        val dropTableDDL = buildString {
+            append("DROP TABLE ")
+            if (currentDialect.supportsIfNotExists) {
+                append(" IF EXISTS ")
+            }
+            append(TransactionManager.current().identity(this@Table))
+            if (currentDialectIfAvailable == OracleDialect) {
+                append(" CASCADE CONSTRAINTS")
+            }
+        }
+        val seqDDL = autoIncColumn?.autoIncSeqName?.let {
+            Seq(it).dropStatement()
+        }.orEmpty()
+
+        return listOf(dropTableDDL) + seqDDL
+    }
 
     override fun modifyStatement() = throw UnsupportedOperationException("Use modify on columns and indices")
 
