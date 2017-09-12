@@ -8,7 +8,7 @@ services:
        - "1521"
      environment:
        WEB_CONSOLE: "true"
-       DBCA_TOTAL_MEMORY: 2048
+       DBCA_TOTAL_MEMORY: 1024
        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/u01/app/oracle/product/12.1.0/xe/bin
        USE_UTF8_IF_CHARSET_EMPTY: "true"
      healthcheck:
