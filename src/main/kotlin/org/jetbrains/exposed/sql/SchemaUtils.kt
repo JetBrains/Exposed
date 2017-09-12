@@ -163,7 +163,7 @@ object SchemaUtils {
                 .filter { it in tables }
         val transactionManager = TransactionManager.current()
         if (!transactionManager.db.dialect.supportsIfNotExists) {
-            tablesForDeletion = tables.filter { it.exists()}
+            tablesForDeletion = tablesForDeletion.filter { it.exists()}
         }
         tablesForDeletion
                 .flatMap { it.dropStatement() }
