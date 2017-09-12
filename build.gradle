@@ -39,26 +39,18 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-def exposedOracleTest = test {
-    jvmArgs "-Dexposed.test.dialects=oracle"
+task exposedOracleTest(type: Test) {
+    jvmArgs += "-Dexposed.test.dialects=oracle"
 }
-
-task initOracleContainer() {
-    
-}
-
-
-
-initOracleContainer.dependsOn exposedOracleTest
-
 
 exposedOracleTest.doFirst {
-    def containerInfo =dockerCompose.servicesInfos.oracleDB
+    def containerInfo = dockerCompose.servicesInfos.oracleDB
     systemProperty 'exposed.test.oracle.host', containerInfo.host
     systemProperty 'exposed.test.oracle.port', containerInfo.ports[1521]
 }
 
-dockerCompose.isRequiredBy(initOracleContainer)
+dockerCompose.isRequiredBy(exposedOracleTest)
+
 dockerCompose {
     captureContainersOutput = true
     removeVolumes = false

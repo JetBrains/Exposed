@@ -15,6 +15,6 @@ services:
        USE_UTF8_IF_CHARSET_EMPTY: "true"
      healthcheck:
        test: ["CMD", "curl", "-f", "http://localhost:8080/apex"]
-       interval: 2m
+       interval: 1m
        timeout: 10s
        retries: 3
