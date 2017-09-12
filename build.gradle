@@ -53,7 +53,7 @@ dockerCompose.isRequiredBy(exposedOracleTest)
 
 dockerCompose {
     captureContainersOutput = true
-    removeVolumes = false
+    removeVolumes = true
     environment.put 'COMPOSE_CONVERT_WINDOWS_PATHS', 'true'
 }
 
