@@ -31,8 +31,10 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(OracleDialect, driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
-            connection = "jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100  ")}" +
-                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe.oracle.docker",
+            connection = "jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
+                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe.oracle.docker".also {
+                            exposedLogger.info("Oracle connection url: $it")
+                        },
             beforeConnection = {
                 Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
                 transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1) {
