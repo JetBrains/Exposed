@@ -1,16 +1,11 @@
 version: '3.1'
 
-networks:
-  main:
-
 services:
    oracleDB:
      container_name: oracleDB
      image: sath89/oracle-12c:latest
-     networks:
-      - main
      ports:
-       - "1521:1521"
+       - "1521"
      environment:
        WEB_CONSOLE: "true"
        DBCA_TOTAL_MEMORY: 2048
