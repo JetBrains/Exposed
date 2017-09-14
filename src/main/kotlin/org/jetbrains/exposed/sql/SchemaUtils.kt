@@ -161,14 +161,13 @@ object SchemaUtils {
                 .sortTablesByReferences(tables.toList())
                 .reversed()
                 .filter { it in tables }
-        val transactionManager = TransactionManager.current()
-        if (!transactionManager.db.dialect.supportsIfNotExists) {
+        if (!currentDialect.supportsIfNotExists) {
             tablesForDeletion = tablesForDeletion.filter { it.exists()}
         }
         tablesForDeletion
                 .flatMap { it.dropStatement() }
                 .forEach {
-                    transactionManager.exec(it)
+                    TransactionManager.current().exec(it)
                 }
         currentDialect.resetCaches()
     }
