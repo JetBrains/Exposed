@@ -91,7 +91,7 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_named_table") {
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.SQLITE, TestDB.ORACLE), tables = TestTable) {
+        withDb (TestDB.H2 ) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", TestTable.ddl)
         }
     }
