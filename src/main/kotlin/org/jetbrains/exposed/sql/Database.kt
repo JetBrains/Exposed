@@ -62,6 +62,7 @@ class Database private constructor(val connector: () -> Connection) {
             registerDialect(PostgreSQLDialect)
             registerDialect(SQLiteDialect)
             registerDialect(OracleDialect)
+            registerDialect(SQLServerDialect)
         }
 
         fun registerDialect(dialect: DatabaseDialect) {
