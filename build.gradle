@@ -56,6 +56,7 @@ dependencies {
     testCompile'com.opentable.components:otj-pg-embedded:0.9.0'
     testCompile 'org.xerial:sqlite-jdbc:3.20.0'
     testCompile files('libs/ojdbc6-12.1.0.2.jar')
+    testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre8'
 //    #com.hynnet:oracle-driver-ojdbc6:12.1.0.1'''
 }
 
