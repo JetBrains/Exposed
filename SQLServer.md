@@ -1,6 +1,9 @@
 ##SQL Server dialect  
 
-* Batch insert is not supported, because SQLServer do not return generated keys.  
+### Limitations
+
+* Batch insert actually inserts rows one by one, because SQLServer do not return generated keys.  
+* SQL Server looses precision when it stores timestamps.
 
 ### Running tests locally
 
