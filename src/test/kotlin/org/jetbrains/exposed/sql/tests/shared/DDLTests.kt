@@ -359,7 +359,13 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(true, result.single()[BoolTable.bool])
         }
     }
-    
+
+    @Test fun testDeleteMissingTable() {
+        val missingTable = Table("missingTable")
+        withDb {
+            SchemaUtils.drop(missingTable)
+        }
+    }
 }
 
 private fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->

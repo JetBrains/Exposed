@@ -140,7 +140,7 @@ object SchemaUtils {
     }
 
     fun <T> Transaction.withDataBaseLock(body: () -> T) {
-        val buzyTable = object : Table("Busy") {
+        val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()
         }
         create(buzyTable)
@@ -157,8 +157,14 @@ object SchemaUtils {
     }
 
     fun drop(vararg tables: Table) {
-        EntityCache.sortTablesByReferences(tables.toList()).reversed()
-                .filter { it in tables && it.exists() }
+        var tablesForDeletion = EntityCache
+                .sortTablesByReferences(tables.toList())
+                .reversed()
+                .filter { it in tables }
+        if (!currentDialect.supportsIfNotExists) {
+            tablesForDeletion = tablesForDeletion.filter { it.exists()}
+        }
+        tablesForDeletion
                 .flatMap { it.dropStatement() }
                 .forEach {
                     TransactionManager.current().exec(it)
