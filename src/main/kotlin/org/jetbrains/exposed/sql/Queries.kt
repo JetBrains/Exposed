@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
@@ -57,13 +58,27 @@ fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T
  */
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Map<Column<*>, Any>> {
     if (data.count() == 0) return emptyList()
-    BatchInsertStatement(this, ignore).let {
-        for (element in data) {
-            it.addBatch()
-            it.body(element)
+    if (currentDialect == SQLServerDialect) {
+        return data.flatMap { element ->
+            object : BatchInsertStatement(this) {
+                override val isAlwaysBatch: Boolean
+                    get() = false
+            }.let {
+                it.addBatch()
+                it.body(element)
+                it.execute(TransactionManager.current())
+                it.generatedKey!!
+            }
         }
-        it.execute(TransactionManager.current())
-        return it.generatedKey!!
+    } else {
+        BatchInsertStatement(this, ignore).let {
+            for (element in data) {
+                it.addBatch()
+                it.body(element)
+            }
+            it.execute(TransactionManager.current())
+            return it.generatedKey!!
+        }
     }
 }
 
