@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size, collection.size, "Count mismatch")
@@ -51,7 +53,12 @@ fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
         if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
             assertEquals(d1.millis / 1000, d2.millis / 1000)
         } else {
-            assertEquals(d1.millis, d2.millis)
+            if (currentDialect != SQLServerDialect) {
+                assertEquals(d1.millis, d2.millis)
+            } else {
+                val difference = d2.millis - d1.millis
+                assertTrue(Math.abs(difference) < 3, "SQLServer should store with error not more than 2 milliseconds, but eror is ${difference}")
+            }
         }
     }
 }
