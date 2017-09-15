@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+   sqlserver:
+     container_name: SQLServer
+     image: microsoft/mssql-server-linux:latest
+     ports:
+       - "1433"
+     environment:
+       WEB_CONSOLE: "true"
+       DBCA_TOTAL_MEMORY: 3500
+       ACCEPT_EULA: Y
+       SA_PASSWORD: "yourStrong(!)Password"
