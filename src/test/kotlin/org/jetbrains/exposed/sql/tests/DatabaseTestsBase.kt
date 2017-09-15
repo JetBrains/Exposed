@@ -49,11 +49,13 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                 }
                 Unit
             }),
-    SQLSERVER(SQLServerDialect, "jdbc:sqlserver://localhost:1433", "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
+    SQLSERVER(SQLServerDialect, "jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "localhost")}" +
+            ":${System.getProperty("exposed.test.sqlserver.port", "1433")}",
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,sqlite,mysql,postgresql").let {
+            val concreteDialects = System.getProperty("exposed.test.dialects","h2,sqlite,mysql,postgresql").let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
