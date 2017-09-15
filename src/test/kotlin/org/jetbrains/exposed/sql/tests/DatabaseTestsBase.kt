@@ -31,7 +31,9 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
             }),
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    ORACLE(OracleDialect, "jdbc:oracle:thin:@//localhost:1521/xe", "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+    ORACLE(OracleDialect, driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
+                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"),
             beforeConnection = {
                 Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
                 transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1) {
@@ -51,11 +53,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects",
-                    "h2,sqlite,mysql,postgresql"
-                            // + ",oracle"
-                            //+ ",sqlserver"
-            ).let {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,sqlite,mysql,postgresql").let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }

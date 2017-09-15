@@ -568,9 +568,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         }
     }
 
-    fun new(init: T.() -> Unit) = new(null, init)
+    open fun new(init: T.() -> Unit) = new(null, init)
 
-    fun new(id: ID?, init: T.() -> Unit): T {
+    open fun new(id: ID?, init: T.() -> Unit): T {
         val entityId = EntityID(id, table)
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
