@@ -7,7 +7,7 @@
 
 ### Running tests locally
 
-* Run SQL Server locally, e.g. with Docker image from 
-https://hub.docker.com/r/microsoft/mssql-server-linux/
-* Uncomment `+ ",sqlserver"` line in `src/test/kotlin/org/jetbrains/exposed/sql/tests/DatabaseTestsBase.kt`
+* Run SQL Server locally, e.g. with Docker image with command like
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=yourStrong(!)Password' -p 1433:1433 -d microsoft/mssql-server-linux
+* Run tests with `-Dexposed.test.dialects=sqlserver`
 
