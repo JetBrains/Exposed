@@ -265,15 +265,15 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
         val t = TransactionManager.current()
-        return buildString {
-            append("CREATE ")
-            if (unique) append("UNIQUE ")
-            // REVIEW
-            append("INDEX ${t.quoteIfNecessary(t.cutIfNecessary(indexName))} ON ${t.quoteIfNecessary(tableName)} ")
-            columns.joinTo(this, ", ", "(", ")") {
-                it
-            }
+        val quotedTableName = t.quoteIfNecessary(tableName)
+        val quotedIndexName = t.quoteIfNecessary(t.cutIfNecessary(indexName))
+        val columnsList = columns.joinToString(prefix = "(", postfix = ")")
+        return if (unique) {
+            "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
+        } else {
+            "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
         }
+
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {

@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.VendorDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Assert.assertTrue
@@ -177,7 +178,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testIndices03() {
+    @Test fun testUniqueIndices01() {
         val t = object : Table("t1") {
             val id = integer("id").primaryKey()
             val name = varchar("name", 255).uniqueIndex()
@@ -185,7 +186,10 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
-            assertEquals("CREATE UNIQUE INDEX ${"t1_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+            if (currentDialect == SQLiteDialect)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+            else
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE (${"name".inProperCase()})", alter)
 
         }
     }
@@ -204,7 +208,10 @@ class DDLTests : DatabaseTestsBase() {
             val indexAlter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
             assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
-            assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+            if (currentDialect == SQLiteDialect)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+            else
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
         }
     }
 

@@ -20,4 +20,10 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 internal object SQLiteDialect : VendorDialect("sqlite", SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
     override fun getDatabase(): String = ""
+
+    override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
+        val originalCreateIndex = super.createIndex(false, tableName, indexName, columns)
+        return if (unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
+        else originalCreateIndex
+    }
 }

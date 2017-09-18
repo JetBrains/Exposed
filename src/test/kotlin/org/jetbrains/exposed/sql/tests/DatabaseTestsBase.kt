@@ -34,6 +34,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
             connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
                         ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"),
             beforeConnection = {
+                Locale.setDefault(Locale.ENGLISH)
                 Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
                 transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1) {
                     try {
