@@ -16,6 +16,8 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
+typealias JoinCondition = Pair<Expression<*>, Expression<*>>
+
 interface FieldSet {
     val fields: List<Expression<*>>
     val source: ColumnSet
@@ -63,14 +65,14 @@ class Join (val table: ColumnSet) : ColumnSet() {
         joinParts.addAll(new.joinParts)
     }
 
-    class JoinPart(val joinType: JoinType, val joinPart: ColumnSet, val pkColumn: Expression<*>? = null, val fkColumn: Expression<*>? = null, val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) {
+    internal class JoinPart(val joinType: JoinType, val joinPart: ColumnSet, val conditions: List<JoinCondition>, val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) {
         init {
-            if (!(pkColumn != null && fkColumn != null || additionalConstraint != null))
+            if (joinType != JoinType.CROSS && conditions.isEmpty() && additionalConstraint == null)
                 error("Missing join condition on $${this.joinPart}")
         }
     }
 
-    val joinParts: ArrayList<JoinPart> = ArrayList()
+    internal val joinParts: ArrayList<JoinPart> = ArrayList()
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.INNER)
 
@@ -81,26 +83,31 @@ class Join (val table: ColumnSet) : ColumnSet() {
     private fun join(otherTable: ColumnSet, joinType: JoinType = JoinType.INNER, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null): Join {
         val fkKeys = findKeys (this, otherTable) ?: findKeys (otherTable, this) ?: emptyList()
         when {
-            fkKeys.isEmpty() && additionalConstraint == null ->
-                error ("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
+            joinType != JoinType.CROSS && fkKeys.isEmpty() && additionalConstraint == null ->
+                error("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
-            fkKeys.count() > 1 || fkKeys.any { it.second.count() > 1 } ->  {
+            fkKeys.any { it.second.count() > 1 } && additionalConstraint == null ->  {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString { it.toString() }}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
-            else -> return join(otherTable, joinType, fkKeys.singleOrNull()?.first, fkKeys.singleOrNull()?.second?.single(), additionalConstraint)
+            else -> return join(otherTable, joinType, fkKeys.map { it.first to it.second.single() }, additionalConstraint)
         }
     }
 
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join {
-        val newJoin = Join(table)
-        newJoin.joinParts.addAll(joinParts)
-        newJoin.joinParts.add(JoinPart(joinType, otherTable, onColumn, otherColumn, additionalConstraint))
-        return newJoin
+        val cond = if (onColumn != null && otherColumn != null) { listOf(JoinCondition(onColumn, otherColumn)) } else emptyList()
+        return join(otherTable, joinType, cond, additionalConstraint)
     }
 
-    private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? {
+    private fun join(otherTable: ColumnSet, joinType: JoinType, cond: List<JoinCondition>, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?) : Join =
+        Join(table).also {
+            it.joinParts.addAll(this.joinParts)
+            it.joinParts.add(JoinPart(joinType, otherTable, cond, additionalConstraint))
+        }
 
+
+
+    private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? {
         val pkToFKeys = a.columns.map { a_pk ->
             a_pk to b.columns.filter { it.referee == a_pk }
         }.filter { it.second.isNotEmpty() }
@@ -115,12 +122,14 @@ class Join (val table: ColumnSet) : ColumnSet() {
             if (p.joinType != JoinType.CROSS) {
                 append(" ON ")
                 val queryBuilder = QueryBuilder(false)
-                if (p.pkColumn != null && p.fkColumn != null) {
-                    append("${p.pkColumn.toSQL(queryBuilder)} = ${p.fkColumn.toSQL(queryBuilder)}")
-                    if (p.additionalConstraint != null) append(" and ")
-                }
-                if (p.additionalConstraint != null)
+                append(p.conditions.joinToString (" AND "){ (pkColumn, fkColumn) ->
+                    "${pkColumn.toSQL(queryBuilder)} = ${fkColumn.toSQL(queryBuilder)}"
+                })
+
+                if (p.additionalConstraint != null) {
+                    if (p.conditions.isNotEmpty()) append(" AND ")
                     append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(queryBuilder)})")
+                }
             }
         }
     }

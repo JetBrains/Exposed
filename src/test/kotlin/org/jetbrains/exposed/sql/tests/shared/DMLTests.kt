@@ -262,6 +262,55 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testMultipleReferenceJoin01() {
+        val foo = object : IntIdTable("foo") {
+            val baz = integer("baz").uniqueIndex()
+        }
+        val bar = object : IntIdTable("bar") {
+            val foo = reference("foo", foo)
+            val baz = integer("baz") references foo.baz
+        }
+        withTables(foo, bar) {
+            val fooId = foo.insertAndGetId {
+                it[baz] = 5
+            }
+
+            bar.insert {
+                it[this.foo] = fooId
+                it[baz] = 5
+            }
+
+            val result = foo.innerJoin(bar).selectAll()
+            assertEquals(1, result.count())
+        }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testMultipleReferenceJoin02() {
+        val foo = object : IntIdTable("foo") {
+            val baz = integer("baz").uniqueIndex()
+        }
+        val bar = object : IntIdTable("bar") {
+            val foo = reference("foo", foo)
+            val foo2 = reference("foo2", foo)
+            val baz = integer("baz") references foo.baz
+        }
+        withTables(foo, bar) {
+            val fooId = foo.insertAndGetId {
+                it[baz] = 5
+            }
+
+            bar.insert {
+                it[this.foo] = fooId
+                it[this.foo2] = fooId
+                it[baz] = 5
+            }
+
+            val result = foo.innerJoin(bar).selectAll()
+            assertEquals(1, result.count())
+        }
+    }
+
     @Test fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
             ((cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
