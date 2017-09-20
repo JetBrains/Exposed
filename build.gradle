@@ -88,7 +88,7 @@ dependencies {
     testCompile'com.opentable.components:otj-pg-embedded:0.9.0'
     testCompile 'org.xerial:sqlite-jdbc:3.20.0'
     testCompile 'com.oracle:ojdbc6:12.1.0.1-atlassian-hosted'
-    testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre8'
+    testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre7'
 }
 
 test {
