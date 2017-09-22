@@ -15,6 +15,7 @@ import org.junit.Test
 import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
+import kotlin.properties.Delegates
 import kotlin.test.assertFalse
 
 class DDLTests : DatabaseTestsBase() {
@@ -39,6 +40,20 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals (true, TestTable.exists())
         }
     }
+
+    @Test fun tableExistsWithKeyword() {
+        var keywordTable by Delegates.notNull<IntIdTable>()
+        withDb {
+            keywordTable = object : IntIdTable(name ="keywords") {}
+        }
+        withTables(keywordTable) {
+            assertEquals (true, keywordTable.exists())
+            keywordTable.insert {
+                it[this.id] = EntityID(1, this)
+            }
+        }
+    }
+
 
     @Test fun testCreateMissingTablesAndColumns01() {
         val TestTable = object : Table("test_table") {

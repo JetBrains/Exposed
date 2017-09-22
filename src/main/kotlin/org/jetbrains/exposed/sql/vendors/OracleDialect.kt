@@ -59,7 +59,7 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
     override fun catalog(transaction: Transaction) : String = transaction.connection.metaData.userName
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        return table.autoIncColumn?.let {
+        return table.autoIncColumn?.takeIf { it !in columns }?.let {
             val newExpr = if (expr.isBlank()) {
                 "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
             } else {

@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
+private val comparator = compareBy<Column<*>>({ it.table.tableName }, { it.name })
+
 class Column<T>(val table: Table, val name: String, override val columnType: IColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
     internal var onDelete: ReferenceOption? = null
@@ -82,5 +84,5 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         }
     }
 
-    override fun compareTo(other: Column<*>): Int = compareBy<Column<*>>({it.table.tableName}, {it.name}).compare(this, other)
+    override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)
 }
