@@ -39,8 +39,11 @@ class ThreadLocalTransactionManager(private val db: Database,
         }
 
         override fun close() {
-            connection.close()
-            threadLocal.set(outerTransaction)
+            try {
+                connection.close()
+            } finally {
+                threadLocal.set(outerTransaction)
+            }
         }
 
     }
