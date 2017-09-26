@@ -24,12 +24,12 @@ internal object MysqlFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
-    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode): Op<Boolean>() {
+    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder): String =
                 "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
     }
 
-    private enum class MysqlMatchMode(val operator: String): FunctionProvider.MatchMode {
+    private enum class MysqlMatchMode(val operator: String) : FunctionProvider.MatchMode {
         STRICT("IN BOOLEAN MODE"),
         NATURAL_LANGUAGE("IN NATURAL LANGUAGE MODE");
 
@@ -40,21 +40,17 @@ internal object MysqlFunctionProvider : FunctionProvider() {
 internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvider) {
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
-
-        val statement = TransactionManager.current().connection.createStatement()
-
-        try {
-            val rs = statement.executeQuery(
-                    "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'")
-            return rs.extractColumns(tables) {
+        return TransactionManager.current().exec(
+                "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM" +
+                        " INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${getDatabase()}'") { rs ->
+            rs.extractColumns(tables) {
                 Triple(it.getString("TABLE_NAME")!!, it.getString("COLUMN_NAME")!!, it.getBoolean("IS_NULLABLE"))
             }
-        } finally {
-            statement.close()
-        }
+        }!!
     }
 
-    override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
+    override @Synchronized
+    fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
 
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
 
@@ -67,20 +63,18 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
             return ""
         }
 
-        val statement = TransactionManager.current().connection.createStatement()
-        try {
-            val rs = statement.executeQuery(
-                    "SELECT\n" +
-                            "  rc.CONSTRAINT_NAME,\n" +
-                            "  ku.TABLE_NAME,\n" +
-                            "  ku.COLUMN_NAME,\n" +
-                            "  ku.REFERENCED_TABLE_NAME,\n" +
-                            "  ku.REFERENCED_COLUMN_NAME,\n" +
-                            "  rc.DELETE_RULE\n" +
-                            "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
-                            "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
-                            "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
-                            "WHERE ku.TABLE_SCHEMA = '${getDatabase()}' ${inTableList()}")
+        TransactionManager.current().exec(
+                "SELECT\n" +
+                        "  rc.CONSTRAINT_NAME,\n" +
+                        "  ku.TABLE_NAME,\n" +
+                        "  ku.COLUMN_NAME,\n" +
+                        "  ku.REFERENCED_TABLE_NAME,\n" +
+                        "  ku.REFERENCED_COLUMN_NAME,\n" +
+                        "  rc.DELETE_RULE\n" +
+                        "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
+                        "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
+                        "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
+                        "WHERE ku.TABLE_SCHEMA = '${getDatabase()}' ${inTableList()}") { rs ->
 
             while (rs.next()) {
                 val refereeTableName = rs.getString("TABLE_NAME")!!
@@ -92,24 +86,21 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
                 val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
                 constraints.getOrPut(Pair(refereeTableName, refereeColumnName), { arrayListOf() }).add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
             }
-        } finally {
-            statement.close()
         }
 
         return constraints
     }
 
-    override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
+    override @Synchronized
+    fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
 
         val constraints = HashMap<Table, MutableList<Index>>()
 
         val tableNames = tables.associateBy { it.nameInDatabaseCase() }
 
         val transaction = TransactionManager.current()
-        val statement = transaction.connection.createStatement()
-        try {
-            val rs = statement.executeQuery(
-                    """SELECT DISTINCT ind.* from (
+        transaction.exec(
+                """SELECT DISTINCT ind.* from (
                         SELECT
                             TABLE_NAME, INDEX_NAME, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `COLUMNS`, NON_UNIQUE
                             FROM INFORMATION_SCHEMA.STATISTICS s
@@ -121,7 +112,7 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
                         and TABLE_SCHEMA = '${getDatabase()}'
                         and kcu.REFERENCED_TABLE_NAME is not NULL
                 WHERE kcu.COLUMN_NAME is NULL OR ind.NON_UNIQUE is FALSE;
-        """)
+        """) { rs ->
 
             while (rs.next()) {
                 val tableName = rs.getString("TABLE_NAME")!!
@@ -132,8 +123,6 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
                     constraints.getOrPut(tableNames[tableName]!!, { arrayListOf() }).add(Index(indexName, tableName, columnsInIndex, isUnique))
                 }
             }
-        } finally {
-            statement.close()
         }
 
         return constraints
@@ -161,5 +150,5 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
     override fun dropIndex(tableName: String, indexName: String): String =
             "ALTER TABLE $tableName DROP INDEX $indexName"
 
-    fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) ||it.databaseMajorVersion > 5 }
+    fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) || it.databaseMajorVersion > 5 }
 }

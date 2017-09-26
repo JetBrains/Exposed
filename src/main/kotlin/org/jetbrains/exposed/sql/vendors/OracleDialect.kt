@@ -74,16 +74,12 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 
-        val statement = TransactionManager.current().connection.createStatement()
-        try {
-            val rs = statement.executeQuery(
-                    "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, NULLABLE FROM DBA_TAB_COLS WHERE OWNER = '${getDatabase()}'")
-            return rs.extractColumns(tables) {
+        return TransactionManager.current().exec(
+                "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, NULLABLE FROM DBA_TAB_COLS WHERE OWNER = '${getDatabase()}'") { rs ->
+            rs.extractColumns(tables) {
                 Triple(it.getString("TABLE_NAME")!!, it.getString("COLUMN_NAME")!!, it.getBoolean("NULLABLE"))
             }
-        } finally {
-            statement.close()
-        }
+        }!!
     }
 
     override fun allTablesNames(): List<String> {
