@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
@@ -30,6 +31,10 @@ class Database private constructor(val connector: () -> Connection) {
     }
 
     val vendor: String get() = dialect.name
+    
+    val version by lazy {
+        metadata.let { BigDecimal("${it.databaseMajorVersion}.${it.databaseMinorVersion}") }
+    }
 
     val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect].orEmpty() + metadata.sqlKeywords.split(',') }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!!.trim() }

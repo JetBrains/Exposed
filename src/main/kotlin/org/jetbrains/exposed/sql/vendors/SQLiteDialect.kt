@@ -19,6 +19,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
 internal object SQLiteDialect : VendorDialect("sqlite", SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
     override fun getDatabase(): String = ""
 
     override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {

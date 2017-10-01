@@ -11,6 +11,8 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
 internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
 
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
     private val isMySQLMode: Boolean get() = currentMode() == "MySQL"
 
     override val supportsMultipleGeneratedKeys: Boolean = false

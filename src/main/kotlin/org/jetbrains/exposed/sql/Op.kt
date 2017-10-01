@@ -21,7 +21,7 @@ class IsNotNullOp(val expr: Expression<*>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder):String = "${expr.toSQL(queryBuilder)} IS NOT NULL"
 }
 
-class LiteralOp<out T>(override val columnType: IColumnType, val value: Any): ExpressionWithColumnType<T>() {
+class LiteralOp<out T>(override val columnType: IColumnType, val value: T): ExpressionWithColumnType<T>() {
     override fun toSQL(queryBuilder: QueryBuilder):String = columnType.valueToString(value)
 }
 
