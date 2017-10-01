@@ -53,7 +53,8 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
     internal fun isOneColumnPK() = table.columns.singleOrNull { it.indexInPK != null } == this
 
     fun descriptionDdl(): String = buildString {
-        append(TransactionManager.current().identity(this@Column))
+        val tr = TransactionManager.current()
+        append(tr.identity(this@Column))
         append(" ")
         val isPKColumn = indexInPK != null
         val colType = columnType
@@ -63,16 +64,22 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
             append(colType.sqlType())
         }
 
-        if (!isPKColumn && dbDefaultValue != null) {
-            if (defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault) {
-                exposedLogger.error("${currentDialect.name} doesn't support expressions as default value. Only constants allowed.")
+        val _dbDefaultValue = dbDefaultValue
+        if (!isPKColumn && _dbDefaultValue != null) {
+            val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(_dbDefaultValue)
+            if (!currentDialect.isAllowedAsColumnDefault(_dbDefaultValue)) {
+                val clientDefault = when {
+                    defaultValueFun != null -> " Expression will be evaluated on client."
+                    !colType.nullable -> " Column will be created with NULL marker."
+                    else -> ""
+                }
+                exposedLogger.error("${currentDialect.name} ${tr.db.version} doesn't support expression '$expressionSQL' as default value.$clientDefault")
             } else {
-                append(" DEFAULT ")
-                append(dbDefaultValue!!.toSQL(QueryBuilder(false)))
+                append(" DEFAULT $expressionSQL" )
             }
         }
 
-        if (colType.nullable || (dbDefaultValue != null && defaultValueFun == null && !currentDialect.supportsExpressionsAsDefault)) {
+        if (colType.nullable || (_dbDefaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(_dbDefaultValue))) {
             append(" NULL")
         } else if (!isPKColumn) {
             append(" NOT NULL")

@@ -34,6 +34,11 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         error("Unexpected value of type Boolean: $value")
     }
 
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> && e.columnType is DateColumnType -> "DATE ${super.processForDefaultValue(e)}"
+        else -> super.processForDefaultValue(e)
+    }
+
     override val blobAsStream = true
 }
 
@@ -55,6 +60,8 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
     override val identifierLengthLimit = 30
 
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun catalog(transaction: Transaction) : String = transaction.connection.metaData.userName
 

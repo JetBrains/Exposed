@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.sql.Expression
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
@@ -22,5 +23,5 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
 }
 
 internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider) {
-    override val supportsExpressionsAsDefault: Boolean = true
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 }

@@ -32,9 +32,13 @@ open class DataTypeProvider {
 
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
-
     open fun textType() = "TEXT"
     open val blobAsStream = false
+
+    open fun processForDefaultValue(e: Expression<*>) : String = when (e) {
+        is LiteralOp<*> -> e.toSQL(QueryBuilder(false))
+        else -> "(${e.toSQL(QueryBuilder(false))})"
+    }
 }
 
 open class FunctionProvider {
@@ -84,7 +88,7 @@ interface DatabaseDialect {
 
     fun supportsSelectForUpdate(): Boolean
     val supportsMultipleGeneratedKeys: Boolean
-    val supportsExpressionsAsDefault: Boolean get() = false
+    fun isAllowedAsColumnDefault(e: Expression<*>) = e is LiteralOp<*>
 
     // --> REVIEW
     val supportsIfNotExists: Boolean get() = true

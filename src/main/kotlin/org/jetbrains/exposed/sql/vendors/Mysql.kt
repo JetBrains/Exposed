@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.math.BigDecimal
 import java.util.*
 
 
@@ -38,6 +39,11 @@ internal object MysqlFunctionProvider : FunctionProvider() {
 }
 
 internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvider) {
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
+        val expression = e.toSQL(QueryBuilder(false)).trim()
+        return super.isAllowedAsColumnDefault(e) || expression == "CURRENT_TIMESTAMP" && isFractionDateTimeSupported()
+    }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
         return TransactionManager.current().exec(
@@ -150,5 +156,5 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
     override fun dropIndex(tableName: String, indexName: String): String =
             "ALTER TABLE $tableName DROP INDEX $indexName"
 
-    fun isFractionDateTimeSupported() = TransactionManager.current().db.metadata.let { (it.databaseMajorVersion == 5 && it.databaseMinorVersion >= 6) || it.databaseMajorVersion > 5 }
+    fun isFractionDateTimeSupported() = TransactionManager.current().db.version >= BigDecimal("5.6")
 }

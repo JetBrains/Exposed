@@ -119,14 +119,15 @@ object SqlExpressionBuilder {
 
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 
-    fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> = when (value) {
+    @Suppress("UNCHECKED_CAST")
+    fun<T, S: T> ExpressionWithColumnType<T>.asLiteral(value: S) = when (value) {
         is Boolean -> booleanLiteral(value)
         is Int -> intLiteral(value)
         is Long -> longLiteral(value)
         is String -> stringLiteral(value)
         is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
         else -> LiteralOp<T>(columnType, value)
-    }
+    } as LiteralOp<T>
 
     fun<T, S: Any> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> = Between(this, asLiteral(from), asLiteral(to))
 
