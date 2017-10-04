@@ -219,16 +219,15 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     }
 
     operator fun <T> Column<T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
-        if (writeValues.containsKey(this as Column<out Any?>) || _readValues?.tryGet(this) != value) {
+        val currentValue = _readValues?.tryGet(this)
+        if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
-                TransactionManager.current().entityCache.referrers.run {
-                    filterKeys { it == value }.forEach {
-                        if (it.value.keys.any { it == this@setValue } ) {
-                            this.remove(it.key)
-                        }
-                    }
+                val entityCache = TransactionManager.current().entityCache
+
+                listOfNotNull<Any>(value, currentValue).forEach {
+                    entityCache.referrers[it]?.remove(this)
                 }
-                TransactionManager.current().entityCache.removeTablesReferrers(listOf(referee!!.table))
+                entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues[this as Column<Any?>] = value
         }
