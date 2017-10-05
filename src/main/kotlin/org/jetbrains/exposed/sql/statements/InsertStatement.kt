@@ -22,18 +22,18 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
-    protected fun valuesAndDefaults(): Map<Column<*>, Any?> {
+    open protected fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
         val columnsWithNotNullDefault = targets.flatMap { it.columns }.filter {
             (it.dbDefaultValue != null || it.defaultValueFun != null) && !it.columnType.nullable && it !in values.keys
         }
         return values + columnsWithNotNullDefault.map { it to (it.defaultValueFun?.invoke() ?: DefaultValueMarker) }
     }
+
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val values = valuesAndDefaults()
         val sql = if(values.isEmpty()) ""
-        else values.entries.joinToString(prefix = "VALUES (", postfix = ")") {
-            val (col, value) = it
+        else values.entries.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
             when (value) {
                 is Expression<*> -> value.toSQL(builder)
                 DefaultValueMarker -> col.dbDefaultValue!!.toSQL(builder)
@@ -66,12 +66,11 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     override fun arguments() = QueryBuilder(true).run {
-        valuesAndDefaults().forEach {
-            val value = it.value
+        valuesAndDefaults().forEach { (col, value) ->
             when (value) {
                 is Expression<*> -> value.toSQL(this)
                 DefaultValueMarker -> {}
-                else -> registerArgument(it.key.columnType, value)
+                else -> registerArgument(col.columnType, value)
             }
         }
         if (args.isNotEmpty()) listOf(args.toList()) else emptyList()
