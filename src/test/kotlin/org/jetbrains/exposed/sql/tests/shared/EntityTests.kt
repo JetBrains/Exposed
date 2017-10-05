@@ -2,9 +2,11 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CurrentDateTime
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.joda.time.DateTime
 import org.junit.Test
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -145,6 +147,61 @@ class EntityTests: DatabaseTestsBase() {
             assertEquals(1, entity2.defaultedInNew)
         }
     }
+
+    object TableWithDBDefault : IntIdTable() {
+        val field = varchar("field", 100)
+        val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+    }
+
+    class DBDefault(id: EntityID<Int>): IntEntity(id) {
+        var field by TableWithDBDefault.field
+        var b1 by TableWithDBDefault.t1
+
+        override fun equals(other: Any?): Boolean {
+            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(b1, it.b1) } ?: false
+        }
+
+        override fun hashCode(): Int = id.value.hashCode()
+
+        companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
+    }
+
+    @Test
+    fun testDefaultsWithExplicit01() {
+        withTables(TableWithDBDefault) {
+            val created = listOf(
+                    DBDefault.new { field = "1" },
+                    DBDefault.new {
+                        field = "2"
+                        b1 = DateTime.now().minusDays(5)
+                    })
+            flushCache()
+            created.forEach {
+                DBDefault.removeFromCache(it)
+            }
+
+            val entities = DBDefault.all().toList()
+            assertEqualCollections(created.map { it.id }, entities.map { it.id })
+        }
+    }
+
+    @Test fun testDefaultsWithExplicit02() {
+        withTables(TableWithDBDefault) {
+            val created = listOf(
+                    DBDefault.new{
+                        field = "2"
+                        b1 = DateTime.now().minusDays(5)
+                    }, DBDefault.new{ field = "1" })
+
+            flushCache()
+            created.forEach {
+                DBDefault.removeFromCache(it)
+            }
+            val entities = DBDefault.all().toList()
+            assertEqualCollections(created, entities)
+        }
+    }
+
 
     @Test fun testBlobField() {
         withTables(EntityTestsData.YTable) {
@@ -337,4 +394,3 @@ class EntityTests: DatabaseTestsBase() {
     }
 
 }
-                                                            

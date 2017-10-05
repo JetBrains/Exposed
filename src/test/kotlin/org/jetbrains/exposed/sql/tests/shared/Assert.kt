@@ -6,9 +6,9 @@ import org.joda.time.DateTime
 import kotlin.test.assertEquals
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
-    assertEquals (expected.size, collection.size, "Count mismatch")
+    assertEquals (expected.size, collection.size, "Count mismatch on ${currentDialect.name}")
     for (p in collection) {
-        assert(expected.any {p == it}) { "Unexpected element in collection pair $p" }
+        assert(expected.any {p == it}) { "Unexpected element in collection pair $p on ${currentDialect.name}" }
     }
 }
 
@@ -38,7 +38,7 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
-fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
+fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
     if (d1 == null) {
         if (d2 != null)
             error("d1 is null while d2 is not")
@@ -54,4 +54,11 @@ fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
             assertEquals(d1.millis, d2.millis)
         }
     }
+}
+
+fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
+    assertEqualDateTime(d1, d2)
+    true
+} catch (e: Exception) {
+    false
 }

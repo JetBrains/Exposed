@@ -4,6 +4,8 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.BatchDataInconsistent
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.joda.time.DateTime
@@ -783,6 +785,33 @@ class DMLTests : DatabaseTestsBase() {
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
             assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map{it.first} }.count())
+        }
+    }
+
+    private val initBatch = listOf<(BatchInsertStatement)->Unit>({
+        it[EntityTests.TableWithDBDefault.field] = "1"
+    }, {
+        it[EntityTests.TableWithDBDefault.field] = "2"
+        it[EntityTests.TableWithDBDefault.t1] = DateTime.now()
+    })
+
+    @Test(expected = BatchDataInconsistent::class)
+    fun testRawBatchInsertFails01() {
+        withTables(EntityTests.TableWithDBDefault) {
+            BatchInsertStatement(EntityTests.TableWithDBDefault).run {
+                initBatch.forEach {
+                    addBatch()
+                    it(this)
+                }
+            }
+        }
+    }
+
+    @Test fun testRawBatchInsertFails02() {
+        withTables(EntityTests.TableWithDBDefault) {
+            EntityTests.TableWithDBDefault.batchInsert(initBatch) { foo ->
+                foo(this)
+            }
         }
     }
 
