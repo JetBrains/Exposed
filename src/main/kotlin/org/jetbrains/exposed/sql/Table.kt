@@ -40,9 +40,9 @@ abstract class ColumnSet : FieldSet {
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
-fun <C1:ColumnSet, C2:ColumnSet> C1.innerJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
+fun <C1:ColumnSet, C2:ColumnSet> C1.innerJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable), additionalConstraint)
 
-fun <C1:ColumnSet, C2:ColumnSet> C1.leftJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn())
+fun <C1:ColumnSet, C2:ColumnSet> C1.leftJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null) = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn(), additionalConstraint)
 
 class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
