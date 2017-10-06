@@ -105,7 +105,7 @@ interface DatabaseDialect {
     fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
     fun dropIndex(tableName: String, indexName: String): String
 
-    fun limit(size: Int, offset: Int = 0): String
+    fun limit(size: Int, offset: Int = 0, alreadyOrdered: Boolean = true): String
 }
 
 internal abstract class VendorDialect(override val name: String,
@@ -286,7 +286,7 @@ internal abstract class VendorDialect(override val name: String,
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
-    override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
+    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
 }
 

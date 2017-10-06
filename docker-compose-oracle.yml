@@ -1,7 +1,7 @@
 version: '3.1'
 
 services:
-   oracleDB:
+   oracle:
      container_name: oracleDB
      image: sath89/oracle-12c:latest
      ports:

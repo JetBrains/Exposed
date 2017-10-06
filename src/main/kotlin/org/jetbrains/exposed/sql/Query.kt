@@ -164,7 +164,7 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
 
             limit?.let {
                 append(" ")
-                append(transaction.db.dialect.limit(it, offset))
+                append(transaction.db.dialect.limit(it, offset, orderByColumns.isNotEmpty()))
             }
         }
 

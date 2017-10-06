@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
+import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -48,11 +49,14 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                     exec("grant dba to ExposedTest IDENTIFIED BY 12345")
                 }
                 Unit
-            });
+            }),
+    SQLSERVER(SQLServerDialect, "jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "localhost")}" +
+            ":${System.getProperty("exposed.test.sqlserver.port", "1433")}",
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,sqlite,mysql,postgresql").let {
+            val concreteDialects = System.getProperty("exposed.test.dialects","h2,sqlite,mysql,postgresql").let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
@@ -86,7 +90,13 @@ abstract class DatabaseTestsBase {
 
         val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
 
-        transaction(database.metadata.defaultTransactionIsolation, 1) {
+        val transactionIsolation = if (dbSettings.dialect == SQLServerDialect) {
+            Connection.TRANSACTION_READ_COMMITTED
+        } else {
+            database.metadata.defaultTransactionIsolation
+        }
+
+        transaction(transactionIsolation, 1) {
             statement()
         }
     }

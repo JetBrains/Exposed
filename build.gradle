@@ -1,3 +1,5 @@
+import java.time.Duration
+
 buildscript {
     repositories {
         mavenCentral()
@@ -39,24 +41,26 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-task exposedOracleTest(type: Test) {
-    jvmArgs += "-Dexposed.test.dialects=oracle"
+task exposedDialectTestWithDocker(type: Test) {
+    jvmArgs += "-Dexposed.test.dialects=" + dialect
 }
 
-exposedOracleTest.doFirst {
-    def containerInfo = dockerCompose.servicesInfos.oracleDB
-    systemProperty 'exposed.test.oracle.host', containerInfo.host
+exposedDialectTestWithDocker.doFirst {
+    def containerInfo = dockerCompose.servicesInfos[dialect]
+    systemProperty 'exposed.test.' + dialect + '.host', containerInfo.host
     systemProperty 'exposed.test.oracle.port', containerInfo.ports[1521]
+    systemProperty 'exposed.test.sqlserver.port', containerInfo.ports[1433]
 }
 
-dockerCompose.isRequiredBy(exposedOracleTest)
+dockerCompose.isRequiredBy(exposedDialectTestWithDocker)
 
 dockerCompose {
+    useComposeFiles = ['docker-compose-' + dialect + '.yml']
     captureContainersOutput = true
     removeVolumes = true
     environment.put 'COMPOSE_CONVERT_WINDOWS_PATHS', 'true'
+    waitForHealthyStateTimeout = Duration.ofMinutes(60)
 }
-
 
 artifacts {
     archives sourcesJar
@@ -84,6 +88,7 @@ dependencies {
     testCompile'com.opentable.components:otj-pg-embedded:0.9.0'
     testCompile 'org.xerial:sqlite-jdbc:3.20.0'
     testCompile 'com.oracle:ojdbc6:12.1.0.1-atlassian-hosted'
+    testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre7'
 }
 
 test {

@@ -9,6 +9,4 @@
 ### Running tests locally
 
 * Run Oracle locally, e.g. with `sath89/oracle-12c` Docker image
-* Download `ojdbc6.jar` and put into local Maven repository
-* Uncomment `testCompile 'com.oracle:ojdbc6:12.1.0.2'` in `build.gradle`
 * Run tests with `-Dexposed.test.dialects=oracle`
