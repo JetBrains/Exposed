@@ -85,7 +85,7 @@ dependencies {
     testCompile "mysql:mysql-connector-java:5.1.44"
     testCompile "mysql:mysql-connector-mxj:5.0.12"
     testCompile 'org.postgresql:postgresql:9.4.1212.jre6'
-    testCompile'com.opentable.components:otj-pg-embedded:0.9.0'
+    testCompile 'com.opentable.components:otj-pg-embedded:0.9.0'
     testCompile 'org.xerial:sqlite-jdbc:3.20.0'
     testCompile 'com.oracle:ojdbc6:12.1.0.1-atlassian-hosted'
     testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre7'

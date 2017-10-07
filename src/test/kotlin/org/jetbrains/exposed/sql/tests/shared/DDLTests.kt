@@ -7,9 +7,11 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.VendorDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.joda.time.DateTime
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.sql.SQLException
@@ -143,18 +145,42 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun testDefaults01() {
+        val currentDT = CurrentDateTime()
+        val nowExpression = object : Expression<DateTime>() {
+            override fun toSQL(queryBuilder: QueryBuilder) = when (currentDialect) {
+                OracleDialect -> "SYSDATE"
+                else -> "NOW()"
+            }
+        }
+        val dtLiteral = dateLiteral(DateTime.parse("2010-01-01"))
         val TestTable = object : Table("t") {
             val s = varchar("s", 100).default("test")
             val l = long("l").default(42)
             val c = char("c").default('X')
+            val t1 = datetime("t1").defaultExpression(currentDT)
+            val t2 = datetime("t2").defaultExpression(nowExpression)
+            val t3 = datetime("t3").defaultExpression(dtLiteral)
+            val t4 = date("t4").default(DateTime.parse("2010-01-01"))
         }
 
+        fun Expression<*>.itOrNull() = when {
+            currentDialect.isAllowedAsColumnDefault(this)  ->
+                "DEFAULT ${currentDialect.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+            else -> "NULL"
+        }
+
+        
         withTables(TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
+            val dtType = currentDialect.dataTypeProvider.dateTimeType()
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
                     "${"t".inProperCase()} (" +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                    "${"l".inProperCase()} ${db.dialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                    "${"c".inProperCase()} CHAR DEFAULT 'X' NOT NULL" +
+                    "${"l".inProperCase()} ${currentDialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
+                    "${"c".inProperCase()} CHAR DEFAULT 'X' NOT NULL, " +
+                    "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
+                    "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
+                    "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
+                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
                 ")", TestTable.ddl)
         }
     }

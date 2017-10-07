@@ -71,14 +71,31 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             }
         }
     } else {
-        BatchInsertStatement(this, ignore).let {
-            for (element in data) {
-                it.addBatch()
-                it.body(element)
+        var statement = BatchInsertStatement(this, ignore)
+
+        val result = ArrayList<Map<Column<*>, Any>>()
+        fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
+            try {
+                body()
+            } catch (e: BatchDataInconsistent) {
+                execute(TransactionManager.current())
+                result += generatedKey!!
+                statement = BatchInsertStatement(this@batchInsert, ignore)//.apply { addBatch() }
             }
-            it.execute(TransactionManager.current())
-            return it.generatedKey!!
         }
+
+        for (element in data) {
+            statement.handleBatchException { addBatch() }
+            statement.handleBatchException {
+                body(element)
+                validateLastBatch()
+            }
+        }
+        if (statement.data.isNotEmpty()) {
+            statement.execute(TransactionManager.current())
+            result += statement.generatedKey!!
+        }
+        return result
     }
 }
 

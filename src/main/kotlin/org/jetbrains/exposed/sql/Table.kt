@@ -286,8 +286,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {
-        this.dbDefaultValue = object : Expression<T>() {
-            override fun toSQL(queryBuilder: QueryBuilder): String = columnType.valueToString(defaultValue)
+        this.dbDefaultValue = SqlExpressionBuilder.run {
+            asLiteral(defaultValue)
         }
         this.defaultValueFun = { defaultValue }
         return this
