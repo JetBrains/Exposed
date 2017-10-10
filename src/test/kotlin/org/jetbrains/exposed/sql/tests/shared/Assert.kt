@@ -41,25 +41,19 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
 }
 
 fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
-    if (d1 == null) {
-        if (d2 != null)
-            error("d1 is null while d2 is not")
-        return
-    } else {
-        if (d2 == null)
-            error ("d1 is not null while d2 is null")
-
+    when{
+        d1 == null && d2 == null -> return
+        d1 == null && d2 != null -> error("d1 is null while d2 is not")
+        d2 == null -> error ("d1 is not null while d2 is null")
+        d1 == null -> error("Impossible")
         // Mysql doesn't support millis prior 5.6.4
-        if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
+        currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported() ->
             assertEquals(d1.millis / 1000, d2.millis / 1000)
-        } else {
-            if (currentDialect != SQLServerDialect) {
-                assertEquals(d1.millis, d2.millis)
-            } else {
-                val difference = d2.millis - d1.millis
-                assertTrue(Math.abs(difference) < 3, "SQLServer should store with error not more than 2 milliseconds, but eror is ${difference}")
-            }
+        currentDialect == SQLServerDialect -> {
+            val difference = d2.millis - d1.millis
+            assertTrue(Math.abs(difference) < 3, "SQLServer should store with error not more than 2 milliseconds, but eror is ${difference}")
         }
+        else -> assertEquals(d1.millis, d2.millis)
     }
 }
 
