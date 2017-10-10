@@ -32,7 +32,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
     POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(OracleDialect, driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
-            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
+            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                         ":${System.getProperty("exposed.test.oracle.port", "32774")}/xe"),
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
@@ -115,7 +115,8 @@ abstract class DatabaseTestsBase {
                     statement()
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    SchemaUtils.drop (*tables)
+                    SchemaUtils.drop(*tables)
+                    commit()
                 }
             }
         }
