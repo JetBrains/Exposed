@@ -16,6 +16,7 @@ import java.nio.ByteBuffer
 import java.sql.Blob
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Types
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
 
@@ -301,10 +302,11 @@ class BlobColumnType : ColumnType() {
     }
 
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
-        if (currentDialect.dataTypeProvider.blobAsStream && value is InputStream) {
-            stmt.setBinaryStream(index, value, value.available())
-        } else {
-            super.setParameter(stmt, index, value)
+        when {
+            currentDialect.dataTypeProvider.blobAsStream && value is InputStream ->
+                stmt.setBinaryStream(index, value, value.available())
+            value == null -> stmt.setNull(index, Types.LONGVARBINARY)
+            else -> super.setParameter(stmt, index, value)
         }
     }
 

@@ -1,12 +1,16 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import java.util.*
 
 class QueryBuilder(val prepared: Boolean) {
     val args = ArrayList<Pair<IColumnType, Any?>>()
 
+    fun <T> registerArgument(column: Column<*>, argument: T) : String = when (argument) {
+        is Expression<*> -> argument.toSQL(this)
+        DefaultValueMarker -> column.dbDefaultValue!!.toSQL(this)
+        else -> registerArgument(column.columnType, argument)
+    }
     fun <T> registerArgument(sqlType: IColumnType, argument: T) = registerArguments(sqlType, listOf(argument)).single()
 
     fun <T> registerArguments(sqlType: IColumnType, arguments: Iterable<T>): List<String> {
@@ -15,7 +19,7 @@ class QueryBuilder(val prepared: Boolean) {
         return argumentsAndStrings.map {
             if (prepared) {
                 args.add(sqlType to it.first)
-                if (currentDialect == SQLServerDialect && sqlType is BlobColumnType) "CONVERT(VARBINARY(MAX), ?)" else "?"
+                "?"
             } else {
                 it.second
             }
