@@ -13,9 +13,9 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
     infix operator fun <T:Key> get(column: Column<T>): T = generatedKey as? T ?: error("No key generated")
 
-    open protected fun generatedKeyFun(rs: ResultSet, inserted: Int) : Key? {
-        return table.columns.firstOrNull { it.columnType.isAutoInc }?.let { column ->
-            if (rs.next()) {
+    open protected fun generatedKeyFun(rs: ResultSet?, inserted: Int) : Key? {
+        return autoIncColumns.firstOrNull()?.let { column ->
+            if (rs?.next() == true) {
                 @Suppress("UNCHECKED_CAST")
                 column.columnType.valueFromDB(rs.getObject(1)) as? Key
             } else null
@@ -34,11 +34,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         val values = valuesAndDefaults()
         val sql = if(values.isEmpty()) ""
         else values.entries.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
-            when (value) {
-                is Expression<*> -> value.toSQL(builder)
-                DefaultValueMarker -> col.dbDefaultValue!!.toSQL(builder)
-                else -> builder.registerArgument(col.columnType, value)
-            }
+            builder.registerArgument(col, value)
         }
         return transaction.db.dialect.insert(isIgnore, table, values.map { it.key }, sql, transaction)
     }
@@ -49,17 +45,17 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         transaction.entityCache.removeTablesReferrers(listOf(table))
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         return inserted.apply {
-            generatedKeys?.let {
-                generatedKey = generatedKeyFun(it, this)
-            }
+            val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
+            generatedKey = generatedKeyFun(rs, this)
         }
     }
 
+    protected val autoIncColumns = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }
+
     override fun prepared(transaction: Transaction, sql: String): PreparedStatement {
-        val autoincs = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }
-        return if (autoincs.isNotEmpty()) {
+        return if (autoIncColumns.isNotEmpty()) {
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            transaction.connection.prepareStatement(sql, autoincs.map { transaction.identity(it) }.toTypedArray())!!
+            transaction.connection.prepareStatement(sql, autoIncColumns.map { transaction.identity(it) }.toTypedArray())!!
         } else {
             transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
         }
@@ -67,11 +63,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
     override fun arguments() = QueryBuilder(true).run {
         valuesAndDefaults().forEach { (col, value) ->
-            when (value) {
-                is Expression<*> -> value.toSQL(this)
-                DefaultValueMarker -> {}
-                else -> registerArgument(col.columnType, value)
-            }
+            registerArgument(col, value)
         }
         if (args.isNotEmpty()) listOf(args.toList()) else emptyList()
     }

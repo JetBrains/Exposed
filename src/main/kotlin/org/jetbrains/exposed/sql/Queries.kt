@@ -58,45 +58,38 @@ fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T
  */
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Map<Column<*>, Any>> {
     if (data.count() == 0) return emptyList()
-    if (currentDialect == SQLServerDialect) {
-        return data.flatMap { element ->
-            object : BatchInsertStatement(this) {
-                override val isAlwaysBatch: Boolean
-                    get() = false
-            }.let {
-                it.addBatch()
-                it.body(element)
-                it.execute(TransactionManager.current())
-                it.generatedKey!!
-            }
+    fun newBatchStatement() : BatchInsertStatement {
+        return if (currentDialect == SQLServerDialect && this.autoIncColumn != null) {
+            SQLServerBatchInsertStatement(this, ignore)
+        } else {
+            BatchInsertStatement(this, ignore)
         }
-    } else {
-        var statement = BatchInsertStatement(this, ignore)
-
-        val result = ArrayList<Map<Column<*>, Any>>()
-        fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
-            try {
-                body()
-            } catch (e: BatchDataInconsistent) {
-                execute(TransactionManager.current())
-                result += generatedKey!!
-                statement = BatchInsertStatement(this@batchInsert, ignore)//.apply { addBatch() }
-            }
-        }
-
-        for (element in data) {
-            statement.handleBatchException { addBatch() }
-            statement.handleBatchException {
-                body(element)
-                validateLastBatch()
-            }
-        }
-        if (statement.data.isNotEmpty()) {
-            statement.execute(TransactionManager.current())
-            result += statement.generatedKey!!
-        }
-        return result
     }
+    var statement = newBatchStatement()
+
+    val result = ArrayList<Map<Column<*>, Any>>()
+    fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
+        try {
+            body()
+        } catch (e: BatchDataInconsistent) {
+            execute(TransactionManager.current())
+            result += generatedKey.orEmpty()
+            statement = newBatchStatement()
+        }
+    }
+
+    for (element in data) {
+        statement.handleBatchException { addBatch() }
+        statement.handleBatchException {
+            body(element)
+            validateLastBatch()
+        }
+    }
+    if (statement.data.isNotEmpty()) {
+        statement.execute(TransactionManager.current())
+        result += statement.generatedKey.orEmpty()
+    }
+    return result
 }
 
 fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {

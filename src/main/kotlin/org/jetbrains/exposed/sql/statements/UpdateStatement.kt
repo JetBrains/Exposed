@@ -20,10 +20,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         append("UPDATE ${targetsSet.describe(transaction)}")
         append(" SET ")
         append(firstDataSet.joinToString { (col, value) ->
-            "${transaction.identity(col)}=" + when (value) {
-                is Expression<*> -> value.toSQL(builder)
-                else -> builder.registerArgument(col.columnType, value)
-            }
+            "${transaction.identity(col)}=" + builder.registerArgument(col, value)
         })
 
         where?.let { append(" WHERE " + it.toSQL(builder)) }
@@ -33,11 +30,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         values.forEach {
-            val value = it.value
-            when (value) {
-                is Expression<*> -> value.toSQL(this)
-                else -> this.registerArgument(it.key.columnType, value)
-            }
+            registerArgument(it.key, it.value)
         }
         where?.toSQL(this)
         if (args.isNotEmpty()) listOf(args) else emptyList()
