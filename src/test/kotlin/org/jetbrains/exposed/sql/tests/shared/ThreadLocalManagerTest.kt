@@ -7,15 +7,68 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.sqlite.SQLiteDataSource
+import java.io.PrintWriter
 import java.sql.Connection
+import java.sql.SQLTransientException
+import java.util.logging.Logger
+import javax.sql.DataSource
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.fail
+
+private open class DataSourceStub : DataSource {
+    override fun setLogWriter(out: PrintWriter?): Unit = throw NotImplementedError()
+    override fun getParentLogger(): Logger { throw NotImplementedError() }
+    override fun setLoginTimeout(seconds: Int) { throw NotImplementedError() }
+    override fun isWrapperFor(iface: Class<*>?): Boolean { throw NotImplementedError() }
+    override fun getLogWriter(): PrintWriter { throw NotImplementedError() }
+    override fun <T : Any?> unwrap(iface: Class<T>?): T { throw NotImplementedError() }
+    override fun getConnection(): Connection { throw NotImplementedError() }
+    override fun getConnection(username: String?, password: String?): Connection { throw NotImplementedError() }
+    override fun getLoginTimeout(): Int { throw NotImplementedError() }
+}
+
+class ConnectionTimeoutTest : DatabaseTestsBase(){
+
+    private class ExceptionOnGetConnectionDataSource : DataSourceStub() {
+        var connectCount = 0
+
+        override fun getConnection(): Connection {
+            connectCount++;
+            throw GetConnectException()
+        }
+    }
+
+    private class GetConnectException : SQLTransientException()
+
+    @Test
+    fun `connect fail causes repeated connect attempts`(){
+        val datasource = ExceptionOnGetConnectionDataSource()
+        Database.connect(datasource = datasource)
+
+        try {
+            transaction(TransactionManager.manager.defaultIsolationLevel, 42) {
+                // NO OP
+            }
+            fail("Should have thrown ${GetConnectException::class.simpleName}")
+        } catch (e : GetConnectException){
+            assertEquals(42, datasource.connectCount)
+        }
+    }
+
+    @After
+    fun `teardown`(){
+        TransactionManager.removeCurrent()
+    }
+
+}
 
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test

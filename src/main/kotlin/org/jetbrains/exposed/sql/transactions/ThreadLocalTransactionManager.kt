@@ -19,12 +19,14 @@ class ThreadLocalTransactionManager(private val db: Database,
 
     private class ThreadLocalTransaction(override val db: Database, isolation: Int, val threadLocal: ThreadLocal<Transaction>) : TransactionInterface {
 
-        override val connection: Connection by lazy(LazyThreadSafetyMode.NONE) {
+        private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             db.connector().apply {
                 autoCommit = false
                 transactionIsolation = isolation
             }
         }
+        override val connection: Connection
+            get() = connectionLazy.value
 
         override val outerTransaction: Transaction? = threadLocal.get()
 
@@ -33,14 +35,14 @@ class ThreadLocalTransactionManager(private val db: Database,
         }
 
         override fun rollback() {
-            if (!connection.isClosed) {
+            if (connectionLazy.isInitialized() && !connection.isClosed) {
                 connection.rollback()
             }
         }
 
         override fun close() {
             try {
-                connection.close()
+                if (connectionLazy.isInitialized()) connection.close()
             } finally {
                 threadLocal.set(outerTransaction)
             }
