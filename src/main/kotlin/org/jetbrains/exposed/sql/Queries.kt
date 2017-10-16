@@ -118,7 +118,7 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
 /**
- * Log entity <-> database mapping problems and returns DDL Statements to fix them
+ * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them
  */
 fun checkMappingConsistence(vararg tables: Table): List<String> {
     checkExcessiveIndices(*tables)
