@@ -264,6 +264,20 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     @Test
+    fun testThatQueriesWithinOtherQueryIteratorWorksFine() {
+        withTables(Boards, Posts) {
+            val board1 = Board.new { name = "irrelevant" }
+            val board2 = Board.new { name = "relevant" }
+            val post1 = Post.new { board = board1 }
+
+            Board.all().forEach {
+                it.posts.count() to it.posts.toList()
+                Post.find { Posts.board eq it.id }.joinToString { it.board?.name.orEmpty() }
+            }
+        }
+    }
+
+    @Test
     fun testInsertChildWithFlush() {
         withTables(Posts) {
             val parent = Post.new {  }
