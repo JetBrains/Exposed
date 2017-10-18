@@ -4,6 +4,7 @@ import org.h2.engine.Session
 import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.Wrapper
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
@@ -29,7 +30,7 @@ internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
     }
 
     private fun currentMode(): String =
-            ((TransactionManager.current().connection as? JdbcConnection)?.session as? Session)?.database?.mode?.name ?: ""
+            ((TransactionManager.current().connection as Wrapper).unwrap(JdbcConnection::class.java).session as? Session)?.database?.mode?.name ?: ""
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
