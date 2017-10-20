@@ -255,7 +255,16 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
 
     operator override fun iterator(): Iterator<ResultRow> {
         flushEntities()
-        return ResultIterator(transaction.exec(this)!!)
+        val resultIterator = ResultIterator(transaction.exec(this)!!)
+        return if (transaction.db.supportsMultipleResultSets)
+            resultIterator
+        else {
+            arrayListOf<ResultRow>().apply {
+                resultIterator.forEach {
+                    this += it
+                }
+            }.iterator()
+        }
     }
 
     private var count: Boolean = false

@@ -31,10 +31,12 @@ class Database private constructor(val connector: () -> Connection) {
     }
 
     val vendor: String get() = dialect.name
-    
+
     val version by lazy {
         metadata.let { BigDecimal("${it.databaseMajorVersion}.${it.databaseMinorVersion}") }
     }
+
+    fun isVersionCovers(version: BigDecimal) = this.version >= version
 
     val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect].orEmpty() + metadata.sqlKeywords.split(',') }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!!.trim() }

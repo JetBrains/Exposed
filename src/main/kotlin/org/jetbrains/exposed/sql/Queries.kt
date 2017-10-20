@@ -71,7 +71,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
         try {
             body()
-        } catch (e: BatchDataInconsistent) {
+        } catch (e: BatchDataInconsistentException) {
             execute(TransactionManager.current())
             result += generatedKey.orEmpty()
             statement = newBatchStatement()
@@ -143,7 +143,7 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: I
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
 /**
- * Log entity <-> database mapping problems and returns DDL Statements to fix them
+ * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them
  */
 fun checkMappingConsistence(vararg tables: Table): List<String> {
     checkExcessiveIndices(*tables)

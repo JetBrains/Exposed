@@ -105,40 +105,61 @@ object SchemaUtils {
         }
     }
 
+    /**
+     * This function should be used in cases when you want an easy-to-use auto-actualization of database scheme.
+     * It will create all absent tables, add missing columns for existing tables if it's possible (columns are nullable or have default values).
+     *
+     * Also if there is inconsistency in DB vs code mappings (excessive or absent indexes)
+     * then DDLs to fix it will be logged to exposedLogger.
+     *
+     * This functionality is based on jdbc metadata what might be a bit slow, so it is recommended to call this function once
+     * at application startup and provide all tables you want to actualize.
+     *
+     * Please note, that execution of this function concurrently might lead to unpredictable state in database due to
+     * non-transactional behavior of some DBMS on processing DDL statements (e.g. MySQL) and metadata caches.
+
+     * To prevent such cases is advised to use any "global" synchronization you prefer (via redis, memcached, etc) or
+     * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
+     */
     fun createMissingTablesAndColumns(vararg tables: Table) {
         with(TransactionManager.current()) {
-            withDataBaseLock {
-                db.dialect.resetCaches()
-                val createStatements = logTimeSpent("Preparing create tables statements") {
-                    createStatements(*tables)
-                }
-                logTimeSpent("Executing create tables statements") {
-                    for (statement in createStatements) {
-                        exec(statement)
-                    }
-                    commit()
-                }
-
-                val alterStatements = logTimeSpent("Preparing alter table statements") {
-                    addMissingColumnsStatements(*tables)
-                }
-                logTimeSpent("Executing alter table statements") {
-                    for (statement in alterStatements) {
-                        exec(statement)
-                    }
-                    commit()
-                }
-                logTimeSpent("Checking mapping consistence") {
-                    for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
-                        exec(statement)
-                    }
-                    commit()
-                }
-                db.dialect.resetCaches()
+            db.dialect.resetCaches()
+            val createStatements = logTimeSpent("Preparing create tables statements") {
+                createStatements(*tables)
             }
+            logTimeSpent("Executing create tables statements") {
+                for (statement in createStatements) {
+                    exec(statement)
+                }
+                commit()
+            }
+
+            val alterStatements = logTimeSpent("Preparing alter table statements") {
+                addMissingColumnsStatements(*tables)
+            }
+            logTimeSpent("Executing alter table statements") {
+                for (statement in alterStatements) {
+                    exec(statement)
+                }
+                commit()
+            }
+            logTimeSpent("Checking mapping consistence") {
+                for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
+                    exec(statement)
+                }
+                commit()
+            }
+            db.dialect.resetCaches()
         }
     }
 
+
+    /**
+     * Creates table with name "busy" (if not present) and single column to be used as "synchronization" point. Table wont be dropped after execution.
+     *
+     * All code provided in _body_ closure will be executed only if there is no another code which running under "withDataBaseLock" at same time.
+     * That means that concurrent execution of long running tasks under "database lock" might lead to that only first of them will be really executed.
+     */
     fun <T> Transaction.withDataBaseLock(body: () -> T) {
         val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()

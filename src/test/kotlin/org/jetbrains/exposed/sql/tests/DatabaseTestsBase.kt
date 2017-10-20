@@ -9,7 +9,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTimeZone
-import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -33,7 +32,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(OracleDialect, driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
             connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                        ":${System.getProperty("exposed.test.oracle.port", "32774")}/xe"),
+                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"),
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
                 Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
@@ -90,13 +89,7 @@ abstract class DatabaseTestsBase {
 
         val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
 
-        val transactionIsolation = if (dbSettings.dialect == SQLServerDialect) {
-            Connection.TRANSACTION_READ_COMMITTED
-        } else {
-            database.metadata.defaultTransactionIsolation
-        }
-
-        transaction(transactionIsolation, 1) {
+        transaction(database.metadata.defaultTransactionIsolation, 1) {
             statement()
         }
     }

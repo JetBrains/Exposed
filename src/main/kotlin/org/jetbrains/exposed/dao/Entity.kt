@@ -622,10 +622,11 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     fun warmUpReferences(references: List<EntityID<ID>>, refColumn: Column<EntityID<ID>>): List<T> {
         if (references.isEmpty()) return emptyList()
+        val distinctRefIds = references.distinct()
         checkReference(refColumn, references.first().table)
-        val entities = find { refColumn inList references }.toList()
+        val entities = find { refColumn inList distinctRefIds }.toList()
         val groupedBySourceId = entities.groupBy { it.readValues[refColumn] }
-        references.forEach {
+        distinctRefIds.forEach {
             TransactionManager.current().entityCache.getOrPutReferrers(it, refColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
         }
         return entities
@@ -633,6 +634,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table): List<T> {
         if (references.isEmpty()) return emptyList()
+        val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>> ?: error("Can't detect source reference column")
         val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID<*>>?: error("Can't detect target reference column")
 
@@ -643,11 +645,11 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
                 - sourceRefColumn).distinct() + sourceRefColumn
 
-        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList references }.map { it[sourceRefColumn] to wrapRow(it, transaction) }
+        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList distinctRefIds }.map { it[sourceRefColumn] to wrapRow(it, transaction) }
 
         val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map {it.second} }
 
-        references.forEach {
+        distinctRefIds.forEach {
             transaction.entityCache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
         }
         return entitiesWithRefs.map { it.second }
