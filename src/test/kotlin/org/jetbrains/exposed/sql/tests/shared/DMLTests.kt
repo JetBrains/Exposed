@@ -4,7 +4,7 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.BatchDataInconsistent
+import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -795,7 +795,7 @@ class DMLTests : DatabaseTestsBase() {
         it[EntityTests.TableWithDBDefault.t1] = DateTime.now()
     })
 
-    @Test(expected = BatchDataInconsistent::class)
+    @Test(expected = BatchDataInconsistentException::class)
     fun testRawBatchInsertFails01() {
         withTables(EntityTests.TableWithDBDefault) {
             BatchInsertStatement(EntityTests.TableWithDBDefault).run {
