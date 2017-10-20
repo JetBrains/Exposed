@@ -42,7 +42,8 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         val expression = e.toSQL(QueryBuilder(false)).trim()
-        return super.isAllowedAsColumnDefault(e) || expression == "CURRENT_TIMESTAMP" && isFractionDateTimeSupported()
+        return super.isAllowedAsColumnDefault(e) ||
+                (expression == "CURRENT_TIMESTAMP" && TransactionManager.current().db.isVersionCovers(BigDecimal("5.6")))
     }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
@@ -156,5 +157,5 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
     override fun dropIndex(tableName: String, indexName: String): String =
             "ALTER TABLE $tableName DROP INDEX $indexName"
 
-    fun isFractionDateTimeSupported() = TransactionManager.current().db.version >= BigDecimal("5.6")
+    fun isFractionDateTimeSupported() = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 }

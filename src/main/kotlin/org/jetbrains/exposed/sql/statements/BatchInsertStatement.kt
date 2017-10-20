@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
 
-internal class BatchDataInconsistent(message : String) : Exception(message)
+internal class BatchDataInconsistentException(message : String) : Exception(message)
 
 open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<Map<Column<*>, Any>>>(table, ignore) {
 
@@ -22,7 +22,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
 
     override operator fun <S> set(column: Column<S>, value: S?) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            throw BatchDataInconsistent("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
+            throw BatchDataInconsistentException("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
         }
         super.set(column, value)
     }
@@ -41,11 +41,11 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
         val cantBeDefaulted = (data.last().keys - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { TransactionManager.current().fullIdentity(it) }
-            throw BatchDataInconsistent("Can't add new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException("Can't add new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
         }
         val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc }
         if (requiredInTargets.any()) {
-            throw BatchDataInconsistent("Can't add new batch because columns: ${requiredInTargets.joinToString()} don't have client default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException("Can't add new batch because columns: ${requiredInTargets.joinToString()} don't have client default values. DB defaults don't support in batch inserts")
         }
     }
 
