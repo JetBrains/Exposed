@@ -8,9 +8,6 @@ buildscript {
         maven {
             url "http://dl.bintray.com/kotlin/kotlin"
         }
-        maven {
-            url "https://maven.atlassian.com/3rdparty/"
-        }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -73,7 +70,7 @@ repositories {
     }
 
     maven {
-        url "https://maven.atlassian.com/content/repositories/atlassian-3rdparty/"
+        url "https://packages.atlassian.com/maven-3rdparty-legacy/"
     }
 }
 
