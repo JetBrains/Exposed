@@ -1,9 +1,8 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.isAutoInc
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -37,7 +36,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
         arguments = null
     }
 
-    internal fun validateLastBatch() {
+    internal open fun validateLastBatch() {
         val cantBeDefaulted = (data.last().keys - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { TransactionManager.current().fullIdentity(it) }
