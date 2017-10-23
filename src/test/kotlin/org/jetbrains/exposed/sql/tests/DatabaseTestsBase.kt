@@ -14,7 +14,8 @@ import kotlin.concurrent.thread
 
 enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val user: String = "root", val pass: String = "",
                   val beforeConnection: () -> Any = {Unit}, val afterTestFinished: () -> Unit = {}) {
-    H2(H2Dialect, "jdbc:h2:mem:", "org.h2.Driver"),
+    H2(H2Dialect, "jdbc:h2:mem:regular", "org.h2.Driver"),
+    H2_MYSQL(MysqlDialect, "jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver"),
     SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
     MYSQL(MysqlDialect, "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
@@ -52,7 +53,7 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,sqlite,mysql,postgresql").let {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,h2_mysql,sqlite,mysql,postgresql").let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
@@ -74,7 +75,7 @@ private val postgresSQLProcess by lazy {
 
 abstract class DatabaseTestsBase {
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
-        if (dbSettings !in TestDB.enabledInTests()) return
+        if (dbSettings !in TestDB.enabledInTests()) throw DBNotEnabledForTest(dbSettings)
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         DateTimeZone.setDefault(DateTimeZone.UTC)
 
@@ -115,4 +116,6 @@ abstract class DatabaseTestsBase {
 
     fun <T>Transaction.assertEquals(exp: T, act: T) = kotlin.test.assertEquals(exp, act, "Failed on ${currentDialect.name}")
     fun <T>Transaction.assertEquals(exp: T, act: List<T>) = kotlin.test.assertEquals(exp, act.single(), "Failed on ${currentDialect.name}")
+
+    class DBNotEnabledForTest(dbSettings: TestDB) : RuntimeException("$dbSettings is not enabled for being used in tests")
 }
