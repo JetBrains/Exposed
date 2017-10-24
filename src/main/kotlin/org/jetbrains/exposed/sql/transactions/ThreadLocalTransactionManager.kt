@@ -95,7 +95,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
         catch (e: SQLException) {
             val currentStatement = transaction.currentStatement
             exposedLogger.info("Transaction attempt #$repetitions failed: ${e.message}. Statement: $currentStatement", e)
-            transaction.rollbackLoggingException { exposedLogger.info("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
+            transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
             repetitions++
             if (repetitions >= repetitionAttempts) {
                 throw e
@@ -103,18 +103,22 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
         }
         catch (e: Throwable) {
             val currentStatement = transaction.currentStatement
-            transaction.rollbackLoggingException { exposedLogger.info("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
+            transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
             throw e
         }
         finally {
             TransactionManager.removeCurrent()
             val currentStatement = transaction.currentStatement
-            currentStatement?.let {
-                if(!it.isClosed) it.close()
-                transaction.currentStatement = null
+            try {
+                currentStatement?.let {
+                    if(!it.isClosed) it.close()
+                    transaction.currentStatement = null
+                }
+                transaction.closeExecutedStatements()
+            } catch (e: Exception) {
+                exposedLogger.warn("Statements close failed", e)
             }
-            transaction.closeExecutedStatements()
-            transaction.closeLoggingException { exposedLogger.info("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
+            transaction.closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
         }
     }
 }
