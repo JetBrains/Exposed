@@ -7,7 +7,7 @@ import java.util.*
 
 
 internal object MysqlDataTypeProvider : DataTypeProvider() {
-    override fun dateTimeType(): String = if (MysqlDialect.isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
+    override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 }
 
 internal object MysqlFunctionProvider : FunctionProvider() {
@@ -38,7 +38,7 @@ internal object MysqlFunctionProvider : FunctionProvider() {
     }
 }
 
-internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, MysqlFunctionProvider) {
+internal class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         val expression = e.toSQL(QueryBuilder(false)).trim()
@@ -158,4 +158,8 @@ internal object MysqlDialect : VendorDialect("mysql", MysqlDataTypeProvider, Mys
             "ALTER TABLE $tableName DROP INDEX $indexName"
 
     fun isFractionDateTimeSupported() = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
+
+    companion object {
+        const val dialectName = "mysql"
+    }
 }

@@ -35,12 +35,12 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isLastColumnInPK = indexInPK != null && indexInPK == table.columns.mapNotNull { indexInPK }.max()
         val columnDefinition = when {
-            isOneColumnPK() && currentDialect in listOf(H2Dialect, SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
-            !isOneColumnPK() && isLastColumnInPK && currentDialect != H2Dialect-> ", ADD ${table.primaryKeyConstraint()}"
+            isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
+            !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> ", ADD ${table.primaryKeyConstraint()}"
             else -> descriptionDdl()
         }
 
-        val addConstr = if (isLastColumnInPK && currentDialect == H2Dialect) {
+        val addConstr = if (isLastColumnInPK && currentDialect is H2Dialect) {
              "$alterTablePrefix ${table.primaryKeyConstraint()}"
         } else null
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
@@ -58,7 +58,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         append(" ")
         val isPKColumn = indexInPK != null
         val colType = columnType
-        if (currentDialect == SQLiteDialect && isOneColumnPK() && colType.isAutoInc) {
+        if (currentDialect is SQLiteDialect && isOneColumnPK() && colType.isAutoInc) {
             append(colType.sqlType().removeSuffix(" AUTO_INCREMENT")) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
         } else {
             append(colType.sqlType())

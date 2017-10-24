@@ -148,7 +148,7 @@ class DDLTests : DatabaseTestsBase() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {
             override fun toSQL(queryBuilder: QueryBuilder) = when (currentDialect) {
-                OracleDialect -> "SYSDATE"
+                is OracleDialect -> "SYSDATE"
                 else -> "NOW()"
             }
         }
@@ -227,7 +227,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
-            if (currentDialect == SQLiteDialect)
+            if (currentDialect is SQLiteDialect)
                 assertEquals("CREATE UNIQUE INDEX ${"t1_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE (${"name".inProperCase()})", alter)
@@ -249,7 +249,7 @@ class DDLTests : DatabaseTestsBase() {
             val indexAlter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
             assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
-            if (currentDialect == SQLiteDialect)
+            if (currentDialect is SQLiteDialect)
                 assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)

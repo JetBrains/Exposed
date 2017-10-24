@@ -212,8 +212,8 @@ class DateColumnType(val time: Boolean): ColumnType() {
         is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
         is String -> when {
-            currentDialect == SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
-            currentDialect == SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
+            currentDialect is SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
+            currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> value
         }
         // REVIEW

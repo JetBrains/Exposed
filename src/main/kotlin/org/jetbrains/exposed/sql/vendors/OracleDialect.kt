@@ -51,7 +51,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?): String = "dbms_random.value"
 }
 
-internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, OracleFunctionProvider) {
+internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
 
     override val supportsMultipleGeneratedKeys = false
     override val supportsIfNotExists = false
@@ -98,5 +98,9 @@ internal object OracleDialect : VendorDialect("oracle", OracleDataTypeProvider, 
             result.add(resultSet.getString("TABLE_NAME").inProperCase)
         }
         return result
+    }
+
+    companion object {
+        const val dialectName = "oracle"
     }
 }

@@ -22,6 +22,10 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override val blobAsStream: Boolean = true
 }
 
-internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider) {
+internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider) {
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
+    companion object {
+        const val dialectName = "postgresql"
+    }
 }

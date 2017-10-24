@@ -10,7 +10,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
 }
 
-internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
+internal class H2Dialect: VendorDialect(dialectName, H2DataTypeProvider) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -46,5 +46,9 @@ internal object H2Dialect: VendorDialect("h2", H2DataTypeProvider) {
         } else {
             super.insert(ignore, table, columns, expr, transaction)
         }
+    }
+
+    companion object {
+        const val dialectName = "h2"
     }
 }

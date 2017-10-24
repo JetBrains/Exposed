@@ -146,7 +146,7 @@ internal abstract class VendorDialect(override val name: String,
         return result
     }
 
-    override fun getDatabase(): String = currentDialect.catalog(TransactionManager.current())
+    override fun getDatabase(): String = catalog(TransactionManager.current())
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
