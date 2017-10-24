@@ -312,6 +312,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)
+            SchemaUtils.drop(t)
         }
 
         withDb(TestDB.SQLITE) {
@@ -320,6 +321,8 @@ class DDLTests : DatabaseTestsBase() {
                 assertFalse(db.supportsAlterTableWithAddColumn)
             } catch (e: SQLException) {
                 // SQLite doesn't support
+            } finally {
+                SchemaUtils.drop(t)
             }
         }
 

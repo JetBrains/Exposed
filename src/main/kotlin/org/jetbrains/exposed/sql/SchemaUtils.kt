@@ -101,7 +101,7 @@ object SchemaUtils {
                 exec(statement)
             }
             commit()
-            db.dialect.resetCaches()
+            currentDialect.resetCaches()
         }
     }
 

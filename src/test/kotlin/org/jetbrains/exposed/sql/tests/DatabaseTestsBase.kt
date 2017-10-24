@@ -7,17 +7,17 @@ import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTimeZone
 import java.util.*
 import kotlin.concurrent.thread
 
-enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driver: String, val user: String = "root", val pass: String = "",
+enum class TestDB(val connection: String, val driver: String, val user: String = "root", val pass: String = "",
                   val beforeConnection: () -> Any = {Unit}, val afterTestFinished: () -> Unit = {}) {
-    H2(H2Dialect, "jdbc:h2:mem:regular", "org.h2.Driver"),
-    H2_MYSQL(MysqlDialect, "jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver"),
-    SQLITE(SQLiteDialect, "jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
-    MYSQL(MysqlDialect, "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
+    H2("jdbc:h2:mem:regular", "org.h2.Driver"),
+    H2_MYSQL("jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver"),
+    SQLITE("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
+    MYSQL("jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
             afterTestFinished = {
                 try {
@@ -29,9 +29,9 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
                     Files().cleanTestDir()
                 }
             }),
-    POSTGRESQL(PostgreSQLDialect, "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
+    POSTGRESQL("jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    ORACLE(OracleDialect, driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
             connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
                         ":${System.getProperty("exposed.test.oracle.port", "32774")}/xe"),
             beforeConnection = {
@@ -53,7 +53,8 @@ enum class TestDB(val dialect: DatabaseDialect, val connection: String, val driv
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val concreteDialects = System.getProperty("exposed.test.dialects", "h2,h2_mysql,sqlite,mysql,postgresql").let {
+            val embeddedTests = (TestDB.values().toList() - ORACLE).joinToString()
+            val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
             }
@@ -75,7 +76,10 @@ private val postgresSQLProcess by lazy {
 
 abstract class DatabaseTestsBase {
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
-        if (dbSettings !in TestDB.enabledInTests()) throw DBNotEnabledForTest(dbSettings)
+        if (dbSettings !in TestDB.enabledInTests())  {
+            exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
+            return
+        }
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         DateTimeZone.setDefault(DateTimeZone.UTC)
 
@@ -106,7 +110,7 @@ abstract class DatabaseTestsBase {
                     statement()
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    SchemaUtils.drop (*tables)
+                    SchemaUtils.drop(*tables)
                 }
             }
         }
@@ -116,6 +120,4 @@ abstract class DatabaseTestsBase {
 
     fun <T>Transaction.assertEquals(exp: T, act: T) = kotlin.test.assertEquals(exp, act, "Failed on ${currentDialect.name}")
     fun <T>Transaction.assertEquals(exp: T, act: List<T>) = kotlin.test.assertEquals(exp, act.single(), "Failed on ${currentDialect.name}")
-
-    class DBNotEnabledForTest(dbSettings: TestDB) : RuntimeException("$dbSettings is not enabled for being used in tests")
 }

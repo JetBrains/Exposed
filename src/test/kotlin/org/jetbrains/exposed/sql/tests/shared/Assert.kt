@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
 
@@ -29,9 +30,9 @@ fun<T> assertEqualCollections (collection : Iterable<T>, expected : Collection<T
 }
 
 fun<T> assertEqualLists (l1: List<T>, l2: List<T>) {
-    assertEquals(l1.size, l2.size, "Count mismatch")
-    for (i in 0..l1.size -1)
-        assertEquals(l1[i], l2[i], "Error at pos $i:")
+    assertEquals(l1.size, l2.size, "Count mismatch on ${currentDialectIfAvailable?.name.orEmpty()}")
+    for (i in 0 until l1.size)
+        assertEquals(l1[i], l2[i], "Error at pos $i on ${currentDialectIfAvailable?.name.orEmpty()}:")
 }
 
 fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
@@ -41,17 +42,17 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
 fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
     if (d1 == null) {
         if (d2 != null)
-            error("d1 is null while d2 is not")
+            error("d1 is null while d2 is not on ${currentDialect.name}")
         return
     } else {
         if (d2 == null)
-            error ("d1 is not null while d2 is null")
+            error ("d1 is not null while d2 is null on ${currentDialect.name}")
 
         // Mysql doesn't support millis prior 5.6.4
-        if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
-            assertEquals(d1.millis / 1000, d2.millis / 1000)
+        if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == false) {
+            assertEquals(d1.millis / 1000, d2.millis / 1000,  "Failed on ${currentDialect.name}")
         } else {
-            assertEquals(d1.millis, d2.millis)
+            assertEquals(d1.millis, d2.millis,  "Failed on ${currentDialect.name}")
         }
     }
 }

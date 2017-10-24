@@ -4,7 +4,6 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.LongIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
@@ -30,14 +29,9 @@ object LongIdTables {
 class LongIdTableEntityTest : DatabaseTestsBase() {
 
     @Test fun `create tables`() {
-        withDb {
-            SchemaUtils.create(LongIdTables.Cities, LongIdTables.People)
-            try {
-                assertEquals(true, LongIdTables.Cities.exists())
-                assertEquals(true, LongIdTables.People.exists())
-            } finally {
-                SchemaUtils.drop(LongIdTables.People, LongIdTables.Cities)
-            }
+        withTables(LongIdTables.Cities, LongIdTables.People) {
+            assertEquals(true, LongIdTables.Cities.exists())
+            assertEquals(true, LongIdTables.People.exists())
         }
     }
 
