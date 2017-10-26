@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.CurrentDateTime
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.joda.time.DateTime
@@ -404,6 +405,26 @@ class EntityTests: DatabaseTestsBase() {
             assertEquals("te", user.human.h)
             assertEquals("testUser", user.name)
             assertEquals(user.id.value, user.human.id.value)
+        }
+    }
+
+    private object SelfReferenceTable : IntIdTable() {
+        val parentId = optReference("parent", SelfReferenceTable)
+    }
+
+    class SelfReferencedEntity(id: EntityID<Int>) : IntEntity(id) {
+        var parent by SelfReferenceTable.parentId
+
+        companion object : IntEntityClass<SelfReferencedEntity>(SelfReferenceTable)
+    }
+
+    @Test(timeout = 5000)
+    fun testSelfReferences() {
+        withTables(SelfReferenceTable) {
+            val ref1 = SelfReferencedEntity.new { }
+            ref1.parent = ref1.id
+            val refRow = SelfReferenceTable.select { SelfReferenceTable.id eq ref1.id }.single()
+            assertEquals(ref1.id._value, refRow[SelfReferenceTable.parentId]!!.value)
         }
     }
 
