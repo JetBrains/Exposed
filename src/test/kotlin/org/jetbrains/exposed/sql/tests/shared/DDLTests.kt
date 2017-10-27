@@ -90,6 +90,38 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testCreateMissingTablesAndColumnsChangeNullability() {
+        val t1 = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50)
+        }
+
+        val t2 = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50).nullable()
+        }
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            t1.insert { it[foo] = "ABC" }
+            assertFailAndRollback("Can't insert to not-null column") {
+                t2.insert { it[foo] = null }
+            }
+
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            t2.insert { it[foo] = null }
+            assertFailAndRollback("Can't make column non-null while has null value") {
+                SchemaUtils.createMissingTablesAndColumns(t1)
+            }
+
+            t2.deleteWhere { t2.foo.isNull() }
+
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            assertFailAndRollback("Can't insert to nullable column") {
+                t2.insert { it[foo] = null }
+            }
+            SchemaUtils.drop(t1)
+        }
+    }
+
     // Placed outside test function to shorten generated name
     val UnnamedTable = object : Table() {
         val id = integer("id").primaryKey()

@@ -5,6 +5,7 @@ import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
 import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -13,9 +14,11 @@ import java.util.*
 import kotlin.concurrent.thread
 
 enum class TestDB(val connection: String, val driver: String, val user: String = "root", val pass: String = "",
-                  val beforeConnection: () -> Any = {Unit}, val afterTestFinished: () -> Unit = {}) {
+                  val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}) {
     H2("jdbc:h2:mem:regular", "org.h2.Driver"),
-    H2_MYSQL("jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver"),
+    H2_MYSQL("jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver", beforeConnection = {
+        Mode.getInstance("MySQL").convertInsertNullToZero = false
+    }),
     SQLITE("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
     MYSQL("jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
@@ -32,7 +35,7 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
     POSTGRESQL("jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
-            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "192.168.99.100")}" +
+            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                         ":${System.getProperty("exposed.test.oracle.port", "32774")}/xe"),
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
@@ -96,14 +99,14 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withDb(statement: Transaction.() -> Unit) {
-        TestDB.enabledInTests().forEach {
+    fun withDb(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.() -> Unit) {
+        (TestDB.enabledInTests() - excludeSettings).forEach {
             withDb(it, statement)
         }
     }
 
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests().toList() - excludeSettings).forEach {
+        (TestDB.enabledInTests() - excludeSettings).forEach {
             withDb(it) {
                 SchemaUtils.create(*tables)
                 try {

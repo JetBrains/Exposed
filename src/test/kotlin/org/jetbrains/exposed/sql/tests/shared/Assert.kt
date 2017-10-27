@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size, collection.size, "Count mismatch on ${currentDialect.name}")
@@ -55,6 +57,16 @@ fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
             assertEquals(d1.millis, d2.millis,  "Failed on ${currentDialect.name}")
         }
     }
+}
+
+fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit) {
+    commit()
+    assertFails("Failed on ${currentDialect.name}. $message") {
+        block()
+        commit()
+    }
+
+    rollback()
 }
 
 fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {

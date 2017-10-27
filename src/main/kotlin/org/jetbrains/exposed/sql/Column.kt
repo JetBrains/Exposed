@@ -46,7 +46,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement() = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} MODIFY COLUMN ${descriptionDdl()}")
+    override fun modifyStatement() = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
 
     override fun dropStatement() = listOf(TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" })
 

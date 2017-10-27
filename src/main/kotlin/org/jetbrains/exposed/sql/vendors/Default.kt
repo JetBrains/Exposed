@@ -108,6 +108,7 @@ interface DatabaseDialect {
 
     fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
     fun dropIndex(tableName: String, indexName: String): String
+    fun modifyColumn(column: Column<*>) : String
 
     fun limit(size: Int, offset: Int = 0): String
 }
@@ -292,6 +293,7 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun limit(size: Int, offset: Int) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
+    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
