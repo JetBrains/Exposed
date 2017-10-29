@@ -100,6 +100,9 @@ internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider
         return result
     }
 
+    override fun modifyColumn(column: Column<*>) =
+        super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
+
     companion object {
         const val dialectName = "oracle"
     }
