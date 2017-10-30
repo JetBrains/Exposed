@@ -122,6 +122,24 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testCreateMissingTablesAndColumnsChangeCascadeType() {
+        val fooTable = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50)
+        }
+
+        val barTable1 = object : IntIdTable("bar") {
+            val foo = optReference("foo", fooTable, onDelete = ReferenceOption.NO_ACTION)
+        }
+
+        val barTable2 = object : IntIdTable("bar") {
+            val foo = optReference("foo", fooTable, onDelete = ReferenceOption.CASCADE)
+        }
+
+        withTables(fooTable, barTable1) {
+            SchemaUtils.createMissingTablesAndColumns(barTable2)
+        }
+    }
+
     // Placed outside test function to shorten generated name
     val UnnamedTable = object : Table() {
         val id = integer("id").primaryKey()

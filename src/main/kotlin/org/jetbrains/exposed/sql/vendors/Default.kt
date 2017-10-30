@@ -176,7 +176,7 @@ internal abstract class VendorDialect(override val name: String,
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{ it.nameInDatabaseCase() }) {
             columnConstraintsCache.getOrPut(table, {
-                val rs = TransactionManager.current().db.metadata.getExportedKeys(getDatabase(), null, table)
+                val rs = TransactionManager.current().db.metadata.getImportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val refereeTableName = rs.getString("FKTABLE_NAME")!!
