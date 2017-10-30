@@ -20,7 +20,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
 
     private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null
 
-    override operator fun <S> set(column: Column<S>, value: S?) {
+    override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
             throw BatchDataInconsistentException("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
         }

@@ -12,7 +12,7 @@ import java.util.*
 abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): Statement<T>(type, targets) {
     protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
-    open operator fun <S> set(column: Column<S>, value: S?) {
+    open operator fun <S> set(column: Column<S>, value: S) {
         if (values.containsKey(column)) {
             error("$column is already initialized")
         }
