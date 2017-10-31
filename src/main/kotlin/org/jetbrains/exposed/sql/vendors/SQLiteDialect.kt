@@ -17,7 +17,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
 }
 
-internal object SQLiteDialect : VendorDialect("sqlite", SQLiteDataTypeProvider, SQLiteFunctionProvider) {
+internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -27,5 +27,9 @@ internal object SQLiteDialect : VendorDialect("sqlite", SQLiteDataTypeProvider, 
         val originalCreateIndex = super.createIndex(false, tableName, indexName, columns)
         return if (unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
         else originalCreateIndex
+    }
+
+    companion object {
+        const val dialectName = "sqlite"
     }
 }

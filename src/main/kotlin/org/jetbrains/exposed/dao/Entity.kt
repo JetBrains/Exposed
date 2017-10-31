@@ -183,33 +183,32 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         _readValues!!
     }
 
-    operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T {
+    operator fun <RID:Any, T: Entity<RID>> Reference<RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
     }
 
-    operator fun <ID:Any, T: Entity<ID>> Reference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+    operator fun <RID:Any, T: Entity<RID>> Reference<RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
         value.id.value // flush before creating reference on it
         reference.setValue(o, desc, value.id)
     }
 
-    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.getValue(o: Entity<*>, desc: KProperty<*>): T? =
+    operator fun <RID:Any, T: Entity<RID>> OptionalReference<RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T? =
             reference.getValue(o, desc)?.let{factory.findById(it)}
 
-    operator fun <ID:Any, T: Entity<ID>> OptionalReference<ID, T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T?) {
+    operator fun <RID:Any, T: Entity<RID>> OptionalReference<RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T?) {
         value?.id?.value // flush before creating reference on it
         reference.setValue(o, desc, value?.id)
     }
 
-    operator fun <T> Column<T>.getValue(o: Entity<*>, desc: KProperty<*>): T = lookup()
+    operator fun <T> Column<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = lookup()
 
     @Suppress("UNCHECKED_CAST")
-    fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? {
+    fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
         if (_readValues?.hasValue(this) ?: false)
-            return found(readValues[this])
+            found(readValues[this])
         else
-            return notFound()
-    }
+            notFound()
 
     @Suppress("UNCHECKED_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
@@ -218,7 +217,8 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         else -> readValues[this]
     }
 
-    operator fun <T> Column<T>.setValue(o: Entity<*>, desc: KProperty<*>, value: T) {
+    operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+        klass.invalidateEntityInCache(o)
         val currentValue = _readValues?.tryGet(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
@@ -233,10 +233,10 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         }
     }
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<*>, desc: KProperty<*>): TReal =
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
             toReal(column.getValue(o, desc))
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<*>, desc: KProperty<*>, value: TReal) {
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<ID>, desc: KProperty<*>, value: TReal) {
         column.setValue(o, desc, toColumn(value))
     }
 
@@ -293,23 +293,19 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
 @Suppress("UNCHECKED_CAST")
 class EntityCache {
     val data = HashMap<IdTable<*>, MutableMap<Any, Entity<Any>>>()
-    val inserts = HashMap<IdTable<*>, MutableList<Entity<*>>>()
+    val inserts = HashMap<IdTable<*>, MutableList<Entity<Any>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun <ID:Any, T: Entity<ID>> getMap(f: EntityClass<ID, T>) : MutableMap<ID, T> = getMap(f.table)
 
-    private fun <ID:Any, T: Entity<ID>> getMap(table: IdTable<ID>) : MutableMap<ID, T> {
-        val answer = data.getOrPut(table, {
-            HashMap()
-        }) as MutableMap<ID, T>
-
-        return answer
-    }
+    private fun <ID:Any, T: Entity<ID>> getMap(table: IdTable<ID>) : MutableMap<ID, T> = data.getOrPut(table, {
+        HashMap()
+    }) as MutableMap<ID, T>
 
     fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
             referrers.getOrPut(sourceId, {HashMap()}).getOrPut(key, {LazySizedCollection(refs())}) as SizedIterable<R>
 
-    fun <ID:Any, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value]
+    fun <ID:Any, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
 
     fun <ID:Any, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values
 
@@ -317,9 +313,8 @@ class EntityCache {
         getMap(f).put(o.id.value, o)
     }
 
-    fun <ID:Any, T: Entity<ID>> store(o: Entity<*>) {
-        val e = o as T
-        getMap(e.klass.table).put(e.id.value, e)
+    fun <ID:Any, T: Entity<ID>> store(o: T) {
+        getMap(o.klass.table).put(o.id.value, o)
     }
 
     fun <ID:Any, T: Entity<ID>> remove(table: IdTable<ID>, o: T) {
@@ -327,7 +322,7 @@ class EntityCache {
     }
 
     fun <ID:Any, T: Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-        inserts.getOrPut(f.table) { arrayListOf() }.add(o)
+        inserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<Any>)
     }
 
     fun flush() {
@@ -376,7 +371,7 @@ class EntityCache {
 
     internal fun flushInserts(table: IdTable<*>) {
         inserts.remove(table)?.let {
-            var toFlush: List<Entity<*>> = it
+            var toFlush: List<Entity<Any>> = it
             do {
                 val partition = toFlush.partition {
                     it.writeValues.none {
@@ -404,8 +399,8 @@ class EntityCache {
                     }
 
                     entry.storeWrittenValues()
-                    TransactionManager.current().entityCache.store<Any,Entity<Any>>(entry)
-                    EntityHook.registerChange(EntityChange(entry.klass as EntityClass<Any, Entity<Any>>, entry.id as EntityID<Any>, EntityChangeType.Created))
+                    TransactionManager.current().entityCache.store(entry)
+                    EntityHook.registerChange(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
                 }
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())
@@ -478,6 +473,12 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         return find { table.id eq entity.id }.firstOrNull()
     }
 
+    internal open fun invalidateEntityInCache(o: Entity<ID>) {
+        if (o.id._value != null && testCache(o.id) == null) {
+            warmCache().store(o)
+        }
+    }
+
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
     fun testCache(cacheCheckCondition: T.()->Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
@@ -510,15 +511,15 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     fun forIds(ids: List<ID>) : SizedIterable<T> = forEntityIds(ids.map {EntityID (it, table)})
 
-    fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> {
-        val transaction = TransactionManager.current()
-        return rows mapLazy {
-            wrapRow(it, transaction)
-        }
+    fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> = rows mapLazy {
+        wrapRow(it)
     }
 
-    fun wrapRow (row: ResultRow, transaction: Transaction) : T {
-        val entity = wrap(row[table.id], row, transaction)
+    @Deprecated("Transaction ", replaceWith = ReplaceWith("wrapRow(row)"), level = DeprecationLevel.WARNING)
+    fun wrapRow (row: ResultRow, transaction: Transaction) : T = wrapRow(row)
+
+    fun wrapRow(row: ResultRow) : T {
+        val entity = wrap(row[table.id], row)
         if (entity._readValues == null)
             entity._readValues = row
 
@@ -557,13 +558,10 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
-    fun wrap(id: EntityID<ID>, row: ResultRow?, s: Transaction): T {
-        return s.entityCache.find(this, id) ?: run {
-            val new = createInstance(id, row)
+    fun wrap(id: EntityID<ID>, row: ResultRow?): T {
+        return testCache(id) ?: createInstance(id, row).also { new ->
             new.klass = this
-            s.entityCache.store(this, new)
-
-            new
+            warmCache().store(this, new)
         }
     }
 
@@ -645,7 +643,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
                 - sourceRefColumn).distinct() + sourceRefColumn
 
-        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList distinctRefIds }.map { it[sourceRefColumn] to wrapRow(it, transaction) }
+        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList distinctRefIds }.map { it[sourceRefColumn] to wrapRow(it) }
 
         val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map {it.second} }
 
@@ -659,7 +657,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 }
 
 abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
-    open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T?) {
+    open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
         }
@@ -669,6 +667,10 @@ abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID
 abstract class ImmutableCachedEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
     private var _cachedValues: MutableMap<Any, Entity<Any>>? = null
+
+    override fun invalidateEntityInCache(o: Entity<ID>) {
+        warmCache()
+    }
 
     final override fun warmCache(): EntityCache {
         val transactionCache = super.warmCache()
@@ -688,7 +690,7 @@ abstract class ImmutableCachedEntityClass<ID:Any, out T: Entity<ID>>(table: IdTa
         _cachedValues = null
     }
 
-    override fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T?) {
+    override fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         super.forceUpdateEntity(entity, column, value)
         entity._readValues?.set(column, value)
         expireCache()

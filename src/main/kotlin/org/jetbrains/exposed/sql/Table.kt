@@ -373,7 +373,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                 append(" IF EXISTS ")
             }
             append(TransactionManager.current().identity(this@Table))
-            if (currentDialectIfAvailable == OracleDialect) {
+            if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
             }
         }

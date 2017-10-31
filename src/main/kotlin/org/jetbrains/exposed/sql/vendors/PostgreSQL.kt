@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
@@ -22,6 +24,24 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override val blobAsStream: Boolean = true
 }
 
-internal object PostgreSQLDialect : VendorDialect("postgresql", PostgreSQLDataTypeProvider) {
+internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider) {
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
+    override fun modifyColumn(column: Column<*>): String = buildString {
+        val colName = TransactionManager.current().identity(column)
+        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()},")
+        append("ALTER COLUMN $colName ")
+        if (column.columnType.nullable)
+            append("DROP ")
+        else
+            append("SET ")
+        append("NOT NULL")
+        column.dbDefaultValue?.let {
+            append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+        }
+    }
+
+    companion object {
+        const val dialectName = "postgresql"
+    }
 }

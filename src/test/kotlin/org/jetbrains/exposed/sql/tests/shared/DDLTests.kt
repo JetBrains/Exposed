@@ -63,7 +63,7 @@ class DDLTests : DatabaseTestsBase() {
             val time = datetime("time").uniqueIndex()
         }
 
-        withDb {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = TestTable) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
@@ -86,6 +86,56 @@ class DDLTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(TestTable)
             }
+        }
+    }
+
+    @Test fun testCreateMissingTablesAndColumnsChangeNullability() {
+        val t1 = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50)
+        }
+
+        val t2 = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50).nullable()
+        }
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            t1.insert { it[foo] = "ABC" }
+            assertFailAndRollback("Can't insert to not-null column") {
+                t2.insert { it[foo] = null }
+            }
+
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            t2.insert { it[foo] = null }
+            assertFailAndRollback("Can't make column non-null while has null value") {
+                SchemaUtils.createMissingTablesAndColumns(t1)
+            }
+
+            t2.deleteWhere { t2.foo.isNull() }
+
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            assertFailAndRollback("Can't insert to nullable column") {
+                t2.insert { it[foo] = null }
+            }
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test fun testCreateMissingTablesAndColumnsChangeCascadeType() {
+        val fooTable = object : IntIdTable("foo") {
+            val foo = varchar("foo", 50)
+        }
+
+        val barTable1 = object : IntIdTable("bar") {
+            val foo = optReference("foo", fooTable, onDelete = ReferenceOption.NO_ACTION)
+        }
+
+        val barTable2 = object : IntIdTable("bar") {
+            val foo = optReference("foo", fooTable, onDelete = ReferenceOption.CASCADE)
+        }
+
+        withTables(fooTable, barTable1) {
+            SchemaUtils.createMissingTablesAndColumns(barTable2)
         }
     }
 
@@ -147,7 +197,7 @@ class DDLTests : DatabaseTestsBase() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {
             override fun toSQL(queryBuilder: QueryBuilder) = when (currentDialect) {
-                OracleDialect -> "SYSDATE"
+                is OracleDialect -> "SYSDATE"
                 else -> "NOW()"
             }
         }
@@ -226,7 +276,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
-            if (currentDialect == SQLiteDialect)
+            if (currentDialect is SQLiteDialect)
                 assertEquals("CREATE UNIQUE INDEX ${"t1_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE (${"name".inProperCase()})", alter)
@@ -248,7 +298,7 @@ class DDLTests : DatabaseTestsBase() {
             val indexAlter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
             assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
-            if (currentDialect == SQLiteDialect)
+            if (currentDialect is SQLiteDialect)
                 assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
@@ -311,6 +361,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialect.tableColumns(t)[t]!!.size)
+            SchemaUtils.drop(t)
         }
 
         withDb(TestDB.SQLITE) {
@@ -319,10 +370,12 @@ class DDLTests : DatabaseTestsBase() {
                 assertFalse(db.supportsAlterTableWithAddColumn)
             } catch (e: SQLException) {
                 // SQLite doesn't support
+            } finally {
+                SchemaUtils.drop(t)
             }
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.SQLITE), tables = initialTable) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = initialTable) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)

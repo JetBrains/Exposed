@@ -280,7 +280,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             bar.insert {
-                it[this.foo] = fooId
+                it[this.foo] = fooId!!
                 it[baz] = 5
             }
 
@@ -305,8 +305,8 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             bar.insert {
-                it[this.foo] = fooId
-                it[this.foo2] = fooId
+                it[this.foo] = fooId!!
+                it[this.foo2] = fooId!!
                 it[baz] = 5
             }
 

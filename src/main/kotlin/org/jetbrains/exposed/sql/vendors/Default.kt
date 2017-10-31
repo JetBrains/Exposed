@@ -108,6 +108,7 @@ interface DatabaseDialect {
 
     fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
     fun dropIndex(tableName: String, indexName: String): String
+    fun modifyColumn(column: Column<*>) : String
 
     fun limit(size: Int, offset: Int = 0, alreadyOrdered: Boolean = true): String
 }
@@ -146,7 +147,7 @@ internal abstract class VendorDialect(override val name: String,
         return result
     }
 
-    override fun getDatabase(): String = currentDialect.catalog(TransactionManager.current())
+    override fun getDatabase(): String = catalog(TransactionManager.current())
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
@@ -175,7 +176,7 @@ internal abstract class VendorDialect(override val name: String,
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{ it.nameInDatabaseCase() }) {
             columnConstraintsCache.getOrPut(table, {
-                val rs = TransactionManager.current().db.metadata.getExportedKeys(getDatabase(), null, table)
+                val rs = TransactionManager.current().db.metadata.getImportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val refereeTableName = rs.getString("FKTABLE_NAME")!!
@@ -292,6 +293,7 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
+    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect

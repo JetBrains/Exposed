@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
@@ -50,7 +51,11 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
     override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "" + foreignKeyPart)
 
-    override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP FOREIGN KEY $fkName")
+    override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP " +
+            when (currentDialect) {
+                is MysqlDialect -> "FOREIGN KEY "
+                else -> "CONSTRAINT "
+            } + fkName)
 
     override fun modifyStatement() = dropStatement() + createStatement()
 

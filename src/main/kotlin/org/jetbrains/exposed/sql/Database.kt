@@ -9,7 +9,7 @@ import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.DriverManager
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
@@ -27,7 +27,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     internal val dialect by lazy {
         val name = url.removePrefix("jdbc:").substringBefore(':')
-        dialects.firstOrNull {name == it.name} ?: error("No dialect registered for $name. URL=$url")
+        dialects[name.toLowerCase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
     }
 
     val vendor: String get() = dialect.name
@@ -38,7 +38,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     fun isVersionCovers(version: BigDecimal) = this.version >= version
 
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect].orEmpty() + metadata.sqlKeywords.split(',') }
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',') }
     val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!!.trim() }
     val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
     val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn()}
@@ -61,19 +61,19 @@ class Database private constructor(val connector: () -> Connection) {
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     companion object {
-        private val dialects = CopyOnWriteArrayList<DatabaseDialect>()
+        private val dialects = ConcurrentHashMap<String, () ->DatabaseDialect>()
 
         init {
-            registerDialect(H2Dialect)
-            registerDialect(MysqlDialect)
-            registerDialect(PostgreSQLDialect)
-            registerDialect(SQLiteDialect)
-            registerDialect(OracleDialect)
-            registerDialect(SQLServerDialect)
+            registerDialect(H2Dialect.dialectName) { H2Dialect() }
+            registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
+            registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
+            registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
+            registerDialect(OracleDialect.dialectName) { OracleDialect() }
+            registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
         }
 
-        fun registerDialect(dialect: DatabaseDialect) {
-            dialects.add(0, dialect)
+        fun registerDialect(prefix:String, dialect: () -> DatabaseDialect) {
+            dialects[prefix] = dialect
         }
 
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
