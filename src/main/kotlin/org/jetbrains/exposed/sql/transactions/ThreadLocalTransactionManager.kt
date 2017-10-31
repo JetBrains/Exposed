@@ -31,7 +31,8 @@ class ThreadLocalTransactionManager(private val db: Database,
         override val outerTransaction: Transaction? = threadLocal.get()
 
         override fun commit() {
-            connection.commit()
+            if (connectionLazy.isInitialized())
+                connection.commit()
         }
 
         override fun rollback() {
