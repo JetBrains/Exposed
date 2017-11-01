@@ -7,6 +7,7 @@ import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTimeZone
@@ -97,7 +98,7 @@ abstract class DatabaseTestsBase {
 
         val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
 
-        transaction(database.metadata.defaultTransactionIsolation, 1) {
+        transaction(TransactionManager.manager.defaultIsolationLevel, 1) {
             statement()
         }
     }
