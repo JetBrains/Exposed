@@ -27,7 +27,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?) = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
 }
 
-internal object SQLServerDialect : VendorDialect("sqlserver", SQLServerDataTypeProvider, SQLServerFunctionProvider) {
+internal class SQLServerDialect() : VendorDialect("sqlserver", SQLServerDataTypeProvider, SQLServerFunctionProvider) {
     override val supportsIfNotExists = false
     override val needsQuotesWhenSymbolsInNames = false
 
