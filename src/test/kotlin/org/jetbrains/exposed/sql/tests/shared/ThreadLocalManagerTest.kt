@@ -43,7 +43,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
         var connectCount = 0
 
         override fun getConnection(): Connection {
-            connectCount++;
+            connectCount++
             throw GetConnectException()
         }
     }
@@ -57,6 +57,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
 
         try {
             transaction(TransactionManager.manager.defaultIsolationLevel, 42) {
+                exec("SELECT 1;")
                 // NO OP
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")
