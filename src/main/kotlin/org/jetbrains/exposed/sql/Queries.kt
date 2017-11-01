@@ -59,7 +59,7 @@ fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T
 fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Map<Column<*>, Any>> {
     if (data.count() == 0) return emptyList()
     fun newBatchStatement() : BatchInsertStatement {
-        return if (currentDialect == SQLServerDialect && this.autoIncColumn != null) {
+        return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
             SQLServerBatchInsertStatement(this, ignore)
         } else {
             BatchInsertStatement(this, ignore)

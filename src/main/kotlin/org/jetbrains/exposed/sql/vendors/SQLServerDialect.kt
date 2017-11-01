@@ -27,7 +27,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?) = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
 }
 
-internal class SQLServerDialect() : VendorDialect("sqlserver", SQLServerDataTypeProvider, SQLServerFunctionProvider) {
+internal class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
     override val supportsIfNotExists = false
     override val needsQuotesWhenSymbolsInNames = false
 
@@ -39,5 +39,8 @@ internal class SQLServerDialect() : VendorDialect("sqlserver", SQLServerDataType
         } else {
             ""
         } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
+    }
+    companion object {
+        const val dialectName = "sqlserver"
     }
 }
