@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.ReferenceOption
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
@@ -40,6 +42,12 @@ internal class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypePr
             ""
         } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
     }
+
+    override fun modifyColumn(column: Column<*>) =
+        super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
     companion object {
         const val dialectName = "sqlserver"
     }

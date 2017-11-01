@@ -7,10 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.VendorDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -198,6 +195,7 @@ class DDLTests : DatabaseTestsBase() {
         val nowExpression = object : Expression<DateTime>() {
             override fun toSQL(queryBuilder: QueryBuilder) = when (currentDialect) {
                 is OracleDialect -> "SYSDATE"
+                is SQLServerDialect -> "GETDATE()"
                 else -> "NOW()"
             }
         }
