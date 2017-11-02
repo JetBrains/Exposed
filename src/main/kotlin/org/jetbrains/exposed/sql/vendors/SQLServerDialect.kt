@@ -5,23 +5,19 @@ import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.ReferenceOption
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
-    override fun shortAutoincType(): String {
-        return "INT IDENTITY(1,1)"
-    }
+    override fun shortAutoincType() = "INT IDENTITY(1,1)"
 
-    override fun longAutoincType(): String {
-        return "BIGINT IDENTITY(1,1)"
-    }
+    override fun longAutoincType() = "BIGINT IDENTITY(1,1)"
 
-    override fun blobType(): String {
-        return "VARBINARY(MAX)"
-    }
+    override fun blobType() = "VARBINARY(MAX)"
 
     override val blobAsStream: Boolean = true
 
     override fun booleanType() = "BIT"
 
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
+
+    override fun dateTimeType() = "DATETIME2"
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
