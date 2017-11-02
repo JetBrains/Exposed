@@ -6,7 +6,11 @@
 * `autoinc` columns supported by sequences, need an argument with sequence name
 * `insert` with `select` with `limit` not supported (`DMLTests.testInsertSelect01`)
 
-### Running tests locally
+### Running tests locally with Gradle
+* Set `dialect` in gradle.properties to 'oracle'
+* Run `exposedDialectTestWithDocker` gradle task  
 
-* Run Oracle locally, e.g. with `sath89/oracle-12c` Docker image
-* Run tests with `-Dexposed.test.dialects=oracle`
+### Running tests locally with Docker
+* Run SQL Server locally, e.g. with `sath89/oracle-12c` Docker image or use `docker-compose -f docker-compose-oracle.yml up` 
+* Run tests with `-Dexposed.test.dialects=oracle`, 
+(optionally you may need to provide `-Dexposed.test.oracle.host=_YOUR_DOCKER_HOST_ -exposed.test.oracle.port=_SQLSERVER_SERVER_EXPOSED_PORT_`)

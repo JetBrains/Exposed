@@ -17,6 +17,7 @@ Currently supported database dialects:
 * [Oracle](ORACLE.md)
 * SQLite
 * H2
+* [SQL Server](SQLServer.md)
 
 ## SQL DSL sample:
 ```kotlin
