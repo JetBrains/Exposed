@@ -399,7 +399,7 @@ class EntityCache {
                     }
 
                     entry.storeWrittenValues()
-                    TransactionManager.current().entityCache.store(entry)
+                    store(entry)
                     EntityHook.registerChange(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
                 }
                 toFlush = partition.second
@@ -559,7 +559,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        return testCache(id) ?: createInstance(id, row).also { new ->
+        return TransactionManager.current().entityCache.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
             warmCache().store(this, new)
         }
@@ -666,6 +666,7 @@ abstract class ImmutableEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID
 
 abstract class ImmutableCachedEntityClass<ID:Any, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
+    private val cacheLoadingState = Key<Any>()
     private var _cachedValues: MutableMap<Any, Entity<Any>>? = null
 
     override fun invalidateEntityInCache(o: Entity<ID>) {
@@ -673,14 +674,23 @@ abstract class ImmutableCachedEntityClass<ID:Any, out T: Entity<ID>>(table: IdTa
     }
 
     final override fun warmCache(): EntityCache {
+        val tr = TransactionManager.current()
         val transactionCache = super.warmCache()
         if (_cachedValues == null) synchronized(this) {
-            for(r in super.all()) {  /* force iteration to initialize lazy collection */ }
-            _cachedValues = transactionCache.data[table]
-        } else {
-            transactionCache.data[table] = _cachedValues!!
+            when {
+                _cachedValues != null -> {} // already loaded in another transaction
+                tr.getUserData(cacheLoadingState) != null -> {
+                    return transactionCache // prevent recursive call to warmCache() in .all()
+                }
+                else -> {
+                    tr.putUserData(cacheLoadingState, this)
+                    super.all().toList()  /* force iteration to initialize lazy collection */
+                    _cachedValues = transactionCache.data[table]
+                    tr.removeUserData(cacheLoadingState)
+                }
+            }
         }
-
+        transactionCache.data[table] = _cachedValues!!
         return transactionCache
     }
 
