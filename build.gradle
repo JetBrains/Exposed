@@ -100,8 +100,9 @@ publishing {
             artifactId = 'exposed'
         }
         spring_transaction(MavenPublication) {
-            from findProject(":spring-transaction").components.java
-            artifact sourcesJar
+            def springModule = findProject(":spring-transaction")
+            from springModule.components.java
+            artifact springModule.sourcesJar
             artifactId = 'spring-transaction'
         }
     }
@@ -166,5 +167,10 @@ project(":spring-transaction") {
         compile "org.springframework:spring-context:$spring_version"
         compile rootProject
         testCompile "org.springframework:spring-test:$spring_version"
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
     }
 }
