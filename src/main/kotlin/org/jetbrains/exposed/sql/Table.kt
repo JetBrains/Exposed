@@ -170,7 +170,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 
-    fun <T> registerColumn(name: String, type: ColumnType): Column<T> = Column<T>(this, name, type).apply {
+    fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).apply {
         _columns.add(this)
     }
 
