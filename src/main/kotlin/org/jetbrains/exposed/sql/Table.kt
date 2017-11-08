@@ -246,15 +246,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
-    fun <N:Number> Column<N>.autoIncrement(idSeqName: String? = null): Column<N> = cloneWithAutoInc(idSeqName).apply {
+    fun <N:Any> Column<N>.autoIncrement(idSeqName: String? = null): Column<N> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoIncrement, this)
     }
 
 
-    fun <N:Number> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
+    fun <N:Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoinc, this)
     }
-
 
     fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption?): C = apply {
         referee = ref
