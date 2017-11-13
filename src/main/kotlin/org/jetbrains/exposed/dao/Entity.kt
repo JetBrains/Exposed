@@ -637,20 +637,25 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID<*>>?: error("Can't detect target reference column")
 
         val transaction = TransactionManager.current()
-        val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable)?: false
-        val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
-        val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
-                - sourceRefColumn).distinct() + sourceRefColumn
+        val inCache = transaction.entityCache.referrers.filter { it.key in distinctRefIds && sourceRefColumn in it.value }.mapValues { it.value[sourceRefColumn]!! }
+        val loaded = (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
+            val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
+            val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
-        val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList distinctRefIds }.map { it[sourceRefColumn] to wrapRow(it) }
+            val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
+                    - sourceRefColumn).distinct() + sourceRefColumn
 
-        val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map {it.second} }
+            val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }.map { it[sourceRefColumn] to wrapRow(it) }
 
-        distinctRefIds.forEach {
-            transaction.entityCache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+            val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
+
+            idsToLoad.forEach {
+                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it] ?: emptyList()) })
+            }
+            entitiesWithRefs.map { it.second }
         }
-        return entitiesWithRefs.map { it.second }
+        return inCache.values.flatMap { it.toList() as List<T> } + loaded.orEmpty()
     }
 
     fun <ID : Any, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
