@@ -97,7 +97,10 @@ abstract class DatabaseTestsBase {
 
         val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
 
-        transaction(database.metadata.defaultTransactionIsolation, 1) {
+        val connection = database.connector()
+        val transactionIsolation = connection.metaData.defaultTransactionIsolation
+        connection.close()
+        transaction(transactionIsolation, 1) {
             statement()
         }
     }
