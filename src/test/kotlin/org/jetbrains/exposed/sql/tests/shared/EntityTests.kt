@@ -306,7 +306,7 @@ class EntityTests: DatabaseTestsBase() {
         withTables(Posts) {
             val parent = Post.new {  }
             Post.new { this.parent = parent } // first flush before referencing
-            assertEquals(1, flushCache().size)
+            assertEquals(2, Post.all().count())
         }
     }
 
@@ -364,6 +364,15 @@ class EntityTests: DatabaseTestsBase() {
 
             Post.new { this.board = board }
             assertEquals(2, board.posts.count())
+        }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testErrorOnSetToDeletedEntity() {
+        withTables(Boards) {
+            val board = Board.new { name = "irrelevant" }
+            board.delete()
+            board.name = "Cool"
         }
     }
 

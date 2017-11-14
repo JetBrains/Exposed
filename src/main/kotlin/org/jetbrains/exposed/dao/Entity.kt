@@ -223,6 +223,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
                 val entityCache = TransactionManager.current().entityCache
+                if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
                     entityCache.referrers[it]?.remove(this)
@@ -331,7 +332,7 @@ class EntityCache {
 
     fun flush(tables: Iterable<IdTable<*>>) {
 
-        val insertedTables = inserts.map { it.key }
+        val insertedTables = inserts.keys
 
         for (t in sortTablesByReferences(tables)) {
             flushInserts(t as IdTable<*>)
@@ -363,7 +364,7 @@ class EntityCache {
         }
     }
 
-    internal fun removeTablesReferrers(insertedTables: List<Table>) {
+    internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
         referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
             referrers.remove(it)
         }
@@ -475,6 +476,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
         if (o.id._value != null && testCache(o.id) == null) {
+            get(o.id) // Check that entity is still exists in database
             warmCache().store(o)
         }
     }
@@ -575,8 +577,8 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         if (id != null) {
             prototype.writeValues.put(table.id as Column<Any?>, entityId)
         }
-        prototype.init()
         warmCache().scheduleInsert(this, prototype)
+        prototype.init()
         return prototype
     }
 
