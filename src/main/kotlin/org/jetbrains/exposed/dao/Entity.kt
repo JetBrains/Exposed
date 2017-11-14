@@ -576,9 +576,12 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         prototype._readValues = ResultRow.create(dependsOnColumns)
         if (id != null) {
             prototype.writeValues.put(table.id as Column<Any?>, entityId)
+            warmCache().scheduleInsert(this, prototype)
         }
-        warmCache().scheduleInsert(this, prototype)
         prototype.init()
+        if (id == null) {
+            warmCache().scheduleInsert(this, prototype)
+        }
         return prototype
     }
 

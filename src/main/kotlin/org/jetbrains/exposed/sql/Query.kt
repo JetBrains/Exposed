@@ -279,8 +279,9 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
             val originalSet = set
             val originalGroupBy = groupedByColumns
             try {
+                var expInx = 0
                 adjustSlice {
-                    slice(originalSet.fields.map { (it as? Column<*>)?.makeAlias() ?: it })
+                    slice(originalSet.fields.map { (it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}") })
                 }
                 groupedByColumns = originalGroupBy.map {
                     (it as? Column<*>)?.takeIf { it in originalSet.fields }?.makeAlias()?.aliasOnlyExpression() ?: it
