@@ -8,8 +8,6 @@ import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -122,6 +120,12 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             UserData.insert {
+                it[user_id] = "smth"
+                it[comment] = "Comment #2"
+                it[value] = 20
+            }
+
+            UserData.insert {
                 it[user_id] = "eugene"
                 it[comment] = "Comment for Eugene"
                 it[value] = 20
@@ -132,7 +136,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[comment] = "Comment for Sergey"
                 it[value] = 30
             }
-//            commit()
+
             statement (Cities, Users, UserData)
         }
     }
@@ -614,10 +618,11 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testInsertSelect02() {
         withCitiesAndUsers { cities, users, userData ->
+            val allUserData = userData.selectAll().count()
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
             val r = userData.select {userData.value eq 42}.orderBy(userData.user_id).toList()
-            assertEquals(3, r.size)
+            assertEquals(allUserData, r.size)
         }
     }
 
@@ -1216,6 +1221,20 @@ class DMLTests : DatabaseTestsBase() {
 
             assertEquals(predicate.repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
+        withCitiesAndUsers { cities, users, _ ->
+           assertEquals(3, cities.innerJoin(users).selectAll().withDistinct().count())
+        }
+    }
+
+    @Test fun  `test that count() returns right value for Query with group by` () {
+        withCitiesAndUsers { _, user, userData ->
+            val uniqueUsersInData = userData.slice(userData.user_id).selectAll().withDistinct().count()
+            val sameQueryWithGrouping = userData.slice(userData.value.max()).selectAll().groupBy(userData.user_id).count()
+            assertEquals(uniqueUsersInData, sameQueryWithGrouping)
         }
     }
 }

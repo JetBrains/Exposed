@@ -147,7 +147,9 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
         if (!count) {
             if (groupedByColumns.isNotEmpty()) {
                 append(" GROUP BY ")
-                append((groupedByColumns.map {it.toSQL(builder)}).joinToString())
+                append(groupedByColumns.joinToString {
+                    ((it as? ExpressionAlias)?.aliasOnlyExpression() ?: it).toSQL(builder)
+                })
             }
 
             having?.let {
@@ -271,18 +273,34 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
     override fun count(): Int {
         flushEntities()
 
-        if (distinct) {
-            return this.alias("subq").selectAll().count()
-        }
+        return if (distinct || groupedByColumns.isNotEmpty()) {
+            fun Column<*>.makeAlias() = alias(transaction.quoteIfNecessary("${table.tableName}_$name"))
 
-        return try {
-            count = true
-            transaction.exec(this) {
-                it.next()
-                it.getInt(1)
-            }!!
-        }  finally {
-            count = false
+            val originalSet = set
+            val originalGroupBy = groupedByColumns
+            try {
+                adjustSlice {
+                    slice(originalSet.fields.map { (it as? Column<*>)?.makeAlias() ?: it })
+                }
+                groupedByColumns = originalGroupBy.map {
+                    (it as? Column<*>)?.takeIf { it in originalSet.fields }?.makeAlias()?.aliasOnlyExpression() ?: it
+                }
+
+                alias("subquery").selectAll().count()
+            } finally {
+                set = originalSet
+                groupedByColumns = originalGroupBy
+            }
+        } else {
+            try {
+                count = true
+                transaction.exec(this) {
+                    it.next()
+                    it.getInt(1)
+                }!!
+            } finally {
+                count = false
+            }
         }
     }
 
