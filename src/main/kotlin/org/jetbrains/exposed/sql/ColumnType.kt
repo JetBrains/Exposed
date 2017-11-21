@@ -145,6 +145,7 @@ class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
         return when (valueFromDB) {
             is BigDecimal -> valueFromDB.setScale(scale, RoundingMode.HALF_EVEN)
             is Double -> BigDecimal.valueOf(valueFromDB).setScale(scale, RoundingMode.HALF_EVEN)
+            is Float -> BigDecimal(java.lang.Float.toString(valueFromDB)).setScale(scale, RoundingMode.HALF_EVEN)
             is Int -> BigDecimal(valueFromDB)
             is Long -> BigDecimal.valueOf(valueFromDB)
             else -> valueFromDB
