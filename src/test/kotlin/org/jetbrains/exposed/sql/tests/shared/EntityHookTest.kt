@@ -56,7 +56,7 @@ object EntityHookTestData {
 
 class EntityHookTest: DatabaseTestsBase() {
 
-    private fun<T> trackChanges(statement: Transaction.() -> T): Pair<T, Collection<EntityChange<*>>> {
+    private fun<T> trackChanges(statement: Transaction.() -> T): Pair<T, Collection<EntityChange>> {
         val alreadyChanged = EntityHook.registeredEvents.size
         return transaction {
                 val result = statement()
