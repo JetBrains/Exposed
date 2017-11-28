@@ -42,13 +42,13 @@ class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>() {
     override val columnType: IColumnType = StringColumnType()
 }
 
-class Min<T:Comparable<T>, S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<S?>() {
+class Min<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "MIN(${expr.toSQL(queryBuilder)})"
 
     override val columnType: IColumnType = _columnType
 }
 
-class Max<T:Comparable<T>, S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<S>() {
+class Max<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "MAX(${expr.toSQL(queryBuilder)})"
 
     override val columnType: IColumnType = _columnType

@@ -14,11 +14,11 @@ fun <T: DateTime?> Expression<T>.month() = Month(this)
 
 fun Column<*>.countDistinct() : Function<Int> = Count(this, true)
 
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.min() = Min<T, S>(this, this.columnType)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.min()  : ExpressionWithColumnType<T?> = Min<T, S>(this, this.columnType)
 
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() = Max<T, S>(this, this.columnType)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() : ExpressionWithColumnType<T?> = Max<T, S>(this, this.columnType)
 
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2) = Avg<T, S>(this, scale)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2)  : ExpressionWithColumnType<BigDecimal?> = Avg<T, S>(this, scale)
 
 fun<T:Any?> Column<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
 
