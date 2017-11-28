@@ -80,7 +80,7 @@ val Column<*>.autoIncSeqName : String? get() {
             ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.autoIncSeqName
 }
 
-class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
+class EntityIDColumnType<T:Comparable<T>>(val idColumn: Column<T>) : ColumnType(false) {
 
     init {
         assert(idColumn.table is IdTable<*>){"EntityId supported only for IdTables"}

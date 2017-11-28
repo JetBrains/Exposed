@@ -25,7 +25,7 @@ class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) 
         }
     }
 
-    override fun <S> update(column: Column<S>, value: Expression<S>) = error("Expressions unsupported in batch update")
+    override fun <T, S:T?> update(column: Column<T>, value: Expression<S>) = error("Expressions unsupported in batch update")
 
     override fun prepareSQL(transaction: Transaction): String =
          "${super.prepareSQL(transaction)} WHERE ${transaction.identity(table.id)} = ?"
@@ -36,11 +36,12 @@ class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) 
             = data.map { it.second.map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
 }
 
-class EntityBatchUpdate<ID:Any>(val klass: EntityClass<in ID, Entity<in ID>>) {
+class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
 
-    private val data = ArrayList<Pair<EntityID<ID>, SortedMap<Column<*>, Any?>>>()
+    private val data = ArrayList<Pair<EntityID<*>, SortedMap<Column<*>, Any?>>>()
 
-    fun addBatch(id: EntityID<ID>) {
+    fun addBatch(id: EntityID<*>) {
+        if (id.table != klass.table) error("Table from Entity ID ${id.table.tableName} differs from entity class ${klass.table.tableName}")
         data.add(id to TreeMap())
     }
 

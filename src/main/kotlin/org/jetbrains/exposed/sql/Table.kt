@@ -187,15 +187,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T:Any> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).apply {
+    fun <T:Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).apply {
         this.indexInPK = this@entityId.indexInPK
         this.defaultValueFun = this@entityId.defaultValueFun?.let { { EntityID(it(), table as IdTable<T>) } }
     })
 
-    fun <ID:Any> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
+    fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
         val columnTypeCopy = originalColumn.columnType.let { (it as? AutoIncColumnType)?.delegate ?: it }.clone()
-        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column(table, name, columnTypeCopy)))
+        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
         _columns.add(answer)
         return answer
     }
@@ -251,7 +251,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
 
-    fun <N:Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
+    fun <N:Comparable<N>> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoinc, this)
     }
 
@@ -262,7 +262,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null)
 
-    fun <T:Any> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> =
+    fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> =
             entityId(name, foreign).references(foreign.id, onDelete)
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
@@ -271,7 +271,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return column
     }
 
-    fun <T:Any> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> =
+    fun <T:Comparable<T>> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> =
             entityId(name, foreign).references(foreign.id, onDelete).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
@@ -279,7 +279,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         newColumn.referee = referee
         newColumn.onDelete = onDelete
         newColumn.defaultValueFun = defaultValueFun
-        newColumn.dbDefaultValue = dbDefaultValue
+        @Suppress("UNCHECKED_CAST")
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
         newColumn.columnType.nullable = true
         return replaceColumn (this, newColumn)
     }

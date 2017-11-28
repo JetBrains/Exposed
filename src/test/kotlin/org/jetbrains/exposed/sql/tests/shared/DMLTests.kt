@@ -2,8 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
+import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -12,6 +14,7 @@ import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.math.BigDecimal
+import java.util.*
 import kotlin.test.*
 
 object DMLTestsData {
@@ -413,7 +416,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testGroupBy06() {
         withCitiesAndUsers { cities, users, userData ->
-            val maxNullableId: Max<Int> = cities.id.max()
+            val maxNullableId = cities.id.max()
 
             cities.slice(maxNullableId).selectAll()
                     .map { it[maxNullableId] }.let { result ->
@@ -720,9 +723,23 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
+            tbl.select {
+                coalesce(tbl.dcn, intLiteral(0).intToDecimal()).isNull()
+//                tbl.tn.greaterEq(tbl.dcn)
+//                tbl.tn greater DateTime.now()!!
+            }
             tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, "test", null, BigDecimal("239.42"), null)
         }
     }
+
+    fun <T:BigDecimal?> usdConversion(currencyAmount: ExpressionWithColumnType<T>): ExpressionWithColumnType<BigDecimal> {
+        return NoOpConversion(Expression.build {
+            val coalesce = coalesce(currencyAmount, intLiteral(0).intToDecimal())
+            coalesce / coalesce(DMLTestsData.Misc.t, intLiteral(1).intToDecimal())
+        }, DecimalColumnType(15, 2))
+    }
+
+
     @Test fun testInsert03() {
         val tbl = DMLTestsData.Misc
         val date = today
@@ -858,6 +875,21 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testGeneratedKey04() {
+        val CharIdTable = object : IdTable<String>("charId") {
+            override val id = varchar("id", 50).primaryKey()
+                    .clientDefault { UUID.randomUUID().toString() }
+                    .entityId()
+            val foo = integer("foo")
+        }
+        withTables(CharIdTable){
+            val id = IntIdTestTable.insertAndGetId {
+                it[CharIdTable.foo] = 5
+            }
+            assertNotNull(id?.value)
+        }
+    }
+
 /*
     Test fun testInsert05() {
         val stringThatNeedsEscaping = "multi\r\nline"
@@ -952,6 +984,10 @@ class DMLTests : DatabaseTestsBase() {
                 it[dc] = dec
                 it[dcn] = dec
 
+            }
+
+            tbl.select {
+                tbl.nn.neq(tbl.nn)
             }
 
             tbl.checkRow(tbl.select{tbl.nn.eq(42)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)

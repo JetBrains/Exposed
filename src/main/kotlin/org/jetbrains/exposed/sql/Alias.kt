@@ -33,7 +33,7 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 }
 
 
-class ExpressionAlias<out T: Any?>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
+class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "${delegate.toSQL(queryBuilder)} $alias"
 
     fun aliasOnlyExpression() = object: Expression<T>() {
