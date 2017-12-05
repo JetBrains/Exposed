@@ -74,14 +74,14 @@ fun <T:Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression
 fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType())
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
-fun stringParam(value: String): Expression<String> = QueryParameter(value, StringColumnType())
+fun stringParam(value: String): Expression<String> = QueryParameter(value, VarCharColumnType())
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(true))
 
 fun booleanLiteral(value: Boolean) : LiteralOp<Boolean> = LiteralOp (BooleanColumnType(), value)
 fun intLiteral(value: Int) : LiteralOp<Int> = LiteralOp (IntegerColumnType(), value)
 fun longLiteral(value: Long) : LiteralOp<Long> = LiteralOp(LongColumnType(), value)
-fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp(StringColumnType(), value)
+fun stringLiteral(value: String) : LiteralOp<String> = LiteralOp(VarCharColumnType(), value)
 fun dateLiteral(value: DateTime) : LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime) : LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 

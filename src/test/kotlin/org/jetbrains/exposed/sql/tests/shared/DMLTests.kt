@@ -629,7 +629,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsertSelect03() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
-            users.insert(users.slice(Random().castTo<String>(StringColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
+            users.insert(users.slice(Random().castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
             val r = users.select {users.name eq "Foo"}.toList()
             assertEquals(userCount, r.size)
         }
@@ -638,7 +638,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsertSelect04() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
-            users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(StringColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
+            users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
             val r = users.select {users.name eq "Foo"}.toList()
             assertEquals(userCount, r.size)
         }

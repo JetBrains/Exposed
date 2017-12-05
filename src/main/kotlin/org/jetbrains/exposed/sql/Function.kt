@@ -33,13 +33,13 @@ class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
 class LowerCase<out T: String?>(val expr: Expression<T>) : Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "LOWER(${expr.toSQL(queryBuilder)})"
 
-    override val columnType: IColumnType = StringColumnType()
+    override val columnType: IColumnType = VarCharColumnType()
 }
 
 class UpperCase<out T: String?>(val expr: Expression<T>) : Function<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "UPPER(${expr.toSQL(queryBuilder)})"
 
-    override val columnType: IColumnType = StringColumnType()
+    override val columnType: IColumnType = VarCharColumnType()
 }
 
 class Min<out T>(val expr: Expression<T>, _columnType: IColumnType): Function<T?>() {
@@ -101,7 +101,7 @@ class Substring(val expr: Expression<String?>, val start: ExpressionWithColumnTy
     override fun toSQL(queryBuilder: QueryBuilder): String
             = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
 
-    override val columnType: IColumnType = StringColumnType()
+    override val columnType: IColumnType = VarCharColumnType()
 }
 
 
@@ -120,7 +120,7 @@ class Cast<out T>(val expr: Expression<*>, override val columnType: IColumnType)
 class Trim(val expr: Expression<*>): Function<String>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "TRIM(${expr.toSQL(queryBuilder)})"
 
-    override val columnType: IColumnType = StringColumnType()
+    override val columnType: IColumnType = VarCharColumnType()
 }
 
 class Case(val value: Expression<*>? = null) {
@@ -174,5 +174,5 @@ class GroupConcat(val expr: Column<*>, val separator: String?, val distinct: Boo
         append(")")
     }
 
-    override val columnType: IColumnType = StringColumnType()
+    override val columnType: IColumnType = VarCharColumnType()
 }

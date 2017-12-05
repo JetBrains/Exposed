@@ -169,7 +169,7 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     }
 }
 
-class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): StringColumnType(length) {
+class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): VarCharColumnType(length) {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is String -> value
         is Enum<*> -> value.name
@@ -236,20 +236,8 @@ class DateColumnType(val time: Boolean): ColumnType() {
     }
 }
 
-open class StringColumnType(val length: Int = 255, val collate: String? = null): ColumnType() {
-    override fun sqlType(): String = buildString {
-        val colLength = this@StringColumnType.length
-        append(when (colLength) {
-            in 1..255 -> "VARCHAR($colLength)"
-            else -> currentDialect.dataTypeProvider.textType()
-        })
-
-        if (collate != null) {
-            append(" COLLATE $collate")
-        }
-    }
-
-    val charactersToEscape = mapOf(
+abstract class StringColumnType(val collate: String? = null) : ColumnType() {
+    private val charactersToEscape = mapOf(
             '\'' to "\'\'",
 //            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
             '\r' to "\\r",
@@ -268,6 +256,26 @@ open class StringColumnType(val length: Int = 255, val collate: String? = null):
             return value.characterStream.readText()
         }
         return value
+    }
+}
+
+open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) : StringColumnType(collate)  {
+    override fun sqlType(): String = buildString {
+        append("VARCHAR($colLength)")
+
+        if (collate != null) {
+            append(" COLLATE $collate")
+        }
+    }
+}
+
+open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
+    override fun sqlType(): String = buildString {
+        append(currentDialect.dataTypeProvider.textType())
+
+        if (collate != null) {
+            append(" COLLATE $collate")
+        }
     }
 }
 

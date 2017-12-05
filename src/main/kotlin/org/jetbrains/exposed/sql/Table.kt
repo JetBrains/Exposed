@@ -231,13 +231,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 
-    fun text(name: String): Column<String> = registerColumn(name, StringColumnType(length = 65535))
+    fun text(name: String, collate: String? = null): Column<String> = registerColumn(name, TextColumnType(collate))
 
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 
     fun uuid(name: String) = registerColumn<UUID>(name, UUIDColumnType())
 
-    fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, StringColumnType(length, collate))
+    fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, VarCharColumnType(length, collate))
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?) : Column<T> = when(columnType) {
         is AutoIncColumnType -> this
