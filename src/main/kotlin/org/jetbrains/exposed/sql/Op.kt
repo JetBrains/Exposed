@@ -132,11 +132,11 @@ class OrOp<out T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolea
     override fun toSQL(queryBuilder: QueryBuilder) = "(${expr1.toSQL(queryBuilder)}) OR (${expr2.toSQL(queryBuilder)})"
 }
 
-class exists(val query: Query) : Op<Boolean>() {
+class Exists(val query: Query) : Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 
-class notExists(val query: Query) : Op<Boolean>() {
+class NotExists(val query: Query) : Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "NOT EXISTS (${query.prepareSQL(queryBuilder)})"
 }
 

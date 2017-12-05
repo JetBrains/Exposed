@@ -506,7 +506,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
+            val r = users.select{ Exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
         }
@@ -514,7 +514,7 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test fun testExists02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
+            val r = users.select{ Exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -525,8 +525,8 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testExists03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select{
-                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
-                                exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
+                        Exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
+                                Exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
             }
                     .orderBy(users.id).toList()
             assertEquals(2, r.size)
