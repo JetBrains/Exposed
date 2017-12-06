@@ -1,7 +1,52 @@
 package org.jetbrains.exposed.sql.vendors
 
 val VENDORS_KEYWORDS = mapOf(
-    OracleDialect.dialectName to listOf("COMMENT", "NUMBER")
+        OracleDialect.dialectName to listOf("COMMENT", "NUMBER"),
+        SQLiteDialect.dialectName to listOf(
+                "ABORT",
+                "ACTION",
+                "AFTER",
+                "ANALYZE",
+                "ASC",
+                "ATTACH",
+                "AUTOINCREMENT",
+                "BEFORE",
+                "CASCADE",
+                "CONFLICT",
+                "DATABASE",
+                "DEFERRABLE",
+                "DEFERRED",
+                "DESC",
+                "DETACH",
+                "EXCLUSIVE",
+                "EXPLAIN",
+                "FAIL",
+                "GLOB",
+                "IGNORE",
+                "INDEX",
+                "INDEXED",
+                "INITIALLY",
+                "INSTEAD",
+                "ISNULL",
+                "KEY",
+                "LIMIT",
+                "NOTNULL",
+                "OFFSET",
+                "PLAN",
+                "PRAGMA",
+                "QUERY",
+                "RAISE",
+                "REGEXP",
+                "REINDEX",
+                "RENAME",
+                "REPLACE",
+                "RESTRICT",
+                "TEMP",
+                "TEMPORARY",
+                "TRANSACTION",
+                "VACUUM",
+                "VIEW",
+                "VIRTUAL")
 )
 
 val ANSI_SQL_2003_KEYWORDS = setOf(
