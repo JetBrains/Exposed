@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -65,9 +64,6 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
         }
 
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
-
-
-
 }
 
 class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false) : BatchInsertStatement(table, ignore) {
@@ -101,11 +97,9 @@ class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false) : Bat
         return transaction.db.dialect.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
     }
 
-//    override fun arguments() = listOf(super.arguments().flatten())
+    override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
 
-/*    override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
-        transaction.entityCache.removeTablesReferrers(listOf(table))
-        generatedKey = generatedKeyFun(executeQuery(), arguments!!.size)
-        return arguments!!.size
-    }*/
+    override fun PreparedStatement.execInsertFunction(): Pair<Int, ResultSet?> {
+        return arguments!!.size to executeQuery()
+    }
 }

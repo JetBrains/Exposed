@@ -78,13 +78,18 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return transaction.db.dialect.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
+    open protected fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {
+        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
+        val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
+        return inserted to rs
+    }
+
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
         if (flushCache)
             transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
-        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
+        val (inserted, rs) = execInsertFunction()
         return inserted.apply {
-            val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
             resultedValues = processResults(rs, this)
         }
     }
