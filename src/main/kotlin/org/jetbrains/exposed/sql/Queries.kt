@@ -38,7 +38,7 @@ fun Table.deleteAll() =
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsert01
  */
-fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement <Number> = InsertStatement<Number>(this).apply {
+fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -50,7 +50,7 @@ fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T
     InsertStatement<EntityID<Key>>(this, ignore).run {
         body(this)
         execute(TransactionManager.current())
-        generatedKey
+        get(id)
     }
 
 /**
@@ -85,7 +85,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             validateLastBatch()
         }
     }
-    if (statement.data.isNotEmpty()) {
+    if (statement.arguments().isNotEmpty()) {
         statement.execute(TransactionManager.current())
         result += statement.generatedKey.orEmpty()
     }
