@@ -79,11 +79,7 @@ class Database private constructor(val connector: () -> Connection) {
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
         ): Database {
-            return Database {
-                datasource.connection!!.apply { setupConnection(this) }
-            }.apply {
-                TransactionManager.manager = manager(this)
-            }
+            return connect(datasource.connection!!, setupConnection, manager )
         }
 
         fun connect(connection: Connection, setupConnection: (Connection) -> Unit = {},
