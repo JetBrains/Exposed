@@ -86,6 +86,15 @@ class Database private constructor(val connector: () -> Connection) {
             }
         }
 
+        fun connect(connection: Connection, setupConnection: (Connection) -> Unit = {},
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+        ): Database {
+            return Database {
+                connection.apply { setupConnection(this) }
+            }.apply {
+                TransactionManager.manager = manager(this)
+            }
+        }
         fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }): Database {
             Class.forName(driver).newInstance()
