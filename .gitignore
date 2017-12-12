@@ -3,3 +3,5 @@
 build
 classes
 out/test/resources
+bin/
+spring-transaction/
