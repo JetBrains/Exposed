@@ -68,7 +68,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
 
     @After
     fun `teardown`(){
-        TransactionManager.removeCurrent()
+        TransactionManager.resetCurrent(null)
     }
 
 }
@@ -230,7 +230,7 @@ class ConnectionExceptions {
 
     @After
     fun `teardown`(){
-        TransactionManager.removeCurrent()
+        TransactionManager.resetCurrent(null)
     }
 
 }

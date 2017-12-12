@@ -82,7 +82,7 @@ class Database private constructor(val connector: () -> Connection) {
             return Database {
                 datasource.connection!!.apply { setupConnection(this) }
             }.apply {
-                TransactionManager.manager = manager(this)
+                TransactionManager.registerManager(this, manager(this))
             }
         }
 
@@ -93,7 +93,7 @@ class Database private constructor(val connector: () -> Connection) {
             return Database {
                 DriverManager.getConnection(url, user, password).apply { setupConnection(this) }
             }.apply {
-                TransactionManager.manager = manager(this)
+                TransactionManager.registerManager(this, manager(this))
             }
         }
     }
