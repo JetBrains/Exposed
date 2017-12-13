@@ -76,25 +76,32 @@ class Database private constructor(val connector: () -> Connection) {
             dialects[prefix] = dialect
         }
 
-        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
+        private fun doConnect(getNewConnection: () -> Connection, setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
         ): Database {
             return Database {
-                datasource.connection!!.apply { setupConnection(this) }
+                getNewConnection().apply { setupConnection(this) }
             }.apply {
                 TransactionManager.manager = manager(this)
             }
         }
 
+        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+        ): Database {
+            return doConnect( { datasource.connection!! }, setupConnection, manager )
+        }
+
+        fun connect(getNewConnection: () -> Connection, 
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+        ): Database {
+            return doConnect( getNewConnection, manager = manager )
+        }
         fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }): Database {
             Class.forName(driver).newInstance()
 
-            return Database {
-                DriverManager.getConnection(url, user, password).apply { setupConnection(this) }
-            }.apply {
-                TransactionManager.manager = manager(this)
-            }
+            return doConnect( { DriverManager.getConnection(url, user, password) }, setupConnection, manager )
         }
     }
 }
