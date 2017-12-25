@@ -84,7 +84,7 @@ private inline fun TransactionInterface.closeLoggingException(log: (Exception) -
 fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, manager: TransactionManager? = null, statement: Transaction.() -> T): T {
     var repetitions = 0
 
-    val outerManager = TransactionManager.manager.takeIf { it != manager && manager != null }
+    val outerManager = TransactionManager.manager.takeIf { TransactionManager.currentOrNull() != null }
     while (true) {
         manager?.let { TransactionManager.resetCurrent(it) }
         val transaction = TransactionManager.manager.newTransaction(transactionIsolation)

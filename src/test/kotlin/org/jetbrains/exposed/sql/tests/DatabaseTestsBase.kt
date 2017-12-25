@@ -14,7 +14,7 @@ import java.util.*
 import kotlin.concurrent.thread
 
 enum class TestDB(val connection: String, val driver: String, val user: String = "root", val pass: String = "",
-                  val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}) {
+                  val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}, var db: Database? = null) {
     H2("jdbc:h2:mem:regular", "org.h2.Driver"),
     H2_MYSQL("jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver", beforeConnection = {
         Mode.getInstance("MySQL").convertInsertNullToZero = false
@@ -93,14 +93,15 @@ abstract class DatabaseTestsBase {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
+            dbSettings.db = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
         }
 
-        val database = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
+        val database = dbSettings.db!!
 
         val connection = database.connector()
         val transactionIsolation = connection.metaData.defaultTransactionIsolation
         connection.close()
-        transaction(transactionIsolation, 1) {
+        transaction(transactionIsolation, 1, db = database) {
             statement()
         }
     }
