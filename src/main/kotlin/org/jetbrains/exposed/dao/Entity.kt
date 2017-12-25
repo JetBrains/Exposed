@@ -173,6 +173,10 @@ class InnerTableLink<ID:Any, Target: Entity<ID>>(val table: Table,
 
 open class Entity<ID:Any>(val id: EntityID<ID>) {
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
+        internal set
+
+    var db: Database by Delegates.notNull()
+        internal set
 
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
     var _readValues: ResultRow? = null
@@ -475,7 +479,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
-        if (o.id._value != null && testCache(o.id) == null) {
+        if (o.id._value != null && testCache(o.id) == null && TransactionManager.current().db == o.db) {
             get(o.id) // Check that entity is still exists in database
             warmCache().store(o)
         }
@@ -561,8 +565,10 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        return TransactionManager.current().entityCache.find(this, id) ?: createInstance(id, row).also { new ->
+        val transaction = TransactionManager.current()
+        return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
+            new.db = transaction.db
             warmCache().store(this, new)
         }
     }
@@ -573,6 +579,7 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
         val entityId = EntityID(id, table)
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
+        prototype.db = TransactionManager.current().db
         prototype._readValues = ResultRow.create(dependsOnColumns)
         if (id != null) {
             prototype.writeValues.put(table.id as Column<Any?>, entityId)

@@ -47,7 +47,6 @@ interface TransactionManager {
         fun registerManager(database: Database, manager: TransactionManager) {
             registeredDatabases[database] = manager
             this._manager = manager
-            resetCurrent(manager)
         }
 
         internal fun managerFor(database: Database) = registeredDatabases[database]

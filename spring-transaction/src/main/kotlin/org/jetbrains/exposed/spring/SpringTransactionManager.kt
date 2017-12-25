@@ -33,7 +33,7 @@ class SpringTransactionManager(dataSource: DataSource,
         if (!TransactionSynchronizationManager.hasResource(dataSource)) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
         }
-        TransactionManager.removeCurrent()
+        TransactionManager.resetCurrent(null)
     }
 
     override fun doSuspend(transaction: Any?): Any? {
