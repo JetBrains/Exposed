@@ -1230,6 +1230,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
+        withCitiesAndUsers { cities, users, _ ->
+            assertEquals(3, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
+        }
+    }
+
     @Test fun  `test that count() returns right value for Query with group by` () {
         withCitiesAndUsers { _, user, userData ->
             val uniqueUsersInData = userData.slice(userData.user_id).selectAll().withDistinct().count()
