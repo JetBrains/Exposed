@@ -69,10 +69,14 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     }
 }
 
+enum class SortOrder {
+    ASC, DESC
+}
+
 open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
-    var orderByColumns: List<Pair<Expression<*>, Boolean>> = mutableListOf()
+    var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
         private set
     var having: Op<Boolean>? = null
         private set
@@ -157,16 +161,16 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
                 append(it.toSQL(builder))
             }
 
-            if (orderByColumns.isNotEmpty()) {
+            if (orderByExpressions.isNotEmpty()) {
                 append(" ORDER BY ")
-                append(orderByColumns.joinToString {
-                    "${(it.first as? ExpressionAlias<*>)?.alias ?: it.first.toSQL(builder)} ${if(it.second) "ASC" else "DESC"}"
+                append(orderByExpressions.joinToString {
+                    "${(it.first as? ExpressionAlias<*>)?.alias ?: it.first.toSQL(builder)} ${it.second.name}"
                 })
             }
 
             limit?.let {
                 append(" ")
-                append(transaction.db.dialect.limit(it, offset, orderByColumns.isNotEmpty()))
+                append(transaction.db.dialect.limit(it, offset, orderByExpressions.isNotEmpty()))
             }
         }
 
@@ -197,7 +201,7 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
         return this
     }
 
-    fun having (op: SqlExpressionBuilder.() -> Op<Boolean>) : Query {
+    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>) : Query {
         val oop = Op.build { op() }
         if (having != null) {
             val fake = QueryBuilder(false)
@@ -207,15 +211,16 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
         return this
     }
 
-    fun orderBy (column: Expression<*>, isAsc: Boolean = true) : Query {
-        (orderByColumns as MutableList).add(column to isAsc)
+    fun orderBy(column: Expression<*>, isAsc: Boolean = true) : Query = orderBy(column to isAsc)
+
+    fun orderBy(vararg columns: Pair<Expression<*>, Boolean>) : Query {
+        (orderByExpressions as MutableList).addAll(columns.map{ it.first to if(it.second) SortOrder.ASC else SortOrder.DESC })
         return this
     }
 
-    fun orderBy (vararg columns: Pair<Column<*>,Boolean>) : Query {
-        for (pair in columns) {
-            (orderByColumns as MutableList).add(pair)
-        }
+    @JvmName("orderBy2")
+    fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
+        (orderByExpressions as MutableList).addAll(columns)
         return this
     }
 

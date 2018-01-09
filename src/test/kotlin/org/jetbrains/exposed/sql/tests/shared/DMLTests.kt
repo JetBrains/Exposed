@@ -461,7 +461,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy02() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -473,7 +473,7 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy03() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -492,6 +492,31 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(2, r[0][users.id.count()])
             assertEquals("St. Petersburg", r[1][cities.name])
             assertEquals(1, r[1][users.id.count()])
+        }
+    }
+
+    @Test fun orderBy05() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
+            assertEquals(5, r.size)
+            assertEquals("eugene", r[0][users.id])
+            assertEquals("sergey", r[1][users.id])
+            assertEquals("andrey", r[2][users.id])
+            assertEquals("alex", r[3][users.id])
+            assertEquals("smth", r[4][users.id])
+        }
+    }
+
+    @Test fun orderBy06() {
+        withCitiesAndUsers { cities, users, userData ->
+            val orderByExpression = users.id.substring(2, 1)
+            val r = users.selectAll().orderBy(orderByExpression to SortOrder.ASC).toList()
+            assertEquals(5, r.size)
+            assertEquals("sergey", r[0][users.id])
+            assertEquals("alex", r[1][users.id])
+            assertEquals("smth", r[2][users.id])
+            assertEquals("andrey", r[3][users.id])
+            assertEquals("eugene", r[4][users.id])
         }
     }
 
