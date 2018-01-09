@@ -464,11 +464,15 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals("andrey", r[2][users.id])
-            assertEquals("alex", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
         }
     }
 
@@ -476,17 +480,21 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals("andrey", r[2][users.id])
-            assertEquals("alex", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
         }
     }
 
     @Test fun testOrderBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
             assertEquals(2, r[0][users.id.count()])
@@ -499,11 +507,15 @@ class DMLTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
             assertEquals(5, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals("andrey", r[2][users.id])
-            assertEquals("alex", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
         }
     }
 
