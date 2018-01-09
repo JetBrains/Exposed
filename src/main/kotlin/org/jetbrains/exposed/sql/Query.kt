@@ -277,20 +277,17 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
             fun Column<*>.makeAlias() = alias(transaction.quoteIfNecessary("${table.tableName}_$name"))
 
             val originalSet = set
-            val originalGroupBy = groupedByColumns
             try {
                 var expInx = 0
                 adjustSlice {
-                    slice(originalSet.fields.map { (it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}") })
-                }
-                groupedByColumns = originalGroupBy.map {
-                    (it as? Column<*>)?.takeIf { it in originalSet.fields }?.makeAlias()?.aliasOnlyExpression() ?: it
+                    slice(originalSet.fields.map {
+                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                    })
                 }
 
                 alias("subquery").selectAll().count()
             } finally {
                 set = originalSet
-                groupedByColumns = originalGroupBy
             }
         } else {
             try {
