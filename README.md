@@ -260,3 +260,5 @@ Outputs:
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
 ```
+
+More examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki).

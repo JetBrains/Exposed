@@ -461,37 +461,74 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test fun orderBy02() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals("andrey", r[2][users.id])
-            assertEquals("alex", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
         }
     }
 
     @Test fun orderBy03() {
-        withCitiesAndUsers(exclude = listOf(TestDB.POSTGRESQL, TestDB.ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals("andrey", r[2][users.id])
-            assertEquals("alex", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
         }
     }
 
     @Test fun testOrderBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll(). groupBy(cities.name).orderBy(cities.name).toList()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
             assertEquals(2, r[0][users.id.count()])
             assertEquals("St. Petersburg", r[1][cities.name])
             assertEquals(1, r[1][users.id.count()])
+        }
+    }
+
+    @Test fun orderBy05() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
+            assertEquals(5, r.size)
+            val usersWithoutCities = listOf("alex", "smth")
+            val otherUsers = listOf("eugene", "sergey", "andrey")
+            val expected =
+                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
+                    usersWithoutCities + otherUsers
+                else otherUsers + usersWithoutCities
+            expected.forEachIndexed { index, e ->
+                assertEquals(e, r[index][users.id])
+            }
+        }
+    }
+
+    @Test fun orderBy06() {
+        withCitiesAndUsers { cities, users, userData ->
+            val orderByExpression = users.id.substring(2, 1)
+            val r = users.selectAll().orderBy(orderByExpression to SortOrder.ASC).toList()
+            assertEquals(5, r.size)
+            assertEquals("sergey", r[0][users.id])
+            assertEquals("alex", r[1][users.id])
+            assertEquals("smth", r[2][users.id])
+            assertEquals("andrey", r[3][users.id])
+            assertEquals("eugene", r[4][users.id])
         }
     }
 
@@ -1227,6 +1264,12 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
         withCitiesAndUsers { cities, users, _ ->
            assertEquals(3, cities.innerJoin(users).selectAll().withDistinct().count())
+        }
+    }
+
+    @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
+        withCitiesAndUsers { cities, users, _ ->
+            assertEquals(3, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
         }
     }
 
