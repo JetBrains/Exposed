@@ -198,7 +198,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
             is DateTime -> value
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)
-            else -> error("Unexpected value: $value")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return if (time)
