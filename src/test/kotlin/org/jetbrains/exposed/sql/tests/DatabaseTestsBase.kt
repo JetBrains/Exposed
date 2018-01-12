@@ -57,6 +57,8 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
             ":${System.getProperty("exposed.test.sqlserver.port", "1433")}",
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
 
+    fun connect() = Database.connect(connection, user = user, password = pass, driver = driver)
+
     companion object {
         fun enabledInTests(): List<TestDB> {
             val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER).joinToString()
@@ -93,7 +95,7 @@ abstract class DatabaseTestsBase {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
-            dbSettings.db = Database.connect(dbSettings.connection, user = dbSettings.user, password = dbSettings.pass, driver = dbSettings.driver)
+            dbSettings.db = dbSettings.connect()
         }
 
         val database = dbSettings.db!!

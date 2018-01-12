@@ -1,21 +1,21 @@
 package org.jetbrains.exposed.sql.tests.h2
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.*
-import kotlin.properties.Delegates
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class MultiDatabaseTest {
 
-    val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    var currentDB : Database? = null
+    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
+    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
+    private var currentDB : Database? = null
 
     @Before
     fun before() {
@@ -24,7 +24,7 @@ class MultiDatabaseTest {
 
     @After
     fun after() {
-        TransactionManager.resetCurrent( currentDB?.let { TransactionManager.managerFor(it) } )
+        TransactionManager.resetCurrent(currentDB?.let { TransactionManager.managerFor(it) })
     }
 
 
