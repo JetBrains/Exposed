@@ -193,6 +193,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
     }
 
     operator fun <RID:Any, T: Entity<RID>> Reference<RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+        if (db != value.db) error("Can't link entities from different databases.")
         value.id.value // flush before creating reference on it
         reference.setValue(o, desc, value.id)
     }
@@ -201,6 +202,7 @@ open class Entity<ID:Any>(val id: EntityID<ID>) {
             reference.getValue(o, desc)?.let{factory.findById(it)}
 
     operator fun <RID:Any, T: Entity<RID>> OptionalReference<RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T?) {
+        if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
         reference.setValue(o, desc, value?.id)
     }
@@ -392,13 +394,14 @@ class EntityCache {
                 }
 
                 for ((entry, genValues) in toFlush.zip(ids)) {
-                    if (entry.id._value != null) continue
-                    val id = genValues[table.id]!!
-                    entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
-                        is EntityID<*> -> id._value!!
-                        else -> id
-                    })
-                    entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                    if (entry.id._value == null) {
+                        val id = genValues[table.id]!!
+                        entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
+                            is EntityID<*> -> id._value!!
+                            else -> id
+                        })
+                        entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                    }
                     genValues.forEach {
                         entry.writeValues[it.key as Column<Any?>] = it.value
                     }

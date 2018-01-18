@@ -61,7 +61,15 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
         outer.statement()
     } else {
         val existingForDb = db?.let { TransactionManager.managerFor(it) }
-        existingForDb?.currentOrNull()?.statement() ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, existingForDb, statement)
+        existingForDb?.currentOrNull()?.let {
+            val currentManager = TransactionManager.manager
+            try {
+                TransactionManager.resetCurrent(existingForDb)
+                it.statement()
+            } finally {
+                TransactionManager.resetCurrent(currentManager)
+            }
+        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, existingForDb, statement)
     }
 }
 

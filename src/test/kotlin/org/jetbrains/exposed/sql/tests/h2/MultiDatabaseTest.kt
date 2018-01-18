@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.h2
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.shared.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.After
@@ -19,14 +20,15 @@ class MultiDatabaseTest {
 
     @Before
     fun before() {
-        currentDB = TransactionManager.currentOrNull()?.db
+        if (TransactionManager.isInitialized()) {
+            currentDB = TransactionManager.currentOrNull()?.db
+        }
     }
 
     @After
     fun after() {
         TransactionManager.resetCurrent(currentDB?.let { TransactionManager.managerFor(it) })
     }
-
 
     @Test
     fun testTransactionWithDatabase() {
@@ -125,11 +127,25 @@ class MultiDatabaseTest {
                 }
                 assertEquals(2, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+
+                transaction(db1) {
+                    assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                    DMLTestsData.Cities.insert {
+                        it[DMLTestsData.Cities.name] = "city4"
+                    }
+                    DMLTestsData.Cities.insert {
+                        it[DMLTestsData.Cities.name] = "city5"
+                    }
+                    assertEquals(3, DMLTestsData.Cities.selectAll().count())
+                }
+
+                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
                 SchemaUtils.drop(DMLTestsData.Cities)
             }
 
-            assertEquals(1, DMLTestsData.Cities.selectAll().count())
-            assertEquals("city1", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
+            assertEquals(3, DMLTestsData.Cities.selectAll().count())
+            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name]})
             SchemaUtils.drop(DMLTestsData.Cities)
         }
     }
