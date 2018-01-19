@@ -8,6 +8,9 @@ import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -460,15 +463,18 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    private fun isNullFirst() = when (currentDialect) {
+        is OracleDialect, is PostgreSQLDialect -> true
+        else -> false
+    }
+
     @Test fun orderBy02() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected =
-                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
-                    usersWithoutCities + otherUsers
+            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
                 else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
@@ -482,9 +488,7 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected =
-                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
-                    usersWithoutCities + otherUsers
+            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
                 else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
@@ -509,9 +513,7 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected =
-                if (!db.metadata.nullsAreSortedAtStart() && db.metadata.nullsAreSortedHigh())
-                    usersWithoutCities + otherUsers
+            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
                 else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])

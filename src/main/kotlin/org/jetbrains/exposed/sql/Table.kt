@@ -277,7 +277,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
-        newColumn.onDelete = onDelete
+        newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.defaultValueFun = defaultValueFun
         newColumn.dbDefaultValue = dbDefaultValue
         newColumn.columnType.nullable = true
