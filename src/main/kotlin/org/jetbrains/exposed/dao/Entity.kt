@@ -459,9 +459,9 @@ abstract class EntityClass<ID : Any, out T: Entity<ID>>(val table: IdTable<ID>, 
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.constructors[0]
 
-    operator fun get(id: EntityID<ID>): T = findById(id) ?: error("Entity not found in database")
+    operator fun get(id: EntityID<ID>): T = findById(id) ?: error("Entity id $id not found in database")
 
-    operator fun get(id: ID): T = findById(id) ?: error("Entity not found in database")
+    operator fun get(id: ID): T = findById(id) ?: error("Entity id $id not found in database")
 
     open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
