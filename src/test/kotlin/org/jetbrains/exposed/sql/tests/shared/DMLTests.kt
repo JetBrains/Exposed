@@ -137,79 +137,139 @@ class DMLTests : DatabaseTestsBase() {
                 it[value] = 30
             }
 
-            statement (Cities, Users, UserData)
+            statement(Cities, Users, UserData)
         }
     }
 
-    @Test fun testUpdate01() {
+    @Test
+    fun testUpdate01() {
         withCitiesAndUsers { cities, users, userData ->
             val alexId = "alex"
-            val alexName = users.slice(users.name).select {users.id.eq(alexId)}.first()[users.name]
+            val alexName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
             assertEquals("Alex", alexName)
 
             val newName = "Alexey"
-            users.update({users.id.eq(alexId)}) {
+            users.update({ users.id.eq(alexId) }) {
                 it[users.name] = newName
             }
 
-            val alexNewName = users.slice(users.name).select {users.id.eq(alexId)}.first()[users.name]
+            val alexNewName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
             assertEquals(newName, alexNewName)
         }
     }
 
-    @Test fun testPreparedStatement() {
+    @Test
+    fun testPreparedStatement() {
         withCitiesAndUsers { cities, users, userData ->
-            val name = users.select{users.id eq "eugene"}.first()[users.name]
+            val name = users.select { users.id eq "eugene" }.first()[users.name]
             assertEquals("Eugene", name)
         }
     }
 
-    @Test fun testDelete01() {
+    @Test
+    fun testDelete01() {
         withCitiesAndUsers { cities, users, userData ->
             userData.deleteAll()
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.slice(users.id).select{users.name.like("%thing")}.single()[users.id]
-            assertEquals ("smth", smthId)
+            val smthId = users.slice(users.id).select { users.name.like("%thing") }.single()[users.id]
+            assertEquals("smth", smthId)
 
-            users.deleteWhere {users.name like  "%thing"}
-            val hasSmth = users.slice(users.id).select{users.name.like("%thing")}.any()
+            users.deleteWhere { users.name like "%thing" }
+            val hasSmth = users.slice(users.id).select { users.name.like("%thing") }.any()
             assertEquals(false, hasSmth)
         }
     }
 
-    // manual join
-    @Test fun testJoin01() {
+    // select expressions
+    @Test
+    fun testSelect() {
         withCitiesAndUsers { cities, users, userData ->
-            (users innerJoin cities).slice(users.name, cities.name).
-            select{(users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id)}.forEach {
+            users.select { users.id.eq("andrey") }.forEach {
+                val userId = it[users.id]
+                val userName = it[users.name]
+                when (userId) {
+                    "andrey" -> assertEquals("Andrey", userName)
+                    else -> error("Unexpected user $userId")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testSelectAnd() {
+        withCitiesAndUsers { cities, users, userData ->
+            users.select { users.id.eq("andrey") and users.name.eq("Andrey") }.forEach {
+                val userId = it[users.id]
+                val userName = it[users.name]
+                when (userId) {
+                    "andrey" -> assertEquals("Andrey", userName)
+                    else -> error("Unexpected user $userId")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testSelectOr() {
+        withCitiesAndUsers { cities, users, userData ->
+            users.select { users.id.eq("andrey") or users.name.eq("Andrey") }.forEach {
+                val userId = it[users.id]
+                val userName = it[users.name]
+                when (userId) {
+                    "andrey" -> assertEquals("Andrey", userName)
+                    else -> error("Unexpected user $userId")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testSelectNot() {
+        withCitiesAndUsers { cities, users, userData ->
+            users.select { org.jetbrains.exposed.sql.not(users.id.eq("andrey")) }.forEach {
+                val userId = it[users.id]
+                val userName = it[users.name]
+                if (userId == "andrey") {
+                    error("Unexpected user $userId")
+                }
+            }
+        }
+    }
+
+    // manual join
+    @Test
+    fun testJoin01() {
+        withCitiesAndUsers { cities, users, userData ->
+            (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }.forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
                 when (userName) {
                     "Andrey" -> assertEquals("St. Petersburg", cityName)
                     "Sergey" -> assertEquals("Munich", cityName)
-                    else -> error ("Unexpected user $userName")
+                    else -> error("Unexpected user $userName")
                 }
             }
         }
     }
 
     // join with foreign key
-    @Test fun testJoin02() {
+    @Test
+    fun testJoin02() {
         withCitiesAndUsers { cities, users, userData ->
-            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).
-            select{cities.name.eq("St. Petersburg") or users.cityId.isNull()}.single()
+            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
         }
     }
 
     // triple join
-    @Test fun testJoin03() {
+    @Test
+    fun testJoin03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
-            assertEquals (2, r.size)
+            assertEquals(2, r.size)
             assertEquals("Eugene", r[0][users.name])
             assertEquals("Comment for Eugene", r[0][userData.comment])
             assertEquals("Munich", r[0][cities.name])
@@ -220,7 +280,8 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     // triple join
-    @Test fun testJoin04() {
+    @Test
+    fun testJoin04() {
         val Numbers = object : Table() {
             val id = integer("id").primaryKey()
         }
@@ -229,16 +290,16 @@ class DMLTests : DatabaseTestsBase() {
             val name = varchar("name", 10).primaryKey()
         }
 
-        val Map = object: Table () {
+        val Map = object : Table() {
             val id_ref = integer("id_ref") references Numbers.id
             val name_ref = varchar("name_ref", 10) references Names.name
         }
 
-        withTables (Numbers, Names, Map) {
+        withTables(Numbers, Names, Map) {
             Numbers.insert { it[id] = 1 }
             Numbers.insert { it[id] = 2 }
-            Names.insert { it[name] = "Foo"}
-            Names.insert { it[name] = "Bar"}
+            Names.insert { it[name] = "Foo" }
+            Names.insert { it[name] = "Bar" }
             Map.insert {
                 it[id_ref] = 2
                 it[name_ref] = "Foo"
@@ -252,10 +313,10 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     // cross join
-    @Test fun testJoin05() {
+    @Test
+    fun testJoin05() {
         withCitiesAndUsers { cities, users, _ ->
-            val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).
-            select{cities.name.eq("St. Petersburg")}.map {
+            val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") }.map {
                 it[users.name] to it[cities.name]
             }
             val allUsers = setOf(
@@ -270,7 +331,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testMultipleReferenceJoin01() {
+    @Test
+    fun testMultipleReferenceJoin01() {
         val foo = object : IntIdTable("foo") {
             val baz = integer("baz").uniqueIndex()
         }
@@ -319,7 +381,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGroupBy01() {
+    @Test
+    fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
             ((cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
@@ -329,15 +392,16 @@ class DMLTests : DatabaseTestsBase() {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
                     "St. Petersburg" -> assertEquals(1, userCount)
-                    else -> error ("Unknow city $cityName")
+                    else -> error("Unknow city $cityName")
                 }
             }
         }
     }
 
-    @Test fun testGroupBy02() {
+    @Test
+    fun testGroupBy02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having{users.id.count() eq 1}.toList()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having { users.id.count() eq 1 }.toList()
             assertEquals(1, r.size)
             assertEquals("St. Petersburg", r[0][cities.name])
             val count = r[0][users.id.count()]
@@ -345,13 +409,14 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGroupBy03() {
+    @Test
+    fun testGroupBy03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
-                    .groupBy(cities.name)
-                    .having{users.id.count().eq(cities.id.max())}
-                    .orderBy(cities.name)
-                    .toList()
+                .groupBy(cities.name)
+                .having { users.id.count().eq(cities.id.max()) }
+                .orderBy(cities.name)
+                .toList()
 
             assertEquals(2, r.size)
             0.let {
@@ -371,13 +436,14 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGroupBy04() {
+    @Test
+    fun testGroupBy04() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
-                    .groupBy(cities.name)
-                    .having{users.id.count() lessEq 42}
-                    .orderBy(cities.name)
-                    .toList()
+                .groupBy(cities.name)
+                .having { users.id.count() lessEq 42 }
+                .orderBy(cities.name)
+                .toList()
 
             assertEquals(2, r.size)
             0.let {
@@ -393,64 +459,68 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGroupBy05() {
+    @Test
+    fun testGroupBy05() {
         withCitiesAndUsers { cities, users, userData ->
             val maxNullableCityId = users.cityId.max()
 
             users.slice(maxNullableCityId).selectAll()
-                    .map { it[maxNullableCityId] }.let { result ->
+                .map { it[maxNullableCityId] }.let { result ->
                 assertTrue(result.size == 1)
                 assertNotNull(result.single())
             }
 
             users.slice(maxNullableCityId).select { users.cityId.isNull() }
-                    .map { it[maxNullableCityId] }.let { result ->
+                .map { it[maxNullableCityId] }.let { result ->
                 assertTrue(result.size == 1)
                 assertNull(result.single())
             }
         }
     }
 
-    @Test fun testGroupBy06() {
+    @Test
+    fun testGroupBy06() {
         withCitiesAndUsers { cities, users, userData ->
             val maxNullableId: Max<Int> = cities.id.max()
 
             cities.slice(maxNullableId).selectAll()
-                    .map { it[maxNullableId] }.let { result ->
+                .map { it[maxNullableId] }.let { result ->
                 assertTrue(result.size == 1)
                 assertNotNull(result.single())
             }
 
             cities.slice(maxNullableId).select { cities.id.isNull() }
-                    .map { it[maxNullableId] }.let { result: List<Int?> ->
+                .map { it[maxNullableId] }.let { result: List<Int?> ->
                 assertTrue(result.size == 1)
                 assertNull(result.single())
             }
         }
     }
 
-    @Test fun testGroupBy07() {
+    @Test
+    fun testGroupBy07() {
         withCitiesAndUsers { cities, users, userData ->
             val avgIdExpr = cities.id.avg()
-            val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id]}.average())
+            val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id] }.average())
 
             cities.slice(avgIdExpr).selectAll()
-                    .map { it[avgIdExpr] }.let { result ->
+                .map { it[avgIdExpr] }.let { result ->
                 assertTrue(result.size == 1)
                 assertTrue(result.single()!!.compareTo(avgId) == 0)
             }
 
             cities.slice(avgIdExpr).select { cities.id.isNull() }
-                    .map { it[avgIdExpr] }.let { result ->
+                .map { it[avgIdExpr] }.let { result ->
                 assertTrue(result.size == 1)
                 assertNull(result.single())
             }
         }
     }
 
-    @Test fun orderBy01() {
+    @Test
+    fun orderBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.selectAll().orderBy (users.id).toList()
+            val r = users.selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals("alex", r[0][users.id])
             assertEquals("andrey", r[1][users.id])
@@ -460,9 +530,10 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun orderBy02() {
+    @Test
+    fun orderBy02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.selectAll().orderBy(users.cityId, false).orderBy (users.id).toList()
+            val r = users.selectAll().orderBy(users.cityId, false).orderBy(users.id).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
@@ -476,7 +547,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun orderBy03() {
+    @Test
+    fun orderBy03() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
             assertEquals(5, r.size)
@@ -492,7 +564,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testOrderBy04() {
+    @Test
+    fun testOrderBy04() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
@@ -503,7 +576,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun orderBy05() {
+    @Test
+    fun orderBy05() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
             assertEquals(5, r.size)
@@ -519,7 +593,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun orderBy06() {
+    @Test
+    fun orderBy06() {
         withCitiesAndUsers { cities, users, userData ->
             val orderByExpression = users.id.substring(2, 1)
             val r = users.selectAll().orderBy(orderByExpression to SortOrder.ASC).toList()
@@ -532,7 +607,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testSizedIterable() {
+    @Test
+    fun testSizedIterable() {
         withCitiesAndUsers { cities, users, userData ->
             assertEquals(false, cities.selectAll().empty())
             assertEquals(true, cities.select { cities.name eq "Qwertt" }.empty())
@@ -541,40 +617,44 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testExists01() {
+    @Test
+    fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
+            val r = users.select { exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
         }
     }
 
-    @Test fun testExists02() {
+    @Test
+    fun testExists02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{ exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
-                    .orderBy(users.id).toList()
+            val r = users.select { exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
+                .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
             assertEquals("Something", r[1][users.name])
         }
     }
 
-    @Test fun testExists03() {
+    @Test
+    fun testExists03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select{
-                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
-                                exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
+            val r = users.select {
+                exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
+                    exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
             }
-                    .orderBy(users.id).toList()
+                .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
             assertEquals("Something", r[1][users.name])
         }
     }
 
-    @Test fun testInList01() {
+    @Test
+    fun testInList01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select { users.id inList listOf("andrey","alex") }.orderBy(users.name).toList()
+            val r = users.select { users.id inList listOf("andrey", "alex") }.orderBy(users.name).toList()
 
             assertEquals(2, r.size)
             assertEquals("Alex", r[0][users.name])
@@ -582,7 +662,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInList02() {
+    @Test
+    fun testInList02() {
         withCitiesAndUsers { cities, users, userData ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
             val r = cities.select { cities.id inList cityIds }
@@ -591,7 +672,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCalc01() {
+    @Test
+    fun testCalc01() {
         withCitiesAndUsers { cities, users, userData ->
             val r = cities.slice(cities.id.sum()).selectAll().toList()
             assertEquals(1, r.size)
@@ -599,13 +681,14 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCalc02() {
+    @Test
+    fun testCalc02() {
         withCitiesAndUsers { cities, users, userData ->
             val sum = Expression.build {
                 Sum(cities.id + userData.value, IntegerColumnType())
             }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
-                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+                .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
             assertEquals(22, r[0][sum])
@@ -614,11 +697,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCalc03() {
+    @Test
+    fun testCalc03() {
         withCitiesAndUsers { cities, users, userData ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
-                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+                .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
             assertEquals(202, r[0][sum])
@@ -627,11 +711,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testSubstring01() {
+    @Test
+    fun testSubstring01() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = users.name.substring(1, 2)
             val r = (users).slice(users.id, substring)
-                    .selectAll().orderBy(users.id).toList()
+                .selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals("Al", r[0][substring])
             assertEquals("An", r[1][substring])
@@ -641,7 +726,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertSelect01() {
+    @Test
+    fun testInsertSelect01() {
         withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val substring = users.name.substring(1, 2)
             cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
@@ -653,37 +739,41 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertSelect02() {
+    @Test
+    fun testInsertSelect02() {
         withCitiesAndUsers { cities, users, userData ->
             val allUserData = userData.selectAll().count()
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
-            val r = userData.select {userData.value eq 42}.orderBy(userData.user_id).toList()
+            val r = userData.select { userData.value eq 42 }.orderBy(userData.user_id).toList()
             assertEquals(allUserData, r.size)
         }
     }
 
-    @Test fun testInsertSelect03() {
+    @Test
+    fun testInsertSelect03() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
             users.insert(users.slice(Random().castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
-            val r = users.select {users.name eq "Foo"}.toList()
+            val r = users.select { users.name eq "Foo" }.toList()
             assertEquals(userCount, r.size)
         }
     }
 
-    @Test fun testInsertSelect04() {
+    @Test
+    fun testInsertSelect04() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
             users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
-            val r = users.select {users.name eq "Foo"}.toList()
+            val r = users.select { users.name eq "Foo" }.toList()
             assertEquals(userCount, r.size)
         }
     }
 
-    @Test fun testSelectCase01() {
+    @Test
+    fun testSelectCase01() {
         withCitiesAndUsers { cities, users, userData ->
-            val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else (stringLiteral("22"))}
+            val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
             val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])
@@ -710,7 +800,8 @@ class DMLTests : DatabaseTestsBase() {
         assertEquals(row[this.dcn], dcn)
     }
 
-    @Test fun testInsert01() {
+    @Test
+    fun testInsert01() {
         val tbl = DMLTestsData.Misc
         val date = today
         val time = DateTime.now()
@@ -733,7 +824,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsert02() {
+    @Test
+    fun testInsert02() {
         val tbl = DMLTestsData.Misc
         val date = today
         val time = DateTime.now()
@@ -760,7 +852,9 @@ class DMLTests : DatabaseTestsBase() {
             tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, "test", null, BigDecimal("239.42"), null)
         }
     }
-    @Test fun testInsert03() {
+
+    @Test
+    fun testInsert03() {
         val tbl = DMLTestsData.Misc
         val date = today
         val time = DateTime.now()
@@ -788,7 +882,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsert04() {
+    @Test
+    fun testInsert04() {
         val stringThatNeedsEscaping = "A'braham Barakhyahu"
         val tbl = DMLTestsData.Misc
         val date = today
@@ -809,7 +904,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testBatchInsert01() {
+    @Test
+    fun testBatchInsert01() {
         withCitiesAndUsers { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
             val allCitiesID = cities.batchInsert(cityNames) { name ->
@@ -828,11 +924,11 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
-            assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map{it.first} }.count())
+            assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
         }
     }
 
-    private val initBatch = listOf<(BatchInsertStatement)->Unit>({
+    private val initBatch = listOf<(BatchInsertStatement) -> Unit>({
         it[EntityTests.TableWithDBDefault.field] = "1"
     }, {
         it[EntityTests.TableWithDBDefault.field] = "2"
@@ -851,7 +947,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRawBatchInsertFails02() {
+    @Test
+    fun testRawBatchInsertFails02() {
         withTables(EntityTests.TableWithDBDefault) {
             EntityTests.TableWithDBDefault.batchInsert(initBatch) { foo ->
                 foo(this)
@@ -859,8 +956,9 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGeneratedKey01() {
-        withTables(DMLTestsData.Cities){
+    @Test
+    fun testGeneratedKey01() {
+        withTables(DMLTestsData.Cities) {
             val id = DMLTestsData.Cities.insert {
                 it[DMLTestsData.Cities.name] = "FooCity"
             } get DMLTestsData.Cities.id
@@ -873,8 +971,9 @@ class DMLTests : DatabaseTestsBase() {
         val name = text("name")
     }
 
-    @Test fun testGeneratedKey02() {
-        withTables(LongIdTable){
+    @Test
+    fun testGeneratedKey02() {
+        withTables(LongIdTable) {
             val id = LongIdTable.insert {
                 it[LongIdTable.name] = "Foo"
             } get LongIdTable.id
@@ -886,8 +985,9 @@ class DMLTests : DatabaseTestsBase() {
         val name = text("name")
     }
 
-    @Test fun testGeneratedKey03() {
-        withTables(IntIdTestTable){
+    @Test
+    fun testGeneratedKey03() {
+        withTables(IntIdTestTable) {
             val id = IntIdTestTable.insertAndGetId {
                 it[IntIdTestTable.name] = "Foo"
             }
@@ -913,7 +1013,8 @@ class DMLTests : DatabaseTestsBase() {
     }
 */
 
-    @Test fun testSelectDistinct() {
+    @Test
+    fun testSelectDistinct() {
         val tbl = DMLTestsData.Cities
         withTables(tbl) {
             tbl.insert { it[tbl.name] = "test" }
@@ -926,7 +1027,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testSelect01() {
+    @Test
+    fun testSelect01() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
@@ -943,29 +1045,30 @@ class DMLTests : DatabaseTestsBase() {
                 it[dc] = dec
             }
 
-            tbl.checkRow(tbl.select{tbl.n.eq(42)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.nn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.nn.eq(null as Int?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.n.eq(42) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.nn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.nn.eq(null as Int?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            tbl.checkRow(tbl.select{tbl.d.eq(date)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.dn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.dn.eq(null as DateTime?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.d.eq(date) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.dn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            tbl.checkRow(tbl.select{tbl.t.eq(time)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.tn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.tn.eq(null as DateTime?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.tn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            tbl.checkRow(tbl.select{tbl.e.eq(DMLTestsData.E.ONE)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.en.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.en.eq(null as DMLTestsData.E?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.e.eq(DMLTestsData.E.ONE) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.en.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.en.eq(null as DMLTestsData.E?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
 
-            tbl.checkRow(tbl.select{tbl.s.eq(sTest)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.sn.isNull()}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
-            tbl.checkRow(tbl.select{tbl.sn.eq(null as String?)}.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.s.eq(sTest) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.sn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
+            tbl.checkRow(tbl.select { tbl.sn.eq(null as String?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null)
         }
     }
 
-    @Test fun testSelect02() {
+    @Test
+    fun testSelect02() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
@@ -991,24 +1094,25 @@ class DMLTests : DatabaseTestsBase() {
 
             }
 
-            tbl.checkRow(tbl.select{tbl.nn.eq(42)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.nn neq null }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.nn.eq(42) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.nn neq null }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
 
-            tbl.checkRow(tbl.select{tbl.dn.eq(date)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.dn.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.dn.eq(date) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.dn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
 
-            tbl.checkRow(tbl.select{tbl.t.eq(time)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.tn.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.tn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
 
-            tbl.checkRow(tbl.select{tbl.en.eq(eOne)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.en.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.en.eq(eOne) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.en.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
 
-            tbl.checkRow(tbl.select{tbl.sn.eq(sTest)}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
-            tbl.checkRow(tbl.select{tbl.sn.isNotNull()}.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.sn.eq(sTest) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
+            tbl.checkRow(tbl.select { tbl.sn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec)
         }
     }
 
-    @Test fun testUpdate02() {
+    @Test
+    fun testUpdate02() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
@@ -1033,7 +1137,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[dcn] = dec
             }
 
-            tbl.update({tbl.n.eq(42)}) {
+            tbl.update({ tbl.n.eq(42) }) {
                 it[nn] = null
                 it[dn] = null
                 it[tn] = null
@@ -1048,7 +1152,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testUpdate03() {
+    @Test
+    fun testUpdate03() {
         val tbl = DMLTestsData.Misc
         val date = today
         val time = DateTime.now()
@@ -1066,7 +1171,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[dc] = dec
             }
 
-            tbl.update({tbl.n.eq(101)}) {
+            tbl.update({ tbl.n.eq(101) }) {
                 it.update(s, tbl.s.substring(2, 255))
                 it.update(sn, tbl.s.substring(3, 255))
             }
@@ -1076,29 +1181,32 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testJoinWithAlias01() {
-        withCitiesAndUsers {  cities, users, userData ->
+    @Test
+    fun testJoinWithAlias01() {
+        withCitiesAndUsers { cities, users, userData ->
             val usersAlias = users.alias("u2")
             val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
-                    .select { users.id eq "alex" }.single()
+                .select { users.id eq "alex" }.single()
 
             assert(resultRow[users.name] == "Alex")
             assert(resultRow[usersAlias[users.name]] == "Something")
         }
     }
 
-    @Test fun testStringFunctions() {
+    @Test
+    fun testStringFunctions() {
         withCitiesAndUsers { cities, users, userData ->
 
             val lcase = DMLTestsData.Cities.name.lowerCase()
-            assert(cities.slice(lcase).selectAll().any{ it[lcase] == "prague"})
+            assert(cities.slice(lcase).selectAll().any { it[lcase] == "prague" })
 
             val ucase = DMLTestsData.Cities.name.upperCase()
-            assert(cities.slice(ucase).selectAll().any{ it[ucase] == "PRAGUE"})
+            assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
         }
     }
 
-    @Test fun testJoinSubQuery01() {
+    @Test
+    fun testJoinSubQuery01() {
         withCitiesAndUsers { cities, users, userData ->
             val expAlias = users.name.max().alias("m")
             val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
@@ -1107,7 +1215,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testJoinSubQuery02() {
+    @Test
+    fun testJoinSubQuery02() {
         withCitiesAndUsers { cities, users, userData ->
             val expAlias = users.name.max().alias("m")
 
@@ -1122,7 +1231,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testJoinWithAdditionalConstraint() {
+    @Test
+    fun testJoinWithAdditionalConstraint() {
         withCitiesAndUsers { cities, users, userData ->
             val usersAlias = users.alias("name")
             val join = cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
@@ -1133,7 +1243,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testDefaultExpressions01() {
+    @Test
+    fun testDefaultExpressions01() {
 
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toSQL(queryBuilder: QueryBuilder): String = "ABS($value)"
@@ -1158,7 +1269,8 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRandomFunction01() {
+    @Test
+    fun testRandomFunction01() {
         val t = DMLTestsData.Cities
         withTables(t) {
             if (t.selectAll().count() == 0) {
@@ -1173,7 +1285,8 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     // GitHub issue #98: Parameter index out of range when using Table.replace
-    @Test fun testReplace01() {
+    @Test
+    fun testReplace01() {
         val NewAuth = object : Table() {
             val username = varchar("username", 16).primaryKey()
             val session = binary("session", 64)
@@ -1202,17 +1315,19 @@ class DMLTests : DatabaseTestsBase() {
             }
         }
     }
+
     private val predicate = Op.build {
         val nameCheck = (DMLTestsData.Users.id eq "andrey") or (DMLTestsData.Users.name eq "Sergey")
         val cityCheck = DMLTestsData.Users.cityId eq DMLTestsData.Cities.id
         nameCheck and cityCheck
     }
 
-    @Test fun testAdjustQuerySlice() {
+    @Test
+    fun testAdjustQuerySlice() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                    .slice(users.name)
-                    .select(predicate)
+                .slice(users.name)
+                .select(predicate)
 
             fun Query.sliceIt(): FieldSet = this.set.source.slice(users.name, cities.name)
             val oldSlice = queryAdjusted.set.fields
@@ -1227,11 +1342,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testAdjustQueryColumnSet() {
+    @Test
+    fun testAdjustQueryColumnSet() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = users
-                    .slice(users.name, cities.name)
-                    .select(predicate)
+                .slice(users.name, cities.name)
+                .select(predicate)
             val oldColumnSet = queryAdjusted.set.source
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
@@ -1244,11 +1360,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testAdjustQueryWhere() {
+    @Test
+    fun testAdjustQueryWhere() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                    .slice(users.name, cities.name)
-                    .selectAll()
+                .slice(users.name, cities.name)
+                .selectAll()
             queryAdjusted.adjustWhere {
                 assertNull(this)
                 predicate
@@ -1261,19 +1378,22 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
+    @Test
+    fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
         withCitiesAndUsers { cities, users, _ ->
-           assertEquals(3, cities.innerJoin(users).selectAll().withDistinct().count())
+            assertEquals(3, cities.innerJoin(users).selectAll().withDistinct().count())
         }
     }
 
-    @Test fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
+    @Test
+    fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
         withCitiesAndUsers { cities, users, _ ->
             assertEquals(3, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
         }
     }
 
-    @Test fun  `test that count() returns right value for Query with group by` () {
+    @Test
+    fun `test that count() returns right value for Query with group by`() {
         withCitiesAndUsers { _, user, userData ->
             val uniqueUsersInData = userData.slice(userData.user_id).selectAll().withDistinct().count()
             val sameQueryWithGrouping = userData.slice(userData.value.max()).selectAll().groupBy(userData.user_id).count()
