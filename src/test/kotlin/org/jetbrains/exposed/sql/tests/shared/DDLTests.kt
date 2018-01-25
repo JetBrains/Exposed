@@ -145,9 +145,9 @@ class DDLTests : DatabaseTestsBase() {
     @Test fun unnamedTableWithQuotesSQL() {
         withTables(UnnamedTable) {
             val q = db.identityQuoteString
-            val tableName = if (db.dialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
+            val tableName = if (currentDialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -157,6 +157,9 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb (TestDB.H2 ) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", TestTable.ddl)
+            DMLTestsData.Users.select {
+                exists(DMLTestsData.UserData.select { DMLTestsData.Users.id eq DMLTestsData.UserData.user_id })
+            }
         }
     }
 
@@ -170,9 +173,9 @@ class DDLTests : DatabaseTestsBase() {
         }
 
          withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
-                    "${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
+                    "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
         }
     }
 
@@ -184,8 +187,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
                     "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
         }
     }

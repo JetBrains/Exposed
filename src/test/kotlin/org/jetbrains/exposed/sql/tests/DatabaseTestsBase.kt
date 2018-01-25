@@ -53,8 +53,8 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
                 }
                 Unit
             }),
-    SQLSERVER("jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "localhost")}" +
-            ":${System.getProperty("exposed.test.sqlserver.port", "1433")}",
+    SQLSERVER("jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
+            ":${System.getProperty("exposed.test.sqlserver.port", "32781")}",
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
 
     fun connect() = Database.connect(connection, user = user, password = pass, driver = driver)

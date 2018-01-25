@@ -63,7 +63,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         internal fun create(columns : List<Column<*>>): ResultRow =
             ResultRow(columns.size, columns.mapIndexed { i, c -> c to i }.toMap()).apply {
                 columns.forEach {
-                    this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
+                    this[it as Expression<Any?>] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
                 }
             }
     }

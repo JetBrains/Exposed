@@ -415,25 +415,26 @@ class DMLTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
-                .groupBy(cities.name)
-                .having { users.id.count().eq(cities.id.max()) }
-                .orderBy(cities.name)
-                .toList()
+            val maxExpr = cities.id.max()
+            val r = (cities innerJoin users).slice(cities.name, users.id.count(), maxExpr).selectAll()
+                    .groupBy(cities.name)
+                    .having{users.id.count().eq(maxExpr)}
+                    .orderBy(cities.name)
+                    .toList()
 
             assertEquals(2, r.size)
             0.let {
                 assertEquals("Munich", r[it][cities.name])
                 val count = r[it][users.id.count()]
                 assertEquals(2, count)
-                val max = r[it][cities.id.max()]
+                val max = r[it][maxExpr]
                 assertEquals(2, max)
             }
             1.let {
                 assertEquals("St. Petersburg", r[it][cities.name])
                 val count = r[it][users.id.count()]
                 assertEquals(1, count)
-                val max = r[it][cities.id.max()]
+                val max = r[it][maxExpr]
                 assertEquals(1, max)
             }
         }
@@ -484,7 +485,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy06() {
         withCitiesAndUsers { cities, users, userData ->
-            val maxNullableId: Max<Int> = cities.id.max()
+            val maxNullableId = cities.id.max()
 
             cities.slice(maxNullableId).selectAll()
                 .map { it[maxNullableId] }.let { result ->
@@ -996,6 +997,22 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(IntIdTestTable.selectAll().last()[IntIdTestTable.id], id)
         }
     }
+
+    /*
+    @Test fun testGeneratedKey04() {
+        val CharIdTable = object : IdTable<String>("charId") {
+            override val id = varchar("id", 50).primaryKey()
+                    .clientDefault { UUID.randomUUID().toString() }
+                    .entityId()
+            val foo = integer("foo")
+        }
+        withTables(CharIdTable){
+            val id = IntIdTestTable.insertAndGetId {
+                it[CharIdTable.foo] = 5
+            }
+            assertNotNull(id?.value)
+        }
+    } */
 
 /*
     Test fun testInsert05() {

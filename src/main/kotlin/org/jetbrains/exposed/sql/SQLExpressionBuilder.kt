@@ -1,3 +1,4 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
@@ -5,19 +6,19 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
-fun Column<*>.count() = Count(this)
+fun Column<*>.count() : Function<Int> = Count(this)
 
 fun <T: DateTime?> Expression<T>.date() = Date(this)
 
 fun <T: DateTime?> Expression<T>.month() = Month(this)
 
-fun Column<*>.countDistinct() = Count(this, true)
+fun Column<*>.countDistinct() : Function<Int> = Count(this, true)
 
-fun<T:Any?> Column<T>.min() = Min(this, this.columnType)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.min()  : ExpressionWithColumnType<T?> = Min<T, S>(this, this.columnType)
 
-fun<T:Any?> Column<T>.max() = Max(this, this.columnType)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() : ExpressionWithColumnType<T?> = Max<T, S>(this, this.columnType)
 
-fun<T:Any?> Column<T>.avg(scale: Int = 2) = Avg(this, scale)
+fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2)  : ExpressionWithColumnType<BigDecimal?> = Avg<T, S>(this, scale)
 
 fun<T:Any?> Column<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
 
@@ -29,26 +30,26 @@ fun<T:Any?> Column<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
 
 fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
 
-fun <R:Any> Expression<*>.castTo(columnType: IColumnType) = Cast<R>(this, columnType)
+fun<R:Any> Expression<*>.castTo(columnType: IColumnType) = Cast<R>(this, columnType)
 
-fun<T:String?> Expression<T>.substring(start: Int, length: Int): Substring =
+fun<T:String?> Expression<T>.substring(start: Int, length: Int) : Function<T> =
         Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
 
-fun<T:String?> Expression<T>.trim() =Trim(this)
+fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
 
-fun <T:String?> Expression<T>.lowerCase() = LowerCase(this)
-fun <T:String?> Expression<T>.upperCase() = UpperCase(this)
+fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
+fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
 
 fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat =
         GroupConcat(this, separator, distinct, *orderBy)
 
 object SqlExpressionBuilder {
-    fun <T:Any> coalesce(expr: ExpressionWithColumnType<T?>, alternate: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> =
+    fun <T, S:T?, E:ExpressionWithColumnType<S>, R:T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>) : ExpressionWithColumnType<R> =
             Coalesce(expr, alternate)
 
     fun case(value: Expression<*>? = null) = Case(value)
 
-    fun<T> ExpressionWithColumnType<T>.wrap(value: T): Expression<T> = QueryParameter(value, columnType)
+    fun<T, S:T?> ExpressionWithColumnType<in S>.wrap(value: T): Expression<T> = QueryParameter(value, columnType)
 
     infix fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
         if (t == null) {
@@ -57,9 +58,9 @@ object SqlExpressionBuilder {
         return EqOp(this, wrap(t))
     }
 
-    fun<T, S: T> Expression<T>.eq(other: Expression<S>) : Op<Boolean> = EqOp (this, other)
+    infix fun<T, S1: T?, S2: T?> Expression<S1>.eq(other: Expression<S2>) : Op<Boolean> = EqOp (this, other)
 
-    infix fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> = EqOp (this, other)
+//    infix fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> = EqOp (this, other)
 
     infix fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
@@ -69,27 +70,27 @@ object SqlExpressionBuilder {
         return NeqOp(this, wrap(other))
     }
 
-    fun<T, S: T> ExpressionWithColumnType<T>.neq(other: Expression<S>) : Op<Boolean> = NeqOp (this, other)
+    fun<T, S: T?> ExpressionWithColumnType<S>.neq(other: Expression<S>) : Op<Boolean> = NeqOp (this, other)
 
     fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> = IsNullOp(this)
 
     fun<T> ExpressionWithColumnType<T>.isNotNull(): Op<Boolean> = IsNotNullOp(this)
 
-    infix fun<T> ExpressionWithColumnType<T>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
+    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
 
-    fun<T, S: T> ExpressionWithColumnType<T>.less(other: Expression<S>) : Op<Boolean> = LessOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<S>) = LessOp (this, other)
 
-    infix fun<T> ExpressionWithColumnType<T>.lessEq(t: T) : Op<Boolean> =LessEqOp(this, wrap(t))
+    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
 
-    fun<T, S: T> ExpressionWithColumnType<T>.lessEq(other: Expression<S>) : Op<Boolean> = LessEqOp(this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<S>) : Op<Boolean> = LessEqOp(this, other)
 
-    infix fun<T> ExpressionWithColumnType<T>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
+    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
 
-    fun<T, S: T> ExpressionWithColumnType<T>.greater(other: Expression<S>) : Op<Boolean> = GreaterOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<S>) : Op<Boolean> = GreaterOp (this, other)
 
-    infix fun<T> ExpressionWithColumnType<T>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp (this, wrap(t))
+    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp (this, wrap(t))
 
-    fun<T, S: T> ExpressionWithColumnType<T>.greaterEq(other: Expression<S>) : Op<Boolean> = GreaterEqOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<T>) : Op<Boolean> = GreaterEqOp (this, other)
 
     operator fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> = PlusOp (this, other, columnType)
 
@@ -120,16 +121,16 @@ object SqlExpressionBuilder {
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 
     @Suppress("UNCHECKED_CAST")
-    fun<T, S: T> ExpressionWithColumnType<T>.asLiteral(value: S) = when (value) {
+    fun<T, S: T?> ExpressionWithColumnType<S>.asLiteral(value: T) = when (value) {
         is Boolean -> booleanLiteral(value)
         is Int -> intLiteral(value)
         is Long -> longLiteral(value)
         is String -> stringLiteral(value)
         is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
-        else -> LiteralOp<T>(columnType, value)
+        else -> LiteralOp(columnType, value)
     } as LiteralOp<T>
 
-    fun<T, S: Any> ExpressionWithColumnType<T>.between(from: S, to: S): Op<Boolean> = Between(this, asLiteral(from), asLiteral(to))
+    fun<T, S: T?> ExpressionWithColumnType<S>.between(from: T, to: T): Op<Boolean> = Between(this, asLiteral(from), asLiteral(to))
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): ExpressionWithColumnType<BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
 
@@ -139,5 +140,5 @@ object SqlExpressionBuilder {
         }
     }
 
-    infix fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
+    infix fun <T: String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 }
