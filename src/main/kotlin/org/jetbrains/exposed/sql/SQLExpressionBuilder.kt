@@ -1,6 +1,8 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -58,9 +60,14 @@ object SqlExpressionBuilder {
         return EqOp(this, wrap(t))
     }
 
-    infix fun<T, S1: T?, S2: T?> Expression<S1>.eq(other: Expression<S2>) : Op<Boolean> = EqOp (this, other)
+    infix fun <T:Comparable<T>> Column<EntityID<T>>.eq(t: T?) : Op<Boolean> {
+        if (t == null) {
+            return isNull()
+        }
+        return EqOp(this, wrap(t))
+    }
 
-//    infix fun<T, S: T> ExpressionWithColumnType<T>.eq(other: Expression<S>) : Op<Boolean> = EqOp (this, other)
+    infix fun<T, S1: T?, S2: T?> Expression<S1>.eq(other: Expression<S2>) : Op<Boolean> = EqOp (this, other)
 
     infix fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
@@ -117,6 +124,11 @@ object SqlExpressionBuilder {
     infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = NotRegexpOp(this, QueryParameter(pattern, columnType))
 
     infix fun<T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
+
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("inListIds")
+    infix fun<T:Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): Op<Boolean>
+            = InListOrNotInListOp(this, list.map { EntityID(it, table as IdTable<T>) }, isInList = true)
 
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 

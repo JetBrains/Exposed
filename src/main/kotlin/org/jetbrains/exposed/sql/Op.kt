@@ -134,7 +134,7 @@ class OrOp<T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>()
     override fun toSQL(queryBuilder: QueryBuilder) = "(${expr1.toSQL(queryBuilder)}) OR (${expr2.toSQL(queryBuilder)})"
 }
 
-class NotOp<out T>(val expr: Expression<T>) : Op<Boolean>() {
+class NotOp<T>(val expr: Expression<T>) : Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "NOT (${expr.toSQL(queryBuilder)})"
 }
 
