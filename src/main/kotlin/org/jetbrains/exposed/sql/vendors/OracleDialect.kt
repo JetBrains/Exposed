@@ -77,7 +77,7 @@ internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider
         } ?: super.insert(ignore, table, columns, expr, transaction)
     }
 
-    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean): String = (if (offset > 0) " OFFSET $offset" else "") + " FETCH FIRST $size ROWS ONLY"
+    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean): String = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
 
