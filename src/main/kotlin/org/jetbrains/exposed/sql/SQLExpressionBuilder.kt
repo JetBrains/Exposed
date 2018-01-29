@@ -127,8 +127,10 @@ object SqlExpressionBuilder {
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun<T:Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): Op<Boolean>
-            = InListOrNotInListOp(this, list.map { EntityID(it, table as IdTable<T>) }, isInList = true)
+    infix fun<T:Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): Op<Boolean> {
+        val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
+        return inList(list.map { EntityID(it, idTable) })
+    }
 
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
 
