@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -689,7 +690,7 @@ abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table:
 abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
     private val cacheLoadingState = Key<Any>()
-    private var _cachedValues: MutableMap<Any, Entity<*>>? = null
+    private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
 
     override fun invalidateEntityInCache(o: Entity<ID>) {
         warmCache()
@@ -697,29 +698,35 @@ abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(
 
     final override fun warmCache(): EntityCache {
         val tr = TransactionManager.current()
+        val db = tr.db
         val transactionCache = super.warmCache()
-        if (_cachedValues == null) synchronized(this) {
+        if (_cachedValues[db] == null) synchronized(this) {
+            val cachedValues = _cachedValues[db]
             when {
-                _cachedValues != null -> {} // already loaded in another transaction
+                cachedValues != null -> {} // already loaded in another transaction
                 tr.getUserData(cacheLoadingState) != null -> {
                     return transactionCache // prevent recursive call to warmCache() in .all()
                 }
                 else -> {
                     tr.putUserData(cacheLoadingState, this)
                     super.all().toList()  /* force iteration to initialize lazy collection */
-                    _cachedValues = transactionCache.data[table] ?: mutableMapOf()
+                    _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
                     tr.removeUserData(cacheLoadingState)
                 }
             }
         }
-        transactionCache.data[table] = _cachedValues!!
+        transactionCache.data[table] = _cachedValues[db]!!
         return transactionCache
     }
 
     override fun all(): SizedIterable<T> = SizedCollection(warmCache().findAll(this))
 
     @Synchronized fun expireCache() {
-        _cachedValues = null
+        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+            _cachedValues.remove(TransactionManager.current().db)
+        } else {
+            _cachedValues.clear()
+        }
     }
 
     override fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
