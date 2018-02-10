@@ -908,6 +908,61 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testInsertAndGetId01() {
+        val idTable = object : IntIdTable("tmp") {
+            val name = varchar("foo", 10).uniqueIndex()
+        }
+
+        withTables(idTable) {
+            idTable.insertAndGetId {
+                it[idTable.name] = "1"
+            }
+
+            assertEquals(1, idTable.selectAll().count())
+
+            idTable.insertAndGetId {
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(2, idTable.selectAll().count())
+
+            assertFailAndRollback("Unique constraint") {
+                idTable.insertAndGetId {
+                    it[idTable.name] = "2"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testInsertIgnoreAndGetId01() {
+        val idTable = object : IntIdTable("tmp") {
+            val name = varchar("foo", 10).uniqueIndex()
+        }
+
+        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.ORACLE), idTable) {
+            idTable.insertIgnoreAndGetId {
+                it[idTable.name] = "1"
+            }
+
+            assertEquals(1, idTable.selectAll().count())
+
+            idTable.insertIgnoreAndGetId {
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(2, idTable.selectAll().count())
+
+            val idNull = idTable.insertIgnoreAndGetId {
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(null, idNull)
+        }
+    }
+
+
+    @Test
     fun testBatchInsert01() {
         withCitiesAndUsers { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
