@@ -940,7 +940,7 @@ class DMLTests : DatabaseTestsBase() {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.ORACLE), idTable) {
+        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL), idTable) {
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "1"
             }
