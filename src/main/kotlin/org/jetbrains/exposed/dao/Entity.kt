@@ -464,14 +464,16 @@ class EntityCache {
     }
 }
 
+class EntityNotFoundException(val id: EntityID<*>, val entity: EntityClass<*,*>): Exception("Entity ${entity.klass.simpleName}, id=$id not found in database")
+
 @Suppress("UNCHECKED_CAST")
 abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.constructors[0]
 
-    operator fun get(id: EntityID<ID>): T = findById(id) ?: error("Entity id $id not found in database")
+    operator fun get(id: EntityID<ID>): T = findById(id) ?: throw EntityNotFoundException(id, this)
 
-    operator fun get(id: ID): T = findById(id) ?: error("Entity id $id not found in database")
+    operator fun get(id: ID): T = get(EntityID(id, table))
 
     open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
