@@ -48,6 +48,14 @@ internal class H2Dialect: VendorDialect(dialectName, H2DataTypeProvider) {
         }
     }
 
+    override fun createIndex(index: Index): String {
+        if (index.columns.any { it.columnType is TextColumnType }) {
+            exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString {it.name}} can't be created in H2")
+            return ""
+        }
+        return super.createIndex(index)
+    }
+
     companion object {
         const val dialectName = "h2"
     }

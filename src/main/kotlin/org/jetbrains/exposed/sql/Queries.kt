@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 /**
@@ -170,12 +171,11 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
     }
 
-    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.value.size > 1}
+    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }.filter { it.value.size > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
-        excessiveIndices.forEach {
-            val (triple, indices) = it
-            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
+        excessiveIndices.forEach { (triple, indices)->
+            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {
@@ -199,7 +199,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
 
-    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull().orEmpty() in fKeyConstraints}
+    fun List<Index>.filterFKeys() = filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.name?.inProperCase()) in fKeyConstraints }
 
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()

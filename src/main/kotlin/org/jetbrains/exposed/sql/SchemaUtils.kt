@@ -49,7 +49,7 @@ object SchemaUtils {
             for (table in tables) {
                 //create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
-                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.first.equals(c.name, true) } }
+                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.name.equals(c.name, true) } }
                 missingTableColumns.flatMapTo(statements) { it.ddl }
 
                 if (db.supportsAlterTableWithAddColumn) {
@@ -62,7 +62,7 @@ object SchemaUtils {
 
                     // sync nullability of existing columns
                     val incorrectNullabilityColumns = table.columns.filter { c ->
-                        thisTableExistingColumns.any { c.name.equals(it.first, true) && it.second != c.columnType.nullable }
+                        thisTableExistingColumns.any { c.name.equals(it.name, true) && it.nullable != c.columnType.nullable }
                     }
                     incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
                 }

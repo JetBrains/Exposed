@@ -79,16 +79,6 @@ internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider
 
     override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean): String = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
-    override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
-
-        return TransactionManager.current().exec(
-                "SELECT DISTINCT TABLE_NAME, COLUMN_NAME, NULLABLE FROM DBA_TAB_COLS WHERE OWNER = '${getDatabase()}'") { rs ->
-            rs.extractColumns(tables) {
-                Triple(it.getString("TABLE_NAME")!!, it.getString("COLUMN_NAME")!!, it.getBoolean("NULLABLE"))
-            }
-        }!!
-    }
-
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
         val tr = TransactionManager.current()
@@ -97,6 +87,7 @@ internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME").inProperCase)
         }
+        resultSet.close()
         return result
     }
 

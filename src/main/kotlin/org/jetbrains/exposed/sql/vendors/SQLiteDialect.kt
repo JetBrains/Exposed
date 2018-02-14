@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.ExpressionWithColumnType
+import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.QueryBuilder
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
@@ -23,9 +24,9 @@ internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider
 
     override fun getDatabase(): String = ""
 
-    override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
-        val originalCreateIndex = super.createIndex(false, tableName, indexName, columns)
-        return if (unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
+    override fun createIndex(index: Index): String {
+        val originalCreateIndex = super.createIndex(index.copy(unique = false))
+        return if (index.unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
         else originalCreateIndex
     }
 

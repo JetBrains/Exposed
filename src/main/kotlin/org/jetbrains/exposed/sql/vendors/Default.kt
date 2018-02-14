@@ -57,6 +57,12 @@ open class FunctionProvider {
     }
 }
 
+/**
+ * type:
+ * @see java.sql.Types
+ */
+data class ColumnMetadata(val name: String, val type: Int, val nullable: Boolean)
+
 interface DatabaseDialect {
     val name: String
     val dataTypeProvider: DataTypeProvider
@@ -68,7 +74,7 @@ interface DatabaseDialect {
     /**
      * returns list of pairs (column name + nullable) for every table
      */
-    fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> = emptyMap()
+    fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
     /**
      * returns map of constraint for a table name/column name pair
@@ -106,7 +112,7 @@ interface DatabaseDialect {
     fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String
     fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
 
-    fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String
+    fun createIndex(index: Index): String
     fun dropIndex(tableName: String, indexName: String): String
     fun modifyColumn(column: Column<*>) : String
 
@@ -144,6 +150,7 @@ internal abstract class VendorDialect(override val name: String,
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME").inProperCase)
         }
+        resultSet.close()
         return result
     }
 
@@ -151,28 +158,32 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
-    protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Triple<String, String, Boolean>): Map<Table, List<Pair<String, Boolean>>> {
+    protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
-        val result = HashMap<Table, MutableList<Pair<String, Boolean>>>()
+        val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
         while (next()) {
-            val (tableName, columnName, nullable) = extract(this)
+            val (tableName, columnMetadata) = extract(this)
             mapping[tableName]?.let { t ->
-                result.getOrPut(t) { arrayListOf() } += columnName to nullable
+                result.getOrPut(t) { arrayListOf() } += columnMetadata
             }
         }
         return result
     }
-    override fun tableColumns(vararg tables: Table): Map<Table, List<Pair<String, Boolean>>> {
-        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, null, null)
-        return rs.extractColumns(tables) {
-            Triple(it.getString("TABLE_NAME"), it.getString("COLUMN_NAME")!!, it.getBoolean("NULLABLE"))
+
+    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
+        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, "%", "%")
+        val result = rs.extractColumns(tables) {
+            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME"), it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
         }
+        rs.close()
+        return result
     }
 
     private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
 
-    override @Synchronized fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
+    @Synchronized
+    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         for (table in tables.map{ it.nameInDatabaseCase() }) {
             columnConstraintsCache.getOrPut(table, {
@@ -187,6 +198,7 @@ internal abstract class VendorDialect(override val name: String,
                     val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
                     tableConstraint.add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
                 }
+                rs.close()
                 tableConstraint
             }).forEach { it ->
                 constraints.getOrPut(it.refereeTable to it.refereeColumn, {arrayListOf()}).add(it)
@@ -198,7 +210,8 @@ internal abstract class VendorDialect(override val name: String,
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
 
-    override @Synchronized fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
+    @Synchronized
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
@@ -210,6 +223,7 @@ internal abstract class VendorDialect(override val name: String,
                     while(rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
                     }
+                    rs.close()
                     names
                 }
                 val rs = metadata.getIndexInfo(getDatabase(), null, tableName, false, false)
@@ -223,13 +237,19 @@ internal abstract class VendorDialect(override val name: String,
                         tmpIndices.getOrPut(it to isUnique, { arrayListOf() }).add(column)
                     }
                 }
-                tmpIndices.filterNot { it.key.first in pkNames }.map { Index(it.key.first, tableName, it.value, it.key.second)}
+                rs.close()
+                val tColumns = table.columns.associateBy { transaction.identity(it) }
+                tmpIndices.filterNot { it.key.first in pkNames }
+                        .mapNotNull {
+                            it.value.mapNotNull { tColumns[it] }.takeIf { c-> c.size == it.value.size }?.let { c-> Index(it.key.first, table, c, it.key.second) }
+                        }
             })
         }
         return HashMap(existingIndicesCache)
     }
 
-    override @Synchronized fun resetCaches() {
+    @Synchronized
+    override fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
         existingIndicesCache.clear()
@@ -268,12 +288,12 @@ internal abstract class VendorDialect(override val name: String,
         }
     }
 
-    override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
+    override fun createIndex(index: Index): String {
         val t = TransactionManager.current()
-        val quotedTableName = t.quoteIfNecessary(tableName)
-        val quotedIndexName = t.quoteIfNecessary(t.cutIfNecessary(indexName))
-        val columnsList = columns.joinToString(prefix = "(", postfix = ")")
-        return if (unique) {
+        val quotedTableName = t.identity(index.table)
+        val quotedIndexName = t.quoteIfNecessary(t.cutIfNecessary(index.indexName))
+        val columnsList = index.columns.map { t.identity(it) }.joinToString(prefix = "(", postfix = ")")
+        return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
         } else {
             "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
