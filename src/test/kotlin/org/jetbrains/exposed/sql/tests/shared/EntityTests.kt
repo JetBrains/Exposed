@@ -367,7 +367,7 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test(expected = EntityNotFoundException::class)
     fun testErrorOnSetToDeletedEntity() {
         withTables(Boards) {
             val board = Board.new { name = "irrelevant" }
