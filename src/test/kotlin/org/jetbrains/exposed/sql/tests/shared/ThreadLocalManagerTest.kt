@@ -232,6 +232,8 @@ class ConnectionExceptions {
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
+        if (TestDB.MYSQL !in TestDB.enabledInTests()) return
+
         var secondThreadTm: TransactionManager? = null
         var isMysql = false
         TestDB.MYSQL.connect()
