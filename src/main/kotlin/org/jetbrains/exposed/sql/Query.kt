@@ -119,7 +119,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
-    fun isForUpdate() = (forUpdate ?: transaction.selectsForUpdate) && transaction.db.dialect.supportsSelectForUpdate()
+    fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
 

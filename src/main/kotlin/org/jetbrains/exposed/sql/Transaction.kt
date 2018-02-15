@@ -39,7 +39,6 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    var selectsForUpdate = false
     val entityCache = EntityCache()
 
     // currently executing statement. Used to log error properly
