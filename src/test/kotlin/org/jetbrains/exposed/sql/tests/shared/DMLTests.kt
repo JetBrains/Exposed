@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -1426,7 +1427,7 @@ class DMLTests : DatabaseTestsBase() {
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
-            fun ColumnSet.repr(): String = this.describe(queryAdjusted.transaction)
+            fun ColumnSet.repr(): String = this.describe(TransactionManager.current())
 
             assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
             assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())

@@ -14,12 +14,12 @@ import java.util.*
  */
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query = select(SqlExpressionBuilder.where())
 
-fun FieldSet.select(where: Op<Boolean>) : Query = Query(TransactionManager.current(), this, where)
+fun FieldSet.select(where: Op<Boolean>) : Query = Query(this, where)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelectDistinct
  */
-fun FieldSet.selectAll() : Query = Query(TransactionManager.current(), this, null)
+fun FieldSet.selectAll() : Query = Query(this, null)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01

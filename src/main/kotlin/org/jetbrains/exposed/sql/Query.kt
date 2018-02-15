@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
@@ -73,7 +74,8 @@ enum class SortOrder {
     ASC, DESC
 }
 
-open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
+open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
+    private val transaction get() = TransactionManager.current()
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
     var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
@@ -170,7 +172,7 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
 
             limit?.let {
                 append(" ")
-                append(transaction.db.dialect.limit(it, offset, orderByExpressions.isNotEmpty()))
+                append(currentDialect.limit(it, offset, orderByExpressions.isNotEmpty()))
             }
         }
 
@@ -240,7 +242,7 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
             }
         }
 
-        operator override fun next(): ResultRow {
+        override operator fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
@@ -260,7 +262,7 @@ open class Query(val transaction: Transaction, set: FieldSet, where: Op<Boolean>
         transaction.entityCache.flush(tables)
     }
 
-    operator override fun iterator(): Iterator<ResultRow> {
+    override operator fun iterator(): Iterator<ResultRow> {
         flushEntities()
         val resultIterator = ResultIterator(transaction.exec(this)!!)
         return if (transaction.db.supportsMultipleResultSets)
