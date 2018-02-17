@@ -1,17 +1,10 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.junit.Test
 import java.util.*
-
-open class UUIDTable(name: String = "") : IdTable<UUID>(name) {
-    override val id: Column<EntityID<UUID>> = uuid("id").clientDefault { UUID.randomUUID() }.primaryKey().entityId()
-}
 
 object ViaTestData {
     object NumbersTable: UUIDTable() {
@@ -35,11 +28,11 @@ object ViaTestData {
     val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable)
 }
 
-class VNumber(id: EntityID<UUID>): Entity<UUID>(id) {
+class VNumber(id: EntityID<UUID>): UUIDEntity(id) {
     var number by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
 
-    companion object : EntityClass<UUID, VNumber>(ViaTestData.NumbersTable)
+    companion object : UUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
 }
 
 class VString(id: EntityID<Long>): Entity<Long>(id) {
