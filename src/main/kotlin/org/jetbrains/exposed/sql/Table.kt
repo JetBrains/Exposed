@@ -208,35 +208,118 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
+    /**
+     * An enumeration column where enumerations are stored by their ordinal integer.
+     *
+     * @param name The column name
+     * @param klass The enum class
+     */
     fun <T:Enum<T>> enumeration(name: String, klass: Class<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
 
+    /**
+     * An enumeration column where enumerations are stored by their name.
+     *
+     * @param name The column name
+     * @param length The maximum length of the enumeration name
+     * @param klass The enum class
+     */
     fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
 
+    /**
+     * An integer column to store an integer number.
+     *
+     * @param name The column name
+     */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
 
+    /**
+     * A char column to store a single character.
+     *
+     * @param name The column name
+     */
     fun char(name: String): Column<Char> = registerColumn(name, CharacterColumnType())
 
+    /**
+     * A decimal column to store a decimal number with a set [precision] and [scale].
+     *
+     * [precision] sets the total amount of digits to store (including the digits behind the decimal point).
+     * [scale] sets the amount of digits to store behind the decimal point.
+     *
+     * So to store the decimal 123.45, [precision] would have to be set to 5 (as there are five digits in total) and [scale] to 2 (as there are two digits behind the decimal point).
+     *
+     * @param name The column name
+     * @param precision The amount of digits to store in total (including the digits behind the decimal point)
+     * @param scale The amount of digits to store behind the decimal point
+     */
     fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(precision, scale))
 
+    /**
+     * A long column to store a large (long) number.
+     *
+     * @param name The column name
+     */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
+    /**
+     * A date column to store a date.
+     *
+     * @param name The column name
+     */
     fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
 
+    /**
+     * A bool column to store a boolean value.
+     *
+     * @param name The column name
+     */
     fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
 
+    /**
+     * A datetime column to store both a date and a time.
+     *
+     * @param name The column name
+     */
     fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
 
     /**
+     * A blob column to store a large amount of binary data.
+     *
      * @sample org.jetbrains.exposed.sql.tests.shared.EntityTests.testBlobField
+     *
+     * @param name The column name
      */
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 
+    /**
+     * A text column to store a large amount of text.
+     *
+     * @param name The column name
+     * @param collate The text collate type. Set to null to use the default type.
+     */
     fun text(name: String, collate: String? = null): Column<String> = registerColumn(name, TextColumnType(collate))
 
+    /**
+     * A binary column to store an array of bytes.
+     *
+     * @param name The column name
+     * @param length The maximum amount of bytes to store
+     */
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 
+    /**
+     * A uuid column to store a UUID.
+     *
+     * @param name The column name
+     */
     fun uuid(name: String) = registerColumn<UUID>(name, UUIDColumnType())
 
+    /**
+     * A varchar column to store a string with a set maximum amount of characters.
+     *
+     * @param name The column name
+     * @param length The maximum amount of characters
+     * @param collate The text collate type. Set to null to use the default type.
+     */
     fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, VarCharColumnType(length, collate))
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?) : Column<T> = when(columnType) {

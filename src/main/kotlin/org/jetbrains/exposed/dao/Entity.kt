@@ -255,6 +255,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
     fun <T: Entity<*>> s(c: EntityClass<*, T>): EntityClass<*, T> = c
 
+    /**
+     * Delete this entity.
+     *
+     * This will remove the entity from the database as well as the cache.
+     */
     open fun delete(){
         klass.removeFromCache(this)
         val table = klass.table
@@ -477,8 +482,22 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
+    /**
+     * Get an entity by its [id].
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or null if no entity was found.
+     */
     fun findById(id: ID): T? = findById(EntityID(id, table))
 
+    /**
+     * Get an entity by its [id].
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or null if no entity was found.
+     */
     open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find{table.id eq id}.firstOrNull()
 
     fun reload(entity: Entity<ID>): T? {
@@ -542,11 +561,25 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
+    /**
+     * Get all the entities that conform to the [op] statement.
+     *
+     * @param op The statement to select the entities for. The statement must be of boolean type.
+     *
+     * @return All the entities that conform to the [op] statement.
+     */
     fun find(op: Op<Boolean>): SizedIterable<T> {
         warmCache()
         return wrapRows(searchQuery(op))
     }
 
+    /**
+     * Get all the entities that conform to the [op] statement.
+     *
+     * @param op The statement to select the entities for. The statement must be of boolean type.
+     *
+     * @return All the entities that conform to the [op] statement.
+     */
     fun find(op: SqlExpressionBuilder.()->Op<Boolean>): SizedIterable<T> {
         warmCache()
         return find(SqlExpressionBuilder.op())
@@ -563,6 +596,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     open fun searchQuery(op: Op<Boolean>): Query =
             dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
 
+    /**
+     * Count the amount of entities that conform to the [op] statement.
+     *
+     * @param op The statement to count the entities for. The statement must be of boolean type.
+     *
+     * @return The amount of entities that conform to the [op] statement.
+     */
     fun count(op: Op<Boolean>? = null): Int = with(TransactionManager.current()) {
         val query = table.slice(table.id.count())
         (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
@@ -581,8 +621,23 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         }
     }
 
+    /**
+     * Create a new entity with the fields that are set in the [init] block. The id will be automatically set.
+     *
+     * @param init The block where the entities' fields can be set.
+     *
+     * @return The entity that has been created.
+     */
     open fun new(init: T.() -> Unit) = new(null, init)
 
+    /**
+     * Create a new entity with the fields that are set in the [init] block and with a set [id].
+     *
+     * @param id The id of the entity. Set this to null if it should be automatically generated.
+     * @param init The block where the entities' fields can be set.
+     *
+     * @return The entity that has been created.
+     */
     open fun new(id: ID?, init: T.() -> Unit): T {
         val entityId = EntityID(id, table)
         val prototype: T = createInstance(entityId, null)
