@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,18 +61,34 @@ open class ExposedTransactionManagerTest {
         }
 
         Assert.assertEquals(t1.selectAll().count(), 1)
-
+        SchemaUtils.drop(t1)
     }
 
     @Test
     @Repeat(5)
     fun testConnection2() {
+        SchemaUtils.create(t1)
         val rnd = Random().nextInt().toString()
         t1.insert {
             it[t1.c1] = rnd
         }
 
         Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
+        SchemaUtils.drop(t1)
     }
 
+    @Test
+    @Repeat(5)
+    fun testConnectionWithoutAnnotation() {
+        transaction {
+            SchemaUtils.create(t1)
+            val rnd = Random().nextInt().toString()
+            t1.insert {
+                it[t1.c1] = rnd
+            }
+
+            Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
+            SchemaUtils.drop(t1)
+        }
+    }
 }

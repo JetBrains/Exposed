@@ -48,7 +48,7 @@ class SpringTransactionManager(dataSource: DataSource,
 
         getTransaction(tDefinition)
 
-        return initTransaction()
+        return currentOrNull() ?: initTransaction()
     }
 
     private fun initTransaction(): Transaction {
