@@ -32,7 +32,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         } as T
     }
 
-    operator fun <T> set(c: Expression<T>, value: T) {
+    operator fun <T> set(c: Expression<out T>, value: T) {
         val index = fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")
         data[index] = value
     }
@@ -64,7 +64,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         internal fun create(columns : List<Column<*>>): ResultRow =
             ResultRow(columns.size, columns.mapIndexed { i, c -> c to i }.toMap()).apply {
                 columns.forEach {
-                    this[it as Expression<Any?>] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
+                    this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
                 }
             }
     }

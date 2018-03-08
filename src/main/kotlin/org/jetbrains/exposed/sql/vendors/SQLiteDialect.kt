@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.QueryBuilder
 
@@ -14,7 +13,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
-    override fun<T:String?> substring(expr: Expression<T>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String =
+    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder): String =
             super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
 }
 

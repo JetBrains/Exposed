@@ -43,7 +43,7 @@ open class DataTypeProvider {
 
 open class FunctionProvider {
 
-    open fun<T:String?> substring(expr: Expression<T>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder) : String =
+    open fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder) : String =
             "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"

@@ -67,9 +67,9 @@ object SqlExpressionBuilder {
         return EqOp(this, wrap(t))
     }
 
-    infix fun<T, S1: T?, S2: T?> Expression<S1>.eq(other: Expression<S2>) : Op<Boolean> = EqOp (this, other)
+    infix fun<T, S1: T?, S2: T?> Expression<in S1>.eq(other: Expression<in S2>) : Op<Boolean> = EqOp (this, other)
 
-    infix fun<T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
+    infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
             return isNotNull()
         }
@@ -77,7 +77,7 @@ object SqlExpressionBuilder {
         return NeqOp(this, wrap(other))
     }
 
-    fun<T, S: T?> ExpressionWithColumnType<S>.neq(other: Expression<S>) : Op<Boolean> = NeqOp (this, other)
+    infix fun <T, S1: T?, S2: T?> ExpressionWithColumnType<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp (this, other)
 
     fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> = IsNullOp(this)
 

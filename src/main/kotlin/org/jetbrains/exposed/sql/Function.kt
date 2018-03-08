@@ -4,123 +4,89 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.*
 
-abstract class Function<T> : ExpressionWithColumnType<T>()
+abstract class Function<T>(override val columnType: IColumnType) : ExpressionWithColumnType<T>()
 
-class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>() {
+class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<Int>(IntegerColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String =
             "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = IntegerColumnType()
 }
 
-class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>() {
+class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>(DateColumnType(false)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "DATE(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DateColumnType(false)
 }
 
-class CurrentDateTime : Function<DateTime>() {
+class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
-    override val columnType: IColumnType = DateColumnType(false)
 }
 
-class Month<T:DateTime?>(val expr: Expression<T>): Function<DateTime>() {
+class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "MONTH(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DateColumnType(false)
 }
 
-class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>() {
+class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "LOWER(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = VarCharColumnType()
 }
 
-class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>() {
+class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "UPPER(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = VarCharColumnType()
 }
 
-class Min<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>() {
+class Min<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>(_columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "MIN(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = _columnType
 }
 
-class Max<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>() {
+class Max<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, _columnType: IColumnType): Function<T?>(_columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "MAX(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = _columnType
 }
 
-class Avg<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, scale: Int): Function<BigDecimal?>() {
+class Avg<T:Comparable<T>, in S:T?>(val expr: Expression<in S>, scale: Int): Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "AVG(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class StdDevPop<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+class StdDevPop<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "STDDEV_POP(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class StdDevSamp<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+class StdDevSamp<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "STDDEV_SAMP(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class VarPop<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+class VarPop<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "VAR_POP(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class VarSamp<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>() {
+class VarSamp<T>(val expr: Expression<T>, scale: Int): Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "VAR_SAMP(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = DecimalColumnType(Int.MAX_VALUE, scale)
 }
 
-class Sum<T>(val expr: Expression<T>, _columnType: IColumnType): Function<T?>() {
+class Sum<T>(val expr: Expression<T>, _columnType: IColumnType): Function<T?>(_columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "SUM(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = _columnType
 }
 
-class Coalesce<out T, S:T?, R:T>(private val expr: ExpressionWithColumnType<S>, private val alternate: ExpressionWithColumnType<out T>): Function<R>() {
+class Coalesce<out T, S:T?, R:T>(private val expr: ExpressionWithColumnType<S>,
+                                 private val alternate: ExpressionWithColumnType<out T>): Function<R>(alternate.columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String =
             "COALESCE(${expr.toSQL(queryBuilder)}, ${alternate.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = alternate.columnType
 }
 
-class Substring<T:String?>(private val expr: Expression<T>, private val start: ExpressionWithColumnType<Int>, val length: ExpressionWithColumnType<Int>): Function<T>() {
+class Substring<T:String?>(private val expr: Expression<T>, private val start: Expression<Int>,
+                           val length: Expression<Int>): Function<T>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String
             = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
-
-    override val columnType: IColumnType = VarCharColumnType()
 }
 
 
-class Random(val seed: Int? = null) : Function<BigDecimal>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String
-            = currentDialect.functionProvider.random(seed)
-
-    override val columnType: IColumnType = DecimalColumnType(38, 20)
+class Random(val seed: Int? = null) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
+    override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.functionProvider.random(seed)
 }
 
-class Cast<T>(val expr: Expression<*>, override val columnType: IColumnType) : Function<T?>() {
+class Cast<T>(val expr: Expression<*>, columnType: IColumnType) : Function<T?>(columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String
             = currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
 }
 
-class Trim<T:String?>(val expr: Expression<T>): Function<T>() {
+class Trim<T:String?>(val expr: Expression<T>): Function<T>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "TRIM(${expr.toSQL(queryBuilder)})"
-
-    override val columnType: IColumnType = VarCharColumnType()
 }
 
 class Case(val value: Expression<*>? = null) {
@@ -154,7 +120,10 @@ class CaseWhenElse<T, R:T> (val caseWhen: CaseWhen<T>, val elseResult: Expressio
     }
 }
 
-class GroupConcat(val expr: Column<*>, val separator: String?, val distinct: Boolean, vararg val orderBy: Pair<Expression<*>,Boolean>): Function<String?>() {
+class GroupConcat(val expr: Column<*>,
+                  val separator: String?,
+                  val distinct: Boolean,
+                  vararg val orderBy: Pair<Expression<*>, Boolean>): Function<String?>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
         append("GROUP_CONCAT(")
         if (distinct)
@@ -174,6 +143,4 @@ class GroupConcat(val expr: Column<*>, val separator: String?, val distinct: Boo
         }
         append(")")
     }
-
-    override val columnType: IColumnType = VarCharColumnType()
 }
