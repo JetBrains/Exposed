@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.*
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType(): String = "INTEGER AUTO_INCREMENT"
@@ -22,6 +20,16 @@ internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun getDatabase(): String = ""
+
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        val def = super.insert(false, table, columns, expr, transaction)
+        return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
+    }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+        val def = super.delete(false, table, where, transaction)
+        return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
+    }
 
     override fun createIndex(index: Index): String {
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
