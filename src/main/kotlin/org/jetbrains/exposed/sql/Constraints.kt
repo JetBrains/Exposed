@@ -63,10 +63,10 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
 data class Index(val indexName: String, val table: Table, val columns: List<Column<*>>, val unique: Boolean) : DdlAware {
     companion object {
-        fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
+        fun forColumns(vararg columns: Column<*>, unique: Boolean, customName: String? = null): Index {
             assert(columns.isNotEmpty())
             assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
-            val indexName = "${columns.first().table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
+            val indexName = customName?: "${columns.first().table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
             return Index(indexName, columns.first().table, columns.toList(), unique)
         }
     }

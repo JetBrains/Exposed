@@ -141,6 +141,8 @@ class Join (val table: ColumnSet) : ColumnSet() {
     fun alreadyInJoin(table: Table) = joinParts.any { it.joinPart == table}
 }
 
+data class IndexDefinition(val unique: Boolean, val customName: String?, val columns: Array<out Column<*>>)
+
 open class Table(name: String = ""): ColumnSet(), DdlAware {
     open val tableName = (if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table"))
 
@@ -153,7 +155,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun describe(s: Transaction): String = s.identity(this)
 
-    val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
+    val indices = ArrayList<IndexDefinition>()
 
     override val fields: List<Expression<*>>
         get() = columns
@@ -389,17 +391,25 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     fun index (isUnique: Boolean = false, vararg columns: Column<*>) {
-        indices.add(columns to isUnique)
+        index(null, isUnique, *columns)
     }
 
-    fun<T> Column<T>.index(isUnique: Boolean = false) : Column<T> = apply {
-        table.index(isUnique, this)
+    fun index (customIndexName:String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
+        indices.add(IndexDefinition(isUnique, customIndexName, columns))
     }
 
-    fun<T> Column<T>.uniqueIndex() : Column<T> = index(true)
+    fun<T> Column<T>.index(customIndexName:String? = null, isUnique: Boolean = false) : Column<T> = apply {
+        table.index(customIndexName, isUnique, this)
+    }
+
+    fun<T> Column<T>.uniqueIndex(customIndexName:String? = null) : Column<T> = index(customIndexName,true)
 
     fun uniqueIndex(vararg columns: Column<*>) {
-        index(true, *columns)
+        index(null,true, *columns)
+    }
+
+    fun uniqueIndex(customIndexName:String? = null, vararg columns: Column<*>) {
+        index(customIndexName,true, *columns)
     }
 
     val ddl: List<String>

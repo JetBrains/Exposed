@@ -22,8 +22,8 @@ object SchemaUtils {
             statements.addAll(table.ddl)
 
             // create indices
-            for ((columns, isUnique) in table.indices) {
-                statements.addAll(createIndex(columns, isUnique))
+            for (indexDefinition in table.indices) {
+                statements.addAll(createIndex(indexDefinition))
             }
         }
 
@@ -35,6 +35,8 @@ object SchemaUtils {
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
     fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = Index.forColumns(*columns, unique = isUnique).createStatement()
+
+    fun createIndex(indexDefinition: IndexDefinition) = Index.forColumns(*indexDefinition.columns, unique = indexDefinition.unique, customName = indexDefinition.customName).createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
@@ -54,9 +56,9 @@ object SchemaUtils {
 
                 if (db.supportsAlterTableWithAddColumn) {
                     // create indexes with new columns
-                    for ((columns, isUnique) in table.indices) {
-                        if (columns.any { missingTableColumns.contains(it) }) {
-                            statements.addAll(createIndex(columns, isUnique))
+                    for (indexDefinition in table.indices) {
+                        if (indexDefinition.columns.any { missingTableColumns.contains(it) }) {
+                            statements.addAll(createIndex(indexDefinition))
                         }
                     }
 
