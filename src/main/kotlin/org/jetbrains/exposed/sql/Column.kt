@@ -15,6 +15,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
     internal var indexInPK: Int? = null
     internal var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
+    internal var checkConstraint: Pair<String, Op<Boolean>>? = null
 
     override fun equals(other: Any?): Boolean {
         return (other as? Column<*>)?.let {
@@ -88,6 +89,11 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
         if (isOneColumnPK()) {
             append(" PRIMARY KEY")
+        }
+
+        if (checkConstraint != null) {
+            if (currentDialect is H2Dialect) append(",")
+            append(CheckConstraint.from(this@Column).checkPart)
         }
     }
 

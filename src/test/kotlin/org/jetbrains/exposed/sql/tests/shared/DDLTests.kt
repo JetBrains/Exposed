@@ -467,6 +467,29 @@ class DDLTests : DatabaseTestsBase() {
             SchemaUtils.drop(missingTable)
         }
     }
+
+    @Test fun testCheckConstraint() {
+        val checkTable = object : Table("checkTable") {
+            val positive = integer("positive").check { it greaterEq 0 }
+            val negative = integer("negative").check("subZero") { it less 0 }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 42
+                it[negative] = -14
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint") {
+                checkTable.insert {
+                    it[positive] = -14
+                    it[negative] = 42
+                }
+            }
+        }
+    }
 }
 
 private fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->

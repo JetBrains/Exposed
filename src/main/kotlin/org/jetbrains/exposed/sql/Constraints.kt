@@ -61,6 +61,38 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
 }
 
+data class CheckConstraint(val tableName: String, val checkName: String, val checkOp: String) : DdlAware {
+
+    companion object {
+        fun from(column: Column<*>): CheckConstraint {
+            assert(column.checkConstraint != null) { "$column does not have any check constraint" }
+            val tr = TransactionManager.current()
+            val name = column.checkConstraint!!.first.let { if (it.isBlank()) "" else tr.quoteIfNecessary(it) }
+            return CheckConstraint(tr.identity(column.table), name, column.checkConstraint!!.second.toString())
+        }
+    }
+
+    internal val checkPart = buildString {
+        if (checkName.isNotBlank()) append(" CONSTRAINT $checkName")
+        append(" CHECK ($checkOp)")
+    }
+
+    override fun createStatement(): List<String> {
+        if (currentDialect is MysqlDialect) throw UnsupportedOperationException("Check constraints are not currently supported by MySQL")
+        return listOf("ALTER TABLE $tableName ADD$checkPart")
+    }
+
+    override fun dropStatement(): List<String> {
+        if (currentDialect is MysqlDialect) throw UnsupportedOperationException("Check constraints are not currently supported by MySQL")
+        return listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
+    }
+
+    override fun modifyStatement(): List<String> {
+        if (currentDialect is MysqlDialect) throw UnsupportedOperationException("Check constraints are not currently supported by MySQL")
+        return dropStatement() + createStatement()
+    }
+}
+
 data class Index(val indexName: String, val table: Table, val columns: List<Column<*>>, val unique: Boolean) : DdlAware {
     companion object {
         fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {

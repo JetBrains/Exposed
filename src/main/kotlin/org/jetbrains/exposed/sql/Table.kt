@@ -402,6 +402,16 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         index(true, *columns)
     }
 
+    /**
+     * Creates a check constraint in this column
+     * @param name The name to identify the constraint, optional.
+     * @param op The expression that the value of this column must satisfy
+     */
+    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> {
+        this.checkConstraint = name to SqlExpressionBuilder.op(this)
+        return this
+    }
+
     val ddl: List<String>
         get() = createStatement()
 
