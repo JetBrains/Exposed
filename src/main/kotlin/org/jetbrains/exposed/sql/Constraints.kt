@@ -64,11 +64,9 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 data class CheckConstraint(val tableName: String, val checkName: String, val checkOp: String) : DdlAware {
 
     companion object {
-        fun from(column: Column<*>): CheckConstraint {
-            assert(column.checkConstraint != null) { "$column does not have any check constraint" }
+        fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             val tr = TransactionManager.current()
-            val name = column.checkConstraint!!.first.let { if (it.isBlank()) "" else tr.quoteIfNecessary(it) }
-            return CheckConstraint(tr.identity(column.table), name, column.checkConstraint!!.second.toString())
+            return CheckConstraint(tr.identity(table), if (name.isBlank()) "" else tr.quoteIfNecessary(name), op.toString())
         }
     }
 

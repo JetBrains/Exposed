@@ -468,7 +468,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCheckConstraint() {
+    @Test fun testCheckConstraint01() {
         val checkTable = object : Table("checkTable") {
             val positive = integer("positive").check { it greaterEq 0 }
             val negative = integer("negative").check("subZero") { it less 0 }
@@ -478,6 +478,33 @@ class DDLTests : DatabaseTestsBase() {
             checkTable.insert {
                 it[positive] = 42
                 it[negative] = -14
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint") {
+                checkTable.insert {
+                    it[positive] = -472
+                    it[negative] = 354
+                }
+            }
+        }
+    }
+
+    @Test fun testCheckConstraint02() {
+        val checkTable = object : Table("multiCheckTable") {
+            val positive = integer("positive")
+            val negative = integer("negative")
+
+            init {
+                check("multi") { (negative less 0) and (positive greaterEq 0) }
+            }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 57
+                it[negative] = -32
             }
 
             assertEquals(1, checkTable.selectAll().count())

@@ -154,6 +154,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override fun describe(s: Transaction): String = s.identity(this)
 
     val indices = ArrayList<Pair<Array<out Column<*>>, Boolean>>()
+    val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
 
     override val fields: List<Expression<*>>
         get() = columns
@@ -407,9 +408,17 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * @param name The name to identify the constraint, optional.
      * @param op The expression that the value of this column must satisfy
      */
-    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> {
-        this.checkConstraint = name to SqlExpressionBuilder.op(this)
-        return this
+    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>) = apply {
+        table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
+    }
+
+    /**
+     * Creates a check constraint in this table
+     * @param name The name to identify the constraint, optional.
+     * @param op The expression that the values in certain columns must satisfy
+     */
+    fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
+        checkConstraints.add(name to SqlExpressionBuilder.op())
     }
 
     val ddl: List<String>
@@ -438,6 +447,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                         append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
                     }
                 }
+                append(checkConstraints.joinToString(prefix = ",", separator = ",") { (name, op) -> CheckConstraint.from(this@Table, name, op).checkPart })
 
                 append(")")
             }
