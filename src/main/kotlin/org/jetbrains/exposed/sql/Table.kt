@@ -447,7 +447,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                         append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
                     }
                 }
-                append(checkConstraints.joinToString(prefix = ",", separator = ",") { (name, op) -> CheckConstraint.from(this@Table, name, op).checkPart })
+                if (checkConstraints.isNotEmpty()) {
+                    append(checkConstraints.joinToString(prefix = ",", separator = ",") { (name, op) -> CheckConstraint.from(this@Table, name, op).checkPart })
+                }
 
                 append(")")
             }
