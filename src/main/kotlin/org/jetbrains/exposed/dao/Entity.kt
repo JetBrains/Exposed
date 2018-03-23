@@ -684,6 +684,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     fun <TargetID: Comparable<TargetID>> referrersOn(column: Column<EntityID<TargetID>>, cache: Boolean) = registerRefRule(column) { Referrers(column, this, cache) }
 
+    infix fun <TargetID : Comparable<TargetID>> optionalReferrersOn(column : Column<EntityID<TargetID>?>) = optionalReferrersOn(column, false)
+    
     fun <TargetID: Comparable<TargetID>> optionalReferrersOn(column: Column<EntityID<TargetID>?>, cache: Boolean = false) =  registerRefRule(column) { OptionalReferrers(column, this, cache) }
 
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
