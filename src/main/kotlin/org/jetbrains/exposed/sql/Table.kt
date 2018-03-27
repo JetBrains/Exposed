@@ -254,6 +254,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(precision, scale))
 
     /**
+     * A float column to store a float number
+     *
+     * @see decimal for more details
+     *
+     */
+    fun float(name: String): Column<Float> = registerColumn(name, FloatColumnType())
+
+    /**
      * A long column to store a large (long) number.
      *
      * @param name The column name

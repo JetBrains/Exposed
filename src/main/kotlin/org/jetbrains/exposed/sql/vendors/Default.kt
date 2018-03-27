@@ -15,6 +15,8 @@ open class DataTypeProvider {
 
     open fun longType() = "BIGINT"
 
+    open fun floatType() = "FLOAT"
+
     open fun uuidType() = "BINARY(16)"
 
     open fun dateTimeType() = "DATETIME"

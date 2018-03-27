@@ -138,6 +138,19 @@ class LongColumnType : ColumnType() {
     }
 }
 
+class FloatColumnType: ColumnType() {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.floatType()
+
+    override fun valueFromDB(value: Any): Any {
+        val valueFromDB = super.valueFromDB(value)
+        return when (valueFromDB) {
+            is Number -> valueFromDB.toFloat()
+            else -> valueFromDB
+        }
+    }
+}
+
+
 class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
     override fun sqlType(): String  = "DECIMAL($precision, $scale)"
     override fun valueFromDB(value: Any): Any {
