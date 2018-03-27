@@ -61,15 +61,17 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
 }
 
-data class Index(val indexName: String, val table: Table, val columns: List<Column<*>>, val unique: Boolean) : DdlAware {
-    companion object {
-        fun forColumns(vararg columns: Column<*>, unique: Boolean, customName: String? = null): Index {
-            assert(columns.isNotEmpty())
-            assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
-            val indexName = customName?: "${columns.first().table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
-            return Index(indexName, columns.first().table, columns.toList(), unique)
-        }
+data class Index(val columns: List<Column<*>>, val unique: Boolean, val customName: String? = null) : DdlAware {
+    val table: Table
+
+    init {
+        assert(columns.isNotEmpty())
+        assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
+        table = columns.first().table
     }
+
+    val indexName
+        get() = customName?: "${table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
 
     override fun createStatement() = listOf(currentDialect.createIndex(this))
     override fun dropStatement() = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName))

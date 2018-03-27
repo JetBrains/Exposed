@@ -141,8 +141,6 @@ class Join (val table: ColumnSet) : ColumnSet() {
     fun alreadyInJoin(table: Table) = joinParts.any { it.joinPart == table}
 }
 
-data class IndexDefinition(val unique: Boolean, val customName: String?, val columns: Array<out Column<*>>)
-
 open class Table(name: String = ""): ColumnSet(), DdlAware {
     open val tableName = (if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table"))
 
@@ -155,7 +153,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun describe(s: Transaction): String = s.identity(this)
 
-    val indices = ArrayList<IndexDefinition>()
+    val indices = ArrayList<Index>()
 
     override val fields: List<Expression<*>>
         get() = columns
@@ -395,7 +393,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     fun index (customIndexName:String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
-        indices.add(IndexDefinition(isUnique, customIndexName, columns))
+        indices.add(Index(columns.toList(), isUnique, customIndexName))
     }
 
     fun<T> Column<T>.index(customIndexName:String? = null, isUnique: Boolean = false) : Column<T> = apply {

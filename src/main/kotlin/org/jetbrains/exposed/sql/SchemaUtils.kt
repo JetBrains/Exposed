@@ -22,8 +22,8 @@ object SchemaUtils {
             statements.addAll(table.ddl)
 
             // create indices
-            for (indexDefinition in table.indices) {
-                statements.addAll(createIndex(indexDefinition))
+            for (index in table.indices) {
+                statements.addAll(createIndex(index))
             }
         }
 
@@ -34,9 +34,10 @@ object SchemaUtils {
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
-    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = Index.forColumns(*columns, unique = isUnique).createStatement()
+    @Deprecated(message = "pass instance of Index", replaceWith = ReplaceWith("SchemaUtils.createIndex(index)"))
+    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = createIndex(Index(columns.toList(), unique = isUnique))
 
-    fun createIndex(indexDefinition: IndexDefinition) = Index.forColumns(*indexDefinition.columns, unique = indexDefinition.unique, customName = indexDefinition.customName).createStatement()
+    fun createIndex(index: Index) = index.createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
@@ -56,9 +57,9 @@ object SchemaUtils {
 
                 if (db.supportsAlterTableWithAddColumn) {
                     // create indexes with new columns
-                    for (indexDefinition in table.indices) {
-                        if (indexDefinition.columns.any { missingTableColumns.contains(it) }) {
-                            statements.addAll(createIndex(indexDefinition))
+                    for (index in table.indices) {
+                        if (index.columns.any { missingTableColumns.contains(it) }) {
+                            statements.addAll(createIndex(index))
                         }
                     }
 
