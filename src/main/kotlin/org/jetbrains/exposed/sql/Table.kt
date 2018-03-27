@@ -404,21 +404,25 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     /**
-     * Creates a check constraint in this column
-     * @param name The name to identify the constraint, optional.
-     * @param op The expression that the value of this column must satisfy
+     * Creates a check constraint in this column.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
+     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param op The expression against which the newly inserted values will be compared.
      */
     fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>) = apply {
-        table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
+        table.checkConstraints.takeIf { name.isEmpty() || it.none { it.first.equals(name, true) } }?.add(name to SqlExpressionBuilder.op(this))
+                ?: exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
     }
 
     /**
-     * Creates a check constraint in this table
-     * @param name The name to identify the constraint, optional.
-     * @param op The expression that the values in certain columns must satisfy
+     * Creates a check constraint in this table.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
+     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param op The expression against which the newly inserted values will be compared.
      */
     fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
-        checkConstraints.add(name to SqlExpressionBuilder.op())
+        checkConstraints.takeIf { name.isEmpty() || it.none { it.first.equals(name, true) } }?.add(name to SqlExpressionBuilder.op())
+                ?: exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
     }
 
     val ddl: List<String>

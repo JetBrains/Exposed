@@ -219,7 +219,7 @@ class DDLTests : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        
+
         withTables(TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
@@ -384,11 +384,11 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    
+
     private abstract class EntityTable(name: String = "") : IdTable<String>(name) {
         override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.primaryKey().entityId()
     }
-    
+
     @Test fun complexTest01() {
         val User = object : EntityTable() {
             val name = varchar("name", 255)
@@ -482,10 +482,17 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(1, checkTable.selectAll().count())
 
-            assertFailAndRollback("Check constraint") {
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
                     it[positive] = -472
-                    it[negative] = 354
+                    it[negative] = -354
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 538
+                    it[negative] = 915
                 }
             }
         }
@@ -509,10 +516,17 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(1, checkTable.selectAll().count())
 
-            assertFailAndRollback("Check constraint") {
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
-                    it[positive] = -14
-                    it[negative] = 42
+                    it[positive] = -47
+                    it[negative] = -35
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 53
+                    it[negative] = 91
                 }
             }
         }
