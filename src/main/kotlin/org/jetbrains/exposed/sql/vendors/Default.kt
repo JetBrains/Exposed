@@ -15,6 +15,8 @@ open class DataTypeProvider {
 
     open fun longType() = "BIGINT"
 
+    open fun floatType() = "FLOAT"
+
     open fun uuidType() = "BINARY(16)"
 
     open fun dateTimeType() = "DATETIME"
@@ -241,7 +243,7 @@ internal abstract class VendorDialect(override val name: String,
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                         .mapNotNull {
-                            it.value.mapNotNull { tColumns[it] }.takeIf { c-> c.size == it.value.size }?.let { c-> Index(it.key.first, table, c, it.key.second) }
+                            it.value.mapNotNull { tColumns[it] }.takeIf { c-> c.size == it.value.size }?.let { c-> Index(c, it.key.second) }
                         }
             })
         }
