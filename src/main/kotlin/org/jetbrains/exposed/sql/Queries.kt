@@ -206,7 +206,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     val nameDiffers = HashSet<Index>()
     for (table in tables) {
         val existingTableIndices = currentDialect.existingIndices(table)[table].orEmpty().filterFKeys()
-        val mappedIndices = table.indices.map { Index.forColumns(*it.first, unique = it.second)}.filterFKeys()
+        val mappedIndices = table.indices.filterFKeys()
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
