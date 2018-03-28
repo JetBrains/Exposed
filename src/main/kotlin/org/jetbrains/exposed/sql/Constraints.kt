@@ -76,19 +76,20 @@ data class CheckConstraint(val tableName: String, val checkName: String, val che
     }
 
     override fun createStatement(): List<String> {
-        if (currentDialect is MysqlDialect) exposedLogger.warn("CHECK constraints are not currently supported by MySQL")
-        return listOf("ALTER TABLE $tableName ADD$checkPart")
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName ADD$checkPart")
     }
 
     override fun dropStatement(): List<String> {
-        if (currentDialect is MysqlDialect) throw UnsupportedOperationException("CHECK constraints are not currently supported by MySQL")
-        return listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
     }
 
-    override fun modifyStatement(): List<String> {
-        if (currentDialect is MysqlDialect) throw UnsupportedOperationException("CHECK constraints are not currently supported by MySQL")
-        return dropStatement() + createStatement()
-    }
+    override fun modifyStatement() = dropStatement() + createStatement()
 }
 
 data class Index(val indexName: String, val table: Table, val columns: List<Column<*>>, val unique: Boolean) : DdlAware {
