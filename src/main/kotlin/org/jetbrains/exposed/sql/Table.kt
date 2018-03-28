@@ -154,6 +154,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override fun describe(s: Transaction): String = s.identity(this)
 
     val indices = ArrayList<Index>()
+    val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
 
     override val fields: List<Expression<*>>
         get() = columns
@@ -418,6 +419,28 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         index(customIndexName,true, *columns)
     }
 
+    /**
+     * Creates a check constraint in this column.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
+     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param op The expression against which the newly inserted values will be compared.
+     */
+    fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>) = apply {
+        table.checkConstraints.takeIf { name.isEmpty() || it.none { it.first.equals(name, true) } }?.add(name to SqlExpressionBuilder.op(this))
+                ?: exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
+    }
+
+    /**
+     * Creates a check constraint in this table.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
+     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param op The expression against which the newly inserted values will be compared.
+     */
+    fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
+        checkConstraints.takeIf { name.isEmpty() || it.none { it.first.equals(name, true) } }?.add(name to SqlExpressionBuilder.op())
+                ?: exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
+    }
+
     val ddl: List<String>
         get() = createStatement()
 
@@ -443,6 +466,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                     if (references.isNotEmpty()) {
                         append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
                     }
+                }
+                if (checkConstraints.isNotEmpty()) {
+                    append(checkConstraints.joinToString(prefix = ",", separator = ",") { (name, op) -> CheckConstraint.from(this@Table, name, op).checkPart })
                 }
 
                 append(")")

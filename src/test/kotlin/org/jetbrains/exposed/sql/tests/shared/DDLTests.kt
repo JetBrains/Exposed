@@ -219,7 +219,7 @@ class DDLTests : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        
+
         withTables(TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
@@ -421,11 +421,11 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    
+
     private abstract class EntityTable(name: String = "") : IdTable<String>(name) {
         override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.primaryKey().entityId()
     }
-    
+
     @Test fun complexTest01() {
         val User = object : EntityTable() {
             val name = varchar("name", 255)
@@ -502,6 +502,70 @@ class DDLTests : DatabaseTestsBase() {
         val missingTable = Table("missingTable")
         withDb {
             SchemaUtils.drop(missingTable)
+        }
+    }
+
+    @Test fun testCheckConstraint01() {
+        val checkTable = object : Table("checkTable") {
+            val positive = integer("positive").check { it greaterEq 0 }
+            val negative = integer("negative").check("subZero") { it less 0 }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 42
+                it[negative] = -14
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
+                checkTable.insert {
+                    it[positive] = -472
+                    it[negative] = -354
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 538
+                    it[negative] = 915
+                }
+            }
+        }
+    }
+
+    @Test fun testCheckConstraint02() {
+        val checkTable = object : Table("multiCheckTable") {
+            val positive = integer("positive")
+            val negative = integer("negative")
+
+            init {
+                check("multi") { (negative less 0) and (positive greaterEq 0) }
+            }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 57
+                it[negative] = -32
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
+                checkTable.insert {
+                    it[positive] = -47
+                    it[negative] = -35
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 53
+                    it[negative] = 91
+                }
+            }
         }
     }
 }

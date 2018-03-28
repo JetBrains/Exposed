@@ -61,6 +61,37 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
 }
 
+data class CheckConstraint(val tableName: String, val checkName: String, val checkOp: String) : DdlAware {
+
+    companion object {
+        fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+            val tr = TransactionManager.current()
+            return CheckConstraint(tr.identity(table), if (name.isBlank()) "" else tr.quoteIfNecessary(name), op.toString())
+        }
+    }
+
+    internal val checkPart = buildString {
+        if (checkName.isNotBlank()) append(" CONSTRAINT $checkName")
+        append(" CHECK ($checkOp)")
+    }
+
+    override fun createStatement(): List<String> {
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName ADD$checkPart")
+    }
+
+    override fun dropStatement(): List<String> {
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
+    }
+
+    override fun modifyStatement() = dropStatement() + createStatement()
+}
+
 data class Index(val columns: List<Column<*>>, val unique: Boolean, val customName: String? = null) : DdlAware {
     val table: Table
 
