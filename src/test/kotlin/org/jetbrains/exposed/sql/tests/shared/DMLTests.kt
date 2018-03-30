@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
@@ -737,7 +738,8 @@ class DMLTests : DatabaseTestsBase() {
     fun testLengthWithCount01() {
         class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
             override fun toSQL(queryBuilder: QueryBuilder): String
-                = "LENGTH(${exp.toSQL(queryBuilder)})"
+                = if (currentDialect is SQLServerDialect) "LEN(${exp.toSQL(queryBuilder)})"
+                else "LENGTH(${exp.toSQL(queryBuilder)})"
         }
         withCitiesAndUsers { cities, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()
