@@ -17,18 +17,18 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
      */
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(c: Expression<T>) : T {
-        val d:Any? = getRaw(c)
-
-        return d?.let {
-            if (d == NotInitializedValue) error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
-            (c as? ExpressionWithColumnType<T>)?.columnType?.valueFromDB(it) ?: it ?: run {
-                val column = c as? Column<T>
-                if (column?.dbDefaultValue != null && column.columnType.nullable == false) {
-                    exposedLogger.warn("Column ${TransactionManager.current().identity(column)} is marked as not null, " +
+        val d = getRaw(c)
+        return when {
+            d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable -> {
+                exposedLogger.warn("Column ${TransactionManager.current().identity(c)} is marked as not null, " +
                             "has default db value, but returns null. Possible have to re-read it from DB.")
-                }
                 null
             }
+            d == null -> null
+            d == NotInitializedValue -> error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
+            c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(d)
+            c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(d)
+            else -> d
         } as T
     }
 
