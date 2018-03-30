@@ -4,6 +4,7 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -729,6 +730,22 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals("Eu", r[2][substring])
             assertEquals("Se", r[3][substring])
             assertEquals("So", r[4][substring])
+        }
+    }
+
+    @Test
+    fun testLengthWithCount01() {
+        class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
+            override fun toSQL(queryBuilder: QueryBuilder): String
+                = "LENGTH(${exp.toSQL(queryBuilder)})"
+        }
+        withCitiesAndUsers { cities, _, _ ->
+            val sumOfLength = LengthFunction(cities.name).sum()
+            val expectedValue = cities.selectAll().sumBy{ it[cities.name].length }
+
+            val results = cities.slice(sumOfLength).selectAll().toList()
+            assertEquals(1, results.size)
+            assertEquals(expectedValue, results.single()[sumOfLength])
         }
     }
 

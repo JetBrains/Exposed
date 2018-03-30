@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
-fun Column<*>.count() : Function<Int> = Count(this)
+fun ExpressionWithColumnType<*>.count() : Function<Int> = Count(this)
 
 fun <T: DateTime?> Expression<T>.date() = Date(this)
 
@@ -22,15 +22,15 @@ fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() : ExpressionWith
 
 fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2)  : ExpressionWithColumnType<BigDecimal?> = Avg<T, S>(this, scale)
 
-fun<T:Any?> Column<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
+fun<T:Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
 
-fun<T:Any?> Column<T>.stdDevSamp(scale: Int = 2) = StdDevSamp(this, scale)
+fun<T:Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2) = StdDevSamp(this, scale)
 
-fun<T:Any?> Column<T>.varPop(scale: Int = 2) = VarPop(this, scale)
+fun<T:Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2) = VarPop(this, scale)
 
-fun<T:Any?> Column<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
+fun<T:Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
 
-fun<T:Any?> Column<T>.sum() = Sum(this, this.columnType)
+fun<T:Any?> ExpressionWithColumnType<T>.sum() = Sum(this, this.columnType)
 
 fun<R:Any> Expression<*>.castTo(columnType: IColumnType) = Cast<R>(this, columnType)
 

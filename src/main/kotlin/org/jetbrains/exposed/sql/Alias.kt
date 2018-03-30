@@ -29,9 +29,10 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
     override fun hashCode(): Int = tableNameWithAlias.hashCode()
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?> get(original: Column<T>): Column<T> = delegate.columns.find { it == original }?.let { it.clone() as? Column<T> } ?: error("Column not found in original table")
+    operator fun <T: Any?> get(original: Column<T>): Column<T> =
+        delegate.columns.find { it == original }?.let { it.clone() as? Column<T> }
+            ?: error("Column not found in original table")
 }
-
 
 class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "${delegate.toSQL(queryBuilder)} $alias"
