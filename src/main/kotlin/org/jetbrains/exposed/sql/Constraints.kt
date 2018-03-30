@@ -64,16 +64,14 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 data class CheckConstraint(val tableName: String, val checkName: String, val checkOp: String) : DdlAware {
 
     companion object {
-        fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+        internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+            require(name.isNotBlank())
             val tr = TransactionManager.current()
-            return CheckConstraint(tr.identity(table), if (name.isBlank()) "" else tr.quoteIfNecessary(name), op.toString())
+            return CheckConstraint(tr.identity(table), tr.quoteIfNecessary(name), op.toString())
         }
     }
 
-    internal val checkPart = buildString {
-        if (checkName.isNotBlank()) append(" CONSTRAINT $checkName")
-        append(" CHECK ($checkOp)")
-    }
+    internal val checkPart = " CONSTRAINT $checkName CHECK ($checkOp)"
 
     override fun createStatement(): List<String> {
         return if (currentDialect is MysqlDialect) {

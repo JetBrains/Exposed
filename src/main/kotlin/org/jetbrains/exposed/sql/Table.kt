@@ -142,7 +142,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
 }
 
 open class Table(name: String = ""): ColumnSet(), DdlAware {
-    open val tableName = (if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table"))
+    open val tableName = if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table")
 
     fun nameInDatabaseCase() = tableName.inProperCase()
 
@@ -468,7 +468,12 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                     }
                 }
                 if (checkConstraints.isNotEmpty()) {
-                    append(checkConstraints.joinToString(prefix = ",", separator = ",") { (name, op) -> CheckConstraint.from(this@Table, name, op).checkPart })
+                    append(
+                        checkConstraints.mapIndexed { index, (name, op) ->
+                            val resolvedName = name.takeIf { it.isNotBlank() } ?: "check_${tableName}_$index"
+                            CheckConstraint.from(this@Table, resolvedName, op).checkPart
+                        }.joinToString(prefix = ",", separator = ",")
+                    )
                 }
 
                 append(")")
