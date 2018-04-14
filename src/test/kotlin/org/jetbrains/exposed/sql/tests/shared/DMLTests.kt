@@ -184,7 +184,7 @@ class DMLTests : DatabaseTestsBase() {
             val smthId = users.slice(users.id).select { users.name.like("%thing") }.single()[users.id]
             assertEquals("smth", smthId)
 
-            users.deleteWhere { users.name like "%thing" }
+            users.deleteWhere({ users.name like "%thing" })
             val hasSmth = users.slice(users.id).select { users.name.like("%thing") }.any()
             assertEquals(false, hasSmth)
         }

@@ -111,7 +111,7 @@ interface DatabaseDialect {
     // Specific SQL statements
 
     fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
-    fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String
+    fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String
     fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
 
     fun createIndex(index: Index): String
@@ -275,7 +275,7 @@ internal abstract class VendorDialect(override val name: String,
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
         if (ignore) {
             throw UnsupportedOperationException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
         }
@@ -286,6 +286,14 @@ internal abstract class VendorDialect(override val name: String,
             if (where != null) {
                 append(" WHERE ")
                 append(where)
+            }
+            if (limit != null) {
+                append(" LIMIT ")
+                append(limit)
+                if (offset != null) {
+                    append(" OFFSET ")
+                    append(offset)
+                }
             }
         }
     }

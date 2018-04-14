@@ -108,7 +108,7 @@ class DDLTests : DatabaseTestsBase() {
                 SchemaUtils.createMissingTablesAndColumns(t1)
             }
 
-            t2.deleteWhere { t2.foo.isNull() }
+            t2.deleteWhere ({ t2.foo.isNull() })
 
             SchemaUtils.createMissingTablesAndColumns(t1)
             assertFailAndRollback("Can't insert to nullable column") {
