@@ -72,7 +72,7 @@ fun main(args: Array<String>) {
             it[name] = "Alexey"
         }
 
-        Users.deleteWhere({Users.name like "%thing"})
+        Users.deleteWhere {Users.name like "%thing"}
 
         println("All cities:")
 
