@@ -190,6 +190,17 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testDelete02() {
+        withCitiesAndUsers { cities, users, userData ->
+            userData.deleteWhere(1, 1, { userData.value eq 20 })
+            userData.slice(userData.user_id).selectAll().let {
+                assertEquals(1, it.count())
+                assertEquals("smth", it.single()[userData.user_id])
+            }
+        }
+    }
+
     // select expressions
     @Test
     fun testSelect() {
