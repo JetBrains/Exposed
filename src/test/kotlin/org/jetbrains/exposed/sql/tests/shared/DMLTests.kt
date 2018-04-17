@@ -199,7 +199,8 @@ class DMLTests : DatabaseTestsBase() {
                 assertEquals(validCount, it.count())
 
                 val validId = when (currentDialect) {
-                    is MysqlDialect, is H2Dialect, is SQLiteDialect -> "eugene"
+                    is SQLiteDialect -> return@let
+                    is MysqlDialect, is H2Dialect -> "eugene"
                     else -> "smth"
                 }
                 assertEquals(validId, it.single()[userData.user_id])
