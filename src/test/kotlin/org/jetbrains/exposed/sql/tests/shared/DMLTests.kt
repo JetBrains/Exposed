@@ -194,7 +194,7 @@ class DMLTests : DatabaseTestsBase() {
             userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
                 assertEquals(1, it.count())
                 val validId = when (currentDialect) {
-                    is MysqlDialect, is H2Dialect -> "eugene"
+                    is MysqlDialect, is H2Dialect, is SQLiteDialect -> "eugene"
                     else -> "smth"
                 }
                 assertEquals(validId, it.single()[userData.user_id])

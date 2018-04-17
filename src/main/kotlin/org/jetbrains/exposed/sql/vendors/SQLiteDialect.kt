@@ -28,7 +28,7 @@ internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        val def = super.delete(false, table, where, limit, offset, transaction)
+        val def = super.delete(false, table, where, null, null, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
 
