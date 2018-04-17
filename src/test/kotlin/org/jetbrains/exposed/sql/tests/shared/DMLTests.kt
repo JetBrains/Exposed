@@ -10,10 +10,7 @@ import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -196,7 +193,11 @@ class DMLTests : DatabaseTestsBase() {
             userData.deleteWhere(1, 1, { userData.value eq 20 })
             userData.slice(userData.user_id).selectAll().let {
                 assertEquals(1, it.count())
-                assertEquals("smth", it.single()[userData.user_id])
+                val validId = when (currentDialect) {
+                    is MysqlDialect, is H2Dialect -> "eugene"
+                    else -> "smth"
+                }
+                assertEquals(validId, it.single()[userData.user_id])
             }
         }
     }
