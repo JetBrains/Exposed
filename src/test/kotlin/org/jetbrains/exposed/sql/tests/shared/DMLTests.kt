@@ -191,7 +191,7 @@ class DMLTests : DatabaseTestsBase() {
     fun testDelete02() {
         withCitiesAndUsers { cities, users, userData ->
             userData.deleteWhere(1, 1, { userData.value eq 20 })
-            userData.slice(userData.user_id).selectAll().let {
+            userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
                 assertEquals(1, it.count())
                 val validId = when (currentDialect) {
                     is MysqlDialect, is H2Dialect -> "eugene"
