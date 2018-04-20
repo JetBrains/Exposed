@@ -94,12 +94,15 @@ class EntityIDColumnType<T:Comparable<T>>(val idColumn: Column<T>) : ColumnType(
             else -> value
         })
 
-    override fun valueFromDB(value: Any): Any {
-        @Suppress("UNCHECKED_CAST")
-        return when (value) {
-            is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
-            else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
-        }
+    override fun nonNullValueToString(value: Any): String =  when (value) {
+        is EntityID<*> -> idColumn.columnType.nonNullValueToString(value.value)
+        else -> idColumn.columnType.nonNullValueToString(value)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
+        else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
     }
 }
 
@@ -355,12 +358,18 @@ class BooleanColumnType : ColumnType() {
 class UUIDColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
-    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(when (value) {
-        is UUID -> value
-        is String -> UUID.fromString(value)
-        is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long )}
-        else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
-    })
+    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(valueToUUID(value))
+
+    private fun valueToUUID(value: Any): UUID {
+        return when (value) {
+            is UUID -> value
+            is String -> UUID.fromString(value)
+            is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
+            else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
+        }
+    }
+
+    override fun nonNullValueToString(value: Any) = valueToUUID(value).toString()
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is UUID -> value
