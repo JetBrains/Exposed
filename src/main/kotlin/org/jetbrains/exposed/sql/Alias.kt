@@ -29,11 +29,12 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
     override fun hashCode(): Int = tableNameWithAlias.hashCode()
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?> get(original: Column<T>): Column<T> = delegate.columns.find { it == original }?.let { it.clone() as? Column<T> } ?: error("Column not found in original table")
+    operator fun <T: Any?> get(original: Column<T>): Column<T> =
+        delegate.columns.find { it == original }?.let { it.clone() as? Column<T> }
+            ?: error("Column not found in original table")
 }
 
-
-class ExpressionAlias<out T: Any?>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
+class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = "${delegate.toSQL(queryBuilder)} $alias"
 
     fun aliasOnlyExpression() = object: Expression<T>() {
@@ -71,7 +72,7 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)
 fun <T:Query> T.alias(alias: String) = QueryAlias(this, alias)
-fun <T:Expression<*>> T.alias(alias: String) = ExpressionAlias(this, alias)
+fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
 
 fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> Query): Join {
     val qAlias = joinPart().alias("q${joinParts.count { it.joinPart is QueryAlias }}")

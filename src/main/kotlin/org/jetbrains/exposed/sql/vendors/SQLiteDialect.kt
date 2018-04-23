@@ -1,19 +1,18 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.*
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType(): String = "INTEGER AUTO_INCREMENT"
     override fun longAutoincType(): String = "INTEGER AUTO_INCREMENT"
+    override fun floatType(): String = "SINGLE"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun dateTimeType(): String  = "NUMERIC"
     override val blobAsStream: Boolean = true
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
-    override fun substring(expr: Expression<String?>, start: ExpressionWithColumnType<Int>, length: ExpressionWithColumnType<Int>, builder: QueryBuilder): String =
+    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder): String =
             super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
 }
 
@@ -23,9 +22,19 @@ internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider
 
     override fun getDatabase(): String = ""
 
-    override fun createIndex(unique: Boolean, tableName: String, indexName: String, columns: List<String>): String {
-        val originalCreateIndex = super.createIndex(false, tableName, indexName, columns)
-        return if (unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        val def = super.insert(false, table, columns, expr, transaction)
+        return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
+    }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+        val def = super.delete(false, table, where, transaction)
+        return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
+    }
+
+    override fun createIndex(index: Index): String {
+        val originalCreateIndex = super.createIndex(index.copy(unique = false))
+        return if (index.unique) originalCreateIndex.replace("INDEX", "UNIQUE INDEX")
         else originalCreateIndex
     }
 

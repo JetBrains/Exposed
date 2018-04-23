@@ -303,7 +303,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithoutFlush() {
-        withTables(Posts) {
+        withTables(Boards, Posts) {
             val parent = Post.new {  }
             Post.new { this.parent = parent } // first flush before referencing
             assertEquals(2, Post.all().count())
@@ -335,7 +335,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithFlush() {
-        withTables(Posts) {
+        withTables(Boards, Posts) {
             val parent = Post.new {  }
             flushCache()
             assertNotNull(parent.id._value)
@@ -346,7 +346,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithChild() {
-        withTables(Posts) {
+        withTables(Boards, Posts) {
             val parent = Post.new {  }
             val child1 = Post.new { this.parent = parent }
             Post.new { this.parent = child1 }
@@ -367,7 +367,7 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test(expected = EntityNotFoundException::class)
     fun testErrorOnSetToDeletedEntity() {
         withTables(Boards) {
             val board = Board.new { name = "irrelevant" }
@@ -437,7 +437,7 @@ class EntityTests: DatabaseTestsBase() {
 
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-            inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, statement)
+            inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {

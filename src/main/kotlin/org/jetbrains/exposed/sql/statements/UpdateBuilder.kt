@@ -22,7 +22,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
         values[column] = value
     }
 
-    open fun <S> update(column: Column<S>, value: Expression<S>) {
+    open fun <T, S:T?> update(column: Column<T>, value: Expression<S>) {
         if (values.containsKey(column)) {
             error("$column is already initialized")
         }

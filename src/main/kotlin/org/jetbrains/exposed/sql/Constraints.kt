@@ -61,19 +61,49 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
 
 }
 
-data class Index(val indexName: String, val tableName: String, val columns: List<String>, val unique: Boolean) : DdlAware {
+data class CheckConstraint(val tableName: String, val checkName: String, val checkOp: String) : DdlAware {
+
     companion object {
-        fun forColumns(vararg columns: Column<*>, unique: Boolean): Index {
-            assert(columns.isNotEmpty())
-            assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
-            val t = TransactionManager.current()
-            val indexName = "${columns.first().table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
-            return Index(indexName, columns.first().table.nameInDatabaseCase(), columns.map { t.identity(it) }, unique)
+        internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+            require(name.isNotBlank())
+            val tr = TransactionManager.current()
+            return CheckConstraint(tr.identity(table), tr.quoteIfNecessary(name), op.toString())
         }
     }
 
-    override fun createStatement() = listOf(currentDialect.createIndex(unique, tableName, indexName, columns))
-    override fun dropStatement() = listOf(currentDialect.dropIndex(tableName, indexName))
+    internal val checkPart = " CONSTRAINT $checkName CHECK ($checkOp)"
+
+    override fun createStatement(): List<String> {
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName ADD$checkPart")
+    }
+
+    override fun dropStatement(): List<String> {
+        return if (currentDialect is MysqlDialect) {
+            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
+            listOf()
+        } else listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
+    }
+
+    override fun modifyStatement() = dropStatement() + createStatement()
+}
+
+data class Index(val columns: List<Column<*>>, val unique: Boolean, val customName: String? = null) : DdlAware {
+    val table: Table
+
+    init {
+        assert(columns.isNotEmpty())
+        assert(columns.groupBy { it.table }.size == 1) { "Columns from different tables can't persist in one index" }
+        table = columns.first().table
+    }
+
+    val indexName
+        get() = customName?: "${table.nameInDatabaseCase()}_${columns.joinToString("_"){it.name.inProperCase()}}" + (if (unique) "_unique".inProperCase() else "")
+
+    override fun createStatement() = listOf(currentDialect.createIndex(this))
+    override fun dropStatement() = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName))
 
 
     override fun modifyStatement() = dropStatement() + createStatement()
@@ -83,5 +113,5 @@ data class Index(val indexName: String, val tableName: String, val columns: List
             indexName != other.indexName && columns == other.columns && unique == other.unique
 
     override fun toString(): String =
-            "${if (unique) "Unique " else ""}Index '$indexName' for '$tableName' on columns ${columns.joinToString(", ")}"
+            "${if (unique) "Unique " else ""}Index '$indexName' for '${table.nameInDatabaseCase()}' on columns ${columns.joinToString(", ")}"
 }

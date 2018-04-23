@@ -4,9 +4,12 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
@@ -37,8 +40,8 @@ open class TestConfig : TransactionManagementConfigurer {
 }
 
 @RunWith(SpringJUnit4ClassRunner::class)
-@ContextConfiguration(classes = arrayOf(TestConfig::class))
-@Transactional
+@ContextConfiguration(classes = [TestConfig::class])
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 open class ExposedTransactionManagerTest {
 
     @Autowired
@@ -49,6 +52,7 @@ open class ExposedTransactionManagerTest {
     }
 
     @Test
+    @Transactional
     @Repeat(5)
     fun testConnection() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
@@ -60,18 +64,35 @@ open class ExposedTransactionManagerTest {
         }
 
         Assert.assertEquals(t1.selectAll().count(), 1)
-
+        SchemaUtils.drop(t1)
     }
 
     @Test
+    @Transactional
     @Repeat(5)
     fun testConnection2() {
+        SchemaUtils.create(t1)
         val rnd = Random().nextInt().toString()
         t1.insert {
             it[t1.c1] = rnd
         }
 
         Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
+        SchemaUtils.drop(t1)
     }
 
+    @Test
+    @Repeat(5)
+    fun testConnectionWithoutAnnotation() {
+        transaction {
+            SchemaUtils.create(t1)
+            val rnd = Random().nextInt().toString()
+            t1.insert {
+                it[t1.c1] = rnd
+            }
+
+            Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
+            SchemaUtils.drop(t1)
+        }
+    }
 }

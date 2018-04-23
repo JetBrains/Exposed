@@ -22,8 +22,8 @@ object SchemaUtils {
             statements.addAll(table.ddl)
 
             // create indices
-            for ((columns, isUnique) in table.indices) {
-                statements.addAll(createIndex(columns, isUnique))
+            for (index in table.indices) {
+                statements.addAll(createIndex(index))
             }
         }
 
@@ -34,7 +34,10 @@ object SchemaUtils {
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
-    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = Index.forColumns(*columns, unique = isUnique).createStatement()
+    @Deprecated(message = "pass instance of Index", replaceWith = ReplaceWith("SchemaUtils.createIndex(index)"))
+    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = createIndex(Index(columns.toList(), unique = isUnique))
+
+    fun createIndex(index: Index) = index.createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
@@ -49,20 +52,20 @@ object SchemaUtils {
             for (table in tables) {
                 //create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
-                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.first.equals(c.name, true) } }
+                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.name.equals(c.name, true) } }
                 missingTableColumns.flatMapTo(statements) { it.ddl }
 
                 if (db.supportsAlterTableWithAddColumn) {
                     // create indexes with new columns
-                    for ((columns, isUnique) in table.indices) {
-                        if (columns.any { missingTableColumns.contains(it) }) {
-                            statements.addAll(createIndex(columns, isUnique))
+                    for (index in table.indices) {
+                        if (index.columns.any { missingTableColumns.contains(it) }) {
+                            statements.addAll(createIndex(index))
                         }
                     }
 
                     // sync nullability of existing columns
                     val incorrectNullabilityColumns = table.columns.filter { c ->
-                        thisTableExistingColumns.any { c.name.equals(it.first, true) && it.second != c.columnType.nullable }
+                        thisTableExistingColumns.any { c.name.equals(it.name, true) && it.nullable != c.columnType.nullable }
                     }
                     incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
                 }

@@ -145,9 +145,9 @@ class DDLTests : DatabaseTestsBase() {
     @Test fun unnamedTableWithQuotesSQL() {
         withTables(UnnamedTable) {
             val q = db.identityQuoteString
-            val tableName = if (db.dialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
+            val tableName = if (currentDialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -157,6 +157,9 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb (TestDB.H2 ) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", TestTable.ddl)
+            DMLTestsData.Users.select {
+                exists(DMLTestsData.UserData.select { DMLTestsData.Users.id eq DMLTestsData.UserData.user_id })
+            }
         }
     }
 
@@ -170,9 +173,9 @@ class DDLTests : DatabaseTestsBase() {
         }
 
          withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
-                    "${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
+                    "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
         }
     }
 
@@ -184,8 +187,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
-            assertEquals("CREATE TABLE " + if (db.dialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${db.dialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
+            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
                     "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
         }
     }
@@ -216,7 +219,7 @@ class DDLTests : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        
+
         withTables(TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
@@ -239,7 +242,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
+            val alter = SchemaUtils.createIndex(t.indices[0])
             assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
         }
     }
@@ -257,10 +260,10 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
+            val a1 = SchemaUtils.createIndex(t.indices[0])
             assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} (${"name".inProperCase()})", a1)
 
-            val a2 = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
+            val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals("CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " +
                     "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})", a2)
         }
@@ -273,11 +276,27 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
+            val alter = SchemaUtils.createIndex(t.indices[0])
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"t1_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE (${"name".inProperCase()})", alter)
+
+        }
+    }
+
+    @Test fun testUniqueIndicesCustomName() {
+        val t = object : Table("t1") {
+            val id = integer("id").primaryKey()
+            val name = varchar("name", 255).uniqueIndex("U_T1_NAME")
+        }
+
+        withTables(t) {
+            val alter = SchemaUtils.createIndex(t.indices[0])
+            if (currentDialect is SQLiteDialect)
+                assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+            else
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE (${"name".inProperCase()})", alter)
 
         }
     }
@@ -293,13 +312,34 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = SchemaUtils.createIndex(t.indices[0].first, t.indices[0].second)
-            val uniqueAlter = SchemaUtils.createIndex(t.indices[1].first, t.indices[1].second)
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"t1_type_name_unique".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_type_name".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+        }
+    }
+
+    @Test fun testMultiColumnIndexCustomName() {
+        val t = object : Table("t1") {
+            val type = varchar("type", 255)
+            val name = varchar("name", 255)
+            init {
+                index("I_T1_NAME_TYPE", false, name, type)
+                uniqueIndex("U_T1_TYPE_NAME", type, name)
+            }
+        }
+
+        withTables(t) {
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
+            assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
+            if (currentDialect is SQLiteDialect)
+                assertEquals("CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+            else
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
         }
     }
 
@@ -322,7 +362,7 @@ class DDLTests : DatabaseTestsBase() {
             } get (t.id)
 
 
-            val readOn = t.select{t.id eq id}.first()[t.b]
+            val readOn = t.select{t.id eq id!!}.first()[t.b]
             val text = readOn.binaryStream.reader().readText()
 
             assertEquals("Hello there!", text)
@@ -381,11 +421,11 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    
+
     private abstract class EntityTable(name: String = "") : IdTable<String>(name) {
         override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.primaryKey().entityId()
     }
-    
+
     @Test fun complexTest01() {
         val User = object : EntityTable() {
             val name = varchar("name", 255)
@@ -462,6 +502,70 @@ class DDLTests : DatabaseTestsBase() {
         val missingTable = Table("missingTable")
         withDb {
             SchemaUtils.drop(missingTable)
+        }
+    }
+
+    @Test fun testCheckConstraint01() {
+        val checkTable = object : Table("checkTable") {
+            val positive = integer("positive").check { it greaterEq 0 }
+            val negative = integer("negative").check("subZero") { it less 0 }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 42
+                it[negative] = -14
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
+                checkTable.insert {
+                    it[positive] = -472
+                    it[negative] = -354
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 538
+                    it[negative] = 915
+                }
+            }
+        }
+    }
+
+    @Test fun testCheckConstraint02() {
+        val checkTable = object : Table("multiCheckTable") {
+            val positive = integer("positive")
+            val negative = integer("negative")
+
+            init {
+                check("multi") { (negative less 0) and (positive greaterEq 0) }
+            }
+        }
+
+        withTables(listOf(TestDB.MYSQL), checkTable) {
+            checkTable.insert {
+                it[positive] = 57
+                it[negative] = -32
+            }
+
+            assertEquals(1, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
+                checkTable.insert {
+                    it[positive] = -47
+                    it[negative] = -35
+                }
+            }
+
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 53
+                    it[negative] = 91
+                }
+            }
         }
     }
 }

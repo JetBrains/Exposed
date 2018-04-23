@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 /**
@@ -13,12 +14,12 @@ import java.util.*
  */
 inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query = select(SqlExpressionBuilder.where())
 
-fun FieldSet.select(where: Op<Boolean>) : Query = Query(TransactionManager.current(), this, where)
+fun FieldSet.select(where: Op<Boolean>) : Query = Query(this, where)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelectDistinct
  */
-fun FieldSet.selectAll() : Query = Query(TransactionManager.current(), this, null)
+fun FieldSet.selectAll() : Query = Query(this, null)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
@@ -46,11 +47,11 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
-fun <Key:Any, T: IdTable<Key>> T.insertAndGetId(ignore: Boolean = false, body: T.(InsertStatement<EntityID<Key>>)->Unit) =
-    InsertStatement<EntityID<Key>>(this, ignore).run {
+fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =
+    InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
-        get(id)
+        get(id)!!
     }
 
 /**
@@ -97,10 +98,10 @@ fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<
     execute(TransactionManager.current())
 }
 
-fun <Key:Any, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
+fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
     body(this)
     execute(TransactionManager.current())
-    generatedKey
+    get(id)
 }
 
 /**
@@ -170,12 +171,11 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
     }
 
-    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.tableName, it.unique, it.columns.joinToString()) }.filter { it.value.size > 1}
+    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }.filter { it.value.size > 1}
     if (!excessiveIndices.isEmpty()) {
         exposedLogger.warn("List of excessive indices:")
-        excessiveIndices.forEach {
-            val (triple, indices) = it
-            exposedLogger.warn("\t\t\t'${triple.first}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
+        excessiveIndices.forEach { (triple, indices)->
+            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {
@@ -199,14 +199,14 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
 
-    fun List<Index>.filterFKeys() = filterNot { it.tableName to it.columns.singleOrNull().orEmpty() in fKeyConstraints}
+    fun List<Index>.filterFKeys() = filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.name?.inProperCase()) in fKeyConstraints }
 
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
     for (table in tables) {
         val existingTableIndices = currentDialect.existingIndices(table)[table].orEmpty().filterFKeys()
-        val mappedIndices = table.indices.map { Index.forColumns(*it.first, unique = it.second)}.filterFKeys()
+        val mappedIndices = table.indices.filterFKeys()
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {

@@ -53,10 +53,10 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
     @Test
     fun `connect fail causes repeated connect attempts`(){
         val datasource = ExceptionOnGetConnectionDataSource()
-        Database.connect(datasource = datasource)
+        val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 42) {
+            transaction(TransactionManager.manager.defaultIsolationLevel, 42, db) {
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -65,12 +65,6 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
             assertEquals(42, datasource.connectCount)
         }
     }
-
-    @After
-    fun `teardown`(){
-        TransactionManager.removeCurrent()
-    }
-
 }
 
 class ConnectionExceptions {
@@ -121,9 +115,9 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
-        Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5) {
+            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -154,9 +148,9 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
-        Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5) {
+            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -177,9 +171,9 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
-        Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5) {
+            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -230,7 +224,7 @@ class ConnectionExceptions {
 
     @After
     fun `teardown`(){
-        TransactionManager.removeCurrent()
+        TransactionManager.resetCurrent(null)
     }
 
 }
@@ -238,14 +232,18 @@ class ConnectionExceptions {
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
+        if (TestDB.MYSQL !in TestDB.enabledInTests()) return
+
         var secondThreadTm: TransactionManager? = null
         var isMysql = false
-        withDb(TestDB.MYSQL) {
+        TestDB.MYSQL.connect()
+        transaction {
             isMysql = true
             SchemaUtils.create(DMLTestsData.Cities)
             val firstThreadTm = TransactionManager.manager
             thread {
-                withDb(TestDB.MYSQL) {
+                TestDB.MYSQL.connect()
+                transaction {
                     DMLTestsData.Cities.selectAll().toList()
                     secondThreadTm = TransactionManager.manager
                     assertNotEquals(firstThreadTm, secondThreadTm)

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import java.sql.Connection
+import java.util.concurrent.ConcurrentHashMap
 
 interface TransactionInterface {
 
@@ -41,18 +42,26 @@ interface TransactionManager {
 
         @Volatile private var _manager: TransactionManager = NotInitializedManager
 
-        internal var currentThreadManager = object : ThreadLocal<TransactionManager>() {
+        private val registeredDatabases = ConcurrentHashMap<Database, TransactionManager>()
+
+        fun registerManager(database: Database, manager: TransactionManager) {
+            registeredDatabases[database] = manager
+            this._manager = manager
+        }
+
+        internal fun managerFor(database: Database) = registeredDatabases[database]
+
+        private val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = _manager
         }
 
-        var manager: TransactionManager
+        val manager: TransactionManager
             get() = currentThreadManager.get()
-            set(value) {
-                _manager = value
-                removeCurrent()
-            }
 
-        fun removeCurrent() = currentThreadManager.remove()
+
+        fun resetCurrent(manager: TransactionManager?)  {
+            manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
+        }
 
         fun currentOrNew(isolation: Int) = currentOrNull() ?: manager.newTransaction(isolation)
 

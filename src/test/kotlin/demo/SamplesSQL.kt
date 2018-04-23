@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
 
         val pragueId = Cities.insert {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
-        }[Cities.id]
+        }[Cities.id]!!
 
         val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
         assertEquals(pragueName, "Pr")

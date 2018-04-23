@@ -80,7 +80,7 @@ val Column<*>.autoIncSeqName : String? get() {
             ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.autoIncSeqName
 }
 
-class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
+class EntityIDColumnType<T:Comparable<T>>(val idColumn: Column<T>) : ColumnType(false) {
 
     init {
         assert(idColumn.table is IdTable<*>){"EntityId supported only for IdTables"}
@@ -94,12 +94,15 @@ class EntityIDColumnType<T:Any>(val idColumn: Column<T>) : ColumnType(false) {
             else -> value
         })
 
-    override fun valueFromDB(value: Any): Any {
-        @Suppress("UNCHECKED_CAST")
-        return when (value) {
-            is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
-            else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
-        }
+    override fun nonNullValueToString(value: Any): String =  when (value) {
+        is EntityID<*> -> idColumn.columnType.nonNullValueToString(value.value)
+        else -> idColumn.columnType.nonNullValueToString(value)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
+        else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
     }
 }
 
@@ -110,7 +113,7 @@ class CharacterColumnType : ColumnType() {
         is Char -> value
         is Number -> value.toInt().toChar()
         is String -> value.single()
-        else -> error("Unexpected value of type Char: $value")
+        else -> error("Unexpected value of type Char: $value of ${value::class.qualifiedName}")
     }
 
     override fun notNullValueToDB(value: Any): Any = valueFromDB(value).toString()
@@ -124,7 +127,7 @@ class IntegerColumnType : ColumnType() {
     override fun valueFromDB(value: Any): Any = when(value) {
         is Int -> value
         is Number -> value.toInt()
-        else -> error("Unexpected value of type Int: $value")
+        else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
     }
 }
 
@@ -134,9 +137,22 @@ class LongColumnType : ColumnType() {
     override fun valueFromDB(value: Any): Any = when(value) {
         is Long -> value
         is Number -> value.toLong()
-        else -> error("Unexpected value of type Long: $value")
+        else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
     }
 }
+
+class FloatColumnType: ColumnType() {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.floatType()
+
+    override fun valueFromDB(value: Any): Any {
+        val valueFromDB = super.valueFromDB(value)
+        return when (valueFromDB) {
+            is Number -> valueFromDB.toFloat()
+            else -> valueFromDB
+        }
+    }
+}
+
 
 class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
     override fun sqlType(): String  = "DECIMAL($precision, $scale)"
@@ -159,27 +175,27 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     override fun notNullValueToDB(value: Any): Any = when(value) {
         is Int -> value
         is Enum<*> -> value.ordinal
-        else -> error("$value is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
         is Number -> klass.enumConstants!![value.toInt()]
         is Enum<*> -> value
-        else -> error("$value is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
     }
 }
 
-class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): VarCharColumnType(length) {
+class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int, val handler: (Any) -> Any): VarCharColumnType(length) {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is String -> value
         is Enum<*> -> value.name
-        else -> error("$value is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
         is String ->  klass.enumConstants!!.first { it.name == value }
         is Enum<*> -> value
-        else -> error("$value is not valid for enum ${klass.name}")
+        else -> handler(value)
     }
 }
 
@@ -198,7 +214,7 @@ class DateColumnType(val time: Boolean): ColumnType() {
             is DateTime -> value
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)
-            else -> error("Unexpected value: $value")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return if (time)
@@ -342,18 +358,24 @@ class BooleanColumnType : ColumnType() {
 class UUIDColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
 
-    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(when (value) {
-        is UUID -> value
-        is String -> UUID.fromString(value)
-        is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long )}
-        else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
-    })
+    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(valueToUUID(value))
+
+    private fun valueToUUID(value: Any): UUID {
+        return when (value) {
+            is UUID -> value
+            is String -> UUID.fromString(value)
+            is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
+            else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
+        }
+    }
+
+    override fun nonNullValueToString(value: Any) = valueToUUID(value).toString()
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is UUID -> value
         is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
-        else -> error("Unexpected value of type UUID: $value")
+        else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
 }

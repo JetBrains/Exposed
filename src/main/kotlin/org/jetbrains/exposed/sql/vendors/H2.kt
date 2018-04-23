@@ -38,7 +38,7 @@ internal class H2Dialect: VendorDialect(dialectName, H2DataTypeProvider) {
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        val uniqueIdxCols = table.indices.filter { it.second }.flatMap { it.first.toList() }
+        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
         return if (ignore && uniqueCols.isNotEmpty() && isMySQLMode) {
             val def = super.insert(false, table, columns, expr, transaction)
@@ -46,6 +46,14 @@ internal class H2Dialect: VendorDialect(dialectName, H2DataTypeProvider) {
         } else {
             super.insert(ignore, table, columns, expr, transaction)
         }
+    }
+
+    override fun createIndex(index: Index): String {
+        if (index.columns.any { it.columnType is TextColumnType }) {
+            exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString {it.name}} can't be created in H2")
+            return ""
+        }
+        return super.createIndex(index)
     }
 
     companion object {

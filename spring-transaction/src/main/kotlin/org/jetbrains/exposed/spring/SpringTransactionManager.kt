@@ -9,6 +9,7 @@ import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.DefaultTransactionDefinition
+import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.sql.Connection
 import javax.sql.DataSource
@@ -33,12 +34,16 @@ class SpringTransactionManager(dataSource: DataSource,
         if (!TransactionSynchronizationManager.hasResource(dataSource)) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
         }
-        TransactionManager.removeCurrent()
+        TransactionManager.resetCurrent(null)
     }
 
     override fun doSuspend(transaction: Any?): Any? {
         TransactionSynchronizationManager.unbindResourceIfPossible(this)
         return super.doSuspend(transaction)
+    }
+
+    override fun doCommit(status: DefaultTransactionStatus?) {
+        currentOrNull()?.commit()
     }
 
     override fun newTransaction(isolation: Int): Transaction {
@@ -48,7 +53,7 @@ class SpringTransactionManager(dataSource: DataSource,
 
         getTransaction(tDefinition)
 
-        return initTransaction()
+        return currentOrNull() ?: initTransaction()
     }
 
     private fun initTransaction(): Transaction {

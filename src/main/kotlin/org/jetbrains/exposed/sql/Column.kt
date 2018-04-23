@@ -85,7 +85,6 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
             append(" NOT NULL")
         }
 
-
         if (isOneColumnPK()) {
             append(" PRIMARY KEY")
         }

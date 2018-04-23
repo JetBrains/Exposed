@@ -39,7 +39,6 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    var selectsForUpdate = false
     val entityCache = EntityCache()
 
     // currently executing statement. Used to log error properly
@@ -76,16 +75,25 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     fun exec(stmt: String) = exec(stmt, { })
 
     fun <T:Any> exec(stmt: String, transform: (ResultSet) -> T): T? {
+        if (stmt.isEmpty()) return null
+
         val type = StatementType.values().find {
             stmt.trim().startsWith(it.name, true)
         } ?: StatementType.OTHER
+
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
                 when (type) {
                     StatementType.SELECT -> executeQuery()
                     else  -> executeUpdate()
                 }
-                return resultSet?.let { transform(it) }
+                return resultSet?.let {
+                    try {
+                        transform(it)
+                    } finally {
+                        it.close()
+                    }
+                }
             }
 
             override fun prepareSQL(transaction: Transaction): String = stmt
