@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -13,6 +14,7 @@ import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
+import java.sql.Array
 import java.sql.Blob
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -376,6 +378,30 @@ class UUIDColumnType : ColumnType() {
         is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
+    }
+
+}
+
+class ArrayColumnType(private val type: ColumnType) : ColumnType() {
+    override fun sqlType(): String = buildString {
+        append(type.sqlType())
+        append(" ARRAY")
+    }
+
+    override fun valueToDB(value: Any?): Any? {
+        if (value is kotlin.Array<*>) {
+            val columnType = type.sqlType().split("(")[0]
+            return TransactionManager.currentOrNull()?.connection?.createArrayOf(columnType, value)
+        } else {
+            return super.valueToDB(value)
+        }
+    }
+
+    override fun valueFromDB(value: Any): Any {
+        if (value is java.sql.Array) {
+            return value.array
+        }
+        error("Array does not support for this database")
     }
 
 }

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -124,6 +125,16 @@ object SqlExpressionBuilder {
     infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = NotRegexpOp(this, QueryParameter(pattern, columnType))
 
     infix fun<T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
+
+    infix fun<T, S> ExpressionWithColumnType<T>.any(t: S) : Op<Boolean> {
+        if (t == null) {
+            return isNull()
+        }
+        return AnyOp(this, wrap(t))
+    }
+
+    infix fun<T, S> ExpressionWithColumnType<T>.contains(arry: Array<in S>) : Op<Boolean> = ContainsOp(this, wrap(arry))
+
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")

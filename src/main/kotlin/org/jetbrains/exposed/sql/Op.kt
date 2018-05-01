@@ -114,6 +114,25 @@ class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1
 class RegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "REGEXP")
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
 
+class AnyOp(val expr1: Expression<*>, val expr2: Expression<*>) : Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder) = buildString {
+        if (expr2 is OrOp<*>) {
+            append("(").append(expr2.toSQL(queryBuilder)).append(")")
+        } else {
+            append(expr2.toSQL(queryBuilder))
+        }
+        append(" = ANY (")
+        if (expr1 is OrOp<*>) {
+            append("(").append(expr1.toSQL(queryBuilder)).append(")")
+        } else {
+            append(expr1.toSQL(queryBuilder))
+        }
+        append(")")
+    }
+}
+
+class ContainsOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "@>")
+
 class AndOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>) : Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
         if (expr1 is OrOp<*>) {
