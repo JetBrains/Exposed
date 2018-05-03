@@ -40,24 +40,24 @@ internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataType
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-
-        val builder = QueryBuilder(true)
-        val sql = if (data.isEmpty()) ""
-        else data.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
-            builder.registerArgument(col, value)
-        }
-
-        val columns = data.map { it.first }
-
-        val def = super.insert(false, table,columns, sql, transaction)
-
-        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
-        val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
-        
-        val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
-        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"}
-    }
+//    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+//
+//        val builder = QueryBuilder(true)
+//        val sql = if (data.isEmpty()) ""
+//        else data.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
+//            builder.registerArgument(col, value)
+//        }
+//
+//        val columns = data.map { it.first }
+//
+//        val def = super.insert(false, table,columns, sql, transaction)
+//
+//        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
+//        val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
+//
+//        val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
+//        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"}
+//    }
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
@@ -66,6 +66,6 @@ internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataType
 
     companion object {
         const val dialectName = "postgresql"
-        private const val onConflictIgnore = "ON_CONFLICT_IGNORE"
+        private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
     }
 }
