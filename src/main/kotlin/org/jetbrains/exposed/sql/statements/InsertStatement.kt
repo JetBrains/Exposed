@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -81,7 +82,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return transaction.db.dialect.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
-    open protected fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {
+    protected open fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
         return inserted to rs
@@ -99,13 +100,18 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
     protected val autoIncColumns = targets.flatMap { it.columns }.filter { it.columnType.isAutoInc }
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatement {
-        return if (autoIncColumns.isNotEmpty()) {
+    override fun prepared(transaction: Transaction, sql: String): PreparedStatement = when {
+        // https://github.com/pgjdbc/pgjdbc/issues/1168
+        // Column names always escaped/quoted in RETURNING clause
+        autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
+            transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
+
+        autoIncColumns.isNotEmpty() ->
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
             transaction.connection.prepareStatement(sql, autoIncColumns.map { transaction.identity(it) }.toTypedArray())!!
-        } else {
+
+        else ->
             transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
-        }
     }
 
     open protected var arguments: List<List<Pair<Column<*>, Any?>>>? = null
