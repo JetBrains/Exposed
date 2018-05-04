@@ -22,7 +22,7 @@ import kotlin.test.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id = integer("id").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
+        val id = integer("cityId").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
         val name = varchar("name", 50) // Column<String>
     }
 
