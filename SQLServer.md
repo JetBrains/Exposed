@@ -1,4 +1,4 @@
-##SQL Server dialect  
+## SQL Server dialect  
 
 ### Running tests locally with Gradle
 * Set `dialect` in gradle.properties to 'sqlserver'
