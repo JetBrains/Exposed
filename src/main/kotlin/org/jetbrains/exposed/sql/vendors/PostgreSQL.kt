@@ -52,9 +52,9 @@ internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataType
 
         val def = super.insert(false, table, columns, sql, transaction)
 
-        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
-        val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols }
-
+        val uniqueCols = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
+        if (uniqueCols.isEmpty())
+            throw IllegalStateException("Postgres replace table must supply at least one primary key")
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
         return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}" }
     }
