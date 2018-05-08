@@ -50,7 +50,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     val statementStats = hashMapOf<String, Pair<Int,Long>>()
 
     init {
-        logger.addLogger(Slf4jSqlLogger)
+        logger.addLogger(Slf4jSqlDebugLogger)
     }
 
     override fun commit() {

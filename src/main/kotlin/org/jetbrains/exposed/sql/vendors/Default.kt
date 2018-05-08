@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
@@ -121,7 +122,7 @@ interface DatabaseDialect {
     fun limit(size: Int, offset: Int = 0, alreadyOrdered: Boolean = true): String
 }
 
-internal abstract class VendorDialect(override val name: String,
+abstract class VendorDialect(override val name: String,
                                       override val dataTypeProvider: DataTypeProvider,
                                       override val functionProvider: FunctionProvider = FunctionProvider()) : DatabaseDialect {
 
@@ -258,14 +259,14 @@ internal abstract class VendorDialect(override val name: String,
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        throw UnsupportedOperationException("There's no generic SQL for replace. There must be vendor specific implementation")
+        throwUnsupportedException("There's no generic SQL for replace. There must be vendor specific implementation")
     }
 
     protected open val DEFAULT_VALUE_EXPRESSION = "DEFAULT VALUES"
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         if (ignore) {
-            throw UnsupportedOperationException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
+            throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
         }
 
         val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
@@ -277,7 +278,7 @@ internal abstract class VendorDialect(override val name: String,
 
     override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
         if (ignore) {
-            throw UnsupportedOperationException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
+            throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
         }
 
         return buildString {
@@ -316,6 +317,8 @@ internal abstract class VendorDialect(override val name: String,
     override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
     override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
+
+    protected fun throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, this)
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect

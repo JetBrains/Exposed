@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -468,8 +469,6 @@ class EntityCache {
         }
     }
 }
-
-class EntityNotFoundException(val id: EntityID<*>, val entity: EntityClass<*,*>): Exception("Entity ${entity.klass.simpleName}, id=$id not found in database")
 
 @Suppress("UNCHECKED_CAST")
 abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {

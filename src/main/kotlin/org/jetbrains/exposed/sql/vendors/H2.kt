@@ -19,7 +19,7 @@ internal class H2Dialect: VendorDialect(dialectName, H2DataTypeProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        if (!isMySQLMode) throw UnsupportedOperationException("REPLACE is only supported in MySQL compatibility more for H2")
+        if (!isMySQLMode) throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
 
         val builder = QueryBuilder(true)
         val values = data.map { builder.registerArgument(it.first.columnType, it.second) }

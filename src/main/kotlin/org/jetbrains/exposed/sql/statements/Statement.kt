@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
+import java.sql.SQLException
 import java.util.*
 
 
@@ -43,7 +45,11 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
                 listOf(context)
             }
 
-            val statement = prepared(transaction, prepareSQL(transaction))
+            val statement = try {
+                prepared(transaction, prepareSQL(transaction))
+            } catch (e: SQLException) {
+                throw ExposedSQLException(e, contexts)
+            }
             contexts.forEachIndexed { i, context ->
                 statement.fillParameters(context.args)
                 // REVIEW
@@ -52,7 +58,11 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             if (!transaction.db.supportsMultipleResultSets) transaction.closeExecutedStatements()
 
             transaction.currentStatement = statement
-            val result = statement.executeInternal(transaction)
+            val result = try {
+                statement.executeInternal(transaction)
+            } catch (e: SQLException) {
+                throw ExposedSQLException(e, contexts)
+            }
             transaction.currentStatement = null
             transaction.executedStatements.add(statement)
 
