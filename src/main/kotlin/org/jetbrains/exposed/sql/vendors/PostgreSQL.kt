@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -24,7 +24,14 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override val blobAsStream: Boolean = true
 }
 
-internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider) {
+internal object PostgreSQLFunctionProvider : FunctionProvider() {
+    override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        if (limit != null) transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
+        return super.update(targets, columnsAndValues, limit, where, transaction)
+    }
+}
+
+internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>): String = buildString {

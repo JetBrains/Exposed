@@ -368,12 +368,14 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = EntityNotFoundException::class)
+    @Test
     fun testErrorOnSetToDeletedEntity() {
         withTables(Boards) {
-            val board = Board.new { name = "irrelevant" }
-            board.delete()
-            board.name = "Cool"
+            expectException<EntityNotFoundException> {
+                val board = Board.new { name = "irrelevant" }
+                board.delete()
+                board.name = "Cool"
+            }
         }
     }
 

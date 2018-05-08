@@ -79,7 +79,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         else values.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
             builder.registerArgument(col, value)
         }
-        return transaction.db.dialect.insert(isIgnore, table, values.map { it.first }, sql, transaction)
+        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
     protected open fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {

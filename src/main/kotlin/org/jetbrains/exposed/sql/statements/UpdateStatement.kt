@@ -15,18 +15,8 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         }
     }
 
-    override fun prepareSQL(transaction: Transaction): String = buildString {
-        val builder = QueryBuilder(true)
-        append("UPDATE ${targetsSet.describe(transaction)}")
-        append(" SET ")
-        append(firstDataSet.joinToString { (col, value) ->
-            "${transaction.identity(col)}=" + builder.registerArgument(col, value)
-        })
-
-        where?.let { append(" WHERE " + it.toSQL(builder)) }
-        limit?.let { append(" LIMIT $it")}
-    }
-
+    override fun prepareSQL(transaction: Transaction): String =
+            transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         values.forEach {

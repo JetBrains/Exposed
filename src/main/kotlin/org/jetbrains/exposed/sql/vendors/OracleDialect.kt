@@ -49,6 +49,21 @@ internal object OracleFunctionProvider : FunctionProvider() {
 
     /* seed is ignored. You have to use dbms_random.seed function manually */
     override fun random(seed: Int?): String = "dbms_random.value"
+
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        return table.autoIncColumn?.takeIf { it !in columns }?.let {
+            val newExpr = if (expr.isBlank()) {
+                "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
+            } else {
+                expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
+            }
+
+            super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
+        } ?: super.insert(ignore, table, columns, expr, transaction)
+    }
+
+    override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)
+        = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 }
 
 internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
@@ -64,20 +79,6 @@ internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun catalog(transaction: Transaction) : String = transaction.connection.metaData.userName
-
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        return table.autoIncColumn?.takeIf { it !in columns }?.let {
-            val newExpr = if (expr.isBlank()) {
-                "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
-            } else {
-                expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
-            }
-
-            super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
-        } ?: super.insert(ignore, table, columns, expr, transaction)
-    }
-
-    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean): String = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()

@@ -3,10 +3,11 @@ package org.jetbrains.exposed.exceptions
 
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.VendorDialect
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
 class EntityNotFoundException(val id: EntityID<*>, val entity: EntityClass<*, *>): Exception("Entity ${entity.klass.simpleName}, id=$id not found in database")
@@ -25,4 +26,6 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
     }
 }
 
-class UnsupportedByDialectException(baseMessage: String, dialect: VendorDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
+class UnsupportedByDialectException(baseMessage: String, dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
+
+internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)

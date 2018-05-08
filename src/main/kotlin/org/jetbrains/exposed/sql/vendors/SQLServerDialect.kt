@@ -21,8 +21,14 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
-
     override fun random(seed: Int?) = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
+    override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String {
+        return if (!alreadyOrdered) {
+            " ORDER BY(SELECT NULL) "
+        } else {
+            ""
+        } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
+    }
 }
 
 internal class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
@@ -30,14 +36,6 @@ internal class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypePr
     override val needsQuotesWhenSymbolsInNames = false
 
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
-
-    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean): String {
-        return if (!alreadyOrdered) {
-            " ORDER BY(SELECT NULL) "
-        } else {
-            ""
-        } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
-    }
 
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")

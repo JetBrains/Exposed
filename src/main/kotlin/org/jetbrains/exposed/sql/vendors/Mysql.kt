@@ -25,6 +25,25 @@ internal object MysqlFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> = MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+        val builder = QueryBuilder(true)
+        val columns = data.joinToString { transaction.identity(it.first) }
+        val values = data.joinToString { builder.registerArgument(it.first.columnType, it.second) }
+        return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
+    }
+
+    override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
+
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        val def = super.insert(false, table, columns, expr, transaction)
+        return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
+    }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+        val def = super.delete(false, table, where, transaction)
+        return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
+    }
+
     private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder): String =
                 "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
@@ -86,25 +105,6 @@ internal class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, 
         }
 
         return constraints
-    }
-
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        val builder = QueryBuilder(true)
-        val columns = data.joinToString { transaction.identity(it.first) }
-        val values = data.joinToString { builder.registerArgument(it.first.columnType, it.second) }
-        return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
-    }
-
-    override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
-
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        val def = super.insert(false, table, columns, expr, transaction)
-        return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
-    }
-
-    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
-        val def = super.delete(false, table, where, transaction)
-        return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
     override fun dropIndex(tableName: String, indexName: String): String =

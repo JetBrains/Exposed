@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
@@ -44,7 +44,9 @@ open class DataTypeProvider {
     }
 }
 
-open class FunctionProvider {
+abstract class FunctionProvider {
+
+    open val DEFAULT_VALUE_EXPRESSION = "DEFAULT VALUES"
 
     open fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder) : String =
             "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
@@ -54,6 +56,52 @@ open class FunctionProvider {
     open fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = "CAST(${expr.toSQL(builder)} AS ${type.sqlType()})"
 
     open fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
+
+    open fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
+        }
+
+        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
+            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
+        } else "" to DEFAULT_VALUE_EXPRESSION
+
+        return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
+    }
+
+    open fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        return buildString {
+            val builder = QueryBuilder(true)
+            append("UPDATE ${targets.describe(transaction)}")
+            append(" SET ")
+            append(columnsAndValues.joinToString { (col, value) ->
+                "${transaction.identity(col)}=" + builder.registerArgument(col, value)
+            })
+
+            where?.let { append(" WHERE " + it.toSQL(builder)) }
+            limit?.let { append(" LIMIT $it")}
+        }
+    }
+
+    open fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
+        }
+
+        return buildString {
+            append("DELETE FROM ")
+            append(transaction.identity(table))
+            if (where != null) {
+                append(" WHERE ")
+                append(where)
+            }
+        }
+    }
+
+    open fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
+        = transaction.throwUnsupportedException("There's no generic SQL for replace. There must be vendor specific implementation")
+
+    open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
     interface MatchMode {
         fun mode() : String
@@ -111,20 +159,14 @@ interface DatabaseDialect {
 
     // Specific SQL statements
 
-    fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String
-    fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String
-    fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
-
     fun createIndex(index: Index): String
     fun dropIndex(tableName: String, indexName: String): String
     fun modifyColumn(column: Column<*>) : String
-
-    fun limit(size: Int, offset: Int = 0, alreadyOrdered: Boolean = true): String
 }
 
 abstract class VendorDialect(override val name: String,
                                       override val dataTypeProvider: DataTypeProvider,
-                                      override val functionProvider: FunctionProvider = FunctionProvider()) : DatabaseDialect {
+                                      override val functionProvider: FunctionProvider) : DatabaseDialect {
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
@@ -258,39 +300,6 @@ abstract class VendorDialect(override val name: String,
         existingIndicesCache.clear()
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        throwUnsupportedException("There's no generic SQL for replace. There must be vendor specific implementation")
-    }
-
-    protected open val DEFAULT_VALUE_EXPRESSION = "DEFAULT VALUES"
-
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        if (ignore) {
-            throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation")
-        }
-
-        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
-            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
-        } else "" to DEFAULT_VALUE_EXPRESSION
-
-        return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
-    }
-
-    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
-        if (ignore) {
-            throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
-        }
-
-        return buildString {
-            append("DELETE FROM ")
-            append(transaction.identity(table))
-            if (where != null) {
-                append(" WHERE ")
-                append(where)
-            }
-        }
-    }
-
     override fun createIndex(index: Index): String {
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
@@ -314,11 +323,8 @@ abstract class VendorDialect(override val name: String,
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
-    override fun limit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
-
     override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
 
-    protected fun throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, this)
 }
 
 internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
