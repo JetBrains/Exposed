@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.selectAll
@@ -61,7 +62,8 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
                 // NO OP
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")
-        } catch (e : GetConnectException){
+        } catch (e : ExposedSQLException){
+            assertTrue(e.cause is GetConnectException)
             assertEquals(42, datasource.connectCount)
         }
     }
