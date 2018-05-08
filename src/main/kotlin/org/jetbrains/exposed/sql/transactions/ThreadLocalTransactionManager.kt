@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.transactions
 
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
@@ -103,8 +104,13 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
             return answer
         }
         catch (e: SQLException) {
-            val currentStatement = transaction.currentStatement
-            exposedLogger.info("Transaction attempt #$repetitions failed: ${e.message}. Statement: $currentStatement", e)
+            val exposedSQLException = e as? ExposedSQLException
+            val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
+            val message = "Transaction attempt #$repetitions failed: ${e.message}. Statement(s): $queriesToLog"
+            exposedSQLException?.contexts?.forEach {
+                transaction.logger.log(it, transaction)
+            }
+            exposedLogger.info(message, e)
             transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
             repetitions++
             if (repetitions >= repetitionAttempts) {

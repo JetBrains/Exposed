@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
 import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
@@ -22,7 +23,7 @@ import kotlin.test.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id = integer("id").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
+        val id = integer("cityId").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
         val name = varchar("name", 50) // Column<String>
     }
 
@@ -163,6 +164,35 @@ class DMLTests : DatabaseTestsBase() {
 
             val alexNewName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
             assertEquals(newName, alexNewName)
+        }
+    }
+
+    @Test
+    fun testUpdateWithLimit01() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.POSTGRESQL)) { cities, users, userData ->
+            val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
+            assertEquals(2, aNames.size)
+
+            users.update({ users.id like "a%" }, 1) {
+                it[users.id] = "NewName"
+            }
+
+            val unchanged = users.slice(users.name).select { users.id like "a%" }.count()
+            val changed = users.slice(users.name).select { users.id eq "NewName" }.count()
+            assertEquals(1, unchanged)
+            assertEquals(1, changed)
+        }
+    }
+
+    @Test
+    fun testUpdateWithLimit02() {
+        val dialects = TestDB.values().toList() - listOf(TestDB.SQLITE, TestDB.POSTGRESQL)
+        withCitiesAndUsers(dialects) { cities, users, userData ->
+            expectException<UnsupportedByDialectException> {
+                users.update({ users.id like "a%" }, 1) {
+                    it[users.id] = "NewName"
+                }
+            }
         }
     }
 
@@ -354,7 +384,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             bar.insert {
-                it[this.foo] = fooId!!
+                it[this.foo] = fooId
                 it[baz] = 5
             }
 
@@ -363,7 +393,7 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMultipleReferenceJoin02() {
         val foo = object : IntIdTable("foo") {
             val baz = integer("baz").uniqueIndex()
@@ -374,18 +404,20 @@ class DMLTests : DatabaseTestsBase() {
             val baz = integer("baz") references foo.baz
         }
         withTables(foo, bar) {
-            val fooId = foo.insertAndGetId {
-                it[baz] = 5
-            }
+            expectException<IllegalStateException> {
+                val fooId = foo.insertAndGetId {
+                    it[baz] = 5
+                }
 
-            bar.insert {
-                it[this.foo] = fooId!!
-                it[this.foo2] = fooId!!
-                it[baz] = 5
-            }
+                bar.insert {
+                    it[this.foo] = fooId
+                    it[this.foo2] = fooId
+                    it[baz] = 5
+                }
 
-            val result = foo.innerJoin(bar).selectAll()
-            assertEquals(1, result.count())
+                val result = foo.innerJoin(bar).selectAll()
+                assertEquals(1, result.count())
+            }
         }
     }
 
@@ -1018,13 +1050,15 @@ class DMLTests : DatabaseTestsBase() {
         it[EntityTests.TableWithDBDefault.t1] = DateTime.now()
     })
 
-    @Test(expected = BatchDataInconsistentException::class)
+    @Test
     fun testRawBatchInsertFails01() {
         withTables(EntityTests.TableWithDBDefault) {
-            BatchInsertStatement(EntityTests.TableWithDBDefault).run {
-                initBatch.forEach {
-                    addBatch()
-                    it(this)
+            expectException<BatchDataInconsistentException> {
+                BatchInsertStatement(EntityTests.TableWithDBDefault).run {
+                    initBatch.forEach {
+                        addBatch()
+                        it(this)
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
@@ -23,21 +24,10 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override val blobAsStream: Boolean = true
 }
 
-internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider) {
-    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
-
-    override fun modifyColumn(column: Column<*>): String = buildString {
-        val colName = TransactionManager.current().identity(column)
-        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()},")
-        append("ALTER COLUMN $colName ")
-        if (column.columnType.nullable)
-            append("DROP ")
-        else
-            append("SET ")
-        append("NOT NULL")
-        column.dbDefaultValue?.let {
-            append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
-        }
+internal object PostgreSQLFunctionProvider : FunctionProvider() {
+    override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        if (limit != null) transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
+        return super.update(targets, columnsAndValues, limit, where, transaction)
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
@@ -54,7 +44,7 @@ internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataType
 
         val uniqueCols = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
         if (uniqueCols.isEmpty())
-            throw IllegalStateException("Postgres replace table must supply at least one primary key")
+            transaction.throwUnsupportedException("Postgres replace table must supply at least one primary key")
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
         return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}" }
     }
@@ -64,8 +54,28 @@ internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataType
         return if (ignore) "$def $onConflictIgnore" else def
     }
 
+    private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
+
+}
+
+internal class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
+    override fun modifyColumn(column: Column<*>): String = buildString {
+        val colName = TransactionManager.current().identity(column)
+        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()},")
+        append("ALTER COLUMN $colName ")
+        if (column.columnType.nullable)
+            append("DROP ")
+        else
+            append("SET ")
+        append("NOT NULL")
+        column.dbDefaultValue?.let {
+            append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+        }
+    }
+
     companion object {
         const val dialectName = "postgresql"
-        private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
     }
 }

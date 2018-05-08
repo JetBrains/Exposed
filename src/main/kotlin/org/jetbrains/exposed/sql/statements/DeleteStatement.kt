@@ -11,7 +11,8 @@ class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIg
         return executeUpdate()
     }
 
-    override fun prepareSQL(transaction: Transaction): String = transaction.db.dialect.delete(isIgnore, table, where?.toSQL(QueryBuilder(true)), transaction)
+    override fun prepareSQL(transaction: Transaction): String =
+        transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.toSQL(QueryBuilder(true)), transaction)
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         where?.toSQL(this)
@@ -19,7 +20,6 @@ class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIg
     }
 
     companion object {
-
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false): Int
             = DeleteStatement(table, op, isIgnore).execute(transaction) ?: 0
 

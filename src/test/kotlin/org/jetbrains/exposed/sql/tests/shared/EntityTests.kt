@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -367,12 +368,14 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = EntityNotFoundException::class)
+    @Test
     fun testErrorOnSetToDeletedEntity() {
         withTables(Boards) {
-            val board = Board.new { name = "irrelevant" }
-            board.delete()
-            board.name = "Cool"
+            expectException<EntityNotFoundException> {
+                val board = Board.new { name = "irrelevant" }
+                board.delete()
+                board.name = "Cool"
+            }
         }
     }
 

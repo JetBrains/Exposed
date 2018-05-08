@@ -21,14 +21,12 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
 }
 
 object StdOutSqlLogger : SqlLogger {
-
     override fun log (context: StatementContext, transaction: Transaction) {
         System.out.println("SQL: ${context.expandArgs(transaction)}")
     }
 }
 
-object Slf4jSqlLogger : SqlLogger {
-
+object Slf4jSqlDebugLogger : SqlLogger {
     override fun log (context: StatementContext, transaction: Transaction) {
         if (exposedLogger.isDebugEnabled) {
             exposedLogger.debug(context.expandArgs(TransactionManager.current()))

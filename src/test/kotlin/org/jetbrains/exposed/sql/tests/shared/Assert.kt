@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.fail
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size, collection.size, "Count mismatch on ${currentDialect.name}")
@@ -69,4 +70,13 @@ fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
     true
 } catch (e: Exception) {
     false
+}
+
+inline fun <reified T:Exception> expectException(body: () -> Unit) {
+    try {
+        body()
+        fail("${T::class.simpleName} expected.")
+    } catch (e: Exception) {
+        if (e !is T) fail("Expected ${T::class.simpleName} but ${e::class.simpleName} thrown.")
+    }
 }
