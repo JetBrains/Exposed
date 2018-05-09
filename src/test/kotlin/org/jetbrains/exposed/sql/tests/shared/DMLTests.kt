@@ -997,7 +997,8 @@ class DMLTests : DatabaseTestsBase() {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        val insertIgnoreSupportedDB = TestDB.values().toList() - listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL)
+        val insertIgnoreSupportedDB = TestDB.values().toList() -
+                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
         withTables(insertIgnoreSupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "1"
@@ -1460,7 +1461,7 @@ class DMLTests : DatabaseTestsBase() {
             val serverID = varchar("serverID", 64).default("")
         }
         // Only MySQL supp
-        withTables(TestDB.values().toList() - TestDB.MYSQL, NewAuth) {
+        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.POSTGRESQL), NewAuth) {
             NewAuth.replace {
                 it[username] = "username"
                 it[session] = "session".toByteArray()
