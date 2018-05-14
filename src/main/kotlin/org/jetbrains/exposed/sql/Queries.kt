@@ -24,11 +24,11 @@ fun FieldSet.selectAll() : Query = Query(this, null)
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
-fun Table.deleteWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op())
+fun Table.deleteWhere(limit: Int? = null, offset: Int? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
 
-fun Table.deleteIgnoreWhere(op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true)
+fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Int? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01

@@ -21,8 +21,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, transaction: Transaction): String {
-        val def = super.delete(false, table, where, transaction)
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+        val def = super.delete(false, table, where, null, null, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
 

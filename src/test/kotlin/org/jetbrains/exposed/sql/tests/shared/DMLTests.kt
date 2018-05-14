@@ -11,10 +11,7 @@ import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -217,6 +214,27 @@ class DMLTests : DatabaseTestsBase() {
             users.deleteWhere { users.name like "%thing" }
             val hasSmth = users.slice(users.id).select { users.name.like("%thing") }.any()
             assertEquals(false, hasSmth)
+        }
+    }
+
+    @Test
+    fun testDelete02() {
+        withCitiesAndUsers { cities, users, userData ->
+            userData.deleteWhere(1, 1, { userData.value eq 20 })
+            userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
+                val validCount = when (currentDialect) {
+                    is SQLiteDialect -> 0
+                    else -> 1
+                }
+                assertEquals(validCount, it.count())
+
+                val validId = when (currentDialect) {
+                    is SQLiteDialect -> return@let
+                    is MysqlDialect, is H2Dialect -> "eugene"
+                    else -> "smth"
+                }
+                assertEquals(validId, it.single()[userData.user_id])
+            }
         }
     }
 

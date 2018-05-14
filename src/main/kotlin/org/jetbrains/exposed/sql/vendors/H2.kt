@@ -63,6 +63,10 @@ internal class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Func
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
 
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+        return super.delete(ignore, table, where, limit, null, transaction)
+    }
+
     override fun createIndex(index: Index): String {
         if (index.columns.any { it.columnType is TextColumnType }) {
             exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString {it.name}} can't be created in H2")

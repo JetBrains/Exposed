@@ -264,7 +264,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     open fun delete(){
         klass.removeFromCache(this)
         val table = klass.table
-        table.deleteWhere{table.id eq id}
+        table.deleteWhere {table.id eq id}
         EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
     }
 
