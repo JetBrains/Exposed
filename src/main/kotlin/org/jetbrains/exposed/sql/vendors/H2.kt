@@ -36,7 +36,6 @@ internal object H2FunctionProvider : FunctionProvider() {
         return "INSERT INTO ${transaction.identity(table)} (${preparedValues.joinToString { it.first }}) VALUES (${values.joinToString()}) ON DUPLICATE KEY UPDATE ${preparedValues.joinToString { "${it.first}=${it.second}" }}"
     }
 
-
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
@@ -52,6 +51,11 @@ internal object H2FunctionProvider : FunctionProvider() {
             else -> super.insert(ignore, table, columns, expr, transaction)
         }
     }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+        if (offset != null) transaction.throwUnsupportedException("OFFSET in DELETE clause is unsupported on H2")
+        return super.delete(ignore, table, where, limit, null, transaction)
+    }
 }
 
 internal class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
@@ -62,10 +66,6 @@ internal class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Func
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
-
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        return super.delete(ignore, table, where, limit, null, transaction)
-    }
 
     override fun createIndex(index: Index): String {
         if (index.columns.any { it.columnType is TextColumnType }) {

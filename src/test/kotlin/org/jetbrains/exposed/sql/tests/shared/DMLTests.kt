@@ -218,18 +218,13 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testDelete02() {
-        withCitiesAndUsers { cities, users, userData ->
-            userData.deleteWhere(1, 1, { userData.value eq 20 })
+    fun testDeleteWithLimitAndOffset01() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE, TestDB.POSTGRESQL)) { cities, users, userData ->
+            val offset = if (currentDialect is H2Dialect) null else 1
+            userData.deleteWhere(1, offset, { userData.value eq 20 })
             userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
-                val validCount = when (currentDialect) {
-                    is SQLiteDialect -> 0
-                    else -> 1
-                }
-                assertEquals(validCount, it.count())
-
+                assertEquals(1, it.count())
                 val validId = when (currentDialect) {
-                    is SQLiteDialect -> return@let
                     is MysqlDialect, is H2Dialect -> "eugene"
                     else -> "smth"
                 }

@@ -31,7 +31,6 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-
         val builder = QueryBuilder(true)
         val sql = if (data.isEmpty()) ""
         else data.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
@@ -52,6 +51,11 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) "$def $onConflictIgnore" else def
+    }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+        if (limit != null || offset != null) transaction.throwUnsupportedException("LIMIT AND OFFSET are not supported in PostgreSQL")
+        return super.delete(ignore, table, where, limit, offset, transaction)
     }
 
     private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
