@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
@@ -60,6 +61,11 @@ internal object OracleFunctionProvider : FunctionProvider() {
 
             super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
         } ?: super.insert(ignore, table, columns, expr, transaction)
+    }
+
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+        if (limit != null || offset != null) transaction.throwUnsupportedException("LIMIT AND OFFSET are not supported in DELETE in Oracle")
+        return super.delete(ignore, table, where, limit, offset, transaction)
     }
 
     override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)

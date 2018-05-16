@@ -54,7 +54,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        if (limit != null || offset != null) transaction.throwUnsupportedException("LIMIT AND OFFSET are not supported in PostgreSQL")
+        if (limit != null || offset != null) transaction.throwUnsupportedException("LIMIT AND OFFSET are not supported in DELETE in PostgreSQL")
         return super.delete(ignore, table, where, limit, offset, transaction)
     }
 
