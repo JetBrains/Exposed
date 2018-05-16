@@ -48,6 +48,15 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder): String =
             super.substring(expr, start, length, builder).replace("SUBSTRING", "SUBSTR")
 
+    override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        val def =  super.update(targets, columnsAndValues, null, where, transaction)
+        return when {
+            limit != null && where != null -> "$def AND ROWNUM <= $limit"
+            limit != null -> "$def WHERE ROWNUM <= $limit"
+            else -> def
+        }
+    }
+
     /* seed is ignored. You have to use dbms_random.seed function manually */
     override fun random(seed: Int?): String = "dbms_random.value"
 
