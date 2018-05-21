@@ -51,11 +51,6 @@ internal object H2FunctionProvider : FunctionProvider() {
             else -> super.insert(ignore, table, columns, expr, transaction)
         }
     }
-
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        if (offset != null) transaction.throwUnsupportedException("OFFSET in DELETE clause is unsupported on H2")
-        return super.delete(ignore, table, where, limit, null, transaction)
-    }
 }
 
 internal class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {

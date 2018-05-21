@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
@@ -29,10 +28,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        if (offset != null) transaction.throwUnsupportedException("OFFSET is not supported in DELETE on SQLServer")
-        val def = super.delete(ignore, table, where, null, offset, transaction)
-        return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP $limit") else def
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+        val def = super.delete(ignore, table, where, null, transaction)
+        return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 }
 

@@ -83,7 +83,7 @@ abstract class FunctionProvider {
         }
     }
 
-    open fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
+    open fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation")
         }
@@ -98,10 +98,6 @@ abstract class FunctionProvider {
             if (limit != null) {
                 append(" LIMIT ")
                 append(limit)
-                if (offset != null) {
-                    append(" OFFSET ")
-                    append(offset)
-                }
             }
         }
     }

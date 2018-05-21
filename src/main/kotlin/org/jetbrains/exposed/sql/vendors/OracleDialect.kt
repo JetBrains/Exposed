@@ -72,9 +72,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         } ?: super.insert(ignore, table, columns, expr, transaction)
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        if (limit != null || offset != null) transaction.throwUnsupportedException("LIMIT AND OFFSET are not supported in DELETE in Oracle")
-        return super.delete(ignore, table, where, limit, offset, transaction)
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+        if (limit != null) transaction.throwUnsupportedException("LIMIT is not supported in DELETE in Oracle")
+        return super.delete(ignore, table, where, limit, transaction)
     }
 
     override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)

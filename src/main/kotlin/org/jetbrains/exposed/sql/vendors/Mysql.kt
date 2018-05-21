@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -39,8 +40,8 @@ internal object MysqlFunctionProvider : FunctionProvider() {
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, offset: Int?, transaction: Transaction): String {
-        val def = super.delete(false, table, where, limit, null, transaction)
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+        val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
