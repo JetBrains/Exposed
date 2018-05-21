@@ -7,21 +7,13 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.junit.Assert
-import org.junit.FixMethodOrder
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
 import org.springframework.test.annotation.Commit
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.fail
 
-@RunWith(SpringJUnit4ClassRunner::class)
-@ContextConfiguration(classes = [TestConfig::class])
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Transactional
-open class EntityUpdateTest {
+open class EntityUpdateTest : SpringTransactionTestBase() {
 
     object t1 : IntIdTable() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
