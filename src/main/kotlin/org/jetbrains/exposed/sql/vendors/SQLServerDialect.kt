@@ -28,6 +28,11 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         } + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
     }
 
+    override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        val def = super.update(targets, columnsAndValues, null, where, transaction)
+        return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
+    }
+
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
