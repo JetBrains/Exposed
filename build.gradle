@@ -18,8 +18,8 @@ buildscript {
 }
 
 plugins {
-    id "com.jfrog.bintray" version "1.7.3"
-    id 'net.researchgate.release' version '2.6.0'
+    id "com.jfrog.bintray" version "1.8.0"
+    id 'net.researchgate.release' version '2.7.0'
 }
 
 apply plugin: 'java'
@@ -79,13 +79,13 @@ repositories {
 }
 
 dependencies {
-    testCompile "mysql:mysql-connector-java:5.1.44"
+    testCompile "mysql:mysql-connector-java:5.1.46"
     testCompile "mysql:mysql-connector-mxj:5.0.12"
-    testCompile 'org.postgresql:postgresql:9.4.1212.jre6'
-    testCompile 'com.opentable.components:otj-pg-embedded:0.9.0'
+    testCompile 'org.postgresql:postgresql:42.2.2.jre6'
+    testCompile 'com.opentable.components:otj-pg-embedded:0.12.0'
     testCompile 'org.xerial:sqlite-jdbc:3.21.0.1'
     testCompile 'com.oracle:ojdbc6:12.1.0.1-atlassian-hosted'
-    testCompile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.1.jre7'
+    testCompile 'com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre7'
 }
 
 test {
