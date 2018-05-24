@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
+import org.springframework.test.annotation.Commit
 import org.springframework.test.annotation.Repeat
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
@@ -18,8 +19,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
-    @Test
-    @Transactional
+    @Test @Transactional @Commit
     @Repeat(5)
     fun testConnection() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
@@ -34,8 +34,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         SchemaUtils.drop(t1)
     }
 
-    @Test
-    @Transactional
+    @Test @Transactional @Commit
     @Repeat(5)
     fun testConnection2() {
         SchemaUtils.create(t1)
@@ -48,7 +47,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         SchemaUtils.drop(t1)
     }
 
-    @Test
+    @Test @Transactional @Commit
     @Repeat(5)
     fun testConnectionWithoutAnnotation() {
         transaction {

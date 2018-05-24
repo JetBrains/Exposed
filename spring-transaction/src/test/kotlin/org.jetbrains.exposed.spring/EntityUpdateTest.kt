@@ -12,7 +12,6 @@ import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.fail
 
-@Transactional
 open class EntityUpdateTest : SpringTransactionTestBase() {
 
     object t1 : IntIdTable() {
@@ -24,8 +23,7 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
         var c1 by t1.c1
     }
 
-    @Test
-    @Commit
+    @Test @Transactional @Commit
     fun test1() {
         SchemaUtils.create(t1)
         t1.insert {
@@ -34,15 +32,14 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
         Assert.assertEquals("new", dao.findById(1)?.c1)
     }
 
-    @Test
-    @Commit
+    @Test @Transactional @Commit
     fun test2() {
         val entity = dao.findById(1) ?: fail()
         entity.c1 = "updated"
         Assert.assertEquals("updated", dao.findById(1)?.c1)
     }
 
-    @Test
+    @Test @Transactional @Commit
     fun test3() {
         val entity = dao.findById(1) ?: fail()
         Assert.assertEquals("updated", entity.c1)
