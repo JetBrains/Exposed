@@ -36,12 +36,12 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             val contexts = if (arguments.count() > 0) {
                 arguments.map { args ->
                     val context = StatementContext(this, args)
-                    transaction.monitor.notifyBeforeExecution(transaction, context)
+                    transaction.monitor.interceptors.forEach { it.beforeExecution(transaction, context) }
                     context
                 }
             } else {
                 val context = StatementContext(this, emptyList())
-                transaction.monitor.notifyBeforeExecution(transaction, context)
+                transaction.monitor.interceptors.forEach { it.beforeExecution(transaction, context) }
                 listOf(context)
             }
 
@@ -66,7 +66,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             transaction.currentStatement = null
             transaction.executedStatements.add(statement)
 
-            transaction.monitor.notifyAfterExecution(transaction, contexts, statement)
+            transaction.monitor.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
             return result to contexts
         } finally {
             transaction.monitor.unregister(transaction.logger)
