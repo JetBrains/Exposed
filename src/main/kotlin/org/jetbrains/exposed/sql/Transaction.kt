@@ -61,6 +61,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         transactionImpl.commit()
         userdata.clear()
         EntityCache.invalidateGlobalCaches(created + createdByHooks)
+        monitor.interceptors.forEach { it.afterCommit(this) }
     }
 
     override fun rollback() {
@@ -70,6 +71,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         entityCache.clearReferrersCache()
         entityCache.data.clear()
         entityCache.inserts.clear()
+        monitor.interceptors.forEach { it.afterRollback(this) }
     }
 
     fun flushCache(): List<Entity<*>> {
