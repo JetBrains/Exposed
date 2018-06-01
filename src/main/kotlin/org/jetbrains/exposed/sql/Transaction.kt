@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementMonitor
+import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -31,8 +31,13 @@ open class UserDataHolder {
 
 open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
 
-    val monitor = StatementMonitor()
+    internal val interceptors = arrayListOf<StatementInterceptor>()
 
+    fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
+
+    fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
+
+    @Deprecated("should be connected externally as StatementInterceptor")
     val logger = CompositeSqlLogger()
 
     var statementCount: Int = 0
@@ -51,27 +56,28 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     init {
         logger.addLogger(Slf4jSqlDebugLogger)
+        registerInterceptor(logger)
     }
 
     override fun commit() {
         val created = flushCache()
         EntityHook.alertSubscribers()
         val createdByHooks = flushCache()
-        monitor.interceptors.forEach { it.beforeCommit(this) }
+        interceptors.forEach { it.beforeCommit(this) }
         transactionImpl.commit()
         userdata.clear()
         EntityCache.invalidateGlobalCaches(created + createdByHooks)
-        monitor.interceptors.forEach { it.afterCommit(this) }
+        interceptors.forEach { it.afterCommit() }
     }
 
     override fun rollback() {
-        monitor.interceptors.forEach { it.beforeRollback(this) }
+        interceptors.forEach { it.beforeRollback(this) }
         transactionImpl.rollback()
         userdata.clear()
         entityCache.clearReferrersCache()
         entityCache.data.clear()
         entityCache.inserts.clear()
-        monitor.interceptors.forEach { it.afterRollback(this) }
+        interceptors.forEach { it.afterRollback() }
     }
 
     fun flushCache(): List<Entity<*>> {

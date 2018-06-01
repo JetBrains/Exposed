@@ -51,8 +51,6 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         }
     }
 
-    override fun beforeExecution(transaction: Transaction, context: StatementContext) { }
-
     override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatement) {
         contexts.forEach {
             log(it, transaction)
