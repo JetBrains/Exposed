@@ -67,7 +67,9 @@ data class CheckConstraint(val tableName: String, val checkName: String, val che
         internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank())
             val tr = TransactionManager.current()
-            return CheckConstraint(tr.identity(table), tr.quoteIfNecessary(name), op.toSQL(QueryBuilder(false)))
+            val tableName = tr.identity(table)
+            val checkOpSQL = op.toSQL(QueryBuilder(false)).replace("$tableName.","")
+            return CheckConstraint(tableName, tr.quoteIfNecessary(name), checkOpSQL)
         }
     }
 
