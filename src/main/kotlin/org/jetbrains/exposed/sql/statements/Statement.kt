@@ -45,7 +45,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         val statement = try {
             prepared(transaction, prepareSQL(transaction))
         } catch (e: SQLException) {
-            throw ExposedSQLException(e, contexts)
+            throw ExposedSQLException(e, contexts, transaction)
         }
         contexts.forEachIndexed { i, context ->
             statement.fillParameters(context.args)
@@ -58,7 +58,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         val result = try {
             statement.executeInternal(transaction)
         } catch (e: SQLException) {
-            throw ExposedSQLException(e, contexts)
+            throw ExposedSQLException(e, contexts, transaction)
         }
         transaction.currentStatement = null
         transaction.executedStatements.add(statement)
