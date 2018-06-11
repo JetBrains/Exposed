@@ -224,7 +224,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * @param length The maximum length of the enumeration name
      * @param klass The enum class
      */
-    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
+    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>,
+      getValueFromDB: (Any) -> T = {error("$it of ${it::class.qualifiedName} is not valid for enum ${klass.name}")},
+      getValueToDB: (T) -> String = { error("$it of ${it::class.qualifiedName} is not valid for enum ${klass.name}") }
+    ): Column<T>
+      = registerColumn(name, EnumerationNameColumnType(klass, length, getValueFromDB, getValueToDB))
 
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
         registerColumn<T>(name, object : ColumnType() {

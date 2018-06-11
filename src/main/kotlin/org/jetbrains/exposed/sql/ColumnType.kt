@@ -185,17 +185,19 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     }
 }
 
-class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): VarCharColumnType(length) {
+class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int,
+    val getValueFromDB: (Any) -> T, val getValueToDB: (T) -> String
+): VarCharColumnType(length) {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is String -> value
         is Enum<*> -> value.name
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> getValueToDB(value as T)
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
         is String ->  klass.enumConstants!!.first { it.name == value }
         is Enum<*> -> value
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> getValueFromDB(value)
     }
 }
 
