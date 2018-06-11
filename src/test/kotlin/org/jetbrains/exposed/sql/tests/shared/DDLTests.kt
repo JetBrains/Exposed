@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
@@ -565,6 +566,55 @@ class DDLTests : DatabaseTestsBase() {
                     it[positive] = 53
                     it[negative] = 91
                 }
+            }
+        }
+    }
+
+    private enum class Foo { Bar, Baz }
+
+    class PGEnum<T:Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
+        init {
+            value = enumValue?.name
+            type = enumTypeName
+        }
+    }
+
+    @Test fun testCustomEnumeration01() {
+        val coveredWithTests = listOf(TestDB.H2, TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.ORACLE)
+        withDb(TestDB.values().toList() - coveredWithTests) {
+            val sqlType = when (currentDialect) {
+                is H2Dialect, is MysqlDialect, is OracleDialect -> "ENUM('Bar', 'Baz')"
+                is PostgreSQLDialect -> "FooEnum"
+                else -> error("Unsupported case")
+            }
+
+            fun fromDB(value: Any) : Foo = when(currentDialect) {
+                is H2Dialect -> Foo.values()[value as Int]
+                else -> Foo.valueOf(value as String)
+            }
+
+            fun toDB(value: Foo) : Any = when(currentDialect) {
+                is PostgreSQLDialect -> PGEnum("FooEnum", value)
+                else -> value.name
+            }
+
+            val enumTable = object : Table("EnumTable") {
+                val enumColumn = customEnumeration("enumColumn", sqlType, ::fromDB, ::toDB)
+            }
+
+            try {
+                if (currentDialect is PostgreSQLDialect) {
+                    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
+                }
+                SchemaUtils.create(enumTable)
+                enumTable.insert {
+                    it[enumColumn] = Foo.Bar
+                }
+                assertEquals(Foo.Bar,  enumTable.selectAll().single()[enumTable.enumColumn])
+            } finally {
+                try {
+                    SchemaUtils.drop(enumTable)
+                } catch (ignore: Exception) {}
             }
         }
     }

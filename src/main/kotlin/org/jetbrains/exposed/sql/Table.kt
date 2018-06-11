@@ -226,6 +226,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
 
+    fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
+        registerColumn<T>(name, object : ColumnType() {
+            override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
+            override fun valueFromDB(value: Any) = fromDb(value)
+            override fun notNullValueToDB(value: Any) = toDb(value as T)
+        })
+
     /**
      * An integer column to store an integer number.
      *
