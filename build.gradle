@@ -90,7 +90,9 @@ dependencies {
 
 test {
     jvmArgs "-XX:MaxPermSize=256m"
-    systemProperties['exposed.test.dialects'] = System.properties['exposed.test.dialects']
+    if (System.properties['exposed.test.dialects'] != null) {
+        systemProperties['exposed.test.dialects'] = System.properties['exposed.test.dialects']
+    }
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
         showStandardStreams = true
