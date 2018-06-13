@@ -39,7 +39,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 task exposedDialectTestWithDocker(type: Test) {
-    jvmArgs += "-Dexposed.test.dialects=" + dialect
+    systemProperties['exposed.test.dialects'] = dialect
 }
 
 exposedDialectTestWithDocker.doFirst {
@@ -90,6 +90,7 @@ dependencies {
 
 test {
     jvmArgs "-XX:MaxPermSize=256m"
+    systemProperties['exposed.test.dialects'] = System.properties['exposed.test.dialects']
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
         showStandardStreams = true
