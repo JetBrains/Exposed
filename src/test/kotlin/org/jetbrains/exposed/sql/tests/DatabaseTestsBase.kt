@@ -39,8 +39,8 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
                         ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"),
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
-                Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
-                transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1) {
+                val tmp = Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
+                transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
                     try {
                         exec("DROP USER ExposedTest CASCADE")
                     } catch (e: Exception) { // ignore
