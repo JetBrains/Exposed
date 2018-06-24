@@ -354,15 +354,17 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         replaceColumn(this@autoinc, this)
     }
 
-    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption?): C = apply {
+    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
         referee = ref
+        this.onUpdate = onUpdate
         this.onDelete = onDelete
     }
 
-    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null)
+    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
 
-    fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>> =
-            entityId(name, foreign).references(foreign.id, onDelete)
+    fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>> =
+            entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
         val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
@@ -370,12 +372,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return column
     }
 
-    fun <T:Comparable<T>> optReference(name: String, foreign: IdTable<T>, onDelete: ReferenceOption? = null): Column<EntityID<T>?> =
-            entityId(name, foreign).references(foreign.id, onDelete).nullable()
+    fun <T:Comparable<T>> optReference(name: String, foreign: IdTable<T>,
+                                       onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>?> =
+            entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
+        newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")

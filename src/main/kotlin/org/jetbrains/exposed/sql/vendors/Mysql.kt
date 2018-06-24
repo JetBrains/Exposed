@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -87,6 +86,7 @@ internal class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, 
                         "  ku.COLUMN_NAME,\n" +
                         "  ku.REFERENCED_TABLE_NAME,\n" +
                         "  ku.REFERENCED_COLUMN_NAME,\n" +
+                        "  rc.UPDATE_RULE,\n" +
                         "  rc.DELETE_RULE\n" +
                         "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
                         "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
@@ -100,8 +100,13 @@ internal class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, 
                 val constraintName = rs.getString("CONSTRAINT_NAME")!!
                 val refTableName = rs.getString("REFERENCED_TABLE_NAME")!!
                 val refColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!
+                val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
                 val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-                constraints.getOrPut(Pair(refereeTableName, refereeColumnName), { arrayListOf() }).add(ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName, refTableName, refColumnName, constraintDeleteRule))
+                constraints.getOrPut(refereeTableName to refereeColumnName) { arrayListOf() }.add(
+                        ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName,
+                                refTableName, refColumnName, 
+                                constraintUpdateRule, constraintDeleteRule)
+                )
             }
         }
 

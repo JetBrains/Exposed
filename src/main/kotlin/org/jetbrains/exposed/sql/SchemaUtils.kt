@@ -83,7 +83,8 @@ object SchemaUtils {
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
                             } else if (existingConstraint.referencedTable != column.referee!!.table.tableName.inProperCase()
-                                    || column.onDelete != existingConstraint.deleteRule) {
+                                    || column.onDelete != existingConstraint.deleteRule
+                                    || column.onUpdate != existingConstraint.updateRule) {
                                 statements.addAll(existingConstraint.dropStatement())
                                 statements.addAll(createFKey(column))
                             }
