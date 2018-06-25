@@ -14,7 +14,11 @@ class EntityNotFoundException(val id: EntityID<*>, val entity: EntityClass<*, *>
 class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: Transaction) : SQLException(cause) {
     fun causedByQueries() : List<String> = contexts.map {
         try {
-            it.expandArgs(transaction)
+            if (transaction.debug) {
+                it.expandArgs(transaction)
+            } else {
+                it.sql(transaction)
+            }
         } catch (e: Exception) {
             "Failed on expanding args for ${it.statement}"
         }
