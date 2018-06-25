@@ -50,6 +50,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
         if (deleteRule != ReferenceOption.NO_ACTION) {
             append(" ON DELETE $deleteRule")
+            append(" ON UPDATE $deleteRule")
         }
         if (updateRule != ReferenceOption.NO_ACTION) {
             append(" ON UPDATE $updateRule")
