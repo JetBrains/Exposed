@@ -53,7 +53,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     }
 }
 
-internal class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

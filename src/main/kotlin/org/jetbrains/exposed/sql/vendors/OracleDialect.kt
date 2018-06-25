@@ -81,7 +81,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 }
 
-internal class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
+open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
 
     override val supportsMultipleGeneratedKeys = false
     override val supportsIfNotExists = false

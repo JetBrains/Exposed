@@ -33,7 +33,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 }
 
-internal class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
+open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

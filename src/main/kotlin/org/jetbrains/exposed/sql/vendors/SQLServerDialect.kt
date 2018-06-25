@@ -39,7 +39,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     }
 }
 
-internal class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
+open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
     override val supportsIfNotExists = false
     override val needsQuotesWhenSymbolsInNames = false
 
