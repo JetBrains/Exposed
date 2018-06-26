@@ -53,7 +53,9 @@ class ThreadLocalTransactionManager(private val db: Database,
     }
 }
 
-fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, 3, db, statement)
+fun <T> transaction(statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, 3, null, statement)
+
+fun <T> transaction(db: Database?, statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, 3, db, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
     val outer = TransactionManager.currentOrNull()
