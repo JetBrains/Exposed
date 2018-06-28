@@ -124,7 +124,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? {
-        val fetchSize = this@Query.fetchSize
+        val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
         if (fetchSize != null) {
             this.fetchSize = fetchSize
         }
