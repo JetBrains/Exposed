@@ -24,6 +24,12 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
         }
     }
 
+    private val originalSQLException = cause as? SQLException
+
+    override fun getSQLState(): String  = originalSQLException?.sqlState.orEmpty()
+
+    override fun getErrorCode(): Int = originalSQLException?.errorCode ?: 0
+
     override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
 }
 
