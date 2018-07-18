@@ -21,7 +21,7 @@ class SpringTransactionManager(dataSource: DataSource,
 
     private val db = Database.connect(dataSource) { this }
 
-    override fun doBegin(transaction: Any?, definition: TransactionDefinition?) {
+    override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         super.doBegin(transaction, definition)
 
         if (TransactionSynchronizationManager.hasResource(dataSource)) {
@@ -37,7 +37,7 @@ class SpringTransactionManager(dataSource: DataSource,
         TransactionManager.resetCurrent(null)
     }
 
-    override fun doSuspend(transaction: Any?): Any? {
+    override fun doSuspend(transaction: Any): Any {
         TransactionSynchronizationManager.unbindResourceIfPossible(this)
         return super.doSuspend(transaction)
     }
@@ -47,9 +47,9 @@ class SpringTransactionManager(dataSource: DataSource,
     }
 
     override fun newTransaction(isolation: Int): Transaction {
-        val tDefinition = if (dataSource.connection.transactionIsolation != isolation) {
-            DefaultTransactionDefinition().apply { isolationLevel = isolation }
-        } else null
+        val tDefinition = dataSource?.connection?.transactionIsolation?.takeIf { it != isolation }?.let {
+                DefaultTransactionDefinition().apply { isolationLevel = isolation }
+        }
 
         getTransaction(tDefinition)
 
