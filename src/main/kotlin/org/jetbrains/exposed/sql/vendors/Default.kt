@@ -194,7 +194,7 @@ abstract class VendorDialect(override val name: String,
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
         val tr = TransactionManager.current()
-        val resultSet = tr.db.metadata.getTables(null, null, "%", arrayOf("TABLE"))
+        val resultSet = tr.db.metadata.getTables(getDatabase(), null, "%", arrayOf("TABLE"))
 
         while (resultSet.next()) {
             result.add(resultSet.getString("TABLE_NAME").inProperCase)
