@@ -384,7 +384,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
     fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
-        val column = Column<T>(this, name, pkColumn.columnType) references pkColumn
+        val originalType = (pkColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: pkColumn.columnType
+        val columnType = originalType.let { (it as? AutoIncColumnType)?.delegate ?: it}.clone()
+        val column = Column<T>(this, name, columnType) references pkColumn
         this._columns.add(column)
         return column
     }
