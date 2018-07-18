@@ -19,8 +19,8 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
             } else {
                 it.sql(transaction)
             }
-        } catch (e: Exception) {
-            "Failed on expanding args for ${it.statement}"
+        } catch (e: Throwable) {
+            "Failed on expanding args for ${it.statement.type}: ${it.statement}"
         }
     }
 
