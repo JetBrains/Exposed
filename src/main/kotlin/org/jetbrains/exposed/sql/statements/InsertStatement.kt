@@ -83,7 +83,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     protected open fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {
-        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
+        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
         val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
         return inserted to rs
     }
