@@ -10,7 +10,6 @@ import org.joda.time.DateTime
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.postgresql.util.PGobject
-import java.lang.Exception
 import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
@@ -654,6 +653,22 @@ class DDLTests : DatabaseTestsBase() {
                     SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
+        }
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/112
+    @Test fun testDropTableFlushesCache() {
+        withDb {
+            class Keyword(id: EntityID<Int>) : IntEntity(id) {
+                var bool by KeyWordTable.bool
+            }
+            val KeywordEntityClass = object : IntEntityClass<Keyword>(KeyWordTable, Keyword::class.java) {}
+
+            SchemaUtils.create(KeyWordTable)
+
+            val newKeyword = KeywordEntityClass.new { bool = true }
+
+            SchemaUtils.drop(KeyWordTable)
         }
     }
 }

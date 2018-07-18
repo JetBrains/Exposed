@@ -182,6 +182,9 @@ object SchemaUtils {
     }
 
     fun drop(vararg tables: Table) {
+        if (tables.isEmpty()) return
+        val transaction = TransactionManager.current()
+        transaction.flushCache()
         var tablesForDeletion = EntityCache
                 .sortTablesByReferences(tables.toList())
                 .reversed()
@@ -192,7 +195,7 @@ object SchemaUtils {
         tablesForDeletion
                 .flatMap { it.dropStatement() }
                 .forEach {
-                    TransactionManager.current().exec(it)
+                    transaction.exec(it)
                 }
         currentDialect.resetCaches()
     }
