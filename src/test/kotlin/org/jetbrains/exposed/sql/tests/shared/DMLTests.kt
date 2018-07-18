@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
 import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.UUIDTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
@@ -436,10 +437,12 @@ class DMLTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
-            ((cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name)).forEach {
+            val cAlias = users.id.count().alias("c")
+            ((cities innerJoin users).slice(cities.name, users.id.count(), cAlias).selectAll().groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
-
+                val userCountAlias = it[cAlias]
+                assertTrue(userCountAlias is Int)
                 when (cityName) {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
@@ -447,6 +450,42 @@ class DMLTests : DatabaseTestsBase() {
                     else -> error("Unknow city $cityName")
                 }
             }
+        }
+    }
+
+    @Test
+    fun `test_github_issue_379_count_alias_ClassCastException`() {
+        val Stables = object : UUIDTable("Stables") {
+            val name = varchar("name", 256).uniqueIndex()
+        }
+
+        val Facilities = object : UUIDTable("Facilities") {
+            val stableId = reference("stable_id", Stables)
+            val name = varchar("name", 256)
+        }
+
+        withTables(Facilities, Stables) {
+            val stable1Id = Stables.insertAndGetId {
+                it[Stables.name] = "Stables1"
+            }
+            Stables.insertAndGetId {
+                it[Stables.name] = "Stables2"
+            }
+            Facilities.insertAndGetId {
+                it[Facilities.stableId] = stable1Id
+                it[Facilities.name] = "Facility1"
+            }
+            val fcAlias = Facilities.name.count().alias("fc")
+            val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
+            val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
+                    .slice(Stables.columns + fAlias[fcAlias])
+                    .selectAll()
+                    .groupBy(Stables.id, fAlias[fcAlias]).map {
+                        it[Stables.name] to it[fAlias[fcAlias]]
+                    }.toMap()
+            assertEquals(2, stats.size)
+            assertEquals(1, stats["Stables1"])
+            assertNull(stats["Stables2"])
         }
     }
 
