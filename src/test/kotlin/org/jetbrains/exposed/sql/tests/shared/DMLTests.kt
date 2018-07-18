@@ -477,10 +477,11 @@ class DMLTests : DatabaseTestsBase() {
             }
             val fcAlias = Facilities.name.count().alias("fc")
             val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
+            val sliceColumns = Stables.columns + fAlias[fcAlias]
             val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
-                    .slice(Stables.columns + fAlias[fcAlias])
+                    .slice(sliceColumns)
                     .selectAll()
-                    .groupBy(Stables.id, fAlias[fcAlias]).map {
+                    .groupBy(*sliceColumns.toTypedArray()).map {
                         it[Stables.name] to it[fAlias[fcAlias]]
                     }.toMap()
             assertEquals(2, stats.size)
