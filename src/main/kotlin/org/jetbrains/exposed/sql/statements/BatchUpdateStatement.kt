@@ -18,7 +18,11 @@ open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, n
 
     fun addBatch(id: EntityID<*>) {
         val lastBatch = data.lastOrNull()
-        val different by lazy {  data.first().second.keys.intersect(lastBatch!!.second.keys) }
+        val different by lazy {
+            val set1 = firstDataSet.map { it.first }.toSet()
+            val set2 = lastBatch!!.second.keys
+            (set1 - set2) + (set2 - set1)
+        }
 
         if (data.size > 1 && different.isNotEmpty()) {
             throw BatchDataInconsistentException("Some values missing for batch update. Different columns: $different")
@@ -38,8 +42,9 @@ open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, n
 
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
-            = data.map { it.second.toSortedMap().map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = data.map { (id, row) ->
+        firstDataSet.map { it.first.columnType to row[it.first] } + (table.id.columnType to id)
+    }
 }
 
 class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
