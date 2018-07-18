@@ -12,17 +12,23 @@ import java.sql.PreparedStatement
 import java.util.*
 
 open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
-    val data = ArrayList<Pair<EntityID<*>, SortedMap<Column<*>, Any?>>>()
+    val data = ArrayList<Pair<EntityID<*>, Map<Column<*>, Any?>>>()
 
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 
     fun addBatch(id: EntityID<*>) {
-        if (data.size < 2 || data.first().second.keys.toList() == data.last().second.keys.toList()) {
-            data.add(id to TreeMap())
-        } else {
-            val different = data.first().second.keys.intersect(data.last().second.keys)
-            error("Some values missing for batch update. Different columns: $different")
+        val lastBatch = data.lastOrNull()
+        val different by lazy {  data.first().second.keys.intersect(lastBatch!!.second.keys) }
+
+        if (data.size > 1 && different.isNotEmpty()) {
+            throw BatchDataInconsistentException("Some values missing for batch update. Different columns: $different")
         }
+
+        if (data.isNotEmpty()) {
+            data[data.size - 1] = lastBatch!!.copy(second = values.toMap())
+            values.clear()
+        }
+        data.add(id to values)
     }
 
     override fun <T, S:T?> update(column: Column<T>, value: Expression<S>) = error("Expressions unsupported in batch update")
@@ -33,7 +39,7 @@ open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, n
     override fun PreparedStatement.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
-            = data.map { it.second.map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
+            = data.map { it.second.toSortedMap().map { it.key.columnType to it.value } + (table.id.columnType to it.first) }
 }
 
 class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
