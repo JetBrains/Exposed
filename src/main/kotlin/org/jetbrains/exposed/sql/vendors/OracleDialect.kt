@@ -19,7 +19,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun uuidType() = "RAW(16)"
 
-    override fun textType() = "LONG"
+    override fun textType() = "CLOB"
 
     override fun blobType() = "BLOB"
 
