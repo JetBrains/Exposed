@@ -208,7 +208,7 @@ fun main(args: Array<String>) {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
-        logger.addLogger(StdOutSqlLogger)
+        addLogger(StdOutSqlLogger)
 
         create (Cities, Users)
 

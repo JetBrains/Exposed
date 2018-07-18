@@ -57,3 +57,10 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         }
     }
 }
+
+fun Transaction.addLogger(vararg logger: SqlLogger) : CompositeSqlLogger {
+    return CompositeSqlLogger().apply {
+        logger.forEach { this.addLogger(it) }
+        registerInterceptor(this)
+    }
+}

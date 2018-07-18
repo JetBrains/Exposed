@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Users : IntIdTable() {
@@ -38,7 +39,7 @@ fun main(args: Array<String>) {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
-        logger.addLogger(StdOutSqlLogger)
+        addLogger(StdOutSqlLogger)
 
         SchemaUtils.create (Cities, Users)
 
