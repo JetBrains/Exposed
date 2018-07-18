@@ -578,16 +578,17 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     object EnumTable : IntIdTable("EnumTable") {
-        internal lateinit var enumColumn: Column<Foo>
+        internal var enumColumn: Column<Foo> = enumeration("enumColumn", Foo::class.java)
 
-        internal fun enumColumn(sql: String): Column<Foo> {
-            return customEnumeration("enumColumn", sql, { value ->
-                when(currentDialect) {
+        internal fun initEnumColumn(sql: String) {
+            (columns as MutableList<Column<*>>).remove(enumColumn)
+            enumColumn = customEnumeration("enumColumn", sql, { value ->
+                when (currentDialect) {
                     is H2Dialect -> Foo.values()[value as Int]
                     else -> Foo.valueOf(value as String)
                 }
             }, { value ->
-                when(currentDialect) {
+                when (currentDialect) {
                     is PostgreSQLDialect -> PGEnum("FooEnum", value)
                     else -> value.name
                 }
@@ -614,7 +615,7 @@ class DDLTests : DatabaseTestsBase() {
                 if (currentDialect is PostgreSQLDialect) {
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
-                EnumTable.enumColumn = EnumTable.enumColumn(sqlType)
+                EnumTable.initEnumColumn(sqlType)
                 SchemaUtils.create(EnumTable)
                 EnumTable.insert {
                     it[enumColumn] = Foo.Bar
