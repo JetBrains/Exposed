@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -570,12 +568,30 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    private enum class Foo { Bar, Baz }
+    internal enum class Foo { Bar, Baz }
 
     class PGEnum<T:Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
         init {
             value = enumValue?.name
             type = enumTypeName
+        }
+    }
+
+    object EnumTable : IntIdTable("EnumTable") {
+        internal lateinit var enumColumn: Column<Foo>
+
+        internal fun enumColumn(sql: String): Column<Foo> {
+            return customEnumeration("enumColumn", sql, { value ->
+                when(currentDialect) {
+                    is H2Dialect -> Foo.values()[value as Int]
+                    else -> Foo.valueOf(value as String)
+                }
+            }, { value ->
+                when(currentDialect) {
+                    is PostgreSQLDialect -> PGEnum("FooEnum", value)
+                    else -> value.name
+                }
+            })
         }
     }
 
@@ -588,32 +604,31 @@ class DDLTests : DatabaseTestsBase() {
                 else -> error("Unsupported case")
             }
 
-            fun fromDB(value: Any) : Foo = when(currentDialect) {
-                is H2Dialect -> Foo.values()[value as Int]
-                else -> Foo.valueOf(value as String)
+            class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
+                var enum by EnumTable.enumColumn
             }
 
-            fun toDB(value: Foo) : Any = when(currentDialect) {
-                is PostgreSQLDialect -> PGEnum("FooEnum", value)
-                else -> value.name
-            }
-
-            val enumTable = object : Table("EnumTable") {
-                val enumColumn = customEnumeration("enumColumn", sqlType, ::fromDB, ::toDB)
-            }
+            val EnumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
             try {
                 if (currentDialect is PostgreSQLDialect) {
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
-                SchemaUtils.create(enumTable)
-                enumTable.insert {
+                EnumTable.enumColumn = EnumTable.enumColumn(sqlType)
+                SchemaUtils.create(EnumTable)
+                EnumTable.insert {
                     it[enumColumn] = Foo.Bar
                 }
-                assertEquals(Foo.Bar,  enumTable.selectAll().single()[enumTable.enumColumn])
+                assertEquals(Foo.Bar,  EnumTable.selectAll().single()[EnumTable.enumColumn])
+
+                val entity = EnumClass.new {
+                    enum = Foo.Baz
+                }
+
+                assertEquals(Foo.Baz, EnumClass.reload(entity)!!.enum)
             } finally {
                 try {
-                    SchemaUtils.drop(enumTable)
+                    SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }

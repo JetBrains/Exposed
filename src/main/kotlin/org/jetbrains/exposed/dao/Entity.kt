@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.primaryConstructor
 
 /**
  * @author max
@@ -295,7 +296,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         // move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
-                _readValues!![c] = v?.let { c.columnType.valueFromDB(c.columnType.valueToDB(it)!!)}
+                _readValues!![c] = v
             }
             if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) } ) {
                 _readValues = null
@@ -473,7 +474,7 @@ class EntityCache {
 @Suppress("UNCHECKED_CAST")
 abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
-    private val ctor = klass.constructors[0]
+    private val ctor = klass.kotlin.primaryConstructor!!
 
     operator fun get(id: EntityID<ID>): T = findById(id) ?: throw EntityNotFoundException(id, this)
 
@@ -609,7 +610,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         ]
     }
 
-    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
+    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()
@@ -698,12 +699,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         checkReference(refColumn, references.first().table)
-        val entities = find { refColumn inList distinctRefIds }.toList()
+        val cache = TransactionManager.current().entityCache
+        val toLoad = distinctRefIds.filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
+        val entities = if (toLoad.isNotEmpty()) { find { refColumn inList toLoad }.toList() } else emptyList()
         val groupedBySourceId = entities.groupBy { it.readValues[refColumn] }
-        distinctRefIds.forEach {
-            TransactionManager.current().entityCache.getOrPutReferrers(it, refColumn, { SizedCollection(groupedBySourceId[it]?:emptyList()) })
+        return distinctRefIds.flatMap {
+            cache.getOrPutReferrers(it, refColumn) { SizedCollection(groupedBySourceId[it]?:emptyList()) }
         }
-        return entities
     }
 
     fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table): List<T> {
