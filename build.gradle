@@ -83,7 +83,7 @@ dependencies {
     testCompile "mysql:mysql-connector-mxj:5.0.12"
     testCompile 'org.postgresql:postgresql:42.2.2.jre6'
     testCompile 'com.opentable.components:otj-pg-embedded:0.12.0'
-    testCompile 'org.xerial:sqlite-jdbc:3.21.1'
+    testCompile 'org.xerial:sqlite-jdbc:3.23.1'
     testCompile 'com.oracle:ojdbc6:12.1.0.1-atlassian-hosted'
     testCompile 'com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre7'
 }
