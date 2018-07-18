@@ -11,7 +11,10 @@ import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -1496,7 +1499,7 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun assertQueryResultValid(query: Query): Unit {
+    private fun assertQueryResultValid(query: Query) {
         val users = DMLTestsData.Users
         val cities = DMLTestsData.Cities
         query.forEach { row ->
@@ -1568,6 +1571,24 @@ class DMLTests : DatabaseTestsBase() {
             fun Op<Boolean>.repr(): String = this.toSQL(QueryBuilder(false))
 
             assertEquals(predicate.repr(), actualWhere!!.repr())
+            assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
+    fun testQueryAndWhere() {
+        withCitiesAndUsers { cities, users, _ ->
+            val queryAdjusted = (users innerJoin cities)
+                    .slice(users.name, cities.name)
+                    .select{ predicate }
+
+            queryAdjusted.andWhere {
+                predicate
+            }
+            val actualWhere = queryAdjusted.where
+            fun Op<Boolean>.repr(): String = this.toSQL(QueryBuilder(false))
+
+            assertEquals((predicate.and(predicate)).repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)
         }
     }

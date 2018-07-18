@@ -339,3 +339,9 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         }
     }
 }
+
+fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
+    val expr = Op.build { andPart() }
+    if(this == null) expr
+    else this and expr
+}
