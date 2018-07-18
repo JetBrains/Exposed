@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.primaryConstructor
 
 /**
  * @author max
@@ -473,7 +474,7 @@ class EntityCache {
 @Suppress("UNCHECKED_CAST")
 abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
-    private val ctor = klass.constructors[0]
+    private val ctor = klass.kotlin.primaryConstructor!!
 
     operator fun get(id: EntityID<ID>): T = findById(id) ?: throw EntityNotFoundException(id, this)
 
@@ -609,7 +610,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         ]
     }
 
-    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.newInstance(entityId) as T
+    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()

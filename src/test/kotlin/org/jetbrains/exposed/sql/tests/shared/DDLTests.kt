@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -598,9 +596,18 @@ class DDLTests : DatabaseTestsBase() {
                 else -> value.name
             }
 
-            val enumTable = object : Table("EnumTable") {
+            val enumTable = object : IntIdTable("EnumTable") {
                 val enumColumn = customEnumeration("enumColumn", sqlType, ::fromDB, ::toDB)
             }
+
+            class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
+                var enum by enumTable.enumColumn
+            }
+
+            val EnumClass = object : IntEntityClass<EnumEntity>(enumTable, EnumEntity::class.java) {}
+
+            /*val param = EnumEntity::class.primaryConstructor!!.parameters.single { it.name == "id" }
+            EnumEntity::class.primaryConstructor!!.callBy(mapOf(param to EntityID(1, enumTable)))*/
 
             try {
                 if (currentDialect is PostgreSQLDialect) {
@@ -611,6 +618,12 @@ class DDLTests : DatabaseTestsBase() {
                     it[enumColumn] = Foo.Bar
                 }
                 assertEquals(Foo.Bar,  enumTable.selectAll().single()[enumTable.enumColumn])
+
+                val entity = EnumClass.new {
+                    enum = Foo.Baz
+                }
+
+                assertEquals(Foo.Baz, EnumClass.reload(entity)!!.enum)
             } finally {
                 try {
                     SchemaUtils.drop(enumTable)
