@@ -1,33 +1,89 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 object SchemaUtils {
-    fun createStatements(vararg tables: Table): List<String> {
-        val statements = ArrayList<String>()
-        if (tables.isEmpty())
-            return statements
-
-        val newTables = ArrayList<Table>()
-
-        for (table in EntityCache.sortTablesByReferences(tables.toList())) {
-
-            if (table.exists()) continue else newTables.add(table)
-
-            // create table
-            statements.addAll(table.ddl)
-
-            // create indices
-            for (index in table.indices) {
-                statements.addAll(createIndex(index))
-            }
+    private class TableDepthGraph(val tables: List<Table>) {
+        val graph = fetchAllTables().associate { t ->
+            t to t.columns.mapNotNull { c ->
+                c.referee?.let{ it.table to c.columnType.nullable }
+            }.toMap()
         }
 
-        return statements
+        private fun fetchAllTables(): HashSet<Table> {
+            val result = HashSet<Table>()
+
+            fun parseTable(table: Table) {
+                if (result.add(table)) {
+                    table.columns.forEach {
+                        it.referee?.table?.let(::parseTable)
+                    }
+                }
+            }
+            tables.forEach(::parseTable)
+            return result
+        }
+
+        fun sorted() : List<Table> {
+            val visited = mutableSetOf<Table>()
+            val result = arrayListOf<Table>()
+
+            fun traverse(table: Table) {
+                if (table !in visited) {
+                    visited += table
+                    graph[table]!!.forEach { t, u ->
+                        if (t !in visited) {
+                            traverse(t)
+                        }
+                    }
+                    result += table
+                }
+            }
+
+            tables.forEach(::traverse)
+            return result
+        }
+
+        fun hasCycle() : Boolean {
+            val visited = mutableSetOf<Table>()
+            val recursion = mutableSetOf<Table>()
+
+            val sortedTables = sorted()
+
+            fun traverse(table: Table) : Boolean {
+                if (table in recursion) return true
+                if (table in visited) return false
+                recursion += table
+                visited += table
+                return if (graph[table]!!.any{ traverse(it.key) }) {
+                    true
+                } else {
+                    recursion -= table
+                    false
+                }
+            }
+            return sortedTables.any { traverse(it) }
+        }
+    }
+
+    fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables.toList()).sorted()
+    fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
+
+    fun createStatements(vararg tables: Table): List<String> {
+        if (tables.isEmpty())
+            return emptyList()
+
+        val toCreate = sortTablesByReferences(tables.toList()).filterNot { it.exists() }
+        val alters = arrayListOf<String>()
+        return toCreate.flatMap { table ->
+            val (create, alter) = table.ddl.partition { it.startsWith("CREATE ") }
+            val indicesDDL = table.indices.flatMap { createIndex(it) }
+            alters += alter
+            create + indicesDDL
+        } + alters
     }
 
     fun createSequence(name: String) = Seq(name).createStatement()
@@ -185,7 +241,7 @@ object SchemaUtils {
         if (tables.isEmpty()) return
         val transaction = TransactionManager.current()
         transaction.flushCache()
-        var tablesForDeletion = EntityCache
+        var tablesForDeletion = SchemaUtils
                 .sortTablesByReferences(tables.toList())
                 .reversed()
                 .filter { it in tables }

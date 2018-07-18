@@ -3,10 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.sql.vendors.inProperCase
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
@@ -485,6 +482,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             Seq(it).createStatement()
         }.orEmpty()
 
+        val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
+
         val createTableDDL = buildString {
             append("CREATE TABLE ")
             if (currentDialect.supportsIfNotExists) {
@@ -498,24 +497,31 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                         append(", $it")
                     }
                 }
-                columns.filter { it.referee != null }.let { references ->
-                    if (references.isNotEmpty()) {
-                        append(references.joinToString(prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart })
+
+                if (!addForeignKeysInAlterPart) {
+                    columns.filter { it.referee != null }.takeIf { it.isNotEmpty() }?.let { references ->
+                        references.joinTo(this, prefix = ", ", separator = ", ") { ForeignKeyConstraint.from(it).foreignKeyPart }
                     }
                 }
+
                 if (checkConstraints.isNotEmpty()) {
-                    append(
-                        checkConstraints.mapIndexed { index, (name, op) ->
-                            val resolvedName = name.takeIf { it.isNotBlank() } ?: "check_${tableName}_$index"
-                            CheckConstraint.from(this@Table, resolvedName, op).checkPart
-                        }.joinToString(prefix = ",", separator = ",")
-                    )
+                    checkConstraints.asSequence().mapIndexed { index, (name, op) ->
+                        val resolvedName = name.takeIf { it.isNotBlank() } ?: "check_${tableName}_$index"
+                        CheckConstraint.from(this@Table, resolvedName, op).checkPart
+                    }.joinTo(this, prefix = ",", separator = ",")
                 }
 
                 append(")")
             }
         }
-        return seqDDL + createTableDDL
+
+        val constraintSQL = if (addForeignKeysInAlterPart) {
+            columns.filter { it.referee != null }.flatMap {
+                ForeignKeyConstraint.from(it).createStatement()
+            }
+        } else emptyList()
+
+        return seqDDL + createTableDDL + constraintSQL
     }
 
     internal fun primaryKeyConstraint(): String? {
@@ -538,11 +544,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         val dropTableDDL = buildString {
             append("DROP TABLE ")
             if (currentDialect.supportsIfNotExists) {
-                append(" IF EXISTS ")
+                append("IF EXISTS ")
             }
             append(TransactionManager.current().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
+            }
+
+            if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@Table)) {
+                append(" CASCADE")
             }
         }
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {

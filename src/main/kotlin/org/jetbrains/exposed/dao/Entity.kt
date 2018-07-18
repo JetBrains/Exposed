@@ -380,7 +380,7 @@ class EntityCache {
 
         val insertedTables = inserts.keys
 
-        for (t in sortTablesByReferences(tables)) {
+        for (t in SchemaUtils.sortTablesByReferences(tables)) {
             flushInserts(t as IdTable<*>)
         }
 
@@ -465,36 +465,6 @@ class EntityCache {
             created.asSequence().mapNotNull { it.klass as? ImmutableCachedEntityClass<*,*>}.distinct().forEach {
                 it.expireCache()
             }
-        }
-
-        fun sortTablesByReferences(tables: Iterable<Table>) = addDependencies(tables).toCollection(arrayListOf()).run {
-            if(this.count() <= 1) return this
-            val canBeReferenced = arrayListOf<Table>()
-            do {
-                val (movable, others) = partition {
-                    it.columns.all { it.referee == null || canBeReferenced.contains(it.referee!!.table) || it.referee!!.table == it.table}
-                }
-                canBeReferenced.addAll(movable)
-                this.removeAll(movable)
-            } while (others.isNotEmpty() && movable.isNotEmpty())
-            canBeReferenced.addAll(this)
-            canBeReferenced
-        }
-
-        fun addDependencies(tables: Iterable<Table>): Iterable<Table> {
-            val workset = HashSet<Table>()
-
-            fun checkTable(table: Table) {
-                if (workset.add(table)) {
-                    for (c in table.columns) {
-                        c.referee?.table?.let { checkTable(it) }
-                    }
-                }
-            }
-
-            for (t in tables) checkTable(t)
-
-            return workset
         }
     }
 }

@@ -433,7 +433,7 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = initialTable) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = *arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialect.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
@@ -486,6 +486,36 @@ class DDLTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, UserToRepo.selectAll().count())
+        }
+    }
+
+    object Table1 : IntIdTable() {
+        val table2 = reference("teamId", Table2, onDelete = ReferenceOption.CASCADE)
+    }
+
+    object Table2 : IntIdTable() {
+        val table1 = optReference("teamId", Table1, onDelete = ReferenceOption.SET_NULL)
+    }
+
+    @Test fun testCrossReference() {
+        withTables(Table2, Table1) {
+            val table2id = Table2.insertAndGetId{}
+            val table1id = Table1.insertAndGetId {
+                it[Table1.table2] = table2id
+            }
+
+            Table2.insertAndGetId {
+                it[Table2.table1] = table1id
+            }
+
+            assertEquals(1, Table1.selectAll().count())
+            assertEquals(2, Table2.selectAll().count())
+            if (currentDialect is MysqlDialect) {
+               exec("SET foreign_key_checks = 0;")
+            }
+            if (currentDialect is PostgreSQLDialect) {
+                exec("set constraints all deferred;")
+            }
         }
     }
 

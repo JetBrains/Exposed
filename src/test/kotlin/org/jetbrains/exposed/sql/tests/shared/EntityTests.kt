@@ -314,7 +314,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test
     fun tableSelfReferenceTest() {
-        assertEquals<List<Table>>(listOf(Categories, Boards, Posts), EntityCache.sortTablesByReferences(listOf(Posts, Boards, Categories)))
+        assertEquals(listOf(Categories, Boards, Posts), SchemaUtils.sortTablesByReferences(listOf(Posts, Boards, Categories)))
     }
 
     @Test

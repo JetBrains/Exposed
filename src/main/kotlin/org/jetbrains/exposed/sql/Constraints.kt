@@ -38,9 +38,11 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
     companion object {
         fun from(column: Column<*>): ForeignKeyConstraint {
             assert(column.referee != null && (column.onDelete != null || column.onUpdate != null)) { "$column does not reference anything" }
-            val s = TransactionManager.current()
-            return ForeignKeyConstraint("", s.identity(column.referee!!.table),
-                    s.identity(column.referee!!), s.identity(column.table), s.identity(column),
+            val referee = column.referee!!
+            val t = TransactionManager.current()
+            val refName = t.quoteIfNecessary(t.cutIfNecessary("fk_${referee.table.tableName}_${referee.name}_${column.name}"))
+            return ForeignKeyConstraint(refName, t.identity(referee.table), t.identity(referee),
+                    t.identity(column.table), t.identity(column),
                     column.onUpdate ?: ReferenceOption.NO_ACTION,
                     column.onDelete ?: ReferenceOption.NO_ACTION)
         }
@@ -56,7 +58,7 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         }
     }
 
-    override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "" + foreignKeyPart)
+    override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + (if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "") + foreignKeyPart)
 
     override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP " +
             when (currentDialect) {
