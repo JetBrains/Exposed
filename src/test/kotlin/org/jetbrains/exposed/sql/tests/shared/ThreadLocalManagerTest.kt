@@ -237,12 +237,10 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         if (TestDB.MYSQL !in TestDB.enabledInTests()) return
 
         var secondThreadTm: TransactionManager? = null
-        var isMysql = false
         TestDB.MYSQL.connect()
         transaction {
-            isMysql = true
-            SchemaUtils.create(DMLTestsData.Cities)
             val firstThreadTm = TransactionManager.manager
+            SchemaUtils.create(DMLTestsData.Cities)
             thread {
                 TestDB.MYSQL.connect()
                 transaction {
@@ -254,9 +252,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
             assertEquals(firstThreadTm, TransactionManager.manager)
             SchemaUtils.drop(DMLTestsData.Cities)
         }
-        if (isMysql) {
-            assertEquals(secondThreadTm, TransactionManager.manager)
-        }
+        assertEquals(secondThreadTm, TransactionManager.manager)
     }
 }
 
