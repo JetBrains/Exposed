@@ -283,6 +283,14 @@ open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) 
             append(" COLLATE $collate")
         }
     }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val string = super.notNullValueToDB(value)
+        require(string is String && string.length <= colLength) {
+            "Value '$string' can't be stored to database column because exceeds length $colLength"
+        }
+        return string
+    }
 }
 
 open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
