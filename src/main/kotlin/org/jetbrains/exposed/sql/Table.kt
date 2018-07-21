@@ -536,8 +536,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 }
 
 data class Seq(private val name: String) {
-    fun createStatement() = listOf("CREATE SEQUENCE $name")
-    fun dropStatement() = listOf("DROP SEQUENCE $name")
+    private val identifier get() = TransactionManager.current().cutIfNecessary(name)
+    fun createStatement() = listOf("CREATE SEQUENCE $identifier")
+    fun dropStatement() = listOf("DROP SEQUENCE $identifier")
 }
 
 fun ColumnSet.targetTables(): List<Table> = when (this) {

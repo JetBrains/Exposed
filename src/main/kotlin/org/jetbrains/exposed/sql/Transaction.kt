@@ -157,7 +157,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     // REVIEW
-    internal fun cutIfNecessary (identity: String) = identity.substring(0, Math.min(currentDialect.identifierLengthLimit, identity.length))
+    internal fun cutIfNecessary(identity: String) = identity.take(identity.length.coerceAtMost(currentDialect.identifierLengthLimit))
 
     private fun quoteTokenIfNecessary(token: String) : String = if (db.needQuotes(token)) token.quoted else token
 
