@@ -192,6 +192,27 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun tableWithMultiPKandAutoIncrement() {
+        val Foo = object : IdTable<Long>() {
+            val bar = integer("bar").primaryKey()
+            override val id: Column<EntityID<Long>> = long("id").entityId().autoIncrement().primaryKey()
+        }
+
+        withTables(Foo) {
+            Foo.insert {
+                it[Foo.bar] = 1
+            }
+            Foo.insert {
+                it[Foo.bar] = 2
+            }
+
+            val result = Foo.selectAll().map { it[Foo.id] to it[Foo.bar] }
+            assertEquals(2, result.size)
+            assertEquals(1, result[0].second)
+            assertEquals(2, result[1].second)
+        }
+    }
+
     @Test fun testDefaults01() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {

@@ -494,7 +494,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     internal fun primaryKeyConstraint(): String? {
-        var pkey = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
+        var pkey = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
         if (pkey.isEmpty()) {
             pkey = columns.filter { it.columnType.isAutoInc }
         }
