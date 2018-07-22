@@ -76,7 +76,7 @@ data class CheckConstraint(val tableName: String, val checkName: String, val che
             val tr = TransactionManager.current()
             val tableName = tr.identity(table)
             val checkOpSQL = op.toSQL(QueryBuilder(false)).replace("$tableName.","")
-            return CheckConstraint(tableName, tr.quoteIfNecessary(name), checkOpSQL)
+            return CheckConstraint(tableName, tr.quoteIfNecessary(tr.cutIfNecessary(name)), checkOpSQL)
         }
     }
 

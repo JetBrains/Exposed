@@ -499,9 +499,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             pkey = columns.filter { it.columnType.isAutoInc }
         }
         if (pkey.isNotEmpty()) {
+            val tr = TransactionManager.current()
+            val constraint = tr.quoteIfNecessary(tr.cutIfNecessary("pk_$tableName"))
             return pkey.joinToString(
-                    prefix = "CONSTRAINT ${TransactionManager.current().quoteIfNecessary("pk_$tableName")} PRIMARY KEY (", postfix = ")") {
-                TransactionManager.current().identity(it)
+                    prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
+                tr.identity(it)
             }
         }
         return null
