@@ -93,6 +93,8 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         private set
     var offset: Int = 0
         private set
+    var fetchSize: Int? = null
+        private set
 
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
@@ -121,7 +123,13 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? = executeQuery()
+    override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? {
+        val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
+        if (fetchSize != null) {
+            this.fetchSize = fetchSize
+        }
+        return executeQuery()
+    }
 
     override fun arguments() = QueryBuilder(true).let {
         prepareSQL(it)
@@ -229,6 +237,11 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     override fun limit(n: Int, offset: Int): Query {
         this.limit = n
         this.offset = offset
+        return this
+    }
+
+    fun fetchSize(n: Int): Query {
+        this.fetchSize = n
         return this
     }
 

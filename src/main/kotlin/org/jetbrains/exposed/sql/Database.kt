@@ -57,6 +57,14 @@ class Database private constructor(val connector: () -> Connection) {
         }
     }
 
+    var defaultFetchSize: Int? = null
+        private set
+
+    fun defaultFetchSize(size: Int): Database {
+        defaultFetchSize = size
+        return this
+    }
+
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
