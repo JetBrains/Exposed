@@ -10,6 +10,7 @@ Bug fixes:
 * [PostgreSQL] Table with customEnumeration column doesn't work with Entity/DAO API ([#340](https://github.com/JetBrains/Exposed/issues/340))
 * Table with composite key created only with specific prop order ([#343](https://github.com/JetBrains/Exposed/issues/343))
 * allTableNames in VendorDialect returns only from current database ([#339](https://github.com/JetBrains/Exposed/issues/339))
+* "ORA-00972: identifier is too long" on creating table with long name
 
 # 0.10.3
 Features:
@@ -27,4 +28,3 @@ Bug fixes:
 *  [#279](https://github.com/JetBrains/Exposed/issues/279) 'SELECT MAX(datetime)' throws ClassCastException 
 *  [#289](https://github.com/JetBrains/Exposed/issues/289) UUID's are not shown in logs 
 *  [#284](https://github.com/JetBrains/Exposed/issues/284) Postgres, DSL Approach: primary key with custom names beside `...
-ª
