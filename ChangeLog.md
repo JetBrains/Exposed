@@ -4,6 +4,7 @@ Features:
 * All dialects made public and open for extensibility
 * Transaction.addLogger() function introduced as replacement to logger.addLogger() approach
 * Strings will be validated against column max length before inserting to database ([#300](https://github.com/JetBrains/Exposed/issues/300))
+* Overriding the fetch size for a Query ([#327](https://github.com/JetBrains/Exposed/pull/327)) 
 
 Bug fixes:
 * Extended sql exception logging available only in debug mode
