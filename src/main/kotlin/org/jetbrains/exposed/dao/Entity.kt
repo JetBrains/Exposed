@@ -192,6 +192,22 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         _readValues!!
     }
 
+    /**
+     * Updates entity fields from database.
+     * Override function to refresh some additional state if any.
+     *
+     * @param flush whether pending entity changes should be flushed previously
+     * @throws EntityNotFoundException if entity no longer exists in database
+     */
+    open fun refresh(flush: Boolean = false) {
+        if (flush) flush() else writeValues.clear()
+
+        klass.removeFromCache(this)
+        val reloaded = klass[id]
+        TransactionManager.current().entityCache.store(this)
+        _readValues = reloaded.readValues
+    }
+
     operator fun <RID:Comparable<RID>, T: Entity<RID>> Reference<RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
         val id = reference.getValue(o, desc)
         return factory.findById(id) ?: error("Cannot find ${factory.table.tableName} WHERE id=$id")
@@ -480,7 +496,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     operator fun get(id: ID): T = get(EntityID(id, table))
 
-    open protected fun warmCache(): EntityCache = TransactionManager.current().entityCache
+    protected open fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
     /**
      * Get an entity by its [id].
@@ -500,9 +516,14 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      */
     open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find{table.id eq id}.firstOrNull()
 
-    fun reload(entity: Entity<ID>): T? {
+    /**
+     * Reloads entity fields from database as new object.
+     * @param flush whether pending entity changes should be flushed previously
+     */
+    fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
+        if (flush) entity.flush()
         removeFromCache(entity)
-        return find { table.id eq entity.id }.firstOrNull()
+        return findById(entity.id)
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
