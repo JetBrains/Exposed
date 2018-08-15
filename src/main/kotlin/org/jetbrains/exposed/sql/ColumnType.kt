@@ -267,11 +267,10 @@ abstract class StringColumnType(val collate: String? = null) : ColumnType() {
         append('\'')
     }
 
-    override fun valueFromDB(value: Any): Any {
-        if (value is java.sql.Clob) {
-            return value.characterStream.readText()
-        }
-        return value
+    override fun valueFromDB(value: Any) = when(value) {
+        is java.sql.Clob -> value.characterStream.readText()
+        is ByteArray -> String(value)
+        else -> value
     }
 }
 
