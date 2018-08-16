@@ -1339,6 +1339,14 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testJoinWithJoin01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val rows = (cities innerJoin (users innerJoin userData)).selectAll()
+            assertEquals(2, rows.count())
+        }
+    }
+
+    @Test
     fun testStringFunctions() {
         withCitiesAndUsers { cities, users, userData ->
 

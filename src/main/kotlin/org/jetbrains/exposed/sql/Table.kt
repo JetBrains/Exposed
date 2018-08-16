@@ -119,7 +119,11 @@ class Join (val table: ColumnSet) : ColumnSet() {
     override fun describe(s: Transaction): String = buildString {
         append(table.describe(s))
         for (p in joinParts) {
-            append(" ${p.joinType} JOIN ${p.joinPart.describe(s)}")
+            append(" ${p.joinType} JOIN ")
+            val isJoin = p.joinPart is Join
+            if (isJoin) append("(")
+            append(p.joinPart.describe(s))
+            if(isJoin) append(")")
             if (p.joinType != JoinType.CROSS) {
                 append(" ON ")
                 val queryBuilder = QueryBuilder(false)
