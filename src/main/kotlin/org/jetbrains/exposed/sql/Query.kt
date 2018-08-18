@@ -13,10 +13,15 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     val data = arrayOfNulls<Any?>(size)
 
     /**
-     * Function might returns null. Use @tryGet if you don't sure of nullability (e.g. in left-join cases)
+     * Retrieves value of a given expression on this row.
+     *
+     * @param c expression to evaluate
+     * @throws IllegalStateException if expression is not in record set or if result value is uninitialized
+     *
+     * @see [tryGet] to get null in the cases an exception would be thrown
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun <T> get(c: Expression<T>) : T {
+    operator fun <T> get(c: Expression<T>): T {
         val d = getRaw(c)
         return when {
             d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable -> {
@@ -37,7 +42,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
         data[index] = value
     }
 
-    fun<T> hasValue (c: Expression<T>) : Boolean = fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
+    fun <T> hasValue(c: Expression<T>): Boolean = fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
 
     fun <T> tryGet(c: Expression<T>): T? = if (hasValue(c)) get(c) else null
 
@@ -51,7 +56,7 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     internal object NotInitializedValue
 
     companion object {
-        fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>) : ResultRow {
+        fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             val size = fieldsIndex.size
             val answer = ResultRow(size, fieldsIndex)
 
