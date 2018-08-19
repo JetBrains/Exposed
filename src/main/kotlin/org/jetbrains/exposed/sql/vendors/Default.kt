@@ -18,6 +18,8 @@ open class DataTypeProvider {
 
     open fun floatType() = "FLOAT"
 
+    open fun doubleType() = "DOUBLE PRECISION"
+
     open fun uuidType() = "BINARY(16)"
 
     open fun dateTimeType() = "DATETIME"
