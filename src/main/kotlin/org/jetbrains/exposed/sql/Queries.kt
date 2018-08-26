@@ -126,13 +126,13 @@ fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testUpdate01
  */
-fun <T:Table> T.update(where: SqlExpressionBuilder.()->Op<Boolean>, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
-    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
+fun <T:Table> T.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
+    val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
 }
 
-fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? =  null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
+fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
