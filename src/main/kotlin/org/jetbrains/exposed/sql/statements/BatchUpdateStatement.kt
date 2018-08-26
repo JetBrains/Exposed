@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.Transaction
 import java.sql.PreparedStatement
 import java.util.*
 
-class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
+open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
     val data = ArrayList<Pair<EntityID<*>, SortedMap<Column<*>, Any?>>>()
 
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
