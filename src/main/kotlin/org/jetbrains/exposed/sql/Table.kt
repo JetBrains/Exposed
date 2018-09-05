@@ -193,9 +193,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T:Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).apply {
-        this.indexInPK = this@entityId.indexInPK
-        this.defaultValueFun = this@entityId.defaultValueFun?.let { { EntityID(it(), table as IdTable<T>) } }
+    fun <T:Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
+        it.indexInPK = this.indexInPK
+        it.defaultValueFun = defaultValueFun?.let { { EntityID(it(), table as IdTable<T>) } }
     })
 
     fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
