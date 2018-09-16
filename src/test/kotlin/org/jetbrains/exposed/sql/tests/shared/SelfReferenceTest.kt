@@ -11,7 +11,7 @@ class SortByReferenceTest {
     @Test
     fun simpleTest() {
         assertEqualLists(listOf(DMLTestsData.Cities), EntityCache.sortTablesByReferences(listOf(DMLTestsData.Cities)))
-        assertEqualLists(listOf(DMLTestsData.Users), EntityCache.sortTablesByReferences(listOf(DMLTestsData.Users)))
+        assertEqualLists(listOf( DMLTestsData.Cities, DMLTestsData.Users), EntityCache.sortTablesByReferences(listOf(DMLTestsData.Users)))
 
         val rightOrder = listOf(DMLTestsData.Cities, DMLTestsData.Users, DMLTestsData.UserData)
         val r1 = EntityCache.sortTablesByReferences(listOf(DMLTestsData.Cities, DMLTestsData.UserData, DMLTestsData.Users))

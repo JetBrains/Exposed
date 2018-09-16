@@ -200,11 +200,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
-        val columnTypeCopy = originalColumn.columnType.let { (it as? AutoIncColumnType)?.delegate ?: it }.clone()
+        val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
         val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
         _columns.add(answer)
         return answer
     }
+
+    private fun IColumnType.cloneAsBaseType() : IColumnType = ((this as? AutoIncColumnType)?.delegate ?: this).clone()
 
     private fun <T:Any> T.clone(replaceArgs: Map<KProperty1<T,*>, Any> = emptyMap()) = javaClass.kotlin.run {
         val consParams = primaryConstructor!!.parameters
@@ -371,22 +373,22 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         replaceColumn(this@autoinc, this)
     }
 
-    fun <T, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
+    fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
         referee = ref
         this.onUpdate = onUpdate
         this.onDelete = onDelete
     }
 
-    infix fun <T, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
+    infix fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
 
     fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>,
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>> =
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
-    fun<T> Table.reference(name: String, pkColumn: Column<T>): Column<T> {
-        val originalType = (pkColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: pkColumn.columnType
-        val columnType = originalType.let { (it as? AutoIncColumnType)?.delegate ?: it}.clone()
-        val column = Column<T>(this, name, columnType) references pkColumn
+    fun <T:Comparable<T>> reference(name: String, refColumn: Column<T>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
+        val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
+        val column = Column<T>(this, name, originalType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
         this._columns.add(column)
         return column
     }
@@ -394,6 +396,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun <T:Comparable<T>> optReference(name: String, foreign: IdTable<T>,
                                        onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>?> =
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
+
+    fun <T:Comparable<T?>> optReference(name: String, refColumn: Column<T>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T?> =
+         Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)

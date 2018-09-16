@@ -10,6 +10,7 @@ private val comparator = compareBy<Column<*>>({ it.table.tableName }, { it.name 
 
 class Column<T>(val table: Table, val name: String, override val columnType: IColumnType) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var referee: Column<*>? = null
+    fun <S:T> referee() : Column<S>? = referee as? Column<S>
     internal var onUpdate: ReferenceOption? = null
         get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
     internal var onDelete: ReferenceOption? = null

@@ -2,11 +2,15 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.dao.UUIDTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
+import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -20,6 +24,7 @@ import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.math.BigDecimal
+import java.util.*
 import kotlin.test.*
 
 object DMLTestsData {
@@ -1654,7 +1659,41 @@ class DMLTests : DatabaseTestsBase() {
             val sameQueryWithGrouping = userData.slice(userData.value.max()).selectAll().groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)
         }
+
+        withTables(OrgMemberships, Orgs) {
+            val org1 = Org.new {
+                name = "FOo"
+            }
+            val membership = OrgMembership.new {
+                org = org1
+            }
+
+            assertEquals(1, OrgMemberships.selectAll().count())
+        }
     }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
+
+object OrgMemberships : IntIdTable() {
+    val orgId = reference("org", Orgs.uid)
+}
+
+class OrgMembership(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<OrgMembership>(OrgMemberships)
+
+    val orgId by OrgMemberships.orgId
+    var org by Org referencedOn OrgMemberships.orgId
+}
+
+object Orgs : IntIdTable() {
+    val uid = varchar("uid", 36).uniqueIndex().clientDefault { UUID.randomUUID().toString() }
+    val name = varchar("name", 256)
+}
+
+class Org(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Org>(Orgs)
+
+    var uid by Orgs.uid
+    var name by Orgs.name
+}

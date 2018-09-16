@@ -280,6 +280,12 @@ class EntityTests: DatabaseTestsBase() {
     object Posts : LongIdTable(name = "posts") {
         val board = optReference("board", Boards)
         val parent = optReference("parent", this)
+        val category = optReference("category", Categories.uniqueId)
+    }
+
+    object Categories : IntIdTable() {
+        val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+        val title = varchar("title", 50)
     }
 
     class Board(id: EntityID<Int>): IntEntity(id) {
@@ -294,6 +300,16 @@ class EntityTests: DatabaseTestsBase() {
 
         var board by Board optionalReferencedOn Posts.board
         var parent by Post optionalReferencedOn Posts.parent
+        var category by Category optionalReferencedOn Posts.category
+    }
+
+
+    class Category(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Category>(Categories)
+
+        val uniqueId by Categories.uniqueId
+        var title by Categories.title
+        val posts by Post optionalReferrersOn Posts.category
     }
 
     @Test
@@ -438,6 +454,27 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testNonEntityIdReference() {
+        withTables(Posts) {
+            val category1 = Category.new {
+                title = "cat1"
+            }
+
+            val post1 = Post.new {
+                category = category1
+            }
+
+            val post2 = Post.new {
+                category = category1
+                parent = post1
+            }
+
+            assertEquals(2, Post.all().count())
+            assertEquals(2, category1.posts.count())
+            assertEquals(2, Posts.select { Posts.category eq category1.uniqueId }.count())
+        }
+    }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
             inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, null, statement)

@@ -53,7 +53,7 @@ object SqlExpressionBuilder {
 
     fun<T, S:T?> ExpressionWithColumnType<in S>.wrap(value: T): Expression<T> = QueryParameter(value, columnType)
 
-    infix fun<T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
+    infix fun <T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
         if (t == null) {
             return isNull()
         }
