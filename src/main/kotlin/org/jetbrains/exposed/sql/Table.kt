@@ -226,7 +226,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun <T:Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass.java))
 
-    @Deprecated("Use enumerationByName(name, length, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumeration(name, length, klass.kotlin)"))
+    @Deprecated("Use enumerationByName(name, length, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumerationByName(name, length, klass.kotlin)"))
     fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
     /**
      * An enumeration column where enumerations are stored by their name.
