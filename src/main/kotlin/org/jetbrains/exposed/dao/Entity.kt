@@ -120,7 +120,7 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
     override fun forUpdate(): SizedIterable<Target> = factory.find(op).forUpdate()
     override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()
 
-    operator override fun iterator(): Iterator<Target> = factory.find(op).iterator()
+    override operator fun iterator(): Iterator<Target> = factory.find(op).iterator()
     operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
 }
 
@@ -245,12 +245,12 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
-        if (_readValues?.hasValue(this) ?: false)
+        if (_readValues?.hasValue(this) == true)
             found(readValues[this])
         else
             notFound()
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T:Any?> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T

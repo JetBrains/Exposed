@@ -599,7 +599,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     object EnumTable : IntIdTable("EnumTable") {
-        internal var enumColumn: Column<Foo> = enumeration("enumColumn", Foo::class.java)
+        internal var enumColumn: Column<Foo> = enumeration("enumColumn", Foo::class)
 
         internal fun initEnumColumn(sql: String) {
             (columns as MutableList<Column<*>>).remove(enumColumn)

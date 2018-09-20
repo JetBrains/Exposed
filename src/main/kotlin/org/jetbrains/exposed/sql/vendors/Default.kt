@@ -273,7 +273,7 @@ abstract class VendorDialect(override val name: String,
             val transaction = TransactionManager.current()
             val metadata = transaction.db.metadata
 
-            existingIndicesCache.getOrPut(table, {
+            existingIndicesCache.getOrPut(table) {
                 val pkNames = metadata.getPrimaryKeys(getDatabase(), null, tableName).let { rs ->
                     val names = arrayListOf<String>()
                     while(rs.next()) {
@@ -290,16 +290,16 @@ abstract class VendorDialect(override val name: String,
                     rs.getString("INDEX_NAME")?.let {
                         val column = transaction.quoteIfNecessary(rs.getString("COLUMN_NAME")!!)
                         val isUnique = !rs.getBoolean("NON_UNIQUE")
-                        tmpIndices.getOrPut(it to isUnique, { arrayListOf() }).add(column)
+                        tmpIndices.getOrPut(it to isUnique) { arrayListOf() }.add(column)
                     }
                 }
                 rs.close()
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                         .mapNotNull {
-                            it.value.mapNotNull { tColumns[it] }.takeIf { c-> c.size == it.value.size }?.let { c-> Index(c, it.key.second) }
+                            it.value.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == it.value.size }?.let { c -> Index(c, it.key.second) }
                         }
-            })
+            }
         }
         return HashMap(existingIndicesCache)
     }
@@ -315,7 +315,7 @@ abstract class VendorDialect(override val name: String,
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.quoteIfNecessary(t.cutIfNecessary(index.indexName))
-        val columnsList = index.columns.map { t.identity(it) }.joinToString(prefix = "(", postfix = ")")
+        val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
         } else {

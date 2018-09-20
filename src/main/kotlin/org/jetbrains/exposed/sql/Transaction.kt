@@ -149,14 +149,13 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     internal fun quoteIfNecessary (identity: String) : String {
-        if (identity.contains('.'))
-            return identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
+        return if (identity.contains('.'))
+            identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
         else {
-            return quoteTokenIfNecessary(identity)
+            quoteTokenIfNecessary(identity)
         }
     }
 
-    // REVIEW
     internal fun cutIfNecessary(identity: String) = identity.take(identity.length.coerceAtMost(currentDialect.identifierLengthLimit))
 
     private fun quoteTokenIfNecessary(token: String) : String = if (db.needQuotes(token)) token.quoted else token
