@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
+import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.primaryConstructor
@@ -59,22 +60,22 @@ class OptionalReference<REF:Comparable<REF>, ID:Comparable<ID>, out Target : Ent
     }
 }
 
-class BackReference<ParentID:Comparable<ParentID>, out Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, in Child:Entity<ChildID>, REF>
-                    (reference: Column<REF>, factory: EntityClass<ParentID, Parent>) {
+internal class BackReference<ParentID:Comparable<ParentID>, out Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, in Child:Entity<ChildID>, REF>
+                    (reference: Column<REF>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent> {
     private val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
-    operator fun getValue(o: Child, desc: KProperty<*>) = delegate.getValue(o.apply { o.id.value }, desc).single() // flush entity before to don't miss newly created entities
+    override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
 }
 
 class OptionalBackReference<ParentID:Comparable<ParentID>, out Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, in Child:Entity<ChildID>, REF>
-                    (reference: Column<REF?>, factory: EntityClass<ParentID, Parent>) {
+                    (reference: Column<REF?>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent?> {
     private val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
-    operator fun getValue(o: Child, desc: KProperty<*>) = delegate.getValue(o.apply { o.id.value }, desc).singleOrNull()  // flush entity before to don't miss newly created entities
+    override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull()  // flush entity before to don't miss newly created entities
 }
 
 class Referrers<ParentID:Comparable<ParentID>, in Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, out Child:Entity<ChildID>, REF>
-    (val reference: Column<REF>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
+    (val reference: Column<REF>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     init {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -83,17 +84,17 @@ class Referrers<ParentID:Comparable<ParentID>, in Parent:Entity<ParentID>, Child
         }
     }
 
-    operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
-        val value = o.run { reference.referee<REF>()!!.lookup() }
-        if (o.id._value == null || value == null) return emptySized()
+    override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
+        val value = thisRef.run { reference.referee<REF>()!!.lookup() }
+        if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {factory.find{reference eq value }}
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(o.id, reference, query) else query()
+        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
     }
 }
 
 class OptionalReferrers<ParentID:Comparable<ParentID>, in Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, out Child:Entity<ChildID>, REF>
-(val reference: Column<REF?>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) {
+(val reference: Column<REF?>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     init {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -102,12 +103,12 @@ class OptionalReferrers<ParentID:Comparable<ParentID>, in Parent:Entity<ParentID
         }
     }
 
-    operator fun getValue(o: Parent, desc: KProperty<*>): SizedIterable<Child> {
-        val value = o.run { reference.referee<REF>()!!.lookup() }
-        if (o.id._value == null || value == null) return emptySized()
+    override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
+        val value = thisRef.run { reference.referee<REF>()!!.lookup() }
+        if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {factory.find{reference eq value }}
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(o.id, reference, query)  else query()
+        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query)  else query()
     }
 }
 
@@ -461,7 +462,7 @@ class EntityCache {
     companion object {
 
         fun invalidateGlobalCaches(created: List<Entity<*>>) {
-            created.map { it.klass }.filterIsInstance<ImmutableCachedEntityClass<*,*>>().distinct().forEach {
+            created.asSequence().mapNotNull { it.klass as? ImmutableCachedEntityClass<*,*>}.distinct().forEach {
                 it.expireCache()
             }
         }
@@ -701,31 +702,31 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     infix fun <REF:Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, Child:Entity<ID>, REF> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF>)
-            = registerRefRule(column) { BackReference<TargetID, Target, ID, Child, REF>(column, this) }
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF>)
+            : ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
-//    @JvmName("backReferencedOnOpt")
-//    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, Child:Entity<ID>, REF> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF?>)
-//            = registerRefRule(column) { BackReference<TargetID, Target, ID, Child, REF>(column, this) }
+    @JvmName("backReferencedOnOpt")
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF?>)
+            : ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, Child:Entity<ID>, REF> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF?>)
-            = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Child, REF>(column, this) }
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF>)
+            = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column as Column<REF?>, this) }
 
-//    @JvmName("optionalBackReferencedOnOpt")
-//    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<ID?>)
-//            = registerRefRule(column) { OptionalBackReference(column, this) }
+    @JvmName("optionalBackReferencedOnOpt")
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF?>)
+            = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, REF: Comparable<REF>> referrersOn(column: Column<REF>) = referrersOn<TargetID, REF>(column, false)
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>)
+            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, false) }
 
-    fun <TargetID: Comparable<TargetID>, REF: Comparable<REF>> referrersOn(column: Column<REF>, cache: Boolean) = registerRefRule(column) {
-        Referrers<TargetID, Entity<TargetID>, ID, T, REF>(column, this, cache)
-    }
+    fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>, cache: Boolean)
+            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
-    infix fun <TargetID : Comparable<TargetID>, REF: Comparable<REF>> optionalReferrersOn(column : Column<REF?>) =
-            optionalReferrersOn<TargetID, REF>(column, false)
-    
-    fun <TargetID: Comparable<TargetID>, REF: Comparable<REF>> optionalReferrersOn(column: Column<REF?>, cache: Boolean = false) =
-            registerRefRule(column) { OptionalReferrers<TargetID, Entity<TargetID>, ID, T, REF>(column, this, cache) }
+    infix fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column : Column<REF?>)
+            = registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, false) }
+
+    fun <TargetID: Comparable<TargetID>, Target:Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column: Column<REF?>, cache: Boolean = false) =
+            registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
     fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
 
