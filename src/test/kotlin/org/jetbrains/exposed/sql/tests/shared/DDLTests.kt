@@ -516,6 +516,9 @@ class DDLTests : DatabaseTestsBase() {
             if (currentDialect is PostgreSQLDialect) {
                 exec("set constraints all deferred;")
             }
+            if (currentDialect is SQLServerDialect) {
+                exec("DROP TABLE ${identity(Table1)}, ${identity(Table2)} CASCADE;")
+            }
         }
     }
 
