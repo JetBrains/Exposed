@@ -490,11 +490,11 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     object Table1 : IntIdTable() {
-        val table2 = reference("teamId", Table2, onDelete = ReferenceOption.CASCADE)
+        val table2 = reference("teamId", Table2, onDelete = ReferenceOption.NO_ACTION)
     }
 
     object Table2 : IntIdTable() {
-        val table1 = optReference("teamId", Table1, onDelete = ReferenceOption.SET_NULL)
+        val table1 = optReference("teamId", Table1, onDelete = ReferenceOption.NO_ACTION)
     }
 
     @Test fun testCrossReference() {
