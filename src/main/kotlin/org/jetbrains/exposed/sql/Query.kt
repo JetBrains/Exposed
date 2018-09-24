@@ -9,8 +9,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
 
-class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
-    val data = arrayOfNulls<Any?>(size)
+class ResultRow(private val fieldIndex: Map<Expression<*>, Int>) {
+    val data = arrayOfNulls<Any?>(fieldIndex.size)
 
     /**
      * Retrieves value of a given expression on this row.
@@ -56,18 +56,20 @@ class ResultRow(size: Int, private val fieldIndex: Map<Expression<*>, Int>) {
     internal object NotInitializedValue
 
     companion object {
-        fun create(rs: ResultSet, fields: List<Expression<*>>, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
-            val size = fieldsIndex.size
-            val answer = ResultRow(size, fieldsIndex)
-
-            fields.forEachIndexed { i, f ->
-                answer.data[i] = (f as? Column<*>)?.columnType?.readObject(rs, i + 1) ?: rs.getObject(i + 1)
+        fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
+            val fieldsIndex = fields.distinct().mapIndexed { i, field ->
+                val value = (field as? Column<*>)?.columnType?.readObject(rs, i + 1) ?: rs.getObject(i + 1)
+                (field to i) to value
+            }.toMap()
+            return ResultRow(fieldsIndex.keys.toMap()).apply {
+                fieldsIndex.forEach{ i, f ->
+                    data[i.second] = f
+                }
             }
-            return answer
         }
 
         internal fun create(columns : List<Column<*>>): ResultRow =
-            ResultRow(columns.size, columns.mapIndexed { i, c -> c to i }.toMap()).apply {
+            ResultRow(columns.mapIndexed { i, c -> c to i }.toMap()).apply {
                 columns.forEach {
                     this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
                 }
@@ -252,19 +254,12 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
     private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
         private var hasNext: Boolean? = null
-        private val fieldsIndex = HashMap<Expression<*>, Int>()
-
-        init {
-            set.fields.forEachIndexed { idx, field ->
-                fieldsIndex[field] = idx
-            }
-        }
 
         override operator fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
-            return ResultRow.create(rs, set.fields, fieldsIndex)
+            return ResultRow.create(rs, set.fields)
         }
 
         override fun hasNext(): Boolean {
