@@ -162,3 +162,8 @@ class DivideOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, over
     override fun toSQL(queryBuilder: QueryBuilder):String =
             "(${expr1.toSQL(queryBuilder)}) / (${expr2.toSQL(queryBuilder)})"
 }
+
+class ModOp<T:Number?, S: Number?>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
+    override fun toSQL(queryBuilder: QueryBuilder):String =
+            "(${expr1.toSQL(queryBuilder)}) % (${expr2.toSQL(queryBuilder)})"
+}

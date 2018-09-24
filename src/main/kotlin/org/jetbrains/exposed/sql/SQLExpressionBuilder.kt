@@ -67,7 +67,7 @@ object SqlExpressionBuilder {
         return EqOp(this, wrap(t))
     }
 
-    infix fun<T, S1: T?, S2: T?> Expression<in S1>.eq(other: Expression<in S2>) : Op<Boolean> = EqOp (this, other)
+    infix fun<T, S1: T?, S2: T?> Expression<in S1>.eq(other: Expression<in S2>) : Op<Boolean> = EqOp(this, other)
 
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
         if (other == null) {
@@ -77,7 +77,7 @@ object SqlExpressionBuilder {
         return NeqOp(this, wrap(other))
     }
 
-    infix fun <T, S1: T?, S2: T?> ExpressionWithColumnType<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp (this, other)
+    infix fun <T, S1: T?, S2: T?> ExpressionWithColumnType<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp(this, other)
 
     fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> = IsNullOp(this)
 
@@ -85,7 +85,7 @@ object SqlExpressionBuilder {
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<S>) = LessOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<S>) = LessOp(this, other)
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
 
@@ -93,27 +93,35 @@ object SqlExpressionBuilder {
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<S>) : Op<Boolean> = GreaterOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<S>) : Op<Boolean> = GreaterOp(this, other)
 
-    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp (this, wrap(t))
+    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<T>) : Op<Boolean> = GreaterEqOp (this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<T>) : Op<Boolean> = GreaterEqOp(this, other)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> = PlusOp (this, other, columnType)
+    operator fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> = PlusOp(this, other, columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> = PlusOp (this, wrap(t), columnType)
+    operator fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> = PlusOp(this, wrap(t), columnType)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> = MinusOp (this, other, columnType)
+    operator fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> = MinusOp(this, other, columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> = MinusOp (this, wrap(t), columnType)
+    operator fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> = MinusOp(this, wrap(t), columnType)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> = TimesOp (this, other, columnType)
+    operator fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> = TimesOp(this, other, columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> = TimesOp (this, wrap(t), columnType)
+    operator fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> = TimesOp(this, wrap(t), columnType)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> = DivideOp (this, other, columnType)
+    operator fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> = DivideOp(this, other, columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> = DivideOp (this, wrap(t), columnType)
+    operator fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> = DivideOp(this, wrap(t), columnType)
+
+    operator fun<T:Number?, S: Number> ExpressionWithColumnType<T>.rem(other: Expression<S>) : ExpressionWithColumnType<T> = ModOp(this, other, columnType)
+
+    operator fun<T:Number?, S: T> ExpressionWithColumnType<T>.rem(t: S) : ExpressionWithColumnType<T> = ModOp(this, wrap(t), columnType)
+
+    infix fun<T:Number?, S: Number> ExpressionWithColumnType<T>.mod(other: Expression<S>) : ExpressionWithColumnType<T> = this % other
+
+    infix fun<T:Number?, S: T> ExpressionWithColumnType<T>.mod(t: S) : ExpressionWithColumnType<T> = this % t
 
     infix fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> = LikeOp(this, QueryParameter(pattern, columnType))
 

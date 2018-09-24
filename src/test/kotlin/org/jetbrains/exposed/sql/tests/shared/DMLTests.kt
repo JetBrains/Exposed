@@ -2,11 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.not
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.dao.UUIDTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
@@ -798,13 +794,19 @@ class DMLTests : DatabaseTestsBase() {
     fun testCalc03() {
         withCitiesAndUsers { cities, users, userData ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
-            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
+            val mod1 = Expression.build { sum % 100 }
+            val mod2 = Expression.build { sum mod 100 }
+            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum, mod1, mod1)
                 .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
             assertEquals(202, r[0][sum])
+            assertEquals(2, r[0][mod1])
+            assertEquals(2, r[0][mod2])
             assertEquals("sergey", r[1][users.id])
             assertEquals(203, r[1][sum])
+            assertEquals(3, r[1][mod1])
+            assertEquals(3, r[1][mod2])
         }
     }
 

@@ -41,7 +41,7 @@ abstract class Expression<T> {
     override fun toString(): String = toSQL(QueryBuilder(false))
 
     companion object {
-        inline fun <T> build(builder: SqlExpressionBuilder.()->Expression<T>): Expression<T> =
+        inline fun <T, E: Expression<T>> build(builder: SqlExpressionBuilder.()->E): E =
                 SqlExpressionBuilder.builder()
     }
 }
