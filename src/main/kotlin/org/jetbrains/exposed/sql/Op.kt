@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 
 abstract class Op<T> : Expression<T>() {
@@ -164,6 +166,9 @@ class DivideOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, over
 }
 
 class ModOp<T:Number?, S: Number?>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder):String =
-            "(${expr1.toSQL(queryBuilder)}) % (${expr2.toSQL(queryBuilder)})"
+    override fun toSQL(queryBuilder: QueryBuilder):String = when(currentDialectIfAvailable) {
+        is OracleDialect -> "MOD(${expr1.toSQL(queryBuilder)}, ${expr2.toSQL(queryBuilder)})"
+        else -> "(${expr1.toSQL(queryBuilder)}) % (${expr2.toSQL(queryBuilder)})"
+    }
+
 }
