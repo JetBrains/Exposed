@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -85,7 +86,7 @@ class Database private constructor(val connector: () -> Connection) {
         }
 
         private fun doConnect(getNewConnection: () -> Connection, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return Database {
                 getNewConnection().apply { setupConnection(this) }
@@ -95,18 +96,18 @@ class Database private constructor(val connector: () -> Connection) {
         }
 
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect( { datasource.connection!! }, setupConnection, manager )
         }
 
         fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect( getNewConnection, manager = manager )
         }
         fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL) }): Database {
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }): Database {
             Class.forName(driver).newInstance()
 
             return doConnect( { DriverManager.getConnection(url, user, password) }, setupConnection, manager )

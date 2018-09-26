@@ -3,6 +3,7 @@ package org.jetbrains.exposed.spring
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.jdbc.datasource.ConnectionHolder
@@ -16,7 +17,8 @@ import javax.sql.DataSource
 
 
 class SpringTransactionManager(dataSource: DataSource,
-                               @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL
+                               @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL,
+                               @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(dataSource), TransactionManager {
 
     private val db = Database.connect(dataSource) { this }
