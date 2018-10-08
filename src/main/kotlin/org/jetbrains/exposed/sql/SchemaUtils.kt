@@ -138,7 +138,7 @@ object SchemaUtils {
                             val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to column.name.inProperCase()]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.referencedTable != column.referee!!.table.tableName.inProperCase()
+                            } else if (existingConstraint.targetTable != column.referee!!.table.tableName.inProperCase()
                                     || column.onDelete != existingConstraint.deleteRule
                                     || column.onUpdate != existingConstraint.updateRule) {
                                 statements.addAll(existingConstraint.dropStatement())
@@ -151,7 +151,6 @@ object SchemaUtils {
 
             return statements
         }
-
     }
 
     fun <T : Table> create(vararg tables: T) {

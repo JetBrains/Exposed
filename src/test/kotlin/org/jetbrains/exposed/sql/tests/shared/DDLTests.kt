@@ -498,7 +498,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun testCrossReference() {
-        withTables(Table2, Table1) {
+        withTables(Table1, Table2) {
             val table2id = Table2.insertAndGetId{}
             val table1id = Table1.insertAndGetId {
                 it[Table1.table2] = table2id
@@ -510,14 +510,16 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(1, Table1.selectAll().count())
             assertEquals(2, Table2.selectAll().count())
-            if (currentDialect is MysqlDialect) {
-               exec("SET foreign_key_checks = 0;")
+
+            Table2.update {
+                it[Table2.table1] = null
             }
-            if (currentDialect is PostgreSQLDialect) {
-                exec("set constraints all deferred;")
-            }
-            if (currentDialect is SQLServerDialect) {
-                exec("DROP TABLE ${identity(Table1)}, ${identity(Table2)} CASCADE;")
+
+            Table1.deleteAll()
+            Table2.deleteAll()
+            
+            if (currentDialect !is SQLiteDialect) {
+                exec(ForeignKeyConstraint.from(Table2.table1).dropStatement().single())
             }
         }
     }

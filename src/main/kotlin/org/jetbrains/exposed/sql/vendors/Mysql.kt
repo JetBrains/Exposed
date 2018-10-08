@@ -74,7 +74,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
         fun inTableList(): String {
             if (tables.isNotEmpty()) {
-                return " AND ku.TABLE_NAME IN ${tableNames.joinToString("','", prefix = "('", postfix = "')")}"
+                return tableNames.joinToString("','", prefix = "AND ku.TABLE_NAME IN ('", postfix = "')")
             }
             return ""
         }
@@ -94,17 +94,18 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                         "WHERE ku.TABLE_SCHEMA = '${getDatabase()}' ${inTableList()}") { rs ->
 
             while (rs.next()) {
-                val refereeTableName = rs.getString("TABLE_NAME")!!
-                if (refereeTableName !in tableNames) continue
-                val refereeColumnName = rs.getString("COLUMN_NAME")!!
+                val fromTableName = rs.getString("TABLE_NAME")!!
+                if (fromTableName !in tableNames) continue
+                val fromColumnName = rs.getString("COLUMN_NAME")!!
                 val constraintName = rs.getString("CONSTRAINT_NAME")!!
-                val refTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-                val refColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!
+                val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!
                 val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
                 val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-                constraints.getOrPut(refereeTableName to refereeColumnName) { arrayListOf() }.add(
-                        ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName,
-                                refTableName, refColumnName, 
+                constraints.getOrPut(fromTableName to fromColumnName) { arrayListOf() }.add(
+                        ForeignKeyConstraint(constraintName,
+                                targetTableName, targetColumnName,
+                                fromTableName, fromColumnName,
                                 constraintUpdateRule, constraintDeleteRule)
                 )
             }

@@ -31,25 +31,27 @@ enum class ReferenceOption {
     }
 }
 
-data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, val refereeColumn:String,
-                           val referencedTable: String, val referencedColumn: String,
-                            val updateRule: ReferenceOption, val deleteRule: ReferenceOption) : DdlAware {
+data class ForeignKeyConstraint(val fkName: String,
+                                val targetTable: String, val targetColumn:String,
+                                val fromTable: String, val fromColumn: String,
+                                val updateRule: ReferenceOption, val deleteRule: ReferenceOption) : DdlAware {
 
     companion object {
-        fun from(column: Column<*>): ForeignKeyConstraint {
-            assert(column.referee != null && (column.onDelete != null || column.onUpdate != null)) { "$column does not reference anything" }
-            val referee = column.referee!!
+        fun from(fromCol: Column<*>): ForeignKeyConstraint {
+            require(fromCol.referee != null && (fromCol.onDelete != null || fromCol.onUpdate != null)) { "$fromCol does not reference anything" }
+            val targetColumn = fromCol.referee!!
             val t = TransactionManager.current()
-            val refName = t.quoteIfNecessary(t.cutIfNecessary("fk_${referee.table.tableName}_${referee.name}_${column.name}"))
-            return ForeignKeyConstraint(refName, t.identity(referee.table), t.identity(referee),
-                    t.identity(column.table), t.identity(column),
-                    column.onUpdate ?: ReferenceOption.NO_ACTION,
-                    column.onDelete ?: ReferenceOption.NO_ACTION)
+            val refName = t.quoteIfNecessary(t.cutIfNecessary("fk_${fromCol.table.tableName}_${fromCol.name}_${targetColumn.name}")).inProperCase()
+            return ForeignKeyConstraint(refName,
+                    t.identity(targetColumn.table), t.identity(targetColumn),
+                    t.identity(fromCol.table), t.identity(fromCol),
+                    fromCol.onUpdate ?: ReferenceOption.NO_ACTION,
+                    fromCol.onDelete ?: ReferenceOption.NO_ACTION)
         }
     }
 
     internal val foreignKeyPart = buildString {
-        append(" FOREIGN KEY ($referencedColumn) REFERENCES $refereeTable($refereeColumn)")
+        append(" FOREIGN KEY ($fromColumn) REFERENCES $targetTable($targetColumn)")
         if (deleteRule != ReferenceOption.NO_ACTION) {
             append(" ON DELETE $deleteRule")
         }
@@ -58,9 +60,9 @@ data class ForeignKeyConstraint(val fkName: String, val refereeTable: String, va
         }
     }
 
-    override fun createStatement() = listOf("ALTER TABLE $referencedTable ADD" + (if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "") + foreignKeyPart)
+    override fun createStatement() = listOf("ALTER TABLE $fromTable ADD" + (if (fkName.isNotBlank()) " CONSTRAINT $fkName" else "") + foreignKeyPart)
 
-    override fun dropStatement() = listOf("ALTER TABLE $refereeTable DROP " +
+    override fun dropStatement() = listOf("ALTER TABLE $fromTable DROP " +
             when (currentDialect) {
                 is MysqlDialect -> "FOREIGN KEY "
                 else -> "CONSTRAINT "

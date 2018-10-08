@@ -241,23 +241,24 @@ abstract class VendorDialect(override val name: String,
                 val rs = TransactionManager.current().db.metadata.getImportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
-                    val refereeTableName = rs.getString("FKTABLE_NAME")!!
-                    val refereeColumnName = rs.getString("FKCOLUMN_NAME")!!
+                    val fromTableName = rs.getString("FKTABLE_NAME")!!
+                    val fromColumnName = rs.getString("FKCOLUMN_NAME")!!
                     val constraintName = rs.getString("FK_NAME")!!
-                    val refTableName = rs.getString("PKTABLE_NAME")!!
-                    val refColumnName = rs.getString("PKCOLUMN_NAME")!!
+                    val targetTableName = rs.getString("PKTABLE_NAME")!!
+                    val targetColumnName = rs.getString("PKCOLUMN_NAME")!!
                     val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("UPDATE_RULE"))
                     val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
                     tableConstraint.add(
-                        ForeignKeyConstraint(constraintName, refereeTableName, refereeColumnName,
-                                refTableName, refColumnName,
+                        ForeignKeyConstraint(constraintName,
+                                targetTableName, targetColumnName,
+                                fromTableName, fromColumnName,
                                 constraintUpdateRule, constraintDeleteRule)
                     )
                 }
                 rs.close()
                 tableConstraint
             }.forEach { it ->
-                constraints.getOrPut(it.refereeTable to it.refereeColumn, {arrayListOf()}).add(it)
+                constraints.getOrPut(it.targetTable to it.targetColumn){arrayListOf()}.add(it)
             }
 
         }
