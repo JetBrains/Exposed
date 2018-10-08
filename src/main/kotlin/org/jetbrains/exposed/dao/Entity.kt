@@ -252,10 +252,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
             notFound()
 
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
-    fun <T:Any?> Column<T>.lookup(): T = when {
+    fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
-        else -> readValues[this]
+        columnType.nullable -> readValues[this]
+        else -> readValues[this]!!
     }
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
