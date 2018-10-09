@@ -33,6 +33,6 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
     override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
 }
 
-class UnsupportedByDialectException(baseMessage: String, dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
+class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
 
 internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType(): String = "INTEGER AUTO_INCREMENT"
@@ -30,6 +31,16 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
         if (limit != null) transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         return super.update(targets, columnsAndValues, limit, where, transaction)
+    }
+
+    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
+        val tr = TransactionManager.current()
+        return when {
+            expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT.")
+            expr.distinct ->  tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT.")
+            else -> super.groupConcat(expr, queryBuilder).replace(" SEPARATOR ", ", ")
+        }
+
     }
 }
 

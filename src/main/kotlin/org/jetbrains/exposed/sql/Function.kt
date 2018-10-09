@@ -123,24 +123,7 @@ class CaseWhenElse<T, R:T> (val caseWhen: CaseWhen<T>, val elseResult: Expressio
 class GroupConcat(val expr: Column<*>,
                   val separator: String?,
                   val distinct: Boolean,
-                  vararg val orderBy: Pair<Expression<*>, Boolean>): Function<String?>(VarCharColumnType()) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
-        append("GROUP_CONCAT(")
-        if (distinct)
-            append("DISTINCT ")
-        append(expr.toSQL(queryBuilder))
-        orderBy.forEach {
-            append(it.first.toSQL(queryBuilder))
-            append(" ")
-            if (it.second) {
-                append("ASC")
-            } else {
-                append("DESC")
-            }
-        }
-        separator?.let {
-            append(" SEPARATOR '$separator'")
-        }
-        append(")")
-    }
+                  vararg val orderBy: Pair<Expression<*>, SortOrder>): Function<String?>(VarCharColumnType()) {
+    override fun toSQL(queryBuilder: QueryBuilder): String
+            = currentDialect.functionProvider.groupConcat(this, queryBuilder)
 }

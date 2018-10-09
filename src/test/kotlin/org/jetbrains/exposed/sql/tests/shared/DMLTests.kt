@@ -12,15 +12,13 @@ import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.test.*
 
 object DMLTestsData {
@@ -560,13 +558,13 @@ class DMLTests : DatabaseTestsBase() {
 
             users.slice(maxNullableCityId).selectAll()
                 .map { it[maxNullableCityId] }.let { result ->
-                assertTrue(result.size == 1)
+                assertEquals(result.size, 1)
                 assertNotNull(result.single())
             }
 
             users.slice(maxNullableCityId).select { users.cityId.isNull() }
                 .map { it[maxNullableCityId] }.let { result ->
-                assertTrue(result.size == 1)
+                assertEquals(result.size, 1)
                 assertNull(result.single())
             }
         }
@@ -579,13 +577,13 @@ class DMLTests : DatabaseTestsBase() {
 
             cities.slice(maxNullableId).selectAll()
                 .map { it[maxNullableId] }.let { result ->
-                assertTrue(result.size == 1)
+                assertEquals(result.size, 1)
                 assertNotNull(result.single())
             }
 
             cities.slice(maxNullableId).select { cities.id.isNull() }
                 .map { it[maxNullableId] }.let { result: List<Int?> ->
-                assertTrue(result.size == 1)
+                assertEquals(result.size, 1)
                 assertNull(result.single())
             }
         }
@@ -599,14 +597,66 @@ class DMLTests : DatabaseTestsBase() {
 
             cities.slice(avgIdExpr).selectAll()
                 .map { it[avgIdExpr] }.let { result ->
-                assertTrue(result.size == 1)
-                assertTrue(result.single()!!.compareTo(avgId) == 0)
+                assertEquals(result.size, 1)
+                        assertEquals(result.single()!!.compareTo(avgId), 0)
             }
 
             cities.slice(avgIdExpr).select { cities.id.isNull() }
                 .map { it[avgIdExpr] }.let { result ->
-                assertTrue(result.size == 1)
+                assertEquals(result.size, 1)
                 assertNull(result.single())
+            }
+        }
+    }
+
+    @Test
+    fun testGroupConcat() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE)) { cities, users, _ ->
+            fun GroupConcat.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) ->Unit) {
+                try {
+                    val result = cities.leftJoin(users)
+                        .slice(cities.name, this)
+                        .selectAll()
+                        .groupBy(cities.id).associate {
+                            it[cities.name] to it[this]
+                        }
+                    assert(result)
+                } catch (e: UnsupportedByDialectException) {
+                    assertTrue(e.dialect::class in dialects, e.message!! )
+                }
+            }
+            users.name.groupConcat().checkExcept(PostgreSQLDialect::class) {
+                assertEquals(3, it.size)
+            }
+
+            users.name.groupConcat(separator = ", ").checkExcept {
+                assertEquals(3, it.size)
+                assertEquals("Andrey", it["St. Petersburg"])
+                val sorted = if (currentDialect is MysqlDialect) "Eugene, Sergey" else "Sergey, Eugene"
+                assertEquals(sorted, it["Munich"])
+                assertNull(it["Prague"])
+            }
+
+            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class) {
+                assertEquals(3, it.size)
+                assertEquals("Andrey", it["St. Petersburg"])
+                val sorted = if (currentDialect is MysqlDialect) "Eugene | Sergey" else "Sergey | Eugene"
+                assertEquals(sorted, it["Munich"])
+                assertNull(it["Prague"])
+            }
+
+            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.ASC).checkExcept(PostgreSQLDialect::class) {
+                assertEquals(3, it.size)
+                assertEquals("Andrey", it["St. Petersburg"])
+                assertEquals("Eugene | Sergey", it["Munich"])
+                assertNull(it["Prague"])
+            }
+
+            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.DESC).checkExcept(PostgreSQLDialect::class) {
+                assertEquals(3, it.size)
+                assertEquals("Andrey", it["St. Petersburg"])
+                assertEquals("Sergey | Eugene", it["Munich"])
+                assertNull(it["Prague"])
             }
         }
     }

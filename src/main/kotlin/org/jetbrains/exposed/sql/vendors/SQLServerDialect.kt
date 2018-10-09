@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType() = "INT IDENTITY(1,1)"
@@ -36,6 +38,20 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
+    }
+
+    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
+        val tr = TransactionManager.current()
+        return when {
+            expr.separator == null ->
+                tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG")
+            expr.orderBy.size > 1 ->
+                tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG")
+            else -> super.groupConcat(expr, queryBuilder)
+                    .replace("GROUP_CONCAT(", "STRING_AGG(")
+                    .replace("SEPARATOR ", ", ")
+                    .replace(" ORDER BY ", ") WITHIN GROUP ( ORDER BY ")
+        }
     }
 }
 

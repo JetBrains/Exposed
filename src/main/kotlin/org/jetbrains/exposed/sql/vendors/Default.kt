@@ -109,6 +109,22 @@ abstract class FunctionProvider {
 
     open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
+    open fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder) = buildString {
+        append("GROUP_CONCAT(")
+        if (expr.distinct)
+            append("DISTINCT ")
+        append(expr.expr.toSQL(queryBuilder))
+        if (expr.orderBy.isNotEmpty()) {
+            expr.orderBy.joinTo(this, prefix = " ORDER BY ") {
+                "${it.first.toSQL(queryBuilder)} ${it.second.name}"
+            }
+        }
+        expr.separator?.let {
+            append(" SEPARATOR '$it'")
+        }
+        append(")")
+    }
+
     interface MatchMode {
         fun mode() : String
     }
