@@ -625,7 +625,7 @@ class DMLTests : DatabaseTestsBase() {
                     assertTrue(e.dialect::class in dialects, e.message!! )
                 }
             }
-            users.name.groupConcat().checkExcept(PostgreSQLDialect::class) {
+            users.name.groupConcat().checkExcept(PostgreSQLDialect::class, SQLServerDialect::class) {
                 assertEquals(3, it.size)
             }
 
