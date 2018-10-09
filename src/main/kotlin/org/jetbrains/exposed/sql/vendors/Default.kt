@@ -258,7 +258,7 @@ abstract class VendorDialect(override val name: String,
                 rs.close()
                 tableConstraint
             }.forEach { it ->
-                constraints.getOrPut(it.targetTable to it.targetColumn){arrayListOf()}.add(it)
+                constraints.getOrPut(it.fromTable to it.fromColumn){arrayListOf()}.add(it)
             }
 
         }
