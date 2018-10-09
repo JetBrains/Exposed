@@ -94,7 +94,7 @@ class ConnectionExceptions {
         val connections = mutableListOf<T>()
 
         override fun getConnection(): Connection {
-            val connection = DriverManager.getConnection(testDB.connection, testDB.user, testDB.pass)
+            val connection = DriverManager.getConnection(testDB.connection(), testDB.user, testDB.pass)
             val wrapped = connectionDecorator(connection)
             connections.add(wrapped)
             return wrapped

@@ -13,14 +13,14 @@ import org.joda.time.DateTimeZone
 import java.util.*
 import kotlin.concurrent.thread
 
-enum class TestDB(val connection: String, val driver: String, val user: String = "root", val pass: String = "",
+enum class TestDB(val connection: () -> String, val driver: String, val user: String = "root", val pass: String = "",
                   val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}, var db: Database? = null) {
-    H2("jdbc:h2:mem:regular", "org.h2.Driver"),
-    H2_MYSQL("jdbc:h2:mem:test;MODE=MySQL", "org.h2.Driver", beforeConnection = {
+    H2({"jdbc:h2:mem:regular"}, "org.h2.Driver"),
+    H2_MYSQL({"jdbc:h2:mem:test;MODE=MySQL"}, "org.h2.Driver", beforeConnection = {
         Mode.getInstance("MySQL").convertInsertNullToZero = false
     }),
-    SQLITE("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC"),
-    MYSQL("jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password=", "com.mysql.jdbc.Driver",
+    SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
+    MYSQL({"jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="}, "com.mysql.jdbc.Driver",
             beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
             afterTestFinished = {
                 try {
@@ -32,14 +32,14 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
                     Files().cleanTestDir()
                 }
             }),
-    POSTGRESQL("jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8", "org.postgresql.Driver",
+    POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
-            connection = ("jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"),
+            connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
+                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
-                val tmp = Database.connect(ORACLE.connection, user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
+                val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
                 transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
                     try {
                         exec("DROP USER ExposedTest CASCADE")
@@ -53,11 +53,11 @@ enum class TestDB(val connection: String, val driver: String, val user: String =
                 }
                 Unit
             }),
-    SQLSERVER("jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
-            ":${System.getProperty("exposed.test.sqlserver.port", "32781")}",
+    SQLSERVER({"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
+            ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"},
             "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
 
-    fun connect() = Database.connect(connection, user = user, password = pass, driver = driver)
+    fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 
     companion object {
         fun enabledInTests(): List<TestDB> {
