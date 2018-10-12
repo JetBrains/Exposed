@@ -617,7 +617,7 @@ class DMLTests : DatabaseTestsBase() {
                     val result = cities.leftJoin(users)
                         .slice(cities.name, this)
                         .selectAll()
-                        .groupBy(cities.id).associate {
+                        .groupBy(cities.id, cities.name).associate {
                             it[cities.name] to it[this]
                         }
                     assert(result)
@@ -625,22 +625,22 @@ class DMLTests : DatabaseTestsBase() {
                     assertTrue(e.dialect::class in dialects, e.message!! )
                 }
             }
-            users.name.groupConcat().checkExcept(PostgreSQLDialect::class, SQLServerDialect::class) {
+            users.name.groupConcat().checkExcept(PostgreSQLDialect::class, SQLServerDialect::class, OracleDialect::class) {
                 assertEquals(3, it.size)
             }
 
-            users.name.groupConcat(separator = ", ").checkExcept {
+            users.name.groupConcat(separator = ", ").checkExcept(OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                val sorted = if (currentDialect is MysqlDialect) "Eugene, Sergey" else "Sergey, Eugene"
+                val sorted = if (currentDialect is MysqlDialect || currentDialect is SQLServerDialect) "Eugene, Sergey" else "Sergey, Eugene"
                 assertEquals(sorted, it["Munich"])
                 assertNull(it["Prague"])
             }
 
-            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class) {
+            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class, OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                val sorted = if (currentDialect is MysqlDialect) "Eugene | Sergey" else "Sergey | Eugene"
+                val sorted = if (currentDialect is MysqlDialect || currentDialect is SQLServerDialect) "Eugene | Sergey" else "Sergey | Eugene"
                 assertEquals(sorted, it["Munich"])
                 assertNull(it["Prague"])
             }

@@ -47,10 +47,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
                 tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG")
             expr.orderBy.size > 1 ->
                 tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG")
-            else -> super.groupConcat(expr, queryBuilder)
-                    .replace("GROUP_CONCAT(", "STRING_AGG(")
-                    .replace("SEPARATOR ", ", ")
-                    .replace(" ORDER BY ", ") WITHIN GROUP ( ORDER BY ")
+            else -> buildString {
+                append("STRING_AGG(")
+                append(expr.expr.toSQL(queryBuilder))
+                append(", '${expr.separator}')")
+                expr.orderBy.singleOrNull()?.let { (col, order) ->
+                    append(") WITHIN GROUP (ORDER BY ${col.toSQL(queryBuilder)} ${order.name})")
+                }
+            }
         }
     }
 }

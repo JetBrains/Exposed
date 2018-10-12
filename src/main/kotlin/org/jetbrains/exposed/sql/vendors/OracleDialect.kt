@@ -80,11 +80,18 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)
         = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
-    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
-        return super.groupConcat(expr, queryBuilder)
-                .replace("GROUP_CONCAT(", "LISTAGG(")
-                .replace("SEPARATOR ", ", ")
-                .replace(" ORDER BY ", ") WITHIN GROUP (")
+    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String = buildString {
+        if (expr.orderBy.size != 1)
+            TransactionManager.current().throwUnsupportedException("LISTAGG requires single order by clause")
+        append("LISTAGG(")
+        append(expr.expr)
+        expr.separator?.let {
+            append(", '$it'")
+        }
+        append(") WITHIN GROUP (ORDER BY ")
+        val (col, order) = expr.orderBy.single()
+        append("${col.toSQL(queryBuilder)} ${order.name}")
+        append(")")
     }
 }
 

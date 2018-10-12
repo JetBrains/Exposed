@@ -66,7 +66,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG.")
             expr.distinct -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG.")
             expr.separator == null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG.")
-            else -> super.groupConcat(expr, queryBuilder).replace("SEPARATOR ", ", ").replace("GROUP_CONCAT", "STRING_AGG")
+            else -> "STRING_AGG(${expr.expr.toSQL(queryBuilder)}, '${expr.separator}')"
         }
     }
 }
