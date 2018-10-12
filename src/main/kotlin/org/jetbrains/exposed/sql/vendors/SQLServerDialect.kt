@@ -52,7 +52,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
                 append(expr.expr.toSQL(queryBuilder))
                 append(", '${expr.separator}')")
                 expr.orderBy.singleOrNull()?.let { (col, order) ->
-                    append(") WITHIN GROUP (ORDER BY ${col.toSQL(queryBuilder)} ${order.name})")
+                    append(" WITHIN GROUP (ORDER BY ${col.toSQL(queryBuilder)} ${order.name})")
                 }
             }
         }
