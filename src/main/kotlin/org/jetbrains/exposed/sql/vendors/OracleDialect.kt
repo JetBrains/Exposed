@@ -84,7 +84,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (expr.orderBy.size != 1)
             TransactionManager.current().throwUnsupportedException("LISTAGG requires single order by clause")
         append("LISTAGG(")
-        append(expr.expr)
+        append(expr.expr.toSQL(queryBuilder))
         expr.separator?.let {
             append(", '$it'")
         }
