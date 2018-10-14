@@ -8,6 +8,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.Delegates
 import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.primaryConstructor
@@ -126,18 +127,18 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
 }
 
 @Suppress("UNCHECKED_CAST")
-class InnerTableLink<ID:Comparable<ID>, Target: Entity<ID>>(val table: Table,
-                                     val target: EntityClass<ID, Target>) {
-    private fun getSourceRefColumn(o: Entity<*>): Column<EntityID<*>> {
-        val sourceRefColumn = table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<*>> ?: error("Table does not reference source")
-        return sourceRefColumn
+class InnerTableLink<Source: Entity<*>, ID:Comparable<ID>, Target: Entity<ID>>(val table: Table,
+                                     val target: EntityClass<ID, Target>) : ReadWriteProperty<Source, SizedIterable<Target>> {
+
+    private fun getSourceRefColumn(o: Source): Column<EntityID<*>> {
+        return table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<*>> ?: error("Table does not reference source")
     }
 
     private fun getTargetRefColumn(): Column<EntityID<*>> {
         return table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<*>> ?: error("Table does not reference target")
     }
 
-    operator fun getValue(o: Entity<*>, desc: KProperty<*>): SizedIterable<Target> {
+    override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
@@ -150,13 +151,13 @@ class InnerTableLink<ID:Comparable<ID>, Target: Entity<ID>>(val table: Table,
         return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
-    operator fun<SrcID : Comparable<SrcID>> setValue(o: Entity<SrcID>, desc: KProperty<*>, value: SizedIterable<Target>) {
+override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
         val targetRefColumn = getTargetRefColumn()
 
         val entityCache = TransactionManager.current().entityCache
         entityCache.flush()
-        val oldValue = getValue(o, desc)
+        val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
         entityCache.clearReferrersCache()
 
@@ -283,7 +284,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix fun <ID:Comparable<ID>, Target:Entity<ID>> EntityClass<ID, Target>.via(table: Table): InnerTableLink<ID, Target> =
+    infix fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<Entity<ID>, TID, Target> =
             InnerTableLink(table, this@via)
 
     fun <T: Entity<*>> s(c: EntityClass<*, T>): EntityClass<*, T> = c
