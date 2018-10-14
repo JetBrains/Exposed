@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
-        create (Cities, Users)
+        SchemaUtils.create (Cities, Users)
 
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
@@ -210,7 +210,7 @@ fun main(args: Array<String>) {
     transaction {
         addLogger(StdOutSqlLogger)
 
-        create (Cities, Users)
+        SchemaUtils.create (Cities, Users)
 
         val stPete = City.new {
             name = "St. Petersburg"
