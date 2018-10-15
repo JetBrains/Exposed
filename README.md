@@ -129,7 +129,7 @@ fun main(args: Array<String>) {
             }
         }
 
-        drop (Users, Cities)
+        SchemaUtils.drop (Users, Cities)
 
     }
 }
