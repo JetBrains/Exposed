@@ -9,7 +9,8 @@ import java.sql.Connection
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(private val db: Database,
-                                    @Volatile override var defaultIsolationLevel: Int) : TransactionManager {
+                                    @Volatile override var defaultIsolationLevel: Int,
+                                    @Volatile override var defaultRepetitionAttempts: Int) : TransactionManager {
 
     val threadLocal = ThreadLocal<Transaction>()
 
@@ -54,7 +55,7 @@ class ThreadLocalTransactionManager(private val db: Database,
     }
 }
 
-fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, 3, db, statement)
+fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, TransactionManager.manager.defaultRepetitionAttempts, db, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
     val outer = TransactionManager.currentOrNull()
