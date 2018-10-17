@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import java.lang.IllegalStateException
+
 interface SizedIterable<out T>: Iterable<T> {
     fun limit(n: Int, offset: Int = 0): SizedIterable<T>
     fun count(): Int
@@ -50,8 +52,18 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
     override operator fun iterator() = wrapper.iterator()
     override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
-    override fun forUpdate(): SizedIterable<T> = delegate.forUpdate()
-    override fun notForUpdate(): SizedIterable<T> = delegate.notForUpdate()
+    override fun forUpdate(): SizedIterable<T> {
+        if (_wrapper != null && (delegate as? Query)?.isForUpdate() != true) {
+            throw IllegalStateException("Impossible to change forUpdate state for loaded data")
+        }
+        return delegate.forUpdate()
+    }
+    override fun notForUpdate(): SizedIterable<T> {
+        if (_wrapper != null && (delegate as? Query)?.isForUpdate() != false) {
+            throw IllegalStateException("Impossible to change forUpdate state for loaded data")
+        }
+        return delegate.notForUpdate()
+    }
 
     private fun _count(): Int {
         if (_size == null) {
