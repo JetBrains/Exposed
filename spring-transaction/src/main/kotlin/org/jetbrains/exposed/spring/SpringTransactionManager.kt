@@ -61,6 +61,7 @@ class SpringTransactionManager(dataSource: DataSource,
     private fun initTransaction(): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(dataSource) as ConnectionHolder).connection
         val transactionImpl = SpringTransaction(connection, db, currentOrNull())
+        TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
         }
