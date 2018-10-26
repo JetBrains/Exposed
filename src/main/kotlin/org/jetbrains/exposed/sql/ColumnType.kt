@@ -380,7 +380,7 @@ class UUIDColumnType : ColumnType() {
         }
     }
 
-    override fun nonNullValueToString(value: Any) = valueToUUID(value).toString()
+    override fun nonNullValueToString(value: Any) = "'${valueToUUID(value)}'"
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is UUID -> value
