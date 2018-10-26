@@ -26,7 +26,7 @@ class Database private constructor(val connector: () -> Connection) {
 
     val url: String by lazy { metadata.url }
 
-    internal val dialect by lazy {
+    val dialect by lazy {
         val name = url.removePrefix("jdbc:").substringBefore(':')
         dialects[name.toLowerCase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
     }
