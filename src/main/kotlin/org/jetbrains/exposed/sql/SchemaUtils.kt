@@ -135,7 +135,7 @@ object SchemaUtils {
                 for (table in tables) {
                     for (column in table.columns) {
                         if (column.referee != null) {
-                            val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to column.name.inProperCase()]?.firstOrNull()
+                            val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to identity(column)]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
                             } else if (existingConstraint.targetTable != column.referee!!.table.tableName.inProperCase()

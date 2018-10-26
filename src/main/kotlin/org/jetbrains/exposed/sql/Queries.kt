@@ -157,8 +157,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
 
     if (!excessiveConstraints.isEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
-        excessiveConstraints.forEach {
-            val (pair, fk) = it
+        excessiveConstraints.forEach { (pair, fk) ->
             val constraint = fk.first()
             exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t${fk.joinToString(", ") {it.fkName}}")
         }
@@ -197,15 +196,16 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
+    val tr = TransactionManager.current()
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
-
-    fun List<Index>.filterFKeys() = filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.name?.inProperCase()) in fKeyConstraints }
+    val existingIndices = currentDialect.existingIndices(*tables)
+    fun List<Index>.filterFKeys() = filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.let { c -> tr.identity(c) }) in fKeyConstraints }
 
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
     for (table in tables) {
-        val existingTableIndices = currentDialect.existingIndices(table)[table].orEmpty().filterFKeys()
+        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys()
         val mappedIndices = table.indices.filterFKeys()
 
         existingTableIndices.forEach { index ->
@@ -216,13 +216,13 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
             }
         }
 
-        notMappedIndices.getOrPut(table.nameInDatabaseCase(), {hashSetOf()}).addAll(existingTableIndices.subtract(mappedIndices))
+        notMappedIndices.getOrPut(table.nameInDatabaseCase()) {hashSetOf()}.addAll(existingTableIndices.subtract(mappedIndices))
 
         missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
     }
 
     val toCreate = missingIndices.subtract(nameDiffers)
     toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { e -> e.value.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '${e.key}':") }
+    notMappedIndices.forEach { (name, indexes) -> indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':") }
     return toCreate.toList()
 }
