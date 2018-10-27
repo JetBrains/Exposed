@@ -1,3 +1,29 @@
+# 0.11.1
+Features:
+* Support entity references by non-ID column ([#282](https://github.com/JetBrains/Exposed/issues/282))
+* groupConcat function reworked and supported on all databases (except SQLite)
+* Now it's possible to create cyclic depended tables in single SchemaUtils.createTable() call. 
+Relates to Defer Foreign references during creation ([#384](https://github.com/JetBrains/Exposed/issues/384))
+* Introduced SchemaUtils.checkCycle() function to check tables for cyclic references
+* MOD (%) operator support ([#391](https://github.com/JetBrains/Exposed/issues/391))
+* Set RepetitionAttempts in TransactionManager (to set globally) ([#393](https://github.com/JetBrains/Exposed/issues/393))
+* Fail with KNPE on not null columns with null
+* Throw exception when trying to change onUpdate state for loaded LazySizedCollection
+* Database.dialect field is now public
+
+Bug fixes:
+* BatchUpdateStatement results in IllegalStateException: Table.columnName is already initialized ([#386](https://github.com/JetBrains/Exposed/issues/386))
+* BatchUpdateStatement expects set(..) calls in alphabetical order and fails when given more than 2 batches ([#388](https://github.com/JetBrains/Exposed/issues/388))
+* autoIncrement carries to referencing column ([#385](https://github.com/JetBrains/Exposed/issues/385))
+* Query fails when same column/expression provided in slice multiple times
+* columnConstraints() returns wrong map with keys in wrong order (target instead of referee)
+* Try to expand Query in ExposedSQLException even if it wasn't able to use current transaction.
+* Autoinc column does not necessarily need to be the first column in the table ([#398](https://github.com/JetBrains/Exposed/issues/398))
+* "No transaction in context" when using SpringTransactionManager ([#365](https://github.com/JetBrains/Exposed/issues/365), [#407](https://github.com/JetBrains/Exposed/issues/407))
+* uuid values are not properly escaped in subquery ([#415](https://github.com/JetBrains/Exposed/issues/415))
+* Foreign Key Constraints being recreated  ([#394](https://github.com/JetBrains/Exposed/issues/394))
+
+
 # 0.10.5
 Features:
 * Added `DOUBLE` column type ([#358](https://github.com/JetBrains/Exposed/issues/358)). Thanks go to Jonathan Shore (@tr8dr).
