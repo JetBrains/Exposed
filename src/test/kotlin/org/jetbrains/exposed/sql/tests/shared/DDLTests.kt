@@ -59,7 +59,7 @@ class DDLTests : DatabaseTestsBase() {
             val time = datetime("time").uniqueIndex()
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = TestTable) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
@@ -171,7 +171,7 @@ class DDLTests : DatabaseTestsBase() {
             //            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
-         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = TestTable) {
+         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = *arrayOf(TestTable)) {
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
                     "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
@@ -185,7 +185,7 @@ class DDLTests : DatabaseTestsBase() {
             val age = integer("age").nullable()
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = TestTable) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
                     "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
