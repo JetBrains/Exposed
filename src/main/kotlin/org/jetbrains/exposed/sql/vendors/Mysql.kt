@@ -79,7 +79,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
             return ""
         }
 
-        TransactionManager.current().exec(
+        val tr = TransactionManager.current()
+        tr.exec(
                 "SELECT\n" +
                         "  rc.CONSTRAINT_NAME,\n" +
                         "  ku.TABLE_NAME,\n" +
@@ -92,14 +93,13 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                         "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
                         "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
                         "WHERE ku.TABLE_SCHEMA = '${getDatabase()}' ${inTableList()}") { rs ->
-
             while (rs.next()) {
                 val fromTableName = rs.getString("TABLE_NAME")!!
                 if (fromTableName !in tableNames) continue
-                val fromColumnName = rs.getString("COLUMN_NAME")!!
+                val fromColumnName = rs.getString("COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
                 val constraintName = rs.getString("CONSTRAINT_NAME")!!
                 val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!
+                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
                 val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
                 val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
                 constraints.getOrPut(fromTableName to fromColumnName) { arrayListOf() }.add(

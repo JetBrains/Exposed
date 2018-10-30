@@ -249,25 +249,24 @@ abstract class VendorDialect(override val name: String,
 
     private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
 
+    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction)
+            = if (tr.db.shouldQuoteIdentifiers && inProperCase != this) "${tr.db.identityQuoteString}$this${tr.db.identityQuoteString}" else tr.quoteIfNecessary(this)
+
     @Synchronized
     override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
         val tr = TransactionManager.current()
-        val db = tr.db
-        val q = db.identityQuoteString
-
-        fun String.quoteIfNeeded() = if (db.shouldQuoteIdentifiers && inProperCase != this) "$q$this$q" else tr.quoteIfNecessary(this)
 
         tables.map{ it.nameInDatabaseCase() }.forEach { table ->
             columnConstraintsCache.getOrPut(table) {
-                val rs = db.metadata.getImportedKeys(getDatabase(), null, table)
+                val rs = tr.db.metadata.getImportedKeys(getDatabase(), null, table)
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val fromTableName = rs.getString("FKTABLE_NAME")!!
-                    val fromColumnName = rs.getString("FKCOLUMN_NAME")!!.quoteIfNeeded()
+                    val fromColumnName = rs.getString("FKCOLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
                     val constraintName = rs.getString("FK_NAME")!!
                     val targetTableName = rs.getString("PKTABLE_NAME")!!
-                    val targetColumnName = rs.getString("PKCOLUMN_NAME")!!.quoteIfNeeded()
+                    val targetColumnName = rs.getString("PKCOLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
                     val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("UPDATE_RULE"))
                     val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
                     tableConstraint.add(
