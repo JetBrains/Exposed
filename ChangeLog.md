@@ -1,3 +1,7 @@
+# 0.11.2
+* Kotlin #1.3.0
+* Fixed bug that call for createMissingTablesAndColumns could lead to exception while trying to add an index which already exists in db (*MySQL only problem*)
+
 # 0.11.1
 Features:
 * Support entity references by non-ID column ([#282](https://github.com/JetBrains/Exposed/issues/282))
