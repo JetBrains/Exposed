@@ -53,13 +53,13 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
     override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
     override fun forUpdate(): SizedIterable<T> {
-        if (_wrapper != null && (delegate as? Query)?.isForUpdate() != true) {
+        if (_wrapper != null && delegate is Query && !delegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
         return delegate.forUpdate()
     }
     override fun notForUpdate(): SizedIterable<T> {
-        if (_wrapper != null && (delegate as? Query)?.isForUpdate() != false) {
+        if (_wrapper != null && delegate is Query && delegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
         return delegate.notForUpdate()
