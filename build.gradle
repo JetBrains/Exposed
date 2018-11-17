@@ -133,7 +133,7 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "4.1"
+    gradleVersion = "4.10"
 }
 
 
@@ -153,6 +153,7 @@ allprojects {
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+        compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.1'
         compile 'joda-time:joda-time:2.9.9'
         compile 'org.slf4j:slf4j-api:1.7.25'
         compileOnly 'com.h2database:h2:1.4.197'
@@ -182,3 +183,10 @@ project(":spring-transaction") {
         from sourceSets.main.allSource
     }
 }
+/*
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+*/
