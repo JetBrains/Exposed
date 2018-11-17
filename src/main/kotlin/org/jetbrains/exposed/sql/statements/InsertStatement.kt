@@ -13,6 +13,7 @@ import java.sql.SQLException
 open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
     protected open val flushCache = true
     protected var resultedValues: List<Map<Column<*>, Any>>? = null
+    @Deprecated("Will be made internal on the next releases")
     open val generatedKey: Key? get() = autoIncColumns.firstOrNull()?.let { get(it) } as Key?
 
     infix operator fun <T> get(column: Column<T>): T? = resultedValues?.get(0)?.get(column)?.let { column.columnType.valueFromDB(it )} as? T
