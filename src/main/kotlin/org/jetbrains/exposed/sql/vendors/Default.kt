@@ -316,7 +316,7 @@ abstract class VendorDialect(override val name: String,
                     }
                 }
                 rs.close()
-                val tColumns = table.columns.associateBy { transaction.identity(it) }
+                val tColumns = table.columns.associateBy { transaction.identity(it).replace("\"", "") }
                 tmpIndices.filterNot { it.key.first in pkNames }
                         .mapNotNull {
                             it.value.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == it.value.size }?.let { c -> Index(c, it.key.second) }
