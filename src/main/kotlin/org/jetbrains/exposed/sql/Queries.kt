@@ -68,7 +68,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     }
     var statement = newBatchStatement()
 
-    val result = ArrayList<Map<Column<*>, Any>>()
+    val result = mutableListOf<Map<Column<*>, Any>>()
     fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
         try {
             body()
@@ -90,7 +90,10 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
         statement.execute(TransactionManager.current())
         result += statement.generatedKey.orEmpty()
     }
-    return result
+
+    val columnTypedResult = result.map { it.mapValues { it.key.columnType.valueFromDB(it.value) } }
+
+    return columnTypedResult
 }
 
 fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
