@@ -57,7 +57,7 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertState
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
-fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<Map<Column<*>, Any>> {
+fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<ResultRow> {
     if (data.count() == 0) return emptyList()
     fun newBatchStatement() : BatchInsertStatement {
         return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
@@ -68,13 +68,13 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     }
     var statement = newBatchStatement()
 
-    val result = ArrayList<Map<Column<*>, Any>>()
+    val result = ArrayList<ResultRow>()
     fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
         try {
             body()
         } catch (e: BatchDataInconsistentException) {
             execute(TransactionManager.current())
-            result += generatedKey.orEmpty()
+            result += resultedValues.orEmpty()
             statement = newBatchStatement()
         }
     }
@@ -88,7 +88,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     }
     if (statement.arguments().isNotEmpty()) {
         statement.execute(TransactionManager.current())
-        result += statement.generatedKey.orEmpty()
+        result += statement.resultedValues.orEmpty()
     }
     return result
 }

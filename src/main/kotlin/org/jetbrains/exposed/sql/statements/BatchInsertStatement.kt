@@ -8,13 +8,13 @@ import java.util.*
 
 internal class BatchDataInconsistentException(message : String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<Map<Column<*>, Any>>>(table, ignore) {
+open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val flushCache: Boolean = false
 
     override val isAlwaysBatch = true
 
-    override val generatedKey: List<Map<Column<*>, Any>>?
+    override val generatedKey: List<ResultRow>?
         get() = resultedValues
 
     protected val data = ArrayList<MutableMap<Column<*>, Any?>>()

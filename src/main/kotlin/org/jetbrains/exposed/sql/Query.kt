@@ -9,8 +9,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
 
-class ResultRow(private val fieldIndex: Map<Expression<*>, Int>) {
-    val data = arrayOfNulls<Any?>(fieldIndex.size)
+class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
+    private val data = arrayOfNulls<Any?>(fieldIndex.size)
 
     /**
      * Retrieves value of a given expression on this row.

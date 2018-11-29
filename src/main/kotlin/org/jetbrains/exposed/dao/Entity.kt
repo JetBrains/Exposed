@@ -444,8 +444,8 @@ class EntityCache {
                         })
                         entry.writeValues[entry.klass.table.id as Column<Any?>] = id
                     }
-                    genValues.forEach {
-                        entry.writeValues[it.key as Column<Any?>] = it.value
+                    genValues.fieldIndex.keys.forEach { key ->
+                        entry.writeValues[key as Column<Any?>] = genValues[key]
                     }
 
                     entry.storeWrittenValues()
