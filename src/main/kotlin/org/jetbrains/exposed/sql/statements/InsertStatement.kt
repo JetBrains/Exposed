@@ -18,7 +18,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     @Deprecated("Will be made internal on the next releases")
     open val generatedKey: Key? get() = autoIncColumns.firstOrNull()?.let { get(it) } as Key?
 
-    infix operator fun <T> get(column: Column<T>): T? = resultedValues?.get(0)?.get(column)
+    infix operator fun <T> get(column: Column<T>): T? = resultedValues?.get(0)?.tryGet(column)
             ?: if (!isIgnore) error("No key generated") else null
 
     private fun processResults(rs: ResultSet?, inserted: Int): List<ResultRow> {
