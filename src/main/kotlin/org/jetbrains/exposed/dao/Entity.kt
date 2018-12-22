@@ -705,22 +705,30 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*,*>) this.notForUpdate() else this
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    fun warmUpOptReferences(references: List<EntityID<ID>>, refColumn: Column<EntityID<ID>?>): List<T> = warmUpReferences(references, refColumn as Column<EntityID<ID>>)
+    fun warmUpOptReferences(references: List<EntityID<ID>>, refColumn: Column<EntityID<ID>?>, forUpdate: Boolean? = null): List<T>
+            = warmUpReferences(references, refColumn as Column<EntityID<ID>>, forUpdate)
 
-    fun warmUpReferences(references: List<EntityID<ID>>, refColumn: Column<EntityID<ID>>): List<T> {
+    fun warmUpReferences(references: List<EntityID<ID>>, refColumn: Column<EntityID<ID>>, forUpdate: Boolean? = null): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         checkReference(refColumn, references.first().table)
         val cache = TransactionManager.current().entityCache
         val toLoad = distinctRefIds.filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
-        val entities = if (toLoad.isNotEmpty()) { find { refColumn inList toLoad }.toList() } else emptyList()
+        val entities = if (toLoad.isNotEmpty()) {
+            find { refColumn inList toLoad }.apply {
+                forUpdate?.let {
+                    if (forUpdate) forUpdate() else notForUpdate()
+                }
+            }.toList()
+        } else
+            emptyList()
         val groupedBySourceId = entities.groupBy { it.readValues[refColumn] }
         return distinctRefIds.flatMap {
             cache.getOrPutReferrers(it, refColumn) { SizedCollection(groupedBySourceId[it]?:emptyList()) }
         }
     }
 
-    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table): List<T> {
+    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>> ?: error("Can't detect source reference column")
@@ -736,12 +744,19 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
                     - sourceRefColumn).distinct() + sourceRefColumn
 
-            val entitiesWithRefs = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }.map { it[sourceRefColumn] to wrapRow(it) }
+            val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
+            forUpdate?.let {
+                if (forUpdate)
+                    query.forUpdate()
+                else
+                    query.notForUpdate()
+            }
+            val entitiesWithRefs = query.map { it[sourceRefColumn] to wrapRow(it) }
 
             val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
 
             idsToLoad.forEach {
-                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn, { SizedCollection(groupedBySourceId[it] ?: emptyList()) })
+                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) { SizedCollection(groupedBySourceId[it] ?: emptyList()) }
             }
             entitiesWithRefs.map { it.second }
         }
