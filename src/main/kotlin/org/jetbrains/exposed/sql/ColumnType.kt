@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -58,6 +59,18 @@ interface IColumnType {
 
 abstract class ColumnType(override var nullable: Boolean = false) : IColumnType {
     override fun toString(): String = sqlType()
+    override fun equals(other: Any?): Boolean = when {
+        other !is ColumnType -> false
+        other.nullable != nullable -> false
+        TransactionManager.currentOrNull() == null -> this === other
+        other.sqlType() == sqlType() -> true
+        else -> false
+    }
+
+    override fun hashCode(): Int {
+        return 41 * nullable.hashCode() + sqlType().hashCode()
+    }
+
 }
 
 class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: String) : IColumnType by delegate {
@@ -72,6 +85,15 @@ class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: Strin
     }
 
     override fun sqlType(): String = resolveAutIncType(delegate)
+
+    override fun equals(other: Any?) = when {
+        other !is AutoIncColumnType -> false
+        other._autoincSeq != _autoincSeq -> false
+        other.delegate == delegate -> true
+        else -> false
+    }
+
+    override fun hashCode() = delegate.hashCode() * 31 + _autoincSeq.hashCode()
 }
 
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
