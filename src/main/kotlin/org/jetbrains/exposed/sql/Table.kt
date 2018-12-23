@@ -164,7 +164,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join
             = Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    @Deprecated("Just an alias to innerJoin", replaceWith = ReplaceWith("this innerJoin otherTable"))
+    @Deprecated("Just an alias to innerJoin", replaceWith = ReplaceWith("this innerJoin otherTable"), level = DeprecationLevel.ERROR)
     infix fun join(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
     override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)

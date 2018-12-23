@@ -553,7 +553,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         wrapRow(it)
     }
 
-    @Deprecated("Transaction ", replaceWith = ReplaceWith("wrapRow(row)"), level = DeprecationLevel.WARNING)
+    @Deprecated("Transaction ", replaceWith = ReplaceWith("wrapRow(row)"), level = DeprecationLevel.ERROR)
     fun wrapRow (row: ResultRow, transaction: Transaction) : T = wrapRow(row)
 
     fun wrapRow(row: ResultRow) : T {

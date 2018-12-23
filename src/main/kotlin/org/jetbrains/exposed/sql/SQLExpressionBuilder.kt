@@ -42,15 +42,15 @@ fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
 fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
 fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
 
-@Deprecated("Use groupConcat function with SortOrder enum", ReplaceWith("groupConcat()"))
+@Deprecated("Use groupConcat function with SortOrder enum", ReplaceWith("groupConcat()"), level = DeprecationLevel.ERROR)
 @JvmName("groupConcatDeprecated")
-fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat =
+fun <T:Any?> Column<T>.groupConcat(separator: String?, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat =
         GroupConcat(this, separator, distinct, *orderBy.map { it.first to if (it.second) SortOrder.ASC else SortOrder.DESC }.toTypedArray())
 
 fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Pair<Expression<*>,SortOrder>): GroupConcat =
         GroupConcat(this, separator, distinct, orderBy)
 
-fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Array<Pair<Expression<*>,SortOrder>>): GroupConcat =
+fun <T:Any?> Column<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Array<Pair<Expression<*>,SortOrder>> = emptyArray()): GroupConcat =
         GroupConcat(this, separator, distinct, *orderBy)
 
 
