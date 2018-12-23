@@ -72,7 +72,7 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
             } finally {
                 TransactionManager.resetCurrent(currentManager)
             }
-        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, existingForDb, statement)
+        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, statement)
     }
 }
 
@@ -92,12 +92,12 @@ private inline fun TransactionInterface.closeLoggingException(log: (Exception) -
     }
 }
 
-fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, manager: TransactionManager? = null, statement: Transaction.() -> T): T {
+fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
     var repetitions = 0
 
     val outerManager = TransactionManager.manager.takeIf { TransactionManager.currentOrNull() != null }
     while (true) {
-        manager?.let { TransactionManager.resetCurrent(it) }
+        db?.let { TransactionManager.managerFor(db)?.let { m -> TransactionManager.resetCurrent(m) } }
         val transaction = TransactionManager.manager.newTransaction(transactionIsolation)
 
         try {
