@@ -23,7 +23,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
-        if (limit != null) transaction.throwUnsupportedException("LIMIT is supported in DELETE in SQLite")
+        if (limit != null) transaction.throwUnsupportedException("LIMIT is not supported in DELETE in SQLite")
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
