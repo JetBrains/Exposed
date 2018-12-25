@@ -539,13 +539,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             return SizedCollection(cached)
         }
 
-        val toLoad = distinctIds - cached.map { it.id }
-        val loaded = wrapRows(searchQuery(Op.build { table.id inList toLoad }))
-        if (cached.isEmpty()) {
-            return loaded
-        } else {
-            return SizedCollection(cached + loaded.toList())
-        }
+        return wrapRows(searchQuery(Op.build { table.id inList distinctIds }))
     }
 
     fun forIds(ids: List<ID>) : SizedIterable<T> = forEntityIds(ids.map {EntityID (it, table)})
