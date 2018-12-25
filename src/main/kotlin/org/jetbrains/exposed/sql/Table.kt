@@ -27,7 +27,7 @@ abstract class ColumnSet : FieldSet {
     override val source
         get() = this
 
-    abstract fun describe(s: Transaction): String
+    abstract fun describe(s: Transaction, queryBuilder: QueryBuilder): String
 
     abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
     abstract fun innerJoin(otherTable: ColumnSet): Join
@@ -113,17 +113,16 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return if (pkToFKeys.isNotEmpty()) pkToFKeys else null
     }
 
-    override fun describe(s: Transaction): String = buildString {
-        append(table.describe(s))
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = buildString {
+        append(table.describe(s, queryBuilder))
         for (p in joinParts) {
             append(" ${p.joinType} JOIN ")
             val isJoin = p.joinPart is Join
             if (isJoin) append("(")
-            append(p.joinPart.describe(s))
+            append(p.joinPart.describe(s, queryBuilder))
             if(isJoin) append(")")
             if (p.joinType != JoinType.CROSS) {
                 append(" ON ")
-                val queryBuilder = QueryBuilder(false)
                 append(p.conditions.joinToString (" AND "){ (pkColumn, fkColumn) ->
                     "${pkColumn.toSQL(queryBuilder)} = ${fkColumn.toSQL(queryBuilder)}"
                 })
@@ -153,7 +152,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
-    override fun describe(s: Transaction): String = s.identity(this)
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = s.identity(this)
 
     val indices = ArrayList<Index>()
     val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
@@ -210,6 +209,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         val allParams = memberProperties
                 .filter { it is KMutableProperty1<T, *> || it.name in consParams.map { it.name } }
                 .associate { it.name to (replaceArgs[it] ?: it.get(this@clone)) }
+
         primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
@@ -399,7 +399,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
          Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
-        val newColumn = Column<T?> (table, name, columnType)
+        val newColumn = Column<T?> (table, name, columnType.cloneAsBaseType())
         newColumn.referee = referee
         newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }

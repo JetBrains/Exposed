@@ -1,9 +1,10 @@
+@file:Suppress("EqualsOrHashCode")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -59,16 +60,22 @@ interface IColumnType {
 
 abstract class ColumnType(override var nullable: Boolean = false) : IColumnType {
     override fun toString(): String = sqlType()
+
+    /**
+     * `other` is always the exact class type as current ColumnType instance at the moment of call
+     */
+    protected open fun additionalEqualsCheck(other: ColumnType) = true
+
     override fun equals(other: Any?): Boolean = when {
         other !is ColumnType -> false
+        other::class.qualifiedName != this::class.qualifiedName -> false
         other.nullable != nullable -> false
-        TransactionManager.currentOrNull() == null -> this === other
-        other.sqlType() == sqlType() -> true
-        else -> false
+        !additionalEqualsCheck(other) -> false
+        else -> true
     }
 
     override fun hashCode(): Int {
-        return 41 * nullable.hashCode() + sqlType().hashCode()
+        return 41 * this::class.qualifiedName.hashCode() + nullable.hashCode()
     }
 
 }
@@ -89,8 +96,8 @@ class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: Strin
     override fun equals(other: Any?) = when {
         other !is AutoIncColumnType -> false
         other._autoincSeq != _autoincSeq -> false
-        other.delegate == delegate -> true
-        else -> false
+        other.delegate != delegate -> false
+        else -> true
     }
 
     override fun hashCode() = delegate.hashCode() * 31 + _autoincSeq.hashCode()
@@ -126,6 +133,9 @@ class EntityIDColumnType<T:Comparable<T>>(val idColumn: Column<T>) : ColumnType(
         is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
         else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
     }
+
+    override fun additionalEqualsCheck(other: ColumnType) = idColumn == (other as EntityIDColumnType<*>).idColumn
+    override fun hashCode(): Int = super.hashCode() * 41 + idColumn.hashCode()
 }
 
 class CharacterColumnType : ColumnType() {
@@ -201,6 +211,13 @@ class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
             else -> valueFromDB
         }
     }
+
+    override fun additionalEqualsCheck(other: ColumnType): Boolean {
+        require(other is DecimalColumnType)
+        return precision == other.precision && scale == other.scale
+    }
+    override fun hashCode(): Int = super.hashCode() * 41 + precision.hashCode() * 41 + scale.hashCode()
+
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
@@ -217,9 +234,13 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
         is Enum<*> -> value
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun additionalEqualsCheck(other: ColumnType) = klass == (other as EnumerationColumnType<T>).klass
+    override fun hashCode(): Int = super.hashCode() * 41 + klass.hashCode()
 }
 
-class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): VarCharColumnType(length) {
+class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, colLength: Int): VarCharColumnType(colLength) {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is String -> value
         is Enum<*> -> value.name
@@ -231,6 +252,12 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): Va
         is Enum<*> -> value
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun additionalEqualsCheck(other: ColumnType) =
+        super.additionalEqualsCheck(other) && klass.name == (other as EnumerationNameColumnType<*>).klass.name
+
+    override fun hashCode(): Int = super.hashCode() * 41 + klass.hashCode()
 }
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
@@ -277,13 +304,16 @@ class DateColumnType(val time: Boolean): ColumnType() {
             val millis = value.millis
             if (time) {
                 return java.sql.Timestamp(millis)
-            }
-            else {
+            } else {
                 return java.sql.Date(millis)
             }
         }
         return value
     }
+
+    override fun additionalEqualsCheck(other: ColumnType) = time == (other as DateColumnType).time
+
+    override fun hashCode(): Int = super.hashCode() * 41 + time.hashCode()
 }
 
 abstract class StringColumnType(val collate: String? = null) : ColumnType() {
@@ -306,9 +336,12 @@ abstract class StringColumnType(val collate: String? = null) : ColumnType() {
         is ByteArray -> String(value)
         else -> value
     }
+
+    override fun additionalEqualsCheck(other: ColumnType) = collate == (other as StringColumnType).collate
+    override fun hashCode(): Int = super.hashCode() * 41 + (collate?.hashCode() ?: 0)
 }
 
-open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) : StringColumnType(collate)  {
+open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) : StringColumnType(collate) {
     override fun sqlType(): String = buildString {
         append("VARCHAR($colLength)")
 
@@ -316,6 +349,11 @@ open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) 
             append(" COLLATE $collate")
         }
     }
+
+    override fun additionalEqualsCheck(other: ColumnType) =
+        super.additionalEqualsCheck(other) && colLength == (other as VarCharColumnType).colLength
+
+    override fun hashCode(): Int = super.hashCode() * 41 + colLength.hashCode()
 }
 
 open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
@@ -338,6 +376,9 @@ class BinaryColumnType(val length: Int) : ColumnType() {
         }
         return value
     }
+
+    override fun additionalEqualsCheck(other: ColumnType) = length == (other as BinaryColumnType).length
+    override fun hashCode(): Int = super.hashCode() * 41 + length.hashCode()
 }
 
 class BlobColumnType : ColumnType() {
@@ -410,5 +451,4 @@ class UUIDColumnType : ColumnType() {
         is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
-
 }
