@@ -74,7 +74,7 @@ abstract class FunctionProvider {
     open fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
         return buildString {
             val builder = QueryBuilder(true)
-            append("UPDATE ${targets.describe(transaction)}")
+            append("UPDATE ${targets.describe(transaction, builder)}")
             append(" SET ")
             append(columnsAndValues.joinToString { (col, value) ->
                 "${transaction.identity(col)}=" + builder.registerArgument(col, value)

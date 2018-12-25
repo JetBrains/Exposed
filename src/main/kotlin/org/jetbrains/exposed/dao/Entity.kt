@@ -124,6 +124,7 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
 
     override operator fun iterator(): Iterator<Target> = factory.find(op).iterator()
     operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
+    override fun copy(): SizedIterable<Target> = View(op, factory)
 }
 
 @Suppress("UNCHECKED_CAST")

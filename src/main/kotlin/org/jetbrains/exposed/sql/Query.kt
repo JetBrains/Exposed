@@ -103,6 +103,17 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     var fetchSize: Int? = null
         private set
 
+    override fun copy(): SizedIterable<ResultRow> = Query(set, where).also { copy ->
+        copy.groupedByColumns = groupedByColumns
+        copy.orderByExpressions = orderByExpressions
+        copy.having = having
+        copy.distinct = distinct
+        copy.forUpdate = forUpdate
+        copy.limit = limit
+        copy.offset = offset
+        copy.fetchSize = fetchSize
+    }
+
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
      * @param body builder for new column set, current [set.source] used as a receiver, you are expected to slice it
@@ -158,7 +169,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
             append(set.fields.joinToString {it.toSQL(builder)})
         }
         append(" FROM ")
-        append(set.source.describe(transaction))
+        append(set.source.describe(transaction, builder))
 
         where?.let {
             append(" WHERE ")
@@ -293,7 +304,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     override fun count(): Int {
         flushEntities()
 
-        return if (distinct || groupedByColumns.isNotEmpty()) {
+        return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() = alias(transaction.quoteIfNecessary("${table.tableName}_$name"))
 
             val originalSet = set

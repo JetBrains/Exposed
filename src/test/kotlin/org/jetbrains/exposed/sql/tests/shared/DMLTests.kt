@@ -1646,7 +1646,7 @@ class DMLTests : DatabaseTestsBase() {
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
-            fun ColumnSet.repr(): String = this.describe(TransactionManager.current())
+            fun ColumnSet.repr(): String = this.describe(TransactionManager.current(), QueryBuilder(false))
 
             assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
             assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())

@@ -88,7 +88,7 @@ class ViaTests : DatabaseTestsBase() {
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
-            n1.connectedStrings = SizedCollection<VString>(emptyList())
+            n1.connectedStrings = SizedCollection(emptyList())
 
             run {
                 val row = ViaTestData.ConnectionTable.selectAll().toList()

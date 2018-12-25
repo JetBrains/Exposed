@@ -477,6 +477,31 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    // https://github.com/JetBrains/Exposed/issues/439
+    @Test fun callLimitOnRelationDoesntMutateTheCachedValue() {
+        withTables(Posts) {
+            val category1 = Category.new {
+                title = "cat1"
+            }
+
+            Post.new {
+                category = category1
+            }
+
+            Post.new {
+                category = category1
+            }
+            commit()
+
+            assertEquals(2, category1.posts.count())
+            assertEquals(2, category1.posts.toList().size)
+            assertEquals(1, category1.posts.limit(1).toList().size)
+            assertEquals(1, category1.posts.limit(1).count())
+            assertEquals(2, category1.posts.count())
+            assertEquals(2, category1.posts.toList().size)
+        }
+    }
+
     private fun <T> newTransaction(statement: Transaction.() -> T) =
             inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, null, statement)
 

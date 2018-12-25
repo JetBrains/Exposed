@@ -50,11 +50,10 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
 
 class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
-    override fun describe(s: Transaction): String = "(${query.prepareSQL(QueryBuilder(false))}) $alias"
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = "(${query.prepareSQL(queryBuilder)}) $alias"
 
     override val columns: List<Column<*>>
-        get() =  query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
-
+        get() = query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
 
     private fun <T:Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 
@@ -63,7 +62,7 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
             let { it.clone() as? Column<T> } ?: error("Column not found in original table")
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?>  get(original: Expression<T>): Expression<T> = (query.set.fields.find { it == original } as? ExpressionAlias<T>)?.aliasOnlyExpression()
+    operator fun <T: Any?> get(original: Expression<T>): Expression<T> = (query.set.fields.find { it == original } as? ExpressionAlias<T>)?.aliasOnlyExpression()
             ?: error("Field not found in original table fields")
 
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
