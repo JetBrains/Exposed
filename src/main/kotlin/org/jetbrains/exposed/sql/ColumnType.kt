@@ -21,6 +21,7 @@ import java.sql.ResultSet
 import java.sql.Types
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
+import kotlin.reflect.KClass
 
 interface IColumnType {
     val nullable: Boolean
@@ -230,19 +231,19 @@ class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
 
 }
 
-class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
+class EnumerationColumnType<T:Enum<T>>(val klass: KClass<T>): ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.shortType()
 
     override fun notNullValueToDB(value: Any): Any = when(value) {
         is Int -> value
         is Enum<*> -> value.ordinal
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.simpleName}")
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is Number -> klass.enumConstants!![value.toInt()]
+        is Number -> klass.java.enumConstants!![value.toInt()]
         is Enum<*> -> value
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.simpleName}")
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -250,22 +251,22 @@ class EnumerationColumnType<T:Enum<T>>(val klass: Class<T>): ColumnType() {
     override fun calcHashCode(): Int = super.calcHashCode() * 41 + klass.hashCode()
 }
 
-class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, colLength: Int): VarCharColumnType(colLength) {
+class EnumerationNameColumnType<T:Enum<T>>(val klass: KClass<T>, colLength: Int): VarCharColumnType(colLength) {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is String -> value
         is Enum<*> -> value.name
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is String ->  klass.enumConstants!!.first { it.name == value }
+        is String -> klass.java.enumConstants!!.first { it.name == value }
         is Enum<*> -> value
-        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.name}")
+        else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun additionalEqualsCheck(other: ColumnType) =
-        super.additionalEqualsCheck(other) && klass.name == (other as EnumerationNameColumnType<*>).klass.name
+        super.additionalEqualsCheck(other) && klass.simpleName == (other as EnumerationNameColumnType<*>).klass.simpleName
 
     override fun calcHashCode(): Int = super.calcHashCode() * 41 + klass.hashCode()
 }
@@ -407,7 +408,7 @@ class BlobColumnType : ColumnType() {
         is Blob -> value
         is InputStream -> SerialBlob(value.readBytes())
         is ByteArray -> SerialBlob(value)
-        else -> error("Unknown type for blob column :${value.javaClass}")
+        else -> error("Unknown type for blob column :${value::class}")
     }
 
     override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {

@@ -215,18 +215,18 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
-    @Deprecated("Use enumeration(name, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumeration(name, klass.kotlin)"))
-    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
+    @Deprecated("Use enumeration(name, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumeration(name, klass.kotlin)"), level = DeprecationLevel.ERROR)
+    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass.kotlin))
     /**
      * An enumeration column where enumerations are stored by their ordinal integer.
      *
      * @param name The column name
      * @param klass The enum class
      */
-    fun <T:Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass.java))
+    fun <T:Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
 
-    @Deprecated("Use enumerationByName(name, length, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumerationByName(name, length, klass.kotlin)"))
-    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
+    @Deprecated("Use enumerationByName(name, length, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumerationByName(name, length, klass.kotlin)"), level = DeprecationLevel.ERROR)
+    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass.kotlin, length))
     /**
      * An enumeration column where enumerations are stored by their name.
      *
@@ -234,7 +234,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * @param length The maximum length of the enumeration name
      * @param klass The enum class
      */
-    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass.java, length))
+    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
 
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
         registerColumn<T>(name, object : ColumnType() {
