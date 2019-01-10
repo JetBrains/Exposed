@@ -100,11 +100,14 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
-                when (type) {
+                val result = when (type) {
                     StatementType.SELECT -> executeQuery()
-                    else  -> executeUpdate()
+                    else -> {
+                        executeUpdate()
+                        resultSet
+                    }
                 }
-                return resultSet?.let {
+                return result?.let {
                     try {
                         transform(it)
                     } finally {
