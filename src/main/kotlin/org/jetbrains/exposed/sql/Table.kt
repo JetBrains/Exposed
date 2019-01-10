@@ -11,6 +11,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -236,10 +237,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
 
+    @Suppress("UNCHECKED_CAST")
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
         registerColumn<T>(name, object : ColumnType() {
             override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
-            override fun valueFromDB(value: Any) = fromDb(value)
+            override fun valueFromDB(value: Any) = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
             override fun notNullValueToDB(value: Any) = toDb(value as T)
         })
 

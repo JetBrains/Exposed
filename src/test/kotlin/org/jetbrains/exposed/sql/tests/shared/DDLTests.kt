@@ -681,7 +681,9 @@ class DDLTests : DatabaseTestsBase() {
                 val entity = EnumClass.new {
                     enum = Foo.Baz
                 }
-
+                assertEquals(Foo.Baz, entity.enum)
+                entity.id.value // flush entity
+                assertEquals(Foo.Baz, entity.enum)
                 assertEquals(Foo.Baz, EnumClass.reload(entity)!!.enum)
             } finally {
                 try {
