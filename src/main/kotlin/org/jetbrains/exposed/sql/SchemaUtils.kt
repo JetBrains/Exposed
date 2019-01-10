@@ -34,7 +34,7 @@ object SchemaUtils {
             fun traverse(table: Table) {
                 if (table !in visited) {
                     visited += table
-                    graph[table]!!.forEach { t, u ->
+                    graph.getValue(table).forEach { (t, _) ->
                         if (t !in visited) {
                             traverse(t)
                         }

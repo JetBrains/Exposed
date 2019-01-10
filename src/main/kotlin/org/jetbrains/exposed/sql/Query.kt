@@ -62,7 +62,7 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
                 (field to i) to value
             }.toMap()
             return ResultRow(fieldsIndex.keys.toMap()).apply {
-                fieldsIndex.forEach{ i, f ->
+                fieldsIndex.forEach{ (i, f) ->
                     data[i.second] = f
                 }
             }
