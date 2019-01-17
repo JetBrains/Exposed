@@ -203,16 +203,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return answer
     }
 
-    private fun IColumnType.cloneAsBaseType(nullable: Boolean? = null) : IColumnType = ((this as? AutoIncColumnType)?.delegate ?: this).clone().also { colType ->
-        nullable?.let { (colType as? ColumnType)?.nullable = it }
-    }
+    private fun IColumnType.cloneAsBaseType() : IColumnType = ((this as? AutoIncColumnType)?.delegate ?: this).clone()
 
     private fun <T:Any> T.clone(replaceArgs: Map<KProperty1<T,*>, Any> = emptyMap()) = javaClass.kotlin.run {
         val consParams = primaryConstructor!!.parameters
         val allParams = memberProperties
                 .filter { it is KMutableProperty1<T, *> || it.name in consParams.map { it.name } }
                 .associate { it.name to (replaceArgs[it] ?: it.get(this@clone)) }
-
         primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
@@ -403,14 +400,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
          Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
-        val newColumn = Column<T?> (table, name, columnType.cloneAsBaseType(nullable = true))
+        val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
         newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")
         newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
-        return replaceColumn(this, newColumn)
+        newColumn.columnType.nullable = true
+        return replaceColumn (this, newColumn)
     }
 
     fun <T:Any> Column<T>.default(defaultValue: T): Column<T> {

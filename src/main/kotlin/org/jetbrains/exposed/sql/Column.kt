@@ -25,7 +25,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         } ?: false
     }
 
-    override fun hashCode(): Int = table.hashCode()*31 + name.hashCode() * 31 + columnType.hashCode()
+    override fun hashCode(): Int = table.hashCode()*31 + name.hashCode()
 
     override fun toString(): String = "${table.javaClass.name}.$name"
 
