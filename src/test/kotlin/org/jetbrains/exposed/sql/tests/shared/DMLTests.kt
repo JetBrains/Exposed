@@ -1415,7 +1415,7 @@ class DMLTests : DatabaseTestsBase() {
         val time = DateTime.now()
         val eOne = DMLTestsData.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(tbl)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
             tbl.insert {
                 it[n] = 101
                 it[s] = "123456789"

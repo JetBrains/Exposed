@@ -79,6 +79,7 @@ class Database private constructor(val connector: () -> Connection) {
             registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
+            registerDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
         }
 
         fun registerDialect(prefix:String, dialect: () -> DatabaseDialect) {

@@ -171,7 +171,7 @@ class DDLTests : DatabaseTestsBase() {
             //            val testCollate = varchar("testCollate", 2, "ascii_general_ci")
         }
 
-         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE), tables = *arrayOf(TestTable)) {
+         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB), tables = *arrayOf(TestTable)) {
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
                     "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)

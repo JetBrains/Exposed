@@ -53,15 +53,20 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
                 }
                 Unit
             }),
+
     SQLSERVER({"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
             ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"},
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password");
+            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"),
+
+    MARIADB({"jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
+            ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"},
+            "org.mariadb.jdbc.Driver");
 
     fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 
     companion object {
         fun enabledInTests(): List<TestDB> {
-            val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER).joinToString()
+            val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
             val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
                 if (it == "") emptyList()
                 else it.split(',').map { it.trim().toUpperCase() }
