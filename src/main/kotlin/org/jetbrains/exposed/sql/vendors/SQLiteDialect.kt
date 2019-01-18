@@ -5,8 +5,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
-    override fun shortAutoincType(): String = "INTEGER AUTO_INCREMENT"
-    override fun longAutoincType(): String = "INTEGER AUTO_INCREMENT"
+    override fun shortAutoincType(): String = "INTEGER AUTOINCREMENT"
+    override fun longAutoincType(): String = "INTEGER AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun dateTimeType(): String  = "NUMERIC"
