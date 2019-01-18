@@ -61,8 +61,8 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         append(" ")
         val isPKColumn = indexInPK != null
         val colType = columnType
-        if (currentDialect is SQLiteDialect && isOneColumnPK() && colType.isAutoInc) {
-            append(colType.sqlType().removeSuffix(" AUTO_INCREMENT")) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
+        if (currentDialect is SQLiteDialect && colType.isAutoInc && table.columns.any{ it.indexInPK != null}) {
+            append(colType.sqlType().removeSuffix(" AUTOINCREMENT")) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
         } else {
             append(colType.sqlType())
         }
