@@ -1,3 +1,29 @@
+#0.12.1
+Features:
+* MariaDB support
+* Suspending `transaction` functions ([#418](https://github.com/JetBrains/Exposed/issues/418)
+* DAO: It's possible to specify forUpdate state in warmup* functions
+
+Bug fixes:
+* Fixed condition when IllegalStateException should be thrown on LazySizedCollection forUpdate/notForUpdate
+* `inTopLevelTransaction` accepts `Database` instead of `TransactionManager` ([#448](https://github.com/JetBrains/Exposed/issues/448))
+* LIMIT is not supported in DELETE SQLite message ([#455](https://github.com/JetBrains/Exposed/issues/455))
+* Limit propagate is same entity ([#439](https://github.com/JetBrains/Exposed/issues/439))
+* forIds/forEntityIds wont return partially cached values
+* Accessing enum field in `Entity` created using `EntityClass.new` causes `ClassCastException` ([#464](https://github.com/JetBrains/Exposed/issues/464))
+* `NoClassDefFoundError` when creating table on Android ([#461](https://github.com/JetBrains/Exposed/issues/461))
+* `exec(String)` throws `SQLException: ResultSet already requested` ([#414](https://github.com/JetBrains/Exposed/issues/414))
+* SQLite autoincrement table is not created correctly ([#328](https://github.com/JetBrains/Exposed/issues/328))  
+
+Deprecations:
+* Deprecate InsertStatement.generatedKey ([#424](https://github.com/JetBrains/Exposed/issues/424))
+* Using of`Transactions.logger` is prohibited  
+* `SchemaUtils.createIndex` with columns and isUnique parameters is prohibited
+* `groupConcat` with boolean sortOrder is replaced with similar `SortOrder` version
+* `join` is replaced with `innerJoin`
+* enumeration/enumerationByName with java `Class` replaced with kotlin `KClass`
+ 
+
 # 0.11.2
 * Kotlin #1.3.0
 * Fixed bug that call for createMissingTablesAndColumns could lead to exception while trying to add an index which already exists in db (*MySQL only problem*)
