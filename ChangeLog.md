@@ -1,4 +1,4 @@
-#0.12.1
+# 0.12.1
 Features:
 * MariaDB support
 * Suspending `transaction` functions ([#418](https://github.com/JetBrains/Exposed/issues/418)
