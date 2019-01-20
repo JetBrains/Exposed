@@ -117,13 +117,19 @@ data class Index(val columns: List<Column<*>>, val unique: Boolean, val customNa
 
     override fun createStatement() = listOf(currentDialect.createIndex(this))
     override fun dropStatement() = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName))
-
-
     override fun modifyStatement() = dropStatement() + createStatement()
-
 
     fun onlyNameDiffer(other: Index): Boolean =
             indexName != other.indexName && columns == other.columns && unique == other.unique
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is Index) return false
+        return indexName == other.indexName && unique == other.unique && columns == other.columns
+    }
+
+    override fun hashCode(): Int {
+        return (((indexName.hashCode() * 41) + columns.hashCode()) * 41) + unique.hashCode()
+    }
 
     override fun toString(): String =
             "${if (unique) "Unique " else ""}Index '$indexName' for '${table.nameInDatabaseCase()}' on columns ${columns.joinToString(", ")}"

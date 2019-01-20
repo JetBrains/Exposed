@@ -431,11 +431,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return this
     }
 
-    fun index (isUnique: Boolean = false, vararg columns: Column<*>) {
+    fun index(isUnique: Boolean = false, vararg columns: Column<*>) {
         index(null, isUnique, *columns)
     }
 
-    fun index (customIndexName:String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
+    fun index(customIndexName:String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
         indices.add(Index(columns.toList(), isUnique, customIndexName))
     }
 
