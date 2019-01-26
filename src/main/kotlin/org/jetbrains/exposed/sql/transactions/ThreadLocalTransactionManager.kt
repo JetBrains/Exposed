@@ -114,7 +114,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
                     logger.log(it, transaction)
                 }
             }
-            exposedLogger.info(message, e)
+            exposedLogger.warn(message, e)
             transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
             repetitions++
             if (repetitions >= repetitionAttempts) {
