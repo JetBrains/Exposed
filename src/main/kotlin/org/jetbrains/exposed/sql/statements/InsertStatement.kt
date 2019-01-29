@@ -80,7 +80,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
     protected open fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
         val columnsWithNotNullDefault = targets.flatMap { it.columns }.filter {
-            (it.dbDefaultValue != null || it.defaultValueFun != null) && !it.columnType.nullable && it !in values.keys
+            (it.dbDefaultValue != null || it.defaultValueFun != null) && it !in values.keys
         }
         return values + columnsWithNotNullDefault.map { it to (it.defaultValueFun?.invoke() ?: DefaultValueMarker) }
     }

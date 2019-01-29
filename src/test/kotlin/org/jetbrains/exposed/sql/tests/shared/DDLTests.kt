@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.postgresql.util.PGobject
@@ -226,15 +227,17 @@ class DDLTests : DatabaseTestsBase() {
                 else -> "NOW()"
             }
         }
-        val dtLiteral = dateLiteral(DateTime.parse("2010-01-01"))
-        val TestTable = object : Table("t") {
+        val dtConstValue = DateTime.parse("2010-01-01").withZone(DateTimeZone.UTC)
+        val dtLiteral = dateLiteral(dtConstValue)
+        val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
+            val sn = varchar("sn", 100).default("testNullable").nullable()
             val l = long("l").default(42)
             val c = char("c").default('X')
             val t1 = datetime("t1").defaultExpression(currentDT)
             val t2 = datetime("t2").defaultExpression(nowExpression)
             val t3 = datetime("t3").defaultExpression(dtLiteral)
-            val t4 = date("t4").default(DateTime.parse("2010-01-01"))
+            val t4 = date("t4").default(dtConstValue)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -243,12 +246,13 @@ class DDLTests : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-
-        withTables(TestTable) {
+        withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
             assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
                     "${"t".inProperCase()} (" +
+                    "${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
+                    "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
                     "${"l".inProperCase()} ${currentDialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
                     "${"c".inProperCase()} CHAR DEFAULT 'X' NOT NULL, " +
                     "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
@@ -256,6 +260,20 @@ class DDLTests : DatabaseTestsBase() {
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
                     "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
                 ")", TestTable.ddl)
+
+            val id1 = TestTable.insertAndGetId {  }
+
+            val row1 = TestTable.select { TestTable.id eq id1 }.single()
+            assertEquals("test", row1[TestTable.s])
+            assertEquals("testNullable", row1[TestTable.sn])
+            assertEquals(42, row1[TestTable.l])
+            assertEquals('X', row1[TestTable.c])
+            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t3].withTimeAtStartOfDay())
+            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t4].withTimeAtStartOfDay())
+
+            val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
+
+            val row2 = TestTable.select { TestTable.id eq id2 }.single()
         }
     }
 
