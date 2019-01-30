@@ -1,7 +1,7 @@
 # 0.12.1
 Features:
 * MariaDB support
-* Suspending `transaction` functions ([#418](https://github.com/JetBrains/Exposed/issues/418)
+* Suspending `transaction` functions ([#418](https://github.com/JetBrains/Exposed/issues/418))
 * DAO: It's possible to specify forUpdate state in warmup* functions
 
 Bug fixes:
