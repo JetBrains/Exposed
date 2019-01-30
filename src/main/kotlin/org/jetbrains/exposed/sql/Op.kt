@@ -9,11 +9,21 @@ abstract class Op<T> : Expression<T>() {
     companion object {
         inline fun <T> build(op: SqlExpressionBuilder.() -> Op<T>): Op<T> = SqlExpressionBuilder.op()
     }
+
+    object TRUE : Op<Boolean>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String = "TRUE"
+    }
+    object FALSE : Op<Boolean>() {
+        override fun toSQL(queryBuilder: QueryBuilder): String = "FALSE"
+    }
 }
 
 infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = AndOp(this, op)
 
 infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = OrOp(this, op)
+
+fun List<Op<Boolean>>.compoundAnd() = reduce { op, nextOp -> op and nextOp }
+fun List<Op<Boolean>>.compoundOr() = reduce { op, nextOp -> op or nextOp }
 
 fun not(op: Expression<Boolean>): Op<Boolean> = NotOp(op)
 
@@ -43,8 +53,8 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: It
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
         list.iterator().let { i ->
             if (!i.hasNext()) {
-                val expr = Op.build { booleanLiteral(!isInList) eq booleanLiteral(true) }
-                append(expr.toSQL(queryBuilder))
+                val op = if (isInList) Op.FALSE else Op.TRUE
+                append(op.toSQL(queryBuilder))
             } else {
                 val first = i.next()
                 if (!i.hasNext()) {
@@ -91,13 +101,13 @@ fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumn
 
 abstract class ComparisonOp(val expr1: Expression<*>, val expr2: Expression<*>, val opSign: String) : Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder) = buildString {
-        if (expr1 is OrOp<*>) {
+        if (expr1 is OrOp) {
             append("(").append(expr1.toSQL(queryBuilder)).append(")")
         } else {
             append(expr1.toSQL(queryBuilder))
         }
         append(" $opSign ")
-        if (expr2 is OrOp<*>) {
+        if (expr2 is OrOp) {
             append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
             append(expr2.toSQL(queryBuilder))
@@ -115,25 +125,23 @@ class LikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, e
 class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT LIKE")
 class RegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "REGEXP")
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
+class AndOp(expr1: Expression<Boolean>, expr2: Expression<Boolean>) : ComparisonOp(expr1, expr2, "AND")
 
-class AndOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>) : Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
-        if (expr1 is OrOp<*>) {
-            append("(").append(expr1.toSQL(queryBuilder)).append(")")
-        } else {
+class OrOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder) : String = buildString {
+        if (expr1 is OrOp) {
             append(expr1.toSQL(queryBuilder))
-        }
-        append(" and ")
-        if (expr2 is OrOp<*>) {
-            append("(").append(expr2.toSQL(queryBuilder)).append(")")
         } else {
+            append('(').append(expr1.toSQL(queryBuilder)).append(")")
+        }
+        append(" OR ")
+
+        if (expr2 is OrOp) {
             append(expr2.toSQL(queryBuilder))
+        } else {
+            append('(').append(expr2.toSQL(queryBuilder)).append(")")
         }
     }
-}
-
-class OrOp<T>(val expr1: Expression<T>, val expr2: Expression<T>): Op<Boolean>() {
-    override fun toSQL(queryBuilder: QueryBuilder) = "(${expr1.toSQL(queryBuilder)}) OR (${expr2.toSQL(queryBuilder)})"
 }
 
 class NotOp<T>(val expr: Expression<T>) : Op<Boolean>() {

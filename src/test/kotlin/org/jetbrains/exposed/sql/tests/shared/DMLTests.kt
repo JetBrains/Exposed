@@ -1723,6 +1723,26 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(1, OrgMemberships.selectAll().count())
         }
     }
+
+    @Test
+    fun testCompoundOp() {
+        withCitiesAndUsers { cities, users, _ ->
+            val allUsers = setOf(
+                    "Andrey",
+                    "Sergey",
+                    "Eugene",
+                    "Alex",
+                    "Something"
+            )
+            val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
+            val userNamesOr = users.select(orOp).map { it[users.name] }.toSet()
+            assertEquals(allUsers, userNamesOr)
+
+            val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
+            assertEquals(0, users.select(andOp).count())
+        }
+    }
+
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
