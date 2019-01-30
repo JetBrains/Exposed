@@ -371,21 +371,24 @@ class UUIDColumnType : ColumnType() {
 
     override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(valueToUUID(value))
 
-    private fun valueToUUID(value: Any): UUID {
-        return when (value) {
-            is UUID -> value
-            is String -> UUID.fromString(value)
-            is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
-            else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
-        }
+    private fun valueToUUID(value: Any): UUID = when (value) {
+        is UUID -> value
+        is String -> UUID.fromString(value)
+        is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
+        else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
     }
 
     override fun nonNullValueToString(value: Any) = "'${valueToUUID(value)}'"
 
-    override fun valueFromDB(value: Any): Any = when(value) {
-        is UUID -> value
-        is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
-        is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+    override fun valueFromDB(value: Any): Any = when {
+        value is UUID -> value
+        value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
+        value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
+        value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
+    }
+
+    companion object {
+        private val uuidRegexp = "[0-9A-F]{8}-[0-9A-F]{4}-[1-5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}".toRegex(RegexOption.IGNORE_CASE)
     }
 }

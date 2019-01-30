@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType() = "INT IDENTITY(1,1)"
@@ -18,6 +19,10 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 
     override fun dateTimeType() = "DATETIME2"
+
+    override fun uuidType() = "uniqueidentifier"
+
+    override fun uuidToDB(value: UUID) = value.toString()
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {

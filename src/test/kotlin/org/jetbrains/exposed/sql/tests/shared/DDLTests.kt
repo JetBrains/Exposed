@@ -15,6 +15,7 @@ import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 
 class DDLTests : DatabaseTestsBase() {
     @Test fun tableExists01() {
@@ -547,16 +548,18 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun testUUIDColumnType() {
-        val Node = object: Table("node") {
-            val uuid = uuid("uuid").primaryKey()
+        val Node = object: IntIdTable("node") {
+            val uuid = uuid("uuid")
         }
 
         withTables(Node){
             val key: UUID = UUID.randomUUID()
-            Node.insert { it[uuid] = key }
-            val result = Node.select { Node.uuid.eq(key) }.toList()
-            assertEquals(1, result.size)
-            assertEquals(key, result.single()[Node.uuid])
+            val id = Node.insertAndGetId { it[uuid] = key }
+            assertNotNull(id)
+            val uidById = Node.select { Node.id eq id }.singleOrNull()?.get(Node.uuid)
+            assertEquals(key, uidById)
+            val uidByKey = Node.select { Node.uuid eq key }.singleOrNull()?.get(Node.uuid)
+            assertEquals(key, uidByKey)
         }
     }
 
