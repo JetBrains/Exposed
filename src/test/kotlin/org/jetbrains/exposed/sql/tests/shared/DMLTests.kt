@@ -681,8 +681,8 @@ class DMLTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy02() {
-        withCitiesAndUsers { cities, users, userData ->
-            val r = users.selectAll().orderBy(users.cityId, false).orderBy(users.id).toList()
+        withCitiesAndUsers { _, users, _ ->
+            val r = users.selectAll().orderBy(users.cityId, SortOrder.DESC).orderBy(users.id).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
@@ -898,7 +898,7 @@ class DMLTests : DatabaseTestsBase() {
             val substring = users.name.substring(1, 2)
             cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
 
-            val r = cities.slice(cities.name).selectAll().orderBy(cities.id, false).limit(2).toList()
+            val r = cities.slice(cities.name).selectAll().orderBy(cities.id, SortOrder.DESC).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("An", r[0][cities.name])
             assertEquals("Al", r[1][cities.name])
