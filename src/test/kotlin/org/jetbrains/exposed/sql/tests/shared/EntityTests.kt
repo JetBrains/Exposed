@@ -507,6 +507,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test fun testOrderByOnEntities() {
         withTables(Categories) {
+            Categories.deleteAll()
             val category1 = Category.new { title = "Test1" }
             val category3 = Category.new { title = "Test3" }
             val category2 = Category.new { title = "Test2" }
