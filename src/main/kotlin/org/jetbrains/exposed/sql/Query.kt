@@ -252,7 +252,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
+    override fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
         (orderByExpressions as MutableList).addAll(columns)
         return this
     }

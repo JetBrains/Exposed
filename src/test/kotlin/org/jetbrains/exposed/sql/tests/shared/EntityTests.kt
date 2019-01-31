@@ -310,6 +310,9 @@ class EntityTests: DatabaseTestsBase() {
         val uniqueId by Categories.uniqueId
         var title by Categories.title
         val posts by Post optionalReferrersOn Posts.category
+
+        override fun equals(other: Any?) = (other as? Category)?.id?.equals(id) == true
+        override fun hashCode() = id.value.hashCode()
     }
 
     @Test
@@ -499,6 +502,18 @@ class EntityTests: DatabaseTestsBase() {
             assertEquals(1, category1.posts.limit(1).count())
             assertEquals(2, category1.posts.count())
             assertEquals(2, category1.posts.toList().size)
+        }
+    }
+
+    @Test fun testOrderByOnEntities() {
+        withTables(Categories) {
+            val category1 = Category.new { title = "Test1" }
+            val category3 = Category.new { title = "Test3" }
+            val category2 = Category.new { title = "Test2" }
+
+            assertEqualLists(listOf(category1, category3, category2), Category.all().toList())
+            assertEqualLists(listOf(category1, category2, category3), Category.all().orderBy(Categories.title to SortOrder.ASC).toList())
+            assertEqualLists(listOf(category3, category2, category1), Category.all().orderBy(Categories.title to SortOrder.DESC).toList())
         }
     }
 

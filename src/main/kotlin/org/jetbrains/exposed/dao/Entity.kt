@@ -125,6 +125,7 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
     override operator fun iterator(): Iterator<Target> = factory.find(op).iterator()
     operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
     override fun copy(): SizedIterable<Target> = View(op, factory)
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<Target> = factory.find(op).orderBy(*order)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -276,13 +277,6 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
             }
             writeValues[this as Column<Any?>] = value
         }
-    }
-
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
-            toReal(column.getValue(o, desc))
-
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<ID>, desc: KProperty<*>, value: TReal) {
-        column.setValue(o, desc, toColumn(value))
     }
 
     infix fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<Entity<ID>, TID, Target> =

@@ -9,6 +9,7 @@ interface SizedIterable<out T>: Iterable<T> {
     fun forUpdate(): SizedIterable<T> = this
     fun notForUpdate(): SizedIterable<T> = this
     fun copy() : SizedIterable<T>
+    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) : SizedIterable<T>
 }
 
 fun <T> emptySized() : SizedIterable<T> = EmptySizedIterable()
@@ -29,6 +30,8 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun hasNext(): Boolean = false
 
     override fun copy(): SizedIterable<T> = this
+
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
 class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
@@ -38,6 +41,7 @@ class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     override fun count() = delegate.size
     override fun empty() = delegate.isEmpty()
     override fun copy(): SizedIterable<T> = SizedCollection(delegate)
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
 class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
@@ -87,6 +91,9 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
     }
 
     override fun copy(): SizedIterable<T> = LazySizedCollection(delegate.copy())
+
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
+            = LazySizedCollection(delegate.orderBy(*order))
 }
 
 infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
@@ -98,6 +105,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
         override fun count(): Int = source.count()
         override fun empty(): Boolean = source.empty()
         override fun copy(): SizedIterable<R> = source.copy().mapLazy(f)
+        override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = source.orderBy(*order).mapLazy(f)
 
         override operator fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
