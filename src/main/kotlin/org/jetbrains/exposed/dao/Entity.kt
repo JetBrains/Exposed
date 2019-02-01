@@ -279,6 +279,13 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
+            toReal(column.getValue(o, desc))
+
+    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<ID>, desc: KProperty<*>, value: TReal) {
+        column.setValue(o, desc, toColumn(value))
+    }
+
     infix fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<Entity<ID>, TID, Target> =
             InnerTableLink(table, this@via)
 
