@@ -612,7 +612,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test
     fun testGroupConcat() {
         withCitiesAndUsers(listOf(TestDB.SQLITE)) { cities, users, _ ->
-            fun GroupConcat.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) ->Unit) {
+            fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) ->Unit) {
                 try {
                     val result = cities.leftJoin(users)
                         .slice(cities.name, this)

@@ -109,7 +109,7 @@ abstract class FunctionProvider {
 
     open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
 
-    open fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder) = buildString {
+    open fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) = buildString {
         append("GROUP_CONCAT(")
         if (expr.distinct)
             append("DISTINCT ")

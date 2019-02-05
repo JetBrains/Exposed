@@ -80,7 +80,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)
         = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
-    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String = buildString {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String = buildString {
         if (expr.orderBy.size != 1)
             TransactionManager.current().throwUnsupportedException("LISTAGG requires single order by clause")
         append("LISTAGG(")
