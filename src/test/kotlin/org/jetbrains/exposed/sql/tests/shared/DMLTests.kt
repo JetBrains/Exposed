@@ -1743,6 +1743,26 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testOrderByExpressions() {
+        withCitiesAndUsers { cities, users, userData ->
+            val expression = wrapAsExpression<Int>(users
+                    .slice(users.id.count())
+                    .select {
+                        cities.id eq users.cityId
+                    })
+
+            val result = cities
+                    .selectAll()
+                    .orderBy(expression, SortOrder.DESC)
+                    .toList()
+
+            // Munich - 2 users
+            // St. Petersburg - 1 user
+            // Prague - 0 users
+            println(result)
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
