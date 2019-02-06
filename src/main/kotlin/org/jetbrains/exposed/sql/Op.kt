@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 
@@ -11,10 +12,10 @@ abstract class Op<T> : Expression<T>() {
     }
 
     object TRUE : Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String = "TRUE"
+        override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.dataTypeProvider.booleanToStatementString(true)
     }
     object FALSE : Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String = "FALSE"
+        override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.dataTypeProvider.booleanToStatementString(true)
     }
 }
 
