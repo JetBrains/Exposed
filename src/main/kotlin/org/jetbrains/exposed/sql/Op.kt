@@ -14,13 +14,13 @@ abstract class Op<T> : Expression<T>() {
 
     object TRUE : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder) = when(currentDialect) {
-            is SQLServerDialect -> Op.build { booleanLiteral(true) eq booleanLiteral(true) }.toSQL(queryBuilder)
+            is SQLServerDialect, is OracleDialect -> Op.build { booleanLiteral(true) eq booleanLiteral(true) }.toSQL(queryBuilder)
             else -> currentDialect.dataTypeProvider.booleanToStatementString(true)
         }
     }
     object FALSE : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder) = when(currentDialect) {
-            is SQLServerDialect -> Op.build { booleanLiteral(true) eq booleanLiteral(false) }.toSQL(queryBuilder)
+            is SQLServerDialect, is OracleDialect -> Op.build { booleanLiteral(true) eq booleanLiteral(false) }.toSQL(queryBuilder)
             else -> currentDialect.dataTypeProvider.booleanToStatementString(false)
         }
     }
