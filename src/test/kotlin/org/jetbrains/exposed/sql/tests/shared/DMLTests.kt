@@ -1763,6 +1763,25 @@ class DMLTests : DatabaseTestsBase() {
             println(result)
         }
     }
+
+    @Test fun testInsertWithPredefinedId() {
+        val stringTable = object : IdTable<String>("stringTable") {
+            override val id = varchar("id", 15).entityId()
+            val name = varchar("name", 10)
+        }
+        withTables(stringTable) {
+            val entityID = EntityID("id1", stringTable)
+            val id = stringTable.insertAndGetId {
+                it[id] = entityID
+                it[name] = "foo"
+            }
+
+            assertEquals(id, entityID)
+            val row1 = stringTable.select { stringTable.id eq entityID }.singleOrNull()
+            assertNotNull(row1)
+            assertEquals(row1[stringTable.id], entityID)
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
