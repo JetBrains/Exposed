@@ -15,7 +15,7 @@ abstract class Op<T> : Expression<T>() {
         override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.dataTypeProvider.booleanToStatementString(true)
     }
     object FALSE : Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.dataTypeProvider.booleanToStatementString(true)
+        override fun toSQL(queryBuilder: QueryBuilder) = currentDialect.dataTypeProvider.booleanToStatementString(false)
     }
 }
 

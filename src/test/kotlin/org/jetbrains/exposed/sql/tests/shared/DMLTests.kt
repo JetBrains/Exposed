@@ -1782,6 +1782,14 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(row1[stringTable.id], entityID)
         }
     }
+
+    @Test fun testTRUEandFALSEOps() {
+        withCitiesAndUsers { cities, _, _ ->
+            val allSities = cities.selectAll().map { it[cities.name] }
+            assertEquals(0, cities.select { Op.FALSE }.count())
+            assertEquals(allSities.size, cities.select { Op.TRUE }.count())
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
