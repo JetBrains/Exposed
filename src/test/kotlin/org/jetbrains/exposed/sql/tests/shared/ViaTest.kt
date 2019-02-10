@@ -129,4 +129,40 @@ class ViaTests : DatabaseTestsBase() {
             }
         }
     }
+
+    object NodeTable : IntIdTable() {
+        val name = varchar("name", 50)
+    }
+    object NodeToNodes : Table() {
+        val parent = reference("parent_node_id", NodeTable)
+        val child = reference("child_user_id", NodeTable)
+    }
+    class Node(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Node>(NodeTable)
+
+        var name by NodeTable.name
+        var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
+        var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
+    }
+
+    @Test
+    fun testHierarchicalReferences() {
+        withTables(NodeToNodes) {
+            val root = Node.new { name = "root" }
+            val child1 = Node.new {
+                name = "child1"
+            }
+            child1.parents = SizedCollection(root)
+
+            assertEquals(0, root.parents.count())
+            assertEquals(1, root.children.count())
+
+            val child2 = Node.new { name = "child2" }
+            root.children = SizedCollection(listOf(child1, child2))
+
+            assertEquals(root, child1.parents.singleOrNull())
+            assertEquals(root, child2.parents.singleOrNull())
+        }
+
+    }
 }

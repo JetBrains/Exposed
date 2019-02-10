@@ -129,22 +129,39 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
 }
 
 @Suppress("UNCHECKED_CAST")
-class InnerTableLink<Source: Entity<*>, ID:Comparable<ID>, Target: Entity<ID>>(val table: Table,
-                                     val target: EntityClass<ID, Target>) : ReadWriteProperty<Source, SizedIterable<Target>> {
-
-    private fun getSourceRefColumn(o: Source): Column<EntityID<*>> {
-        return table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<*>> ?: error("Table does not reference source")
+class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>, Target: Entity<ID>>(
+                                     val table: Table,
+                                     val target: EntityClass<ID, Target>,
+                                     val sourceColumn: Column<EntityID<SID>>? = null,
+                                     _targetColumn: Column<EntityID<ID>>? = null) : ReadWriteProperty<Source, SizedIterable<Target>> {
+    init {
+        _targetColumn?.let {
+            requireNotNull(sourceColumn) { "Both source and target columns should be specified"}
+            require(_targetColumn.referee?.table == target.table) {
+                "Column $_targetColumn point to wrong table, expected ${target.table.tableName}"
+            }
+            require(_targetColumn.table == sourceColumn.table) {
+                "Both source and target columns should be from the same table"
+            }
+        }
+        sourceColumn?.let {
+            requireNotNull(_targetColumn) { "Both source and target columns should be specified"}
+        }
     }
 
-    private fun getTargetRefColumn(): Column<EntityID<*>> {
-        return table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<*>> ?: error("Table does not reference target")
+    private val targetColumn = _targetColumn
+            ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
+            ?: error("Table does not reference target")
+
+    private fun getSourceRefColumn(o: Source): Column<EntityID<SID>> {
+        return sourceColumn ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>> ?: error("Table does not reference source")
     }
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
-        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, getTargetRefColumn())
+        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
 
         val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
             - sourceRefColumn).distinct() + sourceRefColumn
@@ -155,7 +172,6 @@ class InnerTableLink<Source: Entity<*>, ID:Comparable<ID>, Target: Entity<ID>>(v
 
 override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
-        val targetRefColumn = getTargetRefColumn()
 
         val entityCache = TransactionManager.current().entityCache
         entityCache.flush()
@@ -164,10 +180,10 @@ override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Targ
         entityCache.clearReferrersCache()
 
         val targetIds = value.map { it.id }
-        table.deleteWhere { (sourceRefColumn eq o.id) and (targetRefColumn notInList targetIds) }
+        table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
         table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
             this[sourceRefColumn] = o.id
-            this[targetRefColumn] = targetId
+            this[targetColumn] = targetId
         }
 
         // current entity updated
@@ -286,10 +302,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<Entity<ID>, TID, Target> =
+    infix fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
             InnerTableLink(table, this@via)
 
-    fun <T: Entity<*>> s(c: EntityClass<*, T>): EntityClass<*, T> = c
+    fun <TID:Comparable<TID>, Target:Entity<TID>> EntityClass<TID, Target>.via(sourceColumn: Column<EntityID<ID>>, targetColumn: Column<EntityID<TID>>) =
+            InnerTableLink(sourceColumn.table, this@via,sourceColumn, targetColumn)
 
     /**
      * Delete this entity.
