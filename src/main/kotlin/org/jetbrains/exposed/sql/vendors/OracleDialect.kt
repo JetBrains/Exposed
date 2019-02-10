@@ -124,6 +124,15 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
 
+    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
+        val rs = TransactionManager.current().db.metadata.getColumns(null, getDatabase(), "%", "%")
+        val result = rs.extractColumns(tables) {
+            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME"), it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
+        }
+        rs.close()
+        return result
+    }
+
     companion object {
         const val dialectName = "oracle"
     }
