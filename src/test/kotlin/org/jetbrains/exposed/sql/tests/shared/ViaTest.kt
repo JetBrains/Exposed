@@ -130,17 +130,17 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    object NodeTable : IntIdTable() {
+    object NodesTable : IntIdTable() {
         val name = varchar("name", 50)
     }
     object NodeToNodes : Table() {
-        val parent = reference("parent_node_id", NodeTable)
-        val child = reference("child_user_id", NodeTable)
+        val parent = reference("parent_node_id", NodesTable)
+        val child = reference("child_user_id", NodesTable)
     }
     class Node(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<Node>(NodeTable)
+        companion object : IntEntityClass<Node>(NodesTable)
 
-        var name by NodeTable.name
+        var name by NodesTable.name
         var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
         var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
     }
