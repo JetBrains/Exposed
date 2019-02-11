@@ -1,3 +1,26 @@
+# 0.12.2
+Kotlin updated to 1.3.21
+
+Features:
+* DAO: It's possible to call `orderBy` on `SizedIterable` to sort entities ([#476](https://github.com/JetBrains/Exposed/issues/476))
+* DSL/DAO: Self join many-to-many relationships ([#106](https://github.com/JetBrains/Exposed/issues/106)). See [wiki page](https://github.com/JetBrains/Exposed/wiki/DAO#parent-child-reference) for example.
+* DSL: Allow to apply groupConcat on expressions ([#486](https://github.com/JetBrains/Exposed/issues/486)). Thanks for PR goes to Edvinas Danevičius (@Edvinas01). 
+* Log every SQLException thrown inside inTopLevelTransaction with warn instead of info level
+* SQLServer dialect will now use `uniqueidentifier` for UUID columns
+* Compound operations introduced: `compoundAnd`/`compoundOr`([#469](https://github.com/JetBrains/Exposed/issues/469))
+* `Op.TRUE`/`Op.FALSE` expressions added
+* OR operator was optimized to use less braces
+* Oracle: Speedup extracting tableColumns metadata    
+
+Bug fixes: 
+* Impossible to set default value with nullable column ([#474](https://github.com/JetBrains/Exposed/issues/474))
+* UUID value not read correctly ([#473](https://github.com/JetBrains/Exposed/issues/473))
+* `No key generated` exception thrown when trying to insert row to IdTable using `insertAndGetId` with explicit id and then make search by returned id ([#432](https://github.com/JetBrains/Exposed/issues/432))      
+
+Deprecations:
+* orderBy with boolean sort parameters was deprecated
+ 
+
 # 0.12.1
 Features:
 * MariaDB support
