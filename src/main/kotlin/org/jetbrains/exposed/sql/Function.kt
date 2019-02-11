@@ -120,10 +120,12 @@ class CaseWhenElse<T, R:T> (val caseWhen: CaseWhen<T>, val elseResult: Expressio
     }
 }
 
-class GroupConcat(val expr: Column<*>,
-                  val separator: String?,
-                  val distinct: Boolean,
-                  vararg val orderBy: Pair<Expression<*>, SortOrder>): Function<String?>(VarCharColumnType()) {
+class GroupConcat<T : String?>(
+        val expr: Expression<T>,
+        val separator: String?,
+        val distinct: Boolean,
+        vararg val orderBy: Pair<Expression<*>, SortOrder>
+): Function<T>(VarCharColumnType()) {
     override fun toSQL(queryBuilder: QueryBuilder): String
             = currentDialect.functionProvider.groupConcat(this, queryBuilder)
 }

@@ -60,7 +60,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
 
-    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG.")

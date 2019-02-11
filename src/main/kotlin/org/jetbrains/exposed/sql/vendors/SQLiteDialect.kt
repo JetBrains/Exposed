@@ -33,7 +33,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return super.update(targets, columnsAndValues, limit, where, transaction)
     }
 
-    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
+    override fun <T: String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT.")

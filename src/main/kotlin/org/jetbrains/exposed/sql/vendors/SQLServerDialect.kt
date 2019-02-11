@@ -45,7 +45,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 
-    override fun groupConcat(expr: GroupConcat, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
         val tr = TransactionManager.current()
         return when {
             expr.separator == null ->
