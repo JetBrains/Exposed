@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.EntityTests.Detention.Companion.optionalReferrersOn
+import org.jetbrains.exposed.sql.tests.shared.EntityTests.School.Companion.referrersOn
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.joda.time.DateTime
@@ -11,10 +13,7 @@ import org.junit.Test
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.rowset.serial.SerialBlob
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 object EntityTestsData {
 
@@ -526,4 +525,536 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    object Regions : IntIdTable(name = "region") {
+        val name = varchar("name", 255)
+    }
+
+    object Students : LongIdTable(name = "students") {
+        val name    = varchar("name", 255)
+        val school  = reference("school_id", Schools)
+    }
+
+    object Notes : LongIdTable(name = "notes") {
+        val text        = varchar("text", 255)
+        val student     = reference("student_id", Students)
+    }
+
+    object Detentions : LongIdTable(name = "detentions") {
+        val reason          = varchar("reason", 255)
+        val student         = optReference("student_id", Students)
+    }
+
+    object Holidays : LongIdTable(name = "holidays") {
+        val holidayStart     = datetime("holiday_start")
+        val holidayEnd       = datetime("holiday_end")
+    }
+
+    object SchoolHolidays : Table(name = "school_holidays") {
+        val school          = reference("school_id", Schools, ReferenceOption.CASCADE, ReferenceOption.CASCADE).primaryKey(0)
+        val holiday         = reference("holiday_id", Holidays, ReferenceOption.CASCADE, ReferenceOption.CASCADE).primaryKey(1)
+    }
+
+    object Schools : IntIdTable(name = "school") {
+        val name                = varchar("name", 255).index(isUnique = true)
+        val region              = reference("region_id", Regions)
+        val secondaryRegion     = optReference("secondary_region_id", Regions)
+    }
+
+    class Region(id: EntityID<Int>): IntEntity(id) {
+        companion object : IntEntityClass<Region>(Regions)
+
+        var name by Regions.name
+    }
+
+    class Student(id: EntityID<Long>): LongEntity(id) {
+        companion object : LongEntityClass<Student>(Students)
+        var name        by Students.name
+        var school      by School referencedOn Students.school
+        val notes       by Note.referrersOn(Notes.student, true)
+        val detentions  by Detention.optionalReferrersOn(Detentions.student, true)
+    }
+
+    class Note(id: EntityID<Long>): LongEntity(id) {
+        companion object : LongEntityClass<Note>(Notes)
+        var text by Notes.text
+        var student by Student referencedOn Notes.student
+    }
+
+
+    class Detention(id: EntityID<Long>): LongEntity(id) {
+        companion object : LongEntityClass<Detention>(Detentions)
+        var reason        by Detentions.reason
+        var student       by Student optionalReferencedOn  Detentions.student
+    }
+
+
+    class Holiday(id: EntityID<Long>) : LongEntity(id) {
+        companion object : LongEntityClass<Holiday>(Holidays)
+
+        var holidayStart by Holidays.holidayStart
+        var holidayEnd by Holidays.holidayEnd
+    }
+
+    class School(id: EntityID<Int>): IntEntity(id) {
+        companion object : IntEntityClass<School>(Schools)
+
+        var name by Schools.name
+        var region by Region referencedOn Schools.region
+        var secondaryRegion by Region optionalReferencedOn Schools.secondaryRegion
+        val students by Student.referrersOn(Students.school, true)
+        val holidays by Holiday via SchoolHolidays
+
+    }
+
+    @Test fun preloadReferencesOnASizedIterable() {
+
+        withTables(Regions, Schools) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region          = region1
+            }
+
+            val school3 = School.new {
+                name    = "Winchester"
+                region  = region2
+            }
+
+
+            School.all().with(School::region)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(true, cache.referrers.containsKey(school2.id))
+            assertEquals(true, cache.referrers.containsKey(school3.id))
+
+            assertEquals(region1, cache.referrers[school1.id]?.get(Schools.region)?.first())
+            assertEquals(region1, cache.referrers[school2.id]?.get(Schools.region)?.first())
+            assertEquals(region2, cache.referrers[school3.id]?.get(Schools.region)?.first())
+        }
+    }
+
+    @Test fun preloadReferencesOnAnEntity() {
+
+        withTables(Regions, Schools) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            School.find {
+                Schools.id eq school1.id
+            }.first().load(School::region)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(region1,   cache.referrers[school1.id]?.get(Schools.region)?.first())
+        }
+    }
+
+    @Test fun  preloadOptionalReferencesOnASizedIterable() {
+        withTables(Regions, Schools) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+                secondaryRegion = region2
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region          = region1
+            }
+
+            School.all().with(School::secondaryRegion)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(false, cache.referrers.containsKey(school2.id))
+
+            assertEquals(region2, cache.referrers[school1.id]?.get(Schools.secondaryRegion)?.firstOrNull())
+            assertEquals(null, cache.referrers[school2.id]?.get(Schools.secondaryRegion)?.firstOrNull())
+        }
+    }
+
+    @Test fun preloadOptionalReferencesOnAnEntity() {
+
+        withTables(Regions, Schools) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+                secondaryRegion = region2
+            }
+
+            School.find {
+                Schools.id eq school1.id
+            }.first().load(School::secondaryRegion)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(region2,   cache.referrers[school1.id]?.get(Schools.secondaryRegion)?.first())
+        }
+    }
+
+    @Test fun preloadReferrersOnASizedIterable() {
+
+        withTables(Regions, Schools, Students) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region          = region1
+            }
+
+            val school3 = School.new {
+                name    = "Winchester"
+                region  = region2
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school = school2
+            }
+
+            val student3 = Student.new {
+                name = "Henry Smith"
+                school = school3
+            }
+
+            val student4 = Student.new {
+                name = "Peter Smith"
+                school = school3
+            }
+
+
+            School.all().with(School::students)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(true, cache.referrers.containsKey(school2.id))
+            assertEquals(true, cache.referrers.containsKey(school3.id))
+
+            assertEquals(student1, cache.referrers[school1.id]?.get(Students.school)?.first())
+            assertEquals(student2, cache.referrers[school2.id]?.get(Students.school)?.first())
+            assertEquals(true, cache.referrers[school3.id]?.get(Students.school)?.contains(student3))
+            assertEquals(true, cache.referrers[school3.id]?.get(Students.school)?.contains(student4))
+        }
+    }
+
+    @Test fun preloadReferrersOnAnEntity() {
+
+        withTables(Regions, Schools, Students) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school = school1
+            }
+
+            val student3 = Student.new {
+                name = "Henry Smith"
+                school = school1
+            }
+
+            School.find {
+                Schools.id eq school1.id
+            }.first().load(School::students)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student3))
+        }
+    }
+
+    @Test fun preloadOptionalReferrersOnASizedIterable() {
+
+        withTables(Regions, Schools, Students, Detentions) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school = school1
+            }
+
+            val detention1 = Detention.new {
+                reason = "Poor Behaviour"
+                student = student1
+            }
+
+            val detention2 = Detention.new {
+                reason = "Poor Behaviour"
+                student = student1
+            }
+
+
+            School.all().with(School::students, Student::detentions)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(true, cache.referrers.containsKey(student1.id))
+            assertEquals(true, cache.referrers.containsKey(student2.id))
+
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
+            assertEquals(true, cache.referrers[student1.id]?.get(Detentions.student)?.contains(detention1))
+            assertEquals(true, cache.referrers[student1.id]?.get(Detentions.student)?.contains(detention2))
+            assertEquals(null, cache.referrers[student2.id]?.get(Detentions.student)?.firstOrNull())
+        }
+    }
+
+    @Test fun preloadInnerTableLinkOnASizedIterable() {
+
+        withTables(Regions, Schools, Holidays, SchoolHolidays) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val region2 = Region.new {
+                name = "England"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val school2 = School.new {
+                name = "Harrow"
+                region          = region1
+            }
+
+            val school3 = School.new {
+                name    = "Winchester"
+                region  = region2
+            }
+
+            val holiday1 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            val holiday2 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            val holiday3 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday1.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school2.id
+                it[holiday] = holiday2.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school3.id
+                it[holiday] = holiday3.id
+            }
+
+
+            School.all().with(School::holidays)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(true, cache.referrers.containsKey(school2.id))
+            assertEquals(true, cache.referrers.containsKey(school3.id))
+
+            assertEquals(holiday1, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.first())
+            assertEquals(holiday2, cache.referrers[school2.id]?.get(SchoolHolidays.school)?.first())
+            assertEquals(holiday3, cache.referrers[school3.id]?.get(SchoolHolidays.school)?.first())
+        }
+    }
+
+    @Test fun preloadInnerTableLinkOnAnEntity() {
+
+        withTables(Regions, Schools, Holidays, SchoolHolidays) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val holiday1 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            val holiday2 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            val holiday3 = Holiday.new {
+                holidayStart = DateTime.now()
+                holidayEnd = DateTime.now().plus(10)
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday1.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday2.id
+            }
+
+            SchoolHolidays.insert {
+                it[school] = school1.id
+                it[holiday] = holiday3.id
+            }
+
+            School.find {
+                Schools.id eq school1.id
+            }.first().load(School::holidays)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+
+            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday1))
+            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday2))
+            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday3))
+        }
+    }
+
+    @Test fun preloadRelationAtDepth() {
+
+        withTables(Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
+
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "Jack Smith"
+                school = school1
+            }
+
+            val note1 = Note.new {
+                text = "Note text"
+                student = student1
+            }
+
+            val note2 = Note.new {
+                text = "Note text"
+                student = student2
+            }
+
+
+            School.all().with(School::students, Student::notes)
+
+            val cache           = TransactionManager.current().entityCache
+            assertEquals(true, cache.referrers.containsKey(school1.id))
+            assertEquals(true, cache.referrers.containsKey(student1.id))
+            assertEquals(true, cache.referrers.containsKey(student2.id))
+
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
+            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
+            assertEquals(note1, cache.referrers[student1.id]?.get(Notes.student)?.first())
+            assertEquals(note2, cache.referrers[student2.id]?.get(Notes.student)?.first())
+        }
+    }
 }

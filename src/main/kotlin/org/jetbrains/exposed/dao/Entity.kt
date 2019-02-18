@@ -66,21 +66,21 @@ class OptionalReference<REF:Comparable<REF>, ID:Comparable<ID>, out Target : Ent
 }
 
 internal class BackReference<ParentID:Comparable<ParentID>, out Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, in Child:Entity<ChildID>, REF>
-(reference: Column<REF>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent> {
+                    (reference: Column<REF>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent> {
     private val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
 }
 
 class OptionalBackReference<ParentID:Comparable<ParentID>, out Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, in Child:Entity<ChildID>, REF>
-(reference: Column<REF?>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent?> {
+                    (reference: Column<REF?>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent?> {
     private val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull()  // flush entity before to don't miss newly created entities
 }
 
 class Referrers<ParentID:Comparable<ParentID>, in Parent:Entity<ParentID>, ChildID:Comparable<ChildID>, out Child:Entity<ChildID>, REF>
-(val reference: Column<REF>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
+    (val reference: Column<REF>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     init {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -133,7 +133,7 @@ class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClas
 
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<Source: Entity<*>, ID:Comparable<ID>, Target: Entity<ID>>(val table: Table,
-                                                                               val target: EntityClass<ID, Target>) : ReadWriteProperty<Source, SizedIterable<Target>> {
+                                     val target: EntityClass<ID, Target>) : ReadWriteProperty<Source, SizedIterable<Target>> {
 
     private fun getSourceRefColumn(o: Source): Column<EntityID<*>> {
         return table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<*>> ?: error("Table does not reference source")
@@ -150,13 +150,13 @@ class InnerTableLink<Source: Entity<*>, ID:Comparable<ID>, Target: Entity<ID>>(v
         val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, getTargetRefColumn())
 
         val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
-                - sourceRefColumn).distinct() + sourceRefColumn
+            - sourceRefColumn).distinct() + sourceRefColumn
 
         val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
         return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
-    override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
+override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
         val targetRefColumn = getTargetRefColumn()
 
@@ -196,11 +196,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
-        get() = _readValues ?: run {
-            val table = klass.table
-            _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
-            _readValues!!
-        }
+    get() = _readValues ?: run {
+        val table = klass.table
+        _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
+        _readValues!!
+    }
 
     /**
      * Updates entity fields from database.
@@ -252,10 +252,10 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
-            if (_readValues?.hasValue(this) == true)
-                found(readValues[this])
-            else
-                notFound()
+        if (_readValues?.hasValue(this) == true)
+            found(readValues[this])
+        else
+            notFound()
 
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
@@ -610,7 +610,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     fun count(op: Op<Boolean>? = null): Int = with(TransactionManager.current()) {
         val query = table.slice(table.id.count())
         (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
-                table.id.count()
+            table.id.count()
         ]
     }
 
@@ -763,261 +763,299 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     }
 
     fun <ID : Comparable<ID>, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
-
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
-            getDelegatedReference(entity: SRC, property: KProperty1<SRC, REF>) : Reference<SRCID, *, REF> {
-        property.isAccessible   = true
-        return property.getDelegate(entity) as? Reference<SRCID, *, REF> ?: error("Can't detect source reference column")
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?>
-            getOptionalDelegatedReference(entity: SRC, property: KProperty1<SRC, REF>) : OptionalReference<SRCID, *, Entity<*>> {
-        property.isAccessible   = true
-        return property.getDelegate(entity) as? OptionalReference<SRCID, *, Entity<*>> ?: error("Can't detect source reference column")
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
-            getDelegatedReferrers(entity: SRC, property: KProperty1<SRC, SizedIterable<REF>>) : Referrers<SRCID, SRC, *, REF, SRCID> {
-        property.isAccessible   = true
-        return property.getDelegate(entity) as? Referrers<SRCID, SRC, *, REF, SRCID> ?: error("Can't detect source reference column")
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
-            getDelegatedInnerTableLinkProperty(entity: SRC, property: KProperty1<SRC, SizedIterable<REF>>) : InnerTableLink<SRC, *, REF> {
-        property.isAccessible   = true
-        return property.getDelegate(entity) as? InnerTableLink<SRC, *, REF> ?: error("Can't detect source reference column")
-    }
-
-    private fun getReferenceObjectFromDelegatedProperty(entity: Entity<*>, property: KProperty1<Any, Any?>) : Any? {
-        property.isAccessible   = true
-        return property.getDelegate(entity)
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>> List<SRC>
-            .preloadReference(property: KProperty1<SRC, REF>) : List<SRC> {
-
-        if(this.isEmpty()) return this
-
-        val referenceObject = getDelegatedReference(this.first(), property)
-        val srcColumn       = referenceObject.reference as Column<EntityID<*>>
-        val refColumn       = referenceObject.reference.referee as Column<EntityID<*>>
-
-        val cache   = TransactionManager.current().entityCache
-        val map     = mutableMapOf<Any, MutableList<SRC>>()
-        val ids     = this.map {
-            if(map.containsKey(it.readValues[srcColumn].value)) {
-                map[it.readValues[srcColumn].value]?.add(it)
-            } else {
-                map[it.readValues[srcColumn].value] = mutableListOf(it)
-            }
-
-            it.readValues[srcColumn]
-        }
-                .distinct()
-                .filter { cache.referrers[it]?.containsKey(srcColumn)?.not() ?: true }
-
-
-        if(ids.isNotEmpty()) {
-            referenceObject.factory.find {
-                refColumn inList ids
-            }.toList()
-        } else { emptyList() }
-                .map {
-                    val sources = map[it!!.id!!.value]
-                    sources?.map { source ->
-                        cache.getOrPutReferrers(source.id, srcColumn) { SizedCollection(listOf(it)) as SizedIterable<Entity<EntityID<SRCID>>> }
-                    }
-                }
-
-        return this
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?> List<SRC>
-            .preloadOptionalReference(property: KProperty1<SRC, REF>) : List<SRC> {
-
-        if(this.isEmpty()) return this
-
-        val referenceObject = getOptionalDelegatedReference(this.first(), property)
-        val srcColumn       = referenceObject.reference as Column<EntityID<*>>
-        val refColumn       = referenceObject.reference.referee as Column<EntityID<*>>
-
-        val cache   = TransactionManager.current().entityCache
-        val map     = mutableMapOf<Any, MutableList<SRC>>()
-        val ids     = this@preloadOptionalReference.mapNotNull {
-
-            it.readValues[srcColumn]?.let { id ->
-                if(map.containsKey(it.readValues[srcColumn]?.value)) {
-                    map[id.value]?.add(it)
-                } else {
-                    map[id.value] = mutableListOf(it)
-                }
-            }
-            it.readValues[srcColumn]
-        }
-                .distinct()
-                .filter { cache.referrers[it]?.containsKey(srcColumn)?.not() ?: true }
-
-        if(ids.isNotEmpty()) {
-            referenceObject.factory.find {
-                refColumn inList ids
-            }.toList()
-        } else { emptyList() }
-                .map {
-                    val sources = map[it!!.id!!.value]
-                    sources?.map { source ->
-                        cache.getOrPutReferrers(source.id, srcColumn) { SizedCollection(listOf(it)) as SizedIterable<Entity<EntityID<SRCID>>> }
-                    }
-                }
-
-        return this
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>> List<SRC>
-            .preloadReferrers(property: KProperty1<SRC, SizedIterable<REF>>)
-            : List<SRC> {
-
-        if(this.isEmpty()) return this
-
-        val referenceObject = getDelegatedReferrers(this.first(), property)
-        val srcColumn       = referenceObject.reference.referee as Column<EntityID<*>>
-        val refColumn       = referenceObject.reference as Column<EntityID<*>>
-
-
-        val cache   = TransactionManager.current().entityCache
-        val ids     = this@preloadReferrers.map {
-            it.readValues[srcColumn]
-        }
-                .distinct()
-                .filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
-
-        val referenceMap = if(ids.isNotEmpty()) {
-            referenceObject.factory.find {
-                refColumn inList ids
-            }.toList()
-        } else { emptyList() }
-                .groupBy {
-                    it.readValues[refColumn]
-                }
-
-        ids.map {
-            cache.getOrPutReferrers(it, refColumn) { SizedCollection(referenceMap[it]?:emptyList()) as SizedIterable<Entity<EntityID<SRCID>>> }
-        }
-
-        return this
-    }
-
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
-            .preloadInnerTableLink(property: KProperty1<SRC, SizedIterable<REF>>)
-            : List<SRC> {
-
-        if(this.isEmpty()) return this
-
-        val referenceObject = getDelegatedInnerTableLinkProperty(this.first(), property)
-        val refColumn       = referenceObject.table.columns.singleOrNull { it.referee == this.first().klass.table.id } as? Column<EntityID<SRCID>> ?: error("Can't detect source reference column")
-
-        val cache           = TransactionManager.current().entityCache
-        val ids             = this@preloadInnerTableLink.map {
-            it.readValues[it.klass.table.id]
-        }
-                .distinct()
-                .filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
-
-        val pivotTable      = refColumn.table
-        val referenceMap    = (pivotTable innerJoin referenceObject.target.table)
-                .select {
-                    refColumn inList ids
-                }.map {
-                    it[refColumn] to referenceObject.target.wrapRow(it)
-                }.groupBy {
-                    it.first
-                }.mapValues { it.value.map { it.second }}
-
-        ids.map {
-            cache.getOrPutReferrers(it, refColumn) { SizedCollection(referenceMap[it]?:emptyList()) as SizedIterable<Entity<EntityID<SRCID>>> }
-        }
-
-        return this
-    }
-
-    private fun filterRelationsForEntity(entity: Entity<*>, relations: Array<out KProperty1<out Entity<*>, Any?>>): List<KProperty1<out Entity<*>, Any?>> {
-
-        val validMembers = entity.javaClass.kotlin.declaredMemberProperties
-        return relations.filter {relation ->
-            validMembers.any { relation == it  }
-        }
-    }
-
-    private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
-            .preloadRelations(vararg relations: KProperty1<out REF, Any?>, nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
-
-        val entity              = this.firstOrNull() ?: return
-        if(nodesVisited.contains(entity.klass)) {
-            return
-        } else {
-            nodesVisited.add(entity.klass)
-        }
-
-        val directRelations = filterRelationsForEntity(entity, relations)
-        directRelations.map {
-            val refObject = getReferenceObjectFromDelegatedProperty(entity, it as KProperty1<Any, Any?>)
-            when(refObject) {
-                is Reference<*, *, *> -> {
-                    this.preloadReference(it as KProperty1<SRC, Entity<*>>)
-                }
-                is OptionalReference<*, *, *> -> {
-                    this.preloadOptionalReference(it as KProperty1<SRC, Entity<*>>)
-                }
-                is Referrers<*, *, *, *, *> -> {
-                    this.preloadReferrers(it as KProperty1<SRC, SizedIterable<Entity<*>>>)
-                }
-                is InnerTableLink<*,* ,*> -> {
-                    this.preloadInnerTableLink(it as KProperty1<SRC, SizedIterable<Entity<*>>>)
-                }
-                else -> error("Relation delegate has an unknown type")
-            }
-        }
-
-        if(directRelations.isNotEmpty() && relations.size != directRelations.size) {
-
-            val remainingRelations      = relations.filter {
-                directRelations.none { direct -> direct == it  }
-            }
-
-            directRelations. map { relationProperty ->
-                val relations = this.flatMap {
-                    val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)
-                    return@flatMap when(relation) {
-                        is SizedIterable<*> -> relation as SizedIterable<Entity<*>>
-                        is Entity<*>        -> SizedCollection(listOf(relation))
-                        null                -> SizedCollection(listOf())
-                        else                -> error("Unrecognised loaded relation")
-                    }
-                } as List<Entity<SRCID>>
-
-                relations.preloadRelations(*remainingRelations.toTypedArray() as Array<out KProperty1<Entity<*>, Any?>>, nodesVisited = nodesVisited)
-            }
-        }
-    }
-
-    fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>) : SRC {
-
-        listOf(this).with(*relations)
-        return this
-    }
-
-    fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
-            .with(vararg relations: KProperty1<out REF, Any?>) : List<SRC>
-            = this.apply {
-        preloadRelations(*relations)
-    }
-
-    fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SizedIterable<SRC>.with(vararg relations: KProperty1<out Entity<*>, Any?>) : List<SRC>
-            = this.toList().with(*relations)
-
-
 }
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
+        getDelegatedReference(entity: SRC, property: KProperty1<SRC, REF>) : Reference<SRCID, *, REF> {
+    property.isAccessible   = true
+    return property.getDelegate(entity) as? Reference<SRCID, *, REF> ?: error("Can't detect source reference column")
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?>
+        getOptionalDelegatedReference(entity: SRC, property: KProperty1<SRC, REF>) : OptionalReference<SRCID, *, Entity<*>> {
+    property.isAccessible   = true
+    return property.getDelegate(entity) as? OptionalReference<SRCID, *, Entity<*>> ?: error("Can't detect source reference column")
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
+        getDelegatedReferrers(entity: SRC, property: KProperty1<SRC, SizedIterable<REF>>) : Referrers<SRCID, SRC, *, REF, SRCID> {
+    property.isAccessible   = true
+    return property.getDelegate(entity) as? Referrers<SRCID, SRC, *, REF, SRCID> ?: error("Can't detect source reference column")
+}
+
+fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?>
+        getDelegatedOptionalReferrers(entity: SRC, property: KProperty1<SRC, SizedIterable<REF>>) : OptionalReferrers<SRCID, SRC, *, Entity<*>, SRCID> {
+    property.isAccessible   = true
+    return property.getDelegate(entity) as? OptionalReferrers<SRCID, SRC, *, Entity<*>, SRCID> ?: error("Can't detect source reference column")
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>>
+        getDelegatedInnerTableLinkProperty(entity: SRC, property: KProperty1<SRC, SizedIterable<REF>>) : InnerTableLink<SRC, *, REF> {
+    property.isAccessible   = true
+    return property.getDelegate(entity) as? InnerTableLink<SRC, *, REF> ?: error("Can't detect source reference column")
+}
+
+private fun getReferenceObjectFromDelegatedProperty(entity: Entity<*>, property: KProperty1<Any, Any?>) : Any? {
+    property.isAccessible   = true
+    return property.getDelegate(entity)
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>> List<SRC>
+        .preloadReference(property: KProperty1<SRC, REF>) : List<SRC> {
+
+    if(this.isEmpty()) return this
+
+    val referenceObject = getDelegatedReference(this.first(), property)
+    val srcColumn       = referenceObject.reference as Column<EntityID<*>>
+    val refColumn       = referenceObject.reference.referee as Column<EntityID<*>>
+
+    val cache   = TransactionManager.current().entityCache
+    val map     = mutableMapOf<Any, MutableList<SRC>>()
+    val ids     = this.map {
+        if(map.containsKey(it.readValues[srcColumn].value)) {
+            map[it.readValues[srcColumn].value]?.add(it)
+        } else {
+            map[it.readValues[srcColumn].value] = mutableListOf(it)
+        }
+
+        it.readValues[srcColumn]
+    }
+    .distinct()
+    .filter { cache.referrers[it]?.containsKey(srcColumn)?.not() ?: true }
+
+    if(ids.isNotEmpty()) {
+        referenceObject.factory.find {
+            refColumn inList ids
+        }.toList()
+    } else { emptyList() }
+    .map {
+        val sources = map[it!!.id!!.value]
+        sources?.map { source ->
+            cache.getOrPutReferrers(source.id, srcColumn) { SizedCollection(listOf(it)) as SizedIterable<Entity<EntityID<SRCID>>> }
+        }
+    }
+
+    return this
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?> List<SRC>
+        .preloadOptionalReference(property: KProperty1<SRC, REF>) : List<SRC> {
+
+    if(this.isEmpty()) return this
+
+    val referenceObject = getOptionalDelegatedReference(this.first(), property)
+    val srcColumn       = referenceObject.reference as Column<EntityID<*>>
+    val refColumn       = referenceObject.reference.referee as Column<EntityID<*>>
+
+    val cache   = TransactionManager.current().entityCache
+    val map     = mutableMapOf<Any, MutableList<SRC>>()
+    val ids     = this@preloadOptionalReference.mapNotNull {
+
+        it.readValues[srcColumn]?.let { id ->
+            if(map.containsKey(it.readValues[srcColumn]?.value)) {
+                map[id.value]?.add(it)
+            } else {
+                map[id.value] = mutableListOf(it)
+            }
+        }
+        it.readValues[srcColumn]
+    }
+            .distinct()
+            .filter { cache.referrers[it]?.containsKey(srcColumn)?.not() ?: true }
+
+    if(ids.isNotEmpty()) {
+        referenceObject.factory.find {
+            refColumn inList ids
+        }.toList()
+    } else { emptyList() }
+            .map {
+                val sources = map[it!!.id!!.value]
+                sources?.map { source ->
+                    cache.getOrPutReferrers(source.id, srcColumn) { SizedCollection(listOf(it)) as SizedIterable<Entity<EntityID<SRCID>>> }
+                }
+            }
+
+    return this
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>> List<SRC>
+        .preloadReferrers(property: KProperty1<SRC, SizedIterable<REF>>)
+        : List<SRC> {
+
+    if(this.isEmpty()) return this
+
+    val referenceObject = getDelegatedReferrers(this.first(), property)
+    val srcColumn       = referenceObject.reference.referee as Column<EntityID<*>>
+    val refColumn       = referenceObject.reference as Column<EntityID<*>>
+
+    val cache   = TransactionManager.current().entityCache
+    val ids     = this@preloadReferrers.map {
+        it.readValues[srcColumn]
+    }
+    .distinct()
+    .filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
+
+    val referenceMap = if(ids.isNotEmpty()) {
+        referenceObject.factory.find {
+            refColumn inList ids
+        }.toList()
+    } else { emptyList() }
+            .groupBy {
+                it.readValues[refColumn]
+            }
+
+    ids.map {
+        cache.getOrPutReferrers(it, refColumn) { SizedCollection(referenceMap[it]?:emptyList()) as SizedIterable<Entity<EntityID<SRCID>>> }
+    }
+
+    return this
+}
+
+fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF: Entity<*>?> List<SRC>
+        .preloadOptionalReferrers(property: KProperty1<SRC, SizedIterable<REF>>)
+        : List<SRC> {
+
+    if(this.isEmpty()) return this
+
+    val referenceObject = getDelegatedOptionalReferrers(this.first(), property)
+    val srcColumn       = referenceObject.reference.referee as Column<EntityID<*>>
+    val refColumn       = referenceObject.reference as Column<EntityID<*>>
+
+    val cache   = TransactionManager.current().entityCache
+    val ids     = this@preloadOptionalReferrers.mapNotNull {
+        it.readValues[srcColumn]
+    }
+    .distinct()
+    .filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
+
+    val referenceMap = if(ids.isNotEmpty()) {
+        referenceObject.factory.find {
+            refColumn inList ids
+        }.toList()
+    } else { emptyList() }
+            .groupBy {
+                it.readValues[refColumn]
+            }
+
+    ids.map {
+        cache.getOrPutReferrers(it, refColumn) { SizedCollection(referenceMap[it]?:emptyList()) as SizedIterable<Entity<EntityID<SRCID>>> }
+    }
+
+    return this
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
+        .preloadInnerTableLink(property: KProperty1<SRC, SizedIterable<REF>>)
+        : List<SRC> {
+
+    if(this.isEmpty()) return this
+
+    val referenceObject = getDelegatedInnerTableLinkProperty(this.first(), property)
+    val refColumn       = referenceObject.table.columns.singleOrNull { it.referee == this.first().klass.table.id } as? Column<EntityID<SRCID>> ?: error("Can't detect source reference column")
+
+    val cache           = TransactionManager.current().entityCache
+    val ids             = this@preloadInnerTableLink.map {
+        it.readValues[it.klass.table.id]
+    }
+            .distinct()
+            .filter { cache.referrers[it]?.containsKey(refColumn)?.not() ?: true }
+
+    val pivotTable      = refColumn.table
+    val referenceMap    = (pivotTable innerJoin referenceObject.target.table)
+            .select {
+                refColumn inList ids
+            }.map {
+                it[refColumn] to referenceObject.target.wrapRow(it)
+            }.groupBy {
+                it.first
+            }.mapValues { it.value.map { it.second }}
+
+    ids.map {
+        cache.getOrPutReferrers(it, refColumn) { SizedCollection(referenceMap[it]?:emptyList()) as SizedIterable<Entity<EntityID<SRCID>>> }
+    }
+
+    return this
+}
+
+private fun filterRelationsForEntity(entity: Entity<*>, relations: Array<out KProperty1<out Entity<*>, Any?>>): List<KProperty1<out Entity<*>, Any?>> {
+
+    val validMembers = entity.javaClass.kotlin.declaredMemberProperties
+    return relations.filter {relation ->
+        validMembers.any { relation == it  }
+    }
+}
+
+private fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>.preloadRelations(vararg relations: KProperty1<out REF, Any?>, nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
+
+    val entity              = this.firstOrNull() ?: return
+    if(nodesVisited.contains(entity.klass)) {
+        return
+    } else {
+        nodesVisited.add(entity.klass)
+    }
+
+    val directRelations = filterRelationsForEntity(entity, relations)
+    directRelations.map {
+        val refObject = getReferenceObjectFromDelegatedProperty(entity, it as KProperty1<Any, Any?>)
+        when(refObject) {
+            is Reference<*, *, *> -> {
+                this.preloadReference(it as KProperty1<SRC, Entity<*>>)
+            }
+            is OptionalReference<*, *, *> -> {
+                this.preloadOptionalReference(it as KProperty1<SRC, Entity<*>>)
+            }
+            is Referrers<*, *, *, *, *> -> {
+                this.preloadReferrers(it as KProperty1<SRC, SizedIterable<Entity<*>>>)
+            }
+            is OptionalReferrers<*,*,*,*,*> -> {
+                this.preloadOptionalReferrers(it as KProperty1<SRC, SizedIterable<Entity<*>>>)
+            }
+            is InnerTableLink<*,* ,*> -> {
+                this.preloadInnerTableLink(it as KProperty1<SRC, SizedIterable<Entity<*>>>)
+            }
+            else -> error("Relation delegate has an unknown type")
+        }
+    }
+
+    if(directRelations.isNotEmpty() && relations.size != directRelations.size) {
+
+        val remainingRelations      = relations.filter {
+            directRelations.none { direct -> direct == it  }
+        }
+
+        directRelations. map { relationProperty ->
+            val relations = this.flatMap {
+                val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)
+                return@flatMap when(relation) {
+                    is SizedIterable<*> -> relation as SizedIterable<Entity<*>>
+                    is Entity<*>        -> SizedCollection(listOf(relation))
+                    null                -> SizedCollection(listOf())
+                    else                -> error("Unrecognised loaded relation")
+                }
+            } as List<Entity<SRCID>>
+
+            relations.preloadRelations(*remainingRelations.toTypedArray() as Array<out KProperty1<Entity<*>, Any?>>, nodesVisited = nodesVisited)
+        }
+    }
+}
+
+
+fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
+        .with(vararg relations: KProperty1<out REF, Any?>) : List<SRC>
+        = this.apply {
+    preloadRelations(*relations)
+}
+
+fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>) : SRC {
+
+    listOf(this).with(*relations)
+    return this
+}
+
+fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SizedIterable<SRC>.with(vararg relations: KProperty1<out Entity<*>, Any?>) : List<SRC>
+        = this.toList().with(*relations)
+
+
 
 abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
