@@ -134,7 +134,8 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "4.10"
+    gradleVersion = "4.10.2"
+    distributionType = Wrapper.DistributionType.ALL
 }
 
 
