@@ -1,0 +1,44 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'maven-publish'
+    id "com.jfrog.bintray"
+    id 'net.researchgate.release'
+}
+
+dependencies {
+    api "org.springframework:spring-jdbc:$spring_version"
+    api "org.springframework:spring-context:$spring_version"
+
+    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    api "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    api 'joda-time:joda-time:2.9.9'
+    api 'org.slf4j:slf4j-api:1.7.25'
+
+    api rootProject
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.1'
+    implementation 'com.h2database:h2:1.4.197'
+
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    testImplementation 'log4j:log4j:1.2.17'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+    testImplementation 'com.h2database:h2:1.4.197'
+    testImplementation "org.springframework:spring-test:$spring_version"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        spring_transaction(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifactId = 'spring-transaction'
+        }
+    }
+}
