@@ -2,13 +2,12 @@ import java.time.Duration
 
 buildscript {
     repositories {
-        mavenCentral()
         jcenter()
         maven {
-            url 'http://oss.sonatype.org/content/repositories/snapshots'
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
         }
         maven {
-            url "http://dl.bintray.com/kotlin/kotlin"
+            url "https://dl.bintray.com/kotlin/kotlin"
         }
     }
     dependencies {
@@ -68,10 +67,10 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
-        url 'http://oss.sonatype.org/content/repositories/snapshots'
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
     maven {
-        url "http://dl.bintray.com/kotlin/kotlin"
+        url "https://dl.bintray.com/kotlin/kotlin"
     }
 
     maven {
@@ -135,7 +134,8 @@ bintray {
 afterReleaseBuild.dependsOn bintrayUpload
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "4.10"
+    gradleVersion = "4.10.2"
+    distributionType = Wrapper.DistributionType.ALL
 }
 
 

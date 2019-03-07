@@ -45,7 +45,9 @@ class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
-class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<T> {
+class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> {
+    private var delegate: SizedIterable<T> = _delegate
+
     private var _wrapper: List<T>? = null
     private var _size: Int? = null
     private var _empty: Boolean? = null
@@ -62,16 +64,25 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
     override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
     override fun forUpdate(): SizedIterable<T> {
-        if (_wrapper != null && delegate is Query && !delegate.isForUpdate()) {
+        val localDelegate = delegate
+        if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && !localDelegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
-        return delegate.forUpdate()
+        if (_wrapper == null) {
+            delegate = delegate.forUpdate()
+        }
+        return this
     }
+
     override fun notForUpdate(): SizedIterable<T> {
-        if (_wrapper != null && delegate is Query && delegate.isForUpdate()) {
+        val localDelegate = delegate
+        if(_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && localDelegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
-        return delegate.notForUpdate()
+        if (_wrapper == null) {
+            delegate = delegate.notForUpdate()
+        }
+        return this
     }
 
     private fun _count(): Int {
@@ -93,8 +104,11 @@ class LazySizedCollection<out T>(val delegate: SizedIterable<T>): SizedIterable<
 
     override fun copy(): SizedIterable<T> = LazySizedCollection(delegate.copy())
 
-    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
-            = LazySizedCollection(delegate.orderBy(*order))
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> {
+        check(_wrapper == null) { "Can't order already loaded data" }
+        delegate = delegate.orderBy(*order)
+        return this
+    }
 }
 
 infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
