@@ -4,12 +4,11 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.EntityTests.Detention.Companion.optionalReferrersOn
-import org.jetbrains.exposed.sql.tests.shared.EntityTests.School.Companion.referrersOn
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.joda.time.DateTime
 import org.junit.Test
+import java.sql.Connection
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.rowset.serial.SerialBlob
@@ -580,9 +579,22 @@ class EntityTests: DatabaseTestsBase() {
         companion object : IntEntityClass<Region>(Regions)
 
         var name by Regions.name
+
+        override fun equals(other: Any?): Boolean {
+            return (other as? Region)?.id?.equals(id) ?: false
+        }
+
+        override fun hashCode(): Int = id.hashCode()
     }
 
-    class Student(id: EntityID<Long>): LongEntity(id) {
+    abstract class ComparableLongEntity<T:LongEntity>(id: EntityID<Long>) : LongEntity(id) {
+        override fun equals(other: Any?): Boolean {
+            return (other as? T)?.id?.equals(id) ?: false
+        }
+
+        override fun hashCode(): Int = id.hashCode()
+    }
+    class Student(id: EntityID<Long>): ComparableLongEntity<Student>(id) {
         companion object : LongEntityClass<Student>(Students)
         var name        by Students.name
         var school      by School referencedOn Students.school
@@ -590,21 +602,21 @@ class EntityTests: DatabaseTestsBase() {
         val detentions  by Detention.optionalReferrersOn(Detentions.student, true)
     }
 
-    class Note(id: EntityID<Long>): LongEntity(id) {
+    class Note(id: EntityID<Long>): ComparableLongEntity<Note>(id) {
         companion object : LongEntityClass<Note>(Notes)
         var text by Notes.text
         var student by Student referencedOn Notes.student
     }
 
 
-    class Detention(id: EntityID<Long>): LongEntity(id) {
+    class Detention(id: EntityID<Long>): ComparableLongEntity<Detention>(id) {
         companion object : LongEntityClass<Detention>(Detentions)
         var reason        by Detentions.reason
         var student       by Student optionalReferencedOn  Detentions.student
     }
 
 
-    class Holiday(id: EntityID<Long>) : LongEntity(id) {
+    class Holiday(id: EntityID<Long>) : ComparableLongEntity<Holiday>(id) {
         companion object : LongEntityClass<Holiday>(Holidays)
 
         var holidayStart by Holidays.holidayStart
@@ -618,8 +630,7 @@ class EntityTests: DatabaseTestsBase() {
         var region by Region referencedOn Schools.region
         var secondaryRegion by Region optionalReferencedOn Schools.secondaryRegion
         val students by Student.referrersOn(Students.school, true)
-        val holidays by Holiday via SchoolHolidays
-
+        var holidays by Holiday via SchoolHolidays
     }
 
     @Test fun preloadReferencesOnASizedIterable() {
@@ -649,17 +660,18 @@ class EntityTests: DatabaseTestsBase() {
                 region  = region2
             }
 
+            commit()
 
-            School.all().with(School::region)
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                School.all().with(School::region)
+                assertNotNull(School.testCache(school1.id))
+                assertNotNull(School.testCache(school2.id))
+                assertNotNull(School.testCache(school3.id))
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(true, cache.referrers.containsKey(school2.id))
-            assertEquals(true, cache.referrers.containsKey(school3.id))
-
-            assertEquals(region1, cache.referrers[school1.id]?.get(Schools.region)?.first())
-            assertEquals(region1, cache.referrers[school2.id]?.get(Schools.region)?.first())
-            assertEquals(region2, cache.referrers[school3.id]?.get(Schools.region)?.first())
+                assertEquals(region1, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.region]))
+                assertEquals(region1, Region.testCache(School.testCache(school2.id)!!.readValues[Schools.region]))
+                assertEquals(region2, Region.testCache(School.testCache(school3.id)!!.readValues[Schools.region]))
+            }
         }
     }
 
@@ -676,13 +688,22 @@ class EntityTests: DatabaseTestsBase() {
                 region          = region1
             }
 
-            School.find {
-                Schools.id eq school1.id
-            }.first().load(School::region)
+            commit()
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(region1,   cache.referrers[school1.id]?.get(Schools.region)?.first())
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                School.find {
+                    Schools.id eq school1.id
+                }.first().load(School::region)
+
+                assertNotNull(School.testCache(school1.id))
+                assertEquals(region1, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.region]))
+
+//                val cache = TransactionManager.current().entityCache
+//                val schoolReferences = cache.referrers[school1.id]
+//                assertEquals(1, schoolReferences?.size)
+//                assertEquals(1, schoolReferences?.get(Schools.region)?.count())
+//                assertEquals(region1, schoolReferences?.get(Schools.region)?.single())
+            }
         }
     }
 
@@ -708,14 +729,17 @@ class EntityTests: DatabaseTestsBase() {
                 region          = region1
             }
 
-            School.all().with(School::secondaryRegion)
+            commit()
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(false, cache.referrers.containsKey(school2.id))
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                School.all().with(School::region, School::secondaryRegion)
+                assertNotNull(School.testCache(school1.id))
+                assertNotNull(School.testCache(school2.id))
 
-            assertEquals(region2, cache.referrers[school1.id]?.get(Schools.secondaryRegion)?.firstOrNull())
-            assertEquals(null, cache.referrers[school2.id]?.get(Schools.secondaryRegion)?.firstOrNull())
+                assertEquals(region1, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.region]))
+                assertEquals(region2, Region.testCache(School.testCache(school1.id)!!.readValues[Schools.secondaryRegion]!!))
+                assertEquals(null, School.testCache(school2.id)!!.readValues[Schools.secondaryRegion])
+            }
         }
     }
 
@@ -736,13 +760,16 @@ class EntityTests: DatabaseTestsBase() {
                 secondaryRegion = region2
             }
 
-            School.find {
-                Schools.id eq school1.id
-            }.first().load(School::secondaryRegion)
+            commit()
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(region2,   cache.referrers[school1.id]?.get(Schools.secondaryRegion)?.first())
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                val school2 = School.find {
+                    Schools.id eq school1.id
+                }.first().load(School::secondaryRegion)
+
+                assertEquals(null, Region.testCache(school2.readValues[Schools.region]))
+                assertEquals(region2, Region.testCache(school2.readValues[Schools.secondaryRegion]!!))
+            }
         }
     }
 
@@ -793,23 +820,24 @@ class EntityTests: DatabaseTestsBase() {
                 school = school3
             }
 
+            commit()
 
-            School.all().with(School::students)
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                val cache           = TransactionManager.current().entityCache
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(true, cache.referrers.containsKey(school2.id))
-            assertEquals(true, cache.referrers.containsKey(school3.id))
+                School.all().with(School::students)
+                assertEquals(true, cache.referrers.containsKey(school1.id))
+                assertEquals(true, cache.referrers.containsKey(school2.id))
+                assertEquals(true, cache.referrers.containsKey(school3.id))
 
-            assertEquals(student1, cache.referrers[school1.id]?.get(Students.school)?.first())
-            assertEquals(student2, cache.referrers[school2.id]?.get(Students.school)?.first())
-            assertEquals(true, cache.referrers[school3.id]?.get(Students.school)?.contains(student3))
-            assertEquals(true, cache.referrers[school3.id]?.get(Students.school)?.contains(student4))
+                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1)
+                assertEqualCollections(cache.referrers[school2.id]?.get(Students.school)?.toList().orEmpty(), student2)
+                assertEqualCollections(cache.referrers[school3.id]?.get(Students.school)?.toList().orEmpty(), student3, student4)
+            }
         }
     }
 
     @Test fun preloadReferrersOnAnEntity() {
-
         withTables(Regions, Schools, Students) {
 
             val region1 = Region.new {
@@ -837,16 +865,16 @@ class EntityTests: DatabaseTestsBase() {
                 school = school1
             }
 
-            School.find {
-                Schools.id eq school1.id
-            }.first().load(School::students)
+            commit()
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                val cache           = TransactionManager.current().entityCache
 
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student3))
+                School.find { Schools.id eq school1.id }.first().load(School::students)
+                assertEquals(true, cache.referrers.containsKey(school1.id))
+
+                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2, student3)
+            }
         }
     }
 
@@ -884,18 +912,21 @@ class EntityTests: DatabaseTestsBase() {
             }
 
 
-            School.all().with(School::students, Student::detentions)
+            commit()
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(true, cache.referrers.containsKey(student1.id))
-            assertEquals(true, cache.referrers.containsKey(student2.id))
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                School.all().with(School::students, Student::detentions)
+                val cache           = TransactionManager.current().entityCache
 
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
-            assertEquals(true, cache.referrers[student1.id]?.get(Detentions.student)?.contains(detention1))
-            assertEquals(true, cache.referrers[student1.id]?.get(Detentions.student)?.contains(detention2))
-            assertEquals(null, cache.referrers[student2.id]?.get(Detentions.student)?.firstOrNull())
+                School.all().with(School::students, Student::detentions)
+                assertEquals(true, cache.referrers.containsKey(school1.id))
+                assertEquals(true, cache.referrers.containsKey(student1.id))
+                assertEquals(true, cache.referrers.containsKey(student2.id))
+
+                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2)
+                assertEqualCollections(cache.referrers[student1.id]?.get(Detentions.student)?.toList().orEmpty(), detention1, detention2)
+                assertEqualCollections(cache.referrers[student2.id]?.get(Detentions.student)?.toList().orEmpty(), emptyList())
+            }
         }
     }
 
@@ -941,37 +972,26 @@ class EntityTests: DatabaseTestsBase() {
                 holidayEnd = DateTime.now().plus(10)
             }
 
-            SchoolHolidays.insert {
-                it[school] = school1.id
-                it[holiday] = holiday1.id
+            school1.holidays = SizedCollection(holiday1, holiday2)
+            school2.holidays = SizedCollection(holiday3)
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                School.all().with(School::holidays)
+                val cache = TransactionManager.current().entityCache
+                assertEquals(true, cache.referrers.containsKey(school1.id))
+                assertEquals(true, cache.referrers.containsKey(school2.id))
+                assertEquals(true, cache.referrers.containsKey(school3.id))
+
+                assertEqualCollections(cache.referrers[school1.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday1, holiday2)
+                assertEqualCollections(cache.referrers[school2.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday3)
+                assertEqualCollections(cache.referrers[school3.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), emptyList())
             }
-
-            SchoolHolidays.insert {
-                it[school] = school2.id
-                it[holiday] = holiday2.id
-            }
-
-            SchoolHolidays.insert {
-                it[school] = school3.id
-                it[holiday] = holiday3.id
-            }
-
-
-            School.all().with(School::holidays)
-
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(true, cache.referrers.containsKey(school2.id))
-            assertEquals(true, cache.referrers.containsKey(school3.id))
-
-            assertEquals(holiday1, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.first())
-            assertEquals(holiday2, cache.referrers[school2.id]?.get(SchoolHolidays.school)?.first())
-            assertEquals(holiday3, cache.referrers[school3.id]?.get(SchoolHolidays.school)?.first())
         }
     }
 
     @Test fun preloadInnerTableLinkOnAnEntity() {
-
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
 
             val region1 = Region.new {
@@ -1016,6 +1036,8 @@ class EntityTests: DatabaseTestsBase() {
             School.find {
                 Schools.id eq school1.id
             }.first().load(School::holidays)
+
+            commit()
 
             val cache           = TransactionManager.current().entityCache
             assertEquals(true, cache.referrers.containsKey(school1.id))

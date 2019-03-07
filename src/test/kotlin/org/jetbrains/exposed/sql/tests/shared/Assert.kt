@@ -7,12 +7,13 @@ import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.joda.time.DateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
     assertEquals (expected.size, collection.size, "Count mismatch on ${currentDialect.name}")
     for (p in collection) {
-        assert(expected.any {p == it}) { "Unexpected element in collection pair $p on ${currentDialect.name}" }
+        assertTrue(expected.any {p == it}, "Unexpected element in collection pair $p on ${currentDialect.name}")
     }
 }
 

@@ -35,7 +35,7 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
 }
 
 class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
-    constructor(value: T) : this(listOf(value))
+    constructor(vararg values: T) : this(values.toList())
     override fun limit(n: Int, offset: Int): SizedIterable<T> = SizedCollection(delegate.drop(offset).take(n))
 
     override operator fun iterator() = delegate.iterator()
