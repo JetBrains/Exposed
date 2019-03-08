@@ -459,11 +459,8 @@ class EntityCache {
 
                 for ((entry, genValues) in toFlush.zip(ids)) {
                     if (entry.id._value == null) {
-                        val id = genValues[table.id]!!
-                        entry.id._value = (table.id.columnType as EntityIDColumnType<*>).idColumn.columnType.valueFromDB(when (id) {
-                            is EntityID<*> -> id._value!!
-                            else -> id
-                        })
+                        val id = genValues[table.id]
+                        entry.id._value = id._value
                         entry.writeValues[entry.klass.table.id as Column<Any?>] = id
                     }
                     genValues.fieldIndex.keys.forEach { key ->
