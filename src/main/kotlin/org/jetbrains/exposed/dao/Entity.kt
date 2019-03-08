@@ -402,7 +402,6 @@ class EntityCache {
     }
 
     fun flush(tables: Iterable<IdTable<*>>) {
-
         val insertedTables = inserts.keys
 
         for (t in SchemaUtils.sortTablesByReferences(tables)) {
@@ -719,18 +718,18 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*,*>) this.notForUpdate() else this
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null)/*: List<T>*/
+    fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T>
             = warmUpReferences(references, refColumn as Column<SID>, forUpdate)
 
-    fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null)/*: List<T>*/ {
-        val parentTable = refColumn.referee?.table
-        require(parentTable is IdTable<*>) { "RefColumn should have reference to IdTable" }
-        if (references.isEmpty()) return
+    fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null): List<T> {
+        val parentTable = refColumn.referee?.table as? IdTable<*>
+        requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
+        if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val cache = TransactionManager.current().entityCache
         if (refColumn.columnType is EntityIDColumnType<*>) {
             refColumn as Column<EntityID<*>>
-            distinctRefIds as List<EntityID<*>>
+            distinctRefIds as List<EntityID<ID>>
             val toLoad = distinctRefIds.filter {
                  cache.referrers[it]?.containsKey(refColumn)?.not() ?: true
             }
@@ -748,13 +747,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 }
             }
 
+            return forEntityIds(distinctRefIds).toList()
         } else {
             val baseQuery = searchQuery(Op.build{ refColumn inList distinctRefIds })
-            val parentIdColumn = parentTable.id
-            val finalQuery = if (parentIdColumn in baseQuery.set.fields)
+            val finalQuery = if (parentTable.id in baseQuery.set.fields)
                 baseQuery
             else {
-                baseQuery.adjustSlice{ slice(this.fields + parentIdColumn) }.
+                baseQuery.adjustSlice{ slice(this.fields + parentTable.id) }.
                         adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
@@ -762,16 +761,17 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 forUpdate?.let {
                     if (forUpdate) forUpdate() else notForUpdate()
                 }
-            }.toList()
+            }.toList().distinct()
 
-            entities.groupBy { it.readValues[parentIdColumn] }.forEach { (id, values) ->
+            entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
                 cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }
             }
+            return entities
         }
     }
 
-    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null) {
-        if (references.isEmpty()) return
+    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null): List<T> {
+        if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>> ?: error("Can't detect source reference column")
         val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID<*>>?: error("Can't detect target reference column")
@@ -779,7 +779,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         val transaction = TransactionManager.current()
 
         val inCache = transaction.entityCache.referrers.filter { it.key in distinctRefIds && sourceRefColumn in it.value }.mapValues { it.value[sourceRefColumn]!! }
-        (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
+        val loaded = (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
@@ -800,7 +800,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             idsToLoad.forEach {
                 transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) { SizedCollection(groupedBySourceId[it] ?: emptyList()) }
             }
+            entitiesWithRefs.map { it.second }
         }
+        return inCache.values.flatMap { it.toList() as List<T> } + loaded.orEmpty()
     }
 
     fun <ID : Comparable<ID>, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
@@ -816,8 +818,8 @@ private fun <SRC: Entity<*>> filterRelationsForEntity(entity: SRC, relations: Ar
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
-private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relations: KProperty1<out Entity<*>, Any?>, nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
-
+private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relations: KProperty1<out Entity<*>, Any?>,
+                                                                   nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
     val entity              = this.firstOrNull() ?: return
     if(nodesVisited.contains(entity.klass)) {
         return
