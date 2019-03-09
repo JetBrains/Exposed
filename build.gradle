@@ -96,6 +96,7 @@ publishing {
     publications {
         exposed(MavenPublication) {
             from components.java
+            groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'exposed'
         }

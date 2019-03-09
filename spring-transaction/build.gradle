@@ -37,6 +37,7 @@ publishing {
     publications {
         spring_transaction(MavenPublication) {
             from components.java
+            groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'spring-transaction'
         }
