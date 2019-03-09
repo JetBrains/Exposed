@@ -158,6 +158,7 @@ object SqlExpressionBuilder {
         is Long -> longLiteral(value)
         is String -> stringLiteral(value)
         is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
+        is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
         else -> LiteralOp(columnType, value)
     } as LiteralOp<T>
 

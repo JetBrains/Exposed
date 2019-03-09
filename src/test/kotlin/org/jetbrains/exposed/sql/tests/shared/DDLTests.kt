@@ -415,15 +415,32 @@ class DDLTests : DatabaseTestsBase() {
     @Test fun testBinary() {
         val t = object : Table() {
             val binary = binary("bytes", 10)
+            val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
+
+        fun SizedIterable<ResultRow>.readAsString() = map { String(it[t.binary]) }
 
         withTables(t) {
             t.insert { it[t.binary] = "Hello!".toByteArray() }
 
-            val bytes = t.selectAll().single()[t.binary]
+            val hello = t.selectAll().readAsString().single()
 
-            assertEquals("Hello!", String(bytes))
+            assertEquals("Hello!", hello)
 
+            val worldBytes = "World!".toByteArray()
+
+            t.insert {
+                it[t.binary] = worldBytes
+                it[t.byteCol] = byteArrayOf(1)
+             }
+
+            assertEqualCollections(t.selectAll().readAsString(), "Hello!", "World!")
+
+            val world = t.select { t.binary eq worldBytes }.readAsString()
+            assertEqualCollections(world, "World!")
+
+            val worldByBitCol = t.select { t.byteCol eq byteArrayOf(1) }.readAsString()
+            assertEqualCollections(worldByBitCol, "World!")
         }
     }
 

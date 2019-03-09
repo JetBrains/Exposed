@@ -309,12 +309,16 @@ open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
 class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 
-    // REVIEW
     override fun valueFromDB(value: Any): Any {
         if (value is java.sql.Blob) {
             return value.binaryStream.readBytes()
         }
         return value
+    }
+
+    override fun nonNullValueToString(value: Any): String = when(value) {
+        is ByteArray -> value.toString(Charsets.UTF_8)
+        else -> "$value"
     }
 }
 
