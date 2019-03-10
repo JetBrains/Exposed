@@ -99,7 +99,6 @@ publishing {
             groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'exposed'
-            version = rootProject.version
         }
     }
 }

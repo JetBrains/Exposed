@@ -40,7 +40,6 @@ publishing {
             groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'spring-transaction'
-            version = rootProject.version
         }
     }
 }
