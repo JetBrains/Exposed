@@ -2,7 +2,6 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'maven-publish'
     id "com.jfrog.bintray"
-    id 'net.researchgate.release'
 }
 
 dependencies {
@@ -40,6 +39,20 @@ publishing {
             groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'spring-transaction'
+            version = rootProject.version
         }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['spring_transaction']
+    pkg {
+        userOrg = 'kotlin'
+        repo = 'exposed'
+        name = 'exposed'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/JetBrains/Exposed.git'
     }
 }

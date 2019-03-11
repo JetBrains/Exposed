@@ -129,7 +129,7 @@ allprojects {
     bintray {
         user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
         key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-        publications = ['exposed', 'spring_transaction']
+        publications = ['exposed']
         pkg {
             userOrg = 'kotlin'
             repo = 'exposed'
