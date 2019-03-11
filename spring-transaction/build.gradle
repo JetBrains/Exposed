@@ -1,7 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'maven-publish'
-    id "com.jfrog.bintray"
+    id "com.jfrog.bintray" version "1.8.4"
 }
 
 dependencies {
@@ -39,7 +39,7 @@ publishing {
             groupId 'org.jetbrains.exposed'
             artifact sourcesJar
             artifactId = 'spring-transaction'
-            version = rootProject.version
+            version = rootProject.version.toString()
         }
     }
 }

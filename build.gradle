@@ -113,13 +113,9 @@ allprojects {
     compileTestJava.options.encoding = 'UTF-8'
 
     repositories {
-        mavenLocal()
-        mavenCentral()
+        jcenter()
         maven {
             url 'https://oss.sonatype.org/content/repositories/snapshots'
-        }
-        maven {
-            url "https://dl.bintray.com/kotlin/kotlin"
         }
         maven {
             url "https://packages.atlassian.com/maven-3rdparty-legacy/"
