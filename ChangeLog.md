@@ -1,3 +1,7 @@
+# 0.13.2
+Bug fixes: 
+Wrong values returned from warmUp* functions which leads to N + 1
+
 # 0.13.1
 Features:
 * Eager Loading ([#420](https://github.com/JetBrains/Exposed/issues/420)). More information and how to use it could found at [wiki](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading).
