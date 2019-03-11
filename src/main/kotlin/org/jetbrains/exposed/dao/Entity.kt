@@ -174,7 +174,7 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
-override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
+    override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
         val entityCache = TransactionManager.current().entityCache
@@ -744,7 +744,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 }
             }
 
-            return forEntityIds(distinctRefIds).toList()
+            return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
         } else {
             val baseQuery = searchQuery(Op.build{ refColumn inList distinctRefIds })
             val finalQuery = if (parentTable.id in baseQuery.set.fields)
