@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.exposed.gradle.setupDialectTest
 import tanvd.kosogor.proxy.publishJar
 
 plugins {
@@ -8,7 +9,6 @@ plugins {
 
 repositories {
     jcenter()
-    maven("https://dl.bintray.com/jfrog/jfrog-jars")
 }
 
 dependencies {
@@ -58,3 +58,7 @@ tasks.withType(Test::class.java) {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
+
+val dialect: String by project
+val default_dialect: String by project
+setupDialectTest(dialect.takeIf { it.isNotBlank() } ?: default_dialect)
