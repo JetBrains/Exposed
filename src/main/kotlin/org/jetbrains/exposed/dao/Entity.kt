@@ -2,7 +2,6 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
@@ -13,7 +12,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 
@@ -811,7 +810,7 @@ private fun <SRC: Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC
 }
 
 private fun <SRC: Entity<*>> filterRelationsForEntity(entity: SRC, relations: Array<out KProperty1<out Entity<*>, Any?>>): Collection<KProperty1<SRC, Any?>> {
-    val validMembers = entity::class.declaredMemberProperties
+    val validMembers = entity::class.memberProperties
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
