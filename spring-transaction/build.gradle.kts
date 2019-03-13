@@ -36,6 +36,8 @@ publishJar {
         repository = "exposed"
         info {
             githubRepo = "https://github.com/JetBrains/Exposed.git"
+            vcsUrl = "https://github.com/JetBrains/Exposed.git"
+            userOrg = "kotlin"
             license = "Apache-2.0"
         }
     }
