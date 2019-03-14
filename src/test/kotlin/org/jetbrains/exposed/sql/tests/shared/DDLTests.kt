@@ -147,7 +147,7 @@ class DDLTests : DatabaseTestsBase() {
         withTables(UnnamedTable) {
             val q = db.identityQuoteString
             val tableName = if (currentDialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
-            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "$tableName " +
+            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
                     "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
@@ -178,7 +178,7 @@ class DDLTests : DatabaseTestsBase() {
                 currentDialect.dataTypeProvider.shortAutoincType().replace(" AUTOINCREMENT", "")
             else
                 currentDialect.dataTypeProvider.shortAutoincType()
-            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"different_column_types".inProperCase()} " +
+            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} $shortAutoIncType NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
                     "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
         }
@@ -192,7 +192,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
-            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } + "${"with_different_column_types".inProperCase()} " +
+            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
                     "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
         }
@@ -249,7 +249,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
-            assertEquals("CREATE TABLE " + if (currentDialect.supportsIfNotExists) { "IF NOT EXISTS " } else { "" } +
+            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
@@ -341,6 +341,71 @@ class DDLTests : DatabaseTestsBase() {
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE (${"name".inProperCase()})", alter)
 
+        }
+    }
+
+    @Test fun testCompositePrimaryKeyCreateTable() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+        }
+
+        withTables(t) {
+            val id1ProperName = t.id1.name.inProperCase()
+            val id2ProperName = t.id2.name.inProperCase()
+
+            assertEquals(
+                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                            "${t.columns.joinToString { it.descriptionDdl() }}, " +
+                            "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                            ")",
+                    t.ddl)
+        }
+    }
+
+    @Test fun testAddCompositePrimaryKeyToTableH2() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+        }
+
+        withDb(TestDB.H2) {
+            val tableProperName = tableName.inProperCase()
+            val id1ProperName = t.id1.name.inProperCase()
+            val ddlId1 = t.id1.ddl
+            val id2ProperName = t.id2.name.inProperCase()
+            val ddlId2 = t.id2.ddl
+
+            assertEquals(1, ddlId1.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id1.descriptionDdl()}", ddlId1.first())
+
+            assertEquals(2, ddlId2.size)
+            assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${t.id2.columnType.sqlType()}", ddlId2.first())
+            assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", t.id2.ddl.last())
+        }
+    }
+
+    @Test fun testAddCompositePrimaryKeyToTableNotH2() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+        }
+
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(t)) {
+            val tableProperName = tableName.inProperCase()
+            val id1ProperName = t.id1.name.inProperCase()
+            val ddlId1 = t.id1.ddl
+            val id2ProperName = t.id2.name.inProperCase()
+            val ddlId2 = t.id2.ddl
+
+            assertEquals(1, ddlId1.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id1.descriptionDdl()}", ddlId1.first())
+
+            assertEquals(1, ddlId2.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id2.descriptionDdl()}, ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
         }
     }
 
@@ -557,7 +622,7 @@ class DDLTests : DatabaseTestsBase() {
 
             Table1.deleteAll()
             Table2.deleteAll()
-            
+
             if (currentDialect !is SQLiteDialect) {
                 exec(ForeignKeyConstraint.from(Table2.table1).dropStatement().single())
             }
