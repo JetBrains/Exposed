@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
@@ -196,14 +197,22 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
+    val tr = TransactionManager.current()
+    val isMysql = currentDialect is MysqlDialect
+    val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
+    fun List<Index>.filterFKeys() = if (isMysql)
+        filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.let { c -> tr.identity(c) }) in fKeyConstraints }
+    else
+        this
+
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
 
     for (table in tables) {
-        val existingTableIndices = existingIndices[table].orEmpty()
-        val mappedIndices = table.indices
+        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys()
+        val mappedIndices = table.indices.filterFKeys()
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
