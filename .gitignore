@@ -1,5 +1,6 @@
+*.iml
 .idea
 .gradle
+out
 build
 classes
-out/test/resources
