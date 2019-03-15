@@ -1,3 +1,7 @@
+# 0.13.2
+Bug fixes: 
+Wrong values returned from warmUp* functions which leads to N + 1
+
 # 0.13.1
 Features:
 * Eager Loading ([#420](https://github.com/JetBrains/Exposed/issues/420)). More information and how to use it could found at [wiki](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading).
@@ -7,7 +11,7 @@ Bug fixes:
 * Using createMissingTablesAndColumns() generates a spurious WARN message in log files ([#480](https://github.com/JetBrains/Exposed/issues/480))
 * Unexpected value of type Int: 26 of org.jetbrains.exposed.dao.EntityID ([#501](https://github.com/JetBrains/Exposed/issues/501))
 * More proper handling of forUpdate/notForUpdate/orderBy on LazySizedCollection
-* #491 Problems on comparing binary types (bit from MySQL) ([#491](https://github.com/JetBrains/Exposed/issues/491))
+* Problems on comparing binary types (bit from MySQL) ([#491](https://github.com/JetBrains/Exposed/issues/491))
 
 
 # 0.12.2

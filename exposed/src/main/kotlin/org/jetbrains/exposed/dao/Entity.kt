@@ -2,7 +2,6 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.statements.EntityBatchUpdate
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
@@ -13,7 +12,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 
@@ -174,7 +173,7 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
-override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
+    override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
         val entityCache = TransactionManager.current().entityCache
@@ -744,7 +743,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 }
             }
 
-            return forEntityIds(distinctRefIds).toList()
+            return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
         } else {
             val baseQuery = searchQuery(Op.build{ refColumn inList distinctRefIds })
             val finalQuery = if (parentTable.id in baseQuery.set.fields)
@@ -811,7 +810,7 @@ private fun <SRC: Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC
 }
 
 private fun <SRC: Entity<*>> filterRelationsForEntity(entity: SRC, relations: Array<out KProperty1<out Entity<*>, Any?>>): Collection<KProperty1<SRC, Any?>> {
-    val validMembers = entity::class.declaredMemberProperties
+    val validMembers = entity::class.memberProperties
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
