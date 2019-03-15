@@ -1,4 +1,4 @@
-package demo.dao
+package org.jetbrains.exposed.sql.tests.demo.dao
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity

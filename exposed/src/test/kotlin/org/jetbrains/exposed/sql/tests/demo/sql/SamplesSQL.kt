@@ -1,4 +1,4 @@
-package demo.sql
+package org.jetbrains.exposed.sql.tests.demo.sql
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -41,38 +41,38 @@ fun main(args: Array<String>) {
         Users.insert {
             it[id] = "andrey"
             it[name] = "Andrey"
-            it[cityId] = saintPetersburgId
+            it[Users.cityId] = saintPetersburgId
         }
 
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
-            it[cityId] = munichId
+            it[Users.cityId] = munichId
         }
 
         Users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
-            it[cityId] = munichId
+            it[Users.cityId] = munichId
         }
 
         Users.insert {
             it[id] = "alex"
             it[name] = "Alex"
-            it[cityId] = null
+            it[Users.cityId] = null
         }
 
         Users.insert {
             it[id] = "smth"
             it[name] = "Something"
-            it[cityId] = null
+            it[Users.cityId] = null
         }
 
-        Users.update({Users.id eq "alex"}) {
+        Users.update({ Users.id eq "alex"}) {
             it[name] = "Alexey"
         }
 
-        Users.deleteWhere{Users.name like "%thing"}
+        Users.deleteWhere{ Users.name like "%thing"}
 
         println("All cities:")
 
@@ -91,7 +91,7 @@ fun main(args: Array<String>) {
 
 
         (Users innerJoin Cities).slice(Users.name, Users.cityId, Cities.name).
-                select {Cities.name.eq("St. Petersburg") or Users.cityId.isNull()}.forEach {
+                select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull()}.forEach {
             if (it[Users.cityId] != null) {
                 println("${it[Users.name]} lives in ${it[Cities.name]}")
             }
