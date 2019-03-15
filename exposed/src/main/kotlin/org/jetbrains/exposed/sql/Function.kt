@@ -129,3 +129,7 @@ class GroupConcat<T : String?>(
     override fun toSQL(queryBuilder: QueryBuilder): String
             = currentDialect.functionProvider.groupConcat(this, queryBuilder)
 }
+
+class Concat<T>(val expr: Expression<*>, vararg val items: String) : Function<T?>(VarCharColumnType()) {
+    override fun toSQL(queryBuilder: QueryBuilder): String = currentDialect.functionProvider.concat(expr, queryBuilder, *items)
+}

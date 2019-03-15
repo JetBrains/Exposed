@@ -125,6 +125,9 @@ abstract class FunctionProvider {
         append(")")
     }
 
+    open fun concat(expr: Expression<*>, builder: QueryBuilder, vararg items: String) =
+            "CONCAT(${expr.toSQL(builder)} , '${items.joinToString(" ,")}')"
+
     interface MatchMode {
         fun mode() : String
     }

@@ -53,6 +53,8 @@ fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct:
 fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Array<Pair<Expression<*>,SortOrder>> = emptyArray()): GroupConcat<T> =
         GroupConcat(this, separator, distinct, *orderBy)
 
+fun <T : String?> Column<T>.concat(vararg items: String): Concat<T> =
+        Concat(this, *items)
 
 object SqlExpressionBuilder {
     fun <T, S:T?, E:ExpressionWithColumnType<S>, R:T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>) : ExpressionWithColumnType<R> =
