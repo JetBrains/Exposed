@@ -62,5 +62,4 @@ tasks.withType(Test::class.java) {
 }
 
 val dialect: String by project
-val default_dialect: String by project
-setupDialectTest(dialect.takeIf { it.isNotBlank() } ?: default_dialect)
+setupDialectTest(dialect)
