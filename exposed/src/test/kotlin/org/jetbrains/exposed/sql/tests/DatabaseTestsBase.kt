@@ -136,6 +136,12 @@ abstract class DatabaseTestsBase {
 
     fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
+    fun addIfNotExistsIfSupported() = if (currentDialect.supportsIfNotExists) {
+        "IF NOT EXISTS "
+    } else {
+        ""
+    }
+
     fun <T>Transaction.assertEquals(exp: T, act: T) = kotlin.test.assertEquals(exp, act, "Failed on ${currentDialect.name}")
     fun <T>Transaction.assertEquals(exp: T, act: List<T>) = kotlin.test.assertEquals(exp, act.single(), "Failed on ${currentDialect.name}")
 }
