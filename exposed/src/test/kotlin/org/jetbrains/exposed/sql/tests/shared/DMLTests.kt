@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -970,6 +971,27 @@ class DMLTests : DatabaseTestsBase() {
         assertEquals(row[this.fcn], fcn)
         assertEquals(row[this.dblcn], dblcn)
     }
+    private fun DMLTestsData.Misc.checkInsert(row: InsertStatement<Number>, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
+                                           t: DateTime, tn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?,
+                                           es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?,
+                                           dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+        assertEquals(row[this.n], n)
+        assertEquals(row[this.nn], nn)
+        assertEqualDateTime(row[this.d], d)
+        assertEqualDateTime(row[this.dn], dn)
+        assertEqualDateTime(row[this.t], t)
+        assertEqualDateTime(row[this.tn], tn)
+        assertEquals(row[this.e], e)
+        assertEquals(row[this.en], en)
+        assertEquals(row[this.es], es)
+        assertEquals(row[this.esn], esn)
+        assertEquals(row[this.s], s)
+        assertEquals(row[this.sn], sn)
+        assertEquals(row[this.dc], dc)
+        assertEquals(row[this.dcn], dcn)
+        assertEquals(row[this.fcn], fcn)
+        assertEquals(row[this.dblcn], dblcn)
+    }
 
     @Test
     fun testInsert01() {
@@ -1079,6 +1101,30 @@ class DMLTests : DatabaseTestsBase() {
             val row = tbl.selectAll().single()
             tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null,
                     BigDecimal("239.42"), null, null, null)
+        }
+    }
+
+    @Test
+    fun testInsertGet01() {
+        val tbl = DMLTestsData.Misc
+        val date = today
+        val time = DateTime.now()
+
+        withTables(tbl) {
+            val row = tbl.insert {
+                it[n] = 42
+                it[d] = date
+                it[t] = time
+                it[e] = DMLTestsData.E.ONE
+                it[es] = DMLTestsData.E.ONE
+                it[s] = "test"
+                it[dc] = BigDecimal("239.42")
+                it[char] = '('
+            }
+
+            tbl.checkInsert(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
+                    null, "test", null, BigDecimal("239.42"), null, null, null)
+            assertEquals('(', row[tbl.char])
         }
     }
 
