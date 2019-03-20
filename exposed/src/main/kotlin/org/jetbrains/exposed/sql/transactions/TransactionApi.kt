@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import java.sql.Connection
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 
 interface TransactionInterface {
 
@@ -46,19 +47,31 @@ interface TransactionManager {
 
     companion object {
 
-        @Volatile private var _manager: TransactionManager = NotInitializedManager
+        private val managers = ConcurrentLinkedDeque<TransactionManager>().apply {
+            push(NotInitializedManager)
+        }
 
         private val registeredDatabases = ConcurrentHashMap<Database, TransactionManager>()
 
         fun registerManager(database: Database, manager: TransactionManager) {
             registeredDatabases[database] = manager
-            this._manager = manager
+            managers.push(manager)
+        }
+
+        fun closeAndUnregister(database: Database) {
+            val manager = registeredDatabases[database]
+            manager?.let {
+                registeredDatabases.remove(database)
+                managers.remove(it)
+                if (currentThreadManager.get() == it)
+                    currentThreadManager.remove()
+            }
         }
 
         internal fun managerFor(database: Database) = registeredDatabases[database]
 
         private val currentThreadManager = object : ThreadLocal<TransactionManager>() {
-            override fun initialValue(): TransactionManager = _manager
+            override fun initialValue(): TransactionManager = managers.first
         }
 
         val manager: TransactionManager
@@ -75,6 +88,6 @@ interface TransactionManager {
 
         fun current() = currentOrNull() ?: error("No transaction in context.")
 
-        fun isInitialized() = _manager != NotInitializedManager
+        fun isInitialized() = managers.first != NotInitializedManager
     }
 }
