@@ -16,11 +16,15 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         private set
 
     @Deprecated("Will be made internal on the next releases")
-    open val generatedKey: Key? get() = autoIncColumns.firstOrNull()?.let { get(it) } as Key?
+    open val generatedKey: Key? get() = autoIncColumns.firstOrNull()?.let { tryGet(it) } as Key?
 
-    infix operator fun <T> get(column: Column<T>): T? {
-        val row = resultedValues?.get(0)
-        if (row == null && !isIgnore)  error("No key generated")
+    infix operator fun <T> get(column: Column<T>): T {
+        val row = resultedValues?.firstOrNull() ?: error("No key generated")
+        return row[column]
+    }
+
+    fun <T> tryGet(column: Column<T>): T? {
+        val row = resultedValues?.firstOrNull()
         return row?.tryGet(column)
     }
 
