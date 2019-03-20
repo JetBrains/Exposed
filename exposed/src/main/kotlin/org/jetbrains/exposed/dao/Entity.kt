@@ -283,7 +283,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
         klass.invalidateEntityInCache(o)
-        val currentValue = _readValues?.tryGet(this)
+        val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
                 val entityCache = TransactionManager.current().entityCache
