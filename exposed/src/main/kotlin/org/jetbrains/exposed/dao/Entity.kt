@@ -730,10 +730,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                  cache.referrers[it]?.containsKey(refColumn)?.not() ?: true
             }
             if (toLoad.isNotEmpty()) {
-                val entities = find { refColumn inList toLoad }.apply {
-                    forUpdate?.let {
-                        if (forUpdate) forUpdate() else notForUpdate()
-                    }
+                val findQuery = find { refColumn inList toLoad }
+                val entities = when(forUpdate) {
+                    true -> findQuery.forUpdate()
+                    false -> findQuery.notForUpdate()
+                    else -> findQuery
                 }.toList()
 
                 val result = entities.groupBy { it.readValues[refColumn] }
@@ -753,10 +754,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                         adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
-            val entities = wrapRows(finalQuery).apply {
-                forUpdate?.let {
-                    if (forUpdate) forUpdate() else notForUpdate()
-                }
+            val findQuery = wrapRows(finalQuery)
+            val entities = when(forUpdate) {
+                true -> findQuery.forUpdate()
+                false -> findQuery.notForUpdate()
+                else -> findQuery
             }.toList().distinct()
 
             entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
@@ -783,13 +785,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                     - sourceRefColumn).distinct() + sourceRefColumn
 
             val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
-            forUpdate?.let {
-                if (forUpdate)
-                    query.forUpdate()
-                else
-                    query.notForUpdate()
-            }
-            val entitiesWithRefs = query.map { it[sourceRefColumn] to wrapRow(it) }
+            val entitiesWithRefs = when(forUpdate) {
+                true -> query.forUpdate()
+                false -> query.notForUpdate()
+                else -> query
+            }.map { it[sourceRefColumn] to wrapRow(it) }
 
             val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
 
