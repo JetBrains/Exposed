@@ -15,7 +15,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     var resultedValues: List<ResultRow>? = null
         private set
 
-    @Deprecated("Will be made internal on the next releases")
+    @Deprecated("Will be made internal on the next releases", level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("get(autoIncColumn)"))
     open val generatedKey: Key? get() = autoIncColumns.firstOrNull()?.let { tryGet(it) } as Key?
 
     infix operator fun <T> get(column: Column<T>): T {
