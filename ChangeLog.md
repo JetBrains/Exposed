@@ -1,6 +1,29 @@
+# 0.13.4
+Infrastructure:
+* Finished moving to Gradle Kotlin DSL. Many thanks to Thanks for PR goes to Vladislav Tankov (@tanvd).  
+
+Deprecation:
+* `InsertStatement.generatedKey` is forbidden to use now in favour to `resultValues` and `insertAndGetId`
+
+Features:
+* InsertStatement.get function was split into get and getOrNull to simplify get use. 
+Thanks for PR goes to Johannes Jensen (@spand) 
+
+Bug fixes:
+* clientDefault is called multiple times gives incorrect value ([#526](https://github.com/JetBrains/Exposed/issues/526))
+* Fix composite PK bugs (Thanks Aidar Samerkhanov (@Darych) for PR): 
+  incorrect evaluation of last column index in PK and
+  missed column description DDL in ALTER TABLE for non H2 databases.
+* forUpdate value was ignored in warmUp* functions when was applied to mapLazy/cached references  
+
+# 0.13.3
+Bug fixes:
+* Unable to create index on column that also has a foreign key with `createMissingTablesAndColumns`, fix for MySQL ([#498](https://github.com/JetBrains/Exposed/issues/498))
+* Use memberProperties instead of declaredMemberProperties in with/preloadRelations. 
+
 # 0.13.2
 Bug fixes: 
-Wrong values returned from warmUp* functions which leads to N + 1
+* Wrong values returned from warmUp* functions which leads to N + 1
 
 # 0.13.1
 Features:
