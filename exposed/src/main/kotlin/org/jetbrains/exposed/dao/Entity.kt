@@ -660,13 +660,20 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
         prototype.db = TransactionManager.current().db
-        prototype._readValues = ResultRow.create(dependsOnColumns)
+        prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeValues[table.id as Column<Any?>] = entityId
             warmCache().scheduleInsert(this, prototype)
         }
         prototype.init()
         if (entityId._value == null) {
+            val readValues = prototype._readValues!!
+            val writeValues = prototype.writeValues
+            dependsOnColumns.filter { col ->
+                col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
+            }.forEach { col ->
+                writeValues[col as Column<Any?>] = readValues[col]
+            }
             warmCache().scheduleInsert(this, prototype)
         }
         return prototype

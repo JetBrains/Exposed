@@ -147,16 +147,19 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     object TableWithDBDefault : IntIdTable() {
+        var cIndex = 0
         val field = varchar("field", 100)
         val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
     class DBDefault(id: EntityID<Int>): IntEntity(id) {
         var field by TableWithDBDefault.field
-        var b1 by TableWithDBDefault.t1
+        var t1 by TableWithDBDefault.t1
+        val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(b1, it.b1) } ?: false
+            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -171,7 +174,7 @@ class EntityTests: DatabaseTestsBase() {
                     DBDefault.new { field = "1" },
                     DBDefault.new {
                         field = "2"
-                        b1 = DateTime.now().minusDays(5)
+                        t1 = DateTime.now().minusDays(5)
                     })
             flushCache()
             created.forEach {
@@ -188,7 +191,7 @@ class EntityTests: DatabaseTestsBase() {
             val created = listOf(
                     DBDefault.new{
                         field = "2"
-                        b1 = DateTime.now().minusDays(5)
+                        t1 = DateTime.now().minusDays(5)
                     }, DBDefault.new{ field = "1" })
 
             flushCache()
@@ -200,6 +203,17 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    @Test fun testDefaultsInvokedOnlyOncePerEntity() {
+        withTables(TableWithDBDefault) {
+            TableWithDBDefault.cIndex = 0
+            val db1 = DBDefault.new{ field = "1" }
+            val db2 = DBDefault.new{ field = "2" }
+            flushCache()
+            assertEquals(0, db1.clientDefault)
+            assertEquals(1, db2.clientDefault)
+            assertEquals(2, TableWithDBDefault.cIndex)
+        }
+    }
 
     @Test fun testBlobField() {
         withTables(EntityTestsData.YTable) {

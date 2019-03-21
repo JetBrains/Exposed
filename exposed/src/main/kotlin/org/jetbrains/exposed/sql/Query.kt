@@ -71,7 +71,12 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
             }
         }
 
-        internal fun create(columns : List<Column<*>>): ResultRow =
+        internal fun createAndFillValues(data: Map<Column<*>, Any?>) : ResultRow =
+            ResultRow(data.keys.mapIndexed { i, c -> c to i }.toMap()).also { row ->
+                data.forEach { (c, v) -> row[c] = v }
+            }
+
+        internal fun createAndFillDefaults(columns : List<Column<*>>): ResultRow =
             ResultRow(columns.mapIndexed { i, c -> c to i }.toMap()).apply {
                 columns.forEach {
                     this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null

@@ -40,18 +40,18 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
             val mumbai = UUIDTables.City.new { name = "Mumbai" }
             val pune = UUIDTables.City.new { name = "Pune" }
-            UUIDTables.Person.new(UUID.randomUUID(), {
+            UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "David D'souza"
                 city = mumbai
-            })
-            UUIDTables.Person.new(UUID.randomUUID(), {
+            }
+            UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city = mumbai
-            })
-            UUIDTables.Person.new(UUID.randomUUID(), {
+            }
+            UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "Tanu Arora"
                 city = pune
-            })
+            }
 
             val allCities = UUIDTables.City.all().map { it.name }
             assertEquals(true, allCities.contains<String>("Mumbai"))
@@ -66,20 +66,20 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
 
     @Test fun `update and delete records`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
-            val mumbai = UUIDTables.City.new(UUID.randomUUID(), { name = "Mumbai" })
-            val pune = UUIDTables.City.new(UUID.randomUUID(), { name = "Pune" })
-            UUIDTables.Person.new(UUID.randomUUID(), {
+            val mumbai = UUIDTables.City.new(UUID.randomUUID()) { name = "Mumbai" }
+            val pune = UUIDTables.City.new(UUID.randomUUID()) { name = "Pune" }
+            UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "David D'souza"
                 city = mumbai
-            })
-            UUIDTables.Person.new(UUID.randomUUID(), {
+            }
+            UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "Tushar Mumbaikar"
                 city = mumbai
-            })
-            val tanu = UUIDTables.Person.new(UUID.randomUUID(), {
+            }
+            val tanu = UUIDTables.Person.new(UUID.randomUUID()) {
                 name = "Tanu Arora"
                 city = pune
-            })
+            }
 
             tanu.delete()
             pune.delete()
