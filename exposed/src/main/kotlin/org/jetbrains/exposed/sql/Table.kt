@@ -85,11 +85,11 @@ class Join (val table: ColumnSet) : ColumnSet() {
             joinType != JoinType.CROSS && fkKeys.isEmpty() && additionalConstraint == null ->
                 error("Cannot join with $otherTable as there is no matching primary key/ foreign key pair and constraint missing")
 
-            fkKeys.any { it.second.count() > 1 } && additionalConstraint == null ->  {
-                val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString { it.toString() }}" }
+            fkKeys.any { it.second.size > 1 } && additionalConstraint == null ->  {
+                val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
-            else -> return join(otherTable, joinType, fkKeys.map { it.first to it.second.single() }, additionalConstraint)
+            else -> return join(otherTable, joinType, fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }, additionalConstraint)
         }
     }
 

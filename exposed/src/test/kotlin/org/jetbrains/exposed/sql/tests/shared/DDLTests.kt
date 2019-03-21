@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -813,6 +814,21 @@ class DDLTests : DatabaseTestsBase() {
             val newKeyword = KeywordEntityClass.new { bool = true }
 
             SchemaUtils.drop(KeyWordTable)
+        }
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/522
+    @Test fun testInnerJoinWithMultipleForeignKeys() {
+        val Users = object : IntIdTable() {}
+
+        val Subscriptions = object : LongIdTable() {
+            val user = reference("user", Users)
+            val adminBy = reference("adminBy", Users).nullable()
+        }
+
+        withTables(Subscriptions) {
+            val query = Subscriptions.join(Users, JoinType.INNER, additionalConstraint = {Subscriptions.user eq Users.id}).selectAll()
+            assertEquals(0, query.count())
         }
     }
 }

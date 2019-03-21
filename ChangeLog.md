@@ -14,7 +14,8 @@ Bug fixes:
 * Fix composite PK bugs (Thanks Aidar Samerkhanov (@Darych) for PR): 
   incorrect evaluation of last column index in PK and
   missed column description DDL in ALTER TABLE for non H2 databases.
-* forUpdate value was ignored in warmUp* functions when was applied to mapLazy/cached references  
+* forUpdate value was ignored in warmUp* functions when was applied to mapLazy/cached references
+* Join on two tables with more than one foreign key constraint fails even with additionalConstraint ([#522](https://github.com/JetBrains/Exposed/issues/522))  
 
 # 0.13.3
 Bug fixes:
