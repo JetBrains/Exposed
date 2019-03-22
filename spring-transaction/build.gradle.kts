@@ -33,6 +33,8 @@ publishJar {
     }
 
     bintray {
+        username = project.properties["bintrayUser"]?.toString() ?: System.getenv("BINTRAY_USER")
+        secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
         repository = "exposed"
         info {
             githubRepo = "https://github.com/JetBrains/Exposed.git"
