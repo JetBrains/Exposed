@@ -669,7 +669,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         if (entityId._value == null) {
             val readValues = prototype._readValues!!
             val writeValues = prototype.writeValues
-            dependsOnColumns.filter { col ->
+            table.columns.filter { col ->
                 col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
             }.forEach { col ->
                 writeValues[col as Column<Any?>] = readValues[col]
