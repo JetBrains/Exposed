@@ -1,3 +1,7 @@
+# 0.13.5
+Bug fixes: 
+* Initialize client defaults only for target entity table columns (was broken in #0.13.4 with [#526](https://github.com/JetBrains/Exposed/issues/526)
+
 # 0.13.4
 Infrastructure:
 * Finished moving to Gradle Kotlin DSL. Many thanks to Thanks for PR goes to Vladislav Tankov (@tanvd).  
