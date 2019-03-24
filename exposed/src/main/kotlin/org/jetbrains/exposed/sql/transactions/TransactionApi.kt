@@ -52,7 +52,18 @@ interface TransactionManager {
 
         fun registerManager(database: Database, manager: TransactionManager) {
             registeredDatabases[database] = manager
-            this._manager = manager
+            _manager = manager
+        }
+
+        @Synchronized
+        fun closeAndUnregister(database: Database) {
+            val managerToUnregister = registeredDatabases[database]
+            if (managerToUnregister != null) {
+                registeredDatabases.remove(database)
+                _manager = NotInitializedManager
+                if (currentThreadManager.get() == managerToUnregister)
+                    currentThreadManager.remove()
+            }
         }
 
         internal fun managerFor(database: Database) = registeredDatabases[database]
