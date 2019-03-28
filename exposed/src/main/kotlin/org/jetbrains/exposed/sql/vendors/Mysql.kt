@@ -70,7 +70,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
         val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
 
-        val tableNames = tables.map { it.tableName }
+        val tableNames = tables.map { it.nameInDatabaseCase() }
 
         fun inTableList(): String {
             if (tables.isNotEmpty()) {
