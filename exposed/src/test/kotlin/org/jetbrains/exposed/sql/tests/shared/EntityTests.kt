@@ -38,30 +38,6 @@ object EntityTestsData {
         companion object : EntityClass<Int, XEntity>(XTable)
     }
 
-    object NotAutoIntIdTable : IdTable<Int>("") {
-        override val id: Column<EntityID<Int>> = integer("id").entityId()
-        val b1 = bool("b1")
-        val defaultedInt = integer("i1")
-    }
-
-    class NotAutoEntity(id: EntityID<Int>) : Entity<Int>(id) {
-        var b1 by NotAutoIntIdTable.b1
-        var defaultedInNew by NotAutoIntIdTable.defaultedInt
-
-        companion object : EntityClass<Int, NotAutoEntity>(NotAutoIntIdTable) {
-            val lastId = AtomicInteger(0)
-            internal const val defaultInt = 42
-            fun new(b: Boolean) = new(lastId.incrementAndGet()) { b1 = b }
-
-            override fun new(id: Int?, init: NotAutoEntity.() -> Unit): NotAutoEntity {
-                return super.new(id ?: lastId.incrementAndGet()) {
-                    defaultedInNew = defaultInt
-                    init()
-                }
-            }
-        }
-    }
-
     enum class XType {
         A, B
     }
@@ -128,21 +104,6 @@ class EntityTests: DatabaseTestsBase() {
 
             assertFalse (b.y!!.x)
             assertNotNull(y.b)
-        }
-    }
-
-    @Test fun testDefaultsWithOverrideNew() {
-        withTables(EntityTestsData.NotAutoIntIdTable) {
-            val entity1 = EntityTestsData.NotAutoEntity.new(true)
-            assertEquals(true, entity1.b1)
-            assertEquals(EntityTestsData.NotAutoEntity.defaultInt, entity1.defaultedInNew)
-
-            val entity2 = EntityTestsData.NotAutoEntity.new {
-                b1 = false
-                defaultedInNew = 1
-            }
-            assertEquals(false, entity2.b1)
-            assertEquals(1, entity2.defaultedInNew)
         }
     }
 
@@ -233,19 +194,6 @@ class EntityTests: DatabaseTestsBase() {
 
             y2.content = SerialBlob("foo2".toByteArray())
             flushCache()
-        }
-    }
-
-    @Test fun testNotAutoIncTable() {
-        withTables(EntityTestsData.NotAutoIntIdTable) {
-            val e1 = EntityTestsData.NotAutoEntity.new(true)
-            val e2 = EntityTestsData.NotAutoEntity.new(false)
-
-            TransactionManager.current().flushCache()
-
-            val all = EntityTestsData.NotAutoEntity.all()
-            assert(all.any { it.id == e1.id })
-            assert(all.any { it.id == e2.id })
         }
     }
 
