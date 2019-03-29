@@ -17,6 +17,7 @@ You can inspect project [roadmap](ROADMAP.md) to see what's coming next or look 
 Currently supported database dialects:
 * PostgreSQL
 * MySQL
+* MariaDB
 * [Oracle](ORACLE.md)
 * SQLite
 * H2
