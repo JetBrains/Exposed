@@ -202,8 +202,9 @@ object SchemaUtils {
                 }
                 commit()
             }
+            val executedStatements = createStatements + alterStatements
             logTimeSpent("Checking mapping consistence") {
-                for (statement in checkMappingConsistence(*tables).filter { it !in statements }) {
+                for (statement in checkMappingConsistence(*tables).filter { it !in executedStatements }) {
                     exec(statement)
                 }
                 commit()

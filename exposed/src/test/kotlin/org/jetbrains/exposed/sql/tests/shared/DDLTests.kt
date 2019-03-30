@@ -831,6 +831,23 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(0, query.count())
         }
     }
+
+    @Test
+    fun createTableWithMultipleIndexes() {
+        withDb {
+            SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+        }
+    }
+
+    object MultipleIndexesTable: Table("H2_MULTIPLE_INDEXES") {
+        val value1 = varchar("value1", 255)
+        val value2 = varchar("value2", 255)
+
+        init {
+            uniqueIndex("index1", value1, value2)
+            uniqueIndex("index2", value2, value1)
+        }
+    }
 }
 
 private fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->
