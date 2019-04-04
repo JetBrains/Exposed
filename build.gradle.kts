@@ -5,7 +5,6 @@ plugins {
 
 subprojects {
     apply(plugin = "tanvd.kosogor")
-    apply(plugin = "net.researchgate.release")
 }
 
 repositories {
