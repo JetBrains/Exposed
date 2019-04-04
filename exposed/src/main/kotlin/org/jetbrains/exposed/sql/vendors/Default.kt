@@ -179,6 +179,8 @@ interface DatabaseDialect {
 
     val defaultReferenceOption : ReferenceOption get() = ReferenceOption.RESTRICT
 
+    val supportsOnlyIdentifiersInGeneratedKeys get() = false
+
     // Specific SQL statements
 
     fun createIndex(index: Index): String

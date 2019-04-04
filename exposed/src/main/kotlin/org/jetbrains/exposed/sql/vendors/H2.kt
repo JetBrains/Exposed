@@ -17,7 +17,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     private fun currentMode(): String =
             ((TransactionManager.current().connection as Wrapper).unwrap(JdbcConnection::class.java).session as? Session)?.database?.mode?.name ?: ""
 
-    private val isMySQLMode: Boolean get() = currentMode() == "MySQL"
+    internal val isMySQLMode: Boolean get() = currentMode() == "MySQL"
 
     private fun dbReleaseDate(transaction: Transaction) : DateTime {
         val releaseDate = transaction.db.metadata.databaseProductVersion.substringAfterLast('(').substringBeforeLast(')')
@@ -59,6 +59,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override val supportsMultipleGeneratedKeys: Boolean = false
 
+    override val supportsOnlyIdentifiersInGeneratedKeys get() = !(functionProvider as H2FunctionProvider).isMySQLMode
+
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
 
@@ -70,6 +72,11 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
+    override val name: String
+        get() = when {
+            (functionProvider as H2FunctionProvider).isMySQLMode -> "$dialectName (Mysql Mode)"
+            else -> dialectName
+        }
     companion object {
         const val dialectName = "h2"
     }

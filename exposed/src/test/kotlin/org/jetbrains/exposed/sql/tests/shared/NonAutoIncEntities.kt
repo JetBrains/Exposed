@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -79,19 +80,21 @@ class NonAutoIncEntities : DatabaseTestsBase() {
 
     @Test fun testFlushNonAutoincEntityWithoutDefaultValue() {
         withTables(AutoIncSharedTable) {
-            SharedNonAutoIncEntity.new {
-                bool = true
+            if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+                SharedNonAutoIncEntity.new {
+                    bool = true
+                }
+
+                SharedNonAutoIncEntity.new {
+                    bool = false
+                }
+
+                val entities = flushCache()
+
+                assertEquals(2, entities.size)
+                assertEquals(1, entities[0].id._value)
+                assertEquals(2, entities[1].id._value)
             }
-
-            SharedNonAutoIncEntity.new {
-                bool = false
-            }
-
-            val entities = flushCache()
-
-            assertEquals(2, entities.size)
-            assertEquals(1, entities[0].id._value)
-            assertEquals(2, entities[1].id._value)
         }
     }
 }

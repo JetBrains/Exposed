@@ -24,7 +24,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
     open fun prepared(transaction: Transaction, sql: String) : PreparedStatement =
         transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!
 
-    open val isAlwaysBatch: Boolean get() = false
+    open val isAlwaysBatch: Boolean = false
 
     fun execute(transaction: Transaction): T? = transaction.exec(this)
 

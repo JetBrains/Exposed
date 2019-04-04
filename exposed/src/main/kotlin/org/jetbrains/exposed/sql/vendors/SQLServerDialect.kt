@@ -70,6 +70,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
 
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
 
