@@ -6,9 +6,6 @@ plugins {
 subprojects {
     apply(plugin = "tanvd.kosogor")
     apply(plugin = "net.researchgate.release")
-    afterEvaluate {
-        afterRelease.dependsOn(tasks.getByPath("bintrayUpload"))
-    }
 }
 
 repositories {
