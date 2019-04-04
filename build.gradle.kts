@@ -4,11 +4,14 @@ plugins {
     id("net.researchgate.release") version "2.8.0"
 }
 
+
+val afterRelease = tasks.getByPath("afterReleaseBuild")
+
 subprojects {
     apply(plugin = "tanvd.kosogor")
     apply(plugin = "net.researchgate.release")
     afterEvaluate {
-        tasks.getByPath("afterReleaseBuild").dependsOn(tasks.getByPath("bintrayUpload"))
+        afterRelease.dependsOn(tasks.getByPath("bintrayUpload"))
     }
 }
 
