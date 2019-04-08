@@ -1836,6 +1836,28 @@ class DMLTests : DatabaseTestsBase() {
             assertEquals(allSities.size, cities.select { Op.TRUE }.count())
         }
     }
+
+    @Test fun testNoWarningsOnLeftJoinRegression(){
+        val MainTable = object : Table("maintable"){
+            val id = integer("idCol")
+        }
+        val JoinTable = object : Table("jointable"){
+            val id = integer("idCol")
+            val data = integer("dataCol").default(42)
+        }
+
+        withTables(MainTable, JoinTable){
+            MainTable.insert { it[id] = 2 }
+
+            MainTable.join(JoinTable, JoinType.LEFT, JoinTable.id, MainTable.id)
+                    .slice(JoinTable.data)
+                    .selectAll()
+                    .single()
+                    .getOrNull(JoinTable.data)
+
+            // Assert no logging took place. No idea how to.
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
