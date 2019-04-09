@@ -68,13 +68,13 @@ interface TransactionManager {
             }
         }
 
-        internal fun managerFor(database: Database) = registeredDatabases[database]
+        internal fun managerFor(database: Database?) = if (database != null) registeredDatabases[database] else manager
 
         private val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = managers.first
         }
 
-        val manager: TransactionManager
+        private val manager: TransactionManager
             get() = currentThreadManager.get()
 
 
@@ -91,3 +91,5 @@ interface TransactionManager {
         fun isInitialized() = managers.first != NotInitializedManager
     }
 }
+
+val Database?.transactionManager: TransactionManager get() = TransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")

@@ -55,7 +55,8 @@ class ThreadLocalTransactionManager(private val db: Database,
     }
 }
 
-fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T = transaction(TransactionManager.manager.defaultIsolationLevel, TransactionManager.manager.defaultRepetitionAttempts, db, statement)
+fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
+    transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
     val outer = TransactionManager.currentOrNull()
@@ -63,16 +64,16 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
     return if (outer != null && (db == null || outer.db == db)) {
         outer.statement()
     } else {
-        val existingForDb = db?.let { TransactionManager.managerFor(it) }
+        val existingForDb = db?.let { db.transactionManager }
         existingForDb?.currentOrNull()?.let {
-            val currentManager = TransactionManager.manager
+            val currentManager = outer?.db.transactionManager
             try {
                 TransactionManager.resetCurrent(existingForDb)
                 it.statement()
             } finally {
                 TransactionManager.resetCurrent(currentManager)
             }
-        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, statement)
+        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, outer, statement)
     }
 }
 
@@ -92,13 +93,14 @@ private inline fun TransactionInterface.closeLoggingException(log: (Exception) -
     }
 }
 
-fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
+fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, outerTransaction: Transaction? = null, statement: Transaction.() -> T): T {
     var repetitions = 0
 
-    val outerManager = TransactionManager.manager.takeIf { TransactionManager.currentOrNull() != null }
+    val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
+
     while (true) {
-        db?.let { TransactionManager.managerFor(db)?.let { m -> TransactionManager.resetCurrent(m) } }
-        val transaction = TransactionManager.manager.newTransaction(transactionIsolation)
+        db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
+        val transaction = db.transactionManager.newTransaction(transactionIsolation)
 
         try {
             val answer = transaction.statement()

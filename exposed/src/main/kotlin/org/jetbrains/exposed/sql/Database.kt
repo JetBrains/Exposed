@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
-import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
-import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.*
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
@@ -15,7 +12,7 @@ import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
 
-    internal val metadata: DatabaseMetaData get() = TransactionManager.currentOrNull()?.connection?.metaData ?: with(connector()) {
+    internal val metadata: DatabaseMetaData get() = this.transactionManager.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
             metaData
         }
