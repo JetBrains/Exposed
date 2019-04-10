@@ -15,9 +15,9 @@ class Database private constructor(val connector: () -> Connection) {
     internal val metadata: DatabaseMetaData get() = this.transactionManager.currentOrNull()?.connection?.metaData ?: with(connector()) {
         try {
             metaData
-        }
-        finally {
+        } catch (e: Throwable) {
             close()
+            throw e
         }
     }
 
