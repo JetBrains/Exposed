@@ -20,21 +20,15 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
      *
      * @see [getOrNull] to get null in the cases an exception would be thrown
      */
-    @Suppress("UNCHECKED_CAST")
     operator fun <T> get(c: Expression<T>): T {
         val d = getRaw(c)
-        return when {
-            d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable -> {
-                exposedLogger.warn("Column ${TransactionManager.current().identity(c)} is marked as not null, " +
-                            "has default db value, but returns null. Possible have to re-read it from DB.")
-                null
-            }
-            d == null -> null
-            d == NotInitializedValue -> error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
-            c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(d)
-            c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(d)
-            else -> d
-        } as T
+
+        if (d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable) {
+            exposedLogger.warn("Column ${TransactionManager.current().identity(c)} is marked as not null, " +
+                    "has default db value, but returns null. Possible have to re-read it from DB.")
+        }
+
+        return rawToColumnValue(d, c)
     }
 
     operator fun <T> set(c: Expression<out T>, value: T) {
@@ -44,10 +38,21 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
 
     fun <T> hasValue(c: Expression<T>): Boolean = fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
 
-    fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) get(c) else null
+    fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) rawToColumnValue(getRaw(c), c) else null
 
     @Deprecated("Replaced with getOrNull to be more kotlinish", replaceWith = ReplaceWith("getOrNull(c)"))
     fun <T> tryGet(c: Expression<T>): T? = getOrNull(c)
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> rawToColumnValue(raw: T?, c: Expression<T>): T {
+        return when {
+            raw == null -> null
+            raw == NotInitializedValue -> error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
+            c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
+            c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
+            else -> raw
+        } as T
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? =
