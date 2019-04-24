@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
 val VENDORS_KEYWORDS = mapOf(
-        OracleDialect.dialectName to listOf("COMMENT", "NUMBER", "UID")
+        OracleDialect.dialectName to listOf("COMMENT", "NUMBER", "UID"),
+        PostgreSQLDialect.dialectName to PostgreSQLDialect.keywords
 )
 
 val ANSI_SQL_2003_KEYWORDS = setOf(
