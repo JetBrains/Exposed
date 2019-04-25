@@ -24,7 +24,7 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
         val d = getRaw(c)
 
         if (d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable) {
-            exposedLogger.warn("Column ${TransactionManager.current().identity(c)} is marked as not null, " +
+            exposedLogger.warn("Column ${TransactionManager.current().fullIdentity(c)} is marked as not null, " +
                     "has default db value, but returns null. Possible have to re-read it from DB.")
         }
 
