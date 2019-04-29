@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -15,6 +14,7 @@ import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
@@ -507,6 +507,16 @@ class DDLTests : DatabaseTestsBase() {
 
             val worldByBitCol = t.select { t.byteCol eq byteArrayOf(1) }.readAsString()
             assertEqualCollections(worldByBitCol, "World!")
+        }
+    }
+
+    @Test fun testEscapingCollate() {
+        withDb(TestDB.H2) {
+            assertEquals("VARCHAR(255) COLLATE utf8_general_ci", VarCharColumnType(collate = "utf8_general_ci").sqlType())
+            assertEquals("VARCHAR(255) COLLATE injected''code", VarCharColumnType(collate = "injected'code").sqlType())
+
+            assertEquals("TEXT COLLATE utf8_general_ci", TextColumnType(collate = "utf8_general_ci").sqlType())
+            assertEquals("TEXT COLLATE injected''code", TextColumnType(collate = "injected'code").sqlType())
         }
     }
 
