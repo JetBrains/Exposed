@@ -510,13 +510,17 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testEscapingCollate() {
+    @Test fun testEscapeStringColumnType() {
         withDb(TestDB.H2) {
             assertEquals("VARCHAR(255) COLLATE utf8_general_ci", VarCharColumnType(collate = "utf8_general_ci").sqlType())
             assertEquals("VARCHAR(255) COLLATE injected''code", VarCharColumnType(collate = "injected'code").sqlType())
+            assertEquals("'value'", VarCharColumnType().nonNullValueToString("value"))
+            assertEquals("'injected''value'", VarCharColumnType().nonNullValueToString("injected'value"))
 
             assertEquals("TEXT COLLATE utf8_general_ci", TextColumnType(collate = "utf8_general_ci").sqlType())
             assertEquals("TEXT COLLATE injected''code", TextColumnType(collate = "injected'code").sqlType())
+            assertEquals("'value'", TextColumnType().nonNullValueToString("value"))
+            assertEquals("'injected''value'", TextColumnType().nonNullValueToString("injected'value"))
         }
     }
 

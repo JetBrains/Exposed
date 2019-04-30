@@ -265,17 +265,19 @@ class DateColumnType(val time: Boolean): ColumnType() {
 }
 
 abstract class StringColumnType(val collate: String? = null) : ColumnType() {
-    protected val charactersToEscape = mapOf(
-            '\'' to "\'\'",
+    protected fun escape(value: String): String {
+        val characterMap = mapOf(
+                '\'' to "\'\'",
 //            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
-            '\r' to "\\r",
-            '\n' to "\\n")
+                '\r' to "\\r",
+                '\n' to "\\n"
+        )
+        return value.map { characterMap[it] ?: it }.joinToString("")
+    }
 
     override fun nonNullValueToString(value: Any): String = buildString {
         append('\'')
-        value.toString().forEach {
-            append(charactersToEscape[it] ?: it)
-        }
+        escape(value.toString()).forEach { append(it) }
         append('\'')
     }
 
@@ -291,8 +293,7 @@ open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) 
         append("VARCHAR($colLength)")
 
         if (collate != null) {
-            val escaped = collate.map { charactersToEscape[it] ?: it }.joinToString("")
-            append(" COLLATE $escaped")
+            append(" COLLATE ${escape(collate)}")
         }
     }
 }
@@ -302,8 +303,7 @@ open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
         append(currentDialect.dataTypeProvider.textType())
 
         if (collate != null) {
-            val escaped = collate.map { charactersToEscape[it] ?: it }.joinToString("")
-            append(" COLLATE $escaped")
+            append(" COLLATE ${escape(collate)}")
         }
     }
 }
