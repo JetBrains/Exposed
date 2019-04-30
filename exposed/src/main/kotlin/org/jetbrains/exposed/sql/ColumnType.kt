@@ -265,17 +265,13 @@ class DateColumnType(val time: Boolean): ColumnType() {
 }
 
 abstract class StringColumnType(val collate: String? = null) : ColumnType() {
-    private val charactersToEscape = mapOf(
-            '\'' to "\'\'",
-//            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
-            '\r' to "\\r",
-            '\n' to "\\n")
+    protected fun escape(value: String): String {
+        return value.map { charactersToEscape[it] ?: it }.joinToString("")
+    }
 
     override fun nonNullValueToString(value: Any): String = buildString {
         append('\'')
-        value.toString().forEach {
-            append(charactersToEscape[it] ?: it)
-        }
+        append(escape(value.toString()))
         append('\'')
     }
 
@@ -284,6 +280,15 @@ abstract class StringColumnType(val collate: String? = null) : ColumnType() {
         is ByteArray -> String(value)
         else -> value
     }
+
+    companion object {
+        private val charactersToEscape = mapOf(
+                '\'' to "\'\'",
+//            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
+                '\r' to "\\r",
+                '\n' to "\\n"
+        )
+    }
 }
 
 open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) : StringColumnType(collate)  {
@@ -291,7 +296,7 @@ open class VarCharColumnType(val colLength: Int = 255, collate: String? = null) 
         append("VARCHAR($colLength)")
 
         if (collate != null) {
-            append(" COLLATE $collate")
+            append(" COLLATE ${escape(collate)}")
         }
     }
 }
@@ -301,7 +306,7 @@ open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
         append(currentDialect.dataTypeProvider.textType())
 
         if (collate != null) {
-            append(" COLLATE $collate")
+            append(" COLLATE ${escape(collate)}")
         }
     }
 }
