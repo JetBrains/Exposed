@@ -266,18 +266,12 @@ class DateColumnType(val time: Boolean): ColumnType() {
 
 abstract class StringColumnType(val collate: String? = null) : ColumnType() {
     protected fun escape(value: String): String {
-        val characterMap = mapOf(
-                '\'' to "\'\'",
-//            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
-                '\r' to "\\r",
-                '\n' to "\\n"
-        )
-        return value.map { characterMap[it] ?: it }.joinToString("")
+        return value.map { charactersToEscape[it] ?: it }.joinToString("")
     }
 
     override fun nonNullValueToString(value: Any): String = buildString {
         append('\'')
-        escape(value.toString()).forEach { append(it) }
+        append(escape(value.toString()))
         append('\'')
     }
 
@@ -285,6 +279,15 @@ abstract class StringColumnType(val collate: String? = null) : ColumnType() {
         is java.sql.Clob -> value.characterStream.readText()
         is ByteArray -> String(value)
         else -> value
+    }
+
+    companion object {
+        private val charactersToEscape = mapOf(
+                '\'' to "\'\'",
+//            '\"' to "\"\"", // no need to escape double quote as we put string in single quotes
+                '\r' to "\\r",
+                '\n' to "\\n"
+        )
     }
 }
 
