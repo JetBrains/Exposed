@@ -164,9 +164,6 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join
             = Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    @Deprecated("Just an alias to innerJoin", replaceWith = ReplaceWith("this innerJoin otherTable"), level = DeprecationLevel.ERROR)
-    infix fun join(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
-
     override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
@@ -213,8 +210,6 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
     }
 
-    @Deprecated("Use enumeration(name, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumeration(name, klass.kotlin)"), level = DeprecationLevel.ERROR)
-    fun <T:Enum<T>> enumeration(name: String, klass: Class<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass.kotlin))
     /**
      * An enumeration column where enumerations are stored by their ordinal integer.
      *
@@ -223,8 +218,6 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun <T:Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
 
-    @Deprecated("Use enumerationByName(name, length, klass) with KClass instead. Will be removed in next release.", ReplaceWith("enumerationByName(name, length, klass.kotlin)"), level = DeprecationLevel.ERROR)
-    fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: Class<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass.kotlin, length))
     /**
      * An enumeration column where enumerations are stored by their name.
      *

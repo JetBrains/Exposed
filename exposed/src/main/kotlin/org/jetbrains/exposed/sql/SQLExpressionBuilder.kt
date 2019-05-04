@@ -42,11 +42,6 @@ fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
 fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
 fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
 
-@Deprecated("Use groupConcat function with SortOrder enum", ReplaceWith("groupConcat()"), level = DeprecationLevel.ERROR)
-@JvmName("groupConcatDeprecated")
-fun <T : String?> Expression<T>.groupConcat(separator: String?, distinct: Boolean = false, vararg orderBy: Pair<Expression<*>,Boolean>): GroupConcat<T> =
-        GroupConcat(this, separator, distinct, *orderBy.map { it.first to if (it.second) SortOrder.ASC else SortOrder.DESC }.toTypedArray())
-
 fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Pair<Expression<*>,SortOrder>): GroupConcat<T> =
         GroupConcat(this, separator, distinct, orderBy)
 

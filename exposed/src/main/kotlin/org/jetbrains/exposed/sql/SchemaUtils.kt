@@ -90,9 +90,6 @@ object SchemaUtils {
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 
-    @Deprecated(message = "pass instance of Index", replaceWith = ReplaceWith("SchemaUtils.createIndex(index)"), level = DeprecationLevel.ERROR)
-    fun createIndex(columns: Array<out Column<*>>, isUnique: Boolean) = createIndex(Index(columns.toList(), unique = isUnique))
-
     fun createIndex(index: Index) = index.createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
