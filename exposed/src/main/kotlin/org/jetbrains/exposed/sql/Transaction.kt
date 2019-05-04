@@ -37,9 +37,6 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
 
-    @Deprecated("should be connected externally as StatementInterceptor", level = DeprecationLevel.ERROR)
-    val logger = CompositeSqlLogger()
-
     var statementCount: Int = 0
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
