@@ -318,11 +318,13 @@ abstract class VendorDialect(override val name: String,
                     }
                 }
                 rs.close()
-                val tColumns = table.columns.associateBy { transaction.identity(it) }
+                val tColumns = table.columns.associateBy { transaction.identity(it).trim('"') }
+
                 tmpIndices.filterNot { it.key.first in pkNames }
                         .mapNotNull { (index, columns) ->
                             columns.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
                         }
+
             }
         }
         return HashMap(existingIndicesCache)
