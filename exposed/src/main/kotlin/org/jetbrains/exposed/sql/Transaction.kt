@@ -163,8 +163,15 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     fun identity(table: Table): String =
             (table as? Alias<*>)?.let { "${identity(it.delegate)} ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
 
-    fun fullIdentity(column: Column<*>): String =
-            "${quoteIfNecessary(column.table.tableName.inProperCase())}.${identity(column)}"
+    fun fullIdentity(column: Column<*>): String = buildString {
+        if (column.table is Alias<*>)
+            append(quoteIfNecessary(column.table.alias))
+        else
+            append(quoteIfNecessary(column.table.tableName.inProperCase()))
+        append('.')
+        append(identity(column))
+    }
+
 
     fun identity(column: Column<*>): String {
         val nameInProperCase = column.name.inProperCase()
