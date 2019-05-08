@@ -75,6 +75,7 @@ class DDLTests : DatabaseTestsBase() {
 
             val name = varchar("name", 255)
             val email = varchar("email", 255).uniqueIndex()
+            val camelCased = varchar("camelCased", 255).index()
         }
 
         withDb(TestDB.H2) {
