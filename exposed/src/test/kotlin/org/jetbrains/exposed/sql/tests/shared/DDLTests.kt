@@ -149,7 +149,7 @@ class DDLTests : DatabaseTestsBase() {
             val q = db.identityQuoteString
             val tableName = if (currentDialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
-                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, ${"name".inProperCase()} VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, $q${"name".inProperCase()}$q VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -180,7 +180,7 @@ class DDLTests : DatabaseTestsBase() {
             else
                 currentDialect.dataTypeProvider.shortAutoincType()
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} $shortAutoIncType NOT NULL, ${"name".inProperCase()} VARCHAR(42) PRIMARY KEY, " +
+                    "(${"id".inProperCase()} $shortAutoIncType NOT NULL, \"${"name".inProperCase()}\" VARCHAR(42) PRIMARY KEY, " +
                     "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
         }
     }
@@ -193,9 +193,10 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
+            val q = db.identityQuoteString
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, ${"name".inProperCase()} VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
-                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, ${"name".inProperCase()}))", TestTable.ddl)
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
+                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
         }
     }
 
@@ -250,13 +251,14 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
+            val q = db.identityQuoteString
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
                     "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
                     "${"l".inProperCase()} ${currentDialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                    "${"c".inProperCase()} CHAR DEFAULT 'X' NOT NULL, " +
+                    "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
                     "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
                     "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
@@ -287,7 +289,8 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0])
-            assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+            val q = db.identityQuoteString
+            assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
@@ -305,7 +308,8 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val a1 = SchemaUtils.createIndex(t.indices[0])
-            assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} (${"name".inProperCase()})", a1)
+            val q = db.identityQuoteString
+            assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
 
             val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals("CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " +
@@ -321,10 +325,11 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0])
+            val q = db.identityQuoteString
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
             else
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE (${"name".inProperCase()})", alter)
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
 
         }
     }
@@ -336,11 +341,12 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
+            val q = db.identityQuoteString
             val alter = SchemaUtils.createIndex(t.indices[0])
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} (${"name".inProperCase()})", alter)
+                assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
             else
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE (${"name".inProperCase()})", alter)
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
 
         }
     }
@@ -423,11 +429,12 @@ class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             val indexAlter = SchemaUtils.createIndex(t.indices[0])
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
-            assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
+            val q = db.identityQuoteString
+            assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"t1_type_name".inProperCase()} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+                assertEquals("CREATE UNIQUE INDEX ${"t1_type_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
             else
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
         }
     }
 
@@ -444,11 +451,12 @@ class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             val indexAlter = SchemaUtils.createIndex(t.indices[0])
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
-            assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} (${"name".inProperCase()}, ${"type".inProperCase()})", indexAlter)
+            val q = db.identityQuoteString
+            assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             if (currentDialect is SQLiteDialect)
-                assertEquals("CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+                assertEquals("CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
             else
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE (${"type".inProperCase()}, ${"name".inProperCase()})", uniqueAlter)
+                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
         }
     }
 
