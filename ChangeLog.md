@@ -1,3 +1,20 @@
+# 0.13.7
+Kotlin updated to 1.3.31
+
+Deprecation:
+* `logger` field removed from Transaction ([#447](https://github.com/JetBrains/Exposed/issues/447))
+* Deprecated functions removed: wrapRow, createIndex, groupConcat (with boolean order param), join
+* enumeration/enumerationByName with Class<*> param removed
+
+Features:
+* ANSI keywords list actualized to SQl2003.2  (PR [#551](https://github.com/JetBrains/Exposed/issues/551) from [boonshift](https://github.com/boonshift))
+
+Bug fixes:
+* Only warn of schema/db mismatch if its the case. It isn't on left join. (PR [#541](https://github.com/JetBrains/Exposed/issues/541) from [spand](https://github.com/spand))
+* Warn full column name in "Column ... is marked as not null" message
+* Escape collate in Text and Varchar columns  (PR [#554](https://github.com/JetBrains/Exposed/issues/554) from [doyaaaaaken](https://github.com/doyaaaaaken))
+* Aliased tables had use their original names in ON part
+
 # 0.13.6
 Feature:
 * Attempt to fetch not only autoincrement values but all returned from insert/batchInsert
