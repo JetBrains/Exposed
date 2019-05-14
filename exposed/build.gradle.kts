@@ -31,7 +31,7 @@ dependencies {
     testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
     testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testImplementation("org.xerial", "sqlite-jdbc", "3.27.2.1")
+    testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
     testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
     testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
 }
