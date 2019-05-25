@@ -59,7 +59,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
         return _wrapper!!
     }
 
-    override fun limit(n: Int, offset: Int): SizedIterable<T> = copy().limit(n, offset)
+    override fun limit(n: Int, offset: Int): SizedIterable<T> = LazySizedCollection(delegate.limit(n, offset))
     override operator fun iterator() = wrapper.iterator()
     override fun count() = _wrapper?.size ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
