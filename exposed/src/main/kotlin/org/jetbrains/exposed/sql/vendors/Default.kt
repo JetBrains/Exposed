@@ -173,7 +173,7 @@ interface DatabaseDialect {
     val supportsIfNotExists: Boolean get() = true
     val needsSequenceToAutoInc: Boolean get() = false
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
-    val identifierLengthLimit: Int get() = 100
+    val identifierLengthLimit: Int
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
     // <-- REVIEW
 
@@ -208,6 +208,10 @@ abstract class VendorDialect(override val name: String,
         isUpperCaseIdentifiers -> toUpperCase()
         isLowerCaseIdentifiers -> toLowerCase()
         else -> this
+    }
+
+    override val identifierLengthLimit: Int by lazy {
+        TransactionManager.current().db.metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
     }
 
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
