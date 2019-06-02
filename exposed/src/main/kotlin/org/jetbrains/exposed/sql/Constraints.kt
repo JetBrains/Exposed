@@ -41,7 +41,8 @@ data class ForeignKeyConstraint(val fkName: String,
             require(fromCol.referee != null && (fromCol.onDelete != null || fromCol.onUpdate != null)) { "$fromCol does not reference anything" }
             val targetColumn = fromCol.referee!!
             val t = TransactionManager.current()
-            val refName = t.quoteIfNecessary(t.cutIfNecessary("fk_${fromCol.table.tableName}_${fromCol.name}_${targetColumn.name}")).inProperCase()
+            val identifierManager = t.db.identifierManager
+            val refName = identifierManager.quoteIfNecessary(identifierManager.cutIfNecessary("fk_${fromCol.table.tableName}_${fromCol.name}_${targetColumn.name}")).inProperCase()
             return ForeignKeyConstraint(refName,
                     t.identity(targetColumn.table), t.identity(targetColumn),
                     t.identity(fromCol.table), t.identity(fromCol),
@@ -81,9 +82,10 @@ data class CheckConstraint(val tableName: String, val checkName: String, val che
         internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank())
             val tr = TransactionManager.current()
+            val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toSQL(QueryBuilder(false)).replace("$tableName.","")
-            return CheckConstraint(tableName, tr.quoteIfNecessary(tr.cutIfNecessary(name)), checkOpSQL)
+            return CheckConstraint(tableName, identifierManager.quoteIfNecessary(identifierManager.cutIfNecessary(name)), checkOpSQL)
         }
     }
 

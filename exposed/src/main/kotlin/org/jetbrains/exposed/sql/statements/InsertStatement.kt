@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -126,7 +127,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
         autoIncColumns.isNotEmpty() ->
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            transaction.connection.prepareStatement(sql, autoIncColumns.map { transaction.identity(it) }.toTypedArray())!!
+            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())!!
 
         else ->
             transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!

@@ -148,37 +148,21 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         return answer.first?.let { stmt.body(it) }
     }
 
-    internal fun quoteIfNecessary (identity: String) : String {
-        return if (identity.contains('.'))
-            identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
-        else {
-            quoteTokenIfNecessary(identity)
-        }
-    }
-
-    internal fun cutIfNecessary(identity: String) = identity.take(identity.length.coerceAtMost(currentDialect.identifierLengthLimit))
-
-    private fun quoteTokenIfNecessary(token: String) : String = if (db.needQuotes(token)) token.quoted else token
-
     fun identity(table: Table): String =
-            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${quoteIfNecessary(it.alias)}"} ?: quoteIfNecessary(table.tableName.inProperCase())
+            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
+                ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
     fun fullIdentity(column: Column<*>): String = buildString {
         if (column.table is Alias<*>)
-            append(quoteIfNecessary(column.table.alias))
+            append(db.identifierManager.quoteIfNecessary(column.table.alias))
         else
-            append(quoteIfNecessary(column.table.tableName.inProperCase()))
+            append(db.identifierManager.quoteIfNecessary(column.table.tableName.inProperCase()))
         append('.')
         append(identity(column))
     }
 
 
-    fun identity(column: Column<*>): String {
-        val nameInProperCase = column.name.inProperCase()
-        return if (db.shouldQuoteIdentifiers && nameInProperCase != column.name)
-            column.name.quoted
-        else quoteIfNecessary(nameInProperCase)
-    }
+    fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
 
     fun closeExecutedStatements() {
         executedStatements.forEach {
@@ -187,6 +171,5 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         executedStatements.clear()
     }
 
-    private val String.quoted get() = "${db.identityQuoteString}$this${db.identityQuoteString}".trim()
 }
 

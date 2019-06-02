@@ -39,23 +39,88 @@ class Database private constructor(val connector: () -> Connection) {
 
     fun isVersionCovers(version: BigDecimal) = this.version >= version
 
-    val keywords by lazy(LazyThreadSafetyMode.NONE) { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',') }
-    val identityQuoteString by lazy(LazyThreadSafetyMode.NONE) { metadata.identifierQuoteString!!.trim() }
-    val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!!}
-    val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn()}
-    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleResultSets()}
-    val shouldQuoteIdentifiers by lazy(LazyThreadSafetyMode.NONE) {
-        !metadata.storesMixedCaseQuotedIdentifiers() && metadata.supportsMixedCaseQuotedIdentifiers()
-    }
+    val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn() }
+    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleResultSets() }
 
-    val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size >= 1000
-    }
+    internal val identifierManager by lazy { IdentifierManager(metadata) }
 
-    fun needQuotes (identity: String) : Boolean {
-        return checkedIdentities.getOrPut(identity.toLowerCase()) {
-            keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
+    internal class IdentifierManager(private val metadata: DatabaseMetaData) {
+        internal val quoteString = metadata.identifierQuoteString!!.trim()
+        private val isUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers()
+        private val isUpperCaseQuotedIdentifiers = metadata.storesUpperCaseQuotedIdentifiers()
+        private val isLowerCaseIdentifiers = metadata.storesLowerCaseIdentifiers()
+        private val isLowerCaseQuotedIdentifiers = metadata.storesLowerCaseQuotedIdentifiers()
+        private val supportsMixedIdentifiers = metadata.supportsMixedCaseIdentifiers()
+        private val supportsMixedQuotedIdentifiers = metadata.supportsMixedCaseQuotedIdentifiers()
+        private val supportsMixedId = metadata.supportsMixedCaseIdentifiers()
+        private val supportsQuotedMixedId = metadata.supportsMixedCaseQuotedIdentifiers()
+        val keywords = ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',')
+        private val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!! }
+        private val identifierLengthLimit = metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
+
+        val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size >= 1000
         }
+
+        private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
+        private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
+
+        fun needQuotes (identity: String) : Boolean {
+            return checkedIdentities.getOrPut(identity.toLowerCase()) {
+                keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
+            }
+        }
+
+        private fun String.isAlreadyQuoted()  = startsWith(quoteString) && endsWith(quoteString)
+
+        fun shouldQuoteIdentifier(identity: String) : Boolean {
+            val alreadyQuoted = identity.isAlreadyQuoted()
+            val alreadyLower = identity.equals(identity.toLowerCase())
+            val alreadyUpper = identity.equals(identity.toUpperCase())
+            return when {
+                alreadyQuoted -> false
+                supportsMixedId -> false
+                alreadyLower && isLowerCaseIdentifiers -> false
+                alreadyUpper && isUpperCaseIdentifiers -> false
+                supportsQuotedMixedId && (!alreadyLower && !alreadyUpper) -> true
+                else -> false
+            }
+        }
+
+        fun inProperCase(identity: String) : String {
+            val alreadyQuoted = identity.isAlreadyQuoted()
+            return when {
+                alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
+                alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.toUpperCase()
+                alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.toLowerCase()
+                supportsMixedIdentifiers -> identity
+                isUpperCaseIdentifiers -> identity.toUpperCase()
+                isLowerCaseIdentifiers -> identity.toLowerCase()
+                else -> identity
+            }
+        }
+
+        fun quoteIfNecessary (identity: String) : String {
+            return if (identity.contains('.'))
+                identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
+            else {
+                quoteTokenIfNecessary(identity)
+            }
+        }
+
+        fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String) : String {
+            val inProperCase = inProperCase(identity)
+            return if (shouldQuoteIdentifier(identity) && inProperCase != identity)
+                quote(identity)
+            else
+                quoteIfNecessary(inProperCase)
+        }
+
+        fun cutIfNecessary(identity: String) = identity.take(identity.length.coerceAtMost(identifierLengthLimit))
+
+        private fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
+
+        fun quote(identity: String) = "${quoteString}$identity${quoteString}".trim()
     }
 
     var defaultFetchSize: Int? = null
@@ -65,9 +130,6 @@ class Database private constructor(val connector: () -> Connection) {
         defaultFetchSize = size
         return this
     }
-
-    private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
-    private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     companion object {
         private val dialects = ConcurrentHashMap<String, () ->DatabaseDialect>()

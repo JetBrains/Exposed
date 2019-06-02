@@ -169,13 +169,11 @@ interface DatabaseDialect {
     val supportsMultipleGeneratedKeys: Boolean
     fun isAllowedAsColumnDefault(e: Expression<*>) = e is LiteralOp<*>
 
-    // --> REVIEW
     val supportsIfNotExists: Boolean get() = true
     val needsSequenceToAutoInc: Boolean get() = false
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
-    val identifierLengthLimit: Int
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
-    // <-- REVIEW
+
 
     val defaultReferenceOption : ReferenceOption get() = ReferenceOption.RESTRICT
 
@@ -202,17 +200,7 @@ abstract class VendorDialect(override val name: String,
             return _allTableNames!!
         }
 
-    private val isUpperCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesUpperCaseIdentifiers() }
-    private val isLowerCaseIdentifiers by lazy { TransactionManager.current().db.metadata.storesLowerCaseIdentifiers() }
-    val String.inProperCase: String get() = when {
-        isUpperCaseIdentifiers -> toUpperCase()
-        isLowerCaseIdentifiers -> toLowerCase()
-        else -> this
-    }
-
-    override val identifierLengthLimit: Int by lazy {
-        TransactionManager.current().db.metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
-    }
+    val String.inProperCase: String get() = TransactionManager.current().db.identifierManager.inProperCase(this)
 
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
@@ -245,9 +233,10 @@ abstract class VendorDialect(override val name: String,
     }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs = TransactionManager.current().db.metadata.getColumns(getDatabase(), null, "%", "%")
+        val tr = TransactionManager.current()
+        val rs = tr.db.metadata.getColumns(getDatabase(), null, "%", "%")
         val result = rs.extractColumns(tables) {
-            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME"), it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
+            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
         }
         rs.close()
         return result
@@ -255,8 +244,8 @@ abstract class VendorDialect(override val name: String,
 
     private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
 
-    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction)
-            = if (tr.db.shouldQuoteIdentifiers && inProperCase != this) "${tr.db.identityQuoteString}$this${tr.db.identityQuoteString}" else tr.quoteIfNecessary(this)
+    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction) =
+            tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
     @Synchronized
     override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
@@ -316,7 +305,7 @@ abstract class VendorDialect(override val name: String,
 
                 while (rs.next()) {
                     rs.getString("INDEX_NAME")?.let {
-                        val column = transaction.quoteIfNecessary(rs.getString("COLUMN_NAME")!!)
+                        val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("COLUMN_NAME")!!)
                         val isUnique = !rs.getBoolean("NON_UNIQUE")
                         tmpIndices.getOrPut(it to isUnique) { arrayListOf() }.add(column)
                     }
@@ -342,7 +331,7 @@ abstract class VendorDialect(override val name: String,
     override fun createIndex(index: Index): String {
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
-        val quotedIndexName = t.quoteIfNecessary(t.cutIfNecessary(index.indexName))
+        val quotedIndexName = t.db.identifierManager.quoteIfNecessary(t.db.identifierManager.cutIfNecessary(index.indexName))
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
@@ -353,8 +342,8 @@ abstract class VendorDialect(override val name: String,
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {
-        val t = TransactionManager.current()
-        return "ALTER TABLE ${t.quoteIfNecessary(tableName)} DROP CONSTRAINT ${t.quoteIfNecessary(indexName)}"
+        val identifierManager = TransactionManager.current().db.identifierManager
+        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
     private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata.supportsSelectForUpdate() }
@@ -374,5 +363,5 @@ internal val currentDialectIfAvailable : DatabaseDialect? get() =
     } else null
 
 internal fun String.inProperCase(): String = (currentDialectIfAvailable as? VendorDialect)?.run {
-    this@inProperCase.inProperCase
+    TransactionManager.current().db.identifierManager.inProperCase(this@inProperCase)
 } ?: this

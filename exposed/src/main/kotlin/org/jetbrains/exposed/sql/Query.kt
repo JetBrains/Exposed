@@ -323,7 +323,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         flushEntities()
 
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
-            fun Column<*>.makeAlias() = alias(transaction.quoteIfNecessary("${table.tableName}_$name"))
+            fun Column<*>.makeAlias() = alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
 
             val originalSet = set
             try {

@@ -59,8 +59,6 @@ internal object MysqlFunctionProvider : FunctionProvider() {
 
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider) {
 
-    override val identifierLengthLimit = 64
-
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         val expression = e.toSQL(QueryBuilder(false)).trim()
         return super.isAllowedAsColumnDefault(e) ||
