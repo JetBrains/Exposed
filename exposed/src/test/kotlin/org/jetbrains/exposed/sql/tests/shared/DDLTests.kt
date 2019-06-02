@@ -14,7 +14,6 @@ import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 

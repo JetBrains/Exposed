@@ -76,7 +76,7 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
         service.createOrder(customer, "Product1")
         val order = service.findOrderByProduct("Product1")
         assertNotNull(order)
-        assertEquals("Alice1", order!!.customer.name)
+        assertEquals("Alice1", order.customer.name)
     }
 
     @Test @Commit
@@ -84,7 +84,7 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)
-        assertEquals("Bob", order!!.customer.name)
+        assertEquals("Bob", order.customer.name)
         transaction {
             SchemaUtils.drop(CustomerTable, OrderTable)
         }
