@@ -19,17 +19,6 @@ import kotlin.test.assertNotNull
 
 class DDLTests : DatabaseTestsBase() {
 
-    @Test fun printParams() {
-        withDb {
-            val m = db.metadata
-            exposedLogger.info("${currentDialect.name}\n")
-            exposedLogger.info("\t\tStoresLowerCased/Quoted: ${m.storesLowerCaseIdentifiers()}/${m.storesLowerCaseQuotedIdentifiers()}")
-            exposedLogger.info("\t\tStoresMixedCased/Quoted: ${m.storesMixedCaseIdentifiers()}/${m.storesMixedCaseQuotedIdentifiers()}")
-            exposedLogger.info("\t\tStoresUpperCased/Quoted: ${m.storesUpperCaseIdentifiers()}/${m.storesUpperCaseQuotedIdentifiers()}")
-            exposedLogger.info("\t\tSupportsMixedCased/Quoted: ${m.supportsMixedCaseIdentifiers()}/${m.supportsMixedCaseQuotedIdentifiers()}\n\n\n")
-        }
-    }
-
     @Test fun tableExists01() {
         val TestTable = object : Table() {
             val id = integer("id").primaryKey()
