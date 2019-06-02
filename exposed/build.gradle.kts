@@ -17,14 +17,14 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.0.1")
     api("joda-time", "joda-time", "2.10.2")
     api("org.slf4j", "slf4j-api", "1.7.25")
-    implementation("com.h2database", "h2", "1.4.197")
+    implementation("com.h2database", "h2", "1.4.199")
 
     testImplementation(kotlin("test-junit"))
     testImplementation("org.slf4j", "slf4j-log4j12", "1.7.26")
     testImplementation("log4j", "log4j", "1.2.17")
     testImplementation("junit", "junit", "4.12")
     testImplementation("org.hamcrest", "hamcrest-library", "1.3")
-    testImplementation("com.h2database", "h2", "1.4.197")
+    testImplementation("com.h2database", "h2", "1.4.199")
 
     testImplementation("mysql", "mysql-connector-java", "5.1.47")
     testImplementation("mysql", "mysql-connector-mxj", "5.0.12")

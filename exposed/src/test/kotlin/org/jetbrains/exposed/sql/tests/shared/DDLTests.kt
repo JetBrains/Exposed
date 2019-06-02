@@ -770,8 +770,8 @@ class DDLTests : DatabaseTestsBase() {
         internal fun initEnumColumn(sql: String) {
             (columns as MutableList<Column<*>>).remove(enumColumn)
             enumColumn = customEnumeration("enumColumn", sql, { value ->
-                when (currentDialect) {
-                    is H2Dialect -> Foo.values()[value as Int]
+                when {
+                    currentDialect is H2Dialect && value is Int -> Foo.values()[value]
                     else -> Foo.valueOf(value as String)
                 }
             }, { value ->

@@ -228,7 +228,8 @@ class DMLTests : DatabaseTestsBase() {
             userData.deleteWhere(limit = 1) { userData.value eq 20 }
             userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
                 assertEquals(1, it.count())
-                assertEquals("eugene", it.single()[userData.user_id])
+                val expected = if (currentDialect is H2Dialect) "smth" else "eugene"
+                assertEquals(expected, it.single()[userData.user_id])
             }
         }
     }
@@ -641,7 +642,10 @@ class DMLTests : DatabaseTestsBase() {
             users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class, OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                val sorted = if (currentDialect is MysqlDialect || currentDialect is SQLServerDialect) "Eugene | Sergey" else "Sergey | Eugene"
+                val sorted = when (currentDialect) {
+                    is MysqlDialect, is SQLServerDialect, is H2Dialect -> "Eugene | Sergey"
+                    else -> "Sergey | Eugene"
+                }
                 assertEquals(sorted, it["Munich"])
                 assertNull(it["Prague"])
             }

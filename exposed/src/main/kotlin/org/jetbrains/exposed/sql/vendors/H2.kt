@@ -40,7 +40,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
         return when {
-            // INSERT IGNORE support added in H2 version 1.4.198 (2018-03-18)
+            // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
             ignore && uniqueCols.isNotEmpty() && isMySQLMode && dbReleaseDate(transaction).isBefore(DateTime.parse("2018-03-18")) -> {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
