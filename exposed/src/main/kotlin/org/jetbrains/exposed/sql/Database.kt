@@ -42,7 +42,18 @@ class Database private constructor(val connector: () -> Connection) {
     val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn() }
     val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleResultSets() }
 
-    internal val identifierManager by lazy { IdentifierManager(metadata) }
+    internal val identifierManager by lazy {
+        // SQLServer driver closes metadata object when related connection close
+        if (dialect is SQLServerDialect && TransactionManager.currentOrNull() == null) {
+            val connection = connector()
+            try {
+                IdentifierManager(connection.metaData)
+            } finally {
+                connection.close()
+            }
+        } else
+            IdentifierManager(metadata)
+    }
 
     internal class IdentifierManager(private val metadata: DatabaseMetaData) {
         internal val quoteString = metadata.identifierQuoteString!!.trim()
