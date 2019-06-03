@@ -18,7 +18,7 @@ class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>(DateColumnT
 
 class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     override fun toSQL(queryBuilder: QueryBuilder) = when {
-        (currentDialect as MysqlDialect).isFractionDateTimeSupported() -> "CURRENT_TIMESTAMP(6)"
+        (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
         else -> "CURRENT_TIMESTAMP"
     }
 }
