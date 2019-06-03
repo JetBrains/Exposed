@@ -19,6 +19,7 @@ fun Project.setupDialectTest(dialect: String) {
                 systemProperty("exposed.test.oracle.port", containerInfo.ports[1521] ?: -1)
                 systemProperty("exposed.test.sqlserver.port", containerInfo.ports[1433] ?: -1)
                 systemProperty("exposed.test.mariadb.port", containerInfo.ports[3306] ?: -1)
+                systemProperty("exposed.test.mysql.port", containerInfo.ports[3306] ?: -1)
             }
         }
     }

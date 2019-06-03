@@ -20,18 +20,23 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
         Mode.getInstance("MySQL").convertInsertNullToZero = false
     }),
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
-    MYSQL({"jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="}, "com.mysql.jdbc.Driver",
-            beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
-            afterTestFinished = {
-                try {
-                    val baseDir = Files().tmp(MysqldResource.MYSQL_C_MXJ)
-                    ServerLauncherSocketFactory.shutdown(baseDir, null)
-                } catch (e: MysqldResourceNotFoundException) {
-                    exposedLogger.warn(e.message, e)
-                } finally {
-                    Files().cleanTestDir()
-                }
-            }),
+    MYSQL({
+        System.getProperty("exposed.test.mysql.host")?.let { dockerHost ->
+            "jdbc:mysql://$dockerHost:${System.getProperty("exposed.test.mysql.port")!!}/testdb"
+        } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
+    },
+        driver = "com.mysql.jdbc.Driver",
+        beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
+        afterTestFinished = {
+            try {
+                val baseDir = Files().tmp(MysqldResource.MYSQL_C_MXJ)
+                ServerLauncherSocketFactory.shutdown(baseDir, null)
+            } catch (e: MysqldResourceNotFoundException) {
+                exposedLogger.warn(e.message, e)
+            } finally {
+                Files().cleanTestDir()
+            }
+        }),
     POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
