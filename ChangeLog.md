@@ -2,7 +2,7 @@
 Bug Fixes:
 * Fixed support for H2 1.4.198+ (CVE-2018-10054)  ([#530](https://github.com/JetBrains/Exposed/issues/530), [#558](https://github.com/JetBrains/Exposed/issues/558))
 * LazySizedCollection.limit() produce StackOverflowError exception ([#569](https://github.com/JetBrains/Exposed/issues/569))
-* Explicitly specify constraint name in create table statement ([#570](https://github.com/JetBrains/Exposed/issues/570))
+* Explicitly specify constraint name in create table statement (PR [#570](https://github.com/JetBrains/Exposed/issues/570) from [vetrovosk](https://github.com/vetrovosk))
 
 # 0.13.7
 Kotlin updated to 1.3.31
