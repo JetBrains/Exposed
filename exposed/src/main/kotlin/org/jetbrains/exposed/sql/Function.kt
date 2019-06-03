@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.sql
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -16,7 +17,10 @@ class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>(DateColumnT
 }
 
 class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
-    override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
+    override fun toSQL(queryBuilder: QueryBuilder) = when {
+        (currentDialect as MysqlDialect).isFractionDateTimeSupported() -> "CURRENT_TIMESTAMP(6)"
+        else -> "CURRENT_TIMESTAMP"
+    }
 }
 
 class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
