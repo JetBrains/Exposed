@@ -525,7 +525,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         }
         if (pkey.isNotEmpty()) {
             val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.quoteIfNecessary(tr.db.identifierManager.cutIfNecessary("pk_$tableName"))
+            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote("pk_$tableName")
             return pkey.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)
@@ -567,7 +567,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 }
 
 data class Seq(private val name: String) {
-    private val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessary(name)
+    private val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
     fun createStatement() = listOf("CREATE SEQUENCE $identifier")
     fun dropStatement() = listOf("DROP SEQUENCE $identifier")
 }

@@ -127,7 +127,7 @@ class Database private constructor(val connector: () -> Connection) {
                 quoteIfNecessary(inProperCase)
         }
 
-        fun cutIfNecessary(identity: String) = identity.take(identity.length.coerceAtMost(identifierLengthLimit))
+        fun cutIfNecessaryAndQuote(identity: String) = quoteIfNecessary(identity.take(identifierLengthLimit))
 
         private fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
 

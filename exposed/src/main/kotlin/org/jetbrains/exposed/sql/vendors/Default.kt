@@ -331,7 +331,7 @@ abstract class VendorDialect(override val name: String,
     override fun createIndex(index: Index): String {
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
-        val quotedIndexName = t.db.identifierManager.quoteIfNecessary(t.db.identifierManager.cutIfNecessary(index.indexName))
+        val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
