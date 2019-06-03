@@ -129,7 +129,13 @@ object SqlExpressionBuilder {
 
     infix fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> = LikeOp(this, QueryParameter(pattern, columnType))
 
+    @JvmName("likeWithEntityID")
+    infix fun ExpressionWithColumnType<EntityID<String>>.like(pattern: String): Op<Boolean> = LikeOp(this, QueryParameter(pattern, columnType))
+
     infix fun<T:String?> ExpressionWithColumnType<T>.notLike(pattern: String): Op<Boolean> = NotLikeOp(this, QueryParameter(pattern, columnType))
+
+    @JvmName("notLikeWithEntityID")
+    infix fun ExpressionWithColumnType<EntityID<String>>.notLike(pattern: String): Op<Boolean> = NotLikeOp(this, QueryParameter(pattern, columnType))
 
     infix fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> = RegexpOp(this, QueryParameter(pattern, columnType))
 

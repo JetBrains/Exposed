@@ -1821,15 +1821,22 @@ class DMLTests : DatabaseTestsBase() {
         }
         withTables(stringTable) {
             val entityID = EntityID("id1", stringTable)
-            val id = stringTable.insertAndGetId {
+            val id1 = stringTable.insertAndGetId {
                 it[id] = entityID
                 it[name] = "foo"
             }
 
-            assertEquals(id, entityID)
+            stringTable.insertAndGetId {
+                it[id] = EntityID("testId", stringTable)
+                it[name] = "bar"
+            }
+
+            assertEquals(id1, entityID)
             val row1 = stringTable.select { stringTable.id eq entityID }.singleOrNull()
-            assertNotNull(row1)
-            assertEquals(row1[stringTable.id], entityID)
+            assertEquals(row1?.get(stringTable.id), entityID)
+
+            val row2 = stringTable.select { stringTable.id like "id%" }.singleOrNull()
+            assertEquals(row2?.get(stringTable.id), entityID)
         }
     }
 
