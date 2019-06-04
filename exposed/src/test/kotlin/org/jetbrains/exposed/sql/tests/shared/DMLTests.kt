@@ -1865,6 +1865,37 @@ class DMLTests : DatabaseTestsBase() {
             // Assert no logging took place. No idea how to.
         }
     }
+
+    private object OrderedDataTable : IntIdTable()
+    {
+        val name = text("name")
+        val order = integer("order").autoIncrement()
+    }
+
+    class OrderedData(id : EntityID<Int>) : IntEntity(id)
+    {
+        companion object : IntEntityClass<OrderedData>(OrderedDataTable)
+
+        var name by OrderedDataTable.name
+        var order by OrderedDataTable.order
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/192
+    @Test fun testInsertWithColumnNamedWithKeyword() {
+        withTables(listOf(TestDB.MYSQL, TestDB.MARIADB), OrderedDataTable) {
+
+            val foo = OrderedData.new {
+                name = "foo"
+                order = 20
+            }
+            val bar = OrderedData.new {
+                name = "bar"
+                order = 10
+            }
+
+            assertEqualLists(listOf(bar, foo), OrderedData.all().orderBy(OrderedDataTable.order to SortOrder.ASC).toList())
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()

@@ -118,8 +118,9 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withDb(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach {
+    fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.() -> Unit) {
+        val toTest = db ?: TestDB.enabledInTests() - excludeSettings
+        toTest.forEach {
             withDb(it, statement)
         }
     }

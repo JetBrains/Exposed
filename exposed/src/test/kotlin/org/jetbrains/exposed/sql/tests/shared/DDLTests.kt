@@ -784,8 +784,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun testCustomEnumeration01() {
-        val coveredWithTests = listOf(TestDB.H2, TestDB.MYSQL, TestDB.POSTGRESQL)
-        withDb(TestDB.values().toList() - coveredWithTests) {
+        withDb(listOf(TestDB.H2, TestDB.MYSQL, TestDB.POSTGRESQL)) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect -> "FooEnum"
