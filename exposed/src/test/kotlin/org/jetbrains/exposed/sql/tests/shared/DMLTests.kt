@@ -643,6 +643,7 @@ class DMLTests : DatabaseTestsBase() {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 val sorted = when (currentDialect) {
+                    is MariaDBDialect -> "Sergey | Eugene"
                     is MysqlDialect, is SQLServerDialect, is H2Dialect -> "Eugene | Sergey"
                     else -> "Sergey | Eugene"
                 }
