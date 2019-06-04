@@ -642,12 +642,7 @@ class DMLTests : DatabaseTestsBase() {
             users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class, OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                val sorted = when (currentDialect) {
-                    is MariaDBDialect -> "Sergey | Eugene"
-                    is MysqlDialect, is SQLServerDialect, is H2Dialect -> "Eugene | Sergey"
-                    else -> "Sergey | Eugene"
-                }
-                assertEquals(sorted, it["Munich"])
+                assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
                 assertNull(it["Prague"])
             }
 
