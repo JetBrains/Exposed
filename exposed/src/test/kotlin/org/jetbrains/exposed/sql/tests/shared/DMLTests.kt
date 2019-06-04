@@ -1869,7 +1869,7 @@ class DMLTests : DatabaseTestsBase() {
     private object OrderedDataTable : IntIdTable()
     {
         val name = text("name")
-        val order = integer("order").autoIncrement()
+        val order = integer("order")
     }
 
     class OrderedData(id : EntityID<Int>) : IntEntity(id)
@@ -1882,7 +1882,7 @@ class DMLTests : DatabaseTestsBase() {
 
     // https://github.com/JetBrains/Exposed/issues/192
     @Test fun testInsertWithColumnNamedWithKeyword() {
-        withTables(listOf(TestDB.MYSQL, TestDB.MARIADB), OrderedDataTable) {
+        withTables(OrderedDataTable) {
 
             val foo = OrderedData.new {
                 name = "foo"
