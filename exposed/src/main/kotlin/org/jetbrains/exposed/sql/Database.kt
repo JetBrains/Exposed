@@ -66,7 +66,7 @@ class Database private constructor(val connector: () -> Connection) {
         private val supportsMixedId = metadata.supportsMixedCaseIdentifiers()
         private val supportsQuotedMixedId = metadata.supportsMixedCaseQuotedIdentifiers()
         val keywords = ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',')
-        private val extraNameCharacters by lazy(LazyThreadSafetyMode.NONE) { metadata.extraNameCharacters!! }
+        private val extraNameCharacters = metadata.extraNameCharacters!!
         private val identifierLengthLimit = metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
 
         val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
