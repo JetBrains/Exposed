@@ -11,6 +11,8 @@ repositories {
     jcenter()
 }
 
+val dialect: String by project
+
 dependencies {
     api(kotlin("stdlib"))
     api(kotlin("reflect"))
@@ -24,16 +26,22 @@ dependencies {
     testImplementation("log4j", "log4j", "1.2.17")
     testImplementation("junit", "junit", "4.12")
     testImplementation("org.hamcrest", "hamcrest-library", "1.3")
-    testImplementation("com.h2database", "h2", "1.4.199")
 
-    testImplementation("mysql", "mysql-connector-java", "5.1.47")
-    testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
-    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
-    testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
+    testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
-    testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
-    testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
+
+    when (dialect) {
+        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
+        "mysql" ->      testImplementation("mysql", "mysql-connector-java", "8.0.16")
+        "oracle" ->     testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
+        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
+        else -> {
+            testImplementation("com.h2database", "h2", "1.4.199")
+            testImplementation("mysql", "mysql-connector-java", "5.1.47")
+            testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
+        }
+    }
 }
 
 publishJar {
@@ -63,5 +71,4 @@ tasks.withType(Test::class.java) {
     }
 }
 
-val dialect: String by project
 setupDialectTest(dialect)
