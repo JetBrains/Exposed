@@ -55,7 +55,7 @@ class Database private constructor(val connector: () -> Connection) {
             IdentifierManager(metadata)
     }
 
-    internal class IdentifierManager(private val metadata: DatabaseMetaData) {
+    internal class IdentifierManager(metadata: DatabaseMetaData) {
         internal val quoteString = metadata.identifierQuoteString!!.trim()
         private val isUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers()
         private val isUpperCaseQuotedIdentifiers = metadata.storesUpperCaseQuotedIdentifiers()
@@ -67,7 +67,12 @@ class Database private constructor(val connector: () -> Connection) {
         private val supportsQuotedMixedId = metadata.supportsMixedCaseQuotedIdentifiers()
         val keywords = ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',')
         private val extraNameCharacters = metadata.extraNameCharacters!!
-        private val identifierLengthLimit = metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
+        private val identifierLengthLimit = run {
+            if (metadata.databaseProductName == "Oracle")
+                128
+            else
+                metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
+        }
 
         val checkedIdentities = object : LinkedHashMap<String, Boolean> (100) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size >= 1000

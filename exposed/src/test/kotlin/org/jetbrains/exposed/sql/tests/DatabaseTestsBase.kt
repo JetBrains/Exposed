@@ -39,22 +39,21 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
         }),
     POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
             connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                         ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
-                val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "oracle", driver = ORACLE.driver)
+                val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
                 transaction(java.sql.Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
                     try {
-                        exec("DROP USER ExposedTest CASCADE")
+                        exec("DROP USER C##ExposedTest CASCADE")
                     } catch (e: Exception) { // ignore
-                        exposedLogger.warn("Exception on deleting ExposedTest user", e)
+                        exposedLogger.warn("Exception on deleting C##ExposedTest user", e)
                     }
-
-                    exec("CREATE USER ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
-                    exec("grant all privileges to ExposedTest IDENTIFIED BY 12345")
-                    exec("grant dba to ExposedTest IDENTIFIED BY 12345")
+                    exec("CREATE USER C##ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
+                    exec("grant all privileges to C##ExposedTest")
+                    exec("grant dba to C##ExposedTest")
                 }
                 Unit
             }),
