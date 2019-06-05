@@ -14,9 +14,6 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
 
     override val isAlwaysBatch = true
 
-    override val generatedKey: List<ResultRow>?
-        get() = resultedValues
-
     protected val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
     private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null
