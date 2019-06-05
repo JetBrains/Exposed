@@ -1155,14 +1155,16 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    private val insertIgnoreSupportedDB = TestDB.values().toList() -
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
+
     @Test
     fun testInsertIgnoreAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        val insertIgnoreSupportedDB = TestDB.values().toList() -
-                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
+
         withTables(insertIgnoreSupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "1"
@@ -1181,6 +1183,23 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             assertEquals(null, idNull)
+        }
+    }
+
+    @Test
+    fun testInsertIgnoreAndGetIdWithPredefinedId() {
+        val idTable = object : IntIdTable("tmp") {
+            val name = varchar("foo", 10).uniqueIndex()
+        }
+
+        val insertIgnoreSupportedDB = TestDB.values().toList() -
+                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
+        withTables(insertIgnoreSupportedDB, idTable) {
+            val id = idTable.insertIgnore {
+                it[idTable.id] = EntityID(1, idTable)
+                it[idTable.name] = "1"
+            } get idTable.id
+            assertEquals(1, id?.value)
         }
     }
 
