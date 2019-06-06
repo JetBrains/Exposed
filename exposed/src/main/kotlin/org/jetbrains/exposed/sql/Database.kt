@@ -67,8 +67,9 @@ class Database private constructor(val connector: () -> Connection) {
         private val supportsQuotedMixedId = metadata.supportsMixedCaseQuotedIdentifiers()
         val keywords = ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + metadata.sqlKeywords.split(',')
         private val extraNameCharacters = metadata.extraNameCharacters!!
+        private val isOracle = metadata.databaseProductName == "Oracle"
         private val identifierLengthLimit = run {
-            if (metadata.databaseProductName == "Oracle")
+            if (isOracle)
                 128
             else
                 metadata.maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
@@ -98,6 +99,7 @@ class Database private constructor(val connector: () -> Connection) {
                 supportsMixedId -> false
                 alreadyLower && isLowerCaseIdentifiers -> false
                 alreadyUpper && isUpperCaseIdentifiers -> false
+                isOracle -> false
                 supportsQuotedMixedId && (!alreadyLower && !alreadyUpper) -> true
                 else -> false
             }
@@ -110,6 +112,7 @@ class Database private constructor(val connector: () -> Connection) {
                 alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.toUpperCase()
                 alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.toLowerCase()
                 supportsMixedIdentifiers -> identity
+                isOracle -> identity.toUpperCase()
                 isUpperCaseIdentifiers -> identity.toUpperCase()
                 isLowerCaseIdentifiers -> identity.toLowerCase()
                 else -> identity
