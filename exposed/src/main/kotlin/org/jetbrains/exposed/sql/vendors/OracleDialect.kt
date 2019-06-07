@@ -101,8 +101,9 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsIfNotExists = false
     override val needsSequenceToAutoInc = true
     override val needsQuotesWhenSymbolsInNames = false
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
+    override val defaultReferenceOption: ReferenceOption = ReferenceOption.NO_ACTION
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

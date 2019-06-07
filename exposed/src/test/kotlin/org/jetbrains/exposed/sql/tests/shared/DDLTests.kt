@@ -253,7 +253,7 @@ class DDLTests : DatabaseTestsBase() {
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialect.dataTypeProvider.dateTimeType()
             val q = db.identifierManager.quoteString
-            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() +
+            val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
@@ -264,7 +264,14 @@ class DDLTests : DatabaseTestsBase() {
                     "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
                     "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
-                ")", TestTable.ddl)
+                    ")"
+
+            val expected = if (currentDialect is OracleDialect)
+                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
+            else
+                arrayListOf(baseExpression)
+
+            assertEqualLists(expected, TestTable.ddl)
 
             val id1 = TestTable.insertAndGetId {  }
 

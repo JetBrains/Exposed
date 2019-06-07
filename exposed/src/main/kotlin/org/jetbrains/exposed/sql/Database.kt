@@ -139,7 +139,7 @@ class Database private constructor(val connector: () -> Connection) {
 
         private fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
 
-        fun quote(identity: String) = "${quoteString}$identity${quoteString}".trim()
+        private fun quote(identity: String) = "$quoteString$identity$quoteString".trim()
     }
 
     var defaultFetchSize: Int? = null

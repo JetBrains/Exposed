@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
@@ -60,7 +61,10 @@ data class ForeignKeyConstraint(val fkName: String,
             append(" ON DELETE $deleteRule")
         }
         if (updateRule != ReferenceOption.NO_ACTION) {
-            append(" ON UPDATE $updateRule")
+            if (currentDialect !is OracleDialect)
+                append(" ON UPDATE $updateRule")
+            else
+                exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTable table")
         }
     }
 
