@@ -634,15 +634,23 @@ class DMLTests : DatabaseTestsBase() {
             users.name.groupConcat(separator = ", ").checkExcept(OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                val sorted = if (currentDialect is MysqlDialect || currentDialect is SQLServerDialect) "Eugene, Sergey" else "Sergey, Eugene"
-                assertEquals(sorted, it["Munich"])
+                when (currentDialect) {
+                    is MariaDBDialect -> assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
+                    is MysqlDialect, is SQLServerDialect -> assertEquals("Eugene, Sergey", it["Munich"])
+                    else -> assertEquals("Sergey, Eugene", it["Munich"])
+                }
+
                 assertNull(it["Prague"])
             }
 
             users.name.groupConcat(separator = " | ", distinct = true).checkExcept(PostgreSQLDialect::class, OracleDialect::class) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
-                assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
+                when (currentDialect) {
+                    is MariaDBDialect -> assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
+                    is MysqlDialect, is SQLServerDialect -> assertEquals("Eugene | Sergey", it["Munich"])
+                    else -> assertEquals("Sergey | Eugene", it["Munich"])
+                }
                 assertNull(it["Prague"])
             }
 
