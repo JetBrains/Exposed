@@ -1,6 +1,22 @@
+# 0.14.2
+Deprecations:
+* `InsertStatement.generatedKey` field removed
+
+Features:
+* `like` operator for `Column<EntityID<String>>` ([#117](https://github.com/JetBrains/Exposed/issues/117))
+
+Bug Fixes:
+* SQLServer dialect fails on loading `extraNameCharacters` from DatabaseMetadata
+* `insertIgnore` with get id on result fails for MySQL ([#574](https://github.com/JetBrains/Exposed/issues/574))
+* Oracle dialect improvements
+
+Infrastructure:
+* Run MySQL tests on MySQL 5.7+ with jdbc driver `8.0.16` ([#171](https://github.com/JetBrains/Exposed/issues/171))
+* Oracle tests reanimated on Oracle 18 XE
+
 # 0.14.1
 Bug Fixes:
-* Fixed support for H2 1.4.198+ (CVE-2018-10054)  ([#530](https://github.com/JetBrains/Exposed/issues/530), [#558](https://github.com/JetBrains/Exposed/issues/558))
+* Fixed support for H2 1.4.198+ (CVE-2018-10054) ([#530](https://github.com/JetBrains/Exposed/issues/530), [#558](https://github.com/JetBrains/Exposed/issues/558))
 * LazySizedCollection.limit() produce StackOverflowError exception ([#569](https://github.com/JetBrains/Exposed/issues/569))
 * Explicitly specify constraint name in create table statement (PR [#570](https://github.com/JetBrains/Exposed/issues/570) from [vetrovosk](https://github.com/vetrovosk))
 
