@@ -76,7 +76,7 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
             }
         }
 
-        internal fun createAndFillValues(data: Map<Column<*>, Any?>) : ResultRow =
+        internal fun createAndFillValues(data: Map<Expression<*>, Any?>) : ResultRow =
             ResultRow(data.keys.mapIndexed { i, c -> c to i }.toMap()).also { row ->
                 data.forEach { (c, v) -> row[c] = v }
             }

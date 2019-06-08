@@ -75,82 +75,83 @@ object DMLTestsData {
     }
 }
 
-class DMLTests : DatabaseTestsBase() {
-    fun withCitiesAndUsers(exclude: List<TestDB> = emptyList(), statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
-        val Users = DMLTestsData.Users
-        val Cities = DMLTestsData.Cities
-        val UserData = DMLTestsData.UserData
+fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
+    val Users = DMLTestsData.Users
+    val Cities = DMLTestsData.Cities
+    val UserData = DMLTestsData.UserData
 
-        withTables(exclude, Cities, Users, UserData) {
-            val saintPetersburgId = Cities.insert {
-                it[name] = "St. Petersburg"
-            } get Cities.id
+    withTables(exclude, Cities, Users, UserData) {
+        val saintPetersburgId = Cities.insert {
+            it[name] = "St. Petersburg"
+        } get Cities.id
 
-            val munichId = Cities.insert {
-                it[name] = "Munich"
-            } get Cities.id
+        val munichId = Cities.insert {
+            it[name] = "Munich"
+        } get Cities.id
 
-            Cities.insert {
-                it[name] = "Prague"
-            }
-
-            Users.insert {
-                it[id] = "andrey"
-                it[name] = "Andrey"
-                it[cityId] = saintPetersburgId
-            }
-
-            Users.insert {
-                it[id] = "sergey"
-                it[name] = "Sergey"
-                it[cityId] = munichId
-            }
-
-            Users.insert {
-                it[id] = "eugene"
-                it[name] = "Eugene"
-                it[cityId] = munichId
-            }
-
-            Users.insert {
-                it[id] = "alex"
-                it[name] = "Alex"
-                it[cityId] = null
-            }
-
-            Users.insert {
-                it[id] = "smth"
-                it[name] = "Something"
-                it[cityId] = null
-            }
-
-            UserData.insert {
-                it[user_id] = "smth"
-                it[comment] = "Something is here"
-                it[value] = 10
-            }
-
-            UserData.insert {
-                it[user_id] = "smth"
-                it[comment] = "Comment #2"
-                it[value] = 20
-            }
-
-            UserData.insert {
-                it[user_id] = "eugene"
-                it[comment] = "Comment for Eugene"
-                it[value] = 20
-            }
-
-            UserData.insert {
-                it[user_id] = "sergey"
-                it[comment] = "Comment for Sergey"
-                it[value] = 30
-            }
-
-            statement(Cities, Users, UserData)
+        Cities.insert {
+            it[name] = "Prague"
         }
+
+        Users.insert {
+            it[id] = "andrey"
+            it[name] = "Andrey"
+            it[cityId] = saintPetersburgId
+        }
+
+        Users.insert {
+            it[id] = "sergey"
+            it[name] = "Sergey"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "eugene"
+            it[name] = "Eugene"
+            it[cityId] = munichId
+        }
+
+        Users.insert {
+            it[id] = "alex"
+            it[name] = "Alex"
+            it[cityId] = null
+        }
+
+        Users.insert {
+            it[id] = "smth"
+            it[name] = "Something"
+            it[cityId] = null
+        }
+
+        UserData.insert {
+            it[user_id] = "smth"
+            it[comment] = "Something is here"
+            it[value] = 10
+        }
+
+        UserData.insert {
+            it[user_id] = "smth"
+            it[comment] = "Comment #2"
+            it[value] = 20
+        }
+
+        UserData.insert {
+            it[user_id] = "eugene"
+            it[comment] = "Comment for Eugene"
+            it[value] = 20
+        }
+
+        UserData.insert {
+            it[user_id] = "sergey"
+            it[comment] = "Comment for Sergey"
+            it[value] = 30
+        }
+
+        statement(Cities, Users, UserData)
     }
+}
+
+class DMLTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdate01() {
@@ -451,43 +452,6 @@ class DMLTests : DatabaseTestsBase() {
                     else -> error("Unknow city $cityName")
                 }
             }
-        }
-    }
-
-    @Test
-    fun `test_github_issue_379_count_alias_ClassCastException`() {
-        val Stables = object : UUIDTable("Stables") {
-            val name = varchar("name", 256).uniqueIndex()
-        }
-
-        val Facilities = object : UUIDTable("Facilities") {
-            val stableId = reference("stable_id", Stables)
-            val name = varchar("name", 256)
-        }
-
-        withTables(Facilities, Stables) {
-            val stable1Id = Stables.insertAndGetId {
-                it[Stables.name] = "Stables1"
-            }
-            Stables.insertAndGetId {
-                it[Stables.name] = "Stables2"
-            }
-            Facilities.insertAndGetId {
-                it[Facilities.stableId] = stable1Id
-                it[Facilities.name] = "Facility1"
-            }
-            val fcAlias = Facilities.name.count().alias("fc")
-            val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
-            val sliceColumns = Stables.columns + fAlias[fcAlias]
-            val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
-                    .slice(sliceColumns)
-                    .selectAll()
-                    .groupBy(*sliceColumns.toTypedArray()).map {
-                        it[Stables.name] to it[fAlias[fcAlias]]
-                    }.toMap()
-            assertEquals(2, stats.size)
-            assertEquals(1, stats["Stables1"])
-            assertNull(stats["Stables2"])
         }
     }
 
@@ -1539,32 +1503,6 @@ class DMLTests : DatabaseTestsBase() {
 
             val ucase = DMLTestsData.Cities.name.upperCase()
             assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
-        }
-    }
-
-    @Test
-    fun testJoinSubQuery01() {
-        withCitiesAndUsers { cities, users, userData ->
-            val expAlias = users.name.max().alias("m")
-            val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
-            val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
-            assertEquals(3, resultRows.size)
-        }
-    }
-
-    @Test
-    fun testJoinSubQuery02() {
-        withCitiesAndUsers { cities, users, userData ->
-            val expAlias = users.name.max().alias("m")
-
-            val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
-                users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId)
-            }
-            val innerExp = query.lastQueryAlias!![expAlias]
-
-            assertEquals("q0", query.lastQueryAlias?.alias)
-            assertEquals(3, query.selectAll().count())
-            assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
         }
     }
 

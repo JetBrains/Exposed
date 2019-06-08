@@ -565,12 +565,53 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         wrapRow(it)
     }
 
+    fun wrapRows(rows: SizedIterable<ResultRow>, alias: Alias<IdTable<*>>) = rows mapLazy {
+        wrapRow(it, alias)
+    }
+
+    fun wrapRows(rows: SizedIterable<ResultRow>, alias: QueryAlias) = rows mapLazy {
+        wrapRow(it, alias)
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow) : T {
         val entity = wrap(row[table.id], row)
         if (entity._readValues == null)
             entity._readValues = row
 
         return entity
+    }
+
+    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>) : T {
+        require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected"}
+        val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
+            val column = exp as? Column<*>
+            val value = row[exp]
+            val originalColumn = column?.let { alias.originalColumn(it) }
+            when {
+                originalColumn != null -> originalColumn to value
+                column?.table == alias.delegate -> null
+                else -> exp to value
+            }
+        }.toMap()
+        return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
+    }
+
+    fun wrapRow(row: ResultRow, alias: QueryAlias) : T {
+        require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table"}
+        val originalColumns = alias.query.set.source.columns
+        val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
+            val value = row[exp]
+            when {
+                exp is Column && exp.table is Alias<*> -> {
+                    val column = originalColumns.single { exp.table.delegate == it.table && exp.name == it.name }
+                    column to value
+                }
+                exp is Column && exp.table == table -> null
+                else -> exp to value
+            }
+        }.toMap()
+        return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
     }
 
     open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
@@ -818,6 +859,7 @@ private fun <SRC: Entity<*>> filterRelationsForEntity(entity: SRC, relations: Ar
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
+@Suppress("UNCHECKED_CAST")
 private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relations: KProperty1<out Entity<*>, Any?>,
                                                                    nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
     val entity              = this.firstOrNull() ?: return
@@ -873,7 +915,7 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
                 } as List<Entity<Int>>
             }.groupBy { it::class }
 
-            relationsToLoad.forEach { _, entities ->
+            relationsToLoad.forEach { (_, entities) ->
                 entities.preloadRelations(*remainingRelations.toTypedArray() as Array<out KProperty1<Entity<*>, Any?>>, nodesVisited = nodesVisited)
             }
         }
