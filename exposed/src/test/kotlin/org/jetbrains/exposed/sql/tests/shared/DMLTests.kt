@@ -612,7 +612,7 @@ class DMLTests : DatabaseTestsBase() {
                 assertEquals("Andrey", it["St. Petersburg"])
                 when (currentDialect) {
                     is MariaDBDialect -> assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
-                    is MysqlDialect, is SQLServerDialect -> assertEquals("Eugene | Sergey", it["Munich"])
+                    is MysqlDialect, is SQLServerDialect, is H2Dialect -> assertEquals("Eugene | Sergey", it["Munich"])
                     else -> assertEquals("Sergey | Eugene", it["Munich"])
                 }
                 assertNull(it["Prague"])
