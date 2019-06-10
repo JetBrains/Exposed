@@ -10,7 +10,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 }
 
-internal object MysqlFunctionProvider : FunctionProvider() {
+internal open class MysqlFunctionProvider : FunctionProvider() {
+    internal object INSTANSE : MysqlFunctionProvider()
 
     private object CharColumnType : StringColumnType() {
         override fun sqlType(): String = "CHAR"
@@ -64,7 +65,7 @@ internal object MysqlFunctionProvider : FunctionProvider() {
     }
 }
 
-open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider) {
+open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANSE) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         val expression = e.toSQL(QueryBuilder(false)).trim()
