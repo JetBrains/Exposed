@@ -21,8 +21,10 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
     }),
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
     MYSQL({
-        System.getProperty("exposed.test.mysql.host")?.let { dockerHost ->
-            "jdbc:mysql://$dockerHost:${System.getProperty("exposed.test.mysql.port")!!}/testdb?useSSL=false"
+        val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
+        val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
+        host?.let { dockerHost ->
+            "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false"
         } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
     },
         driver = "com.mysql.jdbc.Driver",
