@@ -131,9 +131,14 @@ class GreaterOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1
 class GreaterEqOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, ">=")
 class LikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "LIKE")
 class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT LIKE")
-class RegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "REGEXP")
+
+@Deprecated("Use not(RegexpOp()) instead", level = DeprecationLevel.ERROR)
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
 class AndOp(expr1: Expression<Boolean>, expr2: Expression<Boolean>) : ComparisonOp(expr1, expr2, "AND")
+class RegexpOp<T:String?>(val expr1: Expression<T>, val expr2: Expression<String>, val caseSensitive: Boolean) : Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String
+            = currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
+}
 
 class OrOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<Boolean>() {
     override fun toSQL(queryBuilder: QueryBuilder) : String = buildString {

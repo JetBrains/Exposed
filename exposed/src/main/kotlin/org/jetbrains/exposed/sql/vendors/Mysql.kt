@@ -44,12 +44,19 @@ internal object MysqlFunctionProvider : FunctionProvider() {
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
+    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
+        return if((currentDialect as MysqlDialect).isMysql8)
+            super.regexp(expr1, pattern, caseSensitive, queryBuilder)
+        else
+            "${expr1.toSQL(queryBuilder)} REGEXP ${pattern.toSQL(queryBuilder)}"
+    }
+
     private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toSQL(queryBuilder: QueryBuilder): String =
                 "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
     }
 
-    private enum class MysqlMatchMode(val operator: String) : FunctionProvider.MatchMode {
+    private enum class MysqlMatchMode(val operator: String) : MatchMode {
         STRICT("IN BOOLEAN MODE"),
         NATURAL_LANGUAGE("IN NATURAL LANGUAGE MODE");
 
@@ -118,6 +125,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
             "ALTER TABLE $tableName DROP INDEX $indexName"
 
     fun isFractionDateTimeSupported() = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
+
+    internal val isMysql8 by lazy {
+        TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
+    }
 
     companion object {
         const val dialectName = "mysql"

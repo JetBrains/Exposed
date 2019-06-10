@@ -69,6 +69,15 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             else -> "STRING_AGG(${expr.expr.toSQL(queryBuilder)}, '${expr.separator}')"
         }
     }
+
+    override fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = buildString {
+        append(expr1.toSQL(queryBuilder))
+        if (caseSensitive)
+            append(" ~ ")
+        else
+            append(" ~* ")
+        append(pattern.toSQL(queryBuilder))
+    }
 }
 
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {

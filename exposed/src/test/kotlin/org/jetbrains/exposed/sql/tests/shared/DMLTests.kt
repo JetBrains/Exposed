@@ -1861,6 +1861,24 @@ class DMLTests : DatabaseTestsBase() {
             assertEqualLists(listOf(bar, foo), OrderedData.all().orderBy(OrderedDataTable.order to SortOrder.ASC).toList())
         }
     }
+
+    @Test fun testRegexp01() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+            assertEquals(2, users.select { users.id regexp "a.+" }.count())
+            assertEquals(1, users.select { users.id regexp "an.+" }.count())
+            assertEquals(users.selectAll().count(), users.select { users.id regexp ".*" }.count())
+            assertEquals(2, users.select { users.id regexp ".+y" }.count())
+        }
+    }
+
+    @Test fun testRegexp02() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+            assertEquals(2, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
+            assertEquals(1, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
+            assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
+            assertEquals(2, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
+        }
+    }
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()

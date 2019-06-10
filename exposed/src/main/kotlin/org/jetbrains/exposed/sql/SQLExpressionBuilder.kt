@@ -137,9 +137,15 @@ object SqlExpressionBuilder {
     @JvmName("notLikeWithEntityID")
     infix fun ExpressionWithColumnType<EntityID<String>>.notLike(pattern: String): Op<Boolean> = NotLikeOp(this, QueryParameter(pattern, columnType))
 
-    infix fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> = RegexpOp(this, QueryParameter(pattern, columnType))
+    /*
+     * Function will apply case-sensitive regexp function
+     */
+    infix fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> = RegexpOp(this, QueryParameter(pattern, columnType), true)
 
-    infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = NotRegexpOp(this, QueryParameter(pattern, columnType))
+    fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: Expression<String>, caseSensitive: Boolean = true): Op<Boolean> = RegexpOp(this, pattern, caseSensitive)
+
+    @Deprecated("Use not(RegexpOp()) instead", level = DeprecationLevel.ERROR)
+    infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = TODO()
 
     infix fun<T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
 

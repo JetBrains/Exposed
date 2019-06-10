@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -41,6 +42,10 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             else -> super.groupConcat(expr, queryBuilder).replace(" SEPARATOR ", ", ")
         }
 
+    }
+
+    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
+        TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression")
     }
 }
 

@@ -125,6 +125,18 @@ abstract class FunctionProvider {
         append(")")
     }
 
+    open fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = buildString {
+        append("REGEXP_LIKE(")
+        append(expr1.toSQL(queryBuilder))
+        append(", ")
+        append(pattern.toSQL(queryBuilder))
+        append(", ")
+        if (caseSensitive)
+            append("'c'")
+        else
+            append("'i'")
+        append(")")
+    }
     interface MatchMode {
         fun mode() : String
     }
