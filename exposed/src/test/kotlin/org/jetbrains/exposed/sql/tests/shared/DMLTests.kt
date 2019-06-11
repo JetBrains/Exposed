@@ -789,83 +789,6 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCalc01() {
-        withCitiesAndUsers { cities, users, userData ->
-            val r = cities.slice(cities.id.sum()).selectAll().toList()
-            assertEquals(1, r.size)
-            assertEquals(6, r[0][cities.id.sum()])
-        }
-    }
-
-    @Test
-    fun testCalc02() {
-        withCitiesAndUsers { cities, users, userData ->
-            val sum = Expression.build {
-                Sum(cities.id + userData.value, IntegerColumnType())
-            }
-            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
-                .selectAll().groupBy(users.id).orderBy(users.id).toList()
-            assertEquals(2, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals(22, r[0][sum])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals(32, r[1][sum])
-        }
-    }
-
-    @Test
-    fun testCalc03() {
-        withCitiesAndUsers { cities, users, userData ->
-            val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
-            val mod1 = Expression.build { sum % 100 }
-            val mod2 = Expression.build { sum mod 100 }
-            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum, mod1, mod1)
-                .selectAll().groupBy(users.id).orderBy(users.id).toList()
-            assertEquals(2, r.size)
-            assertEquals("eugene", r[0][users.id])
-            assertEquals(202, r[0][sum])
-            assertEquals(2, r[0][mod1])
-            assertEquals(2, r[0][mod2])
-            assertEquals("sergey", r[1][users.id])
-            assertEquals(203, r[1][sum])
-            assertEquals(3, r[1][mod1])
-            assertEquals(3, r[1][mod2])
-        }
-    }
-
-    @Test
-    fun testSubstring01() {
-        withCitiesAndUsers { cities, users, userData ->
-            val substring = users.name.substring(1, 2)
-            val r = (users).slice(users.id, substring)
-                .selectAll().orderBy(users.id).toList()
-            assertEquals(5, r.size)
-            assertEquals("Al", r[0][substring])
-            assertEquals("An", r[1][substring])
-            assertEquals("Eu", r[2][substring])
-            assertEquals("Se", r[3][substring])
-            assertEquals("So", r[4][substring])
-        }
-    }
-
-    @Test
-    fun testLengthWithCount01() {
-        class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
-            override fun toSQL(queryBuilder: QueryBuilder): String
-                = if (currentDialect is SQLServerDialect) "LEN(${exp.toSQL(queryBuilder)})"
-                else "LENGTH(${exp.toSQL(queryBuilder)})"
-        }
-        withCitiesAndUsers { cities, _, _ ->
-            val sumOfLength = LengthFunction(cities.name).sum()
-            val expectedValue = cities.selectAll().sumBy{ it[cities.name].length }
-
-            val results = cities.slice(sumOfLength).selectAll().toList()
-            assertEquals(1, results.size)
-            assertEquals(expectedValue, results.single()[sumOfLength])
-        }
-    }
-
-    @Test
     fun testInsertSelect01() {
         withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val substring = users.name.substring(1, 2)
@@ -906,19 +829,6 @@ class DMLTests : DatabaseTestsBase() {
             users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
             val r = users.select { users.name eq "Foo" }.toList()
             assertEquals(userCount, r.size)
-        }
-    }
-
-    @Test
-    fun testSelectCase01() {
-        withCitiesAndUsers { cities, users, userData ->
-            val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
-            val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
-            assertEquals(2, r.size)
-            assertEquals("11", r[0][field])
-            assertEquals("alex", r[0][users.id])
-            assertEquals("22", r[1][field])
-            assertEquals("andrey", r[1][users.id])
         }
     }
 
@@ -1495,18 +1405,6 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testStringFunctions() {
-        withCitiesAndUsers { cities, users, userData ->
-
-            val lcase = DMLTestsData.Cities.name.lowerCase()
-            assert(cities.slice(lcase).selectAll().any { it[lcase] == "prague" })
-
-            val ucase = DMLTestsData.Cities.name.upperCase()
-            assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
-        }
-    }
-
-    @Test
     fun testJoinWithAdditionalConstraint() {
         withCitiesAndUsers { cities, users, userData ->
             val usersAlias = users.alias("name")
@@ -1571,21 +1469,6 @@ class DMLTests : DatabaseTestsBase() {
             val result2 = foo.select { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
-        }
-    }
-
-    @Test
-    fun testRandomFunction01() {
-        val t = DMLTestsData.Cities
-        withTables(t) {
-            if (t.selectAll().count() == 0) {
-                t.insert { it[t.name] = "city-1" }
-            }
-
-            val rand = Random()
-            val resultRow = t.slice(rand).selectAll().limit(1).single()
-            assert(resultRow[rand] is BigDecimal)
-            println(resultRow[rand])
         }
     }
 
@@ -1859,24 +1742,6 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             assertEqualLists(listOf(bar, foo), OrderedData.all().orderBy(OrderedDataTable.order to SortOrder.ASC).toList())
-        }
-    }
-
-    @Test fun testRegexp01() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            assertEquals(2, users.select { users.id regexp "a.+" }.count())
-            assertEquals(1, users.select { users.id regexp "an.+" }.count())
-            assertEquals(users.selectAll().count(), users.select { users.id regexp ".*" }.count())
-            assertEquals(2, users.select { users.id regexp ".+y" }.count())
-        }
-    }
-
-    @Test fun testRegexp02() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            assertEquals(2, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
-            assertEquals(1, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
-            assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
-            assertEquals(2, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
         }
     }
 }
