@@ -1,3 +1,16 @@
+# 0.14.3
+Features:
+* Now it's possible to create Entities from aliased tables/queries. Corresponded `wrapRow/wrapRows` functions were added to `EntityClass` ([#404](https://github.com/JetBrains/Exposed/issues/404))
+* Support for `regexp` function (both case-sensitive/insensitive) was provided on every database which provided it
+* `concat` function was introduced
+
+Performance optimizations:
+* Unnecessary string escaping in `registerArguments` was removed when used prepared statements 
+
+Infrastructure:
+* Mysql 8.0 tests added
+* Oracle tests were reanimated
+
 # 0.14.2
 Deprecations:
 * `InsertStatement.generatedKey` field removed
