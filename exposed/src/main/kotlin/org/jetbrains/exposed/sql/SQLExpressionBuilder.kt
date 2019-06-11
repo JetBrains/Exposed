@@ -180,4 +180,7 @@ object SqlExpressionBuilder {
     }
 
     infix fun <T: String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
+
+    fun <T:String?> concat(vararg expr: Expression<T>) = Concat("", *expr)
+    fun <T:String?> concat(separator: String = "", expr: List<Expression<T>>) = Concat(separator, *expr.toTypedArray())
 }

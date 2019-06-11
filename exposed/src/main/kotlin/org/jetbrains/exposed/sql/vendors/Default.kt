@@ -137,8 +137,22 @@ abstract class FunctionProvider {
             append("'i'")
         append(")")
     }
+
     interface MatchMode {
         fun mode() : String
+    }
+
+    open fun <T:String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+        if (separator == "")
+            append("CONCAT(")
+        else {
+            append("CONCAT_WS(")
+            append("'")
+            append(separator)
+            append("',")
+        }
+        expr.joinTo(this) { it.toSQL(queryBuilder) }
+        append(")")
     }
 }
 

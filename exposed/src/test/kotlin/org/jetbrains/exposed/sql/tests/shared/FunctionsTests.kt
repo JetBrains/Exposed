@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.mod
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
@@ -149,6 +150,30 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals(1, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
             assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
             assertEquals(2, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
+        }
+    }
+
+    @Test fun testConcat01() {
+        withCitiesAndUsers { cities, _, _ ->
+            val concatField = concat(stringLiteral("Foo"), stringLiteral("Bar"))
+            val result = cities.slice(concatField).selectAll().limit(1).single()
+            assertEquals("FooBar", result[concatField])
+
+            val concatField2 = concat("!", listOf(stringLiteral("Foo"), stringLiteral("Bar")))
+            val result2 = cities.slice(concatField2).selectAll().limit(1).single()
+            assertEquals("Foo!Bar", result2[concatField2])
+        }
+    }
+
+    @Test fun testConcat02() {
+        withCitiesAndUsers { _, users, _ ->
+            val concatField = concat(users.id, stringLiteral(" - "), users.name)
+            val result = users.slice(concatField).select{ users.id eq "andrey" }.single()
+            assertEquals("andrey - Andrey", result[concatField])
+
+            val concatField2 = concat("!", listOf(users.id, users.name))
+            val result2 = users.slice(concatField2).select{ users.id eq "andrey" }.single()
+            assertEquals("andrey!Andrey", result2[concatField2])
         }
     }
 }

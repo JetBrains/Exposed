@@ -47,6 +47,13 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
         TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression")
     }
+
+    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+        if (separator == "")
+            expr.joinTo(this, separator = " || ") { it.toSQL(queryBuilder) }
+        else
+            expr.joinTo(this, separator = " || '$separator' || ") { it.toSQL(queryBuilder) }
+    }
 }
 
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
