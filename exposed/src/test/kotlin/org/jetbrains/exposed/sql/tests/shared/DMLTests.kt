@@ -1507,6 +1507,30 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCustomStringFunctions() {
+        withCitiesAndUsers { cities, users, userData ->
+            val customLower = DMLTestsData.Cities.name.function("lower")
+            assert(cities.slice(customLower).selectAll().any { it[customLower] == "prague" })
+
+            val customUpper = DMLTestsData.Cities.name.function("UPPER")
+            assert(cities.slice(customUpper).selectAll().any { it[customUpper] == "PRAGUE" })
+        }
+    }
+
+    @Test
+    fun testCustomIntegerFunctions() {
+        withCitiesAndUsers { cities, users, userData ->
+            val ids = cities.selectAll().map { it[DMLTestsData.Cities.id] }.toList()
+            kotlin.assert(ids == listOf(1,2,3)) { ids }
+
+            val sqrt = DMLTestsData.Cities.id.function("SQRT")
+            val sqrtIds = cities.slice(sqrt).selectAll().map { it[sqrt] }.toList()
+            val res= sqrtIds == listOf(1,1,1)
+            assert(res) {sqrtIds}
+        }
+    }
+
+    @Test
     fun testJoinWithAdditionalConstraint() {
         withCitiesAndUsers { cities, users, userData ->
             val usersAlias = users.alias("name")
