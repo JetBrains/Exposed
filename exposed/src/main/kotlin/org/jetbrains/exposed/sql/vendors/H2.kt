@@ -20,7 +20,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     internal val isMySQLMode: Boolean get() = currentMode() == "MySQL"
 
     private fun dbReleaseDate(transaction: Transaction) : DateTime {
-        val releaseDate = transaction.db.metadata.databaseProductVersion.substringAfterLast('(').substringBeforeLast(')')
+        val releaseDate = transaction.db.metadata { databaseProductVersion.substringAfterLast('(').substringBeforeLast(')') }
         return DateTime.parse(releaseDate)
     }
 

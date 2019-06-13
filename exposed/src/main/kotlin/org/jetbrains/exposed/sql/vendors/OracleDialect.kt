@@ -112,25 +112,29 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun allTablesNames(): List<String> {
         val result = ArrayList<String>()
         val tr = TransactionManager.current()
-        val resultSet = tr.db.metadata.getTables(null, getDatabase(), null, arrayOf("TABLE"))
+        return tr.db.metadata {
+            val resultSet = getTables(null, getDatabase(), null, arrayOf("TABLE"))
 
-        while (resultSet.next()) {
-            result.add(resultSet.getString("TABLE_NAME").inProperCase)
+            while (resultSet.next()) {
+                result.add(resultSet.getString("TABLE_NAME").inProperCase)
+            }
+            resultSet.close()
+            result
         }
-        resultSet.close()
-        return result
     }
 
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs = TransactionManager.current().db.metadata.getColumns(null, getDatabase(), "%", "%")
-        val result = rs.extractColumns(tables) {
-            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME"), it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
+        return TransactionManager.current().db.metadata {
+            val rs = getColumns(null, getDatabase(), "%", "%")
+            val result = rs.extractColumns(tables) {
+                it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME"), it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
+            }
+            rs.close()
+            result
         }
-        rs.close()
-        return result
     }
 
     companion object {

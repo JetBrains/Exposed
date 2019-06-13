@@ -230,15 +230,16 @@ abstract class VendorDialect(override val name: String,
 
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> {
-        val result = ArrayList<String>()
         val tr = TransactionManager.current()
-        val resultSet = tr.db.metadata.getTables(getDatabase(), null, "%", arrayOf("TABLE"))
-
-        while (resultSet.next()) {
-            result.add(resultSet.getString("TABLE_NAME").inProperCase)
+        return tr.db.metadata {
+            val result = ArrayList<String>()
+            val resultSet = getTables(getDatabase(), null, "%", arrayOf("TABLE"))
+            while (resultSet.next()) {
+                result.add(resultSet.getString("TABLE_NAME").inProperCase)
+            }
+            resultSet.close()
+            result
         }
-        resultSet.close()
-        return result
     }
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
@@ -260,7 +261,7 @@ abstract class VendorDialect(override val name: String,
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val tr = TransactionManager.current()
-        val rs = tr.db.metadata.getColumns(getDatabase(), null, "%", "%")
+        val rs = tr.db.metadata { getColumns(getDatabase(), null, "%", "%") }
         val result = rs.extractColumns(tables) {
             it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
         }
@@ -280,7 +281,7 @@ abstract class VendorDialect(override val name: String,
 
         tables.map{ it.nameInDatabaseCase() }.forEach { table ->
             columnConstraintsCache.getOrPut(table) {
-                val rs = tr.db.metadata.getImportedKeys(getDatabase(), null, table)
+                val rs = tr.db.metadata { getImportedKeys(getDatabase(), null, table) }
                 val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
                 while (rs.next()) {
                     val fromTableName = rs.getString("FKTABLE_NAME")!!
@@ -314,7 +315,7 @@ abstract class VendorDialect(override val name: String,
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
-            val metadata = transaction.db.metadata
+            val metadata = transaction.db.metadata{ this }
 
             existingIndicesCache.getOrPut(table) {
                 val pkNames = metadata.getPrimaryKeys(getDatabase(), null, tableName).let { rs ->
@@ -372,7 +373,7 @@ abstract class VendorDialect(override val name: String,
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata.supportsSelectForUpdate() }
+    private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate() } }
     override fun supportsSelectForUpdate() = supportsSelectForUpdate
 
     override val supportsMultipleGeneratedKeys: Boolean = true

@@ -15,16 +15,20 @@ import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
 
-    internal val metadata: DatabaseMetaData get() = TransactionManager.currentOrNull()?.connection?.metaData ?: with(connector()) {
-        try {
-            metaData
-        }
-        finally {
-            close()
-        }
+    internal fun <T> metadata(body: DatabaseMetaData.() -> T) : T {
+        val transaction = TransactionManager.currentOrNull()
+        return if (transaction == null) {
+            val connection = connector()
+            try {
+                connection.metaData.body()
+            } finally {
+                connection.close()
+            }
+        } else
+            transaction.connection.metaData.body()
     }
 
-    val url: String by lazy { metadata.url }
+    val url: String by lazy { metadata { url } }
 
     val dialect by lazy {
         val name = url.removePrefix("jdbc:").substringBefore(':')
@@ -34,26 +38,15 @@ class Database private constructor(val connector: () -> Connection) {
     val vendor: String get() = dialect.name
 
     val version by lazy {
-        metadata.let { BigDecimal("${it.databaseMajorVersion}.${it.databaseMinorVersion}") }
+        metadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
     }
 
     fun isVersionCovers(version: BigDecimal) = this.version >= version
 
-    val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsAlterTableWithAddColumn() }
-    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata.supportsMultipleResultSets() }
+    val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsAlterTableWithAddColumn() } }
+    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsMultipleResultSets() } }
 
-    internal val identifierManager by lazy {
-        // SQLServer driver closes metadata object when related connection close
-        if (dialect is SQLServerDialect && TransactionManager.currentOrNull() == null) {
-            val connection = connector()
-            try {
-                IdentifierManager(connection.metaData)
-            } finally {
-                connection.close()
-            }
-        } else
-            IdentifierManager(metadata)
-    }
+    internal val identifierManager by lazy { metadata { IdentifierManager(this) } }
 
     internal class IdentifierManager(metadata: DatabaseMetaData) {
         internal val quoteString = metadata.identifierQuoteString!!.trim()
