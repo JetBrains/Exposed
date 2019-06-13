@@ -1,8 +1,13 @@
+# 0.14.4
+Bug Fixes:
+* `concat` function doesn't work with Oracle ([#509](https://github.com/JetBrains/Exposed/issues/509))
+* SQLServer metadata already closed issues ([#580](https://github.com/JetBrains/Exposed/issues/580))
+
 # 0.14.3
 Features:
 * Now it's possible to create Entities from aliased tables/queries. Corresponded `wrapRow/wrapRows` functions were added to `EntityClass` ([#404](https://github.com/JetBrains/Exposed/issues/404))
 * Support for `regexp` function (both case-sensitive/insensitive) was provided on every database which provided it
-* `concat` function was introduced
+* `concat` function was introduced ([#509](https://github.com/JetBrains/Exposed/issues/509))
 
 Performance optimizations:
 * Unnecessary string escaping in `registerArguments` was removed when used prepared statements 
