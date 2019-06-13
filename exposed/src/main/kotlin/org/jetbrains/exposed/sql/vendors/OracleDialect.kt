@@ -93,6 +93,13 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("${col.toSQL(queryBuilder)} ${order.name}")
         append(")")
     }
+
+    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+        if (separator == "")
+            expr.joinTo(this, separator = " || ") { it.toSQL(queryBuilder) }
+        else
+            expr.joinTo(this, separator = " || '$separator' || ") { it.toSQL(queryBuilder) }
+    }
 }
 
 open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, OracleFunctionProvider) {
