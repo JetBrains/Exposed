@@ -78,13 +78,15 @@ class DDLTests : DatabaseTestsBase() {
             val camelCased = varchar("camelCased", 255).index()
         }
 
-        withDb(TestDB.H2) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            try {
+        withDb {
+            if (!db.url.startsWith("jdbc:mysql:mxj")) {
                 SchemaUtils.createMissingTablesAndColumns(TestTable)
-            } finally {
-                SchemaUtils.drop(TestTable)
+                assertTrue(TestTable.exists())
+                try {
+                    SchemaUtils.createMissingTablesAndColumns(TestTable)
+                } finally {
+                    SchemaUtils.drop(TestTable)
+                }
             }
         }
     }
