@@ -1744,6 +1744,16 @@ class DMLTests : DatabaseTestsBase() {
             assertEqualLists(listOf(bar, foo), OrderedData.all().orderBy(OrderedDataTable.order to SortOrder.ASC).toList())
         }
     }
+
+    // https://github.com/JetBrains/Exposed/issues/581
+    @Test fun sameColumnUsedInSliceMultipleTimes() {
+        withCitiesAndUsers { city, _, _ ->
+            val row = city.slice(city.name, city.name, city.id).select { city.name eq "Munich" }.toList().single()
+            assertEquals(2, row[city.id])
+            assertEquals("Munich", row[city.name])
+        }
+    }
+
 }
 
 private val today: DateTime = DateTime.now().withTimeAtStartOfDay()

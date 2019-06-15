@@ -35,8 +35,8 @@ abstract class ColumnSet : FieldSet {
     abstract fun leftJoin(otherTable: ColumnSet) : Join
     abstract fun crossJoin(otherTable: ColumnSet) : Join
 
-    fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, listOf(*columns))
-    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
+    fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.distinct())
+    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns.distinct())
 }
 
 fun <C1:ColumnSet, C2:ColumnSet> C1.innerJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
