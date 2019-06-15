@@ -178,8 +178,8 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCustomStringFunctions() {
-        withCitiesAndUsers { cities, users, userData ->
+    fun testCustomStringFunctions01() {
+        withCitiesAndUsers { cities, _, _ ->
             val customLower = DMLTestsData.Cities.name.function("lower")
             assert(cities.slice(customLower).selectAll().any { it[customLower] == "prague" })
 
@@ -189,15 +189,32 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCustomIntegerFunctions() {
-        withCitiesAndUsers { cities, users, userData ->
+    fun testCustomStringFunctions02() {
+        withCitiesAndUsers { cities, _, _ ->
+            val replace = CustomStringFunction("REPLACE", cities.name, stringParam("gue"), stringParam("foo"))
+            val result = cities.slice(replace).select { cities.name eq "Prague" }.singleOrNull()
+            assertEquals("Prafoo", result?.get(replace))
+        }
+    }
+
+    @Test
+    fun testCustomIntegerFunctions01() {
+        withCitiesAndUsers { cities, _, _ ->
             val ids = cities.selectAll().map { it[DMLTestsData.Cities.id] }.toList()
-            kotlin.assert(ids == listOf(1,2,3)) { ids }
+            assertEqualCollections(listOf(1,2,3), ids)
 
             val sqrt = DMLTestsData.Cities.id.function("SQRT")
             val sqrtIds = cities.slice(sqrt).selectAll().map { it[sqrt] }.toList()
-            val res= sqrtIds == listOf(1,1,1)
-            assert(res) {sqrtIds}
+            assertEqualCollections(listOf(1,1,1), sqrtIds)
+        }
+    }
+
+    @Test
+    fun testCustomIntegerFunctions02() {
+        withCitiesAndUsers { cities, _, _ ->
+            val power = CustomLongFunction("POWER", cities.id, intParam(2))
+            val ids = cities.slice(power).selectAll().map { it[power] }
+            assertEqualCollections(listOf(1L,4L,9L), ids)
         }
     }
 }

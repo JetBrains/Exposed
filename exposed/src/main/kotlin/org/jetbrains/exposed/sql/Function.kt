@@ -23,8 +23,13 @@ class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     }
 }
 
-class CustomFunction1<T: Any?>(val expr: Expression<T>, _columnType: IColumnType, val functionName : String) : Function<T?>(_columnType) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "$functionName(${expr.toSQL(queryBuilder)})"
+open class CustomFunction<T>(val functionName: String, _columnType: IColumnType, vararg val expr: Expression<*>) : Function<T>(_columnType) {
+    override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
+        append(functionName)
+        append('(')
+        expr.joinTo(this) { it.toSQL(queryBuilder) }
+        append(')')
+    }
 }
 
 class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {

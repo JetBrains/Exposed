@@ -41,7 +41,11 @@ fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
 
 fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
 fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
-fun<T:Any?> ExpressionWithColumnType<T>.function(functionName: String) : Function<T?> = CustomFunction1(this, this.columnType, functionName)
+
+fun<T:Any?> ExpressionWithColumnType<T>.function(functionName: String) : Function<T?> = CustomFunction(functionName, columnType, this)
+fun CustomStringFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<String?>(functionName, VarCharColumnType(), *params)
+fun CustomLongFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<Long?>(functionName, LongColumnType(), *params)
+fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
 
 fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Pair<Expression<*>,SortOrder>): GroupConcat<T> =
         GroupConcat(this, separator, distinct, orderBy)
