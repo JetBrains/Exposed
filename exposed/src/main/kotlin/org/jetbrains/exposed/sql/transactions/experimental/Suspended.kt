@@ -22,10 +22,21 @@ suspend fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, 
 
 
 suspend fun <T> suspendedTransaction(context: CoroutineContext? = null, db: Database? = null, statement: Transaction.() -> T): T {
-    val threadLocalManager = (db?.let { TransactionManager.managerFor(it) } ?: TransactionManager.manager) as? ThreadLocalTransactionManager
+    val manager = db?.let { TransactionManager.managerFor(it) } ?: TransactionManager.manager
+    val threadLocalManager = manager as? ThreadLocalTransactionManager
     val currentContext = context ?: coroutineContext
     val scope = threadLocalManager?.let { currentContext + it.threadLocal.asContextElement() } ?: currentContext
     return withContext(scope) {
-        transaction(TransactionManager.manager.defaultIsolationLevel, TransactionManager.manager.defaultRepetitionAttempts, db, statement)
+        transaction(manager.defaultIsolationLevel, manager.defaultRepetitionAttempts, db, statement)
+    }
+}
+
+suspend fun <T> Transaction.suspendedTransaction(context: CoroutineContext? = null, db: Database? = null, statement: Transaction.() -> T): T {
+    val manager = db?.let { TransactionManager.managerFor(it) } ?: TransactionManager.manager
+    val threadLocalManager = manager as? ThreadLocalTransactionManager
+    val currentContext = context ?: coroutineContext
+    val scope = threadLocalManager?.let { currentContext + it.threadLocal.asContextElement(this) } ?: currentContext
+    return withContext(scope) {
+        transaction(manager.defaultIsolationLevel, manager.defaultRepetitionAttempts, db, statement)
     }
 }
