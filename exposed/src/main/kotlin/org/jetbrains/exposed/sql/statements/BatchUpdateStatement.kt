@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Transaction
-import java.sql.PreparedStatement
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.util.*
 
 open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
@@ -40,7 +40,7 @@ open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, n
     override fun prepareSQL(transaction: Transaction): String =
          "${super.prepareSQL(transaction)} WHERE ${transaction.identity(table.id)} = ?"
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = data.map { (id, row) ->
         firstDataSet.map { it.first.columnType to row[it.first] } + (table.id.columnType to id)

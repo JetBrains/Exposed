@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.jdbc.PreparedStatementImpl
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
@@ -103,13 +105,13 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
-    protected open fun PreparedStatement.execInsertFunction() : Pair<Int, ResultSet?> {
+    protected open fun PreparedStatementApi.execInsertFunction() : Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
-        val rs = if (autoIncColumns.isNotEmpty()) { generatedKeys } else null
+        val rs = if (autoIncColumns.isNotEmpty()) { resultSet } else null
         return inserted to rs
     }
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         if (flushCache)
             transaction.flushCache()
         transaction.entityCache.removeTablesReferrers(listOf(table))
@@ -123,7 +125,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         it.columnType.isAutoInc || (it.columnType is EntityIDColumnType<*> && !currentDialect.supportsOnlyIdentifiersInGeneratedKeys)
     }
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatement = when {
+    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = PreparedStatementImpl(when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
@@ -135,7 +137,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
         else ->
             transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
-    }
+    })
 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {

@@ -1,13 +1,14 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.PreparedStatement
 
 open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where: Op<Boolean>? = null): UpdateBuilder<Int>(StatementType.UPDATE, targetsSet.targetTables()) {
 
     open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): Int {
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         if (values.isEmpty()) return 0
         transaction.flushCache()
         return executeUpdate().apply {

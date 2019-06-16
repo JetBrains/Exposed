@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.transactions
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import java.sql.Connection
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -10,7 +11,7 @@ interface TransactionInterface {
 
     val db : Database
 
-    val connection: Connection
+    val connection: ExposedConnection
 
     val outerTransaction: Transaction?
 

@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.statements.api.ExposedConnection
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import java.sql.Connection
 import java.sql.SQLException
 
@@ -23,12 +25,12 @@ class ThreadLocalTransactionManager(private val db: Database,
     private class ThreadLocalTransaction(override val db: Database, isolation: Int, val threadLocal: ThreadLocal<Transaction>) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
-            db.connector().apply {
+            JdbcConnectionImpl( db.connector().apply {
                 autoCommit = false
                 transactionIsolation = isolation
-            }
+            })
         }
-        override val connection: Connection
+        override val connection: ExposedConnection
             get() = connectionLazy.value
 
         override val outerTransaction: Transaction? = threadLocal.get()
@@ -131,7 +133,7 @@ fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int
             val currentStatement = transaction.currentStatement
             try {
                 currentStatement?.let {
-                    if(!it.isClosed) it.close()
+                    it.closeIfPossible()
                     transaction.currentStatement = null
                 }
                 transaction.closeExecutedStatements()

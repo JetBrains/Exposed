@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -96,7 +97,7 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false) 
 
     override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
 
-    override fun PreparedStatement.execInsertFunction(): Pair<Int, ResultSet?> {
+    override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         return arguments!!.size to executeQuery()
     }
 }

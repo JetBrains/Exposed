@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.slf4j.LoggerFactory
@@ -51,7 +52,7 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         }
     }
 
-    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatement) {
+    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
         contexts.forEach {
             log(it, transaction)
         }

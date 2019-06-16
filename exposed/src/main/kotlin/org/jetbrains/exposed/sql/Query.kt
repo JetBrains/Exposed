@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.PreparedStatement
@@ -154,7 +155,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
-    override fun PreparedStatement.executeInternal(transaction: Transaction): ResultSet? {
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
         if (fetchSize != null) {
             this.fetchSize = fetchSize

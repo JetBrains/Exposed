@@ -4,6 +4,8 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.jdbc.PreparedStatementImpl
 import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.util.*
@@ -15,14 +17,14 @@ internal object DefaultValueMarker {
 
 abstract class Statement<out T>(val type: StatementType, val targets: List<Table>) {
 
-    abstract fun PreparedStatement.executeInternal(transaction: Transaction): T?
+    abstract fun PreparedStatementApi.executeInternal(transaction: Transaction): T?
 
     abstract fun prepareSQL(transaction: Transaction): String
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
-    open fun prepared(transaction: Transaction, sql: String) : PreparedStatement =
-        transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!
+    open fun prepared(transaction: Transaction, sql: String) : PreparedStatementApi =
+        PreparedStatementImpl(transaction.connection.prepareStatement(sql, PreparedStatement.NO_GENERATED_KEYS)!!)
 
     open val isAlwaysBatch: Boolean = false
 
@@ -111,13 +113,7 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
     }
 }
 
-fun PreparedStatement.fillParameters(args: Iterable<Pair<IColumnType, Any?>>): Int {
-    args.forEachIndexed { index, (c, v) ->
-        c.setParameter(this, index + 1, c.valueToDB(v))
-    }
 
-    return args.count() + 1
-}
 
 enum class StatementGroup {
     DDL, DML

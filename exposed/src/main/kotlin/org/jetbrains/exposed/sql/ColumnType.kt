@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -52,8 +53,8 @@ interface IColumnType {
 
     fun readObject(rs: ResultSet, index: Int): Any? = rs.getObject(index)
 
-    fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
-        stmt.setObject(index, value)
+    fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        stmt[index] = value
     }
 }
 
@@ -346,11 +347,11 @@ class BlobColumnType : ColumnType() {
         else -> error("Unknown type for blob column :${value::class}")
     }
 
-    override fun setParameter(stmt: PreparedStatement, index: Int, value: Any?) {
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
             currentDialect.dataTypeProvider.blobAsStream && value is InputStream ->
-                stmt.setBinaryStream(index, value, value.available())
-            value == null -> stmt.setNull(index, Types.LONGVARBINARY)
+                stmt.setInputStream(index, value)
+            value == null -> stmt.setInputStream(index, value)
             else -> super.setParameter(stmt, index, value)
         }
     }

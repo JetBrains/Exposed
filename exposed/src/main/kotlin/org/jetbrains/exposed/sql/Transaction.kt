@@ -6,10 +6,9 @@ import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,8 +43,8 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     val entityCache = EntityCache()
 
     // currently executing statement. Used to log error properly
-    var currentStatement: PreparedStatement? = null
-    internal val executedStatements: MutableList<PreparedStatement> = arrayListOf()
+    var currentStatement: PreparedStatementApi? = null
+    internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
 
     val statements = StringBuilder()
     // prepare statement as key and count to execution time as value
@@ -96,7 +95,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         } ?: StatementType.OTHER
 
         return exec(object : Statement<T>(type, emptyList()) {
-            override fun PreparedStatement.executeInternal(transaction: Transaction): T? {
+            override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
                     StatementType.SELECT -> executeQuery()
                     else -> {
@@ -166,7 +165,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     fun closeExecutedStatements() {
         executedStatements.forEach {
-            if (!it.isClosed) it.close()
+            it.closeIfPossible()
         }
         executedStatements.clear()
     }

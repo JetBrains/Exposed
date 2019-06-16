@@ -373,7 +373,7 @@ abstract class VendorDialect(override val name: String,
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate() } }
+    private val supportsSelectForUpdate by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
     override fun supportsSelectForUpdate() = supportsSelectForUpdate
 
     override val supportsMultipleGeneratedKeys: Boolean = true
