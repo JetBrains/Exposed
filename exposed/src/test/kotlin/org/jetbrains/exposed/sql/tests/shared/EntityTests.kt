@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
@@ -180,19 +181,19 @@ class EntityTests: DatabaseTestsBase() {
         withTables(EntityTestsData.YTable) {
             val y1 = EntityTestsData.YEntity.new {
                 x = false
-                content = SerialBlob("foo".toByteArray())
+                content = ExposedBlob("foo".toByteArray())
             }
 
             flushCache()
             var y2 = EntityTestsData.YEntity.reload(y1)!!
-            assertEquals(String(y2.content!!.binaryStream.readBytes()), "foo")
+            assertEquals(String(y2.content!!.bytes), "foo")
 
             y2.content = null
             flushCache()
             y2 = EntityTestsData.YEntity.reload(y1)!!
             assertNull(y2.content)
 
-            y2.content = SerialBlob("foo2".toByteArray())
+            y2.content = ExposedBlob("foo2".toByteArray())
             flushCache()
         }
     }

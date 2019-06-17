@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -478,11 +479,12 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val bytes = "Hello there!".toByteArray()
-            val blob = if (currentDialect.dataTypeProvider.blobAsStream) {
-                    SerialBlob(bytes)
-                } else connection.createBlob().apply {
-                    setBytes(1, bytes)
-                }
+            val blob = ExposedBlob(bytes)
+//            if (currentDialect.dataTypeProvider.blobAsStream) {
+//                    SerialBlob(bytes)
+//                } else connection.createBlob().apply {
+//                    setBytes(1, bytes)
+//                }
 
             val id = t.insert {
                 it[t.b] = blob
@@ -490,7 +492,7 @@ class DDLTests : DatabaseTestsBase() {
 
 
             val readOn = t.select { t.id eq id }.first()[t.b]
-            val text = readOn.binaryStream.reader().readText()
+            val text = String(readOn.bytes)//.reader().readText()
 
             assertEquals("Hello there!", text)
         }

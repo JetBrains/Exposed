@@ -10,6 +10,9 @@ class PreparedStatementImpl(val statement: PreparedStatement) : PreparedStatemen
     override val resultSet: ResultSet
         get() = statement.generatedKeys ?: statement.resultSet
 
+    override var fetchSize: Int?
+        get() = statement.fetchSize
+        set(value) { value?.let { statement.fetchSize = value } }
     override fun addBatch() {
         statement.addBatch()
     }

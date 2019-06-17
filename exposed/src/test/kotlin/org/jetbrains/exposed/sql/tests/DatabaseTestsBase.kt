@@ -113,7 +113,7 @@ abstract class DatabaseTestsBase {
         val database = dbSettings.db!!
 
         val connection = database.connector()
-        val transactionIsolation = connection.metaData.defaultTransactionIsolation
+        val transactionIsolation = connection.metadata { defaultIsolationLevel }
         connection.close()
         transaction(transactionIsolation, 1, db = database) {
             statement()

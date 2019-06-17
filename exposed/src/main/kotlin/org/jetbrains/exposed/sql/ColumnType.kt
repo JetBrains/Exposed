@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -335,7 +336,7 @@ class BlobColumnType : ColumnType() {
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         return if (currentDialect.dataTypeProvider.blobAsStream)
-            rs.getBytes(index)?.let { SerialBlob(it) }         
+            rs.getBytes(index)?.let { ExposedBlob(it) }
         else
             rs.getBlob(index)
     }

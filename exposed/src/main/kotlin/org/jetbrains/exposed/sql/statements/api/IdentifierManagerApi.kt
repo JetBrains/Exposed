@@ -12,11 +12,11 @@ internal abstract class IdentifierManagerApi {
     protected abstract val isLowerCaseIdentifiers : Boolean
     protected abstract val isLowerCaseQuotedIdentifiers : Boolean
     protected abstract val supportsMixedIdentifiers : Boolean
-    protected abstract val supportsMixedQuotedIdentifiers: Boolean
+    protected abstract val supportsMixedQuotedIdentifiers : Boolean
     protected abstract val supportsMixedId : Boolean
     protected abstract val supportsQuotedMixedId : Boolean
-    protected abstract val dbKeywords: List<String>
-    val keywords = ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords
+    protected abstract fun dbKeywords() : List<String>
+    val keywords by lazy { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords() }
     protected abstract val extraNameCharacters : String
     protected abstract val isOracle : Boolean
     protected abstract val maxColumnNameLength : Int

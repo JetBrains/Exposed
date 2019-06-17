@@ -25,12 +25,12 @@ class ThreadLocalTransactionManager(private val db: Database,
     private class ThreadLocalTransaction(override val db: Database, isolation: Int, val threadLocal: ThreadLocal<Transaction>) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
-            JdbcConnectionImpl( db.connector().apply {
+            db.connector().apply {
                 autoCommit = false
                 transactionIsolation = isolation
-            })
+            }
         }
-        override val connection: ExposedConnection
+        override val connection: ExposedConnection<*>
             get() = connectionLazy.value
 
         override val outerTransaction: Transaction? = threadLocal.get()

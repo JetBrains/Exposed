@@ -13,7 +13,8 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     override val supportsMixedQuotedIdentifiers = metadata.supportsMixedCaseQuotedIdentifiers()
     override val supportsMixedId = metadata.supportsMixedCaseIdentifiers()
     override val supportsQuotedMixedId = metadata.supportsMixedCaseQuotedIdentifiers()
-    override val dbKeywords: List<String> = metadata.sqlKeywords.split(',')
+    private val _keywords = metadata.sqlKeywords.split(',')
+    override fun dbKeywords(): List<String> = _keywords
     override val extraNameCharacters = metadata.extraNameCharacters!!
     override val isOracle = metadata.databaseProductName == "Oracle"
     override val maxColumnNameLength: Int = metadata.maxColumnNameLength

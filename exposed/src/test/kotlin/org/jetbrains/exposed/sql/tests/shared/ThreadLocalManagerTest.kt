@@ -310,7 +310,7 @@ class MultipleDatabaseBugTest {
     private fun initDb() {
         transaction {
             println("TransactionManager: ${TransactionManager.manager}")
-            println("Transaction connection url: ${connection.metaData?.url}")
+            println("Transaction connection url: ${connection.metadata { url }}")
         }
     }
 }

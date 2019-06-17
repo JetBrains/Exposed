@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.h2.jdbc.JdbcDatabaseMetaData
+import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcDatabaseMetadataImpl
@@ -17,19 +18,19 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
 
-class Database private constructor(val connector: () -> Connection) {
+class Database private constructor(val connector: () -> ExposedConnection<*>) {
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
             try {
-                JdbcDatabaseMetadataImpl(connection.metaData).body()
+                connection.metadata(body)
             } finally {
                 connection.close()
             }
         } else
-            JdbcDatabaseMetadataImpl(transaction.connection as JdbcConnectionImpl).metaData).body()
+            transaction.connection.metadata(body)
     }
 
     val url: String by lazy { metadata { url } }
@@ -80,7 +81,7 @@ class Database private constructor(val connector: () -> Connection) {
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return Database {
-                getNewConnection().apply { setupConnection(this) }
+                JdbcConnectionImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
             }

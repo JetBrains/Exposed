@@ -125,19 +125,19 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         it.columnType.isAutoInc || (it.columnType is EntityIDColumnType<*> && !currentDialect.supportsOnlyIdentifiersInGeneratedKeys)
     }
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = PreparedStatementImpl(when {
+    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
-            transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
+            transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() ->
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())!!
+            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
 
         else ->
-            transaction.connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)!!
-    })
+            transaction.connection.prepareStatement(sql, true)
+    }
 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {

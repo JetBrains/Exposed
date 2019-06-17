@@ -2,9 +2,15 @@ package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import java.lang.Exception
 import java.sql.Connection
+import java.sql.PreparedStatement
 
-class JdbcConnectionImpl(val connection: Connection) : ExposedConnection {
+class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
+
+    // Oracle driver could throw excpection on catalog
+    override val catalog: String = try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName
 
     override fun commit() {
         connection.commit()
@@ -23,15 +29,23 @@ class JdbcConnectionImpl(val connection: Connection) : ExposedConnection {
         get() = connection.autoCommit
         set(value) { connection.autoCommit = value }
 
-    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
-        return if (transaction == null) {
-            val connection = connector()
-            try {
-                JdbcDatabaseMetadataImpl(connection.metaData).body()
-            } finally {
-                connection.close()
-            }
-        } else
-            JdbcDatabaseMetadataImpl(transaction.connection as JdbcConnectionImpl).metaData).body()
+    override var transactionIsolation: Int
+        get() = connection.transactionIsolation
+        set(value) { connection.transactionIsolation = value }
+
+    private val metadata by lazy { JdbcDatabaseMetadataImpl(catalog, connection.metaData) }
+
+    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
+
+    override fun prepareStatement(sql: String, returnKeys: Boolean) : PreparedStatementApi {
+        val generated = if (returnKeys)
+            PreparedStatement.RETURN_GENERATED_KEYS
+        else
+            PreparedStatement.NO_GENERATED_KEYS
+        return PreparedStatementImpl(connection.prepareStatement(sql, generated))
+    }
+
+    override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
+        return PreparedStatementImpl(connection.prepareStatement(sql, columns))
     }
 }

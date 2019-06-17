@@ -229,130 +229,27 @@ abstract class VendorDialect(override val name: String,
     val String.inProperCase: String get() = TransactionManager.current().db.identifierManager.inProperCase(this)
 
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
-    override fun allTablesNames(): List<String> {
-        val tr = TransactionManager.current()
-        return tr.db.metadata {
-            val result = ArrayList<String>()
-            val resultSet = getTables(getDatabase(), null, "%", arrayOf("TABLE"))
-            while (resultSet.next()) {
-                result.add(resultSet.getString("TABLE_NAME").inProperCase)
-            }
-            resultSet.close()
-            result
-        }
-    }
+    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata { tableNames }
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
-    protected fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCase() }
-        val result = HashMap<Table, MutableList<ColumnMetadata>>()
-
-        while (next()) {
-            val (tableName, columnMetadata) = extract(this)
-            mapping[tableName]?.let { t ->
-                result.getOrPut(t) { arrayListOf() } += columnMetadata
-            }
-        }
-        return result
-    }
-
-    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val tr = TransactionManager.current()
-        val rs = tr.db.metadata { getColumns(getDatabase(), null, "%", "%") }
-        val result = rs.extractColumns(tables) {
-            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
-        }
-        rs.close()
-        return result
-    }
-
-    private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
+    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
+            TransactionManager.current().connection.metadata { tableColumns(*tables) }
 
     protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction) =
             tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
-    @Synchronized
-    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-        val tr = TransactionManager.current()
+    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>>
+        = TransactionManager.current().db.metadata { columnConstraints(*tables) }
 
-        tables.map{ it.nameInDatabaseCase() }.forEach { table ->
-            columnConstraintsCache.getOrPut(table) {
-                val rs = tr.db.metadata { getImportedKeys(getDatabase(), null, table) }
-                val tableConstraint = arrayListOf<ForeignKeyConstraint> ()
-                while (rs.next()) {
-                    val fromTableName = rs.getString("FKTABLE_NAME")!!
-                    val fromColumnName = rs.getString("FKCOLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                    val constraintName = rs.getString("FK_NAME")!!
-                    val targetTableName = rs.getString("PKTABLE_NAME")!!
-                    val targetColumnName = rs.getString("PKCOLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                    val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("UPDATE_RULE"))
-                    val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
-                    tableConstraint.add(
-                        ForeignKeyConstraint(constraintName,
-                                targetTableName, targetColumnName,
-                                fromTableName, fromColumnName,
-                                constraintUpdateRule, constraintDeleteRule)
-                    )
-                }
-                rs.close()
-                tableConstraint
-            }.forEach { it ->
-                constraints.getOrPut(it.fromTable to it.fromColumn){arrayListOf()}.add(it)
-            }
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
+        = TransactionManager.current().db.metadata { existingIndices(*tables) }
 
-        }
-        return constraints
-    }
-
-    private val existingIndicesCache = HashMap<Table, List<Index>>()
-
-    @Synchronized
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
-        for(table in tables) {
-            val tableName = table.nameInDatabaseCase()
-            val transaction = TransactionManager.current()
-            val metadata = transaction.db.metadata{ this }
-
-            existingIndicesCache.getOrPut(table) {
-                val pkNames = metadata.getPrimaryKeys(getDatabase(), null, tableName).let { rs ->
-                    val names = arrayListOf<String>()
-                    while(rs.next()) {
-                        rs.getString("PK_NAME")?.let { names += it }
-                    }
-                    rs.close()
-                    names
-                }
-                val rs = metadata.getIndexInfo(getDatabase(), null, tableName, false, false)
-
-                val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
-
-                while (rs.next()) {
-                    rs.getString("INDEX_NAME")?.let {
-                        val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("COLUMN_NAME")!!)
-                        val isUnique = !rs.getBoolean("NON_UNIQUE")
-                        tmpIndices.getOrPut(it to isUnique) { arrayListOf() }.add(column)
-                    }
-                }
-                rs.close()
-                val tColumns = table.columns.associateBy { transaction.identity(it) }
-                tmpIndices.filterNot { it.key.first in pkNames }
-                        .mapNotNull { (index, columns) ->
-                            columns.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
-                        }
-            }
-        }
-        return HashMap(existingIndicesCache)
-    }
-
-    @Synchronized
     override fun resetCaches() {
         _allTableNames = null
-        columnConstraintsCache.clear()
-        existingIndicesCache.clear()
+        TransactionManager.current().db.metadata { cleanCache() }
     }
 
     override fun createIndex(index: Index): String {

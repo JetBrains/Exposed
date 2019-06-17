@@ -15,7 +15,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 internal object H2FunctionProvider : FunctionProvider() {
 
     private fun currentMode(): String =
-            ((TransactionManager.current().connection as Wrapper).unwrap(JdbcConnection::class.java).session as? Session)?.database?.mode?.name ?: ""
+            ((TransactionManager.current().connection.connection as Wrapper).unwrap(JdbcConnection::class.java).session as? Session)?.database?.mode?.name ?: ""
 
     internal val isMySQLMode: Boolean get() = currentMode() == "MySQL"
 

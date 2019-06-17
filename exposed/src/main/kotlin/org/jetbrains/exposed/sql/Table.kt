@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
@@ -314,7 +315,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      *
      * @param name The column name
      */
-    fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
+    fun blob(name: String): Column<ExposedBlob> = registerColumn(name, BlobColumnType())
 
     /**
      * A text column to store a large amount of text.

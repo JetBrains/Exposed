@@ -11,7 +11,7 @@ interface TransactionInterface {
 
     val db : Database
 
-    val connection: ExposedConnection
+    val connection: ExposedConnection<*>
 
     val outerTransaction: Transaction?
 
