@@ -1,6 +1,6 @@
 # 0.15.1
 Features:
-* `suspendedTransaction` function introduced to work within `suspend` functions
+* `suspendedTransaction` function introduced to work within `suspend` functions. See [wiki section](https://github.com/JetBrains/Exposed/wiki/Transactions#working-with-coroutines) for more details.
 * Custom functions support ([#581](https://github.com/JetBrains/Exposed/issues/581)). See [wiki section](https://github.com/JetBrains/Exposed/wiki/Functions#custom-functions) for more details.
 
 Bug Fixes:
