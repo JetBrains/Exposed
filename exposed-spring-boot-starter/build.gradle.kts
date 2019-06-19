@@ -14,11 +14,11 @@ repositories {
 dependencies {
     api(project(":exposed"))
     api(project(":spring-transaction"))
-    api("org.springframework.boot", "spring-boot-starter-data-jdbc", "2.1.5.RELEASE")
-    api("org.springframework.boot", "spring-boot-autoconfigure", "2.1.5.RELEASE")
-    compileOnly("org.springframework.boot", "spring-boot-configuration-processor", "2.1.5.RELEASE")
+    api("org.springframework.boot", "spring-boot-starter-data-jdbc", "2.1.6.RELEASE")
+    api("org.springframework.boot", "spring-boot-autoconfigure", "2.1.6.RELEASE")
+    compileOnly("org.springframework.boot", "spring-boot-configuration-processor", "2.1.6.RELEASE")
 
-    testImplementation("org.springframework.boot", "spring-boot-starter-test", "2.1.5.RELEASE")
+    testImplementation("org.springframework.boot", "spring-boot-starter-test", "2.1.6.RELEASE")
     testImplementation("com.h2database", "h2", "1.4.199")
 }
 
