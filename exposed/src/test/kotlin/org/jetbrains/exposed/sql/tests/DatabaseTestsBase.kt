@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTimeZone
+import java.lang.AssertionError
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -123,7 +124,11 @@ abstract class DatabaseTestsBase {
     fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.() -> Unit) {
         val toTest = db ?: TestDB.enabledInTests() - excludeSettings
         toTest.forEach {
-            withDb(it, statement)
+            try {
+                withDb(it, statement)
+            } catch (e: Exception) {
+                throw AssertionError("Failed on ${it.name}", e)
+            }
         }
     }
 

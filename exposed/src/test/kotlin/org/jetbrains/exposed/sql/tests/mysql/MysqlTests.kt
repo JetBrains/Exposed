@@ -29,32 +29,4 @@ class MysqlTests : DatabaseTestsBase() {
             assertFalse(TransactionManager.current().exec("SELECT VERSION();") { it.next(); it.getString(1) }.isNullOrEmpty())
         }
     }
-
-    @Test @RepeatableTest(10)
-    fun suspendedTx() {
-        withDb(TestDB.MYSQL) {
-            runBlocking {
-                SchemaUtils.create(H2Tests.Testing)
-
-                suspendedTransaction {
-                    H2Tests.Testing.insert {
-                        it[id] = 1
-                    }
-
-                    launch(Dispatchers.Default) {
-                        suspendedTransaction {
-                            assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
-                        }
-                    }
-                }
-
-                val result = suspendedTransaction(Dispatchers.Default) {
-                    H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.single()[H2Tests.Testing.id]
-                }
-
-                kotlin.test.assertEquals(1, result)
-                SchemaUtils.drop(H2Tests.Testing)
-            }
-        }
-    }
 }

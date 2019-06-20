@@ -36,7 +36,7 @@ suspend fun <T> Transaction.suspendedTransaction(context: CoroutineContext? = nu
     val threadLocalManager = manager as? ThreadLocalTransactionManager
     val currentContext = context ?: coroutineContext
     val scope = threadLocalManager?.let { currentContext + it.threadLocal.asContextElement(this) } ?: currentContext
-    return withContext(scope) {
+    return withContext(scope + TransactionManager.currentThreadManager.asContextElement()) {
         transaction(manager.defaultIsolationLevel, manager.defaultRepetitionAttempts, db, statement)
     }
 }
