@@ -107,7 +107,14 @@ abstract class FunctionProvider {
     open fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String
         = transaction.throwUnsupportedException("There's no generic SQL for replace. There must be vendor specific implementation")
 
-    open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean) = "LIMIT $size" + if (offset > 0) " OFFSET $offset" else ""
+    open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean) = buildString {
+        if (size > 0) {
+            append("LIMIT $size")
+            if (offset > 0) {
+                append(" OFFSET $offset")
+            }
+        }
+    }
 
     open fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) = buildString {
         append("GROUP_CONCAT(")
