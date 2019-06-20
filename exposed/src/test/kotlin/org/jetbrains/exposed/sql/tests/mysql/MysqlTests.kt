@@ -12,11 +12,17 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.h2.H2Tests
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
+import org.jetbrains.exposed.test.utils.RepeatableTest
+import org.jetbrains.exposed.test.utils.RepeatableTestRule
+import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertFalse
 
 class MysqlTests : DatabaseTestsBase() {
 
+    @get:Rule
+    val repeatRule = RepeatableTestRule()
+    
     @Test
     fun testEmbeddedConnection() {
         withDb(TestDB.MYSQL) {
@@ -24,7 +30,8 @@ class MysqlTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun suspendedTx() {
+    @Test @RepeatableTest(10)
+    fun suspendedTx() {
         withDb(TestDB.MYSQL) {
             runBlocking {
                 SchemaUtils.create(H2Tests.Testing)
@@ -46,6 +53,7 @@ class MysqlTests : DatabaseTestsBase() {
                 }
 
                 kotlin.test.assertEquals(1, result)
+                SchemaUtils.drop(H2Tests.Testing)
             }
         }
     }
