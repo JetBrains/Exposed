@@ -243,7 +243,7 @@ abstract class VendorDialect(override val name: String,
     override fun tableExists(table: Table) = allTablesNames.any { it == table.nameInDatabaseCase() }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
-            TransactionManager.current().connection.metadata { tableColumns(*tables) }
+            TransactionManager.current().connection.metadata { columns(*tables) }
 
     protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction) =
             tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
