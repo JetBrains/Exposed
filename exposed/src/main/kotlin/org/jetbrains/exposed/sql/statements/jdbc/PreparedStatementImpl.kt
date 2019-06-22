@@ -6,13 +6,14 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 
-class PreparedStatementImpl(val statement: PreparedStatement) : PreparedStatementApi {
+class PreparedStatementImpl(val statement: PreparedStatement, val wasGeneratedKeysRequested: Boolean) : PreparedStatementApi {
     override val resultSet: ResultSet
-        get() = statement.generatedKeys ?: statement.resultSet
+        get() = if (wasGeneratedKeysRequested) statement.generatedKeys else statement.resultSet
 
     override var fetchSize: Int?
         get() = statement.fetchSize
         set(value) { value?.let { statement.fetchSize = value } }
+
     override fun addBatch() {
         statement.addBatch()
     }

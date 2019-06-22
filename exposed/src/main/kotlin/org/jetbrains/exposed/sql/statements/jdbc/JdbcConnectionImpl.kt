@@ -10,7 +10,9 @@ import java.sql.PreparedStatement
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
     // Oracle driver could throw excpection on catalog
-    override val catalog: String = try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName
+    override val catalog: String by lazy {
+        try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
+    }
 
     override fun commit() {
         connection.commit()
@@ -33,7 +35,9 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         get() = connection.transactionIsolation
         set(value) { connection.transactionIsolation = value }
 
-    private val metadata by lazy { JdbcDatabaseMetadataImpl(catalog, connection.metaData) }
+    private val metadata by lazy {
+        JdbcDatabaseMetadataImpl(catalog, connection.metaData)
+    }
 
     override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
 
@@ -42,10 +46,10 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
             PreparedStatement.RETURN_GENERATED_KEYS
         else
             PreparedStatement.NO_GENERATED_KEYS
-        return PreparedStatementImpl(connection.prepareStatement(sql, generated))
+        return PreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
     }
 
     override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
-        return PreparedStatementImpl(connection.prepareStatement(sql, columns))
+        return PreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 }

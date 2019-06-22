@@ -23,7 +23,7 @@ interface PreparedStatementApi {
 
     fun executeUpdate() : Int
 
-    val resultSet: ResultSet
+    val resultSet: ResultSet?
 
     operator fun set(index: Int, value: Any?)
 

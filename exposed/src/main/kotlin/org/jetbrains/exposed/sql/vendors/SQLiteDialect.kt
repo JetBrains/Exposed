@@ -60,8 +60,6 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     override val supportsMultipleGeneratedKeys: Boolean = false
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun getDatabase(): String = ""
-
     override fun createIndex(index: Index): String {
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
         return if (index.unique) originalCreateIndex.replace("CREATE INDEX", "CREATE UNIQUE INDEX")
