@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import kotlinx.coroutines.sync.Mutex
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityCache
 import org.jetbrains.exposed.dao.EntityHook
@@ -29,6 +30,8 @@ open class UserDataHolder {
 }
 
 open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
+
+    internal val suspendedMutex = Mutex()
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
 

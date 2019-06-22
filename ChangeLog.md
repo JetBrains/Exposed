@@ -1,3 +1,11 @@
+# 0.15.1
+Features:
+* `suspendedTransaction` function introduced to work within `suspend` functions. See [wiki section](https://github.com/JetBrains/Exposed/wiki/Transactions#working-with-coroutines) for more details.
+* Custom functions support ([#581](https://github.com/JetBrains/Exposed/issues/581)). See [wiki section](https://github.com/JetBrains/Exposed/wiki/Functions#custom-functions) for more details.
+
+Bug Fixes:
+* Duplicated columns in the parameter list of slice() caused unexpected value in ResultRow ([#581](https://github.com/JetBrains/Exposed/issues/581))
+
 # 0.14.4
 Bug Fixes:
 * `concat` function doesn't work with Oracle ([#509](https://github.com/JetBrains/Exposed/issues/509))

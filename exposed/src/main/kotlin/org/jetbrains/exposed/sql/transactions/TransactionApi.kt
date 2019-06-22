@@ -71,7 +71,7 @@ interface TransactionManager {
 
         internal fun managerFor(database: Database) = registeredDatabases[database]
 
-        private val currentThreadManager = object : ThreadLocal<TransactionManager>() {
+        internal val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = managers.first
         }
 
