@@ -3,6 +3,7 @@ package org.jetbrains.exposed.spring
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
@@ -60,7 +61,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     private fun initTransaction(): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
-        val transactionImpl = SpringTransaction(connection, db, currentOrNull())
+        val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
@@ -69,7 +70,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
 
-    private class SpringTransaction(override val connection: ExposedConnection, override val db: Database, override val outerTransaction: Transaction?) : TransactionInterface {
+    private class SpringTransaction(override val connection: ExposedConnection<*>, override val db: Database, override val outerTransaction: Transaction?) : TransactionInterface {
 
         override fun commit() {
             connection.run {
