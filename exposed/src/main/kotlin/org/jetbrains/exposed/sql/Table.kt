@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import java.math.BigDecimal
-import java.sql.Blob
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1

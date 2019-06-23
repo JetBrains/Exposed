@@ -7,7 +7,7 @@ import java.sql.ResultSet
 import java.sql.Types
 
 class PreparedStatementImpl(val statement: PreparedStatement, val wasGeneratedKeysRequested: Boolean) : PreparedStatementApi {
-    override val resultSet: ResultSet
+    override val resultSet: ResultSet?
         get() = if (wasGeneratedKeysRequested) statement.generatedKeys else statement.resultSet
 
     override var fetchSize: Int?

@@ -16,11 +16,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
-import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Types
 import java.util.*
-import javax.sql.rowset.serial.SerialBlob
 import kotlin.reflect.KClass
 
 interface IColumnType {
@@ -317,7 +314,7 @@ class BinaryColumnType(val length: Int) : ColumnType() {
     override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 
     override fun valueFromDB(value: Any): Any {
-        if (value is java.sql.Blob) {
+        if (value is Blob) {
             return value.binaryStream.readBytes()
         }
         return value
@@ -338,22 +335,24 @@ class BlobColumnType : ColumnType() {
         return if (currentDialect.dataTypeProvider.blobAsStream)
             rs.getBytes(index)?.let { ExposedBlob(it) }
         else
-            rs.getBlob(index)
+            rs.getBlob(index)?.let { ExposedBlob(it.binaryStream.readBytes()) }
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is Blob -> value
-        is InputStream -> SerialBlob(value.readBytes())
-        is ByteArray -> SerialBlob(value)
+        is ExposedBlob -> value
+        is Blob -> ExposedBlob(value.binaryStream.readBytes())
+        is InputStream -> ExposedBlob(value.readBytes())
+        is ByteArray -> ExposedBlob(value)
         else -> error("Unknown type for blob column :${value::class}")
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value
         when {
-            currentDialect.dataTypeProvider.blobAsStream && value is InputStream ->
-                stmt.setInputStream(index, value)
-            value == null -> stmt.setInputStream(index, value)
-            else -> super.setParameter(stmt, index, value)
+            currentDialect.dataTypeProvider.blobAsStream && toSetValue is InputStream ->
+                stmt.setInputStream(index, toSetValue)
+            toSetValue == null -> stmt.setInputStream(index, toSetValue)
+            else -> super.setParameter(stmt, index, toSetValue)
         }
     }
 
