@@ -20,7 +20,7 @@ internal abstract class IdentifierManagerApi {
     protected abstract val extraNameCharacters : String
     protected abstract val isOracle : Boolean
     protected abstract val maxColumnNameLength : Int
-    protected val identifierLengthLimit = run {
+    protected val identifierLengthLimit by lazy {
         if (isOracle)
             128
         else
