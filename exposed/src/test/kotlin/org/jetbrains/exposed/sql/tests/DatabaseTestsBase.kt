@@ -8,6 +8,7 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTimeZone
@@ -115,6 +116,7 @@ abstract class DatabaseTestsBase {
 
         val connection = database.connector()
         val transactionIsolation = connection.metadata { defaultIsolationLevel }
+        TransactionManager.managerFor(database)!!.defaultIsolationLevel = transactionIsolation
         connection.close()
         transaction(transactionIsolation, 1, db = database) {
             statement()
