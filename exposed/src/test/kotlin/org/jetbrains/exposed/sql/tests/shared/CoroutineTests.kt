@@ -23,9 +23,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 SchemaUtils.create(H2Tests.Testing)
 
                 val launchResult = suspendedTransaction {
-                    H2Tests.Testing.insert {
-                        it[id] = 1
-                    }
+                    H2Tests.Testing.insert{}
 
                     launch(Dispatchers.Default) {
                         suspendedTransaction {
@@ -52,9 +50,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 SchemaUtils.create(H2Tests.Testing)
 
                 val launchResult = suspendedTransactionAsync {
-                    H2Tests.Testing.insert {
-                        it[id] = 1
-                    }
+                    H2Tests.Testing.insert{}
 
                     launch(Dispatchers.Default) {
                         suspendedTransaction {
