@@ -1,0 +1,15 @@
+{
+  "properties": [
+    {
+      "name": "spring.exposed.generate-ddl",
+      "type": "java.lang.Boolean",
+      "description": "Auto generate the database schema.",
+      "defaultValue": false
+    },
+    {
+      "name": "spring.exposed.excluded-packages",
+      "type": "java.util.List",
+      "description": "Packages to exclude from schema generation."
+    }
+  ]
+}
