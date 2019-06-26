@@ -369,3 +369,9 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
     if(this == null) expr
     else this and expr
 }
+
+fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
+    val expr = Op.build { andPart() }
+    if(this == null) expr
+    else this or expr
+}
