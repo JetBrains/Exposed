@@ -8,9 +8,8 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.h2.H2Tests
 import org.jetbrains.exposed.sql.transactions.experimental.andThen
-//import org.jetbrains.exposed.sql.transact/ions.experimental.andThen
-import org.jetbrains.exposed.sql.transactions.experimental.runSuspended
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.test.utils.RepeatableTest
 import org.junit.Rule
@@ -29,18 +28,18 @@ class CoroutineTests : DatabaseTestsBase() {
                 SchemaUtils.create(H2Tests.Testing)
                 commit()
 
-                val job = suspendedTransaction(Dispatchers.IO) {
+                val job = newSuspendedTransaction(Dispatchers.IO) {
                     H2Tests.Testing.insert{}
 
                     launch(Dispatchers.Default) {
-                        runSuspended {
+                        suspendedTransaction {
                             assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
                         }
                     }
                 }
 
 
-                val result = runSuspended(Dispatchers.Default) {
+                val result = suspendedTransaction(Dispatchers.Default) {
                     job.join()
                     H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.single()[H2Tests.Testing.id]
                 }
@@ -62,7 +61,7 @@ class CoroutineTests : DatabaseTestsBase() {
                     H2Tests.Testing.insert{}
 
                     launch(Dispatchers.Default) {
-                        runSuspended {
+                        suspendedTransaction {
                             assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
                         }
                         commit()

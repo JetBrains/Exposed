@@ -60,11 +60,11 @@ internal class TransactionCoroutineElement(val outerTransaction: Transaction?, v
     }
 }
 
-suspend fun <T> suspendedTransaction(context: CoroutineDispatcher? = null, db: Database? = null, statement: suspend Transaction.() -> T): T {
+suspend fun <T> newSuspendedTransaction(context: CoroutineDispatcher? = null, db: Database? = null, statement: suspend Transaction.() -> T): T {
     return suspendedTransactionAsyncInternal(context, db, TransactionManager.currentOrNull(), false, statement).await()
 }
 
-suspend fun <T> Transaction.runSuspended(context: CoroutineDispatcher? = null, statement: suspend Transaction.() -> T): T {
+suspend fun <T> Transaction.suspendedTransaction(context: CoroutineDispatcher? = null, statement: suspend Transaction.() -> T): T {
     val tx = this
     return suspendedTransactionAsyncInternal(context, db, tx, false, statement = statement).await()
 }
