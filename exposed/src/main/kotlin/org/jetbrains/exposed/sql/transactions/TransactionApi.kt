@@ -91,3 +91,19 @@ interface TransactionManager {
         fun isInitialized() = managers.first != NotInitializedManager
     }
 }
+
+internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit){
+    try {
+        rollback()
+    } catch (e: Exception){
+        log(e)
+    }
+}
+
+internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit){
+    try {
+        close()
+    } catch (e: Exception){
+        log(e)
+    }
+}

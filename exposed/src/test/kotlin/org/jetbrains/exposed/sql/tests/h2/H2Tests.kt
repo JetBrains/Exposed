@@ -1,12 +1,8 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.junit.Test
 import kotlin.test.assertFailsWith
 

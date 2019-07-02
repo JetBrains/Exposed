@@ -76,22 +76,6 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
     }
 }
 
-private fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit){
-    try {
-        rollback()
-    } catch (e: Exception){
-        log(e)
-    }
-}
-
-private inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit){
-    try {
-        close()
-    } catch (e: Exception){
-        log(e)
-    }
-}
-
 fun <T> inTopLevelTransaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T {
     var repetitions = 0
 
