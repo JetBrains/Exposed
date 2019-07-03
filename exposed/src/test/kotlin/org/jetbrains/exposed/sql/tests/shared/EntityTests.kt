@@ -480,7 +480,7 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-            inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, null, null, statement)
+            inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {

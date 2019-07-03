@@ -12,6 +12,8 @@ import javax.sql.DataSource
 
 class Database private constructor(val connector: () -> Connection) {
 
+    var useNestedTransactions: Boolean = false
+
     internal fun <T> metadata(body: DatabaseMetaData.() -> T) : T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {

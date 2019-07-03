@@ -18,19 +18,9 @@ class ThreadLocalTransactionManager(private val db: Database,
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = Transaction(
         ThreadLocalTransaction(
             db = db,
-            transactionIsolation = if (outerTransaction != null) outerTransaction.transactionIsolation else isolation,
+            transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
             threadLocal = threadLocal,
-            outerTransaction = outerTransaction,
-            connectionProvider = {
-                if (outerTransaction == null) {
-                    db.connector().apply {
-                        autoCommit = false
-                        this.transactionIsolation = isolation
-                    }
-                } else {
-                    outerTransaction.connection
-                }
-            }
+            outerTransaction = outerTransaction
         )
     ).apply {
         threadLocal.set(this)
@@ -42,23 +32,27 @@ class ThreadLocalTransactionManager(private val db: Database,
         override val db: Database,
         override val transactionIsolation: Int,
         val threadLocal: ThreadLocal<Transaction>,
-        override val outerTransaction: Transaction?,
-        private val connectionProvider: () -> Connection = { db.connector() }
+        override val outerTransaction: Transaction?
     ) : TransactionInterface {
 
-        private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) { connectionProvider() }
+        private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
+            outerTransaction?.connection ?: db.connector().apply {
+                autoCommit = false
+                transactionIsolation = transactionIsolation
+            }
+        }
         override val connection: Connection
             get() = connectionLazy.value
 
-        private val topLevelTransaction = outerTransaction == null
-        private var savepoint: Savepoint? = if (!topLevelTransaction) {
-            connection.setSavepoint("POINT_$name")
+        private val useSavePoints = outerTransaction != null && db.useNestedTransactions
+        private var savepoint: Savepoint? = if (useSavePoints) {
+            connection.setSavepoint(savepointName)
         } else null
 
 
         override fun commit() {
             if (connectionLazy.isInitialized()) {
-                if (topLevelTransaction) {
+                if (!useSavePoints) {
                     connection.commit()
                 } else {
                     // do nothing in nested. close() will commit everything and release savepoint.
@@ -68,21 +62,21 @@ class ThreadLocalTransactionManager(private val db: Database,
 
         override fun rollback() {
             if (connectionLazy.isInitialized() && !connection.isClosed) {
-                if (topLevelTransaction) {
-                    connection.rollback()
-                } else {
+                if (useSavePoints) {
                     connection.rollback(savepoint)
-                    savepoint = connection.setSavepoint("POINT_$name")
+                    savepoint = connection.setSavepoint(savepointName)
+                } else {
+                    connection.rollback()
                 }
             }
         }
 
         override fun close() {
             try {
-                if (topLevelTransaction) {
+                if (!useSavePoints) {
                     if (connectionLazy.isInitialized()) connection.close()
                 } else {
-                    savepoint.let {
+                    savepoint?.let {
                         connection.releaseSavepoint(it)
                         savepoint = null
                     }
@@ -92,16 +86,15 @@ class ThreadLocalTransactionManager(private val db: Database,
             }
         }
 
-        private val name: String
+        private val savepointName: String
             get() {
-                var p: Transaction? = outerTransaction
-                var value: String = ""
-
-                while (p != null) {
-                    value = p.hashCode().toString(16) + "_" + value
-                    p = p.outerTransaction
+                var nestedLevel = 0
+                var currenTransaction = outerTransaction
+                while(currenTransaction?.outerTransaction != null) {
+                    nestedLevel++
+                    currenTransaction = currenTransaction.outerTransaction
                 }
-                return value + this.hashCode().toString(16)
+                return "Exposed_savepoint_$nestedLevel"
             }
     }
 }
@@ -148,7 +141,8 @@ fun <T> inTopLevelTransaction(
         statement: Transaction.() -> T
 ): T {
 
-    fun run():T {    var repetitions = 0
+    fun run():T {
+        var repetitions = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
 

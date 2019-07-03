@@ -76,7 +76,7 @@ interface TransactionManager {
             override fun initialValue(): TransactionManager = managers.first
         }
 
-        private val manager: TransactionManager
+        internal val manager: TransactionManager
             get() = currentThreadManager.get()
 
 

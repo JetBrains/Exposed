@@ -10,7 +10,7 @@ import kotlin.coroutines.coroutineContext
 
 internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
 
-internal class TransactionCoroutineElement(val outerTransaction: Transaction?, val newTransaction: Transaction, val manager: TransactionManager) : ThreadContextElement<TransactionContext> /*by original*/ {
+internal class TransactionCoroutineElement(val outerTransaction: Transaction?, val newTransaction: Transaction, manager: TransactionManager) : ThreadContextElement<TransactionContext> /*by original*/ {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
     private val tlManager = manager as? ThreadLocalTransactionManager
 

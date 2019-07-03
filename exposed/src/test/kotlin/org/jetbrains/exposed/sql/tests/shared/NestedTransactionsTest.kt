@@ -12,36 +12,40 @@ class NestedTransactionsTest : DatabaseTestsBase() {
     @Test
     fun testNestedTransactions() {
         withTables(DMLTestsData.Cities) {
+            try {
+                db.useNestedTransactions = true
+                assertTrue(DMLTestsData.Cities.selectAll().empty())
 
-            assertTrue(DMLTestsData.Cities.selectAll().empty())
-
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
-            }
-
-            kotlin.test.assertEquals(1, DMLTestsData.Cities.selectAll().count())
-
-            assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
-
-            transaction {
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
+                    it[DMLTestsData.Cities.name] = "city1"
                 }
-                assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+
+                kotlin.test.assertEquals(1, DMLTestsData.Cities.selectAll().count())
+
+                assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
 
                 transaction {
                     DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city3"
+                        it[DMLTestsData.Cities.name] = "city2"
                     }
+                    assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+
+                    transaction {
+                        DMLTestsData.Cities.insert {
+                            it[DMLTestsData.Cities.name] = "city3"
+                        }
+                        assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                    }
+
                     assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+
+                    rollback()
                 }
 
-                assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
-
-                rollback()
+                assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+            } finally {
+                db.useNestedTransactions = false
             }
-
-            assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
         }
     }
 }
