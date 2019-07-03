@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.joda.time.DateTime
 import org.junit.Test
 import java.sql.Connection
@@ -479,7 +480,7 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-            inTopLevelTransaction(TransactionManager.current().db.metadata { defaultTransactionIsolation }, 1, null, statement)
+            inTopLevelTransaction(TransactionManager.current().db.metadata.defaultTransactionIsolation, 1, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {

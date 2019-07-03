@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +39,7 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        TransactionManager.resetCurrent(currentDB?.let { TransactionManager.managerFor(it) })
+        TransactionManager.resetCurrent(currentDB?.transactionManager)
         transaction(db1) {
             SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
         }

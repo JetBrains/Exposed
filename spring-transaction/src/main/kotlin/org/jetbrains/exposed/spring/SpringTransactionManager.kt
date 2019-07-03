@@ -48,8 +48,8 @@ class SpringTransactionManager(private val _dataSource: DataSource,
         currentOrNull()?.commit()
     }
 
-    override fun newTransaction(isolation: Int): Transaction {
-        val tDefinition = _dataSource.connection?.transactionIsolation?.takeIf { it != isolation }?.let {
+    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
+        val tDefinition = dataSource?.connection?.transactionIsolation?.takeIf { it != isolation }?.let {
                 DefaultTransactionDefinition().apply { isolationLevel = isolation }
         }
 
@@ -59,8 +59,8 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     private fun initTransaction(): Transaction {
-        val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
-        val transactionImpl = SpringTransaction(connection, db, currentOrNull())
+        val connection = (TransactionSynchronizationManager.getResource(dataSource) as ConnectionHolder).connection
+        val transactionImpl = SpringTransaction(connection, db, defaultIsolationLevel, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
@@ -69,7 +69,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
 
-    private class SpringTransaction(override val connection: Connection, override val db: Database, override val outerTransaction: Transaction?) : TransactionInterface {
+    private class SpringTransaction(override val connection: Connection, override val db: Database, override val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
 
         override fun commit() {
             connection.run {

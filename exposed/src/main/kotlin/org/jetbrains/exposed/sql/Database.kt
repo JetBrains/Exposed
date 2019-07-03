@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
-import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
-import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.*
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
