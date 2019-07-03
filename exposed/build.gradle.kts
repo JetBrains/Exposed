@@ -55,6 +55,7 @@ publishJar {
         secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
         repository = "exposed"
         info {
+            publish = false
             githubRepo = "https://github.com/JetBrains/Exposed.git"
             vcsUrl = "https://github.com/JetBrains/Exposed.git"
             userOrg = "kotlin"
