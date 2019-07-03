@@ -388,7 +388,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                                        onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>?> =
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
 
-    fun <T:Comparable<T?>> optReference(name: String, refColumn: Column<T>,
+    fun <T:Comparable<T>> optReference(name: String, refColumn: Column<T>,
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T?> =
          Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 
