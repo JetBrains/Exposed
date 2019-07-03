@@ -8,22 +8,24 @@ import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-internal class TransactionCoroutineElement(val outerTransaction: Transaction?, val newTransaction: Transaction, val manager: TransactionManager) : ThreadContextElement<Transaction> /*by original*/ {
+internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
+
+internal class TransactionCoroutineElement(val outerTransaction: Transaction?, val newTransaction: Transaction, val manager: TransactionManager) : ThreadContextElement<TransactionContext> /*by original*/ {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
+    private val tlManager = manager as? ThreadLocalTransactionManager
 
-    private var prevManager : TransactionManager? = null
-
-    override fun updateThreadContext(context: CoroutineContext): Transaction {
-        prevManager = TransactionManager.currentThreadManager.get()
-        (manager as? ThreadLocalTransactionManager)?.let {
+    override fun updateThreadContext(context: CoroutineContext): TransactionContext {
+        val currentTransaction = TransactionManager.currentOrNull()
+        val currentManger = TransactionManager.manager.takeIf { currentTransaction != null }
+        tlManager?.let {
             it.threadLocal.set(newTransaction)
-            TransactionManager.currentThreadManager.set(manager)
+            TransactionManager.currentThreadManager.set(it)
         }
-        return newTransaction
+        return TransactionContext(currentManger, currentTransaction)
     }
 
-    override fun restoreThreadContext(context: CoroutineContext, oldState: Transaction) {
-        require(newTransaction == oldState)
+    override fun restoreThreadContext(context: CoroutineContext, oldState: TransactionContext) {
+//        require(newTransaction == oldState)
         if (outerTransaction == null) {
             with(newTransaction) {
                 try {
@@ -43,18 +45,16 @@ internal class TransactionCoroutineElement(val outerTransaction: Transaction?, v
                     throw e
                 }
             }
-            (manager as? ThreadLocalTransactionManager)?.threadLocal?.remove()
-
-        } else {
-            (manager as? ThreadLocalTransactionManager)?.threadLocal?.set(outerTransaction)
         }
-        prevManager?.let {
-            TransactionManager.currentThreadManager.set(it)
-        } ?: TransactionManager.currentThreadManager.remove()
+        if (oldState.transaction == null)
+            tlManager?.threadLocal?.remove()
+        else
+            tlManager?.threadLocal?.set(oldState.transaction)
+        TransactionManager.resetCurrent(oldState.manager)
     }
 
     companion object : CoroutineContext.Key<TransactionCoroutineElement> {
-        fun forTLManager(manager: TransactionManager, currentTransaction: Transaction?, newTransaction: Transaction) : ThreadContextElement<Transaction> {
+        fun forTLManager(manager: TransactionManager, currentTransaction: Transaction?, newTransaction: Transaction) : ThreadContextElement<TransactionContext> {
             return TransactionCoroutineElement(currentTransaction, newTransaction, manager)
         }
     }

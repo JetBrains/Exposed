@@ -64,7 +64,6 @@ class CoroutineTests : DatabaseTestsBase() {
                         suspendedTransaction {
                             assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
                         }
-                        commit()
                     }
                 }
 
