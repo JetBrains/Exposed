@@ -20,7 +20,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
                     it[DMLTestsData.Cities.name] = "city1"
                 }
 
-                kotlin.test.assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                assertEquals(1, DMLTestsData.Cities.selectAll().count())
 
                 assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
 
