@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
+import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.lang.Exception
 import java.sql.Connection
@@ -51,5 +52,17 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
         return PreparedStatementImpl(connection.prepareStatement(sql, columns), true)
+    }
+
+    override fun setSavepoint(name: String): ExposedSavepoint {
+        return JdbcSavepoint(name, connection.setSavepoint(name))
+    }
+
+    override fun releaseSavepoint(savepoint: ExposedSavepoint) {
+        connection.releaseSavepoint((savepoint as JdbcSavepoint).savepoint)
+    }
+
+    override fun rollback(savepoint: ExposedSavepoint) {
+        connection.rollback((savepoint as JdbcSavepoint).savepoint)
     }
 }

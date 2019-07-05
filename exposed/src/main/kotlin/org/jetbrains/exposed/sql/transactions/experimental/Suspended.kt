@@ -32,7 +32,7 @@ internal class TransactionCoroutineElement(val outerTransaction: Transaction?, v
                     commit()
                     try {
                         currentStatement?.let {
-                            it.close()
+                            it.closeIfPossible()
                             currentStatement = null
                         }
                         closeExecutedStatements()

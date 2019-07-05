@@ -17,4 +17,10 @@ interface ExposedConnection<OriginalConnection> {
     val catalog: String
 
     fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T
+
+    fun setSavepoint(name: String) : ExposedSavepoint
+
+    fun releaseSavepoint(savepoint: ExposedSavepoint)
+
+    fun rollback(savepoint: ExposedSavepoint)
 }

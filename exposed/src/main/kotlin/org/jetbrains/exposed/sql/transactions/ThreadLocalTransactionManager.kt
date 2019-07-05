@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
+import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import java.sql.Connection
 import java.sql.SQLException
@@ -47,7 +48,7 @@ class ThreadLocalTransactionManager(private val db: Database,
             get() = connectionLazy.value
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
-        private var savepoint: Savepoint? = if (useSavePoints) {
+        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
             connection.setSavepoint(savepointName)
         } else null
 
@@ -64,8 +65,8 @@ class ThreadLocalTransactionManager(private val db: Database,
 
         override fun rollback() {
             if (connectionLazy.isInitialized() && !connection.isClosed) {
-                if (useSavePoints) {
-                    connection.rollback(savepoint)
+                if (useSavePoints && savepoint != null) {
+                    connection.rollback(savepoint!!)
                     savepoint = connection.setSavepoint(savepointName)
                 } else {
                     connection.rollback()
