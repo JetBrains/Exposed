@@ -86,7 +86,14 @@ object SqlExpressionBuilder {
         return NeqOp(this, wrap(other))
     }
 
-    infix fun <T, S1: T?, S2: T?> ExpressionWithColumnType<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp(this, other)
+    infix fun <T:Comparable<T>> Column<EntityID<T>>.neq(t: T?) : Op<Boolean> {
+        if (t == null) {
+            return isNotNull()
+        }
+        return NeqOp(this, wrap(t))
+    }
+
+    infix fun <T, S1: T?, S2: T?> Expression<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp(this, other)
 
     fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> = IsNullOp(this)
 

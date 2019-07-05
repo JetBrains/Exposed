@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -57,7 +58,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 42, db) {
+            transaction(db.transactionManager.defaultIsolationLevel, 42, db) {
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -119,7 +120,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
+            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -152,7 +153,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
+            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -175,7 +176,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(TransactionManager.manager.defaultIsolationLevel, 5, db) {
+            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -237,22 +238,24 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         if (TestDB.MYSQL !in TestDB.enabledInTests()) return
 
         var secondThreadTm: TransactionManager? = null
-        TestDB.MYSQL.connect()
+        val db1 = TestDB.MYSQL.connect()
+        lateinit var db2: Database
+
         transaction {
-            val firstThreadTm = TransactionManager.manager
+            val firstThreadTm = db1.transactionManager
             SchemaUtils.create(DMLTestsData.Cities)
             thread {
-                TestDB.MYSQL.connect()
+                db2 = TestDB.MYSQL.connect()
                 transaction {
                     DMLTestsData.Cities.selectAll().toList()
-                    secondThreadTm = TransactionManager.manager
+                    secondThreadTm = db2.transactionManager
                     assertNotEquals(firstThreadTm, secondThreadTm)
                 }
             }.join()
-            assertEquals(firstThreadTm, TransactionManager.manager)
+            assertEquals(firstThreadTm, db1.transactionManager)
             SchemaUtils.drop(DMLTestsData.Cities)
         }
-        assertEquals(secondThreadTm, TransactionManager.manager)
+        assertEquals(secondThreadTm, db2.transactionManager)
     }
 }
 
@@ -285,7 +288,7 @@ class MultipleDatabaseBugTest {
         db = Database.connect(ds)
 
         // SQLite supports only TRANSACTION_SERIALIZABLE and TRANSACTION_READ_UNCOMMITTED
-        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+        db.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     }
 
     @Test
@@ -309,7 +312,7 @@ class MultipleDatabaseBugTest {
 
     private fun initDb() {
         transaction {
-            println("TransactionManager: ${TransactionManager.manager}")
+            println("TransactionManager: ${db.transactionManager}")
             println("Transaction connection url: ${connection.metadata { url }}")
         }
     }

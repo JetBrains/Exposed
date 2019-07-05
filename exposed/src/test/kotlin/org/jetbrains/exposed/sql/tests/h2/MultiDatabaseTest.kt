@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.tests.shared.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -27,7 +28,7 @@ class MultiDatabaseTest {
 
     @After
     fun after() {
-        TransactionManager.resetCurrent(currentDB?.let { TransactionManager.managerFor(it) })
+        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test

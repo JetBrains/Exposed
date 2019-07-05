@@ -370,6 +370,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         this.onDelete = onDelete
     }
 
+    @JvmName("referencesById")
+    fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<EntityID<T>>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
+        referee = ref
+        this.onUpdate = onUpdate
+        this.onDelete = onDelete
+    }
+
     infix fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
 
     fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>,
@@ -388,7 +395,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                                        onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>?> =
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
 
-    fun <T:Comparable<T?>> optReference(name: String, refColumn: Column<T>,
+    fun <T:Comparable<T>> optReference(name: String, refColumn: Column<T>,
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T?> =
          Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 

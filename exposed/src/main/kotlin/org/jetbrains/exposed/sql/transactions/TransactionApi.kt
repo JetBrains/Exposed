@@ -13,6 +13,8 @@ interface TransactionInterface {
 
     val connection: ExposedConnection<*>
 
+    val transactionIsolation: Int
+
     val outerTransaction: Transaction?
 
     fun commit()
@@ -31,7 +33,7 @@ private object NotInitializedManager : TransactionManager {
 
     override var defaultRepetitionAttempts: Int = -1
 
-    override fun newTransaction(isolation: Int): Transaction = error("Please call Database.connect() before using this code")
+    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = error("Please call Database.connect() before using this code")
 
     override fun currentOrNull(): Transaction? = error("Please call Database.connect() before using this code")
 }
@@ -42,7 +44,7 @@ interface TransactionManager {
 
     var defaultRepetitionAttempts: Int
 
-    fun newTransaction(isolation: Int = defaultIsolationLevel) : Transaction
+    fun newTransaction(isolation: Int = defaultIsolationLevel, outerTransaction: Transaction? = null) : Transaction
 
     fun currentOrNull(): Transaction?
 
@@ -69,13 +71,13 @@ interface TransactionManager {
             }
         }
 
-        internal fun managerFor(database: Database) = registeredDatabases[database]
+        internal fun managerFor(database: Database?) = if (database != null) registeredDatabases[database] else manager
 
         internal val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager = managers.first
         }
 
-        val manager: TransactionManager
+        internal val manager: TransactionManager
             get() = currentThreadManager.get()
 
 
@@ -92,3 +94,21 @@ interface TransactionManager {
         fun isInitialized() = managers.first != NotInitializedManager
     }
 }
+
+internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit){
+    try {
+        rollback()
+    } catch (e: Exception){
+        log(e)
+    }
+}
+
+internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit){
+    try {
+        close()
+    } catch (e: Exception){
+        log(e)
+    }
+}
+
+val Database?.transactionManager: TransactionManager get() = TransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")
