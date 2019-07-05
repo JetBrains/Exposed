@@ -70,7 +70,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
 
-    private class SpringTransaction(override val connection: ExposedConnection<*>, override val db: Database, val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
+    private class SpringTransaction(override val connection: ExposedConnection<*>, override val db: Database, override val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
 
         override fun commit() {
             connection.run {
