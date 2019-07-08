@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    api(project(":exposed"))
+    api(project(":exposed-core"))
     api("org.springframework", "spring-jdbc", "5.1.7.RELEASE")
     api("org.springframework", "spring-context", "5.1.7.RELEASE")
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")

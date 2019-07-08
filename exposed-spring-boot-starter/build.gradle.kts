@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    api(project(":exposed"))
+    api(project(":exposed-core"))
     api(project(":spring-transaction"))
     api("org.springframework.boot", "spring-boot-starter-data-jdbc", "2.1.6.RELEASE")
     api("org.springframework.boot", "spring-boot-autoconfigure", "2.1.6.RELEASE")
