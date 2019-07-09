@@ -61,6 +61,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     private fun initTransaction(): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
+
         val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
