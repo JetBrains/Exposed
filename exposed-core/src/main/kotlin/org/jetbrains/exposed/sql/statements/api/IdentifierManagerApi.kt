@@ -13,8 +13,6 @@ abstract class IdentifierManagerApi {
     protected abstract val isLowerCaseQuotedIdentifiers : Boolean
     protected abstract val supportsMixedIdentifiers : Boolean
     protected abstract val supportsMixedQuotedIdentifiers : Boolean
-    protected abstract val supportsMixedId : Boolean
-    protected abstract val supportsQuotedMixedId : Boolean
     protected abstract fun dbKeywords() : List<String>
     val keywords by lazy { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords() }
     protected abstract val extraNameCharacters : String
@@ -48,11 +46,11 @@ abstract class IdentifierManagerApi {
         val alreadyUpper = identity.equals(identity.toUpperCase())
         return when {
             alreadyQuoted -> false
-            supportsMixedId -> false
+            supportsMixedIdentifiers -> false
             alreadyLower && isLowerCaseIdentifiers -> false
             alreadyUpper && isUpperCaseIdentifiers -> false
             isOracle -> false
-            supportsQuotedMixedId && (!alreadyLower && !alreadyUpper) -> true
+            supportsMixedQuotedIdentifiers && (!alreadyLower && !alreadyUpper) -> true
             else -> false
         }
     }
