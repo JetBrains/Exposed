@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.concurrent.CopyOnWriteArrayList
 
 enum class EntityChangeType {
@@ -24,10 +24,6 @@ fun<ID: Comparable<ID>,T: Entity<ID>> EntityChange.toEntity(klass: EntityClass<I
 object EntityHook {
     private val entitySubscribers = CopyOnWriteArrayList<(EntityChange) -> Unit>()
 
-    private val events by transactionScope { CopyOnWriteArrayList<EntityChange>() }
-
-    val registeredEvents: List<EntityChange> get() = events.toList()
-
     fun subscribe (action: (EntityChange) -> Unit): (EntityChange) -> Unit {
         entitySubscribers.add(action)
         return action
@@ -37,20 +33,22 @@ object EntityHook {
         entitySubscribers.remove(action)
     }
 
-    fun registerChange(change: EntityChange) {
-        if (events.lastOrNull() != change) {
-            events.add(change)
+    fun registerChange(transaction: Transaction, change: EntityChange) {
+        if (transaction.entityEvents.lastOrNull() != change) {
+            transaction.entityEvents.add(change)
         }
     }
 
-    fun alertSubscribers() {
-        events.forEach { e ->
+    fun alertSubscribers(transaction: Transaction) {
+        transaction.entityEvents.forEach { e ->
             entitySubscribers.forEach {
                 it(e)
             }
         }
-        events.clear()
+        transaction.entityEvents.clear()
     }
+
+    fun registeredChanges(transaction: Transaction) = transaction.entityEvents.toList()
 }
 
 fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {

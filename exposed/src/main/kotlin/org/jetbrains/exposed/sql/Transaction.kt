@@ -1,19 +1,18 @@
 package org.jetbrains.exposed.sql
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.EntityChange
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 class Key<T>
 @Suppress("UNCHECKED_CAST")
@@ -43,7 +42,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    val entityCache = EntityCache()
+    val entityCache = EntityCache(this)
+
+    internal val entityEvents = CopyOnWriteArrayList<EntityChange>()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatement? = null
@@ -59,7 +60,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     override fun commit() {
         val created = flushCache()
-        EntityHook.alertSubscribers()
+        EntityHook.alertSubscribers(this)
         val createdByHooks = flushCache()
         interceptors.forEach { it.beforeCommit(this) }
         transactionImpl.commit()

@@ -176,7 +176,8 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
     override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
-        val entityCache = TransactionManager.current().entityCache
+        val tx = TransactionManager.current()
+        val entityCache = tx.entityCache
         entityCache.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
@@ -190,13 +191,13 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         }
 
         // current entity updated
-        EntityHook.registerChange(EntityChange(o.klass, o.id, EntityChangeType.Updated))
+        EntityHook.registerChange(tx, EntityChange(o.klass, o.id, EntityChangeType.Updated))
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
-                EntityHook.registerChange(EntityChange(targetClass, it, EntityChangeType.Updated))
+                EntityHook.registerChange(tx,EntityChange(targetClass, it, EntityChangeType.Updated))
             }
         }
     }
@@ -320,7 +321,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
-        EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
+        EntityHook.registerChange(TransactionManager.current(), EntityChange(klass, id, EntityChangeType.Removed))
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
@@ -362,7 +363,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 }
 
 @Suppress("UNCHECKED_CAST")
-class EntityCache {
+class EntityCache(private val transaction: Transaction) {
     val data = HashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     val inserts = HashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
@@ -420,9 +421,9 @@ class EntityCache {
                             updatedEntities.add(entity)
                         }
                     }
-                    batch.execute(TransactionManager.current())
+                    batch.execute(transaction)
                     updatedEntities.forEach {
-                        EntityHook.registerChange(EntityChange(it.klass, it.id, EntityChangeType.Updated))
+                        EntityHook.registerChange(transaction, EntityChange(it.klass, it.id, EntityChangeType.Updated))
                     }
                 }
             }
@@ -468,7 +469,7 @@ class EntityCache {
 
                     entry.storeWrittenValues()
                     store(entry)
-                    EntityHook.registerChange(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
+                    EntityHook.registerChange(transaction, EntityChange(entry.klass, entry.id, EntityChangeType.Created))
                 }
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 
@@ -57,11 +58,11 @@ object EntityHookTestData {
 class EntityHookTest: DatabaseTestsBase() {
 
     private fun<T> trackChanges(statement: Transaction.() -> T): Pair<T, Collection<EntityChange>> {
-        val alreadyChanged = EntityHook.registeredEvents.size
+        val alreadyChanged = EntityHook.registeredChanges(TransactionManager.current()).size
         return transaction {
                 val result = statement()
                 flushCache()
-                result to EntityHook.registeredEvents.drop(alreadyChanged)
+                result to EntityHook.registeredChanges(this).drop(alreadyChanged)
         }
     }
 
