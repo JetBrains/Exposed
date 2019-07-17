@@ -1,3 +1,9 @@
+# 0.16.2
+Bug fixes:
+* `Connection is closed` error when used suspended transactions ([#601](https://github.com/JetBrains/Exposed/issues/601))
+* EntityHooks fails on commit from suspended transactions
+* `TransactionManager.manager` is public again  ([#599](https://github.com/JetBrains/Exposed/issues/599))
+
 # 0.16.1
 Features:
 * Spring Boot starter for Exposed ([#582](https://github.com/JetBrains/Exposed/issues/582)). Many kudos to [Trey Bastian](https://github.com/TreyBastian)!
