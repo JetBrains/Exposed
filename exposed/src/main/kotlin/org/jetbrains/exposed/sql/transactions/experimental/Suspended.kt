@@ -60,23 +60,33 @@ class TransactionResult<T>(internal val transaction: Transaction,
     override suspend fun await(): T {
         return deferred.await().apply {
             if (shouldCommit) {
-                with(transaction) {
-                    try {
-                        commit()
+                val currentTransaction = TransactionManager.currentOrNull()
+                try {
+                    val temporaryManager = transaction.db.transactionManager
+                    (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(transaction)
+                    TransactionManager.resetCurrent(temporaryManager)
+                    with(transaction) {
                         try {
-                            currentStatement?.let {
-                                it.close()
-                                currentStatement = null
+                            commit()
+                            try {
+                                currentStatement?.let {
+                                    it.close()
+                                    currentStatement = null
+                                }
+                                closeExecutedStatements()
+                            } catch (e: Exception) {
+                                exposedLogger.warn("Statements close failed", e)
                             }
-                            closeExecutedStatements()
+                            closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
                         } catch (e: Exception) {
-                            exposedLogger.warn("Statements close failed", e)
+                            rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
+                            throw e
                         }
-                        closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
-                    } catch (e: Exception) {
-                        rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
-                        throw e
                     }
+                } finally {
+                    val transactionManager = currentTransaction?.db?.transactionManager
+                    (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
+                    TransactionManager.resetCurrent(transactionManager)
                 }
             }
         }
