@@ -80,6 +80,10 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
     override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
 
+    override infix fun rightJoin(otherTable: ColumnSet): Join  = Join (this, otherTable, JoinType.RIGHT)
+
+    override infix fun fullJoin(otherTable: ColumnSet): Join = Join (this, otherTable, JoinType.FULL)
+
     override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 }
 
