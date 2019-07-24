@@ -108,23 +108,24 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
     if (outer != null && (db == null || outer.db == db)) {
         val outerManager = outer.db.transactionManager
 
-        db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
-        val transaction = db.transactionManager.newTransaction(transactionIsolation, outer)
+        val transaction = outerManager.newTransaction(transactionIsolation, outer)
         try {
             transaction.statement().also {
-                transaction.commit()
+                if(outer.db.useNestedTransactions)
+                    transaction.commit()
             }
         } finally {
             TransactionManager.resetCurrent(outerManager)
         }
     } else {
-        val existingForDb = db?.let { db.transactionManager }
+        val existingForDb = db?.transactionManager
         existingForDb?.currentOrNull()?.let { transaction ->
             val currentManager = outer?.db.transactionManager
             try {
                 TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    transaction.commit()
+                    if(db.useNestedTransactions)
+                        transaction.commit()
                 }
             } finally {
                 TransactionManager.resetCurrent(currentManager)
@@ -198,7 +199,7 @@ fun <T> inTopLevelTransaction(
 
 internal fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
     val manager = db.transactionManager as? ThreadLocalTransactionManager
-    val currentTransaction = manager?.threadLocal?.get()
+    val currentTransaction = manager?.currentOrNull()
     return block().also {
         manager?.threadLocal?.set(currentTransaction)
     }
