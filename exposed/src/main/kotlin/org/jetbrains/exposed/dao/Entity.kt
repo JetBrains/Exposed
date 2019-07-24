@@ -404,9 +404,7 @@ class EntityCache(private val transaction: Transaction) {
     fun flush(tables: Iterable<IdTable<*>>) {
         val insertedTables = inserts.keys
 
-        for (t in SchemaUtils.sortTablesByReferences(tables)) {
-            flushInserts(t as IdTable<*>)
-        }
+        SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
 
         for (t in tables) {
             data[t]?.let { map ->
@@ -415,9 +413,7 @@ class EntityCache(private val transaction: Transaction) {
                     val batch = EntityBatchUpdate(map.values.first().klass)
                     for ((_, entity) in map) {
                         if (entity.flush(batch)) {
-                            if (entity.klass is ImmutableEntityClass<*,*>) {
-                                throw IllegalStateException("Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}")
-                            }
+                            check(entity.klass !is ImmutableEntityClass<*,*>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
                             updatedEntities.add(entity)
                         }
                     }
