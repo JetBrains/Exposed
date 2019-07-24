@@ -88,6 +88,12 @@ class InListOrNotInListOp<T>(val expr: ExpressionWithColumnType<T>, val list: It
     }
 }
 
+class InSubQueryOp<T>(val expr: Expression<T>, val query: Query): Op<Boolean>() {
+    override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
+        append("${expr.toSQL(queryBuilder)} IN (${query.prepareSQL(queryBuilder)})")
+    }
+}
+
 class QueryParameter<T>(val value: T, val sqlType: IColumnType) : Expression<T>() {
     override fun toSQL(queryBuilder: QueryBuilder): String = queryBuilder.registerArgument(sqlType, value)
 }
