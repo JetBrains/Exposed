@@ -15,16 +15,17 @@ class ThreadLocalTransactionManager(private val db: Database,
 
     val threadLocal = ThreadLocal<Transaction>()
 
-    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = Transaction(
-        ThreadLocalTransaction(
-            db = db,
-            transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-            threadLocal = threadLocal,
-            outerTransaction = outerTransaction
-        )
-    ).apply {
-        threadLocal.set(this)
-    }
+    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction =
+        (outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
+            ThreadLocalTransaction(
+                db = db,
+                transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                threadLocal = threadLocal,
+                outerTransaction = outerTransaction
+            )
+        )).apply {
+            threadLocal.set(this)
+        }
 
     override fun currentOrNull(): Transaction? = threadLocal.get()
 
