@@ -789,6 +789,14 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testInSubQuery01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = cities.select { cities.id inSubQuery cities.slice(cities.id).select { cities.id eq 2 } }
+            assertEquals(1, r.count())
+        }
+    }
+
+    @Test
     fun testInsertSelect01() {
         withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val substring = users.name.substring(1, 2)
