@@ -76,15 +76,20 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
             Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
+    override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
+    override fun innerJoin(otherTable: ColumnSet, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join = Join(this, otherTable, JoinType.INNER, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
+    override infix fun leftJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.LEFT)
+    override fun leftJoin(otherTable: ColumnSet, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join = Join(this, otherTable, JoinType.LEFT, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun rightJoin(otherTable: ColumnSet): Join  = Join (this, otherTable, JoinType.RIGHT)
+    override infix fun rightJoin(otherTable: ColumnSet): Join  = Join(this, otherTable, JoinType.RIGHT)
+    override fun rightJoin(otherTable: ColumnSet, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join = Join(this, otherTable, JoinType.RIGHT, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun fullJoin(otherTable: ColumnSet): Join = Join (this, otherTable, JoinType.FULL)
+    override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
+    override fun fullJoin(otherTable: ColumnSet, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join = Join(this, otherTable, JoinType.FULL, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
+    override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+    override fun crossJoin(otherTable: ColumnSet, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join = Join(this, otherTable, JoinType.CROSS, onColumn, otherColumn, additionalConstraint)
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)
