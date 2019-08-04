@@ -871,14 +871,16 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
         when(val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    val refIds = this.map { it.run { refColumn.lookup() } }
-                    refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    }.orEmpty()
                 }
             }
             is OptionalReference<*, *, *> -> {
                 (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    val refIds = this.mapNotNull { it.run { refColumn.lookup() } }
-                    refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    }.orEmpty()
                 }
             }
             is Referrers<*, *, *, *, *> -> {
