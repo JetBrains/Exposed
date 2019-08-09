@@ -5,7 +5,6 @@ import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
@@ -287,25 +286,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
     /**
-     * A date column to store a date.
-     *
-     * @param name The column name
-     */
-    fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
-
-    /**
      * A bool column to store a boolean value.
      *
      * @param name The column name
      */
     fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
-
-    /**
-     * A datetime column to store both a date and a time.
-     *
-     * @param name The column name
-     */
-    fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
 
     /**
      * A blob column to store a large amount of binary data.

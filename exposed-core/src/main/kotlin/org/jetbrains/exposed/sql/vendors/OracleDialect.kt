@@ -35,7 +35,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is DateColumnType -> "DATE ${super.processForDefaultValue(e)}"
+        e is LiteralOp<*> && e.columnType is IDateColumnType -> "DATE ${super.processForDefaultValue(e)}"
         else -> super.processForDefaultValue(e)
     }
 

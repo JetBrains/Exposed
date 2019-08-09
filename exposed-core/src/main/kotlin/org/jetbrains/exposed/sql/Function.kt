@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
+
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.*
 
@@ -12,17 +11,6 @@ class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<In
             "COUNT(${if (distinct) "DISTINCT " else ""}${expr.toSQL(queryBuilder)})"
 }
 
-class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>(DateColumnType(false)) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "DATE(${expr.toSQL(queryBuilder)})"
-}
-
-class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
-    override fun toSQL(queryBuilder: QueryBuilder) = when {
-        (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-        else -> "CURRENT_TIMESTAMP"
-    }
-}
-
 open class CustomFunction<T>(val functionName: String, _columnType: IColumnType, vararg val expr: Expression<*>) : Function<T>(_columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String = buildString {
         append(functionName)
@@ -30,10 +18,6 @@ open class CustomFunction<T>(val functionName: String, _columnType: IColumnType,
         expr.joinTo(this) { it.toSQL(queryBuilder) }
         append(')')
     }
-}
-
-class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "MONTH(${expr.toSQL(queryBuilder)})"
 }
 
 class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {

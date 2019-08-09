@@ -1,31 +1,30 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.h2.engine.Session
+import org.h2.engine.Mode
 import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.joda.time.DateTime
-import java.sql.Wrapper
+import java.text.SimpleDateFormat
+import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
 }
 
+private val Transaction.isMySQLMode: Boolean
+    get() = (connection.connection as? JdbcConnection)?.settings?.mode?.enum == Mode.ModeEnum.MySQL
+
 internal object H2FunctionProvider : FunctionProvider() {
 
-    private fun currentMode(): String =
-            ((TransactionManager.current().connection.connection as Wrapper).unwrap(JdbcConnection::class.java).session as? Session)?.database?.mode?.name ?: ""
-
-    internal val isMySQLMode: Boolean get() = currentMode() == "MySQL"
-
-    private fun dbReleaseDate(transaction: Transaction) : DateTime {
+    private fun dbReleaseDate(transaction: Transaction) : Date {
         val releaseDate = transaction.db.metadata { databaseProductVersion.substringAfterLast('(').substringBeforeLast(')') }
-        return DateTime.parse(releaseDate)
+        val formatter = SimpleDateFormat("yyyy-MM-dd")
+        return formatter.parse(releaseDate)
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        if (!isMySQLMode) transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
+        if (!transaction.isMySQLMode) transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
 
         val builder = QueryBuilder(true)
         val values = data.map { builder.registerArgument(it.first.columnType, it.second) }
@@ -39,13 +38,14 @@ internal object H2FunctionProvider : FunctionProvider() {
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols}
+        val borderDate = Date(118, 2, 18)
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
-            ignore && uniqueCols.isNotEmpty() && isMySQLMode && dbReleaseDate(transaction).isBefore(DateTime.parse("2018-03-18")) -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && dbReleaseDate(transaction) < borderDate -> {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
-            ignore && uniqueCols.isNotEmpty() && isMySQLMode -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
                 super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
             else -> super.insert(ignore, table, columns, expr, transaction)
@@ -59,7 +59,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override val supportsMultipleGeneratedKeys: Boolean = false
 
-    override val supportsOnlyIdentifiersInGeneratedKeys get() = !(functionProvider as H2FunctionProvider).isMySQLMode
+    override val supportsOnlyIdentifiersInGeneratedKeys get() = !TransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
             super.existingIndices(*tables).mapValues { it.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_")  } }.filterValues { it.isNotEmpty() }
@@ -74,7 +74,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override val name: String
         get() = when {
-            (functionProvider as H2FunctionProvider).isMySQLMode -> "$dialectName (Mysql Mode)"
+            TransactionManager.current().isMySQLMode -> "$dialectName (Mysql Mode)"
             else -> dialectName
         }
     companion object {

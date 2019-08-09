@@ -10,16 +10,13 @@ repositories {
     jcenter()
 }
 
-repositories {
-    mavenCentral()
-}
-
 val dialect: String by project
 
 dependencies {
-//    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
     testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
     testImplementation(project(":exposed-jdbc"))
+    testImplementation(project(":exposed-jodatime"))
+    testImplementation("joda-time", "joda-time", "2.10.2")
     testImplementation(kotlin("test-junit"))
     testImplementation("org.slf4j", "slf4j-log4j12", "1.7.26")
     testImplementation("log4j", "log4j", "1.2.17")
@@ -30,7 +27,6 @@ dependencies {
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
     testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
-//    implementation("com.h2database", "h2", "1.4.199")
     testImplementation("com.h2database", "h2", "1.4.199")
 
     when (dialect) {

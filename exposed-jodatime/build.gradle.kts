@@ -8,4 +8,5 @@ repositories {
 
 dependencies {
     api(project(":exposed-core"))
+    api("joda-time", "joda-time", "2.10.2")
 }

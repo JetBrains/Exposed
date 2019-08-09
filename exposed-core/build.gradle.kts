@@ -11,10 +11,9 @@ repositories {
 dependencies {
     api(kotlin("stdlib"))
     api(kotlin("reflect"))
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
-    api("joda-time", "joda-time", "2.10.2")
+    api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
     api("org.slf4j", "slf4j-api", "1.7.25")
-    implementation("com.h2database", "h2", "1.4.199")
+    compileOnly("com.h2database", "h2", "1.4.199")
 }
 
 publishJar {

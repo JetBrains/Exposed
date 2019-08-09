@@ -5,14 +5,9 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTime
 import java.math.BigDecimal
 
 fun ExpressionWithColumnType<*>.count() : Function<Int> = Count(this)
-
-fun <T: DateTime?> Expression<T>.date() = Date(this)
-
-fun <T: DateTime?> Expression<T>.month() = Month(this)
 
 fun Column<*>.countDistinct() : Function<Int> = Count(this, true)
 
@@ -45,7 +40,6 @@ fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
 fun<T:Any?> ExpressionWithColumnType<T>.function(functionName: String) : Function<T?> = CustomFunction(functionName, columnType, this)
 fun CustomStringFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<String?>(functionName, VarCharColumnType(), *params)
 fun CustomLongFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<Long?>(functionName, LongColumnType(), *params)
-fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
 
 fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Pair<Expression<*>,SortOrder>): GroupConcat<T> =
         GroupConcat(this, separator, distinct, orderBy)
@@ -176,7 +170,6 @@ object SqlExpressionBuilder {
         is Int -> intLiteral(value)
         is Long -> longLiteral(value)
         is String -> stringLiteral(value)
-        is DateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
         is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
         else -> LiteralOp(columnType, value)
     } as LiteralOp<T>

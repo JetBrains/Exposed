@@ -285,7 +285,7 @@ abstract class VendorDialect(override val name: String,
 
 }
 
-internal val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
+val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable : DatabaseDialect? get() =
     if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
