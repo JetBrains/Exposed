@@ -364,14 +364,14 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
-    val data = HashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = HashMap<IdTable<*>, MutableList<Entity<*>>>()
+    val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+    val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any,  Entity<*>> = getMap(f.table)
 
     private fun getMap(table: IdTable<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
-        HashMap()
+        LinkedHashMap()
     }
 
     fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
@@ -382,11 +382,11 @@ class EntityCache(private val transaction: Transaction) {
     fun <ID:Comparable<ID>, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
     fun <ID:Comparable<ID>, T: Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
-        getMap(f).put(o.id.value, o)
+        getMap(f)[o.id.value] = o
     }
 
     fun store(o: Entity<*>) {
-        getMap(o.klass.table).put(o.id.value, o)
+        getMap(o.klass.table)[o.id.value] = o
     }
 
     fun <ID:Comparable<ID>, T: Entity<ID>> remove(table: IdTable<ID>, o: T) {
