@@ -12,10 +12,10 @@ open class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val
     }
 
     override fun prepareSQL(transaction: Transaction): String =
-        transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.toSQL(QueryBuilder(true)), limit, transaction)
+        transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.let { QueryBuilder(true).append(it).toString() }, limit, transaction)
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
-        where?.toSQL(this)
+        where?.toQueryBuilder(this)
         listOf(args)
     }
 

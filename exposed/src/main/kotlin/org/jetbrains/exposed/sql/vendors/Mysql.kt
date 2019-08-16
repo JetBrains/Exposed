@@ -29,7 +29,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val columns = data.joinToString { transaction.identity(it.first) }
-        val values = data.joinToString { builder.registerArgument(it.first.columnType, it.second) }
+        val values = builder.apply { data.appendTo { registerArgument(it.first.columnType, it.second) } }.toString()
         return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
     }
 
@@ -45,16 +45,17 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
-    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
         return if((currentDialect as MysqlDialect).isMysql8)
             super.regexp(expr1, pattern, caseSensitive, queryBuilder)
         else
-            "${expr1.toSQL(queryBuilder)} REGEXP ${pattern.toSQL(queryBuilder)}"
+            queryBuilder { append(expr1, " REGEXP ", pattern)}
     }
 
     private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
-        override fun toSQL(queryBuilder: QueryBuilder): String =
-                "MATCH(${expr.toSQL(queryBuilder)}) AGAINST ('$pattern' ${mode.mode()})"
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+            append("MATCH(", expr, " AGAINST ('", pattern, "' ", mode.mode(),")")
+        }
     }
 
     private enum class MysqlMatchMode(val operator: String) : MatchMode {
@@ -68,7 +69,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANSE) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
-        val expression = e.toSQL(QueryBuilder(false)).trim()
+        val expression = e.toQueryBuilder(QueryBuilder(false)).toString().trim()
         return super.isAllowedAsColumnDefault(e) ||
                 (expression == "CURRENT_TIMESTAMP" && TransactionManager.current().db.isVersionCovers(BigDecimal("5.6")))
     }

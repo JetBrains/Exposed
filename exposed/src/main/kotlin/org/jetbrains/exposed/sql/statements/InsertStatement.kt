@@ -97,8 +97,11 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         val builder = QueryBuilder(true)
         val values = arguments!!.first()
         val sql = if(values.isEmpty()) ""
-        else values.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
-            builder.registerArgument(col, value)
+        else with(builder) {
+            values.appendTo(prefix = "VALUES (", postfix = ")") { (col, value) ->
+                registerArgument(col, value)
+            }
+            toString()
         }
         return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }

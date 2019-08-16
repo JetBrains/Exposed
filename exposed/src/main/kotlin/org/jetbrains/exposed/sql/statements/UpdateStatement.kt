@@ -22,7 +22,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         values.forEach {
             registerArgument(it.key, it.value)
         }
-        where?.toSQL(this)
+        where?.toQueryBuilder(this)
         if (args.isNotEmpty()) listOf(args) else emptyList()
     }
 

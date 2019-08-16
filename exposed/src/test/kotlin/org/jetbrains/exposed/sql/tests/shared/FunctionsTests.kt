@@ -3,17 +3,11 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.mod
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.rem
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-import java.math.BigDecimal
 import kotlin.test.assertNotNull
 
 class FunctionsTests : DatabaseTestsBase() {
@@ -81,9 +75,10 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testLengthWithCount01() {
         class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
-            override fun toSQL(queryBuilder: QueryBuilder): String
-                    = if (currentDialect is SQLServerDialect) "LEN(${exp.toSQL(queryBuilder)})"
-            else "LENGTH(${exp.toSQL(queryBuilder)})"
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+                if (currentDialect is SQLServerDialect) append("LEN(", exp, ')')
+                else append("LENGTH(", exp, ')')
+            }
         }
         withCitiesAndUsers { cities, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()

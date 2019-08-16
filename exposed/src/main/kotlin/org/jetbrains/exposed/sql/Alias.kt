@@ -41,16 +41,16 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 }
 
 class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "${delegate.toSQL(queryBuilder)} $alias"
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(delegate).append(" $alias") }
 
     fun aliasOnlyExpression() : Expression<T> {
         return if (delegate is ExpressionWithColumnType<T>) {
             object : Function<T>(delegate.columnType) {
-                override fun toSQL(queryBuilder: QueryBuilder): String = alias
+                override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         } else {
             object : Expression<T>() {
-                override fun toSQL(queryBuilder: QueryBuilder): String = alias
+                override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         }
     }
@@ -58,8 +58,12 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
 
 class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = "(${query.prepareSQL(queryBuilder)}) $alias"
-
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder{
+        append("(")
+        query.prepareSQL(queryBuilder)
+        append(") ", alias)
+    }
+    
     override val columns: List<Column<*>>
         get() = query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
 
@@ -102,5 +106,9 @@ fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinTy
 val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
 
 fun <T:Any> wrapAsExpression(query: Query) = object : Expression<T>() {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "(" + query.prepareSQL(queryBuilder) + ")"
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        append("(")
+        query.prepareSQL(this)
+        append(")")
+    }
 }

@@ -41,8 +41,8 @@ open class DataTypeProvider {
     open val blobAsStream = false
 
     open fun processForDefaultValue(e: Expression<*>) : String = when (e) {
-        is LiteralOp<*> -> e.toSQL(QueryBuilder(false))
-        else -> "(${e.toSQL(QueryBuilder(false))})"
+        is LiteralOp<*> -> "$e"
+        else -> "($e)"
     }
 }
 
@@ -50,12 +50,18 @@ abstract class FunctionProvider {
 
     open val DEFAULT_VALUE_EXPRESSION = "DEFAULT VALUES"
 
-    open fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder) : String =
-            "SUBSTRING(${expr.toSQL(builder)}, ${start.toSQL(builder)}, ${length.toSQL(builder)})"
+    open fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>,
+                                  length: Expression<Int>, builder: QueryBuilder,
+                                  prefix: String = "SUBSTRING") = builder {
+        append(prefix, "(", expr, ", ", start, ", ", length, ")")
+    }
+
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
-    open fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = "CAST(${expr.toSQL(builder)} AS ${type.sqlType()})"
+    open fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = builder {
+        append("CAST(", expr, " AS ", type.sqlType(), ")")
+    }
 
     open fun<T:String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) { this@match.like(pattern) }
 
@@ -72,16 +78,21 @@ abstract class FunctionProvider {
     }
 
     open fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
-        return buildString {
-            val builder = QueryBuilder(true)
-            append("UPDATE ${targets.describe(transaction, builder)}")
-            append(" SET ")
-            append(columnsAndValues.joinToString { (col, value) ->
-                "${transaction.identity(col)}=" + builder.registerArgument(col, value)
-            })
+        return with(QueryBuilder(true)) {
+            +"UPDATE "
+            targets.describe(transaction, this)
+            +" SET "
+            columnsAndValues.appendTo(this) { (col, value) ->
+                append("${transaction.identity(col)}=")
+                registerArgument(col, value)
+            }
 
-            where?.let { append(" WHERE " + it.toSQL(builder)) }
-            limit?.let { append(" LIMIT $it")}
+            where?.let {
+                +" WHERE "
+                +it
+            }
+            limit?.let { +" LIMIT $it" }
+            toString()
         }
     }
 
@@ -116,14 +127,14 @@ abstract class FunctionProvider {
         }
     }
 
-    open fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) = buildString {
+    open fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("GROUP_CONCAT(")
         if (expr.distinct)
             append("DISTINCT ")
-        append(expr.expr.toSQL(queryBuilder))
+        append(expr.expr)
         if (expr.orderBy.isNotEmpty()) {
-            expr.orderBy.joinTo(this, prefix = " ORDER BY ") {
-                "${it.first.toSQL(queryBuilder)} ${it.second.name}"
+            expr.orderBy.toList().appendTo(prefix = " ORDER BY ") {
+                append(it.first, " ", it.second.name)
             }
         }
         expr.separator?.let {
@@ -132,11 +143,11 @@ abstract class FunctionProvider {
         append(")")
     }
 
-    open fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = buildString {
+    open fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = queryBuilder {
         append("REGEXP_LIKE(")
-        append(expr1.toSQL(queryBuilder))
+        append(expr1)
         append(", ")
-        append(pattern.toSQL(queryBuilder))
+        append(pattern)
         append(", ")
         if (caseSensitive)
             append("'c'")
@@ -149,7 +160,7 @@ abstract class FunctionProvider {
         fun mode() : String
     }
 
-    open fun <T:String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+    open fun <T:String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = queryBuilder {
         if (separator == "")
             append("CONCAT(")
         else {
@@ -158,7 +169,7 @@ abstract class FunctionProvider {
             append(separator)
             append("',")
         }
-        expr.joinTo(this) { it.toSQL(queryBuilder) }
+        expr.toList().appendTo { +it }
         append(")")
     }
 }

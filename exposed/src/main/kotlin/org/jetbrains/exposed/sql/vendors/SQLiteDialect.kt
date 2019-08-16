@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -15,8 +14,8 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
-    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder): String =
-            super.substring(expr, start, length, builder).replace("SUBSTRING", "substr")
+    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder, prefix: String) =
+            super.substring(expr, start, length, builder, "substr")
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
@@ -34,25 +33,25 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return super.update(targets, columnsAndValues, limit, where, transaction)
     }
 
-    override fun <T: String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
+    override fun <T: String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT.")
             expr.distinct ->  tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT.")
-            else -> super.groupConcat(expr, queryBuilder).replace(" SEPARATOR ", ", ")
+            else -> super.groupConcat(expr, queryBuilder)//.replace(" SEPARATOR ", ", ")
         }
 
     }
 
-    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
         TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression")
     }
 
-    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = queryBuilder {
         if (separator == "")
-            expr.joinTo(this, separator = " || ") { it.toSQL(queryBuilder) }
+            expr.toList().appendTo(this, separator = " || ") { +it }
         else
-            expr.joinTo(this, separator = " || '$separator' || ") { it.toSQL(queryBuilder) }
+            expr.toList().appendTo(this, separator = " || '$separator' || ") { +it }
     }
 }
 

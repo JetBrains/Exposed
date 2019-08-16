@@ -155,7 +155,11 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
             (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
                 ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
-    fun fullIdentity(column: Column<*>): String = buildString {
+    fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
+        fullIdentity(column, it)
+    }.toString()
+
+    internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
         if (column.table is Alias<*>)
             append(db.identifierManager.quoteIfNecessary(column.table.alias))
         else

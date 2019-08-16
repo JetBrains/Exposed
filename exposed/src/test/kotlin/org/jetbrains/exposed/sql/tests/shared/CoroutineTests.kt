@@ -2,7 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.experimental.andThen
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -65,7 +68,6 @@ class CoroutineTests : DatabaseTestsBase() {
 
                 launchResult.await()
                 val result = suspendedTransactionAsync(Dispatchers.Default, db = db) {
-                    addLogger(StdOutSqlLogger)
                     Testing.select { Testing.id.eq(1) }.single()[Testing.id]
                 }.andThen {
                     assertEquals(1, it)

@@ -32,7 +32,7 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
     }
 
     operator fun <T> set(c: Expression<out T>, value: T) {
-        val index = fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")
+        val index = fieldIndex[c] ?: error("${c.toQueryBuilder(QueryBuilder(false))} is not in record set")
         data[index] = value
     }
 
@@ -47,7 +47,7 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
     private fun <T> rawToColumnValue(raw: T?, c: Expression<T>): T {
         return when {
             raw == null -> null
-            raw == NotInitializedValue -> error("${c.toSQL(QueryBuilder(false))} is not initialized yet")
+            raw == NotInitializedValue -> error("${c.toQueryBuilder(QueryBuilder(false))} is not initialized yet")
             c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
             c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
             else -> raw
@@ -56,10 +56,10 @@ class ResultRow(internal val fieldIndex: Map<Expression<*>, Int>) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? =
-            data[fieldIndex[c] ?: error("${c.toSQL(QueryBuilder(false))} is not in record set")] as T?
+            data[fieldIndex[c] ?: error("${c.toQueryBuilder(QueryBuilder(false))} is not in record set")] as T?
 
     override fun toString(): String =
-            fieldIndex.entries.joinToString { "${it.key.toSQL(QueryBuilder(false))}=${data[it.value]}" }
+            fieldIndex.entries.joinToString { "${it.key.toQueryBuilder(QueryBuilder(false))}=${data[it.value]}" }
 
     internal object NotInitializedValue
 
@@ -169,55 +169,58 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
     override fun prepareSQL(transaction: Transaction): String = prepareSQL(QueryBuilder(true))
 
-    fun prepareSQL(builder: QueryBuilder): String = buildString {
-        append("SELECT ")
+    fun prepareSQL(builder: QueryBuilder): String {
+        builder {
+            append("SELECT ")
 
-        if (count) {
-            append("COUNT(*)")
-        }
-        else {
-            if (distinct) {
-                append("DISTINCT ")
+            if (count) {
+                append("COUNT(*)")
             }
-            append(set.fields.joinToString {it.toSQL(builder)})
-        }
-        append(" FROM ")
-        append(set.source.describe(transaction, builder))
+            else {
+                if (distinct) {
+                    append("DISTINCT ")
+                }
+                set.fields.appendTo { +it }
+            }
+            append(" FROM ")
+            set.source.describe(transaction, this)
 
-        where?.let {
-            append(" WHERE ")
-            append(it.toSQL(builder))
-        }
-
-        if (!count) {
-            if (groupedByColumns.isNotEmpty()) {
-                append(" GROUP BY ")
-                append(groupedByColumns.joinToString {
-                    ((it as? ExpressionAlias)?.aliasOnlyExpression() ?: it).toSQL(builder)
-                })
+            where?.let {
+                append(" WHERE ")
+                +it
             }
 
-            having?.let {
-                append(" HAVING ")
-                append(it.toSQL(builder))
+            if (!count) {
+                if (groupedByColumns.isNotEmpty()) {
+                    append(" GROUP BY ")
+                    groupedByColumns.appendTo {
+                        +((it as? ExpressionAlias)?.aliasOnlyExpression() ?: it)
+                    }
+                }
+
+                having?.let {
+                    append(" HAVING ")
+                    append(it)
+                }
+
+                if (orderByExpressions.isNotEmpty()) {
+                    append(" ORDER BY ")
+                    orderByExpressions.appendTo {
+                        append((it.first as? ExpressionAlias<*>)?.alias ?: it.first, " ", it.second.name)
+                    }
+                }
+
+                limit?.let {
+                    append(" ")
+                    append(currentDialect.functionProvider.queryLimit(it, offset, orderByExpressions.isNotEmpty()))
+                }
             }
 
-            if (orderByExpressions.isNotEmpty()) {
-                append(" ORDER BY ")
-                append(orderByExpressions.joinToString {
-                    "${(it.first as? ExpressionAlias<*>)?.alias ?: it.first.toSQL(builder)} ${it.second.name}"
-                })
-            }
-
-            limit?.let {
-                append(" ")
-                append(currentDialect.functionProvider.queryLimit(it, offset, orderByExpressions.isNotEmpty()))
+            if (isForUpdate()) {
+                append(" FOR UPDATE")
             }
         }
-
-        if (isForUpdate()) {
-            append(" FOR UPDATE")
-        }
+        return builder.toString()
     }
 
     override fun forUpdate() : Query {
@@ -246,7 +249,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         val oop = Op.build { op() }
         if (having != null) {
             val fake = QueryBuilder(false)
-            error ("HAVING clause is specified twice. Old value = '${having!!.toSQL(fake)}', new value = '${oop.toSQL(fake)}'")
+            error ("HAVING clause is specified twice. Old value = '${having!!.toQueryBuilder(fake)}', new value = '${oop.toQueryBuilder(fake)}'")
         }
         having = oop
         return this

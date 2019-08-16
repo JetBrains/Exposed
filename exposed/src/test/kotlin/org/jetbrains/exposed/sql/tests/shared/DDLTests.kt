@@ -227,10 +227,12 @@ class DDLTests : DatabaseTestsBase() {
     @Test fun testDefaults01() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {
-            override fun toSQL(queryBuilder: QueryBuilder) = when (currentDialect) {
-                is OracleDialect -> "SYSDATE"
-                is SQLServerDialect -> "GETDATE()"
-                else -> "NOW()"
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+                +when (currentDialect) {
+                    is OracleDialect -> "SYSDATE"
+                    is SQLServerDialect -> "GETDATE()"
+                    else -> "NOW()"
+                }
             }
         }
         val dtConstValue = DateTime.parse("2010-01-01").withZone(DateTimeZone.UTC)

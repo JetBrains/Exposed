@@ -83,13 +83,14 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false) 
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val builder = QueryBuilder(true)
             val output = table.autoIncColumn?.let { " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS" }.orEmpty()
-            values.joinToString(prefix = "$output VALUES") {
-                it.joinToString(prefix = "(", postfix = ")") { (col, value) ->
-                    builder.registerArgument(col, value)
+            with(QueryBuilder(true)) {
+                values.appendTo(prefix = "$output VALUES") {
+                    it.appendTo(prefix = "(", postfix = ")") { (col, value) ->
+                        registerArgument(col, value)
+                    }
                 }
-            }
+            } .toString()
         }
         return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
     }

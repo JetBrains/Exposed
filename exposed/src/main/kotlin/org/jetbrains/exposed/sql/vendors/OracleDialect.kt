@@ -45,8 +45,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
 internal object OracleFunctionProvider : FunctionProvider() {
 
-    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder): String =
-            super.substring(expr, start, length, builder).replace("SUBSTRING", "SUBSTR")
+    override fun<T:String?> substring(expr: Expression<T>, start: Expression<Int>, length: Expression<Int>, builder: QueryBuilder, prefix: String) =
+            super.substring(expr, start, length, builder, "SUBSTR")
 
     override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
         val def =  super.update(targets, columnsAndValues, null, where, transaction)
@@ -80,25 +80,24 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean)
         = (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
 
-    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String = buildString {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) = queryBuilder {
         if (expr.orderBy.size != 1)
             TransactionManager.current().throwUnsupportedException("LISTAGG requires single order by clause")
         append("LISTAGG(")
-        append(expr.expr.toSQL(queryBuilder))
+        append(expr.expr)
         expr.separator?.let {
             append(", '$it'")
         }
         append(") WITHIN GROUP (ORDER BY ")
         val (col, order) = expr.orderBy.single()
-        append("${col.toSQL(queryBuilder)} ${order.name}")
-        append(")")
+        append(col, " ", order.name, ")")
     }
 
-    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = buildString {
+    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = queryBuilder {
         if (separator == "")
-            expr.joinTo(this, separator = " || ") { it.toSQL(queryBuilder) }
+            expr.toList().appendTo(separator = " || ") { +it }
         else
-            expr.joinTo(this, separator = " || '$separator' || ") { it.toSQL(queryBuilder) }
+            expr.toList().appendTo(separator = " || '$separator' || ") { +it }
     }
 }
 
