@@ -1,3 +1,14 @@
+# 0.16.4
+Features:
+* Added where in subquery ([#610](https://github.com/JetBrains/Exposed/issues/610)). Kudos to [Manabu OHTAKE](https://github.com/otkmnb2783) for PR. 
+
+Bug fixes:
+* ClassCastException on an attempt to flush IdTable with reference to Table
+* Fixed needQuotes check of already quoted identifiers ([#614](https://github.com/JetBrains/Exposed/issues/614)). Thanks [mpe85](https://github.com/mpe85)
+* Suspend transactions broken when working with multiple databases ([#624](https://github.com/JetBrains/Exposed/issues/624))
+* Unnecessary select when preloading absent references ([#615](https://github.com/JetBrains/Exposed/issues/615))
+* Updates of entities were executed in random order what could lead to unexpected behavior 
+
 # 0.16.3
 Features:
 * Added `rightJoin`, `fullJoin` and `crossJoin` functions. [Fedor Korotkov](https://github.com/fkorotkov) thanks for PR.  
