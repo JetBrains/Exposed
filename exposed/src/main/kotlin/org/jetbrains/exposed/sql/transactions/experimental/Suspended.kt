@@ -115,7 +115,8 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
                                              currentTransaction: Transaction?,
                                              db: Database? = null,
                                              body: suspend TransactionScope.() -> T) : T {
-    return coroutineContext[TransactionScope]?.body() ?: run {
+    val currentScope = coroutineContext[TransactionScope]
+    suspend fun newScope() : T {
         val manager = (currentTransaction?.db ?: db)?.transactionManager ?: TransactionManager.manager
 
         val tx = currentTransaction ?: manager.newTransaction(manager.defaultIsolationLevel)
@@ -124,7 +125,13 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
 
         val newContext = context ?: coroutineContext
 
-        TransactionScope(tx, newContext + element).body()
+       return TransactionScope(tx, newContext + element).body()
+    }
+    return when {
+        currentScope == null -> newScope()
+        currentTransaction != null && currentScope.tx != currentTransaction -> newScope()
+        db != null && currentScope.tx.db != db -> newScope()
+        else -> currentScope.body()
     }
 }
 
