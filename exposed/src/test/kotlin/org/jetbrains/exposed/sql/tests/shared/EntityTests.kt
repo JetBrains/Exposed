@@ -6,14 +6,15 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.joda.time.DateTime
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.rowset.serial.SerialBlob
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 object EntityTestsData {
 
