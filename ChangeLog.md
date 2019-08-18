@@ -1,3 +1,13 @@
+# 0.17.1
+Performance:
+* QueryBuilder and Expression were reworked to lower object allocation when preparing SQL.
+
+**Important**: 
+
+This version has a broken change: `Expression.toSQL` was replaced with `Expression.toQueryBuilder`.
+Difference is what `toQueryBuilder` doesn't return `String` representation of an `Expression` but only register it in a `QueryBuilder`.
+If you need to get raw SQL value please use `Expression.toString`.
+
 # 0.16.4
 Features:
 * Added where in subquery ([#610](https://github.com/JetBrains/Exposed/issues/610)). Kudos to [Manabu OHTAKE](https://github.com/otkmnb2783) for PR. 
