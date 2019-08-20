@@ -4,9 +4,12 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.Blob
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
@@ -310,7 +313,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      *
      * @param name The column name
      */
-    fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+    fun date(name: String): Column<LocalDate> = registerColumn(name, DateColumnType(false))
 
     /**
      * A bool column to store a boolean value.
@@ -324,7 +327,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      *
      * @param name The column name
      */
-    fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+    fun datetime(name: String): Column<LocalDateTime> = registerColumn(name, DateColumnType(true))
 
     /**
      * A blob column to store a large amount of binary data.

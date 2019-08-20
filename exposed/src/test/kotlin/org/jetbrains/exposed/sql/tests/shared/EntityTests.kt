@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.joda.time.DateTime
+import java.time.LocalDateTime
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -137,7 +138,7 @@ class EntityTests: DatabaseTestsBase() {
                     DBDefault.new { field = "1" },
                     DBDefault.new {
                         field = "2"
-                        t1 = DateTime.now().minusDays(5)
+                        t1 = LocalDateTime.now().minusDays(5)
                     })
             flushCache()
             created.forEach {
@@ -154,7 +155,7 @@ class EntityTests: DatabaseTestsBase() {
             val created = listOf(
                     DBDefault.new{
                         field = "2"
-                        t1 = DateTime.now().minusDays(5)
+                        t1 = LocalDateTime.now().minusDays(5)
                     }, DBDefault.new{ field = "1" })
 
             flushCache()
@@ -922,18 +923,18 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             val holiday1 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             val holiday2 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             val holiday3 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             school1.holidays = SizedCollection(holiday1, holiday2)
@@ -968,18 +969,18 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             val holiday1 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             val holiday2 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             val holiday3 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = LocalDateTime.now()
+                holidayEnd = LocalDateTime.now().plusDays(10)
             }
 
             SchoolHolidays.insert {

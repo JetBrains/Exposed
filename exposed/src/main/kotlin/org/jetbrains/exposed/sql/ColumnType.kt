@@ -13,11 +13,14 @@ import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
-import java.sql.Blob
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Types
+import java.sql.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.Date
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.reflect.KClass
 
@@ -212,53 +215,57 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: KClass<T>, colLength: Int)
     }
 }
 
-private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
-private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
-private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
-private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
+private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
+private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
+private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss")
+private val SQLITE_DATE_STRING_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd")
 
-class DateColumnType(val time: Boolean): ColumnType() {
-    override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
+fun Long.toLocalDateTime(): LocalDateTime =
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault());
+
+fun LocalDateTime.toLong() =
+        this.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+fun LocalDate.toLong() =
+        this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+class DateColumnType(val time: Boolean) : ColumnType() {
+    override fun sqlType(): String = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
 
-        val dateTime = when (value) {
-            is DateTime -> value
-            is java.sql.Date -> DateTime(value.time)
-            is java.sql.Timestamp -> DateTime(value.time)
+        return when (value) {
+            is LocalDateTime -> value.format(DEFAULT_DATE_TIME_STRING_FORMATTER)
+            is LocalDate -> value.format(DEFAULT_DATE_STRING_FORMATTER)
+            is java.sql.Date -> value.toLocalDate().format(DEFAULT_DATE_STRING_FORMATTER)
+            is java.sql.Timestamp -> value.toLocalDateTime().format(DEFAULT_DATE_STRING_FORMATTER)
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
-
-        return if (time)
-            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
-        else
-            "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
     }
 
-    override fun valueFromDB(value: Any): Any = when(value) {
-        is DateTime -> value
-        is java.sql.Date ->  DateTime(value.time)
-        is java.sql.Timestamp -> DateTime(value.time)
-        is Int -> DateTime(value.toLong())
-        is Long -> DateTime(value)
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is LocalDateTime -> value
+        is LocalDate -> value
+        is java.sql.Date -> value.toLocalDate()
+        is java.sql.Timestamp -> value.toLocalDateTime()
+        is Int -> value.toLong().toLocalDateTime()
+        is Long -> value.toLocalDateTime()
         is String -> when {
-            currentDialect is SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
-            currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
+            currentDialect is SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parse(value)
+            currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parse(value)
             else -> value
         }
         // REVIEW
-        else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value.toString())
+        else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parse(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        if (value is DateTime) {
-            val millis = value.millis
-            if (time) {
-                return java.sql.Timestamp(millis)
-            } else {
-                return java.sql.Date(millis)
-            }
+        if (value is LocalDateTime && time) {
+            Timestamp(value.toLong())
+        }
+        if (value is LocalDate && !time) {
+            java.sql.Date(value.toLong())
         }
         return value
     }

@@ -6,12 +6,14 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.sql.SQLException
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertFalse
@@ -226,7 +228,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testDefaults01() {
         val currentDT = CurrentDateTime()
-        val nowExpression = object : Expression<DateTime>() {
+        val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (currentDialect) {
                     is OracleDialect -> "SYSDATE"
@@ -235,8 +237,8 @@ class DDLTests : DatabaseTestsBase() {
                 }
             }
         }
-        val dtConstValue = DateTime.parse("2010-01-01").withZone(DateTimeZone.UTC)
-        val dtLiteral = dateLiteral(dtConstValue)
+        val dtConstValue = LocalDate.parse("2010-01-01")
+        val dtLiteral = dateTimeLiteral(dtConstValue.atTime(0,0,0))
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
@@ -284,8 +286,8 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals("testNullable", row1[TestTable.sn])
             assertEquals(42, row1[TestTable.l])
             assertEquals('X', row1[TestTable.c])
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t3].withTimeAtStartOfDay())
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t4].withTimeAtStartOfDay())
+            assertEqualDateTime(dtConstValue.atTime(0,0,0) , row1[TestTable.t3])
+            assertEqualDateTime(dtConstValue.atTime(0,0,0), row1[TestTable.t4].atTime(0,0,0))
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
