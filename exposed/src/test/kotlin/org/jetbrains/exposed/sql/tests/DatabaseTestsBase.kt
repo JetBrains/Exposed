@@ -7,10 +7,8 @@ import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTimeZone
 import java.lang.AssertionError
 import java.util.*
 import kotlin.concurrent.thread
@@ -102,17 +100,13 @@ abstract class DatabaseTestsBase {
             return
         }
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-        DateTimeZone.setDefault(DateTimeZone.UTC)
-
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
         }
-
         val database = dbSettings.db!!
-
         val connection = database.connector()
         val transactionIsolation = connection.metaData.defaultTransactionIsolation
         connection.close()

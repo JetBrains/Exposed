@@ -5,7 +5,6 @@ import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.joda.time.DateTime
 import java.time.LocalDateTime
 import java.sql.Wrapper
 

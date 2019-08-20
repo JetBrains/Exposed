@@ -5,10 +5,6 @@ import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.ISODateTimeFormat
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -20,7 +16,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
-import java.util.Date
 import javax.sql.rowset.serial.SerialBlob
 import kotlin.reflect.KClass
 
@@ -262,7 +257,7 @@ class DateColumnType(val time: Boolean) : ColumnType() {
 
     override fun notNullValueToDB(value: Any): Any {
         if (value is LocalDateTime && time) {
-            Timestamp(value.toLong())
+            java.sql.Timestamp(value.toLong())
         }
         if (value is LocalDate && !time) {
             java.sql.Date(value.toLong())
