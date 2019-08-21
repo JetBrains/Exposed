@@ -54,7 +54,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-            append("MATCH(", expr, " AGAINST ('", pattern, "' ", mode.mode(),")")
+            append("MATCH(", expr, ") AGAINST ('", pattern, "' ", mode.mode(),")")
         }
     }
 
