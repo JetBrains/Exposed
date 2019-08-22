@@ -75,9 +75,10 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testLengthWithCount01() {
         class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
-            override fun toSQL(queryBuilder: QueryBuilder): String
-                    = if (currentDialectTest is SQLServerDialect) "LEN(${exp.toSQL(queryBuilder)})"
-            else "LENGTH(${exp.toSQL(queryBuilder)})"
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+                if (currentDialectTest is SQLServerDialect) append("LEN(", exp, ')')
+                else append("LENGTH(", exp, ')')
+            }
         }
         withCitiesAndUsers { cities, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()

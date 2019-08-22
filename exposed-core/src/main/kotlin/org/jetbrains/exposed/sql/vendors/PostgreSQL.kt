@@ -33,9 +33,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val sql = if (data.isEmpty()) ""
-        else data.joinToString(prefix = "VALUES (", postfix = ")") { (col, value) ->
-            builder.registerArgument(col, value)
-        }
+        else data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) ->
+            registerArgument(col, value)
+        }.toString()
 
         val columns = data.map { it.first }
 
@@ -60,23 +60,23 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
 
-    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG.")
             expr.distinct -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG.")
             expr.separator == null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG.")
-            else -> "STRING_AGG(${expr.expr.toSQL(queryBuilder)}, '${expr.separator}')"
+            else -> queryBuilder{ append("STRING_AGG(", expr.expr,", '", expr.separator, "')") }
         }
     }
 
-    override fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = buildString {
-        append(expr1.toSQL(queryBuilder))
+    override fun <T:String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) = queryBuilder {
+        append(expr1)
         if (caseSensitive)
             append(" ~ ")
         else
             append(" ~* ")
-        append(pattern.toSQL(queryBuilder))
+        append(pattern)
     }
 }
 

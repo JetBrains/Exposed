@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.EntityChange
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 class Key<T>
 @Suppress("UNCHECKED_CAST")
@@ -40,7 +42,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    val entityCache = EntityCache()
+    val entityCache = EntityCache(this)
+
+    internal val entityEvents = CopyOnWriteArrayList<EntityChange>()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
@@ -56,7 +60,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     override fun commit() {
         val created = flushCache()
-        EntityHook.alertSubscribers()
+        EntityHook.alertSubscribers(this)
         val createdByHooks = flushCache()
         interceptors.forEach { it.beforeCommit(this) }
         transactionImpl.commit()
@@ -151,7 +155,11 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
             (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
                 ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
-    fun fullIdentity(column: Column<*>): String = buildString {
+    fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
+        fullIdentity(column, it)
+    }.toString()
+
+    internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
         if (column.table is Alias<*>)
             append(db.identifierManager.quoteIfNecessary(column.table.alias))
         else

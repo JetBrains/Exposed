@@ -2,13 +2,13 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
+import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
@@ -314,6 +314,61 @@ class MultipleDatabaseBugTest {
         transaction {
             println("TransactionManager: ${db.transactionManager}")
             println("Transaction connection url: ${connection.metadata { url }}")
+        }
+    }
+}
+
+object RollbackTable : IntIdTable() {
+    val value = varchar("value", 20)
+}
+
+class RollbackTransactionTest : DatabaseTestsBase() {
+
+    @Test
+    fun testRollbackWithoutSavepoints() {
+        withTables(RollbackTable) {
+            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+                RollbackTable.insert { it[value] = "before-dummy" }
+                transaction {
+                    assertEquals(1, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+                    RollbackTable.insert { it[value] = "inner-dummy" }
+                }
+                assertEquals(1, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+                assertEquals(1, RollbackTable.select { RollbackTable.value eq "inner-dummy" }.count())
+                RollbackTable.insert { it[value] = "after-dummy" }
+                assertEquals(1, RollbackTable.select { RollbackTable.value eq "after-dummy" }.count())
+                rollback()
+            }
+            assertEquals(0, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+            assertEquals(0, RollbackTable.select { RollbackTable.value eq "inner-dummy" }.count())
+            assertEquals(0, RollbackTable.select { RollbackTable.value eq "after-dummy" }.count())
+        }
+    }
+
+    @Test
+    fun testRollbackWithSavepoints() {
+        withTables(RollbackTable) {
+            try {
+                db.useNestedTransactions = true
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+                    RollbackTable.insert { it[value] = "before-dummy" }
+                    transaction {
+                        assertEquals(1, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+                        RollbackTable.insert { it[value] = "inner-dummy" }
+                        rollback()
+                    }
+                    assertEquals(1, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+                    assertEquals(0, RollbackTable.select { RollbackTable.value eq "inner-dummy" }.count())
+                    RollbackTable.insert { it[value] = "after-dummy" }
+                    assertEquals(1, RollbackTable.select { RollbackTable.value eq "after-dummy" }.count())
+                    rollback()
+                }
+                assertEquals(0, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
+                assertEquals(0, RollbackTable.select { RollbackTable.value eq "inner-dummy" }.count())
+                assertEquals(0, RollbackTable.select { RollbackTable.value eq "after-dummy" }.count())
+            } finally {
+                db.useNestedTransactions = false
+            }
         }
     }
 }

@@ -45,25 +45,25 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 
-    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
         return when {
             expr.separator == null ->
                 tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG")
             expr.orderBy.size > 1 ->
                 tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG")
-            else -> buildString {
+            else -> queryBuilder {
                 append("STRING_AGG(")
-                append(expr.expr.toSQL(queryBuilder))
+                append(expr.expr)
                 append(", '${expr.separator}')")
                 expr.orderBy.singleOrNull()?.let { (col, order) ->
-                    append(" WITHIN GROUP (ORDER BY ${col.toSQL(queryBuilder)} ${order.name})")
+                    append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")
                 }
             }
         }
     }
 
-    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder): String {
+    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
         TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead")
     }
 }

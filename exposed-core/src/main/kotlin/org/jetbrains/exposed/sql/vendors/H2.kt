@@ -27,12 +27,12 @@ internal object H2FunctionProvider : FunctionProvider() {
         if (!transaction.isMySQLMode) transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
 
         val builder = QueryBuilder(true)
-        val values = data.map { builder.registerArgument(it.first.columnType, it.second) }
+        data.appendTo(builder) { registerArgument(it.first.columnType, it.second) }
+        val values = builder.toString()
 
-        val inlineBuilder = QueryBuilder(false)
-        val preparedValues = data.map { transaction.identity(it.first) to inlineBuilder.registerArgument(it.first.columnType, it.second) }
+        val preparedValues = data.map { transaction.identity(it.first) to it.first.columnType.valueToString(it.second) }
 
-        return "INSERT INTO ${transaction.identity(table)} (${preparedValues.joinToString { it.first }}) VALUES (${values.joinToString()}) ON DUPLICATE KEY UPDATE ${preparedValues.joinToString { "${it.first}=${it.second}" }}"
+        return "INSERT INTO ${transaction.identity(table)} (${preparedValues.joinToString { it.first }}) VALUES ($values) ON DUPLICATE KEY UPDATE ${preparedValues.joinToString { "${it.first}=${it.second}" }}"
     }
 
     override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {

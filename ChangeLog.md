@@ -1,3 +1,38 @@
+# 0.17.1
+Performance:
+* QueryBuilder and Expression were reworked to lower object allocation when preparing SQL.
+
+**Important**: 
+
+This version has a broken change: `Expression.toSQL` was replaced with `Expression.toQueryBuilder`.
+Difference is what `toQueryBuilder` doesn't return `String` representation of an `Expression` but only register it in a `QueryBuilder`.
+If you need to get raw SQL value please use `Expression.toString`.
+
+# 0.16.4
+Features:
+* Added where in subquery ([#610](https://github.com/JetBrains/Exposed/issues/610)). Kudos to [Manabu OHTAKE](https://github.com/otkmnb2783) for PR. 
+
+Bug fixes:
+* ClassCastException on an attempt to flush IdTable with reference to Table
+* Fixed needQuotes check of already quoted identifiers ([#614](https://github.com/JetBrains/Exposed/issues/614)). Thanks [mpe85](https://github.com/mpe85)
+* Suspend transactions broken when working with multiple databases ([#624](https://github.com/JetBrains/Exposed/issues/624))
+* Unnecessary select when preloading absent references ([#615](https://github.com/JetBrains/Exposed/issues/615))
+* Updates of entities were executed in random order what could lead to unexpected behavior 
+
+# 0.16.3
+Features:
+* Added `rightJoin`, `fullJoin` and `crossJoin` functions. [Fedor Korotkov](https://github.com/fkorotkov) thanks for PR.  
+
+Bug fixes:
+* `Connection is closed` error when used suspended transactions ([#601](https://github.com/JetBrains/Exposed/issues/601))
+* Nested transaction partially commits outer transaction since 0.16.1 ([#605](https://github.com/JetBrains/Exposed/issues/605))
+
+# 0.16.2
+Bug fixes:
+* `Connection is closed` error when used suspended transactions ([#601](https://github.com/JetBrains/Exposed/issues/601))
+* EntityHooks fails on commit from suspended transactions
+* `TransactionManager.manager` is public again  ([#599](https://github.com/JetBrains/Exposed/issues/599))
+
 # 0.16.1
 Features:
 * Spring Boot starter for Exposed ([#582](https://github.com/JetBrains/Exposed/issues/582)). Many kudos to [Trey Bastian](https://github.com/TreyBastian)!

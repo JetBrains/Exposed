@@ -789,6 +789,14 @@ class DMLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testInSubQuery01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val r = cities.select { cities.id inSubQuery cities.slice(cities.id).select { cities.id eq 2 } }
+            assertEquals(1, r.count())
+        }
+    }
+
+    @Test
     fun testInsertSelect01() {
         withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val substring = users.name.substring(1, 2)
@@ -1420,7 +1428,7 @@ class DMLTests : DatabaseTestsBase() {
     fun testDefaultExpressions01() {
 
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
-            override fun toSQL(queryBuilder: QueryBuilder): String = "ABS($value)"
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
             override val columnType: IColumnType = IntegerColumnType()
         }
@@ -1540,7 +1548,7 @@ class DMLTests : DatabaseTestsBase() {
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
-            fun ColumnSet.repr(): String = this.describe(TransactionManager.current(), QueryBuilder(false))
+            fun ColumnSet.repr(): String = QueryBuilder(false).also { this.describe(TransactionManager.current(), it ) }.toString()
 
             assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
             assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())
@@ -1559,7 +1567,11 @@ class DMLTests : DatabaseTestsBase() {
                 predicate
             }
             val actualWhere = queryAdjusted.where
-            fun Op<Boolean>.repr(): String = this.toSQL(QueryBuilder(false))
+            fun Op<Boolean>.repr(): String {
+                val builder = QueryBuilder(false)
+                builder.append(this)
+                return builder.toString()
+            }
 
             assertEquals(predicate.repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)
@@ -1577,7 +1589,11 @@ class DMLTests : DatabaseTestsBase() {
                 predicate
             }
             val actualWhere = queryAdjusted.where
-            fun Op<Boolean>.repr(): String = this.toSQL(QueryBuilder(false))
+            fun Op<Boolean>.repr(): String {
+                val builder = QueryBuilder(false)
+                builder.append(this)
+                return builder.toString()
+            }
 
             assertEquals((predicate.and(predicate)).repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)

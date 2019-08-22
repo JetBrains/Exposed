@@ -11,6 +11,7 @@ import org.joda.time.DateTime
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
+import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull

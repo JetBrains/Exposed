@@ -27,11 +27,13 @@ abstract class ColumnSet : FieldSet {
     override val source
         get() = this
 
-    abstract fun describe(s: Transaction, queryBuilder: QueryBuilder): String
+    abstract fun describe(s: Transaction, queryBuilder: QueryBuilder)
 
     abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
     abstract fun innerJoin(otherTable: ColumnSet): Join
     abstract fun leftJoin(otherTable: ColumnSet) : Join
+    abstract fun rightJoin(otherTable: ColumnSet) : Join
+    abstract fun fullJoin(otherTable: ColumnSet) : Join
     abstract fun crossJoin(otherTable: ColumnSet) : Join
 
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.distinct())
@@ -41,6 +43,12 @@ abstract class ColumnSet : FieldSet {
 fun <C1:ColumnSet, C2:ColumnSet> C1.innerJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
 
 fun <C1:ColumnSet, C2:ColumnSet> C1.leftJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn())
+
+fun <C1:ColumnSet, C2:ColumnSet> C1.rightJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.RIGHT, onColumn(), otherTable.otherColumn())
+
+fun <C1:ColumnSet, C2:ColumnSet> C1.fullJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.FULL, onColumn(), otherTable.otherColumn())
+
+fun <C1:ColumnSet, C2:ColumnSet> C1.crossJoin(otherTable: C2, onColumn: C1.() -> Expression<*>, otherColumn: C2.() -> Expression<*>) = join(otherTable, JoinType.CROSS, onColumn(), otherTable.otherColumn())
 
 class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>): FieldSet
 
@@ -75,6 +83,10 @@ class Join (val table: ColumnSet) : ColumnSet() {
     override infix fun innerJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.LEFT)
+
+    override infix fun rightJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.RIGHT)
+
+    override infix fun fullJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.CROSS)
 
@@ -113,27 +125,30 @@ class Join (val table: ColumnSet) : ColumnSet() {
         return if (pkToFKeys.isNotEmpty()) pkToFKeys else null
     }
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = buildString {
-        append(table.describe(s, queryBuilder))
-        for (p in joinParts) {
-            append(" ${p.joinType} JOIN ")
-            val isJoin = p.joinPart is Join
-            if (isJoin) append("(")
-            append(p.joinPart.describe(s, queryBuilder))
-            if(isJoin) append(")")
-            if (p.joinType != JoinType.CROSS) {
-                append(" ON ")
-                append(p.conditions.joinToString (" AND "){ (pkColumn, fkColumn) ->
-                    "${pkColumn.toSQL(queryBuilder)} = ${fkColumn.toSQL(queryBuilder)}"
-                })
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder)
+        = queryBuilder {
+            table.describe(s, this)
+            for (p in joinParts) {
+                append(" ${p.joinType} JOIN ")
+                val isJoin = p.joinPart is Join
+                if (isJoin) append("(")
+                p.joinPart.describe(s, this)
+                if(isJoin) append(")")
+                if (p.joinType != JoinType.CROSS) {
+                    append(" ON ")
+                    p.conditions.appendTo (this, " AND "){ (pkColumn, fkColumn) ->
+                        append(pkColumn, " = ", fkColumn)
+                    }
 
-                if (p.additionalConstraint != null) {
-                    if (p.conditions.isNotEmpty()) append(" AND ")
-                    append(" (${SqlExpressionBuilder.(p.additionalConstraint)().toSQL(queryBuilder)})")
+                    if (p.additionalConstraint != null) {
+                        if (p.conditions.isNotEmpty()) append(" AND ")
+                        append(" (")
+                        append(SqlExpressionBuilder.(p.additionalConstraint)())
+                        append(")")
+                    }
                 }
             }
         }
-    }
 
     override val columns: List<Column<*>> get() = joinParts.fold(table.columns) { r, j ->
         r + j.joinPart.columns
@@ -152,7 +167,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): String = s.identity(this)
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder{ append(s.identity(this@Table)) }
 
     val indices = ArrayList<Index>()
     val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
@@ -166,6 +181,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
     override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
+
+    override infix fun rightJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.RIGHT)
+
+    override infix fun fullJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 

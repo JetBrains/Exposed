@@ -1,14 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.h2.H2Tests
 import org.jetbrains.exposed.sql.transactions.experimental.andThen
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
@@ -17,7 +15,12 @@ import org.jetbrains.exposed.test.utils.RepeatableTest
 import org.junit.Rule
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class CoroutineTests : DatabaseTestsBase() {
+
+    object Testing : Table("COROUTINE_TESTING") {
+        val id = integer("id").autoIncrement().primaryKey() // Column<Int>
+    }
 
     @Rule
     @JvmField
@@ -25,61 +28,58 @@ class CoroutineTests : DatabaseTestsBase() {
 
     @Test @RepeatableTest(10)
     fun suspendedTx() {
-        withDb {
-            runBlocking {
-                SchemaUtils.create(H2Tests.Testing)
-                commit()
+        withTables(Testing) {
+            val mainJob = GlobalScope.async {
 
-                val job = newSuspendedTransaction(Dispatchers.IO) {
-                    H2Tests.Testing.insert{}
+                val job = launch(Dispatchers.IO) {
+                    newSuspendedTransaction(db = db) {
+                        Testing.insert {}
 
-                    launch(Dispatchers.Default) {
                         suspendedTransaction {
-                            assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
+                            assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
                         }
                     }
                 }
 
-
-                val result = suspendedTransaction(Dispatchers.Default) {
-                    job.join()
-                    H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.single()[H2Tests.Testing.id]
+                job.join()
+                val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
+                    Testing.select { Testing.id.eq(1) }.single()[Testing.id]
                 }
 
-                assertEquals(1, result)
-
-                SchemaUtils.drop(H2Tests.Testing)
+                kotlin.test.assertEquals(1, result)
             }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
         }
     }
 
     @Test @RepeatableTest(10)
     fun suspendTxAsync() {
-        withDb {
-            runBlocking {
-                SchemaUtils.create(H2Tests.Testing)
+        withTables(Testing) {
+            val job = GlobalScope.async {
+                val launchResult = suspendedTransactionAsync(Dispatchers.IO, db = db) {
+                    Testing.insert{}
 
-                val launchResult = suspendedTransactionAsync {
-                    H2Tests.Testing.insert{}
-
-                    launch(Dispatchers.Default) {
-                        suspendedTransaction {
-                            assertEquals(1, H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.singleOrNull()?.getOrNull(H2Tests.Testing.id))
-                        }
+                    suspendedTransaction {
+                        assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
                     }
                 }
 
-                val result = suspendedTransactionAsync(Dispatchers.Default, useOuterTransactionIfAccessible = true) {
-                    launchResult.await().join()
-                    H2Tests.Testing.select { H2Tests.Testing.id.eq(1) }.single()[H2Tests.Testing.id]
+                launchResult.await()
+                val result = suspendedTransactionAsync(Dispatchers.Default, db = db) {
+                    Testing.select { Testing.id.eq(1) }.single()[Testing.id]
                 }.andThen {
                     assertEquals(1, it)
-                    true
+                    Testing.selectAll().count()
                 }
 
-                assertEquals(true, result.await())
-                SchemaUtils.drop(H2Tests.Testing)
+                kotlin.test.assertEquals(1, result.await())
             }
+
+            while (!job.isCompleted) Thread.sleep(100)
+
+            job.getCompletionExceptionOrNull()?.let { throw it }
         }
     }
 }

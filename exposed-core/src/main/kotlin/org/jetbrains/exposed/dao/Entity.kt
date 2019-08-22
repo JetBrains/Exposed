@@ -176,7 +176,8 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
     override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
-        val entityCache = TransactionManager.current().entityCache
+        val tx = TransactionManager.current()
+        val entityCache = tx.entityCache
         entityCache.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
@@ -190,13 +191,13 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         }
 
         // current entity updated
-        EntityHook.registerChange(EntityChange(o.klass, o.id, EntityChangeType.Updated))
+        EntityHook.registerChange(tx, EntityChange(o.klass, o.id, EntityChangeType.Updated))
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
-                EntityHook.registerChange(EntityChange(targetClass, it, EntityChangeType.Updated))
+                EntityHook.registerChange(tx,EntityChange(targetClass, it, EntityChangeType.Updated))
             }
         }
     }
@@ -320,7 +321,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
-        EntityHook.registerChange(EntityChange(klass, id, EntityChangeType.Removed))
+        EntityHook.registerChange(TransactionManager.current(), EntityChange(klass, id, EntityChangeType.Removed))
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
@@ -362,15 +363,15 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 }
 
 @Suppress("UNCHECKED_CAST")
-class EntityCache {
-    val data = HashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = HashMap<IdTable<*>, MutableList<Entity<*>>>()
+class EntityCache(private val transaction: Transaction) {
+    val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+    val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any,  Entity<*>> = getMap(f.table)
 
     private fun getMap(table: IdTable<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
-        HashMap()
+        LinkedHashMap()
     }
 
     fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
@@ -381,11 +382,11 @@ class EntityCache {
     fun <ID:Comparable<ID>, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
     fun <ID:Comparable<ID>, T: Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
-        getMap(f).put(o.id.value, o)
+        getMap(f)[o.id.value] = o
     }
 
     fun store(o: Entity<*>) {
-        getMap(o.klass.table).put(o.id.value, o)
+        getMap(o.klass.table)[o.id.value] = o
     }
 
     fun <ID:Comparable<ID>, T: Entity<ID>> remove(table: IdTable<ID>, o: T) {
@@ -403,9 +404,7 @@ class EntityCache {
     fun flush(tables: Iterable<IdTable<*>>) {
         val insertedTables = inserts.keys
 
-        for (t in SchemaUtils.sortTablesByReferences(tables)) {
-            flushInserts(t as IdTable<*>)
-        }
+        SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
 
         for (t in tables) {
             data[t]?.let { map ->
@@ -414,15 +413,13 @@ class EntityCache {
                     val batch = EntityBatchUpdate(map.values.first().klass)
                     for ((_, entity) in map) {
                         if (entity.flush(batch)) {
-                            if (entity.klass is ImmutableEntityClass<*,*>) {
-                                throw IllegalStateException("Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}")
-                            }
+                            check(entity.klass !is ImmutableEntityClass<*,*>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
                             updatedEntities.add(entity)
                         }
                     }
-                    batch.execute(TransactionManager.current())
+                    batch.execute(transaction)
                     updatedEntities.forEach {
-                        EntityHook.registerChange(EntityChange(it.klass, it.id, EntityChangeType.Updated))
+                        EntityHook.registerChange(transaction, EntityChange(it.klass, it.id, EntityChangeType.Updated))
                     }
                 }
             }
@@ -468,7 +465,7 @@ class EntityCache {
 
                     entry.storeWrittenValues()
                     store(entry)
-                    EntityHook.registerChange(EntityChange(entry.klass, entry.id, EntityChangeType.Created))
+                    EntityHook.registerChange(transaction, EntityChange(entry.klass, entry.id, EntityChangeType.Created))
                 }
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())
@@ -874,14 +871,16 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
         when(val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    val refIds = this.map { it.run { refColumn.lookup() } }
-                    refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    }.orEmpty()
                 }
             }
             is OptionalReference<*, *, *> -> {
                 (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    val refIds = this.mapNotNull { it.run { refColumn.lookup() } }
-                    refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                    }.orEmpty()
                 }
             }
             is Referrers<*, *, *, *, *> -> {

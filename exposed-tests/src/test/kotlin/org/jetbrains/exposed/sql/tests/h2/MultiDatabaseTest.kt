@@ -1,9 +1,13 @@
 package org.jetbrains.exposed.sql.tests.h2
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.shared.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
@@ -130,6 +134,50 @@ class MultiDatabaseTest {
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
                 transaction(db1) {
+                    assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                    DMLTestsData.Cities.insert {
+                        it[DMLTestsData.Cities.name] = "city4"
+                    }
+                    DMLTestsData.Cities.insert {
+                        it[DMLTestsData.Cities.name] = "city5"
+                    }
+                    assertEquals(3, DMLTestsData.Cities.selectAll().count())
+                }
+
+                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+                SchemaUtils.drop(DMLTestsData.Cities)
+            }
+
+            assertEquals(3, DMLTestsData.Cities.selectAll().count())
+            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name]})
+            SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    @Test
+    fun testCoroutinesWithMultiDb() = runBlocking {
+        newSuspendedTransaction(Dispatchers.IO, db1) {
+            val tr1 = this
+            SchemaUtils.create(DMLTestsData.Cities)
+            assertTrue(DMLTestsData.Cities.selectAll().empty())
+            DMLTestsData.Cities.insert {
+                it[DMLTestsData.Cities.name] = "city1"
+            }
+
+            newSuspendedTransaction(Dispatchers.IO, db2) {
+                assertFalse(DMLTestsData.Cities.exists())
+                SchemaUtils.create(DMLTestsData.Cities)
+                DMLTestsData.Cities.insert {
+                    it[DMLTestsData.Cities.name] = "city2"
+                }
+                DMLTestsData.Cities.insert {
+                    it[DMLTestsData.Cities.name] = "city3"
+                }
+                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+
+                tr1.suspendedTransaction {
                     assertEquals(1, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city4"

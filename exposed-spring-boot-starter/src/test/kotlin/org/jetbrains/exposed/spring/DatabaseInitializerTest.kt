@@ -25,7 +25,7 @@ open class DatabaseInitializerTest {
 
     @Test(expected = ExposedSQLException::class)
     fun `should create schema for TestTable and not for IgnoreTable`() {
-        Database.connect("jdbc:h2:mem:test", user = "sa", driver =  "org.h2.Driver")
+        Database.connect("jdbc:h2:mem:test-spring", user = "sa", driver =  "org.h2.Driver")
         transaction {
             DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.spring.tables.ignore")).run(null)
             Assert.assertEquals(0, TestTable.selectAll().count())
