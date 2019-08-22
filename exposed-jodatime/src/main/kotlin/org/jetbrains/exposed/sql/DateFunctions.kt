@@ -5,18 +5,20 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 
 class Date<T:DateTime?>(val expr: Expression<T>): Function<DateTime>(DateColumnType(false)) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "DATE(${expr.toSQL(queryBuilder)})"
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr,")") }
 }
 
 class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
-    override fun toSQL(queryBuilder: QueryBuilder) = when {
-        (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-        else -> "CURRENT_TIMESTAMP"
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when {
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            else -> "CURRENT_TIMESTAMP"
+        }
     }
 }
 
 class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
-    override fun toSQL(queryBuilder: QueryBuilder): String = "MONTH(${expr.toSQL(queryBuilder)})"
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("MONTH(", expr,")") }
 }
 
 fun <T: DateTime?> Expression<T>.date() = Date(this)

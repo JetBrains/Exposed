@@ -70,7 +70,7 @@ class TransactionResult<T>(internal val transaction: Transaction,
                             commit()
                             try {
                                 currentStatement?.let {
-                                    it.close()
+                                    it.closeIfPossible()
                                     currentStatement = null
                                 }
                                 closeExecutedStatements()
