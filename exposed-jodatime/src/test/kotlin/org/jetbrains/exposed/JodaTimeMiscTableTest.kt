@@ -18,7 +18,7 @@ object Misc : MiscTable() {
     val tn = datetime("tn").nullable()
 }
 
-class MiscTableTest : JodaTimeBaseTest() {
+class JodaTimeMiscTableTest : JodaTimeBaseTest() {
     @Test
     fun testInsert01() {
         val tbl = Misc

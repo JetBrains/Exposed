@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
@@ -16,11 +17,11 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
 
-class DefaultsTest : JodaTimeBaseTest() {
+class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
@@ -49,7 +50,7 @@ class DefaultsTest : JodaTimeBaseTest() {
                     DBDefault.new { field = "1" },
                     DBDefault.new {
                         field = "2"
-                        t1 = DateTime.now().minusDays(5)
+                        t1 = LocalDateTime.now().minusDays(5)
                     })
             flushCache()
             created.forEach {
@@ -67,7 +68,7 @@ class DefaultsTest : JodaTimeBaseTest() {
             val created = listOf(
                     DBDefault.new{
                         field = "2"
-                        t1 = DateTime.now().minusDays(5)
+                        t1 = LocalDateTime.now().minusDays(5)
                     }, DBDefault.new{ field = "1" })
 
             flushCache()
@@ -96,7 +97,7 @@ class DefaultsTest : JodaTimeBaseTest() {
         it[TableWithDBDefault.field] = "1"
     }, {
         it[TableWithDBDefault.field] = "2"
-        it[TableWithDBDefault.t1] = DateTime.now()
+        it[TableWithDBDefault.t1] = LocalDateTime.now()
     })
 
     @Test
@@ -125,7 +126,7 @@ class DefaultsTest : JodaTimeBaseTest() {
     @Test
     fun testDefaults01() {
         val currentDT = CurrentDateTime()
-        val nowExpression = object : Expression<DateTime>() {
+        val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (currentDialectTest) {
                     is OracleDialect -> "SYSDATE"
@@ -134,8 +135,8 @@ class DefaultsTest : JodaTimeBaseTest() {
                 }
             }
         }
-        val dtConstValue = DateTime.parse("2010-01-01").withZone(DateTimeZone.UTC)
-        val dtLiteral = dateLiteral(dtConstValue)
+        val dtConstValue = LocalDate.of(2010, 1, 1)
+        val dtLiteral = dateTimeLiteral(dtConstValue.atStartOfDay())
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
@@ -183,8 +184,8 @@ class DefaultsTest : JodaTimeBaseTest() {
             assertEquals("testNullable", row1[TestTable.sn])
             assertEquals(42, row1[TestTable.l])
             assertEquals('X', row1[TestTable.c])
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t3].withTimeAtStartOfDay())
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t4].withTimeAtStartOfDay())
+            assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t3])
+            assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t4])
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
@@ -213,7 +214,7 @@ class DefaultsTest : JodaTimeBaseTest() {
             }
             val result = foo.select { foo.id eq id }.single()
 
-            assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
+            assertEquals(today, result[foo.defaultDateTime].toLocalDate())
             assertEquals(100, result[foo.defaultInt])
         }
     }
@@ -225,7 +226,7 @@ class DefaultsTest : JodaTimeBaseTest() {
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
         }
 
-        val nonDefaultDate = DateTime.parse("2000-01-01")
+        val nonDefaultDate = LocalDate.of(2000, 1, 1).atStartOfDay()
 
         withTables(foo) {
             val id = foo.insertAndGetId {
