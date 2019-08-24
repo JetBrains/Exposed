@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -79,7 +80,7 @@ class NonAutoIncEntities : DatabaseTestsBase() {
 
     @Test fun testFlushNonAutoincEntityWithoutDefaultValue() {
         withTables(AutoIncSharedTable) {
-            if (!org.jetbrains.exposed.sql.tests.currentDialectTest.supportsOnlyIdentifiersInGeneratedKeys) {
+            if (!currentDialectTest.supportsOnlyIdentifiersInGeneratedKeys) {
                 SharedNonAutoIncEntity.new {
                     bool = true
                 }

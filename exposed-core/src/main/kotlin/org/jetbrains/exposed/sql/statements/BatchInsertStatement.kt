@@ -14,7 +14,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
 
     override val isAlwaysBatch = true
 
-    protected val data = ArrayList<MutableMap<Column<*>, Any?>>()
+    internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
     private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null
 
@@ -29,27 +29,36 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
         if (data.isNotEmpty()) {
             validateLastBatch()
             data[data.size - 1] = LinkedHashMap(values)
+            allColumnsInDataSet.addAll(values.keys)
             values.clear()
         }
         data.add(values)
         arguments = null
     }
 
+    internal fun removeLastBatch() {
+        data.removeAt(data.size - 1)
+        allColumnsInDataSet.clear()
+        data.flatMapTo(allColumnsInDataSet) { it.keys }
+        values.clear()
+        values.putAll(data.last())
+        arguments = null
+    }
+
     internal open fun validateLastBatch() {
-        val cantBeDefaulted = (data.last().keys - values.keys).filterNot { it.isDefaultable() }
+        val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { TransactionManager.current().fullIdentity(it) }
             throw BatchDataInconsistentException("Can't add new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
         }
-        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc }
+        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
         if (requiredInTargets.any()) {
-            throw BatchDataInconsistentException("Can't add new batch because columns: ${requiredInTargets.joinToString()} don't have client default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException("Can't add new batch because columns: ${requiredInTargets.joinToString()} don't have default values. DB defaults don't support in batch inserts")
         }
     }
 
-    private fun allColumnsInDataSet() = data.fold(setOf<Column<*>>()) { columns, row ->
-        columns + row.keys
-    }
+    private val allColumnsInDataSet = mutableSetOf<Column<*>>()
+    private fun allColumnsInDataSet() = allColumnsInDataSet + data.last().keys
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {

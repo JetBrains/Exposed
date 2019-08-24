@@ -70,22 +70,32 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
     var statement = newBatchStatement()
 
     val result = ArrayList<ResultRow>()
-    fun BatchInsertStatement.handleBatchException(body: BatchInsertStatement.() -> Unit) {
+    fun BatchInsertStatement.handleBatchException(removeLastData: Boolean = false, body: BatchInsertStatement.() -> Unit) {
         try {
             body()
+            if(removeLastData)
+                validateLastBatch()
         } catch (e: BatchDataInconsistentException) {
-            execute(TransactionManager.current())
-            result += resultedValues.orEmpty()
+            val notTheFirstBatch = this.data.size > 1
+            if (notTheFirstBatch) {
+                if (removeLastData) {
+                    removeLastBatch()
+                }
+                execute(TransactionManager.current())
+                result += resultedValues.orEmpty()
+            }
             statement = newBatchStatement()
+            if (removeLastData && notTheFirstBatch) {
+                statement.addBatch()
+                statement.body()
+                statement.validateLastBatch()
+            }
         }
     }
 
     for (element in data) {
         statement.handleBatchException { addBatch() }
-        statement.handleBatchException {
-            body(element)
-            validateLastBatch()
-        }
+        statement.handleBatchException(true) { body(element) }
     }
     if (statement.arguments().isNotEmpty()) {
         statement.execute(TransactionManager.current())
