@@ -13,34 +13,31 @@ repositories {
 val dialect: String by project
 
 dependencies {
-    testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
-    testImplementation(project(":exposed-jdbc"))
-    testImplementation(project(":exposed-jodatime"))
-    testImplementation("joda-time", "joda-time", "2.10.2")
-    testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j", "slf4j-log4j12", "1.7.26")
-    testImplementation("log4j", "log4j", "1.2.17")
-    testImplementation("junit", "junit", "4.12")
-    testImplementation("org.hamcrest", "hamcrest-library", "1.3")
-    testImplementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", "1.3.0-M1")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
+    implementation(project(":exposed-jdbc"))
+    implementation(kotlin("test-junit"))
+    implementation("org.slf4j", "slf4j-log4j12", "1.7.26")
+    implementation("log4j", "log4j", "1.2.17")
+    implementation("junit", "junit", "4.12")
+    implementation("org.hamcrest", "hamcrest-library", "1.3")
+    implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", "1.3.0-M1")
 
-    testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
-    testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
-    testImplementation("com.h2database", "h2", "1.4.199")
+    implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
+    implementation("mysql", "mysql-connector-mxj", "5.0.12")
+    implementation("org.xerial", "sqlite-jdbc", "3.23.1")
+    implementation("com.h2database", "h2", "1.4.199")
 
     when (dialect) {
-        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
-        "mysql" ->      testImplementation("mysql", "mysql-connector-java", "8.0.16")
-        "oracle" ->     testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
-        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
+        "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
+        "mysql" ->      implementation("mysql", "mysql-connector-java", "8.0.16")
+        "oracle" ->     implementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
+        "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
         else -> {
-            testImplementation("com.h2database", "h2", "1.4.199")
-            testImplementation("mysql", "mysql-connector-java", "5.1.47")
-            testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
+            implementation("com.h2database", "h2", "1.4.199")
+            implementation("mysql", "mysql-connector-java", "5.1.47")
+            implementation("org.postgresql", "postgresql", "42.2.5.jre6")
         }
     }
-
 }
 
 tasks.withType(Test::class.java) {

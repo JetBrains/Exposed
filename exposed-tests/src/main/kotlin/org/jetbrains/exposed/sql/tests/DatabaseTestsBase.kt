@@ -9,8 +9,6 @@ import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.joda.time.DateTimeZone
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -86,22 +84,22 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-//    val locale = if (PlatformUtil.isWindows()) "american_usa" else "en_US.UTF-8"
     EmbeddedPostgres.builder()
         .setPgBinaryResolver{ system, _ ->
             EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-        }/*.setLocaleConfig("locale", locale)*/
+        }
         .setPort(12346).start()
 }
 
 abstract class DatabaseTestsBase {
+    init {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
-        if (dbSettings !in TestDB.enabledInTests())  {
+        if (dbSettings !in TestDB.enabledInTests()) {
             exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
             return
         }
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-        DateTimeZone.setDefault(DateTimeZone.UTC)
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
@@ -155,13 +153,4 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    fun <T>Transaction.assertEquals(exp: T, act: T) = kotlin.test.assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
-    fun <T>Transaction.assertEquals(exp: T, act: List<T>) = kotlin.test.assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 }
-
-internal val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
-
-internal val currentDialectIfAvailableTest : DatabaseDialect? get() =
-    if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
-        currentDialectTest
-    } else null

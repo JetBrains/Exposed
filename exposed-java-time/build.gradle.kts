@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     api(project(":exposed-core"))
+    testImplementation(project(":exposed-tests"))
 }
 
 tasks.withType<KotlinJvmCompile> {

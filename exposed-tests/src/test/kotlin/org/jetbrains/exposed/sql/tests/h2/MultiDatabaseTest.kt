@@ -150,7 +150,7 @@ class MultiDatabaseTest {
             }
 
             assertEquals(3, DMLTestsData.Cities.selectAll().count())
-            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name]})
+            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }
     }
@@ -194,7 +194,7 @@ class MultiDatabaseTest {
             }
 
             assertEquals(3, DMLTestsData.Cities.selectAll().count())
-            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name]})
+            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }
     }

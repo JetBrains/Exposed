@@ -67,7 +67,7 @@ class ViaTests : DatabaseTestsBase() {
             assertEquals(2, row.count())
             assertEquals (n1.id, row[0][ViaTestData.ConnectionTable.numId])
             assertEquals (n1.id, row[1][ViaTestData.ConnectionTable.numId])
-            assertEqualCollections (listOf(s1.id, s2.id), row.map { it[ViaTestData.ConnectionTable.stringId] })
+            assertEqualCollections(listOf(s1.id, s2.id), row.map { it[ViaTestData.ConnectionTable.stringId] })
         }
     }
 

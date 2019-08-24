@@ -6,15 +6,11 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Random
-import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTime
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.math.BigDecimal
@@ -38,40 +34,6 @@ object DMLTestsData {
         val user_id = varchar("user_id", 10) references Users.id
         val comment = varchar("comment", 30)
         val value = integer("value")
-    }
-
-    enum class E {
-        ONE,
-        TWO,
-        THREE
-    }
-
-    object Misc : Table() {
-        val n = integer("n")
-        val nn = integer("nn").nullable()
-
-        val d = date("d")
-        val dn = date("dn").nullable()
-
-        val t = datetime("t")
-        val tn = datetime("tn").nullable()
-
-        val e = enumeration("e", E::class)
-        val en = enumeration("en", E::class).nullable()
-
-        val es = enumerationByName("es", 5, E::class)
-        val esn = enumerationByName("esn", 5, E::class).nullable()
-
-        val s = varchar("s", 100)
-        val sn = varchar("sn", 100).nullable()
-
-        val dc = decimal("dc", 12, 2)
-        val dcn = decimal("dcn", 12, 2).nullable()
-
-        val fcn = float("fcn").nullable()
-        val dblcn = double("dblcn").nullable()
-
-        val char = char("char").nullable()
     }
 }
 
@@ -444,7 +406,6 @@ class DMLTests : DatabaseTestsBase() {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
                 val userCountAlias = it[cAlias]
-                assertTrue(userCountAlias is Int)
                 when (cityName) {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
@@ -840,184 +801,6 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
-                                           t: DateTime, tn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?,
-                                           es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?,
-                                           dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
-        assertEquals(row[this.n], n)
-        assertEquals(row[this.nn], nn)
-        assertEqualDateTime(row[this.d], d)
-        assertEqualDateTime(row[this.dn], dn)
-        assertEqualDateTime(row[this.t], t)
-        assertEqualDateTime(row[this.tn], tn)
-        assertEquals(row[this.e], e)
-        assertEquals(row[this.en], en)
-        assertEquals(row[this.es], es)
-        assertEquals(row[this.esn], esn)
-        assertEquals(row[this.s], s)
-        assertEquals(row[this.sn], sn)
-        assertEquals(row[this.dc], dc)
-        assertEquals(row[this.dcn], dcn)
-        assertEquals(row[this.fcn], fcn)
-        assertEquals(row[this.dblcn], dblcn)
-    }
-    private fun DMLTestsData.Misc.checkInsert(row: InsertStatement<Number>, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
-                                           t: DateTime, tn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?,
-                                           es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?,
-                                           dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
-        assertEquals(row[this.n], n)
-        assertEquals(row[this.nn], nn)
-        assertEqualDateTime(row[this.d], d)
-        assertEqualDateTime(row[this.dn], dn)
-        assertEqualDateTime(row[this.t], t)
-        assertEqualDateTime(row[this.tn], tn)
-        assertEquals(row[this.e], e)
-        assertEquals(row[this.en], en)
-        assertEquals(row[this.es], es)
-        assertEquals(row[this.esn], esn)
-        assertEquals(row[this.s], s)
-        assertEquals(row[this.sn], sn)
-        assertEquals(row[this.dc], dc)
-        assertEquals(row[this.dcn], dcn)
-        assertEquals(row[this.fcn], fcn)
-        assertEquals(row[this.dblcn], dblcn)
-    }
-
-    @Test
-    fun testInsert01() {
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-
-        withTables(tbl) {
-            tbl.insert {
-                it[n] = 42
-                it[d] = date
-                it[t] = time
-                it[e] = DMLTestsData.E.ONE
-                it[es] = DMLTestsData.E.ONE
-                it[s] = "test"
-                it[dc] = BigDecimal("239.42")
-                it[char] = '('
-            }
-
-            val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
-                    null, "test", null, BigDecimal("239.42"), null, null, null)
-            assertEquals('(', row[tbl.char])
-        }
-    }
-
-    @Test
-    fun testInsert02() {
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-
-        withTables(tbl) {
-            tbl.insert {
-                it[n] = 42
-                it[nn] = null
-                it[d] = date
-                it[dn] = null
-                it[t] = time
-                it[tn] = null
-                it[e] = DMLTestsData.E.ONE
-                it[en] = null
-                it[es] = DMLTestsData.E.ONE
-                it[esn] = null
-                it[s] = "test"
-                it[sn] = null
-                it[dc] = BigDecimal("239.42")
-                it[dcn] = null
-                it[fcn] = null
-            }
-
-            val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
-                    null, "test", null, BigDecimal("239.42"), null, null, null)
-        }
-    }
-
-    @Test
-    fun testInsert03() {
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-
-        withTables(tbl) {
-            tbl.insert {
-                it[n] = 42
-                it[nn] = 42
-                it[d] = date
-                it[dn] = date
-                it[t] = time
-                it[tn] = time
-                it[e] = DMLTestsData.E.ONE
-                it[en] = DMLTestsData.E.ONE
-                it[es] = DMLTestsData.E.ONE
-                it[esn] = DMLTestsData.E.ONE
-                it[s] = "test"
-                it[sn] = "test"
-                it[dc] = BigDecimal("239.42")
-                it[dcn] = BigDecimal("239.42")
-                it[fcn] = 239.42f
-                it[dblcn] = 567.89
-            }
-
-            val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, 42, date, date, time, time, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE,
-                    "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89)
-        }
-    }
-
-    @Test
-    fun testInsert04() {
-        val stringThatNeedsEscaping = "A'braham Barakhyahu"
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-        withTables(tbl) {
-            tbl.insert {
-                it[n] = 42
-                it[d] = date
-                it[t] = time
-                it[e] = DMLTestsData.E.ONE
-                it[es] = DMLTestsData.E.ONE
-                it[s] = stringThatNeedsEscaping
-                it[dc] = BigDecimal("239.42")
-            }
-
-            val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null,
-                    BigDecimal("239.42"), null, null, null)
-        }
-    }
-
-    @Test
-    fun testInsertGet01() {
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-
-        withTables(tbl) {
-            val row = tbl.insert {
-                it[n] = 42
-                it[d] = date
-                it[t] = time
-                it[e] = DMLTestsData.E.ONE
-                it[es] = DMLTestsData.E.ONE
-                it[s] = "test"
-                it[dc] = BigDecimal("239.42")
-                it[char] = '('
-            }
-
-            tbl.checkInsert(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
-                    null, "test", null, BigDecimal("239.42"), null, null, null)
-            assertEquals('(', row[tbl.char])
-        }
-    }
-
     @Test
     fun testInsertAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
@@ -1118,36 +901,6 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private val initBatch = listOf<(BatchInsertStatement) -> Unit>({
-        it[EntityTests.TableWithDBDefault.field] = "1"
-    }, {
-        it[EntityTests.TableWithDBDefault.field] = "2"
-        it[EntityTests.TableWithDBDefault.t1] = DateTime.now()
-    })
-
-    @Test
-    fun testRawBatchInsertFails01() {
-        withTables(EntityTests.TableWithDBDefault) {
-            expectException<BatchDataInconsistentException> {
-                BatchInsertStatement(EntityTests.TableWithDBDefault).run {
-                    initBatch.forEach {
-                        addBatch()
-                        it(this)
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun testRawBatchInsertFails02() {
-        withTables(EntityTests.TableWithDBDefault) {
-            EntityTests.TableWithDBDefault.batchInsert(initBatch) { foo ->
-                foo(this)
-            }
-        }
-    }
-
     @Test
     fun testGeneratedKey01() {
         withTables(DMLTestsData.Cities) {
@@ -1235,162 +988,7 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testSelect01() {
-        val tbl = DMLTestsData.Misc
-        withTables(tbl) {
-            val date = today
-            val time = DateTime.now()
-            val sTest = "test"
-            val dec = BigDecimal("239.42")
-            tbl.insert {
-                it[n] = 42
-                it[d] = date
-                it[t] = time
-                it[e] = DMLTestsData.E.ONE
-                it[es] = DMLTestsData.E.ONE
-                it[s] = sTest
-                it[dc] = dec
-            }
 
-            tbl.checkRow(tbl.select { tbl.n.eq(42) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.nn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.nn.eq(null as Int?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-
-            tbl.checkRow(tbl.select { tbl.d.eq(date) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.dn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-
-            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.tn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-
-            tbl.checkRow(tbl.select { tbl.e.eq(DMLTestsData.E.ONE) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.en.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.en.eq(null as DMLTestsData.E?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-
-            tbl.checkRow(tbl.select { tbl.s.eq(sTest) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.sn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.sn.eq(null as String?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-        }
-    }
-
-    @Test
-    fun testSelect02() {
-        val tbl = DMLTestsData.Misc
-        withTables(tbl) {
-            val date = today
-            val time = DateTime.now()
-            val sTest = "test"
-            val eOne = DMLTestsData.E.ONE
-            val dec = BigDecimal("239.42")
-            tbl.insert {
-                it[n] = 42
-                it[nn] = 42
-                it[d] = date
-                it[dn] = date
-                it[t] = time
-                it[tn] = time
-                it[e] = eOne
-                it[en] = eOne
-                it[es] = eOne
-                it[esn] = eOne
-                it[s] = sTest
-                it[sn] = sTest
-                it[dc] = dec
-                it[dcn] = dec
-                it[fcn] = 239.42f
-                it[dblcn] = 567.89
-            }
-
-            tbl.checkRow(tbl.select { tbl.nn.eq(42) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.nn.neq<Int?>(null) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-
-            tbl.checkRow(tbl.select { tbl.dn.eq(date) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.dn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-
-            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.tn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-
-            tbl.checkRow(tbl.select { tbl.en.eq(eOne) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.en.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-
-            tbl.checkRow(tbl.select { tbl.sn.eq(sTest) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.sn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-        }
-    }
-
-    @Test
-    fun testUpdate02() {
-        val tbl = DMLTestsData.Misc
-        withTables(tbl) {
-            val date = today
-            val time = DateTime.now()
-            val eOne = DMLTestsData.E.ONE
-            val sTest = "test"
-            val dec = BigDecimal("239.42")
-            tbl.insert {
-                it[n] = 42
-                it[nn] = 42
-                it[d] = date
-                it[dn] = date
-                it[t] = time
-                it[tn] = time
-                it[e] = eOne
-                it[en] = eOne
-                it[es] = eOne
-                it[esn] = eOne
-                it[s] = sTest
-                it[sn] = sTest
-                it[dc] = dec
-                it[dcn] = dec
-                it[fcn] = 239.42f
-            }
-
-            tbl.update({ tbl.n.eq(42) }) {
-                it[nn] = null
-                it[dn] = null
-                it[tn] = null
-                it[en] = null
-                it[esn] = null
-                it[sn] = null
-                it[dcn] = null
-                it[fcn] = null
-            }
-
-            val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, eOne, null, eOne, null, sTest, null, dec, null, null, null)
-        }
-    }
-
-    @Test
-    fun testUpdate03() {
-        val tbl = DMLTestsData.Misc
-        val date = today
-        val time = DateTime.now()
-        val eOne = DMLTestsData.E.ONE
-        val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
-            tbl.insert {
-                it[n] = 101
-                it[s] = "123456789"
-                it[sn] = "123456789"
-                it[d] = date
-                it[t] = time
-                it[e] = eOne
-                it[es] = eOne
-                it[dc] = dec
-            }
-
-            tbl.update({ tbl.n.eq(101) }) {
-                it.update(s, tbl.s.substring(2, 255))
-                it.update(sn, tbl.s.substring(3, 255))
-            }
-
-            val row = tbl.select { tbl.n eq 101 }.single()
-            tbl.checkRow(row, 101, null, date, null, time, null, eOne, null, eOne, null, "23456789", "3456789", dec, null, null, null)
-        }
-    }
 
     @Test
     fun testJoinWithAlias01() {
@@ -1421,62 +1019,6 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, join.selectAll().count())
-        }
-    }
-
-    @Test
-    fun testDefaultExpressions01() {
-
-        fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
-            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
-
-            override val columnType: IColumnType = IntegerColumnType()
-        }
-
-        val foo = object : IntIdTable("foo") {
-            val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
-            val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
-        }
-
-        withTables(foo) {
-            val id = foo.insertAndGetId {
-                it[foo.name] = "bar"
-            }
-            val result = foo.select { foo.id eq id }.single()
-
-            assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
-            assertEquals(100, result[foo.defaultInt])
-        }
-    }
-
-    @Test
-    fun testDefaultExpressions02() {
-        val foo = object : IntIdTable("foo") {
-            val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
-        }
-
-        val nonDefaultDate = DateTime.parse("2000-01-01")
-
-        withTables(foo) {
-            val id = foo.insertAndGetId {
-                it[foo.name] = "bar"
-                it[foo.defaultDateTime] = nonDefaultDate
-            }
-
-            val result = foo.select { foo.id eq id }.single()
-
-            assertEquals("bar", result[foo.name])
-            assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
-
-            foo.update({foo.id eq id}) {
-                it[foo.name] = "baz"
-            }
-
-            val result2 = foo.select { foo.id eq id }.single()
-            assertEquals("baz", result2[foo.name])
-            assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
         }
     }
 
@@ -1771,8 +1313,6 @@ class DMLTests : DatabaseTestsBase() {
     }
 
 }
-
-private val today: DateTime = DateTime.now().withTimeAtStartOfDay()
 
 object OrgMemberships : IntIdTable() {
     val orgId = reference("org", Orgs.uid)

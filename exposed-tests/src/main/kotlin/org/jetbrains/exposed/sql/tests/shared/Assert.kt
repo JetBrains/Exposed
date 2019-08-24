@@ -3,8 +3,6 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.joda.time.DateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
@@ -43,18 +41,8 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
-fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
-    when{
-        d1 == null && d2 == null -> return
-        d1 == null && d2 != null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
-        d2 == null -> error ("d1 is not null while d2 is null on ${currentDialectTest.name}")
-        d1 == null -> error("Impossible")
-        // Mysql doesn't support millis prior 5.6.4
-        (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
-            assertEquals(d1.millis / 1000, d2.millis / 1000,  "Failed on ${currentDialectTest.name}")
-        else -> assertEquals(d1.millis, d2.millis,   "Failed on ${currentDialectTest.name}")
-    }
-}
+fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
+fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 
 fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit) {
     commit()
@@ -64,13 +52,6 @@ fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit)
     }
 
     rollback()
-}
-
-fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
-    assertEqualDateTime(d1, d2)
-    true
-} catch (e: Exception) {
-    false
 }
 
 inline fun <reified T:Exception> expectException(body: () -> Unit) {

@@ -165,7 +165,7 @@ class EntityHookTest: DatabaseTestsBase() {
             }
 
             val entities = trackChanges {
-                val spb = EntityHookTestData.City.find({ EntityHookTestData.Cities.name eq "St. Petersburg" }).single()
+                val spb = EntityHookTestData.City.find { EntityHookTestData.Cities.name eq "St. Petersburg" }.single()
                 val john = EntityHookTestData.User.all().single()
                 john.cities = SizedCollection(listOf(spb))
             }

@@ -6,17 +6,18 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
-import org.junit.Assert.assertTrue
+import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class DDLTests : DatabaseTestsBase() {
 
@@ -50,7 +51,7 @@ class DDLTests : DatabaseTestsBase() {
         withTables(KeyWordTable) {
             assertEquals (true, KeyWordTable.exists())
             KeyWordTable.insert {
-                it[KeyWordTable.bool] = true
+                it[bool] = true
             }
         }
     }
@@ -60,7 +61,7 @@ class DDLTests : DatabaseTestsBase() {
         val TestTable = object : Table("test_table") {
             val id = integer("id").primaryKey()
             val name = varchar("name", length = 42)
-            val time = datetime("time").uniqueIndex()
+            val time = long("time").uniqueIndex()
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
@@ -225,74 +226,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testDefaults01() {
-        val currentDT = CurrentDateTime()
-        val nowExpression = object : Expression<DateTime>() {
-            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                +when (currentDialectTest) {
-                    is OracleDialect -> "SYSDATE"
-                    is SQLServerDialect -> "GETDATE()"
-                    else -> "NOW()"
-                }
-            }
-        }
-        val dtConstValue = DateTime.parse("2010-01-01").withZone(DateTimeZone.UTC)
-        val dtLiteral = dateLiteral(dtConstValue)
-        val TestTable = object : IntIdTable("t") {
-            val s = varchar("s", 100).default("test")
-            val sn = varchar("sn", 100).default("testNullable").nullable()
-            val l = long("l").default(42)
-            val c = char("c").default('X')
-            val t1 = datetime("t1").defaultExpression(currentDT)
-            val t2 = datetime("t2").defaultExpression(nowExpression)
-            val t3 = datetime("t3").defaultExpression(dtLiteral)
-            val t4 = date("t4").default(dtConstValue)
-        }
 
-        fun Expression<*>.itOrNull() = when {
-            currentDialectTest.isAllowedAsColumnDefault(this)  ->
-                "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
-            else -> "NULL"
-        }
-
-        withTables(listOf(TestDB.SQLITE), TestTable) {
-            val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
-            val q = db.identifierManager.quoteString
-            val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
-                    "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                    "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
-                    "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                    "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                    "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                    "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                    "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
-                    ")"
-
-            val expected = if (currentDialectTest is OracleDialect)
-                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
-            else
-                arrayListOf(baseExpression)
-
-            assertEqualLists(expected, TestTable.ddl)
-
-            val id1 = TestTable.insertAndGetId {  }
-
-            val row1 = TestTable.select { TestTable.id eq id1 }.single()
-            assertEquals("test", row1[TestTable.s])
-            assertEquals("testNullable", row1[TestTable.sn])
-            assertEquals(42, row1[TestTable.l])
-            assertEquals('X', row1[TestTable.c])
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t3].withTimeAtStartOfDay())
-            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t4].withTimeAtStartOfDay())
-
-            val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
-
-            val row2 = TestTable.select { TestTable.id eq id2 }.single()
-        }
-    }
 
     @Test fun testIndices01() {
         val t = object : Table("t1") {
@@ -643,18 +577,18 @@ class DDLTests : DatabaseTestsBase() {
         withTables(Table1, Table2) {
             val table2id = Table2.insertAndGetId{}
             val table1id = Table1.insertAndGetId {
-                it[Table1.table2] = table2id
+                it[table2] = table2id
             }
 
             Table2.insertAndGetId {
-                it[Table2.table1] = table1id
+                it[table1] = table1id
             }
 
             assertEquals(1, Table1.selectAll().count())
             assertEquals(2, Table2.selectAll().count())
 
             Table2.update {
-                it[Table2.table1] = null
+                it[table1] = null
             }
 
             Table1.deleteAll()
@@ -885,8 +819,4 @@ class DDLTests : DatabaseTestsBase() {
     }
 }
 
-private fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->
-    (currentDialectTest as? VendorDialect)?.run {
-        this@inProperCase.inProperCase
-    }
-} ?: this
+

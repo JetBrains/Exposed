@@ -196,11 +196,11 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testCustomIntegerFunctions01() {
         withCitiesAndUsers { cities, _, _ ->
             val ids = cities.selectAll().map { it[DMLTestsData.Cities.id] }.toList()
-            assertEqualCollections(listOf(1,2,3), ids)
+            assertEqualCollections(listOf(1, 2, 3), ids)
 
             val sqrt = DMLTestsData.Cities.id.function("SQRT")
             val sqrtIds = cities.slice(sqrt).selectAll().map { it[sqrt] }.toList()
-            assertEqualCollections(listOf(1,1,1), sqrtIds)
+            assertEqualCollections(listOf(1, 1, 1), sqrtIds)
         }
     }
 
@@ -209,7 +209,7 @@ class FunctionsTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, _, _ ->
             val power = CustomLongFunction("POWER", cities.id, intParam(2))
             val ids = cities.slice(power).selectAll().map { it[power] }
-            assertEqualCollections(listOf(1L,4L,9L), ids)
+            assertEqualCollections(listOf(1L, 4L, 9L), ids)
         }
     }
 }

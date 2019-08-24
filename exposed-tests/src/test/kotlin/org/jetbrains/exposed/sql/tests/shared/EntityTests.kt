@@ -7,11 +7,9 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.joda.time.DateTime
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import javax.sql.rowset.serial.SerialBlob
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -107,75 +105,6 @@ class EntityTests: DatabaseTestsBase() {
 
             assertFalse (b.y!!.x)
             assertNotNull(y.b)
-        }
-    }
-
-    object TableWithDBDefault : IntIdTable() {
-        var cIndex = 0
-        val field = varchar("field", 100)
-        val t1 = datetime("t1").defaultExpression(CurrentDateTime())
-        val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
-    }
-
-    class DBDefault(id: EntityID<Int>): IntEntity(id) {
-        var field by TableWithDBDefault.field
-        var t1 by TableWithDBDefault.t1
-        val clientDefault by TableWithDBDefault.clientDefault
-
-        override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) } ?: false
-        }
-
-        override fun hashCode(): Int = id.value.hashCode()
-
-        companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
-    }
-
-    @Test
-    fun testDefaultsWithExplicit01() {
-        withTables(TableWithDBDefault) {
-            val created = listOf(
-                    DBDefault.new { field = "1" },
-                    DBDefault.new {
-                        field = "2"
-                        t1 = DateTime.now().minusDays(5)
-                    })
-            flushCache()
-            created.forEach {
-                DBDefault.removeFromCache(it)
-            }
-
-            val entities = DBDefault.all().toList()
-            assertEqualCollections(created.map { it.id }, entities.map { it.id })
-        }
-    }
-
-    @Test fun testDefaultsWithExplicit02() {
-        withTables(TableWithDBDefault) {
-            val created = listOf(
-                    DBDefault.new{
-                        field = "2"
-                        t1 = DateTime.now().minusDays(5)
-                    }, DBDefault.new{ field = "1" })
-
-            flushCache()
-            created.forEach {
-                DBDefault.removeFromCache(it)
-            }
-            val entities = DBDefault.all().toList()
-            assertEqualCollections(created, entities)
-        }
-    }
-
-    @Test fun testDefaultsInvokedOnlyOncePerEntity() {
-        withTables(TableWithDBDefault) {
-            TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new{ field = "1" }
-            val db2 = DBDefault.new{ field = "2" }
-            flushCache()
-            assertEquals(0, db1.clientDefault)
-            assertEquals(1, db2.clientDefault)
-            assertEquals(2, TableWithDBDefault.cIndex)
         }
     }
 
@@ -525,8 +454,8 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     object Holidays : LongIdTable(name = "holidays") {
-        val holidayStart     = datetime("holiday_start")
-        val holidayEnd       = datetime("holiday_end")
+        val holidayStart     = long("holiday_start")
+        val holidayEnd       = long("holiday_end")
     }
 
     object SchoolHolidays : Table(name = "school_holidays") {
@@ -899,6 +828,9 @@ class EntityTests: DatabaseTestsBase() {
 
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
 
+            val now = System.currentTimeMillis()
+            val now10 = now + 10
+
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -923,18 +855,18 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             val holiday1 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             val holiday2 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             val holiday3 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             school1.holidays = SizedCollection(holiday1, holiday2)
@@ -959,6 +891,9 @@ class EntityTests: DatabaseTestsBase() {
     @Test fun preloadInnerTableLinkOnAnEntity() {
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
 
+            val now = System.currentTimeMillis()
+            val now10 = now + 10
+
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -969,18 +904,18 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             val holiday1 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             val holiday2 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             val holiday3 = Holiday.new {
-                holidayStart = DateTime.now()
-                holidayEnd = DateTime.now().plus(10)
+                holidayStart = now
+                holidayEnd = now10
             }
 
             SchoolHolidays.insert {
