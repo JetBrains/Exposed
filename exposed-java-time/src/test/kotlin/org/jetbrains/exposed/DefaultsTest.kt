@@ -136,6 +136,7 @@ class DefaultsTest : DatabaseTestsBase() {
             }
         }
         val dtConstValue = LocalDate.of(2010, 1, 1)
+        val dLiteral = dateLiteral(dtConstValue)
         val dtLiteral = dateTimeLiteral(dtConstValue.atStartOfDay())
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
@@ -167,7 +168,7 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
                     "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
+                    "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}" +
                     ")"
 
             val expected = if (currentDialectTest is OracleDialect)
@@ -185,7 +186,7 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEquals(42, row1[TestTable.l])
             assertEquals('X', row1[TestTable.c])
             assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t3])
-            assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t4])
+            assertEqualDateTime(dtConstValue, row1[TestTable.t4])
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
