@@ -1,3 +1,8 @@
+# 0.17.2
+Bug fixes:
+* MySQL match function is broken
+* notInList function doesn't work with list of EntityID. Thank you [kenta.koyama](https://github.com/doyaaaaaken) for a PR.
+
 # 0.17.1
 Performance:
 * QueryBuilder and Expression were reworked to lower object allocation when preparing SQL.
