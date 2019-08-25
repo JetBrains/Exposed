@@ -82,6 +82,8 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 }
 
 private val registeredOnShutdown = HashSet<TestDB>()
+private val alreadyRegisteredInAnotherThread get() = System.getProperty("db.registered")?.split(",")?.map { TestDB.valueOf(it) }.orEmpty()
+private fun isRegisteredOnShutdown(dbSettings: TestDB) = dbSettings in registeredOnShutdown || dbSettings in alreadyRegisteredInAnotherThread
 
 private val postgresSQLProcess by lazy {
     EmbeddedPostgres.builder()
@@ -101,10 +103,11 @@ abstract class DatabaseTestsBase {
             return
         }
 
-        if (dbSettings !in registeredOnShutdown) {
+        if (!isRegisteredOnShutdown(dbSettings)) {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
+            System.setProperty("db.registered", registeredOnShutdown.joinToString(","){ it.name })
             dbSettings.db = dbSettings.connect()
         }
 
