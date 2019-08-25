@@ -27,7 +27,13 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
         } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
     },
         driver = "com.mysql.jdbc.Driver",
-        beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
+        beforeConnection = {
+            val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
+            if (!MysqldResource(baseDir, null).isRunning) {
+                System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString())
+                Files().cleanTestDir()
+            }
+        },
         afterTestFinished = {
             try {
                 val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
