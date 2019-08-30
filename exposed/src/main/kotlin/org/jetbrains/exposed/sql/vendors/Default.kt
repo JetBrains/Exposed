@@ -40,8 +40,9 @@ open class DataTypeProvider {
     open fun textType() = "TEXT"
     open val blobAsStream = false
 
-    open fun processForDefaultValue(e: Expression<*>) : String = when (e) {
-        is LiteralOp<*> -> "$e"
+    open fun processForDefaultValue(e: Expression<*>) : String = when {
+        e is LiteralOp<*> -> "$e"
+        currentDialect is MysqlDialect -> "$e"
         else -> "($e)"
     }
 }

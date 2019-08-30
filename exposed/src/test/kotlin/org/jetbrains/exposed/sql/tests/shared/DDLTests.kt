@@ -228,9 +228,10 @@ class DDLTests : DatabaseTestsBase() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                +when (currentDialect) {
+                +when (val dialect = currentDialect) {
                     is OracleDialect -> "SYSDATE"
                     is SQLServerDialect -> "GETDATE()"
+                    is MysqlDialect -> if (dialect.isFractionDateTimeSupported()) "NOW(6)" else "NOW()"
                     else -> "NOW()"
                 }
             }

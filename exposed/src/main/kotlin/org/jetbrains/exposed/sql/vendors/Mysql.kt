@@ -70,9 +70,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        val dataBaseVersion = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
-        val acceptableDefaults = arrayOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()")
-        return e.toString().trim() in acceptableDefaults && dataBaseVersion
+        val acceptableDefaults = arrayOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
+        return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
     }
 
     @Synchronized
