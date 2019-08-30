@@ -254,6 +254,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         })
 
     /**
+     * A smallint column to store a short number.
+     *
+     * @param name The column name
+     */
+    fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
+
+    /**
      * An integer column to store an integer number.
      *
      * @param name The column name

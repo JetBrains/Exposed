@@ -1,3 +1,19 @@
+# 0.17.3
+Infrastructure:
+* Kotlin updated to 1.3.50
+
+Features:
+* Added `short` column type support backed with `SMALLINT` SQL type
+* Added `greater/greaterEq/less/lessEq` functions with EntityID parameter ([#619](https://github.com/JetBrains/Exposed/issues/619))
+
+Bug fixes:
+* CURRENT_TIMESTAMP/NOW used as DEFAULT were broken for MySQL in some cases ([#631](https://github.com/JetBrains/Exposed/issues/631). Thanks [Saeed Shahrivari](https://github.com/shahrivari) for initial PR.   
+
+# 0.17.2
+Bug fixes:
+* MySQL match function is broken
+* notInList function doesn't work with list of EntityID. Thank you [kenta.koyama](https://github.com/doyaaaaaken) for a PR.
+
 # 0.17.1
 Performance:
 * QueryBuilder and Expression were reworked to lower object allocation when preparing SQL.

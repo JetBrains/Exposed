@@ -988,8 +988,6 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-
-
     @Test
     fun testJoinWithAlias01() {
         withCitiesAndUsers { cities, users, userData ->

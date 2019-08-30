@@ -7,9 +7,9 @@ import java.nio.ByteBuffer
 import java.util.*
 
 open class DataTypeProvider {
-    open fun shortAutoincType() = "INT AUTO_INCREMENT"
+    open fun integerAutoincType() = "INT AUTO_INCREMENT"
 
-    open fun shortType() = "INT"
+    open fun integerType() = "INT"
 
     open fun longAutoincType() = "BIGINT AUTO_INCREMENT"
 
@@ -39,8 +39,9 @@ open class DataTypeProvider {
     open fun textType() = "TEXT"
     open val blobAsStream = false
 
-    open fun processForDefaultValue(e: Expression<*>) : String = when (e) {
-        is LiteralOp<*> -> "$e"
+    open fun processForDefaultValue(e: Expression<*>) : String = when {
+        e is LiteralOp<*> -> "$e"
+        currentDialect is MysqlDialect -> "$e"
         else -> "($e)"
     }
 }

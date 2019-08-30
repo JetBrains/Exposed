@@ -61,7 +61,7 @@ class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: Strin
 
     private fun resolveAutIncType(columnType: IColumnType) : String = when (columnType) {
         is EntityIDColumnType<*> -> resolveAutIncType(columnType.idColumn.columnType)
-        is IntegerColumnType -> currentDialect.dataTypeProvider.shortAutoincType()
+        is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
         is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
         else -> error("Unsupported type $delegate for auto-increment")
     }
@@ -116,8 +116,18 @@ class CharacterColumnType : ColumnType() {
     override fun nonNullValueToString(value: Any): String = "'$value'"
 }
 
+class ShortColumnType : ColumnType() {
+    override fun sqlType(): String = "SMALLINT"
+
+    override fun valueFromDB(value: Any): Any = when(value) {
+        is Short -> value
+        is Number -> value.toShort()
+        else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+    }
+}
+
 class IntegerColumnType : ColumnType() {
-    override fun sqlType(): String = currentDialect.dataTypeProvider.shortType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.integerType()
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is Int -> value
@@ -177,7 +187,7 @@ class DecimalColumnType(val precision: Int, val scale: Int): ColumnType() {
 }
 
 class EnumerationColumnType<T:Enum<T>>(val klass: KClass<T>): ColumnType() {
-    override fun sqlType(): String  = currentDialect.dataTypeProvider.shortType()
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.integerType()
 
     override fun notNullValueToDB(value: Any): Any = when(value) {
         is Int -> value

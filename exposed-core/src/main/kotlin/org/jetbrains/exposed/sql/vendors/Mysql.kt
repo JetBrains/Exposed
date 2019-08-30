@@ -68,9 +68,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANSE) {
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
-        val expression = e.toQueryBuilder(QueryBuilder(false)).toString().trim()
-        return super.isAllowedAsColumnDefault(e) ||
-                (expression == "CURRENT_TIMESTAMP" && TransactionManager.current().db.isVersionCovers(BigDecimal("5.6")))
+        if (super.isAllowedAsColumnDefault(e)) return true
+        val acceptableDefaults = arrayOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
+        return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
     }
 
 //    @Synchronized
