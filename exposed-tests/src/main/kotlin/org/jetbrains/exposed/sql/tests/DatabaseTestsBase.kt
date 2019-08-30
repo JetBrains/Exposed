@@ -20,20 +20,14 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
     }),
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
     MYSQL({
-        val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
-        val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
-        host?.let { dockerHost ->
-            "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false"
-        } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
-    },
-        driver = "com.mysql.jdbc.Driver",
-        beforeConnection = {
-            val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
-            if (!MysqldResource(baseDir, null).isRunning) {
-                System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString())
-                Files().cleanTestDir()
-            }
+            val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
+            val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
+            host?.let { dockerHost ->
+                "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false"
+            } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
         },
+        driver = "com.mysql.jdbc.Driver",
+        beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
         afterTestFinished = {
             try {
                 val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
@@ -48,7 +42,7 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
             connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                        ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
+                    ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
                 val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
@@ -88,15 +82,13 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 }
 
 private val registeredOnShutdown = HashSet<TestDB>()
-private val alreadyRegisteredInAnotherThread get() = System.getProperty("db.registered")?.split(",")?.map { TestDB.valueOf(it) }.orEmpty()
-private fun isRegisteredOnShutdown(dbSettings: TestDB) = dbSettings in registeredOnShutdown || dbSettings in alreadyRegisteredInAnotherThread
 
 private val postgresSQLProcess by lazy {
     EmbeddedPostgres.builder()
-        .setPgBinaryResolver{ system, _ ->
-            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-        }
-        .setPort(12346).start()
+            .setPgBinaryResolver{ system, _ ->
+                EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
+            }
+            .setPort(12346).start()
 }
 
 abstract class DatabaseTestsBase {
@@ -109,11 +101,10 @@ abstract class DatabaseTestsBase {
             return
         }
 
-        if (!isRegisteredOnShutdown(dbSettings)) {
+        if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
             registeredOnShutdown += dbSettings
-            System.setProperty("db.registered", registeredOnShutdown.joinToString(","){ it.name })
             dbSettings.db = dbSettings.connect()
         }
 
