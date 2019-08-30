@@ -103,7 +103,10 @@ abstract class DatabaseTestsBase {
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
-            Runtime.getRuntime().addShutdownHook(thread(false ){ dbSettings.afterTestFinished() })
+            Runtime.getRuntime().addShutdownHook(thread(false){
+                dbSettings.afterTestFinished()
+                registeredOnShutdown.remove(dbSettings)
+            })
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
         }
