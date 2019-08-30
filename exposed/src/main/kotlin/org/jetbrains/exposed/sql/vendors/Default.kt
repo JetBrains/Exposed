@@ -8,9 +8,9 @@ import java.sql.ResultSet
 import java.util.*
 
 open class DataTypeProvider {
-    open fun shortAutoincType() = "INT AUTO_INCREMENT"
+    open fun integerAutoincType() = "INT AUTO_INCREMENT"
 
-    open fun shortType() = "INT"
+    open fun integerType() = "INT"
 
     open fun longAutoincType() = "BIGINT AUTO_INCREMENT"
 

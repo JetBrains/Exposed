@@ -46,6 +46,9 @@ object DMLTestsData {
     }
 
     object Misc : Table() {
+        val sm = short("sm")
+        val smn = short("smn").nullable()
+
         val n = integer("n")
         val nn = integer("nn").nullable()
 
@@ -839,10 +842,12 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
+    private fun DMLTestsData.Misc.checkRow(row: ResultRow, sm: Short, smn: Short?, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
                                            t: DateTime, tn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?,
                                            es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?,
                                            dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+        assertEquals(row[this.sm], sm)
+        assertEquals(row[this.smn], smn)
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
         assertEqualDateTime(row[this.d], d)
@@ -860,10 +865,12 @@ class DMLTests : DatabaseTestsBase() {
         assertEquals(row[this.fcn], fcn)
         assertEquals(row[this.dblcn], dblcn)
     }
-    private fun DMLTestsData.Misc.checkInsert(row: InsertStatement<Number>, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
+    private fun DMLTestsData.Misc.checkInsert(row: InsertStatement<Number>, sm: Short, smn: Short?, n: Int, nn: Int?, d: DateTime, dn: DateTime?,
                                            t: DateTime, tn: DateTime?, e: DMLTestsData.E, en: DMLTestsData.E?,
                                            es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?,
                                            dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+        assertEquals(row[this.sm], sm)
+        assertEquals(row[this.smn], smn)
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
         assertEqualDateTime(row[this.d], d)
@@ -890,6 +897,7 @@ class DMLTests : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -901,7 +909,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
+            tbl.checkRow(row, -10, null,42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
             assertEquals('(', row[tbl.char])
         }
@@ -915,6 +923,8 @@ class DMLTests : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
+                it[smn] = null
                 it[n] = 42
                 it[nn] = null
                 it[d] = date
@@ -933,7 +943,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
+            tbl.checkRow(row, -10, null, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
         }
     }
@@ -946,6 +956,8 @@ class DMLTests : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -965,7 +977,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, 42, date, date, time, time, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE,
+            tbl.checkRow(row, -10, -10, 42, 42, date, date, time, time, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE, DMLTestsData.E.ONE,
                     "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89)
         }
     }
@@ -978,6 +990,7 @@ class DMLTests : DatabaseTestsBase() {
         val time = DateTime.now()
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -988,7 +1001,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null,
+            tbl.checkRow(row, -10, null, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, stringThatNeedsEscaping, null,
                     BigDecimal("239.42"), null, null, null)
         }
     }
@@ -1001,6 +1014,7 @@ class DMLTests : DatabaseTestsBase() {
 
         withTables(tbl) {
             val row = tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -1011,7 +1025,7 @@ class DMLTests : DatabaseTestsBase() {
                 it[char] = '('
             }
 
-            tbl.checkInsert(row, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
+            tbl.checkInsert(row, -10, null, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
             assertEquals('(', row[tbl.char])
         }
@@ -1243,6 +1257,7 @@ class DMLTests : DatabaseTestsBase() {
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -1252,25 +1267,33 @@ class DMLTests : DatabaseTestsBase() {
                 it[dc] = dec
             }
 
-            tbl.checkRow(tbl.select { tbl.n.eq(42) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.nn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.nn.eq(null as Int?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            fun checkSingleRow(condition: SqlExpressionBuilder.() -> Op<Boolean>) {
+                tbl.checkRow(tbl.select(condition).single(), -10, null, 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            }
 
-            tbl.checkRow(tbl.select { tbl.d.eq(date) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.dn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            checkSingleRow { tbl.sm.eq(-10) }
+            checkSingleRow { tbl.smn.isNull() }
+            checkSingleRow { tbl.smn.eq(null as Short?) }
 
-            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.tn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            checkSingleRow { tbl.n.eq(42) }
+            checkSingleRow { tbl.nn.isNull() }
+            checkSingleRow { tbl.nn.eq(null as Int?) }
 
-            tbl.checkRow(tbl.select { tbl.e.eq(DMLTestsData.E.ONE) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.en.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.en.eq(null as DMLTestsData.E?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            checkSingleRow { tbl.d.eq(date) }
+            checkSingleRow { tbl.dn.isNull() }
+            checkSingleRow { tbl.dn.eq(null as DateTime?) }
 
-            tbl.checkRow(tbl.select { tbl.s.eq(sTest) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.sn.isNull() }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRow(tbl.select { tbl.sn.eq(null as String?) }.single(), 42, null, date, null, time, null, DMLTestsData.E.ONE, null, DMLTestsData.E.ONE, null, sTest, null, dec, null, null, null)
+            checkSingleRow { tbl.t.eq(time) }
+            checkSingleRow { tbl.tn.isNull() }
+            checkSingleRow { tbl.tn.eq(null as DateTime?) }
+
+            checkSingleRow { tbl.e.eq(DMLTestsData.E.ONE) }
+            checkSingleRow { tbl.en.isNull() }
+            checkSingleRow { tbl.en.eq(null as DMLTestsData.E?) }
+
+            checkSingleRow { tbl.s.eq(sTest) }
+            checkSingleRow { tbl.sn.isNull() }
+            checkSingleRow { tbl.sn.eq(null as String?) }
         }
     }
 
@@ -1284,6 +1307,8 @@ class DMLTests : DatabaseTestsBase() {
             val eOne = DMLTestsData.E.ONE
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -1302,20 +1327,24 @@ class DMLTests : DatabaseTestsBase() {
                 it[dblcn] = 567.89
             }
 
-            tbl.checkRow(tbl.select { tbl.nn.eq(42) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.nn.neq<Int?>(null) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            fun checkSingleRow(condition: SqlExpressionBuilder.() -> Op<Boolean>) {
+                tbl.checkRow(tbl.select(condition).single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            }
 
-            tbl.checkRow(tbl.select { tbl.dn.eq(date) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.dn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            checkSingleRow { tbl.nn.eq(42) }
+            checkSingleRow { tbl.nn.neq<Int?>(null) }
 
-            tbl.checkRow(tbl.select { tbl.t.eq(time) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.tn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            checkSingleRow { tbl.dn.eq(date) }
+            checkSingleRow { tbl.dn.isNotNull() }
 
-            tbl.checkRow(tbl.select { tbl.en.eq(eOne) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.en.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            checkSingleRow { tbl.t.eq(time) }
+            checkSingleRow { tbl.tn.isNotNull() }
 
-            tbl.checkRow(tbl.select { tbl.sn.eq(sTest) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRow(tbl.select { tbl.sn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            checkSingleRow { tbl.en.eq(eOne) }
+            checkSingleRow { tbl.en.isNotNull() }
+
+            checkSingleRow { tbl.sn.eq(sTest) }
+            checkSingleRow { tbl.sn.isNotNull() }
         }
     }
 
@@ -1329,6 +1358,8 @@ class DMLTests : DatabaseTestsBase() {
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -1347,6 +1378,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             tbl.update({ tbl.n.eq(42) }) {
+                it[smn] = null
                 it[nn] = null
                 it[dn] = null
                 it[tn] = null
@@ -1358,7 +1390,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, date, null, time, null, eOne, null, eOne, null, sTest, null, dec, null, null, null)
+            tbl.checkRow(row, -10, null, 42, null, date, null, time, null, eOne, null, eOne, null, sTest, null, dec, null, null, null)
         }
     }
 
@@ -1371,6 +1403,7 @@ class DMLTests : DatabaseTestsBase() {
         val dec = BigDecimal("239.42")
         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
             tbl.insert {
+                it[sm] = 10
                 it[n] = 101
                 it[s] = "123456789"
                 it[sn] = "123456789"
@@ -1387,7 +1420,7 @@ class DMLTests : DatabaseTestsBase() {
             }
 
             val row = tbl.select { tbl.n eq 101 }.single()
-            tbl.checkRow(row, 101, null, date, null, time, null, eOne, null, eOne, null, "23456789", "3456789", dec, null, null, null)
+            tbl.checkRow(row, 10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "23456789", "3456789", dec, null, null, null)
         }
     }
 

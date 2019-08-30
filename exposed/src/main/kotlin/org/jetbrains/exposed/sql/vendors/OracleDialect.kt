@@ -7,9 +7,9 @@ import java.util.*
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
 
-    override fun shortAutoincType() = "NUMBER(12)"
+    override fun integerAutoincType() = "NUMBER(12)"
 
-    override fun shortType() = "NUMBER(12)"
+    override fun integerType() = "NUMBER(12)"
 
     override fun longAutoincType() = "NUMBER(19)"
 

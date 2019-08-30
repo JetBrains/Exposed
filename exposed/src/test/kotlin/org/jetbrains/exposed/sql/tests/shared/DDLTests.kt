@@ -152,7 +152,7 @@ class DDLTests : DatabaseTestsBase() {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialect.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
-                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} PRIMARY KEY, $q${"name".inProperCase()}$q VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.integerType()} PRIMARY KEY, $q${"name".inProperCase()}$q VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -179,12 +179,12 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB), tables = *arrayOf(TestTable)) {
             val shortAutoIncType = if (currentDialect is SQLiteDialect)
-                currentDialect.dataTypeProvider.shortAutoincType().replace(" AUTOINCREMENT", "")
+                currentDialect.dataTypeProvider.integerAutoincType().replace(" AUTOINCREMENT", "")
             else
-                currentDialect.dataTypeProvider.shortAutoincType()
+                currentDialect.dataTypeProvider.integerAutoincType()
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} $shortAutoIncType NOT NULL, \"${"name".inProperCase()}\" VARCHAR(42) PRIMARY KEY, " +
-                    "${"age".inProperCase()} ${currentDialect.dataTypeProvider.shortType()} NULL)", TestTable.ddl)
+                    "${"age".inProperCase()} ${currentDialect.dataTypeProvider.integerType()} NULL)", TestTable.ddl)
         }
     }
 
@@ -198,7 +198,7 @@ class DDLTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
             val q = db.identifierManager.quoteString
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.shortType()} NULL, " +
+                    "(${"id".inProperCase()} ${currentDialect.dataTypeProvider.integerType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL, " +
                     "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
         }
     }
@@ -259,7 +259,7 @@ class DDLTests : DatabaseTestsBase() {
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialect.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
+                    "${"id".inProperCase()} ${currentDialect.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
                     "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
                     "${"l".inProperCase()} ${currentDialect.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +

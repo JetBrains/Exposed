@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
-    override fun shortAutoincType() = "INT IDENTITY(1,1)"
+    override fun integerAutoincType() = "INT IDENTITY(1,1)"
 
     override fun longAutoincType() = "BIGINT IDENTITY(1,1)"
 

@@ -7,7 +7,7 @@ import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
 
-    override fun shortAutoincType(): String = "SERIAL"
+    override fun integerAutoincType(): String = "SERIAL"
 
     override fun longAutoincType(): String = "BIGSERIAL"
 
