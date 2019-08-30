@@ -14,8 +14,10 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.Test
@@ -127,9 +129,10 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val currentDT = CurrentDateTime()
         val nowExpression = object : Expression<DateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                +when (currentDialectTest) {
+                +when (val dialect = currentDialect) {
                     is OracleDialect -> "SYSDATE"
                     is SQLServerDialect -> "GETDATE()"
+                    is MysqlDialect -> if (dialect.isFractionDateTimeSupported()) "NOW(6)" else "NOW()"
                     else -> "NOW()"
                 }
             }
@@ -158,7 +161,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.shortAutoincType()} PRIMARY KEY, " +
+                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                     "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
                     "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
                     "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +

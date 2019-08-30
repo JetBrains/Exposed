@@ -7,6 +7,9 @@ import java.math.BigDecimal
 import kotlin.test.assertEquals
 
 open class MiscTable : Table() {
+    val sm = short("sm")
+    val smn = short("smn").nullable()
+
     val n = integer("n")
     val nn = integer("nn").nullable()
 
@@ -34,9 +37,13 @@ open class MiscTable : Table() {
     }
 }
 
-fun MiscTable.checkRow(row: ResultRow, n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
-                                       es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
-                                       dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+fun MiscTable.checkRow(row: ResultRow,
+                            sm: Short, smn: Short?,
+                            n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
+                            es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
+                            dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+    assertEquals(row[this.sm], sm)
+    assertEquals(row[this.smn], smn)
     assertEquals(row[this.n], n)
     assertEquals(row[this.nn], nn)
     assertEquals(row[this.e], e)
@@ -51,9 +58,13 @@ fun MiscTable.checkRow(row: ResultRow, n: Int, nn: Int?, e: MiscTable.E, en: Mis
     assertEquals(row[this.dblcn], dblcn)
 }
 
-fun MiscTable.checkInsert(row: InsertStatement<Number>, n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
-                                  es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
-                                  dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+fun MiscTable.checkInsert(row: InsertStatement<Number>,
+                                sm: Short, smn: Short?,
+                                n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
+                                es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
+                                dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+    assertEquals(row[this.sm], sm)
+    assertEquals(row[this.smn], smn)
     assertEquals(row[this.n], n)
     assertEquals(row[this.nn], nn)
     assertEquals(row[this.e], e)

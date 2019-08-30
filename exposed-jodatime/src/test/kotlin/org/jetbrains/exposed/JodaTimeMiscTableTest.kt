@@ -27,6 +27,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -38,7 +39,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+            tbl.checkRow(row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
             tbl.checkRowDates(row, date, null, time, null)
             assertEquals('(', row[tbl.char])
@@ -53,6 +54,8 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
+                it[smn] = null
                 it[n] = 42
                 it[nn] = null
                 it[d] = date
@@ -71,7 +74,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+            tbl.checkRow(row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
             tbl.checkRowDates(row, date, null, time, null)
         }
@@ -85,6 +88,8 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -104,7 +109,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
+            tbl.checkRow(row, -10, -10, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
                     "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89)
             tbl.checkRowDates(row, date, date, time, time)
         }
@@ -118,6 +123,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
         val time = DateTime.now()
         withTables(tbl) {
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -128,7 +134,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRow(row, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, stringThatNeedsEscaping, null,
+            tbl.checkRow(row,- 10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, stringThatNeedsEscaping, null,
                     BigDecimal("239.42"), null, null, null)
             tbl.checkRowDates(row, date, null, time, null)
         }
@@ -142,6 +148,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
         withTables(tbl) {
             val row = tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -152,7 +159,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it[char] = '('
             }
 
-            tbl.checkInsert(row, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+            tbl.checkInsert(row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                     null, "test", null, BigDecimal("239.42"), null, null, null)
             tbl.checkRowDates(row.resultedValues!!.single(), date, null, time, null)
             assertEquals('(', row[tbl.char])
@@ -168,6 +175,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
                 it[n] = 42
                 it[d] = date
                 it[t] = time
@@ -177,25 +185,25 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it[dc] = dec
             }
 
-            tbl.checkRowFull(tbl.select { tbl.n.eq(42) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.nn.isNull() }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.nn.eq(null as Int?) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.n.eq(42) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.nn.isNull() }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.nn.eq(null as Int?) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.d.eq(date) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.dn.isNull() }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.d.eq(date) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.dn.isNull() }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.tn.isNull() }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.tn.isNull() }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.e.eq(MiscTable.E.ONE) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.en.isNull() }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.en.eq(null as MiscTable.E?) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.e.eq(MiscTable.E.ONE) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.en.isNull() }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.en.eq(null as MiscTable.E?) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.s.eq(sTest) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.sn.isNull() }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.sn.eq(null as String?) }.single(), 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.s.eq(sTest) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.sn.isNull() }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.select { tbl.sn.eq(null as String?) }.single(), -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, dec, null, null, null)
         }
     }
 
@@ -209,6 +217,8 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             val eOne = MiscTable.E.ONE
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -227,20 +237,20 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it[dblcn] = 567.89
             }
 
-            tbl.checkRowFull(tbl.select { tbl.nn.eq(42) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.nn.neq<Int?>(null) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.nn.eq(42) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.nn.neq<Int?>(null) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.dn.eq(date) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.dn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.dn.eq(date) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.dn.isNotNull() }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.tn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.tn.isNotNull() }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.en.eq(eOne) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.en.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.en.eq(eOne) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.en.isNotNull() }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.sn.eq(sTest) }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.sn.isNotNull() }.single(), 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.sn.eq(sTest) }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.select { tbl.sn.isNotNull() }.single(), -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, dec, dec, 239.42f, 567.89)
         }
     }
 
@@ -254,6 +264,8 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[sm] = -10
+                it[smn] = -10
                 it[n] = 42
                 it[nn] = 42
                 it[d] = date
@@ -272,6 +284,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             tbl.update({ tbl.n.eq(42) }) {
+                it[smn] = null
                 it[nn] = null
                 it[dn] = null
                 it[tn] = null
@@ -283,7 +296,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.selectAll().single()
-            tbl.checkRowFull(row, 42, null, date, null, time, null, eOne, null, eOne, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(row, -10, null, 42, null, date, null, time, null, eOne, null, eOne, null, sTest, null, dec, null, null, null)
         }
     }
 
@@ -296,6 +309,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
         val dec = BigDecimal("239.42")
         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
             tbl.insert {
+                it[sm] = -10
                 it[n] = 101
                 it[s] = "123456789"
                 it[sn] = "123456789"
@@ -312,17 +326,19 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             }
 
             val row = tbl.select { tbl.n eq 101 }.single()
-            tbl.checkRowFull(row, 101, null, date, null, time, null, eOne, null, eOne, null, "23456789", "3456789", dec, null, null, null)
+            tbl.checkRowFull(row, -10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "23456789", "3456789", dec, null, null, null)
         }
     }
 }
 
-fun Misc.checkRowFull(row: ResultRow, n: Int, nn: Int?,
+fun Misc.checkRowFull(row: ResultRow,
+                      sm: Short, smn: Short?,
+                      n: Int, nn: Int?,
                       d: DateTime, dn: DateTime?, t: DateTime, tn: DateTime?,
                       e: MiscTable.E, en: MiscTable.E?,
                       es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
                       dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
-    checkRow(row, n, nn, e, en, es, esn, s, sn, dc, dcn, fcn, dblcn)
+    checkRow(row,sm, smn, n, nn, e, en, es, esn, s, sn, dc, dcn, fcn, dblcn)
     checkRowDates(row, d, dn, t, tn)
 }
 
