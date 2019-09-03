@@ -760,6 +760,9 @@ class DDLTests : DatabaseTestsBase() {
                 entity.id.value // flush entity
                 assertEquals(Foo.Baz, entity.enum)
                 assertEquals(Foo.Baz, EnumClass.reload(entity)!!.enum)
+                entity.enum = Foo.Bar
+//                flushCache()
+                assertEquals(Foo.Bar, EnumClass.reload(entity, true)!!.enum)
             } finally {
                 try {
                     SchemaUtils.drop(EnumTable)
