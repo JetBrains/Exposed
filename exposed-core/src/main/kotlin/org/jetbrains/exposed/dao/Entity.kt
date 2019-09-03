@@ -325,11 +325,14 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
-        if (!writeValues.isEmpty()) {
+        if (writeValues.isNotEmpty()) {
             if (batch == null) {
                 val table = klass.table
+                // Store values before update to prevent flush inside UpdateStatement
+                val _writeValues = writeValues.toMap()
+                storeWrittenValues()
                 table.update({table.id eq id}) {
-                    for ((c, v) in writeValues) {
+                    for ((c, v) in _writeValues) {
                         it[c] = v
                     }
                 }
@@ -339,9 +342,9 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 for ((c, v) in writeValues) {
                     batch[c] = v
                 }
+                storeWrittenValues()
             }
 
-            storeWrittenValues()
             return true
         }
         return false
