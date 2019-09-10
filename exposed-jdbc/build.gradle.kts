@@ -17,7 +17,7 @@ dependencies {
 
 publishJar {
     publication {
-        artifactId = "exposed-jodatime"
+        artifactId = "exposed-jdbc"
     }
 
     bintray {
