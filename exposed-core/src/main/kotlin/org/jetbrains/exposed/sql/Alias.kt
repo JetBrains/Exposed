@@ -105,7 +105,7 @@ fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinTy
 
 val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
 
-fun <T:Any> wrapAsExpression(query: Query) = object : Expression<T>() {
+fun <T:Any> wrapAsExpression(query: Query) = object : Expression<T?>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
         query.prepareSQL(this)
