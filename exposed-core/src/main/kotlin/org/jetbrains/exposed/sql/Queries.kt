@@ -22,6 +22,19 @@ fun FieldSet.select(where: Op<Boolean>) : Query = Query(this, where)
  */
 fun FieldSet.selectAll() : Query = Query(this, null)
 
+fun FieldSet.selectBatched(
+        batchSize: Int = 1000,
+        where: SqlExpressionBuilder.() -> Op<Boolean>
+): Iterable<Iterable<ResultRow>> {
+    return selectBatched(batchSize, SqlExpressionBuilder.where())
+}
+
+fun FieldSet.selectAllBatched(
+        batchSize: Int = 1000
+): Iterable<Iterable<ResultRow>> {
+    return selectBatched(batchSize, Op.TRUE)
+}
+
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
@@ -192,6 +205,50 @@ fun checkExcessiveIndices(vararg tables: Table) {
             it.value.take(it.value.size - 1).forEach {
                 exposedLogger.info("\t\t\t${it.dropStatement()};")
             }
+        }
+    }
+}
+
+private fun FieldSet.selectBatched(
+        batchSize: Int = 1000,
+        whereOp: Op<Boolean>
+): Iterable<Iterable<ResultRow>> {
+    require(batchSize > 0) { "Batch size should be greater than 0" }
+
+    val autoIncColumn = try {
+        source.columns.first { it.columnType.isAutoInc }
+    } catch (_: NoSuchElementException) {
+        throw UnsupportedOperationException("Batched select only works on tables with an autoincrementing column")
+    }
+
+    return object : Iterable<Iterable<ResultRow>> {
+        override fun iterator(): Iterator<Iterable<ResultRow>> {
+            return iterator {
+                var lastOffset = 0L
+                while (true) {
+                    val query =
+                            select { whereOp and (autoIncColumn greater lastOffset) }
+                                    .limit(batchSize)
+                                    .orderBy(autoIncColumn, SortOrder.ASC)
+
+                    // query.iterator() executes the query
+                    val results = query.iterator().asSequence().toList()
+
+                    if (results.isEmpty()) break
+
+                    yield(results)
+
+                    if (results.size < batchSize) break
+
+                    lastOffset = toLong(results.last()[autoIncColumn]!!)
+                }
+            }
+        }
+
+        private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
+            is EntityID<*> -> autoIncVal.value as Long
+            is Int -> autoIncVal.toLong()
+            else -> autoIncVal as Long
         }
     }
 }
