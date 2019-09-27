@@ -1,3 +1,13 @@
+# 0.17.4
+Critical bug fix:
+* `and` function executed on `And` expression mutates expression state
+
+Features:
+* `SchemaUtils` functions (`create/createMissingTablesAndColumns/drop`) could be executed with `inBatch` flag to perform related functions in a single batch (where possible)
+
+Performance:
+*  Speed up scheme analysis within for MySQL in place where column constraints metadata is required
+
 # 0.17.3
 Infrastructure:
 * Kotlin updated to 1.3.50
