@@ -73,57 +73,50 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
     }
 
-//    @Synchronized
-//    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
-//
-//        val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-//
-//        val tableNames = tables.map { it.nameInDatabaseCase() }
-//
-//        fun inTableList(): String {
-//            if (tables.isNotEmpty()) {
-//                return tableNames.joinToString("','", prefix = "AND ku.TABLE_NAME IN ('", postfix = "')")
-//            }
-//            return ""
-//        }
-//
-//        val tr = TransactionManager.current()
-//        tr.exec(
-//                "SELECT\n" +
-//                        "  rc.CONSTRAINT_NAME,\n" +
-//                        "  ku.TABLE_NAME,\n" +
-//                        "  ku.COLUMN_NAME,\n" +
-//                        "  ku.REFERENCED_TABLE_NAME,\n" +
-//                        "  ku.REFERENCED_COLUMN_NAME,\n" +
-//                        "  rc.UPDATE_RULE,\n" +
-//                        "  rc.DELETE_RULE\n" +
-//                        "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
-//                        "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
-//                        "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
-//                        "WHERE ku.TABLE_SCHEMA = '${getDatabase()}' ${inTableList()}") { rs ->
-//            while (rs.next()) {
-//                val fromTableName = rs.getString("TABLE_NAME")!!
-//                if (fromTableName !in tableNames) continue
-//                val fromColumnName = rs.getString("COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-//                val constraintName = rs.getString("CONSTRAINT_NAME")!!
-//                val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-//                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-//                val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
-//                val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-//                constraints.getOrPut(fromTableName to fromColumnName) { arrayListOf() }.add(
-//                        ForeignKeyConstraint(constraintName,
-//                                targetTableName, targetColumnName,
-//                                fromTableName, fromColumnName,
-//                                constraintUpdateRule, constraintDeleteRule)
-//                )
-//            }
-//        }
-//
-//        return constraints
-//    }
+    override fun fillConstraintCacheForTables(tables: List<Table>) {
+        val allTableNames = tables.map { it.nameInDatabaseCase() }
+        val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
+        val tr = TransactionManager.current()
+        val schemaName = "'${getDatabase()}'"
+        val constraintsToLoad = HashMap<String, MutableList<ForeignKeyConstraint>>()
+        tr.exec(
+                "SELECT\n" +
+                        "  rc.CONSTRAINT_NAME,\n" +
+                        "  ku.TABLE_NAME,\n" +
+                        "  ku.COLUMN_NAME,\n" +
+                        "  ku.REFERENCED_TABLE_NAME,\n" +
+                        "  ku.REFERENCED_COLUMN_NAME,\n" +
+                        "  rc.UPDATE_RULE,\n" +
+                        "  rc.DELETE_RULE\n" +
+                        "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
+                        "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
+                        "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
+                        "WHERE ku.TABLE_SCHEMA = $schemaName " +
+                        "   AND ku.CONSTRAINT_SCHEMA = $schemaName" +
+                        "   AND rc.CONSTRAINT_SCHEMA = $schemaName" +
+                        "   AND $inTableList") { rs ->
+            while (rs.next()) {
+                val fromTableName = rs.getString("TABLE_NAME")!!
+                if (fromTableName !in allTableNames) continue
+                val fromColumnName = rs.getString("COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
+                val constraintName = rs.getString("CONSTRAINT_NAME")!!
+                val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
+                val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
+                val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
+                constraintsToLoad.getOrPut(fromTableName) { arrayListOf() }.add(
+                        ForeignKeyConstraint(constraintName,
+                                targetTableName, targetColumnName,
+                                fromTableName, fromColumnName,
+                                constraintUpdateRule, constraintDeleteRule)
+                )
+            }
 
-    override fun dropIndex(tableName: String, indexName: String): String =
-            "ALTER TABLE $tableName DROP INDEX $indexName"
+            columnConstraintsCache.putAll(constraintsToLoad)
+        }
+    }
+
+    override fun dropIndex(tableName: String, indexName: String): String = "ALTER TABLE $tableName DROP INDEX $indexName"
 
     fun isFractionDateTimeSupported() = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 

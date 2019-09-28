@@ -13,6 +13,7 @@ interface ExposedConnection<OriginalConnection: Any> {
 
     fun prepareStatement(sql: String, returnKeys: Boolean) : PreparedStatementApi
     fun prepareStatement(sql: String, columns: Array<String>) : PreparedStatementApi
+    fun executeInBatch(sqls: List<String>)
 
     val catalog: String
 

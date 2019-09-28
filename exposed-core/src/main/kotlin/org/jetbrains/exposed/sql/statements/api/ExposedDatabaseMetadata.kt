@@ -24,7 +24,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     abstract fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
 
-    abstract fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>>
+    abstract fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
 
     abstract fun cleanCache()
 

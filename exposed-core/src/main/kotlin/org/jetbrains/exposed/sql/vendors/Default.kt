@@ -5,6 +5,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+
+internal typealias TableAndColumnName = Pair<String, String>
 
 open class DataTypeProvider {
     open fun integerAutoincType() = "INT AUTO_INCREMENT"
@@ -196,7 +199,7 @@ interface DatabaseDialect {
     /**
      * returns map of constraint for a table name/column name pair
      */
-    fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> = emptyMap()
+    fun columnConstraints(vararg tables: Table): Map<TableAndColumnName, List<ForeignKeyConstraint>> = emptyMap()
 
     /**
      * return set of indices for each table
@@ -259,14 +262,32 @@ abstract class VendorDialect(override val name: String,
     protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction) =
             tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>>
-        = TransactionManager.current().db.metadata { columnConstraints(*tables) }
+    protected val columnConstraintsCache = ConcurrentHashMap<String, List<ForeignKeyConstraint>>()
+
+    protected open fun fillConstraintCacheForTables(tables: List<Table>) {
+        columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })
+    }
+    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
+        val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
+
+        val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
+
+        fillConstraintCacheForTables(tablesToLoad)
+        tables.forEach { table ->
+            columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
+                constraints.getOrPut(it.fromTable to it.fromColumn){arrayListOf()}.add(it)
+            }
+
+        }
+        return constraints
+    }
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
         = TransactionManager.current().db.metadata { existingIndices(*tables) }
 
     override fun resetCaches() {
         _allTableNames = null
+        columnConstraintsCache.clear()
         TransactionManager.current().db.metadata { cleanCache() }
     }
 

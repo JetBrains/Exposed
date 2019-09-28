@@ -29,16 +29,31 @@ abstract class Op<T> : Expression<T>() {
     }
 }
 
-infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
-    this is AndOp && op is AndOp -> apply {
-        expressions.add(op.expr1)
-        expressions.addAll(op.expressions)
-    }
-    this is AndOp -> apply { expressions.add(op) }
-    else -> AndOp(this, op)
+infix fun Expression<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
+    this is AndOp && op is AndOp -> AndOp(ArrayList(expressions).apply{ addAll(op.expressions) })
+    this is AndOp -> AndOp(ArrayList(expressions).apply{ add(op) })
+    op is AndOp -> AndOp(ArrayList<Expression<Boolean>>(op.expressions.size + 1).apply {
+        add(this@and)
+        addAll(op.expressions)
+    })
+    else -> AndOp(ArrayList<Expression<Boolean>>().apply{
+        add(this@and)
+        add(op)
+    })
 }
 
-infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = OrOp(this, op)
+infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = when {
+    this is OrOp && op is OrOp -> OrOp(ArrayList(expressions).apply{ addAll(op.expressions) })
+    this is OrOp -> OrOp(ArrayList(expressions).apply{ add(op) })
+    op is OrOp -> OrOp(ArrayList<Expression<Boolean>>(op.expressions.size + 1).apply {
+        add(this@or)
+        addAll(op.expressions)
+    })
+    else -> OrOp(ArrayList<Expression<Boolean>>().apply{
+        add(this@or)
+        add(op)
+    })
+}
 
 fun List<Op<Boolean>>.compoundAnd() = reduce { op, nextOp -> op and nextOp }
 fun List<Op<Boolean>>.compoundOr() = reduce { op, nextOp -> op or nextOp }
@@ -123,7 +138,7 @@ fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), valu
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(VarCharColumnType(), value)
 
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
-    if (expr is OrOp) {
+    if (expr is CompoundBooleanOp<*>) {
         append("(", expr, ")")
     } else {
         append(expr)
@@ -150,30 +165,22 @@ class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1
 @Deprecated("Use not(RegexpOp()) instead", level = DeprecationLevel.ERROR)
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
 
-class AndOp(internal val expr1: Expression<*>, vararg expr: Expression<*>) : Op<Boolean>() {
+abstract class CompoundBooleanOp<T:CompoundBooleanOp<T>>(private val operator: String, internal val expressions: List<Expression<Boolean>>) : Op<Boolean> () {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        appendExpression(expr1)
-        expressions.forEach {
-            append(" AND ")
-            appendExpression(it)
+        expressions.forEachIndexed { indx, el ->
+            if (indx > 0) append(operator)
+            appendExpression(el)
         }
     }
-
-    internal val expressions = expr.toMutableList()
-
 }
+
+class AndOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp<AndOp>(" AND ", expressions)
+
+class OrOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp<AndOp>(" OR ", expressions)
 
 class RegexpOp<T:String?>(val expr1: Expression<T>, val expr2: Expression<String>, val caseSensitive: Boolean) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
-    }
-}
-
-class OrOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<Boolean>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        appendExpression(expr1)
-        append(" OR ")
-        appendExpression(expr2)
     }
 }
 

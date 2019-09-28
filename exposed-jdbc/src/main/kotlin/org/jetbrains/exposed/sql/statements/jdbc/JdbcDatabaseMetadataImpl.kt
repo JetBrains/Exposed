@@ -86,39 +86,27 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return HashMap(existingIndicesCache)
     }
 
-    private val columnConstraintsCache = HashMap<String, List<ForeignKeyConstraint>>()
-
     @Synchronized
-    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
-
-        tables.map{ it.nameInDatabaseCase() }.forEach { table ->
-            columnConstraintsCache.getOrPut(table) {
-                val rs = metadata.getImportedKeys(databaseName, oracleSchema, table)
-                rs.iterate {
-                    val fromTableName = rs.getString("FKTABLE_NAME")!!
-                    val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("FKCOLUMN_NAME")!!)
-                    val constraintName = rs.getString("FK_NAME")!!
-                    val targetTableName = rs.getString("PKTABLE_NAME")!!
-                    val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("PKCOLUMN_NAME")!!)
-                    val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("UPDATE_RULE"))
-                    val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(rs.getInt("DELETE_RULE"))
-                    ForeignKeyConstraint(constraintName,
-                            targetTableName, targetColumnName,
-                            fromTableName, fromColumnName,
-                            constraintUpdateRule, constraintDeleteRule)
-                }
-            }.forEach {
-                constraints.getOrPut(it.fromTable to it.fromColumn){arrayListOf()}.add(it)
+    override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
+        return tables.map{ it.nameInDatabaseCase() }.associateWith { table ->
+            metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
+                val fromTableName = getString("FKTABLE_NAME")!!
+                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
+                val constraintName = getString("FK_NAME")!!
+                val targetTableName = getString("PKTABLE_NAME")!!
+                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("PKCOLUMN_NAME")!!)
+                val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
+                val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                ForeignKeyConstraint(constraintName,
+                        targetTableName, targetColumnName,
+                        fromTableName, fromColumnName,
+                        constraintUpdateRule, constraintDeleteRule)
             }
-
         }
-        return constraints
     }
 
     @Synchronized
     override fun cleanCache() {
-        columnConstraintsCache.clear()
         existingIndicesCache.clear()
     }
 

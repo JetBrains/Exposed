@@ -124,6 +124,14 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     fun <T> exec(stmt: Statement<T>): T? = exec(stmt, {it})
 
+    /**
+     * Provided statements will be executed in a batch.
+     * Select statements are not supported as it's impossible to return multiple results.
+     */
+    fun execInBatch(stmts: List<String>) {
+        connection.executeInBatch(stmts)
+    }
+
     fun <T, R> exec(stmt: Statement<T>, body: Statement<T>.(T) -> R): R? {
         statementCount++
 

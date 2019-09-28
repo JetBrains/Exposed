@@ -150,12 +150,18 @@ object SchemaUtils {
         }
     }
 
-    fun <T : Table> create(vararg tables: T) {
-        with(TransactionManager.current()) {
-            val statements = createStatements(*tables)
+    private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
+        if (inBatch)
+            execInBatch(statements)
+        else {
             for (statement in statements) {
                 exec(statement)
             }
+        }
+    }
+    fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            execStatements(inBatch, createStatements(*tables))
             commit()
             currentDialect.resetCaches()
         }
@@ -177,16 +183,14 @@ object SchemaUtils {
      * To prevent such cases is advised to use any "global" synchronization you prefer (via redis, memcached, etc) or
      * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
      */
-    fun createMissingTablesAndColumns(vararg tables: Table) {
+    fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             db.dialect.resetCaches()
             val createStatements = logTimeSpent("Preparing create tables statements") {
                 createStatements(*tables)
             }
             logTimeSpent("Executing create tables statements") {
-                for (statement in createStatements) {
-                    exec(statement)
-                }
+                execStatements(inBatch, createStatements)
                 commit()
             }
 
@@ -194,16 +198,13 @@ object SchemaUtils {
                 addMissingColumnsStatements(*tables)
             }
             logTimeSpent("Executing alter table statements") {
-                for (statement in alterStatements) {
-                    exec(statement)
-                }
+                execStatements(inBatch, alterStatements)
                 commit()
             }
             val executedStatements = createStatements + alterStatements
             logTimeSpent("Checking mapping consistence") {
-                for (statement in checkMappingConsistence(*tables).filter { it !in executedStatements }) {
-                    exec(statement)
-                }
+                val modifyTablesStatements = checkMappingConsistence(*tables).filter { it !in executedStatements }
+                execStatements(inBatch, modifyTablesStatements)
                 commit()
             }
             db.dialect.resetCaches()
@@ -234,22 +235,20 @@ object SchemaUtils {
         }
     }
 
-    fun drop(vararg tables: Table) {
+    fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
-        val transaction = TransactionManager.current()
-        transaction.flushCache()
-        var tablesForDeletion = SchemaUtils
-                .sortTablesByReferences(tables.toList())
-                .reversed()
-                .filter { it in tables }
-        if (!currentDialect.supportsIfNotExists) {
-            tablesForDeletion = tablesForDeletion.filter { it.exists()}
+        with(TransactionManager.current()) {
+            flushCache()
+            var tablesForDeletion =
+                    sortTablesByReferences(tables.toList())
+                            .reversed()
+                            .filter { it in tables }
+            if (!currentDialect.supportsIfNotExists) {
+                tablesForDeletion = tablesForDeletion.filter { it.exists() }
+            }
+            val dropStatements = tablesForDeletion.flatMap { it.dropStatement() }
+            execStatements(inBatch, dropStatements)
+            currentDialect.resetCaches()
         }
-        tablesForDeletion
-                .flatMap { it.dropStatement() }
-                .forEach {
-                    transaction.exec(it)
-                }
-        currentDialect.resetCaches()
     }
 }
