@@ -63,7 +63,7 @@ class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
             error("$column is already initialized")
         }
 
-        values[column] = column.columnType.valueToDB(value)
+        values[column] = value
     }
 
     fun execute(transaction: Transaction): Int {
