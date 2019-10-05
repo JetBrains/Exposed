@@ -1,3 +1,7 @@
+# 0.17.5
+Critical bug fix:
+* Transaction isolation level wasn't applied to transaction
+
 # 0.17.4
 Critical bug fix:
 * `and` function executed on `And` expression mutates expression state
