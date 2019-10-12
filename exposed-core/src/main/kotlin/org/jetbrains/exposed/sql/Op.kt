@@ -128,13 +128,19 @@ class QueryParameter<T>(val value: T, val sqlType: IColumnType) : Expression<T>(
 
 fun <T:Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
 fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType())
+fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
+fun floatParam(value: Float): Expression<Float> = QueryParameter(value, FloatColumnType())
+fun doubleParam(value: Double): Expression<Double> = QueryParameter(value, DoubleColumnType())
 fun stringParam(value: String): Expression<String> = QueryParameter(value, VarCharColumnType())
 
 fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumnType(), value)
+fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
 fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), value)
 fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
+fun floatLiteral(value: Float): LiteralOp<Float> = LiteralOp(FloatColumnType(), value)
+fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType(), value)
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(VarCharColumnType(), value)
 
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
