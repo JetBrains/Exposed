@@ -411,7 +411,7 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-            inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, 1, null, null, statement)
+            inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
@@ -441,6 +441,11 @@ class EntityTests: DatabaseTestsBase() {
     object Students : LongIdTable(name = "students") {
         val name    = varchar("name", 255)
         val school  = reference("school_id", Schools)
+    }
+
+    object StudentBios : LongIdTable(name = "student_bio") {
+        val student = reference("student_id", Students).uniqueIndex()
+        val dateOfBirth = varchar("date_of_birth", 25)
     }
 
     object Notes : LongIdTable(name = "notes") {
@@ -494,6 +499,13 @@ class EntityTests: DatabaseTestsBase() {
         var school      by School referencedOn Students.school
         val notes       by Note.referrersOn(Notes.student, true)
         val detentions  by Detention.optionalReferrersOn(Detentions.student, true)
+        val bio by StudentBio.optionalBackReferencedOn(StudentBios.student)
+    }
+
+    class StudentBio(id: EntityID<Long>): ComparableLongEntity<StudentBio>(id) {
+        companion object : LongEntityClass<StudentBio>(StudentBios)
+        var student by Student.referencedOn(StudentBios.student)
+        var dateOfBirth by StudentBios.dateOfBirth
     }
 
     class Note(id: EntityID<Long>): ComparableLongEntity<Note>(id) {
@@ -993,6 +1005,98 @@ class EntityTests: DatabaseTestsBase() {
             assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
             assertEquals(note1, cache.referrers[student1.id]?.get(Notes.student)?.first())
             assertEquals(note2, cache.referrers[student2.id]?.get(Notes.student)?.first())
+        }
+    }
+
+    @Test fun preloadBackReferrenceOnASizedIterable() {
+
+        withTables(Regions, Schools, Students, StudentBios) {
+            val region1 = Region.new {
+                name = "United States"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "John Smith"
+                school = school1
+            }
+
+            val bio1 = StudentBio.new {
+                student = student1
+                dateOfBirth = "01/01/2000"
+            }
+
+            val bio2 = StudentBio.new {
+                student = student2
+                dateOfBirth = "01/01/2002"
+            }
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                Student.all().with(Student::bio)
+                val cache           = TransactionManager.current().entityCache
+
+                assertEquals(true, cache.referrers.containsKey(student1.id))
+                assertEquals(true, cache.referrers.containsKey(student2.id))
+
+                assertEqualCollections(cache.referrers[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
+                assertEqualCollections(cache.referrers[student2.id]?.get(StudentBios.student)?.toList().orEmpty(), bio2)
+            }
+        }
+    }
+
+    @Test fun preloadBackReferrenceOnAnEntity() {
+
+        withTables(Regions, Schools, Students, StudentBios) {
+            val region1 = Region.new {
+                name = "United States"
+            }
+
+            val school1 = School.new {
+                name = "Eton"
+                region          = region1
+            }
+
+            val student1 = Student.new {
+                name = "James Smith"
+                school = school1
+            }
+
+            val student2 = Student.new {
+                name = "John Smith"
+                school = school1
+            }
+
+            val bio1 = StudentBio.new {
+                student = student1
+                dateOfBirth = "01/01/2000"
+            }
+
+            val bio2 = StudentBio.new {
+                student = student2
+                dateOfBirth = "01/01/2002"
+            }
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                Student.all().first().load(Student::bio)
+                val cache           = TransactionManager.current().entityCache
+
+                assertEquals(true, cache.referrers.containsKey(student1.id))
+
+                assertEqualCollections(cache.referrers[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
+            }
         }
     }
 }
