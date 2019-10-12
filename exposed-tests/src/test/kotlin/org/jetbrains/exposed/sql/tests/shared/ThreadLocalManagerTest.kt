@@ -372,3 +372,14 @@ class RollbackTransactionTest : DatabaseTestsBase() {
         }
     }
 }
+
+class TransactionIsolationTest : DatabaseTestsBase() {
+    @Test
+    fun `test what transaction isolation was applied`() {
+        withDb {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+                assertEquals(Connection.TRANSACTION_SERIALIZABLE, this.connection.transactionIsolation)
+            }
+        }
+    }
+}
