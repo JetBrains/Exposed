@@ -201,7 +201,9 @@ fun <T> inTopLevelTransaction(
 internal fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
     val manager = db.transactionManager as? ThreadLocalTransactionManager
     val currentTransaction = manager?.currentOrNull()
-    return block().also {
+    return try {
+        block()
+    } finally {
         manager?.threadLocal?.set(currentTransaction)
     }
 }

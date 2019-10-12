@@ -3,8 +3,11 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class NestedTransactionsTest : DatabaseTestsBase() {
@@ -46,6 +49,23 @@ class NestedTransactionsTest : DatabaseTestsBase() {
             } finally {
                 db.useNestedTransactions = false
             }
+        }
+    }
+
+    @Test
+    fun `test outer transaction restored after nested transaction failed`() {
+        withTables(DMLTestsData.Cities) {
+            assertNotNull(TransactionManager.currentOrNull())
+
+            try {
+                inTopLevelTransaction(this.transactionIsolation, 1) {
+                    throw IllegalStateException("Should be rethrow")
+                }
+            } catch (e: Exception){
+                assertTrue(e is IllegalStateException)
+            }
+
+            assertNotNull(TransactionManager.currentOrNull())
         }
     }
 }

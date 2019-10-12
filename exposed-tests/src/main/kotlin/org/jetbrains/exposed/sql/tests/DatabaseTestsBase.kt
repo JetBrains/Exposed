@@ -9,6 +9,7 @@ import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
@@ -117,11 +118,7 @@ abstract class DatabaseTestsBase {
 
         val database = dbSettings.db!!
 
-        val connection = database.connector()
-        val transactionIsolation = connection.metadata { defaultIsolationLevel }
-        TransactionManager.managerFor(database)!!.defaultIsolationLevel = transactionIsolation
-        connection.close()
-        transaction(transactionIsolation, 1, db = database) {
+        transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
             statement()
         }
     }
