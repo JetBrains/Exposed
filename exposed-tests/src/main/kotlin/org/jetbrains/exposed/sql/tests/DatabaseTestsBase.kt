@@ -9,6 +9,7 @@ import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -109,6 +110,9 @@ abstract class DatabaseTestsBase {
             })
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
+            if (dbSettings == TestDB.SQLITE) {
+                TransactionManager.managerFor(dbSettings.db)!!.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+            }
         }
 
         val database = dbSettings.db!!
