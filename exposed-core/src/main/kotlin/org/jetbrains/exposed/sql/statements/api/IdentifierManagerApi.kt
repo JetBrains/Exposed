@@ -16,13 +16,17 @@ abstract class IdentifierManagerApi {
     protected abstract fun dbKeywords() : List<String>
     val keywords by lazy { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords() }
     protected abstract val extraNameCharacters : String
-    protected abstract val isOracle : Boolean
+    protected abstract val oracleVersion : OracleVersion
     protected abstract val maxColumnNameLength : Int
+
+    protected enum class OracleVersion { Oracle11g, `Oracle12+`, NonOracle }
+
     protected val identifierLengthLimit by lazy {
-        if (isOracle)
-            128
-        else
-            maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
+        when(oracleVersion) {
+            OracleVersion.Oracle11g -> 30
+            OracleVersion.`Oracle12+` -> 128
+            else -> maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
+        }
     }
 
     val checkedIdentities = object : LinkedHashMap<String, Boolean>(100) {
@@ -49,7 +53,7 @@ abstract class IdentifierManagerApi {
             supportsMixedIdentifiers -> false
             alreadyLower && isLowerCaseIdentifiers -> false
             alreadyUpper && isUpperCaseIdentifiers -> false
-            isOracle -> false
+            oracleVersion != OracleVersion.NonOracle -> false
             supportsMixedQuotedIdentifiers && (!alreadyLower && !alreadyUpper) -> true
             else -> false
         }
@@ -62,7 +66,7 @@ abstract class IdentifierManagerApi {
             alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.toUpperCase()
             alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.toLowerCase()
             supportsMixedIdentifiers -> identity
-            isOracle -> identity.toUpperCase()
+            oracleVersion != OracleVersion.NonOracle -> identity.toUpperCase()
             isUpperCaseIdentifiers -> identity.toUpperCase()
             isLowerCaseIdentifiers -> identity.toLowerCase()
             else -> identity
