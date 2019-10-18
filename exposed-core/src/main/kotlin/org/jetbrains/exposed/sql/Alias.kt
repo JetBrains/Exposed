@@ -9,7 +9,7 @@ class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 
     private fun <T:Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
-    internal fun <R> originalColumn(column: Column<R>) : Column<R>? {
+    fun <R> originalColumn(column: Column<R>) : Column<R>? {
         @Suppress("UNCHECKED_CAST")
         return if (column.table == this)
             delegate.columns.first { column.name == it.name } as Column<R>

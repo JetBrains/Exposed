@@ -9,10 +9,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         if (values.isEmpty()) return 0
-        transaction.flushCache()
-        return executeUpdate().apply {
-            transaction.entityCache.removeTablesReferrers(targetsSet.targetTables())
-        }
+        return executeUpdate()
     }
 
     override fun prepareSQL(transaction: Transaction): String =

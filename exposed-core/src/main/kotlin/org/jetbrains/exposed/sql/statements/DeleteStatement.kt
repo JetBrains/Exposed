@@ -6,8 +6,6 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 open class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIgnore: Boolean = false, val limit: Int? = null, val offset: Int? = null): Statement<Int>(StatementType.DELETE, listOf(table)) {
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        transaction.flushCache()
-        transaction.entityCache.removeTablesReferrers(listOf(table))
         return executeUpdate()
     }
 

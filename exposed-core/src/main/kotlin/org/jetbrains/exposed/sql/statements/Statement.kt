@@ -33,11 +33,13 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         val contexts = if (arguments.count() > 0) {
             arguments.map { args ->
                 val context = StatementContext(this, args)
+                Transaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
                 transaction.interceptors.forEach { it.beforeExecution(transaction, context) }
                 context
             }
         } else {
             val context = StatementContext(this, emptyList())
+            Transaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
             transaction.interceptors.forEach { it.beforeExecution(transaction, context) }
             listOf(context)
         }
@@ -63,6 +65,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         transaction.currentStatement = null
         transaction.executedStatements.add(statement)
 
+        Transaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
         transaction.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
         return result to contexts
     }

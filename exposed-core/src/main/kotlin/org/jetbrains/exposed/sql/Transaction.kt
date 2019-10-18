@@ -1,9 +1,5 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityCache
-import org.jetbrains.exposed.dao.EntityChange
-import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -12,7 +8,6 @@ import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 
 class Key<T>
 @Suppress("UNCHECKED_CAST")
@@ -42,9 +37,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    val entityCache = EntityCache(this)
+//    val entityCache = EntityCache(this)
 
-    internal val entityEvents = CopyOnWriteArrayList<EntityChange>()
+//    internal val entityEvents = CopyOnWriteArrayList<EntityChange>()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
@@ -59,32 +54,20 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     override fun commit() {
-        val created = flushCache()
-        EntityHook.alertSubscribers(this)
-        val createdByHooks = flushCache()
+        globalInterceptors.forEach { it.beforeCommit(this) }
         interceptors.forEach { it.beforeCommit(this) }
         transactionImpl.commit()
-        userdata.clear()
-        EntityCache.invalidateGlobalCaches(created + createdByHooks)
+        globalInterceptors.forEach { it.afterCommit() }
         interceptors.forEach { it.afterCommit() }
+        userdata.clear()
     }
 
     override fun rollback() {
+        globalInterceptors.forEach { it.beforeRollback(this) }
         interceptors.forEach { it.beforeRollback(this) }
         transactionImpl.rollback()
-        userdata.clear()
-        entityCache.clearReferrersCache()
-        entityCache.data.clear()
-        entityCache.inserts.clear()
         interceptors.forEach { it.afterRollback() }
-    }
-
-    fun flushCache(): List<Entity<*>> {
-        with(entityCache) {
-            val newEntities = inserts.flatMap { it.value }
-            flush()
-            return newEntities
-        }
+        userdata.clear()
     }
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
@@ -186,5 +169,14 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         executedStatements.clear()
     }
 
+    companion object {
+        internal val globalInterceptors = arrayListOf<StatementInterceptor>()
+        fun registerGlobalIntercepter(statement: StatementInterceptor) {
+            globalInterceptors.add(statement)
+        }
+        init {
+            this::class.java.classLoader.getResources("org.jetbrains.exposed.intercepter") // iterate to load all intercepters
+        }
+    }
 }
 

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -19,7 +19,7 @@ object EntityTestsData {
 
     object YTable: IdTable<String>("YTable") {
         override val id: Column<EntityID<String>> = varchar("uuid", 36).primaryKey().entityId().clientDefault {
-            EntityID(UUID.randomUUID().toString(), YTable)
+            SimpleEntityID(UUID.randomUUID().toString(), YTable)
         }
 
         val x = bool("x").default(true)

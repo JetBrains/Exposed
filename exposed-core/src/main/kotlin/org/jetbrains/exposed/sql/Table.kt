@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -207,7 +208,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     @Suppress("UNCHECKED_CAST")
     fun <T:Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> = replaceColumn(this, Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
         it.indexInPK = this.indexInPK
-        it.defaultValueFun = defaultValueFun?.let { { EntityID(it(), table as IdTable<T>) } }
+        it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
     })
 
     fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {

@@ -12,7 +12,7 @@ import java.sql.SQLException
  * isIgnore is supported for mysql only
  */
 open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
-    protected open val flushCache = true
+    open val flushCache = true
     var resultedValues: List<ResultRow>? = null
         private set
 
@@ -113,9 +113,6 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        if (flushCache)
-            transaction.flushCache()
-        transaction.entityCache.removeTablesReferrers(listOf(table))
         val (inserted, rs) = execInsertFunction()
         return inserted.apply {
             resultedValues = processResults(rs, this)

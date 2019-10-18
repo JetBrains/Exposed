@@ -238,7 +238,6 @@ object SchemaUtils {
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
-            flushCache()
             var tablesForDeletion =
                     sortTablesByReferences(tables.toList())
                             .reversed()

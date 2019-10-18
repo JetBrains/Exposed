@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -96,8 +97,8 @@ class EntityIDColumnType<T:Comparable<T>>(val idColumn: Column<T>) : ColumnType(
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): Any = when (value) {
-        is EntityID<*> -> EntityID(value.value as T, idColumn.table as IdTable<T>)
-        else -> EntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
+        is EntityID<*> -> EntityIDFunctionProvider.createEntityID(value.value as T, idColumn.table as IdTable<T>)
+        else -> EntityIDFunctionProvider.createEntityID(idColumn.columnType.valueFromDB(value) as T, idColumn.table as IdTable<T>)
     }
 }
 

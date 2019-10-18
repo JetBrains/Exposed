@@ -15,8 +15,8 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
     internal var onDelete: ReferenceOption? = null
                 get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
-    internal var indexInPK: Int? = null
-    internal var defaultValueFun: (() -> T)? = null
+    var indexInPK: Int? = null
+    var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
 
     override fun equals(other: Any?): Boolean {

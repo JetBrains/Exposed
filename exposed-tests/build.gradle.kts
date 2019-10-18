@@ -14,7 +14,9 @@ val dialect: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
+    implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
+    implementation(project(":exposed-dao"))
     implementation(kotlin("test-junit"))
     implementation("org.slf4j", "slf4j-log4j12", "1.7.26")
     implementation("log4j", "log4j", "1.2.17")

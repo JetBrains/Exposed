@@ -6,6 +6,7 @@ import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
 import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
+import org.jetbrains.exposed.dao.EntityLifecycleInterceptor
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -96,6 +97,7 @@ private val postgresSQLProcess by lazy {
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        EntityLifecycleInterceptor // register it
     }
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) {

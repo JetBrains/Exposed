@@ -869,7 +869,7 @@ class DMLTests : DatabaseTestsBase() {
                 listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
         withTables(insertIgnoreSupportedDB, idTable) {
             val id = idTable.insertIgnore {
-                it[idTable.id] = EntityID(1, idTable)
+                it[idTable.id] = SimpleEntityID(1, idTable)
                 it[idTable.name] = "1"
             } get idTable.id
             assertEquals(1, id?.value)
@@ -1220,14 +1220,14 @@ class DMLTests : DatabaseTestsBase() {
             val name = varchar("name", 10)
         }
         withTables(stringTable) {
-            val entityID = EntityID("id1", stringTable)
+            val entityID = SimpleEntityID("id1", stringTable)
             val id1 = stringTable.insertAndGetId {
                 it[id] = entityID
                 it[name] = "foo"
             }
 
             stringTable.insertAndGetId {
-                it[id] = EntityID("testId", stringTable)
+                it[id] = SimpleEntityID("testId", stringTable)
                 it[name] = "bar"
             }
 

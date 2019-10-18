@@ -2,6 +2,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.IdTable
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -171,7 +172,7 @@ object SqlExpressionBuilder {
     @JvmName("inListIds")
     infix fun<T:Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): Op<Boolean> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
-        return inList(list.map { EntityID(it, idTable) })
+        return inList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
     infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
@@ -180,7 +181,7 @@ object SqlExpressionBuilder {
     @JvmName("notInListIds")
     infix fun<T:Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): Op<Boolean> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
-        return notInList(list.map { EntityID(it, idTable) })
+        return notInList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
     infix fun<T> ExpressionWithColumnType<T>.inSubQuery(query: Query): Op<Boolean> = InSubQueryOp(this, query)
