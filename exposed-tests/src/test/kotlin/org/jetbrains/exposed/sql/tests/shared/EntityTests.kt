@@ -945,11 +945,11 @@ class EntityTests: DatabaseTestsBase() {
                 it[holiday] = holiday3.id
             }
 
+            commit()
+
             School.find {
                 Schools.id eq school1.id
             }.first().load(School::holidays)
-
-            commit()
 
             val cache           = TransactionManager.current().entityCache
             assertEquals(true, cache.referrers.containsKey(school1.id))
