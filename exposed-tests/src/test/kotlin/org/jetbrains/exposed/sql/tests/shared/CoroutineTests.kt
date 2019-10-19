@@ -2,11 +2,9 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.experimental.andThen
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
@@ -14,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionA
 import org.jetbrains.exposed.test.utils.RepeatableTest
 import org.junit.Rule
 import org.junit.Test
+import java.sql.Connection
 
 @ExperimentalCoroutinesApi
 class CoroutineTests : DatabaseTestsBase() {
@@ -80,6 +79,38 @@ class CoroutineTests : DatabaseTestsBase() {
             while (!job.isCompleted) Thread.sleep(100)
 
             job.getCompletionExceptionOrNull()?.let { throw it }
+        }
+    }
+
+    @Test @RepeatableTest(10)
+    fun nestedSuspendTxTest() {
+        suspend fun insertTesting(db : Database) =  newSuspendedTransaction(db = db) {
+            Testing.insert {}
+        }
+        withTables(listOf(TestDB.SQLITE), Testing) {
+            val mainJob = GlobalScope.async {
+
+                val job = launch(Dispatchers.IO) {
+                    newSuspendedTransaction(db = db) {
+                        connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
+                        assertEquals(null, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
+
+                        insertTesting(db)
+
+                        assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
+                    }
+                }
+
+                job.join()
+                val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
+                    Testing.select { Testing.id.eq(1) }.single()[Testing.id]
+                }
+
+                kotlin.test.assertEquals(1, result)
+            }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
         }
     }
 }
