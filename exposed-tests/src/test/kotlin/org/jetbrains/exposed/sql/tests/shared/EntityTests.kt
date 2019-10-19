@@ -19,7 +19,7 @@ object EntityTestsData {
 
     object YTable: IdTable<String>("YTable") {
         override val id: Column<EntityID<String>> = varchar("uuid", 36).primaryKey().entityId().clientDefault {
-            SimpleEntityID(UUID.randomUUID().toString(), YTable)
+            EntityID(UUID.randomUUID().toString(), YTable)
         }
 
         val x = bool("x").default(true)

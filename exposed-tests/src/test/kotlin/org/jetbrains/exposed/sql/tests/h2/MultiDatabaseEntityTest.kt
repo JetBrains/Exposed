@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import org.jetbrains.exposed.dao.SimpleEntityID
+import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.shared.EntityTestsData
@@ -170,7 +170,7 @@ class MultiDatabaseEntityTest {
             commit()
 
             transaction(db2) {
-                assertNull(EntityTestsData.BEntity.testCache(SimpleEntityID(2, EntityTestsData.BEntity.table)))
+                assertNull(EntityTestsData.BEntity.testCache(EntityID(2, EntityTestsData.BEntity.table)))
                 val b2Reread = EntityTestsData.BEntity.all().single()
                 assertEquals(db2b1.id, b2Reread.id)
                 assertEquals(db2y1.id, b2Reread.y?.id)

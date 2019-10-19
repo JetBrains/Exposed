@@ -1,18 +1,19 @@
 package org.jetbrains.exposed.dao
 
-abstract class EntityID<T:Comparable<T>>(id: T?, val table: IdTable<T>) : Comparable<EntityID<T>> {
+open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
+    constructor(id:T, table: IdTable<T>) : this(table, id)
     var _value: Any? = id
     val value: T get() {
         if (_value == null) {
             invokeOnNoValue()
-            assert(_value != null) { "Entity must be inserted" }
+            check(_value != null) { "Entity must be inserted" }
         }
 
         @Suppress("UNCHECKED_CAST")
         return _value!! as T
     }
 
-    protected abstract fun invokeOnNoValue()
+    protected open fun invokeOnNoValue() {}
 
     override fun toString() = value.toString()
 
@@ -25,8 +26,4 @@ abstract class EntityID<T:Comparable<T>>(id: T?, val table: IdTable<T>) : Compar
     }
 
     override fun compareTo(other: EntityID<T>): Int = value.compareTo(other.value)
-}
-
-class SimpleEntityID<T:Comparable<T>>(id: T?, table: IdTable<T>) : EntityID<T>(id, table) {
-    override fun invokeOnNoValue() {}
 }

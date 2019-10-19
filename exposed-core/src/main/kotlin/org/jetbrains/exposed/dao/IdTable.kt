@@ -11,7 +11,7 @@ interface EntityIDFactory {
 object EntityIDFunctionProvider {
     var factory : EntityIDFactory = object : EntityIDFactory {
         override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
-            return SimpleEntityID(value, table)
+            return EntityID(value, table)
         }
     }
 
