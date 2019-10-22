@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -7,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class Key<T>
@@ -170,12 +172,12 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     companion object {
-        internal val globalInterceptors = arrayListOf<StatementInterceptor>()
-        fun registerGlobalIntercepter(statement: StatementInterceptor) {
-            globalInterceptors.add(statement)
-        }
+        internal val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
+
         init {
-            this::class.java.classLoader.getResources("org.jetbrains.exposed.intercepter") // iterate to load all intercepters
+            ServiceLoader.load(GlobalStatementInterceptor::class.java).forEach {
+                globalInterceptors.add(it)
+            }
         }
     }
 }

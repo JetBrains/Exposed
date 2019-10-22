@@ -86,6 +86,7 @@ class MultiDatabaseTest {
     @Test
     fun testEmbeddedInsertsInDifferentDatabase() {
         transaction(db1) {
+            addLogger(StdOutSqlLogger)
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {

@@ -13,3 +13,5 @@ interface StatementInterceptor {
     fun beforeRollback(transaction: Transaction) {}
     fun afterRollback() {}
 }
+
+interface GlobalStatementInterceptor : StatementInterceptor

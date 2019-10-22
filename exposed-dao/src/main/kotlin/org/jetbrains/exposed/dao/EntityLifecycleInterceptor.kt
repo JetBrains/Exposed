@@ -5,15 +5,8 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.targetTables
 
-object EntityLifecycleInterceptor : StatementInterceptor, EntityIDFactory {
-    init {
-        Transaction.registerGlobalIntercepter(this)
-        EntityIDFunctionProvider.factory = this
-    }
+class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
-    override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
-        return DaoEntityID(value, table)
-    }
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         when (val statement = context.statement) {
             is Query -> transaction.flushEntities(statement)

@@ -9,10 +9,14 @@ interface EntityIDFactory {
 }
 
 object EntityIDFunctionProvider {
-    var factory : EntityIDFactory = object : EntityIDFactory {
-        override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
-            return EntityID(value, table)
-        }
+    private val factory : EntityIDFactory
+    init {
+        factory = ServiceLoader.load(EntityIDFactory::class.java).firstOrNull()
+                ?: object : EntityIDFactory {
+                    override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
+                        return EntityID(value, table)
+                    }
+                }
     }
 
     @Suppress("UNCHECKED_CAST")
