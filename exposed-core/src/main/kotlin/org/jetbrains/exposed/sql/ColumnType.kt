@@ -64,7 +64,13 @@ class AutoIncColumnType(val delegate: ColumnType, private val _autoincSeq: Strin
         is EntityIDColumnType<*> -> resolveAutIncType(columnType.idColumn.columnType)
         is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
         is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
-        else -> error("Unsupported type $delegate for auto-increment")
+        else -> guessAutIncTypeBy(columnType.sqlType())
+    } ?: error("Unsupported type $delegate for auto-increment")
+
+    private fun guessAutIncTypeBy(sqlType: String) : String? = when (sqlType) {
+        currentDialect.dataTypeProvider.longType() -> currentDialect.dataTypeProvider.longAutoincType()
+        currentDialect.dataTypeProvider.integerType() -> currentDialect.dataTypeProvider.integerAutoincType()
+        else -> null
     }
 
     override fun sqlType(): String = resolveAutIncType(delegate)
