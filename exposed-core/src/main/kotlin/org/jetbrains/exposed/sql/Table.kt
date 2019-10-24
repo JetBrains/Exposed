@@ -371,6 +371,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         replaceColumn(this@autoIncrement, this)
     }
 
+    fun Column<UUID>.autoGenerate(): Column<UUID> = this.clientDefault { UUID.randomUUID() }
 
     fun <N:Comparable<N>> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoinc, this)
