@@ -377,6 +377,12 @@ abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table:
         table.update({ table.id eq entity.id }) {
             it[column] = value
         }
+
+        /* Evict the entity from the current transaction entity cache,
+           so that the next read of this entity using DAO API would return
+           actual data from the DB */
+
+        TransactionManager.currentOrNull()?.entityCache?.remove(table, entity)
     }
 }
 
