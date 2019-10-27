@@ -3,8 +3,8 @@ package org.jetbrains.exposed.sql.tests.h2
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.tests.shared.EntityTestsData
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction

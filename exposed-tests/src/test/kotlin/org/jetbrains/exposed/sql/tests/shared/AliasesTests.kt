@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

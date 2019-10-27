@@ -1,10 +1,12 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test

@@ -1,10 +1,14 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
@@ -518,7 +522,7 @@ class EntityTests: DatabaseTestsBase() {
     class Detention(id: EntityID<Long>): ComparableLongEntity<Detention>(id) {
         companion object : LongEntityClass<Detention>(Detentions)
         var reason        by Detentions.reason
-        var student       by Student optionalReferencedOn  Detentions.student
+        var student       by Student optionalReferencedOn Detentions.student
     }
 
 

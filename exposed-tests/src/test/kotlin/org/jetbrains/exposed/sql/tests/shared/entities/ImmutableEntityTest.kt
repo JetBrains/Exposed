@@ -1,9 +1,11 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import org.junit.Test
 
 class ImmutableEntityTest : DatabaseTestsBase() {
