@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.sql.statements.api
 
-class ExposedBlob(val bytes: ByteArray)
-
 interface ExposedConnection<OriginalConnection: Any> {
     val isClosed: Boolean
     fun commit()

@@ -51,11 +51,11 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
             PreparedStatement.RETURN_GENERATED_KEYS
         else
             PreparedStatement.NO_GENERATED_KEYS
-        return PreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
+        return JdbcPreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
     }
 
     override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
-        return PreparedStatementImpl(connection.prepareStatement(sql, columns), true)
+        return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
     override fun executeInBatch(sqls: List<String>) {

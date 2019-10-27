@@ -39,9 +39,6 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-//    val entityCache = EntityCache(this)
-
-//    internal val entityEvents = CopyOnWriteArrayList<EntityChange>()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
