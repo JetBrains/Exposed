@@ -72,13 +72,6 @@ abstract class Expression<T> {
         toString().hashCode()
     }
 
-    @Deprecated(
-            level = DeprecationLevel.ERROR,
-            replaceWith = ReplaceWith("toString"),
-            message = "Function was replaced with more memory effective #toQueryBuilder function. If you want to get resulting SQL use #toString function."
-    )
-    fun toSQL(queryBuilder: QueryBuilder): String = TODO()
-
     abstract fun toQueryBuilder(queryBuilder: QueryBuilder)
 
     override fun equals(other: Any?): Boolean = (other as? Expression<*>)?.toString() == toString()

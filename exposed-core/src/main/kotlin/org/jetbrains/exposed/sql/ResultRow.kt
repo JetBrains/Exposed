@@ -26,7 +26,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     }
 
     operator fun <T> set(c: Expression<out T>, value: T) {
-        val index = fieldIndex[c] ?: error("${c.toQueryBuilder(QueryBuilder(false))} is not in record set")
+        val index = fieldIndex[c] ?: error("$c is not in record set")
         data[index] = value
     }
 
@@ -41,7 +41,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     private fun <T> rawToColumnValue(raw: T?, c: Expression<T>): T {
         return when {
             raw == null -> null
-            raw == NotInitializedValue -> error("${c.toQueryBuilder(QueryBuilder(false))} is not initialized yet")
+            raw == NotInitializedValue -> error("$c is not initialized yet")
             c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
             c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
             else -> raw
@@ -50,10 +50,10 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? =
-            data[fieldIndex[c] ?: error("${c.toQueryBuilder(QueryBuilder(false))} is not in record set")] as T?
+            data[fieldIndex[c] ?: error("$c is not in record set")] as T?
 
     override fun toString(): String =
-            fieldIndex.entries.joinToString { "${it.key.toQueryBuilder(QueryBuilder(false))}=${data[it.value]}" }
+            fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
 
     internal object NotInitializedValue
 
