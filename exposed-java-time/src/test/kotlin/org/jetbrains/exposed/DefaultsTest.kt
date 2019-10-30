@@ -1,9 +1,6 @@
 package org.jetbrains.exposed
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
@@ -53,7 +50,7 @@ class DefaultsTest : DatabaseTestsBase() {
                         field = "2"
                         t1 = LocalDateTime.now().minusDays(5)
                     })
-            flushCache()
+            commit()
             created.forEach {
                 DBDefault.removeFromCache(it)
             }

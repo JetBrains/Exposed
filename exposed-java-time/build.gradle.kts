@@ -16,6 +16,7 @@ val dialect: String by project
 
 dependencies {
     api(project(":exposed-core"))
+    testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
