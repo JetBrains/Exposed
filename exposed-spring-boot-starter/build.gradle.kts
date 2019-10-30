@@ -11,14 +11,16 @@ repositories {
     maven("https://dl.bintray.com/jfrog/jfrog-jars")
 }
 
+val SPRING_BOOT_VERSION = "2.2.0.RELEASE"
+
 dependencies {
     api(project(":exposed-core"))
     api(project(":spring-transaction"))
-    api("org.springframework.boot", "spring-boot-starter-data-jdbc", "2.1.6.RELEASE")
-    api("org.springframework.boot", "spring-boot-autoconfigure", "2.1.6.RELEASE")
-    compileOnly("org.springframework.boot", "spring-boot-configuration-processor", "2.1.6.RELEASE")
+    api("org.springframework.boot", "spring-boot-starter-data-jdbc", SPRING_BOOT_VERSION)
+    api("org.springframework.boot", "spring-boot-autoconfigure", SPRING_BOOT_VERSION)
+    compileOnly("org.springframework.boot", "spring-boot-configuration-processor", SPRING_BOOT_VERSION)
 
-    testImplementation("org.springframework.boot", "spring-boot-starter-test", "2.1.6.RELEASE")
+    testImplementation("org.springframework.boot", "spring-boot-starter-test", SPRING_BOOT_VERSION)
     testImplementation("com.h2database", "h2", "1.4.199")
 }
 
