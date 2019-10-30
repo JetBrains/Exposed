@@ -132,11 +132,6 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
     return when {
         currentScope == null -> newScope(currentTransaction)
         sameTransaction && sameContext -> currentScope.body()
-        !sameTransaction -> newScope(null)
-//        sameTransaction -> newScope(null)
-//        currentTransaction != null && currentScope.tx != currentTransaction -> newScope()
-//        db != null && currentScope.tx.db != db -> newScope()
-//        else -> currentScope.body()
         else -> newScope(currentTransaction)
     }
 }
