@@ -25,12 +25,27 @@ class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INST
     }
 }
 
+class Year<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append("EXTRACT(YEAR FROM ", expr, ")")
+            is OracleDialect -> append("EXTRACT(YEAR FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(YEAR FROM ", expr, ")")
+            is SQLServerDialect -> append("YEAR(", expr, ")")
+            is MariaDBDialect -> append("YEAR(", expr, ")")
+            is SQLiteDialect -> append("STRFTIME('%Y',", expr, ")")
+            is H2Dialect -> append("YEAR(", expr, ")")
+            else -> append("YEAR(", expr, ")")
+        }
+    }
+}
+
 class Month<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         when (currentDialect) {
             is PostgreSQLDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
             is OracleDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is OracleDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
             is SQLServerDialect -> append("MONTH(", expr, ")")
             is MariaDBDialect -> append("MONTH(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%m',", expr, ")")
@@ -40,9 +55,74 @@ class Month<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnTy
     }
 }
 
+class Day<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append("EXTRACT(DAY FROM ", expr, ")")
+            is OracleDialect -> append("EXTRACT(DAY FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(DAY FROM ", expr, ")")
+            is SQLServerDialect -> append("DAY(", expr, ")")
+            is MariaDBDialect -> append("DAY(", expr, ")")
+            is SQLiteDialect -> append("STRFTIME('%d',", expr, ")")
+            is H2Dialect -> append("DAY(", expr, ")")
+            else -> append("DAY(", expr, ")")
+        }
+    }
+}
+
+class Hour<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append("EXTRACT(HOUR FROM ", expr, ")")
+            is OracleDialect -> append("EXTRACT(HOUR FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(HOUR FROM ", expr, ")")
+            is SQLServerDialect -> append("HOUR(", expr, ")")
+            is MariaDBDialect -> append("HOUR(", expr, ")")
+            is SQLiteDialect -> append("STRFTIME('%H',", expr, ")")
+            is H2Dialect -> append("HOUR(", expr, ")")
+            else -> append("HOUR(", expr, ")")
+        }
+    }
+}
+
+class Minute<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append("EXTRACT(MINUTE FROM ", expr, ")")
+            is OracleDialect -> append("EXTRACT(MINUTE FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(MINUTE FROM ", expr, ")")
+            is SQLServerDialect -> append("MINUTE(", expr, ")")
+            is MariaDBDialect -> append("MINUTE(", expr, ")")
+            is SQLiteDialect -> append("STRFTIME('%M',", expr, ")")
+            is H2Dialect -> append("MINUTE(", expr, ")")
+            else -> append("MINUTE(", expr, ")")
+        }
+    }
+}
+
+class Second<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append("EXTRACT(SECOND FROM ", expr, ")")
+            is OracleDialect -> append("EXTRACT(SECOND FROM ", expr, ")")
+            is MysqlDialect -> append("EXTRACT(SECOND FROM ", expr, ")")
+            is SQLServerDialect -> append("SECOND(", expr, ")")
+            is MariaDBDialect -> append("SECOND(", expr, ")")
+            is SQLiteDialect -> append("STRFTIME('%S',", expr, ")")
+            is H2Dialect -> append("SECOND(", expr, ")")
+            else -> append("SECOND(", expr, ")")
+        }
+    }
+}
+
 fun <T: Temporal?> Expression<T>.date() = Date(this)
 
+fun <T: Temporal?> Expression<T>.year() = Year(this)
 fun <T: Temporal?> Expression<T>.month() = Month(this)
+fun <T: Temporal?> Expression<T>.day() = Day(this)
+fun <T: Temporal?> Expression<T>.hour() = Hour(this)
+fun <T: Temporal?> Expression<T>.minute() = Minute(this)
+fun <T: Temporal?> Expression<T>.second() = Second(this)
 
 
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, JavaLocalDateColumnType.INSTANCE)
