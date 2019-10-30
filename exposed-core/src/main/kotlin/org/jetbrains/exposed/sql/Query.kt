@@ -166,8 +166,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun having(op: SqlExpressionBuilder.() -> Op<Boolean>) : Query {
         val oop = Op.build { op() }
         if (having != null) {
-            val fake = QueryBuilder(false)
-            error ("HAVING clause is specified twice. Old value = '${having!!.toQueryBuilder(fake)}', new value = '${oop.toQueryBuilder(fake)}'")
+            error ("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
         }
         having = oop
         return this
