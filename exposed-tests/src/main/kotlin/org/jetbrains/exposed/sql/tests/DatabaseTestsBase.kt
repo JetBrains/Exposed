@@ -111,7 +111,7 @@ abstract class DatabaseTestsBase {
             })
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
-            if (dbSettings == TestDB.SQLITE) {
+            if (dbSettings == TestDB.SQLITE || dbSettings == TestDB.ORACLE) {
                 TransactionManager.managerFor(dbSettings.db)!!.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
             }
         }
