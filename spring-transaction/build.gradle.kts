@@ -19,6 +19,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.0-M1")
     implementation("com.h2database", "h2", "1.4.199")
 
+    testImplementation(project(":exposed-dao"))
     testImplementation(kotlin("test-junit"))
     testImplementation("org.springframework", "spring-test", "5.1.7.RELEASE")
     testImplementation("org.slf4j", "slf4j-log4j12", "1.7.26")
