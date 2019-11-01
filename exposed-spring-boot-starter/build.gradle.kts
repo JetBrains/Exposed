@@ -21,6 +21,7 @@ dependencies {
     compileOnly("org.springframework.boot", "spring-boot-configuration-processor", SPRING_BOOT_VERSION)
 
     testImplementation("org.springframework.boot", "spring-boot-starter-test", SPRING_BOOT_VERSION)
+    testImplementation("org.springframework.boot", "spring-boot-starter-webflux", SPRING_BOOT_VERSION) // put in testImplementation so no hard dependency for those using the starter
     testImplementation("com.h2database", "h2", "1.4.199")
 }
 
