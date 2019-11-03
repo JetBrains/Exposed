@@ -64,14 +64,10 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         val colType = columnType
         val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && colType.isAutoInc
 
-        if (!isPKColumn && isSQLiteAutoIncColumn) {
-            tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")// Workaround as SQLite Doesn't support both PK and autoInc in DDL
-        }
-
-        if (isSQLiteAutoIncColumn && !isOneColumnPK() && table.columns.any{ it.indexInPK != null}) {
-            append(currentDialect.dataTypeProvider.integerType()) // Workaround as SQLite Doesn't support both PK and autoInc in DDL
-        } else {
-            append(colType.sqlType())
+        when {
+            !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
+            isSQLiteAutoIncColumn && !isOneColumnPK() && table.columns.any{ it.indexInPK != null} -> append(currentDialect.dataTypeProvider.integerType())
+            else -> append(colType.sqlType())
         }
 
         val _dbDefaultValue = dbDefaultValue
