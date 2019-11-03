@@ -13,7 +13,10 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 private val Transaction.isMySQLMode: Boolean
-    get() = (connection.connection as? JdbcConnection)?.settings?.mode?.enum == Mode.ModeEnum.MySQL
+    get() = (connection.connection as? JdbcConnection)?.let {
+        !it.isClosed && it.settings.mode.enum == Mode.ModeEnum.MySQL
+    } == true
+
 
 internal object H2FunctionProvider : FunctionProvider() {
 
@@ -74,7 +77,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override val name: String
         get() = when {
-            TransactionManager.current().isMySQLMode -> "$dialectName (Mysql Mode)"
+            TransactionManager.currentOrNull()?.isMySQLMode == true -> "$dialectName (Mysql Mode)"
             else -> dialectName
         }
     companion object {

@@ -54,57 +54,37 @@ suspend fun <T> Transaction.suspendedTransaction(context: CoroutineDispatcher? =
         suspendedTransactionAsyncInternal(false, statement).await()
     }
 
-class TransactionResult<T>(internal val transaction: Transaction,
-                           internal val deferred: Deferred<T>,
-                           internal var shouldCommit: Boolean) : Deferred<T> by deferred {
-    override suspend fun await(): T {
-        return deferred.await().apply {
-            if (shouldCommit) {
-                val currentTransaction = TransactionManager.currentOrNull()
-                try {
-                    val temporaryManager = transaction.db.transactionManager
-                    (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(transaction)
-                    TransactionManager.resetCurrent(temporaryManager)
-                    with(transaction) {
-                        try {
-                            commit()
-                            try {
-                                currentStatement?.let {
-                                    it.closeIfPossible()
-                                    currentStatement = null
-                                }
-                                closeExecutedStatements()
-                            } catch (e: Exception) {
-                                exposedLogger.warn("Statements close failed", e)
-                            }
-                            closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
-                        } catch (e: Exception) {
-                            rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
-                            throw e
-                        }
-                    }
-                } finally {
-                    val transactionManager = currentTransaction?.db?.transactionManager
-                    (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
-                    TransactionManager.resetCurrent(transactionManager)
+private fun Transaction.commitInAsync() {
+    val currentTransaction = TransactionManager.currentOrNull()
+    try {
+        val temporaryManager = this.db.transactionManager
+        (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(this)
+        TransactionManager.resetCurrent(temporaryManager)
+        try {
+            commit()
+            try {
+                currentStatement?.let {
+                    it.closeIfPossible()
+                    currentStatement = null
                 }
+                closeExecutedStatements()
+            } catch (e: Exception) {
+                exposedLogger.warn("Statements close failed", e)
             }
+            closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
+        } catch (e: Exception) {
+            rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
+            throw e
         }
-    }
-}
-
-suspend fun <T, R> TransactionResult<T>.andThen(statement: suspend Transaction.(T) -> R) : TransactionResult<R> {
-    val currentAsync = this
-    return withTransactionScope(null, currentAsync.transaction, null) {
-        currentAsync.shouldCommit = false
-        suspendedTransactionAsyncInternal(true) {
-            statement(currentAsync.await())
-        }
+    } finally {
+        val transactionManager = currentTransaction?.db?.transactionManager
+        (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
+        TransactionManager.resetCurrent(transactionManager)
     }
 }
 
 suspend fun <T> suspendedTransactionAsync(context: CoroutineDispatcher? = null, db: Database? = null,
-                                          statement: suspend Transaction.() -> T) : TransactionResult<T> {
+                                          statement: suspend Transaction.() -> T) : Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db) {
         suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
@@ -137,12 +117,14 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
 }
 
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(shouldCommit: Boolean,
-                                                          statement: suspend Transaction.() -> T) : TransactionResult<T>
-    = TransactionResult(tx, async {
+                                                          statement: suspend Transaction.() -> T) : Deferred<T>
+    = async {
             try {
                 tx.statement()
             } catch (e: Throwable) {
                 tx.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: ${tx.currentStatement}", it) }
                 throw e
+            } finally {
+                if (shouldCommit) tx.commitInAsync()
             }
-        }, shouldCommit)
+        }

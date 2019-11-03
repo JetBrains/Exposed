@@ -5,10 +5,10 @@ import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.transactions.experimental.andThen
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.test.utils.RepeatableTest
 import org.junit.Rule
 import org.junit.Test
@@ -68,12 +68,14 @@ class CoroutineTests : DatabaseTestsBase() {
                 launchResult.await()
                 val result = suspendedTransactionAsync(Dispatchers.Default, db = db) {
                     Testing.select { Testing.id.eq(1) }.single()[Testing.id]
-                }.andThen {
-                    assertEquals(1, it)
+                }.await()
+
+                val result2 = suspendedTransactionAsync(Dispatchers.Default, db = db) {
+                    assertEquals(1, result)
                     Testing.selectAll().count()
                 }
 
-                kotlin.test.assertEquals(1, result.await())
+                kotlin.test.assertEquals(1, result2.await())
             }
 
             while (!job.isCompleted) Thread.sleep(100)
@@ -111,6 +113,33 @@ class CoroutineTests : DatabaseTestsBase() {
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
+        }
+    }
+
+    @Test @RepeatableTest(10)
+    fun awaitAllTest() {
+        suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
+            Testing.insert {}
+        }
+        withTables(listOf(TestDB.SQLITE), Testing) {
+            val mainJob = GlobalScope.async {
+
+                val results = (1..5).map { indx ->
+                    suspendedTransactionAsync(Dispatchers.IO, db = db) {
+                        Testing.insert {  }
+                        indx
+                    }
+                }.awaitAll()
+
+                kotlin.test.assertEquals(15, results.sum())
+            }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+
+            transaction {
+                assertEquals(5, Testing.selectAll().count())
+            }
         }
     }
 }
