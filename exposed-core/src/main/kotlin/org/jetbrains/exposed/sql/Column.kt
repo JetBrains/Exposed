@@ -74,9 +74,6 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
             append(colType.sqlType())
         }
 
-
-//        append(colType.sqlType())
-
         val _dbDefaultValue = dbDefaultValue
         if (!isPKColumn && _dbDefaultValue != null) {
             val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(_dbDefaultValue)
