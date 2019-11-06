@@ -1,3 +1,34 @@
+# 0.17.7
+Deprecations:
+* Remove deprecated Expression.toSQL 
+* `newSuspendedTransactionAsync` now returns `Deferred` instead of `TransactionResult` (which was removed completely)
+* `TransactionResult.andThen` function was removed 
+
+Features:
+* Added `autoGenerate` method for uuid columns to generate UUID on client side ([#664](https://github.com/JetBrains/Exposed/issues/664)). PR from [Aleks](https://github.com/red-avtovo).
+
+Bug fixes:
+* [Coroutines] newSuspendedTransaction captures outer transaction and then close it before return to outer block
+* [Coroutines] IllegalArgumentException thrown when List<Deferred<T>>.awaitAll() is used on List<TransactionResult<T>> ([#658](https://github.com/JetBrains/Exposed/issues/658))
+* identifierLengthLimit should not be lazy initialized
+* Immutable entities wasn't invalidated in some cases ([#665](https://github.com/JetBrains/Exposed/issues/665)). PR from [Dmitry Dolzhenko](https://github.com/dsdolzhenko).
+* Rework resolving auto increment type to handle own ColumnType implementation ([#663](https://github.com/JetBrains/Exposed/issues/663)). PR from [Mateusz Śledź](https://github.com/sledzmateusz).
+* Fixing the `month` built-in function in case of all database dialects ([#670](https://github.com/JetBrains/Exposed/issues/670)). PR from [hichem-fazai](https://github.com/hichem-fazai)
+* Compilation error Field name 'Oracle12+' cannot be represented in dex format. ([#668](https://github.com/JetBrains/Exposed/issues/668))
+* [SQLite] Problem with `autoIncrement()` and `primaryKey()`. ([#649](https://github.com/JetBrains/Exposed/issues/649)), ([#669](https://github.com/JetBrains/Exposed/issues/669))
+* fixes in error logging of expressions.
+
+# 0.17.6
+Critical bug fix:
+* Outer transaction wasn't restored after inner transaction failed on exception
+
+Bug fixes:
+* ORA-00972: identifier is too long. Oracle 11g ([#654](https://github.com/JetBrains/Exposed/issues/654))
+
+Features:
+* shortParam/shortLiteral, floatParam/floatLiteral, doubleParam/doubleLiteral added ([#648](https://github.com/JetBrains/Exposed/issues/648))
+* Warmup for backReferences via `load` and `with` functions was supported
+
 # 0.17.5
 Critical bug fix:
 * Transaction isolation level wasn't applied to transaction
@@ -10,7 +41,7 @@ Features:
 * `SchemaUtils` functions (`create/createMissingTablesAndColumns/drop`) could be executed with `inBatch` flag to perform related functions in a single batch (where possible)
 
 Performance:
-*  Speed up scheme analysis within for MySQL in place where column constraints metadata is required
+* Speed up scheme analysis within for MySQL in place where column constraints metadata is required
 
 # 0.17.3
 Infrastructure:
