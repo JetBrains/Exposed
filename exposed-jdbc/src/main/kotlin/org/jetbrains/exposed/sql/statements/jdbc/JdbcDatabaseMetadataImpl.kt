@@ -21,7 +21,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
 
     override val tableNames: List<String> get() = with(metadata) {
-        return getTables(database, null, "%", arrayOf("TABLE")).iterate {
+        return getTables(databaseName, oracleSchema, "%", arrayOf("TABLE")).iterate {
             identifierManager.inProperCase(getString("TABLE_NAME"))
         }
     }
@@ -64,7 +64,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     rs.close()
                     names
                 }
-                val rs = metadata.getIndexInfo(database, null, tableName, false, false)
+                val rs = metadata.getIndexInfo(databaseName, oracleSchema, tableName, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
