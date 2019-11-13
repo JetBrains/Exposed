@@ -223,10 +223,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     private fun <T:Any> T.clone(replaceArgs: Map<KProperty1<T,*>, Any> = emptyMap()) = javaClass.kotlin.run {
         val consParams = primaryConstructor!!.parameters
-        val allParams = memberProperties
-                .filter { it is KMutableProperty1<T, *> || it.name in consParams.map { it.name } }
+        val mutableProperties = memberProperties.filterIsInstance<KMutableProperty1<T, Any?>>()
+        val allValues = memberProperties
+                .filter { it in mutableProperties || it.name in consParams.map { it.name } }
                 .associate { it.name to (replaceArgs[it] ?: it.get(this@clone)) }
-        primaryConstructor!!.callBy(consParams.associate { it to allParams[it.name] })
+        primaryConstructor!!.callBy(consParams.associateWith { allValues[it.name] }).also { newInstance ->
+            mutableProperties.forEach { prop ->
+                prop.set(newInstance, allValues[prop.name])
+            }
+        }
     }
 
     /**
@@ -362,8 +367,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?) : Column<T> = when(columnType) {
         is AutoIncColumnType -> this
-        is ColumnType ->
-            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName ?: "${tableName}_${name}_seq")))
+        is ColumnType -> {
+            val autoIncSequence = idSeqName ?: "${tableName}_${name}_seq"
+            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, autoIncSequence)))
+        }
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 

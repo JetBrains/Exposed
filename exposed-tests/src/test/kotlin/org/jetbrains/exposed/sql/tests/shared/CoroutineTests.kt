@@ -18,12 +18,12 @@ import java.sql.Connection
 class CoroutineTests : DatabaseTestsBase() {
 
     object Testing : Table("COROUTINE_TESTING") {
-        val id = integer("id").autoIncrement().primaryKey() // Column<Int>
+        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
     }
 
     @Rule
     @JvmField
-    val timeout = CoroutinesTimeout.seconds(100)
+    val timeout = CoroutinesTimeout.seconds(60)
 
     @Test @RepeatableTest(10)
     fun suspendedTx() {
@@ -109,6 +109,36 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 kotlin.test.assertEquals(1, result)
+            }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+        }
+    }
+
+    @Test @RepeatableTest(10)
+    fun nestedSuspendAsyncTxTest() {
+        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), Testing) {
+            val mainJob = GlobalScope.async {
+                val job = launch(Dispatchers.IO) {
+                    newSuspendedTransaction(db = db) {
+                        repeat(10) {
+                            Testing.insert {  }
+                        }
+                        (1..10).map {
+                            suspendedTransactionAsync {
+                                Testing.selectAll().toList()
+                            }
+                        }.awaitAll()
+                    }
+                }
+
+                job.join()
+                val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
+                    Testing.selectAll().count()
+                }
+
+                kotlin.test.assertEquals(10, result)
             }
 
             while (!mainJob.isCompleted) Thread.sleep(100)
