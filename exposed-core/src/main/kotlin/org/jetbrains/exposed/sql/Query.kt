@@ -274,12 +274,20 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     }
 }
 
+/**
+ * Mutate Query instance and add `andPart` to where condition with `and` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
     if(this == null) expr
     else this and expr
 }
 
+/**
+ * Mutate Query instance and add `andPart` to where condition with `or` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
 fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
     if(this == null) expr
