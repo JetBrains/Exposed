@@ -8,6 +8,7 @@ plugins {
 
 repositories {
     jcenter()
+    mavenCentral()
     maven("https://dl.bintray.com/jfrog/jfrog-jars")
 }
 
