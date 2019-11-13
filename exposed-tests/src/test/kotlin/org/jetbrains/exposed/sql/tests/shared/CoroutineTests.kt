@@ -125,6 +125,7 @@ class CoroutineTests : DatabaseTestsBase() {
                         repeat(10) {
                             Testing.insert {  }
                         }
+                        commit()
                         (1..10).map {
                             suspendedTransactionAsync {
                                 Testing.selectAll().toList()
