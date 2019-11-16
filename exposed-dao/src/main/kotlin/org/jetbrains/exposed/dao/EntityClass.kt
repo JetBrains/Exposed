@@ -49,9 +49,16 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
-        if (o.id._value != null && testCache(o.id) == null && TransactionManager.current().db == o.db) {
-            get(o.id) // Check that entity is still exists in database
-            warmCache().store(o)
+        val entityAlreadyFlushed = o.id._value != null
+        val sameDatabase = TransactionManager.current().db == o.db
+        if (entityAlreadyFlushed && sameDatabase) {
+            val currentEntityInCache = testCache(o.id)
+            if (currentEntityInCache == null) {
+                get(o.id) // Check that entity is still exists in database
+                warmCache().store(o)
+            } else if (currentEntityInCache != o) {
+                exposedLogger.error("Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. Changes on entity could be missed.")
+            }
         }
     }
 
