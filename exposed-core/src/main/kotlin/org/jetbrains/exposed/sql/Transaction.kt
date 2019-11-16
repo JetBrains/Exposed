@@ -65,6 +65,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         globalInterceptors.forEach { it.beforeRollback(this) }
         interceptors.forEach { it.beforeRollback(this) }
         transactionImpl.rollback()
+        globalInterceptors.forEach { it.afterRollback() }
         interceptors.forEach { it.afterRollback() }
         userdata.clear()
     }
