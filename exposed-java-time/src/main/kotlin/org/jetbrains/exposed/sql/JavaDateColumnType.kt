@@ -13,6 +13,15 @@ private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
 private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss").withZone(ZoneId.systemDefault()) }
 
+private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
+private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
+    val baseFormat = "yyyy-MM-d HH:mm:ss"
+    val newFormat = if(fraction in 1..9)
+        (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
+    else
+        baseFormat
+    return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
@@ -76,9 +85,9 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is Long -> LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault())
         is String -> when (currentDialect) {
             is SQLiteDialect -> LocalDateTime.parse(value, SQLITE_DATE_TIME_STRING_FORMATTER)
-            else -> value
+            else -> LocalDateTime.parse(value, formatterForDateString(value))
         }
-        else -> LocalDateTime.parse(value.toString(), DEFAULT_DATE_TIME_STRING_FORMATTER)
+        else -> valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any {
