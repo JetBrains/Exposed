@@ -9,8 +9,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("YYYY-MM-d").withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
-private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss.SSSSSS").withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
+private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
+private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
 private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss").withZone(ZoneId.systemDefault()) }
 
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
