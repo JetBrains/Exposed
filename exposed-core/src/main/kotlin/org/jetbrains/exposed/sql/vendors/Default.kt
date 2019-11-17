@@ -247,8 +247,6 @@ abstract class VendorDialect(override val name: String,
             return _allTableNames!!
         }
 
-    val String.inProperCase: String get() = TransactionManager.current().db.identifierManager.inProperCase(this)
-
     /* Method always re-read data from DB. Using allTablesNames field is preferred way */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata { tableNames }
 
@@ -325,6 +323,5 @@ internal val currentDialectIfAvailable : DatabaseDialect? get() =
         currentDialect
     } else null
 
-internal fun String.inProperCase(): String = (currentDialectIfAvailable as? VendorDialect)?.run {
-    TransactionManager.current().db.identifierManager.inProperCase(this@inProperCase)
-} ?: this
+internal fun String.inProperCase(): String =
+    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

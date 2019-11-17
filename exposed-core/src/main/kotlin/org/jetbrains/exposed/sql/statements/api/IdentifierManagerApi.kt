@@ -46,8 +46,8 @@ abstract class IdentifierManagerApi {
 
     fun shouldQuoteIdentifier(identity: String) : Boolean {
         val alreadyQuoted = identity.isAlreadyQuoted()
-        val alreadyLower = identity.equals(identity.toLowerCase())
-        val alreadyUpper = identity.equals(identity.toUpperCase())
+        val alreadyLower = identity == identity.toLowerCase()
+        val alreadyUpper = identity == identity.toUpperCase()
         return when {
             alreadyQuoted -> false
             supportsMixedIdentifiers -> false

@@ -2,13 +2,8 @@ package org.jetbrains.exposed.sql.tests
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.sql.vendors.VendorDialect
 
-fun String.inProperCase(): String = TransactionManager.currentOrNull()?.let { tm ->
-    (currentDialectTest as? VendorDialect)?.run {
-        this@inProperCase.inProperCase
-    }
-} ?: this
+fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 

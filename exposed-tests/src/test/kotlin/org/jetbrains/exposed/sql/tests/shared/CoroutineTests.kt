@@ -149,9 +149,6 @@ class CoroutineTests : DatabaseTestsBase() {
 
     @Test @RepeatableTest(10)
     fun awaitAllTest() {
-        suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
-            Testing.insert {}
-        }
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
 
