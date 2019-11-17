@@ -1,3 +1,8 @@
+# 0.18.1
+Major changes:
+* New modules model. For more details please read dependencies section and migration guide in wiki.
+* Java 8 Time API support
+
 # 0.17.7
 Deprecations:
 * Remove deprecated Expression.toSQL 
