@@ -99,28 +99,28 @@ object SqlExpressionBuilder {
     @JvmName("lessEntityID")
     infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<S>) = LessOp(this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<in S>) = LessOp(this, other)
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
 
     @JvmName("lessEqEntityID")
     infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<S>) : Op<Boolean> = LessEqOp(this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<in S>) : Op<Boolean> = LessEqOp(this, other)
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
 
     @JvmName("greaterEntityID")
     infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<S>) : Op<Boolean> = GreaterOp(this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<in S>) : Op<Boolean> = GreaterOp(this, other)
 
     infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp(this, wrap(t))
 
     @JvmName("greaterEqEntityID")
     infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<T>) : Op<Boolean> = GreaterEqOp(this, other)
+    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<in S>) : Op<Boolean> = GreaterEqOp(this, other)
 
     operator fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> = PlusOp(this, other, columnType)
 
