@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import java.util.*
 
 abstract class UUIDEntity(id: EntityID<UUID>) : Entity<UUID>(id)

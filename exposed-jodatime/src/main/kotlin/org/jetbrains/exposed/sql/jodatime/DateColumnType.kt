@@ -1,5 +1,9 @@
-package org.jetbrains.exposed.sql
+package org.jetbrains.exposed.sql.jodatime
 
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.IDateColumnType
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime

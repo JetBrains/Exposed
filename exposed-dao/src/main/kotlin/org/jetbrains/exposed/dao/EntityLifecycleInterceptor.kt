@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*

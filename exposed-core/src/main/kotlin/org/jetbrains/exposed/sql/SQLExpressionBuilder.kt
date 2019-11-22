@@ -1,9 +1,9 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.EntityIDFunctionProvider
-import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal

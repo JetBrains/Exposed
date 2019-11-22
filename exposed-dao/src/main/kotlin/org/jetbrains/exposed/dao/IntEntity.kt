@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 
 abstract class IntEntity(id: EntityID<Int>) : Entity<Int>(id)
 

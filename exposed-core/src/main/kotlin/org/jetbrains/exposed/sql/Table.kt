@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.EntityIDFunctionProvider
-import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*

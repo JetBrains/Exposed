@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists

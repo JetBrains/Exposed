@@ -1,6 +1,8 @@
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.jodatime.date
+import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.sql.tests.shared.checkInsert

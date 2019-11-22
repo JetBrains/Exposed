@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.dao
+package org.jetbrains.exposed.dao.id
 
 open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
     constructor(id:T, table: IdTable<T>) : this(table, id)
