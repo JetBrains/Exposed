@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
@@ -33,7 +34,7 @@ class Year<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnTyp
             is MariaDBDialect -> append("YEAR(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%Y',", expr, ")")
             is H2Dialect -> append("YEAR(", expr, ")")
-            else -> append("YEAR(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
@@ -48,7 +49,7 @@ class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnTy
             is MariaDBDialect -> append("MONTH(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%m',", expr, ")")
             is H2Dialect -> append("MONTH(", expr, ")")
-            else -> append("MONTH(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
@@ -63,7 +64,7 @@ class Day<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType
             is MariaDBDialect -> append("DAY(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%d',", expr, ")")
             is H2Dialect -> append("DAY(", expr, ")")
-            else -> append("DAY(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
@@ -78,7 +79,7 @@ class Hour<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnTyp
             is MariaDBDialect -> append("HOUR(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%H',", expr, ")")
             is H2Dialect -> append("HOUR(", expr, ")")
-            else -> append("HOUR(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
@@ -93,7 +94,7 @@ class Minute<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnT
             is MariaDBDialect -> append("MINUTE(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%M',", expr, ")")
             is H2Dialect -> append("MINUTE(", expr, ")")
-            else -> append("MINUTE(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
@@ -108,7 +109,7 @@ class Second<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnT
             is MariaDBDialect -> append("SECOND(", expr, ")")
             is SQLiteDialect -> append("STRFTIME('%S',", expr, ")")
             is H2Dialect -> append("SECOND(", expr, ")")
-            else -> append("SECOND(", expr, ")")
+            else -> throw UnsupportedByDialectException("Unsupported database dialect", currentDialect)
         }
     }
 }
