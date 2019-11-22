@@ -1,9 +1,9 @@
-package org.jetbrains.exposed.sql
+package org.jetbrains.exposed.jdbc
 
+import org.jetbrains.exposed.sql.DatabaseConnectionAutoRegistration
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import java.sql.Connection
 
-@Suppress("unused")
-object ExposedConnectionImpl : DatabaseConnectionAutoRegistration {
+class ExposedConnectionImpl : DatabaseConnectionAutoRegistration {
     override fun invoke(connection: Connection) = JdbcConnectionImpl(connection)
 }

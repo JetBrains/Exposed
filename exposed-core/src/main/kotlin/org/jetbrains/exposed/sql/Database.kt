@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
 
@@ -59,16 +60,10 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
     companion object {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
-        private lateinit var connectionInstanceImpl : (Connection) -> ExposedConnection<*>
+        private val connectionInstanceImpl : DatabaseConnectionAutoRegistration =
+                ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
 
         init {
-            try {
-                connectionInstanceImpl = Class.forName(DatabaseConnectionAutoRegistration.implementationName).kotlin.objectInstance as DatabaseConnectionAutoRegistration
-            } catch (e: ClassNotFoundException) {
-                exposedLogger.error("Can't load implementation for ${DatabaseConnectionAutoRegistration.implementationName}", e)
-            }
-
-
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
             registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
@@ -112,10 +107,6 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
     }
 }
 
-interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*> {
-    companion object {
-        const val implementationName: String = "org.jetbrains.exposed.sql.ExposedConnectionImpl"
-    }
-}
+interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
 val Database.name : String get() = url.substringAfterLast('/').substringBefore('?')
