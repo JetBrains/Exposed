@@ -16,6 +16,7 @@ val SPRING_BOOT_VERSION = "2.2.0.RELEASE"
 
 dependencies {
     api(project(":exposed-core"))
+    api(project(":exposed-dao"))
     api(project(":spring-transaction"))
     api("org.springframework.boot", "spring-boot-starter-data-jdbc", SPRING_BOOT_VERSION)
     api("org.springframework.boot", "spring-boot-autoconfigure", SPRING_BOOT_VERSION)
