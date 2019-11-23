@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.DefaultTransactionDefinition
 import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
@@ -21,6 +22,10 @@ class SpringTransactionManager(private val _dataSource: DataSource,
                                @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL,
                                @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
+
+    init {
+        this.isRollbackOnCommitFailure = true
+    }
 
     private val db = Database.connect(_dataSource) { this }
 
@@ -46,7 +51,19 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
-        currentOrNull()?.commit()
+        try {
+            currentOrNull()?.commit()
+        } catch (e: Exception) {
+            throw TransactionSystemException(e.message.orEmpty(), e)
+        }
+    }
+
+    override fun doRollback(status: DefaultTransactionStatus) {
+        try {
+            currentOrNull()?.rollback()
+        } catch (e: Exception) {
+            throw TransactionSystemException(e.message.orEmpty(), e)
+        }
     }
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
