@@ -1,6 +1,8 @@
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.`java-time`.date
+import org.jetbrains.exposed.sql.`java-time`.datetime
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
