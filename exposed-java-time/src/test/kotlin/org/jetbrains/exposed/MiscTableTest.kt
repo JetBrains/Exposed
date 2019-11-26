@@ -145,6 +145,18 @@ class MiscTableTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testInsert05(){
+        val expression = stringLiteral(" _exp_ ").trim().substring(2, 3)
+
+        val tbl = Misc
+        withTables(tbl) {
+            tbl.insert { it.update(s, expression) }
+        }
+        val row = tbl.selectAll().single()
+        assertEquals(row[tbl.s], "exp")
+    }
+
+    @Test
     fun testInsertGet01() {
         val tbl = Misc
         val date = today
