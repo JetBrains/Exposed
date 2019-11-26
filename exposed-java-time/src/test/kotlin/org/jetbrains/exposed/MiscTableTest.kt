@@ -326,7 +326,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.update({ tbl.n.eq(101) }) {
                 it.update(s, tbl.s.substring(2, 255))
-                it.update(sn, tbl.s.substring(3, 255))
+                it.update(sn) { tbl.s.substring(3, 255) }
             }
 
             val row = tbl.select { tbl.n eq 101 }.single()

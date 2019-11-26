@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.VarCharColumnType
 import java.util.*
@@ -31,5 +32,12 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
             error("$column is already initialized")
         }
         values[column] = value
+    }
+
+    open fun <T, S:T?> update(column: Column<T>, value: SqlExpressionBuilder.() -> Expression<S>) {
+        if (values.containsKey(column)) {
+            error("$column is already initialized")
+        }
+        values[column] = SqlExpressionBuilder.value()
     }
 }
