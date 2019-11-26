@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.test.Test
 
 object Users : IntIdTable() {
     val name = varchar("name", 50).index()
@@ -35,7 +36,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
     val users by User referrersOn Users.city
 }
 
-fun main(args: Array<String>) {
+fun main() {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
@@ -72,5 +73,12 @@ fun main(args: Array<String>) {
         println("Cities: ${City.all().joinToString {it.name}}")
         println("Users in ${stPete.name}: ${stPete.users.joinToString {it.name}}")
         println("Adults: ${User.find { Users.age greaterEq 18 }.joinToString {it.name}}")
+    }
+}
+
+class SamplesDao {
+    @Test
+    fun ensureSamplesDoesntCrash(){
+        main()
     }
 }
