@@ -5,95 +5,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 import kotlin.properties.Delegates
-import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal)
-
-class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
-    override fun limit(n: Int, offset: Int): SizedIterable<Target> = factory.find(op).limit(n, offset)
-    override fun count(): Int = factory.find(op).count()
-    override fun empty(): Boolean = factory.find(op).empty()
-    override fun forUpdate(): SizedIterable<Target> = factory.find(op).forUpdate()
-    override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()
-
-    override operator fun iterator(): Iterator<Target> = factory.find(op).iterator()
-    operator fun getValue(o: Any?, desc: KProperty<*>): SizedIterable<Target> = factory.find(op)
-    override fun copy(): SizedIterable<Target> = View(op, factory)
-    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<Target> = factory.find(op).orderBy(*order)
-}
-
-@Suppress("UNCHECKED_CAST")
-class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>, Target: Entity<ID>>(
-        val table: Table,
-        val target: EntityClass<ID, Target>,
-        val sourceColumn: Column<EntityID<SID>>? = null,
-        _targetColumn: Column<EntityID<ID>>? = null) : ReadWriteProperty<Source, SizedIterable<Target>> {
-    init {
-        _targetColumn?.let {
-            requireNotNull(sourceColumn) { "Both source and target columns should be specified"}
-            require(_targetColumn.referee?.table == target.table) {
-                "Column $_targetColumn point to wrong table, expected ${target.table.tableName}"
-            }
-            require(_targetColumn.table == sourceColumn.table) {
-                "Both source and target columns should be from the same table"
-            }
-        }
-        sourceColumn?.let {
-            requireNotNull(_targetColumn) { "Both source and target columns should be specified"}
-        }
-    }
-
-    private val targetColumn = _targetColumn
-            ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
-            ?: error("Table does not reference target")
-
-    private fun getSourceRefColumn(o: Source): Column<EntityID<SID>> {
-        return sourceColumn ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>> ?: error("Table does not reference source")
-    }
-
-    override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
-        if (o.id._value == null) return emptySized()
-        val sourceRefColumn = getSourceRefColumn(o)
-        val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table)?: false
-        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
-
-        val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList())
-            - sourceRefColumn).distinct() + sourceRefColumn
-
-        val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
-        return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
-    }
-
-    override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
-        val sourceRefColumn = getSourceRefColumn(o)
-
-        val tx = TransactionManager.current()
-        val entityCache = tx.entityCache
-        entityCache.flush()
-        val oldValue = getValue(o, unused)
-        val existingIds = oldValue.map { it.id }.toSet()
-        entityCache.clearReferrersCache()
-
-        val targetIds = value.map { it.id }
-        table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
-        table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
-            this[sourceRefColumn] = o.id
-            this[targetColumn] = targetId
-        }
-
-        // current entity updated
-        EntityHook.registerChange(tx, EntityChange(o.klass, o.id, EntityChangeType.Updated))
-
-        // linked entities updated
-        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
-        if (targetClass != null) {
-            existingIds.plus(targetIds).forEach {
-                EntityHook.registerChange(tx, EntityChange(targetClass, it, EntityChangeType.Updated))
-            }
-        }
-    }
-}
 
 open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
