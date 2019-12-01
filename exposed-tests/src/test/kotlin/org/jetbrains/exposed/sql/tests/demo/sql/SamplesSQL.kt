@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.demo.sql
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.Test
 import kotlin.test.assertEquals
 
 object Users : Table() {
@@ -15,7 +16,7 @@ object Cities : Table() {
     val name = varchar("name", 50) // Column<String>
 }
 
-fun main(args: Array<String>) {
+fun main() {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
@@ -115,5 +116,12 @@ fun main(args: Array<String>) {
 
         SchemaUtils.drop (Users, Cities)
 
+    }
+}
+
+class SamplesSQL {
+    @Test
+    fun ensureSamplesDoesntCrash(){
+        main()
     }
 }
