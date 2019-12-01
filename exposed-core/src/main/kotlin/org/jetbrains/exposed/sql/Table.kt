@@ -161,6 +161,8 @@ class Join (val table: ColumnSet) : ColumnSet() {
 open class Table(name: String = ""): ColumnSet(), DdlAware {
     open val tableName = if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table")
 
+    internal val tableNameWithoutScheme get() = tableName.substringAfter(".")
+
     fun nameInDatabaseCase() = tableName.inProperCase()
 
     private val _columns = ArrayList<Column<*>>()

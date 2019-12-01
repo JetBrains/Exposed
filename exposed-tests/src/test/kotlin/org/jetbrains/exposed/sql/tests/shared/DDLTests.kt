@@ -819,6 +819,29 @@ class DDLTests : DatabaseTestsBase() {
             uniqueIndex("index2", value2, value1)
         }
     }
+
+    @Test
+    fun createTableWithForeignKeyToAnotherSchema() {
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            exec("CREATE SCHEMA ONE")
+            exec("CREATE SCHEMA TWO")
+            SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
+            val idFromOne = TableFromSchemeOne.insertAndGetId {  }
+
+            TableFromSchemeTwo.insert {
+                it[reference] = idFromOne
+            }
+
+            assertEquals(1, TableFromSchemeOne.selectAll().count())
+            assertEquals(1, TableFromSchemeTwo.selectAll().count())
+        }
+    }
+
+    object TableFromSchemeOne : IntIdTable("one.test")
+
+    object TableFromSchemeTwo : IntIdTable("two.test") {
+        val reference = reference("testOne", TableFromSchemeOne)
+    }
 }
 
 
