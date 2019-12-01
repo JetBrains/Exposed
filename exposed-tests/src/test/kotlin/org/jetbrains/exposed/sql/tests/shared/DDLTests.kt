@@ -823,8 +823,8 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun createTableWithForeignKeyToAnotherSchema() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            exec("CREATE SCHEMA ONE")
-            exec("CREATE SCHEMA TWO")
+            exec("CREATE SCHEMA ${"one".inProperCase()}")
+            exec("CREATE SCHEMA ${"two".inProperCase()}")
             SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId {  }
 
