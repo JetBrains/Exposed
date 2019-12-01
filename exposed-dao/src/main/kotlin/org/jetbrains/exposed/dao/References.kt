@@ -109,14 +109,14 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
                 }
             }
             is OptionalReference<*, *, *> -> {
                 (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds }.toList()
+                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
                 }
             }
