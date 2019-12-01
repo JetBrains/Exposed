@@ -1,10 +1,7 @@
+@file:Suppress("internal")
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.VarCharColumnType
+import org.jetbrains.exposed.sql.*
 import java.util.*
 
 /**
@@ -26,6 +23,9 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
         }
         values[column] = value
     }
+
+
+    open operator fun <T, S:T, E:Expression<S>> set(column: Column<T>, value: E) = update<T, S>(column, value)
 
     open fun <T, S:T?> update(column: Column<T>, value: Expression<S>) {
         if (values.containsKey(column)) {

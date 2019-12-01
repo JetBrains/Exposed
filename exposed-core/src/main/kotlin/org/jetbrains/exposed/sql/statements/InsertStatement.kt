@@ -145,5 +145,9 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             listOf(result).apply { field = this }
         }
 
-    override fun arguments() = arguments!!.map { it.map { it.first.columnType to it.second }.filter { it.second != DefaultValueMarker} }
+    override fun arguments() = arguments!!.map { args ->
+        args.filter { (_, value) ->
+            value != DefaultValueMarker  && value !is Expression<*>
+        }.map { it.first.columnType to it.second }
+    }
 }

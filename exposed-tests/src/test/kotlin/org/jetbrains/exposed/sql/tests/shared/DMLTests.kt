@@ -1309,6 +1309,44 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInsertWithExpression() {
+
+        val tbl = object : IntIdTable("testInsert") {
+            val nullableInt = integer("nullableIntCol").nullable()
+            val string = varchar("stringCol", 20)
+        }
+
+        fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
+
+        fun verify(value: String) {
+            val row = tbl.select{ tbl.string eq value }.single()
+            assertEquals(row[tbl.string], value)
+        }
+
+        withTables(tbl) {
+            addLogger(StdOutSqlLogger)
+            tbl.insert {
+                it[string] = expression(" _exp1_ ")
+            }
+
+            verify("exp1")
+
+            tbl.insert {
+                it[string] = expression(" _exp2_ ")
+                it[nullableInt] = 5
+            }
+
+            verify("exp2")
+
+            tbl.insert {
+                it[string] = expression(" _exp3_ ")
+                it[nullableInt] = null
+            }
+
+            verify("exp3")
+        }
+    }
+
     @Test fun testTRUEandFALSEOps() {
         withCitiesAndUsers { cities, _, _ ->
             val allSities = cities.selectAll().toCityNameList()
