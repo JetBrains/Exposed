@@ -18,23 +18,50 @@ class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     }
 }
 
+class Year<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.year(expr, queryBuilder)
+    }
+}
+
 class Month<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        when (currentDialect) {
-            is PostgreSQLDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is OracleDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is SQLServerDialect -> append("MONTH(", expr, ")")
-            is MariaDBDialect -> append("MONTH(", expr, ")")
-            is SQLiteDialect -> append("STRFTIME('%m',", expr, ")")
-            is H2Dialect -> append("MONTH(", expr, ")")
-            else -> append("MONTH(", expr, ")")
-        }
+        currentDialect.functionProvider.month(expr, queryBuilder)
+    }
+}
+
+class Day<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.day(expr, queryBuilder)
+    }
+}
+
+class Hour<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.hour(expr, queryBuilder)
+    }
+}
+
+class Minute<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.minute(expr, queryBuilder)
+    }
+}
+
+class Second<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.second(expr, queryBuilder)
     }
 }
 
 fun <T: DateTime?> Expression<T>.date() = Date(this)
 
+fun <T: DateTime?> Expression<T>.year() = Year(this)
 fun <T: DateTime?> Expression<T>.month() = Month(this)
+fun <T: DateTime?> Expression<T>.day() = Day(this)
+fun <T: DateTime?> Expression<T>.hour() = Hour(this)
+fun <T: DateTime?> Expression<T>.minute() = Minute(this)
+fun <T: DateTime?> Expression<T>.second() = Second(this)
 
 
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))

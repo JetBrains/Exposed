@@ -175,6 +175,42 @@ abstract class FunctionProvider {
         expr.toList().appendTo { +it }
         append(")")
     }
+
+    open fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("YEAR(")
+        append(expr)
+        append(")")
+    }
+
+    open fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("MONTH(")
+        append(expr)
+        append(")")
+    }
+
+    open fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DAY(")
+        append(expr)
+        append(")")
+    }
+
+    open fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("HOUR(")
+        append(expr)
+        append(")")
+    }
+
+    open fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("MINUTE(")
+        append(expr)
+        append(")")
+    }
+
+    open fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("SECOND(")
+        append(expr)
+        append(")")
+    }
 }
 
 /**

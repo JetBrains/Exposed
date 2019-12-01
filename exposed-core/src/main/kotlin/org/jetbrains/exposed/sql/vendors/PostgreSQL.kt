@@ -78,6 +78,42 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             append(" ~* ")
         append(pattern)
     }
+
+    override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(YEAR FROM")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(MONTH FROM")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(DAY FROM")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(HOUR FROM")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(MINUTE FROM")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("Extract(SECOND FROM")
+        append(expr)
+        append(")")
+    }
 }
 
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {

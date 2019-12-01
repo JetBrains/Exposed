@@ -53,6 +53,42 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         else
             expr.toList().appendTo(this, separator = " || '$separator' || ") { +it }
     }
+
+    override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%Y',")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%m',")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%d',")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%H',")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%M',")
+        append(expr)
+        append(")")
+    }
+
+    override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("STRFTIME('%S',")
+        append(expr)
+        append(")")
+    }
 }
 
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
