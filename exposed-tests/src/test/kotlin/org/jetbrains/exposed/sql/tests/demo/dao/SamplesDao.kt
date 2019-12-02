@@ -1,13 +1,9 @@
 package org.jetbrains.exposed.sql.tests.demo.dao
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.test.Test
 
@@ -37,7 +33,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
         addLogger(StdOutSqlLogger)

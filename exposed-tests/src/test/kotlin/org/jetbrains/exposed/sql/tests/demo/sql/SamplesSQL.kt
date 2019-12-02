@@ -17,7 +17,7 @@ object Cities : Table() {
 }
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
         addLogger(StdOutSqlLogger)
@@ -115,7 +115,6 @@ fun main() {
         }
 
         SchemaUtils.drop (Users, Cities)
-
     }
 }
 

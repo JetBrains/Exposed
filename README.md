@@ -39,10 +39,11 @@ object Cities : Table() {
     val name = varchar("name", 50) // Column<String>
 }
 
-fun main(args: Array<String>) {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
+        addLogger(StdOutSqlLogger)
+
         SchemaUtils.create (Cities, Users)
 
         val saintPetersburgId = Cities.insert {
@@ -53,45 +54,48 @@ fun main(args: Array<String>) {
             it[name] = "Munich"
         } get Cities.id
 
-        Cities.insert {
-            it[name] = "Prague"
-        }
+        val pragueId = Cities.insert {
+            it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
+        }[Cities.id]
+
+        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        assertEquals(pragueName, "Pr")
 
         Users.insert {
             it[id] = "andrey"
             it[name] = "Andrey"
-            it[cityId] = saintPetersburgId
+            it[Users.cityId] = saintPetersburgId
         }
 
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
-            it[cityId] = munichId
+            it[Users.cityId] = munichId
         }
 
         Users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
-            it[cityId] = munichId
+            it[Users.cityId] = munichId
         }
 
         Users.insert {
             it[id] = "alex"
             it[name] = "Alex"
-            it[cityId] = null
+            it[Users.cityId] = null
         }
 
         Users.insert {
             it[id] = "smth"
             it[name] = "Something"
-            it[cityId] = null
+            it[Users.cityId] = null
         }
 
-        Users.update({Users.id eq "alex"}) {
+        Users.update({ Users.id eq "alex"}) {
             it[name] = "Alexey"
         }
 
-        Users.deleteWhere{Users.name like "%thing"}
+        Users.deleteWhere{ Users.name like "%thing"}
 
         println("All cities:")
 
@@ -110,7 +114,7 @@ fun main(args: Array<String>) {
 
 
         (Users innerJoin Cities).slice(Users.name, Users.cityId, Cities.name).
-                select {Cities.name.eq("St. Petersburg") or Users.cityId.isNull()}.forEach {
+                select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull()}.forEach {
             if (it[Users.cityId] != null) {
                 println("${it[Users.name]} lives in ${it[Cities.name]}")
             }
@@ -133,9 +137,7 @@ fun main(args: Array<String>) {
         }
 
         SchemaUtils.drop (Users, Cities)
-
     }
-}
 
 ```
 
@@ -175,9 +177,10 @@ Outputs:
 
 ## DAO sample
 ```kotlin
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.dao.*
 
 object Users : IntIdTable() {
     val name = varchar("name", 50).index()
@@ -204,8 +207,8 @@ class City(id: EntityID<Int>) : IntEntity(id) {
     val users by User referrersOn Users.city
 }
 
-fun main(args: Array<String>) {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+fun main() {
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
         addLogger(StdOutSqlLogger)
