@@ -28,8 +28,22 @@ abstract class ColumnSet : FieldSet {
     override val source
         get() = this
 
+    /**
+     * Appends current [ColumnSet] to a query
+     */
     abstract fun describe(s: Transaction, queryBuilder: QueryBuilder)
 
+    /**
+     * Create join relation with [otherTable]
+     * When all joining options are absent Exposed will try to resolve referencing columns by itself.
+     *
+     * @param otherTable - [ColumnSet] to join with
+     * @param joinType - see [JoinType] for available options
+     * @param onColumn - column from a current [ColumnSet], may be skipped if [additionalConstraint] will be used
+     * @param otherColumn - column from an [otherTable], may be skipped if [additionalConstraint] will be used
+     * @param additionalConstraint - condition to join which will be placed in ON part of SQL query
+     * @throws IllegalStateException - if join could not be prepared. See exception message for more details.
+     */
     abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
     abstract fun innerJoin(otherTable: ColumnSet): Join
     abstract fun leftJoin(otherTable: ColumnSet) : Join
@@ -158,11 +172,21 @@ class Join (val table: ColumnSet) : ColumnSet() {
     fun alreadyInJoin(table: Table) = joinParts.any { it.joinPart == table}
 }
 
+/**
+ * Base class for any simple table.
+ *
+ * If you want to reference your table use [IdTable] instead.
+ *
+ * @property name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ */
 open class Table(name: String = ""): ColumnSet(), DdlAware {
     open val tableName = if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table")
 
     internal val tableNameWithoutScheme get() = tableName.substringAfter(".")
 
+    /**
+     * @return table name in proper case. Should be called within transaction or default [tableName] will be returned
+     */
     fun nameInDatabaseCase() = tableName.inProperCase()
 
     private val _columns = ArrayList<Column<*>>()
@@ -172,8 +196,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder{ append(s.identity(this@Table)) }
 
-    val indices = ArrayList<Index>()
-    val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
+    /**
+     * Contains all indices declared on that table
+     */
+    val indices: List<Index> = ArrayList()
+    private val checkConstraints = ArrayList<Pair<String, Op<Boolean>>>()
 
     override val fields: List<Expression<*>>
         get() = columns
@@ -191,11 +218,18 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 
+    /**
+     * Adds a new column to a table.
+     */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).apply {
         _columns.add(this)
     }
 
-    fun<TColumn: Column<*>> replaceColumn (oldColumn: Column<*>, newColumn: TColumn) : TColumn {
+    /**
+     * Replaces [oldColumn] with a [newColumn] in a table.
+     * Mostly used internally by the library.
+     */
+    fun<TColumn: Column<*>> replaceColumn(oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
         _columns.add(newColumn)
         return newColumn
@@ -458,7 +492,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     fun index(customIndexName:String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
-        indices.add(Index(columns.toList(), isUnique, customIndexName))
+        (indices as MutableList<Index>).add(Index(columns.toList(), isUnique, customIndexName))
     }
 
     fun<T> Column<T>.index(customIndexName:String? = null, isUnique: Boolean = false) : Column<T> = apply {
