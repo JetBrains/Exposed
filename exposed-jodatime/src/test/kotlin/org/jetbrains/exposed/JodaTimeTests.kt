@@ -1,15 +1,46 @@
 package org.jetbrains.exposed
 
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.junit.Test
 import kotlin.test.assertEquals
 
 open class JodaTimeBaseTest : DatabaseTestsBase() {
     init {
         DateTimeZone.setDefault(DateTimeZone.UTC)
+    }
+
+    @Test
+    fun jodaTimeFunctions() {
+        withTables(CitiesTime) {
+            val now = DateTime.now()
+
+            val cityID = CitiesTime.insertAndGetId {
+                it[name] = "St. Petersburg"
+                it[local_time] = now.toDateTime()
+            }
+
+            val insertedYear = CitiesTime.slice(CitiesTime.local_time.year()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
+            val insertedMonth = CitiesTime.slice(CitiesTime.local_time.month()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
+            val insertedDay = CitiesTime.slice(CitiesTime.local_time.day()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
+            val insertedHour = CitiesTime.slice(CitiesTime.local_time.hour()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
+            val insertedMinute = CitiesTime.slice(CitiesTime.local_time.minute()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
+            val insertedSecond = CitiesTime.slice(CitiesTime.local_time.second()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+
+            assertEquals(now.year, insertedYear)
+            assertEquals(now.monthOfYear, insertedMonth)
+            assertEquals(now.dayOfMonth, insertedDay)
+            assertEquals(now.hourOfDay, insertedHour)
+            assertEquals(now.minuteOfHour, insertedMinute)
+            assertEquals(now.secondOfMinute, insertedSecond)
+        }
     }
 }
 
@@ -34,3 +65,8 @@ fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
 }
 
 val today: DateTime = DateTime.now().withTimeAtStartOfDay()
+
+object CitiesTime : IntIdTable("CitiesTime") {
+    val name = varchar("name", 50) // Column<String>
+    val local_time = datetime("local_time").nullable() // Column<datetime>
+}

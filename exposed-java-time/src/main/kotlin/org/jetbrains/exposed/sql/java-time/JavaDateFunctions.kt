@@ -20,24 +20,50 @@ class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INST
     }
 }
 
+class Year<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.year(expr, queryBuilder)
+    }
+}
+
 class Month<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        when (currentDialect) {
-            is PostgreSQLDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is OracleDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is OracleDialect -> append("EXTRACT(MONTH FROM ", expr, ")")
-            is SQLServerDialect -> append("MONTH(", expr, ")")
-            is MariaDBDialect -> append("MONTH(", expr, ")")
-            is SQLiteDialect -> append("STRFTIME('%m',", expr, ")")
-            is H2Dialect -> append("MONTH(", expr, ")")
-            else -> append("MONTH(", expr, ")")
-        }
+        currentDialect.functionProvider.month(expr, queryBuilder)
+    }
+}
+
+class Day<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.day(expr, queryBuilder)
+    }
+}
+
+class Hour<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.hour(expr, queryBuilder)
+    }
+}
+
+class Minute<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.minute(expr, queryBuilder)
+    }
+}
+
+class Second<T:Temporal?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.second(expr, queryBuilder)
     }
 }
 
 fun <T: Temporal?> Expression<T>.date() = Date(this)
 
+fun <T: Temporal?> Expression<T>.year() = Year(this)
 fun <T: Temporal?> Expression<T>.month() = Month(this)
+fun <T: Temporal?> Expression<T>.day() = Day(this)
+fun <T: Temporal?> Expression<T>.hour() = Hour(this)
+fun <T: Temporal?> Expression<T>.minute() = Minute(this)
+fun <T: Temporal?> Expression<T>.second() = Second(this)
 
 
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, JavaLocalDateColumnType.INSTANCE)

@@ -139,6 +139,7 @@ class IntegerColumnType : ColumnType() {
     override fun valueFromDB(value: Any): Any = when(value) {
         is Int -> value
         is Number -> value.toInt()
+        is String -> value.toInt()
         else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
     }
 }
