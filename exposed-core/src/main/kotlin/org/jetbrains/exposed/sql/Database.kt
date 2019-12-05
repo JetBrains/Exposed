@@ -71,6 +71,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
             registerDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
+            registerDialect(RedshiftDialect.dialectName) { RedshiftDialect() }
         }
 
         fun registerDialect(prefix:String, dialect: () -> DatabaseDialect) {
