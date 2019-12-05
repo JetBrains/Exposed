@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.RedshiftDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
@@ -124,6 +125,11 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
+        // https://github.com/JetBrains/Exposed/issues/711
+        // Redshift is not supporting RETURNING feature
+        currentDialect is RedshiftDialect ->
+            transaction.connection.prepareStatement(sql, false)
+
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
