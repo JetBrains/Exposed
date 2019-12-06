@@ -37,12 +37,12 @@ abstract class ColumnSet : FieldSet {
      * Create join relation with [otherTable]
      * When all joining options are absent Exposed will try to resolve referencing columns by itself.
      *
-     * @param otherTable - [ColumnSet] to join with
-     * @param joinType - see [JoinType] for available options
-     * @param onColumn - column from a current [ColumnSet], may be skipped if [additionalConstraint] will be used
-     * @param otherColumn - column from an [otherTable], may be skipped if [additionalConstraint] will be used
-     * @param additionalConstraint - condition to join which will be placed in ON part of SQL query
-     * @throws IllegalStateException - if join could not be prepared. See exception message for more details.
+     * @param otherTable [ColumnSet] to join with
+     * @param joinType See [JoinType] for available options
+     * @param onColumn The column from a current [ColumnSet], may be skipped if [additionalConstraint] will be used
+     * @param otherColumn The column from an [otherTable], may be skipped if [additionalConstraint] will be used
+     * @param additionalConstraint The condition to join which will be placed in ON part of SQL query
+     * @throws IllegalStateException If join could not be prepared. See exception message for more details.
      */
     abstract fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>? = null, otherColumn: Expression<*>? = null, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? = null): Join
     abstract fun innerJoin(otherTable: ColumnSet): Join
@@ -177,7 +177,7 @@ class Join (val table: ColumnSet) : ColumnSet() {
  *
  * If you want to reference your table use [IdTable] instead.
  *
- * @property name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
 open class Table(name: String = ""): ColumnSet(), DdlAware {
     open val tableName = if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table")
@@ -185,7 +185,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     internal val tableNameWithoutScheme get() = tableName.substringAfter(".")
 
     /**
-     * @return table name in proper case. Should be called within transaction or default [tableName] will be returned
+     * @return Table name in proper case. Should be called within transaction or default [tableName] will be returned
      */
     fun nameInDatabaseCase() = tableName.inProperCase()
 
@@ -235,6 +235,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return newColumn
     }
 
+    /**
+     * Mark @receiver column as primary key.
+     *
+     * When you define multiple primary keys on a table it will create composite key.
+     * Order of columns in a primary key will be the same as order of the columns in a table mapping from top to bottom.
+     * If you desire to change the order only in a primary key provide [indx] paramter.
+     *
+     * @param indx An optional column index in a primary key
+     */
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> {
         if (indx != null && table.columns.any { it.indexInPK == indx } ) throw IllegalArgumentException("Table $tableName already contains PK at $indx")
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
@@ -287,6 +296,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun <T:Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
 
+    /**
+     * An enumeration column with custom sql type.
+     * The main usage is to use a database specific types.
+     * See [https://github.com/JetBrains/Exposed/wiki/DataTypes#how-to-use-database-enum-types] for more details.
+     * @param name The column name
+     * @param sql A SQL definition for the column
+     * @param fromDb A lambda to convert a value received from a database to an enumeration instance
+     * @param toDb A lambda to convert an enumeration instance to a value which will be stored to a database
+     */
     @Suppress("UNCHECKED_CAST")
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
         registerColumn<T>(name, object : ColumnType() {
@@ -410,15 +428,36 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
+    /**
+     * Make @receiver column an auto-increment to generate its values in a database.
+     * Only integer and long columns supported.
+     * Some databases like a PostgreSQL supports auto-increment via sequences.
+     * In that case you should provide a name with [idSeqName] param and Exposed will create a sequence for you.
+     * If you already have a sequence in a database just use its name in [idSeqName].
+     *
+     * @param idSeqName an optional parameter to provide a sequence name
+     */
     fun <N:Any> Column<N>.autoIncrement(idSeqName: String? = null): Column<N> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoIncrement, this)
     }
 
-    fun Column<UUID>.autoGenerate(): Column<UUID> = this.clientDefault { UUID.randomUUID() }
-
+    /**
+     * Make @receiver column an auto-increment to generate its values in a database.
+     * Only integer and long columns supported.
+     * Some databases like a PostgreSQL supports auto-increment via sequences.
+     * In that case you should provide a name with [idSeqName] param and Exposed will create a sequence for you.
+     * If you already have a sequence in a database just use its name in [idSeqName].
+     *
+     * @param idSeqName an optional parameter to provide a sequence name
+     */
     fun <N:Comparable<N>> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> = cloneWithAutoInc(idSeqName).apply {
         replaceColumn(this@autoinc, this)
     }
+
+    /**
+     * UUID column will auto generate its value on a client side just before an insert
+     */
+    fun Column<UUID>.autoGenerate(): Column<UUID> = this.clientDefault { UUID.randomUUID() }
 
     fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
         referee = ref

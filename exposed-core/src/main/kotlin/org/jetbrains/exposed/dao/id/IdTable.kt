@@ -26,7 +26,7 @@ object EntityIDFunctionProvider {
 /**
  * Base class for an identity table which could be referenced from another tables.
  *
- * @param name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
 abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
     abstract val id : Column<EntityID<T>>
@@ -35,8 +35,8 @@ abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
 /**
  * Identity table with autoincrement integer primary key
  *
- * @param name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
- * @param columnName - name for a primary key, "id" by default
+ * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ * @param columnName name for a primary key, "id" by default
  */
 open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
     override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().primaryKey().entityId()
@@ -45,8 +45,8 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
 /**
  * Identity table with autoincrement long primary key
  *
- * @param name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
- * @param columnName - name for a primary key, "id" by default
+ * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ * @param columnName name for a primary key, "id" by default
  */
 open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
     override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().primaryKey().entityId()
@@ -59,8 +59,8 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  *
  * Id value will be generated on a client side just before an insert of a new row.
  *
- * @param name - table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
- * @param columnName - name for a primary key, "id" by default
+ * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
+ * @param columnName name for a primary key, "id" by default
  */
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
     override val id: Column<EntityID<UUID>> = uuid(columnName).primaryKey()
