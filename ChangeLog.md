@@ -1,3 +1,22 @@
+# 0.19.1
+Broken changes:
+* `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable` classes from `exposed-core` 
+were moved from `org.jetbrains.exposed.dao` to `org.jetbrains.exposed.dao.id` package to support Java 9 module system.
+To help with migration, old classes were deprecated with proper `replaceWith` option. Read migration guide for more details.
+
+Features:
+* `selectBatched` and `selectAllBatched` functions added to make queries in batches ([#642](https://github.com/JetBrains/Exposed/issues/642)). Many thanks to [Pin-Sho Feng](https://github.com/red-avtovo) for a PR.
+* Added UpdateBuilder.update expression builder version ([#700](https://github.com/JetBrains/Exposed/issues/700)). Another useful PR from [spand](https://github.com/spand)
+* New SQL datetime functions year, day, hour, minute, second ([#707](https://github.com/JetBrains/Exposed/issues/707)). Helpful PR from [hichem-fazai](https://github.com/hichem-fazai)
+
+Bug fixes:
+* SpringTransactionManager doesn't properly rollback transactions in some cases ([#666](https://github.com/JetBrains/Exposed/issues/666))
+* Compilation error Field name 'Oracle12+' cannot be represented in dex format. ([#668](https://github.com/JetBrains/Exposed/issues/668))
+* Enable comparing(less/lessEq/greater/greaterEq) to nullable column ([#694](https://github.com/JetBrains/Exposed/issues/694)). Thank you [Toshiaki Kameyama](https://github.com/t-kameyama).
+* Fixed insert statements with expression as a value.
+* Do not load related entities multiple times when using eager loading with the same entities. Small but useful fix from [kenta.koyama](https://github.com/doyaaaaaken)
+* Failed on create a FK for a table created in another database schema ([#701](https://github.com/JetBrains/Exposed/issues/701))
+
 # 0.18.1
 Major changes:
 * New modules model. For more details please read dependencies section and migration guide in wiki.
