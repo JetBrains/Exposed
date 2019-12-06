@@ -64,6 +64,6 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  */
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
     override val id: Column<EntityID<UUID>> = uuid(columnName).primaryKey()
-            .clientDefault { UUID.randomUUID() }
+            .autoGenerate()
             .entityId()
 }
