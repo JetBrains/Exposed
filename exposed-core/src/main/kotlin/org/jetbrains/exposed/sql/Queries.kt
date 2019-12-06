@@ -22,13 +22,28 @@ fun FieldSet.select(where: Op<Boolean>) : Query = Query(this, where)
  */
 fun FieldSet.selectAll() : Query = Query(this, null)
 
-fun FieldSet.selectBatched(
+/**
+ * That function will make multiple queries with limit equals to [batchSize]
+ * and return result as a collection of [ResultRow] sub-collections.
+ * [FieldSet] will be sorted by the first auto-increment column and then returned in batches.
+ *
+ * @param batchSize Size of a sub-collections to return
+ * @param where Where condition to be applied
+ */
+fun <T:Comparable<T>> FieldSet.selectBatched(
         batchSize: Int = 1000,
         where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Iterable<Iterable<ResultRow>> {
     return selectBatched(batchSize, SqlExpressionBuilder.where())
 }
 
+/**
+ * That function will make multiple queries with limit equals to [batchSize]
+ * and return result as a collection of [ResultRow] sub-collections.
+ * [FieldSet] will be sorted by the first auto-increment column and then returned in batches.
+ *
+ * @param batchSize Size of a sub-collections to return
+ */
 fun FieldSet.selectAllBatched(
         batchSize: Int = 1000
 ): Iterable<Iterable<ResultRow>> {
