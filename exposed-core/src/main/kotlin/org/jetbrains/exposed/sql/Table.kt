@@ -386,6 +386,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 
     /**
+     * A binary column to store an array of bytes.
+     *
+     * @param name The column name
+     */
+    fun binary(name: String): Column<ByteArray> = registerColumn(name, BasicBinaryColumnType())
+
+    /**
      * A uuid column to store a UUID.
      *
      * @param name The column name

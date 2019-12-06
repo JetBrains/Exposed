@@ -23,6 +23,11 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidType() = "uniqueidentifier"
 
     override fun uuidToDB(value: UUID) = value.toString()
+
+    override fun binaryType(): String {
+        exposedLogger.error("The length of the Binary column is missing.")
+        error("The length of the Binary column is missing.")
+    }
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {

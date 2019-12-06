@@ -10,6 +10,11 @@ import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "UUID"
+
+    override fun binaryType(): String {
+        exposedLogger.error("The length of the Binary column is missing.")
+        error("The length of the Binary column is missing.")
+    }
 }
 
 private val Transaction.isMySQLMode: Boolean
