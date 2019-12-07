@@ -66,6 +66,26 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
         TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead")
     }
+
+    override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(MINUTE, ", expr, ")")
+    }
+
+    override fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(HOUR, ", expr, ")")
+    }
+
+    override fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(DAY, ", expr, ")")
+    }
+
+    override fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(MONTH, ", expr, ")")
+    }
+
+    override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(YEAR, ", expr, ")")
+    }
 }
 
 open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
