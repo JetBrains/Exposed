@@ -1,8 +1,8 @@
 # 0.19.1
 Broken changes:
 * `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable` classes from `exposed-core` 
-were moved from `org.jetbrains.exposed.dao` to `org.jetbrains.exposed.dao.id` package to support Java 9 module system.
-To help with migration, old classes were deprecated with proper `replaceWith` option. Read migration guide for more details.
+were moved from `org.jetbrains.exposed.dao` to `org.jetbrains.exposed.dao.id` package along with `exposed-jodatime` module classes to support Java 9 module system.
+To help with migration, old classes were deprecated with proper `replaceWith` option. Read [migration guide](https://github.com/JetBrains/Exposed/wiki/Migration-Guide#migrating-to-019) for more details.
 
 Features:
 * `selectBatched` and `selectAllBatched` functions added to make queries in batches ([#642](https://github.com/JetBrains/Exposed/issues/642)). Many thanks to [Pin-Sho Feng](https://github.com/red-avtovo) for a PR.
