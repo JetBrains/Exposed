@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -202,7 +201,7 @@ class DDLTests : DatabaseTestsBase() {
             val q = db.identifierManager.quoteString
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL, " +
-                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
+                    "CONSTRAINT pk_with_different_column_types_${TestTable.id.name}_${TestTable.name.name} PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
         }
     }
 
@@ -311,9 +310,32 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(
                     "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
                             "${t.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                            "CONSTRAINT pk_${tableName}_${t.id1.name}_${t.id2.name} PRIMARY KEY ($id1ProperName, $id2ProperName)" +
                             ")",
                     t.ddl)
+        }
+    }
+
+    @Test fun testAddCompositePrimaryKeyWithCustomPKName() {
+        val tableName = "Foo"
+        val table = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+            override val primaryKey = "CustomPK"
+        }
+
+        /**
+         * We are excluding H2 because it is covered by the test {@link #testAddCompositePrimaryKeyToTableH2()}
+         */
+        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL), table) {
+            val tableProperName = tableName.inProperCase()
+            val id1ProperName = table.id1.name.inProperCase()
+            val ddlId1 = table.id1.ddl
+            val id2ProperName = table.id2.name.inProperCase()
+            val ddlId2 = table.id2.ddl
+
+            assertEquals("ALTER TABLE $tableProperName ADD ${table.id1.descriptionDdl()}",ddlId1.first())
+            assertEquals("ALTER TABLE $tableProperName ADD ${table.id2.descriptionDdl()}, ADD CONSTRAINT CustomPK PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.last())
         }
     }
 
@@ -336,7 +358,7 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(2, ddlId2.size)
             assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${t.id2.columnType.sqlType()}", ddlId2.first())
-            assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", t.id2.ddl.last())
+            assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT pk_${tableName}_${t.id1.name}_${t.id2.name} PRIMARY KEY ($id1ProperName, $id2ProperName)", t.id2.ddl.last())
         }
     }
 
@@ -358,7 +380,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals("ALTER TABLE $tableProperName ADD ${t.id1.descriptionDdl()}", ddlId1.first())
 
             assertEquals(1, ddlId2.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${t.id2.descriptionDdl()}, ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id2.descriptionDdl()}, ADD CONSTRAINT pk_${tableName}_${t.id1.name}_${t.id2.name} PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
         }
     }
 
@@ -490,7 +512,7 @@ class DDLTests : DatabaseTestsBase() {
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(initialTable)
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
-            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})", t.id.ddl[1])
+            assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_${tableName}_${t.id.name} PRIMARY KEY (${"id".inProperCase()})", t.id.ddl[1])
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)

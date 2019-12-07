@@ -40,6 +40,14 @@ object EntityTestsData {
         val y1 = optReference("y1", YTable)
     }
 
+    /*
+    Entity with the default name of the primary key constraint.
+    */
+    object Book : IntIdTable("Article") {
+        val title = varchar("name", 50).primaryKey()
+        override val primaryKey = "Custom_PK_Article"
+    }
+
     class XEntity(id: EntityID<Int>): Entity<Int>(id) {
         var b1 by XTable.b1
         var b2 by XTable.b2
@@ -91,7 +99,14 @@ object EntityTestsData {
 }
 
 class EntityTests: DatabaseTestsBase() {
-    @Test fun testDefaults01() {
+
+    @Test fun testCustomPKContraintName() {
+        withTables(EntityTestsData.Book) {
+            assertEquals(EntityTestsData.Book.primaryKey, "Custom_PK_Article")
+        }
+    }
+
+        @Test fun testDefaults01() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new {  }
             assertEquals (x.b1, true, "b1 mismatched")

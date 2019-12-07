@@ -549,7 +549,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-                if (columns.none { it.isOneColumnPK() }) {
+                if (isCustomPKNameDefined || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let {
                         append(", $it")
                     }
@@ -581,13 +581,25 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return seqDDL + createTableDDL + constraintSQL
     }
 
-    internal fun primaryKeyConstraint(): String? {
-        val pkey = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+    val primaryKeyColumns: List<Column<*>> by lazy {
+        columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+    }
 
-        if (pkey.isNotEmpty()) {
+    var isCustomPKNameDefined = true
+
+    open val primaryKey: String by lazy {
+        isCustomPKNameDefined = false
+
+        "pk_${tableName}_" + primaryKeyColumns.joinToString(separator = "_") {
+            it.name
+        }
+    }
+
+    internal fun primaryKeyConstraint(): String? {
+        if (primaryKeyColumns.isNotEmpty()) {
             val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote("pk_$tableName")
-            return pkey.joinToString(
+            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey)
+            return primaryKeyColumns.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)
             }

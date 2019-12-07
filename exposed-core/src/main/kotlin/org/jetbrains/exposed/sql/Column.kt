@@ -39,6 +39,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isLastColumnInPK = indexInPK != null && indexInPK == table.columns.mapNotNull { it.indexInPK }.max()
         val columnDefinition = when {
+            isOneColumnPK() && table.isCustomPKNameDefined && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
             isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
             !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
             else -> descriptionDdl()
@@ -91,7 +92,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
             append(" NOT NULL")
         }
 
-        if (isOneColumnPK() && !isSQLiteAutoIncColumn) {
+        if (!table.isCustomPKNameDefined && isOneColumnPK() && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
     }
