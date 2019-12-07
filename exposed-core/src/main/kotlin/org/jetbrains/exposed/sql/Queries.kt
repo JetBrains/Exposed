@@ -30,7 +30,7 @@ fun FieldSet.selectAll() : Query = Query(this, null)
  * @param batchSize Size of a sub-collections to return
  * @param where Where condition to be applied
  */
-fun <T:Comparable<T>> FieldSet.selectBatched(
+fun FieldSet.selectBatched(
         batchSize: Int = 1000,
         where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Iterable<Iterable<ResultRow>> {
