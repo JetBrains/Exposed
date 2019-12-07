@@ -13,7 +13,7 @@ val dialect: String by project
 
 dependencies {
     api(project(":exposed-core"))
-    api("joda-time", "joda-time", "2.10.2")
+    api("joda-time", "joda-time", "2.10.5")
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation("junit", "junit", "4.12")
