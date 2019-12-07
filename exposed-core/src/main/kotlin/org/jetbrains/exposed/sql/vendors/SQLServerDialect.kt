@@ -67,6 +67,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead")
     }
 
+    override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("DATEPART(SECOND, ", expr, ")")
+    }
+
     override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("DATEPART(MINUTE, ", expr, ")")
     }
