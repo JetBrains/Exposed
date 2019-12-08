@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -21,6 +22,8 @@ import org.junit.Test
 import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
+import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -837,10 +840,61 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    // https://github.com/JetBrains/Exposed/issues/709
+    @Test
+    fun createTableWithDuplicateColumn() {
+        val assertionFailureMessage = "Can't create a table with multiple columns having the same name"
+
+        withDb() {
+            assertFails(assertionFailureMessage) {
+                SchemaUtils.create(TableWithDuplicatedColumn)
+            }
+            assertFails(assertionFailureMessage) {
+                SchemaUtils.create(TableDuplicatedColumnRefereToIntIdTable)
+            }
+            assertFails(assertionFailureMessage) {
+                SchemaUtils.create(TableDuplicatedColumnRefereToTable)
+            }
+        }
+    }
+
+    // https://github.com/JetBrains/Exposed/issues/709
+    @Test
+    fun replaceColumnToDuplicateColumn() {
+        val assertionFailureMessage = "Can't replace a column with another one that has the same name as an existing column"
+
+        withTables(IDTable) {
+            assertFailsWith(exceptionClass =    DuplicateColumnException::class,
+                            message =           assertionFailureMessage
+            ) {
+                //Duplicate the id column by replacing the IDTable.code by a column with the name "id"
+                val id = Column<Int>(IDTable, IDTable.id.name, IDTable.id.columnType)
+                IDTable.replaceColumn(IDTable.code, id)
+            }
+        }
+    }
+
     object TableFromSchemeOne : IntIdTable("one.test")
 
     object TableFromSchemeTwo : IntIdTable("two.test") {
         val reference = reference("testOne", TableFromSchemeOne)
+    }
+
+    object TableWithDuplicatedColumn : Table("myTable") {
+        val id1 = integer("id")
+        val id2 = integer("id")
+    }
+
+    object IDTable : IntIdTable("myTable") {
+        val code = integer("code")
+    }
+
+    object TableDuplicatedColumnRefereToIntIdTable : IntIdTable("myTable") {
+        val reference = reference("id", IDTable)
+    }
+
+    object TableDuplicatedColumnRefereToTable : Table("myTable") {
+        val reference = reference("id", TableWithDuplicatedColumn.id1)
     }
 }
 

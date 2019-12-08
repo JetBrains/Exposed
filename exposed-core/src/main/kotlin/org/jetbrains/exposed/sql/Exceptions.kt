@@ -37,4 +37,14 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
 
 class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
 
+/**
+ * DuplicateColumnException is thrown :
+ *
+ * When you attempt to create a table with multiple columns having the same name.
+ * When you replace a column of a table so that you define multiple columns having the same name.
+ *
+ * @param columnName the duplicated column name
+ */
+class DuplicateColumnException(columnName: String) : ExceptionInInitializerError("Duplicate column name : $columnName")
+
 internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)
