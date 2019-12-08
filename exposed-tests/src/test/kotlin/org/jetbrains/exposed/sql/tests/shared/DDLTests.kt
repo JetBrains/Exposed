@@ -325,7 +325,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         /**
-         * We are excluding H2 because it is covered by the test {@link #testAddCompositePrimaryKeyToTableH2()}
+         * We are excluding H2 because it is covered by the test [testAddCompositePrimaryKeyToTableH2]
          */
         withTables(listOf(TestDB.H2, TestDB.H2_MYSQL), table) {
             val tableProperName = tableName.inProperCase()
