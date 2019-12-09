@@ -13,6 +13,11 @@ interface DdlAware {
     fun dropStatement(): List<String>
 }
 
+/**
+ * Represents reference constraint actions.
+ * Read [Referental actions](https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html#foreign-key-referential-actions) from MySQL docs
+ * or on [StackOverflow](https://stackoverflow.com/a/6720458/813981)
+ */
 enum class ReferenceOption {
     CASCADE,
     SET_NULL,
