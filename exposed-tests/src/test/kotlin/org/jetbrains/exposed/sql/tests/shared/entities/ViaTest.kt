@@ -171,4 +171,13 @@ class ViaTests : DatabaseTestsBase() {
         }
 
     }
+
+    @Test fun testRefresh() {
+        withTables(*ViaTestData.allTables) {
+            val s = VString.new { text = "ccc" }.apply {
+                refresh(true)
+            }
+            assertEquals("ccc", s.text)
+        }
+    }
 }
