@@ -2,6 +2,8 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.statements.api.ExposedConnection
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
@@ -9,10 +11,10 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.DefaultTransactionDefinition
 import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
-import java.sql.Connection
 import javax.sql.DataSource
 
 
@@ -20,6 +22,10 @@ class SpringTransactionManager(private val _dataSource: DataSource,
                                @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL,
                                @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
+
+    init {
+        this.isRollbackOnCommitFailure = true
+    }
 
     private val db = Database.connect(_dataSource) { this }
 
@@ -45,7 +51,19 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
-        currentOrNull()?.commit()
+        try {
+            currentOrNull()?.commit()
+        } catch (e: Exception) {
+            throw TransactionSystemException(e.message.orEmpty(), e)
+        }
+    }
+
+    override fun doRollback(status: DefaultTransactionStatus) {
+        try {
+            currentOrNull()?.rollback()
+        } catch (e: Exception) {
+            throw TransactionSystemException(e.message.orEmpty(), e)
+        }
     }
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
@@ -59,8 +77,9 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     private fun initTransaction(): Transaction {
-        val connection = (TransactionSynchronizationManager.getResource(dataSource) as ConnectionHolder).connection
-        val transactionImpl = SpringTransaction(connection, db, defaultIsolationLevel, currentOrNull())
+        val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
+
+        val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
@@ -69,7 +88,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
 
-    private class SpringTransaction(override val connection: Connection, override val db: Database, override val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
+    private class SpringTransaction(override val connection: ExposedConnection<*>, override val db: Database, override val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
 
         override fun commit() {
             connection.run {

@@ -1,3 +1,109 @@
+# 0.19.1
+Broken changes:
+* `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable` classes from `exposed-core` 
+were moved from `org.jetbrains.exposed.dao` to `org.jetbrains.exposed.dao.id` package along with `exposed-jodatime` module classes to support Java 9 module system.
+To help with migration, old classes were deprecated with proper `replaceWith` option. Read [migration guide](https://github.com/JetBrains/Exposed/wiki/Migration-Guide#migrating-to-019) for more details.
+
+Features:
+* `selectBatched` and `selectAllBatched` functions added to make queries in batches ([#642](https://github.com/JetBrains/Exposed/issues/642)). Many thanks to [Pin-Sho Feng](https://github.com/red-avtovo) for a PR.
+* Added UpdateBuilder.update expression builder version ([#700](https://github.com/JetBrains/Exposed/issues/700)). Another useful PR from [spand](https://github.com/spand)
+* New SQL datetime functions year, day, hour, minute, second ([#707](https://github.com/JetBrains/Exposed/issues/707)). Helpful PR from [hichem-fazai](https://github.com/hichem-fazai)
+
+Bug fixes:
+* SpringTransactionManager doesn't properly rollback transactions in some cases ([#666](https://github.com/JetBrains/Exposed/issues/666))
+* Compilation error Field name 'Oracle12+' cannot be represented in dex format. ([#668](https://github.com/JetBrains/Exposed/issues/668))
+* Enable comparing(less/lessEq/greater/greaterEq) to nullable column ([#694](https://github.com/JetBrains/Exposed/issues/694)). Thank you [Toshiaki Kameyama](https://github.com/t-kameyama).
+* Fixed insert statements with expression as a value.
+* Do not load related entities multiple times when using eager loading with the same entities. Small but useful fix from [kenta.koyama](https://github.com/doyaaaaaken)
+* Failed on create a FK for a table created in another database schema ([#701](https://github.com/JetBrains/Exposed/issues/701))
+
+# 0.18.1
+Major changes:
+* New modules model. For more details please read dependencies section and migration guide in wiki.
+* Java 8 Time API support
+
+# 0.17.7
+Deprecations:
+* Remove deprecated Expression.toSQL 
+* `newSuspendedTransactionAsync` now returns `Deferred` instead of `TransactionResult` (which was removed completely)
+* `TransactionResult.andThen` function was removed 
+
+Features:
+* Added `autoGenerate` method for uuid columns to generate UUID on client side ([#664](https://github.com/JetBrains/Exposed/issues/664)). PR from [Aleks](https://github.com/red-avtovo).
+
+Bug fixes:
+* [Coroutines] newSuspendedTransaction captures outer transaction and then close it before return to outer block
+* [Coroutines] IllegalArgumentException thrown when List<Deferred<T>>.awaitAll() is used on List<TransactionResult<T>> ([#658](https://github.com/JetBrains/Exposed/issues/658))
+* identifierLengthLimit should not be lazy initialized
+* Immutable entities wasn't invalidated in some cases ([#665](https://github.com/JetBrains/Exposed/issues/665)). PR from [Dmitry Dolzhenko](https://github.com/dsdolzhenko).
+* Rework resolving auto increment type to handle own ColumnType implementation ([#663](https://github.com/JetBrains/Exposed/issues/663)). PR from [Mateusz Śledź](https://github.com/sledzmateusz).
+* Fixing the `month` built-in function in case of all database dialects ([#670](https://github.com/JetBrains/Exposed/issues/670)). PR from [hichem-fazai](https://github.com/hichem-fazai)
+* Compilation error Field name 'Oracle12+' cannot be represented in dex format. ([#668](https://github.com/JetBrains/Exposed/issues/668))
+* [SQLite] Problem with `autoIncrement()` and `primaryKey()`. ([#649](https://github.com/JetBrains/Exposed/issues/649)), ([#669](https://github.com/JetBrains/Exposed/issues/669))
+* fixes in error logging of expressions.
+
+# 0.17.6
+Critical bug fix:
+* Outer transaction wasn't restored after inner transaction failed on exception
+
+Bug fixes:
+* ORA-00972: identifier is too long. Oracle 11g ([#654](https://github.com/JetBrains/Exposed/issues/654))
+
+Features:
+* shortParam/shortLiteral, floatParam/floatLiteral, doubleParam/doubleLiteral added ([#648](https://github.com/JetBrains/Exposed/issues/648))
+* Warmup for backReferences via `load` and `with` functions was supported
+
+# 0.17.5
+Critical bug fix:
+* Transaction isolation level wasn't applied to transaction
+
+# 0.17.4
+Critical bug fix:
+* `and` function executed on `And` expression mutates expression state
+
+Features:
+* `SchemaUtils` functions (`create/createMissingTablesAndColumns/drop`) could be executed with `inBatch` flag to perform related functions in a single batch (where possible)
+
+Performance:
+* Speed up scheme analysis within for MySQL in place where column constraints metadata is required
+
+# 0.17.3
+Infrastructure:
+* Kotlin updated to 1.3.50
+
+Features:
+* Added `short` column type support backed with `SMALLINT` SQL type
+* Added `greater/greaterEq/less/lessEq` functions with EntityID parameter ([#619](https://github.com/JetBrains/Exposed/issues/619))
+
+Bug fixes:
+* CURRENT_TIMESTAMP/NOW used as DEFAULT were broken for MySQL in some cases ([#631](https://github.com/JetBrains/Exposed/issues/631). Thanks [Saeed Shahrivari](https://github.com/shahrivari) for initial PR.   
+
+# 0.17.2
+Bug fixes:
+* MySQL match function is broken
+* notInList function doesn't work with list of EntityID. Thank you [kenta.koyama](https://github.com/doyaaaaaken) for a PR.
+
+# 0.17.1
+Performance:
+* QueryBuilder and Expression were reworked to lower object allocation when preparing SQL.
+
+**Important**: 
+
+This version has a broken change: `Expression.toSQL` was replaced with `Expression.toQueryBuilder`.
+Difference is what `toQueryBuilder` doesn't return `String` representation of an `Expression` but only register it in a `QueryBuilder`.
+If you need to get raw SQL value please use `Expression.toString`.
+
+# 0.16.4
+Features:
+* Added where in subquery ([#610](https://github.com/JetBrains/Exposed/issues/610)). Kudos to [Manabu OHTAKE](https://github.com/otkmnb2783) for PR. 
+
+Bug fixes:
+* ClassCastException on an attempt to flush IdTable with reference to Table
+* Fixed needQuotes check of already quoted identifiers ([#614](https://github.com/JetBrains/Exposed/issues/614)). Thanks [mpe85](https://github.com/mpe85)
+* Suspend transactions broken when working with multiple databases ([#624](https://github.com/JetBrains/Exposed/issues/624))
+* Unnecessary select when preloading absent references ([#615](https://github.com/JetBrains/Exposed/issues/615))
+* Updates of entities were executed in random order what could lead to unexpected behavior 
+
 # 0.16.3
 Features:
 * Added `rightJoin`, `fullJoin` and `crossJoin` functions. [Fedor Korotkov](https://github.com/fkorotkov) thanks for PR.  
