@@ -5,6 +5,7 @@ import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.Wrapper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -13,9 +14,14 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 private val Transaction.isMySQLMode: Boolean
-    get() = (connection.connection as? JdbcConnection)?.let {
-        !it.isClosed && it.settings.mode.enum == Mode.ModeEnum.MySQL
-    } == true
+    get() {
+        val h2Connection = (connection.connection as? JdbcConnection)
+                ?: (connection.connection as? Wrapper)?.takeIf { it.isWrapperFor(JdbcConnection::class.java) }?.unwrap(JdbcConnection::class.java)
+
+        return h2Connection?.let {
+            !it.isClosed && it.settings.mode.enum == Mode.ModeEnum.MySQL
+        } == true
+    }
 
 
 internal object H2FunctionProvider : FunctionProvider() {
