@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -33,11 +34,18 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
      * @throws EntityNotFoundException if entity no longer exists in database
      */
     open fun refresh(flush: Boolean = false) {
-        if (flush) flush() else writeValues.clear()
+        val cache = TransactionManager.current().entityCache
+        val isNewEntity = id._value == null
+        when {
+            isNewEntity && flush -> cache.flushInserts(klass.table)
+            flush -> flush()
+            isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
+            else -> writeValues.clear()
+        }
 
         klass.removeFromCache(this)
         val reloaded = klass[id]
-        TransactionManager.current().entityCache.store(this)
+        cache.store(this)
         _readValues = reloaded.readValues
     }
 

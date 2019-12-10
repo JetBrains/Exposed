@@ -29,6 +29,9 @@ open class UserDataHolder {
 
 open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
 
+    init {
+        Companion.globalInterceptors // init interceptors
+    }
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
     fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
