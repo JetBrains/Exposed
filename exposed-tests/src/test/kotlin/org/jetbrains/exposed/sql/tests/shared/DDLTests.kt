@@ -301,12 +301,13 @@ class DDLTests : DatabaseTestsBase() {
         val tableName = "Foo"
         val t = object : Table(tableName) {
             val id1 = integer("id1").primaryKey()
-            val id2 = integer("id2").primaryKey()
+            val id2 = integer("ID2").primaryKey()
         }
 
         withTables(t) {
-            val id1ProperName = t.id1.name.inProperCase()
-            val id2ProperName = t.id2.name.inProperCase()
+            val tr = TransactionManager.current()
+            val id1ProperName = tr.identity(t.id1)
+            val id2ProperName = tr.identity(t.id2)
 
             assertEquals(
                     "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +

@@ -180,7 +180,8 @@ class EntityTests: DatabaseTestsBase() {
     object Posts : LongIdTable(name = "posts") {
         val board = optReference("board", Boards)
         val parent = optReference("parent", this)
-        val category = optReference("category", Categories.uniqueId)
+        val category = optReference("category", Categories.uniqueId).uniqueIndex()
+        val optCategory = optReference("optCategory", Categories.uniqueId)
     }
 
     object Categories : IntIdTable() {
@@ -201,6 +202,7 @@ class EntityTests: DatabaseTestsBase() {
         var board by Board optionalReferencedOn Posts.board
         var parent by Post optionalReferencedOn Posts.parent
         var category by Category optionalReferencedOn Posts.category
+        var optCategory by Category optionalReferencedOn Posts.optCategory
     }
 
 
@@ -209,7 +211,7 @@ class EntityTests: DatabaseTestsBase() {
 
         val uniqueId by Categories.uniqueId
         var title by Categories.title
-        val posts by Post optionalReferrersOn Posts.category
+        val posts by Post optionalReferrersOn Posts.optCategory
 
         override fun equals(other: Any?) = (other as? Category)?.id?.equals(id) == true
         override fun hashCode() = id.value.hashCode()
@@ -366,17 +368,17 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             val post1 = Post.new {
-                category = category1
+                optCategory = category1
             }
 
             val post2 = Post.new {
-                category = category1
+                optCategory = category1
                 parent = post1
             }
 
             assertEquals(2, Post.all().count())
             assertEquals(2, category1.posts.count())
-            assertEquals(2, Posts.select { Posts.category eq category1.uniqueId }.count())
+            assertEquals(2, Posts.select { Posts.optCategory eq category1.uniqueId }.count())
         }
     }
 
@@ -388,11 +390,11 @@ class EntityTests: DatabaseTestsBase() {
             }
 
             Post.new {
-                category = category1
+                optCategory = category1
             }
 
             Post.new {
-                category = category1
+                optCategory = category1
             }
             commit()
 
@@ -415,6 +417,40 @@ class EntityTests: DatabaseTestsBase() {
             assertEqualLists(listOf(category1, category3, category2), Category.all().toList())
             assertEqualLists(listOf(category1, category2, category3), Category.all().orderBy(Categories.title to SortOrder.ASC).toList())
             assertEqualLists(listOf(category3, category2, category1), Category.all().orderBy(Categories.title to SortOrder.DESC).toList())
+        }
+    }
+
+    @Test fun `test what update of inserted entities goes before an insert`() {
+        withTables(Categories, Posts) {
+            addLogger(StdOutSqlLogger)
+            val category1 = Category.new {
+                title = "category1"
+            }
+
+            val category2 = Category.new {
+                title = "category2"
+            }
+
+            val post1 = Post.new {
+                category = category1
+            }
+
+            flushCache()
+            assertEquals(post1.category, category1)
+
+            post1.category = category2
+
+
+            val post2 = Post.new {
+                category = category1
+            }
+
+            flushCache()
+            Post.reload(post1)
+            Post.reload(post2)
+
+            assertEquals(category2, post1.category)
+            assertEquals(category1, post2.category)
         }
     }
 

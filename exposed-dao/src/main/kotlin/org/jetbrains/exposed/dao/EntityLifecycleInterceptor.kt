@@ -18,8 +18,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             is InsertStatement<*> -> {
-                if (statement.flushCache)
-                    transaction.flushCache()
+                transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
             }
 

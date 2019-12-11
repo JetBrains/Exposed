@@ -249,6 +249,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 writeValues[col as Column<Any?>] = readValues[col]
             }
             warmCache().scheduleInsert(this, prototype)
+            check(prototype in warmCache().inserts[this.table]!!)
         }
         return prototype
     }

@@ -27,9 +27,9 @@ class H2Tests : DatabaseTestsBase() {
 
     @Test
     fun replaceInH2WithoutMySQLMode() {
-        withDb(TestDB.H2) {
+        withDb(TestDB.SQLITE) {
 
-            SchemaUtils.create(Testing)
+            SchemaUtils.create(Testing, RefTable)
             assertFailsWith(UnsupportedOperationException::class) {
                 Testing.replace {
                     it[Testing.id] = 1
@@ -39,6 +39,11 @@ class H2Tests : DatabaseTestsBase() {
     }
 
     object Testing : Table("H2_TESTING") {
-        val id = integer("id").autoIncrement().primaryKey() // Column<Int>
+        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
+    }
+
+    object RefTable : Table() {
+        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
+        val ref = reference("test", Testing.id)
     }
 }
