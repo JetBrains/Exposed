@@ -235,6 +235,37 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return newColumn
     }
 
+    var isCustomPKNameDefined = false
+
+    /**
+     * The primary key class.
+     *
+     * @param columns list of columns in the primarykey
+     * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
+     */
+    inner class PrimaryKey(val columns: List<Column<*>>, var name: String = "") {
+        init {
+            for (column in columns) {
+                column.primaryKey()
+            }
+            if (name.isEmpty()) {
+                name = "pk_${tableName}"
+            } else {
+                isCustomPKNameDefined = true
+            }
+        }
+    }
+
+    /**
+     * Represents the primary key of the table. It is initialized with existing keys.
+     */
+    open val primaryKey = PrimaryKey(getPrimaryKeyColumns(), "")
+
+    /**
+     * Returns the list of columns in the primary key.
+     */
+    private fun getPrimaryKeyColumns(): List<Column<*>> = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+
     /**
      * Mark @receiver column as primary key.
      *
@@ -588,7 +619,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-                if (columns.none { it.isOneColumnPK() }) {
+                if (isCustomPKNameDefined || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let {
                         append(", $it")
                     }
@@ -625,7 +656,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
         if (pkey.isNotEmpty()) {
             val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote("pk_$tableName")
+            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return pkey.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)
