@@ -6,12 +6,13 @@ import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import java.sql.ResultSet
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Locale
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
@@ -106,6 +107,41 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+class JavaInstantColumnType : ColumnType(), IDateColumnType {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.dateTimeType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val instant = when (value) {
+            is String -> return value
+            is Instant -> value
+            is java.sql.Timestamp -> value.toInstant()
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+    }
+
+    override fun valueFromDB(value: Any): Instant = when(value) {
+        is java.sql.Timestamp -> value.toInstant()
+        is String -> Instant.parse(value)
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return rs.getTimestamp(index)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (value is Instant) {
+            return java.sql.Timestamp.from(value)
+        }
+        return value
+    }
+
+    companion object {
+        internal val INSTANCE = JavaInstantColumnType()
+    }
+}
 
 /**
  * A date column to store a date.
@@ -119,4 +155,11 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocal
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType.INSTANCE)
+
+/**
+ * A timestamp column to store both a date and a time.
+ *
+ * @param name The column name
+ */
+fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType.INSTANCE)
