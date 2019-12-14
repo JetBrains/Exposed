@@ -255,7 +255,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
-            if (isForUpdate())
+            if (!isForUpdate())
                 limit = 1
             return !transaction.exec(this)!!.next()
         } finally {
