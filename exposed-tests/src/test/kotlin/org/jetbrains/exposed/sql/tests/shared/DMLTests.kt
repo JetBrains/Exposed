@@ -635,7 +635,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test
     fun orderBy03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.selectAll().orderBy(users.cityId to false, users.id to true).toList()
+            val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
