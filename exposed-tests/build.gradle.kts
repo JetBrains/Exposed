@@ -13,7 +13,7 @@ repositories {
 val dialect: String by project
 
 dependencies {
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.2")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
@@ -22,7 +22,7 @@ dependencies {
     implementation("log4j", "log4j", "1.2.17")
     implementation("junit", "junit", "4.12")
     implementation("org.hamcrest", "hamcrest-library", "1.3")
-    implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", "1.3.2")
+    implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", "1.3.3")
 
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
     implementation("mysql", "mysql-connector-mxj", "5.0.12")
