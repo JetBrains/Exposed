@@ -227,7 +227,7 @@ class EntityTests: DatabaseTestsBase() {
     @Test
     fun testInsertChildWithoutFlush() {
         withTables(Boards, Posts) {
-            val parent = Post.new {  }
+            val parent = Post.new { this.category = Category.new { title = "title" } }
             Post.new { this.parent = parent } // first flush before referencing
             assertEquals(2, Post.all().count())
         }
@@ -259,7 +259,7 @@ class EntityTests: DatabaseTestsBase() {
     @Test
     fun testInsertChildWithFlush() {
         withTables(Boards, Posts) {
-            val parent = Post.new {  }
+            val parent = Post.new { this.category = Category.new { title = "title" } }
             flushCache()
             assertNotNull(parent.id._value)
             Post.new { this.parent = parent }
@@ -270,8 +270,11 @@ class EntityTests: DatabaseTestsBase() {
     @Test
     fun testInsertChildWithChild() {
         withTables(Boards, Posts) {
-            val parent = Post.new {  }
-            val child1 = Post.new { this.parent = parent }
+            val parent = Post.new { this.category = Category.new { title = "title1" } }
+            val child1 = Post.new {
+                this.parent = parent
+                this.category = Category.new { title = "title2" }
+            }
             Post.new { this.parent = child1 }
             flushCache()
         }
@@ -281,7 +284,10 @@ class EntityTests: DatabaseTestsBase() {
     fun testOptionalReferrersWithDifferentKeys() {
         withTables(Boards, Posts) {
             val board = Board.new { name = "irrelevant" }
-            val post1 = Post.new { this.board = board }
+            val post1 = Post.new {
+                this.board = board
+                this.category = Category.new { title = "title" }
+            }
             assertEquals(1, board.posts.count())
             assertEquals(post1, board.posts.single())
 
@@ -369,6 +375,7 @@ class EntityTests: DatabaseTestsBase() {
 
             val post1 = Post.new {
                 optCategory = category1
+                category = Category.new { title = "title" }
             }
 
             val post2 = Post.new {
@@ -391,6 +398,7 @@ class EntityTests: DatabaseTestsBase() {
 
             Post.new {
                 optCategory = category1
+                category = Category.new { title = "title" }
             }
 
             Post.new {
