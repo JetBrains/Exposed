@@ -259,7 +259,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     /**
      * Represents the primary key of the table. It is initialized with existing keys.
      */
-    open val primaryKey = PrimaryKey(getPrimaryKeyColumns(), "")
+    open val primaryKey by lazy { PrimaryKey(getPrimaryKeyColumns(), "") }
 
     /**
      * Returns the list of columns in the primary key.
@@ -652,7 +652,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     internal fun primaryKeyConstraint(): String? {
-        val pkey = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+        val pkey = primaryKey.columns
 
         if (pkey.isNotEmpty()) {
             val tr = TransactionManager.current()
