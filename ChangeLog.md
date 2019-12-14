@@ -1,7 +1,4 @@
 # 0.19.3
-* `Query.empty()` shouldn't add LIMIT 1 if query is marked as forUpdate() ([#684](https://github.com/JetBrains/Exposed/issues/684))
-
-# 0.19.2
 Deprecations:
 * `Query.orderBy()` functions with boolean sort parameter were removed
 
@@ -9,6 +6,8 @@ Bug fixes:
 * NoSuchElementException: List is empty on updating not flushed entities ([#708](https://github.com/JetBrains/Exposed/issues/708))
 * Replace function fails on H2 in MySQL mode when using pool 
 * Delayed DAO update flush causes unique constraint violation ([#717](https://github.com/JetBrains/Exposed/issues/717))
+* `Query.empty()` shouldn't add LIMIT 1 if query is marked as forUpdate() ([#684](https://github.com/JetBrains/Exposed/issues/684))
+
 
 # 0.19.1
 Broken changes:
