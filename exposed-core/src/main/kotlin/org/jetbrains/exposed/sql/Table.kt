@@ -681,11 +681,10 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     else -> error("No target provided for update")
 }
 
-private fun <T> ArrayList<Column<*>>.addColumn(column: Column<T>) {
+private fun <T> MutableList<Column<*>>.addColumn(column: Column<T>) {
     if (this.any { it.name == column.name }) {
         throw DuplicateColumnException(column.name)
     } else {
         this.add(column)
     }
 }
-
