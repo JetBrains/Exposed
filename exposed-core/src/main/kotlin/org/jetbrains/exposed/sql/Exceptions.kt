@@ -45,6 +45,6 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  *
  * @param columnName the duplicated column name
  */
-class DuplicateColumnException(columnName: String) : ExceptionInInitializerError("Duplicate column name : $columnName")
+class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError("Duplicate column name \"$columnName\" in table \"$tableName\"")
 
 internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)

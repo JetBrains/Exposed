@@ -665,6 +665,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    private fun <T> MutableList<Column<*>>.addColumn(column: Column<T>) {
+        if (this.any { it.name == column.name }) {
+            throw DuplicateColumnException(column.name, tableName)
+        } else {
+            this.add(column)
+        }
+    }
 }
 
 data class Seq(private val name: String) {
@@ -681,10 +689,3 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     else -> error("No target provided for update")
 }
 
-private fun <T> MutableList<Column<*>>.addColumn(column: Column<T>) {
-    if (this.any { it.name == column.name }) {
-        throw DuplicateColumnException(column.name)
-    } else {
-        this.add(column)
-    }
-}
