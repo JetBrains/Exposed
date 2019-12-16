@@ -88,10 +88,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is java.sql.Timestamp -> value.toLocalDateTime()
         is Int -> LocalDateTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault())
         is Long -> LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault())
-        is String -> when (currentDialect) {
-            is SQLiteDialect -> LocalDateTime.parse(value, SQLITE_DATE_TIME_STRING_FORMATTER)
-            else -> LocalDateTime.parse(value, formatterForDateString(value))
-        }
+        is String -> LocalDateTime.parse(value, formatterForDateString(value))
         else -> valueFromDB(value.toString())
     }
 
