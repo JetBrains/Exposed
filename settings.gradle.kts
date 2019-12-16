@@ -1,6 +1,7 @@
 rootProject.name = "exposed"
 include("exposed-core")
 include("exposed-dao")
+include("exposed-repository-dao")
 include("exposed-jodatime")
 include("exposed-java-time")
 include("spring-transaction")
