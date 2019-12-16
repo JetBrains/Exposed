@@ -228,7 +228,7 @@ class DefaultsTest : DatabaseTestsBase() {
     fun testDefaultExpressions02() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentTimestamp())
         }
 
         val nonDefaultDate = LocalDate.of(2000, 1, 1).atStartOfDay()

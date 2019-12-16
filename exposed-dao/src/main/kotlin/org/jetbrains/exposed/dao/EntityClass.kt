@@ -45,7 +45,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      * @param flush whether pending entity changes should be flushed previously
      */
     fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
-        if (flush) entity.flush()
+        if (flush) {
+            if (entity.id._value == null)
+                TransactionManager.current().entityCache.flushInserts(table)
+            else
+                entity.flush()
+        }
         removeFromCache(entity)
         return findById(entity.id)
     }
@@ -244,6 +249,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 writeValues[col as Column<Any?>] = readValues[col]
             }
             warmCache().scheduleInsert(this, prototype)
+            check(prototype in warmCache().inserts[this.table]!!)
         }
         return prototype
     }

@@ -172,18 +172,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    @Deprecated("use orderBy with SortOrder instead")
-    @JvmName("orderByDeprecated")
-    fun orderBy(column: Expression<*>, isAsc: Boolean) : Query = orderBy(column to isAsc)
-
     fun orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC) = orderBy(column to order)
-
-    @Deprecated("use orderBy with SortOrder instead")
-    @JvmName("orderByDeprecated2")
-    fun orderBy(vararg columns: Pair<Expression<*>, Boolean>) : Query {
-        (orderByExpressions as MutableList).addAll(columns.map{ it.first to if(it.second) SortOrder.ASC else SortOrder.DESC })
-        return this
-    }
 
     override fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
         (orderByExpressions as MutableList).addAll(columns)
@@ -266,7 +255,8 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
-            limit = 1
+            if (!isForUpdate())
+                limit = 1
             return !transaction.exec(this)!!.next()
         } finally {
             limit = oldLimit

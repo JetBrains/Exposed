@@ -10,8 +10,6 @@ class BatchDataInconsistentException(message : String) : Exception(message)
 
 open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<ResultRow>>(table, ignore) {
 
-    override val flushCache: Boolean = false
-
     override val isAlwaysBatch = true
 
     internal val data = ArrayList<MutableMap<Column<*>, Any?>>()

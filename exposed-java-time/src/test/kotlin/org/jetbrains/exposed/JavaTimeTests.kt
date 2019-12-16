@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -51,6 +52,8 @@ fun <T:Temporal> assertEqualDateTime(d1: T?, d2: T?) {
         d1 == null -> error("Impossible")
         d1 is LocalDateTime && d2 is LocalDateTime && (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
             assertEquals(d1.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000, d2.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
+        d1 is Instant && d2 is Instant && (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
+            assertEquals(d1.toEpochMilli() / 1000, d2.toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
         else -> assertEquals(d1, d2,   "Failed on ${currentDialectTest.name}")
     }
 }

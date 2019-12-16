@@ -459,12 +459,32 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun Column<UUID>.autoGenerate(): Column<UUID> = this.clientDefault { UUID.randomUUID() }
 
+    /**
+     * Create reference from a @receiver column to [ref] column with [onDelete] and [onUpdate] options.
+     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corespoding columns' values.
+     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     *
+     * @receiver A column from current table where reference values will be stored
+     * @param ref A column from another table which will be used as a "parent".
+     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
+     * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     */
     fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
         referee = ref
         this.onUpdate = onUpdate
         this.onDelete = onDelete
     }
 
+    /**
+     * Create reference from a @receiver column to [ref] column with [onDelete] and [onUpdate] options.
+     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corespoding columns' values.
+     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     *
+     * @receiver A column from current table where reference values will be stored
+     * @param ref A column from another table which will be used as a "parent".
+     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
+     * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     */
     @JvmName("referencesById")
     fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<EntityID<T>>, onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): C = apply {
         referee = ref
@@ -472,6 +492,15 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         this.onDelete = onDelete
     }
 
+    /**
+     * Create reference from a @receiver column to [ref] column.
+     *
+     * It's a short infix version of [references] function with default onDelete and onUpdate behavior.
+     *
+     * @receiver A column from current table where reference values will be stored
+     * @param ref A column from another table which will be used as a "parent".
+     * @see [references]
+     */
     infix fun <T:Comparable<T>, S: T, C:Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
 
     fun <T:Comparable<T>> reference(name: String, foreign: IdTable<T>,

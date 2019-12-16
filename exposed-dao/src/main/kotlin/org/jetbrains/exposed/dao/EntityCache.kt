@@ -12,6 +12,7 @@ val Transaction.entityEvents : MutableList<EntityChange> by transactionScope { C
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
+    internal var flushingEntities by transactionScope { false }
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
@@ -49,32 +50,46 @@ class EntityCache(private val transaction: Transaction) {
         flush(inserts.keys + data.keys)
     }
 
-    fun flush(tables: Iterable<IdTable<*>>) {
-        val insertedTables = inserts.keys
-
-        SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
-
-        for (t in tables) {
-            data[t]?.let { map ->
-                if (map.isNotEmpty()) {
-                    val updatedEntities = HashSet<Entity<*>>()
-                    val batch = EntityBatchUpdate(map.values.first().klass)
-                    for ((_, entity) in map) {
-                        if (entity.flush(batch)) {
-                            check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
-                            updatedEntities.add(entity)
-                        }
+    private fun updateEntities(idTable: IdTable<*>) {
+        data[idTable]?.let { map ->
+            if (map.isNotEmpty()) {
+                val updatedEntities = HashSet<Entity<*>>()
+                val batch = EntityBatchUpdate(map.values.first().klass)
+                for ((_, entity) in map) {
+                    if (entity.flush(batch)) {
+                        check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
+                        updatedEntities.add(entity)
                     }
-                    batch.execute(transaction)
-                    updatedEntities.forEach {
-                        EntityHook.registerChange(transaction, EntityChange(it.klass, it.id, EntityChangeType.Updated))
-                    }
+                }
+                batch.execute(transaction)
+                updatedEntities.forEach {
+                    EntityHook.registerChange(transaction, EntityChange(it.klass, it.id, EntityChangeType.Updated))
                 }
             }
         }
+    }
 
-        if (insertedTables.isNotEmpty()) {
-            removeTablesReferrers(insertedTables)
+    fun flush(tables: Iterable<IdTable<*>>) {
+        if (flushingEntities) return
+        try {
+            flushingEntities = true
+            val insertedTables = inserts.keys
+
+            val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
+            updateBeforeInsert.forEach(::updateEntities)
+
+            SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
+
+            val updateTheRestTables = tables - updateBeforeInsert
+            for (t in updateTheRestTables) {
+                updateEntities(t)
+            }
+
+            if (insertedTables.isNotEmpty()) {
+                removeTablesReferrers(insertedTables)
+            }
+        } finally {
+            flushingEntities = false
         }
     }
 

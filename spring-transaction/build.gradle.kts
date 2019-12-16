@@ -19,7 +19,7 @@ dependencies {
     implementation(project(":exposed-jdbc"))
     api("org.springframework", "spring-jdbc", SPRING_FRAMEWORK_VERSION)
     api("org.springframework", "spring-context", SPRING_FRAMEWORK_VERSION)
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.2")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
 
     testImplementation(project(":exposed-dao"))
     testImplementation(kotlin("test-junit"))

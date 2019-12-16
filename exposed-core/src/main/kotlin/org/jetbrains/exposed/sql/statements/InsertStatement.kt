@@ -12,7 +12,6 @@ import java.sql.SQLException
  * isIgnore is supported for mysql only
  */
 open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
-    open val flushCache = true
     var resultedValues: List<ResultRow>? = null
         private set
 
