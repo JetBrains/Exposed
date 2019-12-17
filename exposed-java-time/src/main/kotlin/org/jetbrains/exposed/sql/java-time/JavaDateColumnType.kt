@@ -137,10 +137,6 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         }
         return value
     }
-
-    companion object {
-        internal val INSTANCE = JavaInstantColumnType()
-    }
 }
 
 /**
@@ -155,11 +151,11 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocal
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType.INSTANCE)
+fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType.INSTANCE)
+fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
