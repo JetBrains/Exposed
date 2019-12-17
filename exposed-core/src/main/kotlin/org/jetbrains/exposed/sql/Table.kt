@@ -398,10 +398,23 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     /**
      * A binary column to store an array of bytes.
      *
+     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinary
+     *
      * @param name The column name
-     * @param length The maximum amount of bytes to store
+     * @param length The maximum amount of bytes to store, this parameter is necessary only in H2, SQLite, MySQL,
+     *               MariaDB, and SQL Server dialects.
      */
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
+
+    /**
+     * A binary column to store an array of bytes. This function is supported only by Oracle and PostgeSQL dialects.
+     * If you are using another dialect, please use instead the [binary] function by adding the length parameter.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinaryWithoutLength
+     *
+     * @param name The column name
+     */
+    fun binary(name: String): Column<ByteArray> = registerColumn(name, BasicBinaryColumnType())
 
     /**
      * A uuid column to store a UUID.

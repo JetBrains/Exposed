@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 internal typealias TableAndColumnName = Pair<String, String>
 
-open class DataTypeProvider {
+abstract class DataTypeProvider {
     open fun integerAutoincType() = "INT AUTO_INCREMENT"
 
     open fun integerType() = "INT"
@@ -29,6 +29,8 @@ open class DataTypeProvider {
     open fun blobType(): String = "BLOB"
 
     open fun binaryType(length: Int): String = "VARBINARY($length)"
+
+    open abstract fun binaryType(): String
 
     open fun booleanType(): String = "BOOLEAN"
 

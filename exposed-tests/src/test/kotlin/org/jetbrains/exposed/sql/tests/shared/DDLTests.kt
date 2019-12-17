@@ -434,8 +434,42 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testBinaryWithoutLength() {
+        val tableWithBinary = object : Table("TableWithBinary") {
+            val binaryColumn = binary("binaryColumn")
+        }
+
+        fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
+
+        withDb(listOf(TestDB.ORACLE,TestDB.POSTGRESQL)) {
+            val exposedBytes = "Exposed".toByteArray()
+            val kotlinBytes = "Kotlin".toByteArray()
+
+            SchemaUtils.create(tableWithBinary)
+
+            tableWithBinary.insert {
+                it[tableWithBinary.binaryColumn] = exposedBytes
+            }
+            val insertedExposed = tableWithBinary.selectAll().readAsString().single()
+
+            assertEquals("Exposed", insertedExposed)
+
+            tableWithBinary.insert {
+                it[tableWithBinary.binaryColumn] = kotlinBytes
+            }
+
+            assertEqualCollections(tableWithBinary.selectAll().readAsString(), "Exposed", "Kotlin")
+
+            val insertedKotlin = tableWithBinary.select { tableWithBinary.binaryColumn eq kotlinBytes }.readAsString()
+            assertEqualCollections(insertedKotlin, "Kotlin")
+
+            SchemaUtils.drop(tableWithBinary)
+        }
+    }
+
     @Test fun testBinary() {
-        val t = object : Table() {
+        val t = object : Table("t") {
             val binary = binary("bytes", 10)
             val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
