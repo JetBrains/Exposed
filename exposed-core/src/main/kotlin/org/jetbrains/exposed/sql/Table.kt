@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -222,7 +223,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * Adds a new column to a table.
      */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).apply {
-        _columns.add(this)
+        _columns.addColumn(this)
     }
 
     /**
@@ -231,7 +232,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun<TColumn: Column<*>> replaceColumn(oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
-        _columns.add(newColumn)
+        _columns.addColumn(newColumn)
         return newColumn
     }
 
@@ -260,7 +261,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
         val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
-        _columns.add(answer)
+        _columns.addColumn(answer)
         return answer
     }
 
@@ -524,7 +525,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
         val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
         val column = Column<T>(this, name, originalType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
-        this._columns.add(column)
+        this._columns.addColumn(column)
         return column
     }
 
@@ -706,6 +707,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    private fun <T> MutableList<Column<*>>.addColumn(column: Column<T>) {
+        if (this.any { it.name == column.name }) {
+            throw DuplicateColumnException(column.name, tableName)
+        } else {
+            this.add(column)
+        }
+    }
 }
 
 data class Seq(private val name: String) {
@@ -721,3 +730,4 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
+
