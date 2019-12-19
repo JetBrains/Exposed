@@ -16,7 +16,6 @@ import java.util.Locale
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
-private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss").withZone(ZoneId.systemDefault()) }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
@@ -88,10 +87,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is java.sql.Timestamp -> value.toLocalDateTime()
         is Int -> LocalDateTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault())
         is Long -> LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault())
-        is String -> when (currentDialect) {
-            is SQLiteDialect -> LocalDateTime.parse(value, SQLITE_DATE_TIME_STRING_FORMATTER)
-            else -> LocalDateTime.parse(value, formatterForDateString(value))
-        }
+        is String -> LocalDateTime.parse(value, formatterForDateString(value))
         else -> valueFromDB(value.toString())
     }
 
