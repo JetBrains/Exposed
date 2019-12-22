@@ -243,15 +243,39 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * @param columns list of columns in the primarykey
      * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
      */
-    inner class PrimaryKey(val columns: List<Column<*>>, var name: String = "") {
+    inner class PrimaryKey(vararg columns: Column<*>, var name: String = "") {
+        val columns = columns
         init {
+            checkMultipleDeclaration()
+
             for (column in columns) {
                 column.primaryKey()
             }
+
             if (name.isEmpty()) {
                 name = "pk_${tableName}"
             } else {
                 isCustomPKNameDefined = true
+            }
+        }
+
+        /** Check if both old and new declarations of primary key are defined.
+         *
+         * Workaround : unregister old primary keys and log error.
+         * This workaround must be removed when old [primaryKey] method is no longer supported.
+         */
+        private fun checkMultipleDeclaration() {
+            if (columns.isNotEmpty()) {
+                unregisterPrimaryKey()
+                exposedLogger.error("Confusion between multiple declarations of primary key. " +
+                                    "Use only override val primaryKey=PrimaryKey() declaration.")
+            }
+        }
+
+        // This workaround must be removed when old primaryKey(indx) method is no longer supported.
+        private fun unregisterPrimaryKey() {
+            for(column in columns) {
+                column.indexInPK = null
             }
         }
     }
@@ -259,7 +283,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     /**
      * Represents the primary key of the table. It is initialized with existing keys.
      */
-    open val primaryKey by lazy { PrimaryKey(getPrimaryKeyColumns(), "") }
+    open val primaryKey by lazy { PrimaryKey(*getPrimaryKeyColumns().toTypedArray()) }
 
     /**
      * Returns the list of columns in the primary key.
