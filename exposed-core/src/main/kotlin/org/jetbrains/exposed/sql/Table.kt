@@ -236,6 +236,88 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return newColumn
     }
 
+    var isCustomPKNameDefined = false
+
+    /**
+     * The primary key class.
+     */
+    inner class PrimaryKey {
+        val columns: List<Column<*>>
+        val name: String
+
+        /**
+         * Define the columns in the primary key of the current table. You can also provide the name of primary key constraint
+         * by passing the "name" argument. Example : PrimaryKey(id1, id2, id3..., name = "CustomPKName")
+         *
+         * @param columns list of columns in the primary key
+         * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
+         */
+        constructor(vararg columns: Column<*>, name: String = "") {
+            this.columns = columns.toList()
+
+            checkMultipleDeclaration()
+
+            for (column in columns) {
+                column.markPrimaryKey()
+            }
+
+            if (name.isEmpty()) {
+                this.name = "pk_${tableName}"
+            } else {
+                this.name = name
+                isCustomPKNameDefined = true
+            }
+        }
+
+        /**
+         * Initialize PrimaryKey class with columns defined using [primaryKey] method
+         *
+        * This constructor must be removed when [primaryKey] method is no longer supported.
+        */
+        internal constructor(columns: List<Column<*>>) {
+            this.columns = columns
+            this.name = "pk_${tableName}"
+        }
+
+        /**
+         * Mark @receiver column as an element of primary key.
+         */
+        private fun <T> Column<T>.markPrimaryKey() {
+            indexInPK = table.columns.count { it.indexInPK != null } + 1
+        }
+
+        /** Check if both old and new declarations of primary key are defined.
+         *
+         * Remove columns from primary key to take columns declared in PrimaryKey class instead.
+         * Log an error.
+         * This function must be removed when [primaryKey] method is no longer supported.
+         */
+        private fun checkMultipleDeclaration() {
+            if (this@Table.columns.any { it.indexInPK != null }) {
+                removeOldPrimaryKey()
+                exposedLogger.error("Confusion between multiple declarations of primary key. " +
+                                    "Use only override val primaryKey=PrimaryKey() declaration.")
+            }
+        }
+
+        /** This function must be removed when [primaryKey] method is no longer supported. */
+        private fun removeOldPrimaryKey() {
+            for (column in columns.filter { it.indexInPK != null }) {
+                column.indexInPK = null
+            }
+        }
+    }
+
+    /**
+     * Represents the primary key of the table. It is initialized with existing keys.
+     */
+    open val primaryKey by lazy { PrimaryKey(getPrimaryKeyColumns()) }
+
+    /**
+     * Returns the list of columns in the primary key.
+     */
+    private fun getPrimaryKeyColumns(): List<Column<*>> = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+
     /**
      * Mark @receiver column as primary key.
      *
@@ -245,6 +327,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      *
      * @param indx An optional column index in a primary key
      */
+    @Deprecated("This function will be no longer supported. Please use the new declarations of primary key by " +
+                "overriding the primaryKey property in the current table. " +
+                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(columns, name = \"CustomPKConstraintName\") }")
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> {
         if (indx != null && table.columns.any { it.indexInPK == indx } ) throw IllegalArgumentException("Table $tableName already contains PK at $indx")
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
@@ -631,7 +716,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-                if (columns.none { it.isOneColumnPK() }) {
+                if (isCustomPKNameDefined || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let {
                         append(", $it")
                     }
@@ -664,11 +749,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     internal fun primaryKeyConstraint(): String? {
-        val pkey = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+        val pkey = primaryKey.columns
 
         if (pkey.isNotEmpty()) {
             val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote("pk_$tableName")
+            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return pkey.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)

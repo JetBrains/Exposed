@@ -37,8 +37,9 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
-        val isLastColumnInPK = indexInPK != null && indexInPK == table.columns.mapNotNull { it.indexInPK }.max()
+        val isLastColumnInPK = table.primaryKey.columns.lastOrNull() == this
         val columnDefinition = when {
+            isOneColumnPK() && table.isCustomPKNameDefined && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
             isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
             !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
             else -> descriptionDdl()
@@ -54,19 +55,19 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
     override fun dropStatement() = listOf(TransactionManager.current().let {"ALTER TABLE ${it.identity(table)} DROP COLUMN ${it.identity(this)}" })
 
-    internal fun isOneColumnPK() = table.columns.singleOrNull { it.indexInPK != null } == this
+    internal fun isOneColumnPK() = table.primaryKey.columns.singleOrNull() == this
 
     fun descriptionDdl(): String = buildString {
         val tr = TransactionManager.current()
         append(tr.identity(this@Column))
         append(" ")
-        val isPKColumn = indexInPK != null
+        val isPKColumn = table.primaryKey.columns.contains(this@Column)
         val colType = columnType
         val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && colType.isAutoInc
 
         when {
             !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
-            isSQLiteAutoIncColumn && !isOneColumnPK() && table.columns.any{ it.indexInPK != null} -> append(currentDialect.dataTypeProvider.integerType())
+            isSQLiteAutoIncColumn && !isOneColumnPK() && table.primaryKey.columns.isNotEmpty() -> append(currentDialect.dataTypeProvider.integerType())
             else -> append(colType.sqlType())
         }
 
@@ -91,7 +92,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
             append(" NOT NULL")
         }
 
-        if (isOneColumnPK() && !isSQLiteAutoIncColumn) {
+        if (!table.isCustomPKNameDefined && isOneColumnPK() && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
     }
