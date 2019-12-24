@@ -249,6 +249,8 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
          * Define the columns in the primary key of the current table. You can also provide the name of primary key constraint
          * by passing the "name" argument. Example : PrimaryKey(id1, id2, id3..., name = "CustomPKName")
          *
+         * @sample org.jetbrains.exposed.sql.tests.demo.sql.Users
+         *
          * @param columns list of columns in the primary key
          * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
          */
