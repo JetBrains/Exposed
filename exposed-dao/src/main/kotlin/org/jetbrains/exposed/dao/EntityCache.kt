@@ -8,7 +8,6 @@ import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
 val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this) }
-val Transaction.entityEvents : MutableList<EntityChange> by transactionScope { CopyOnWriteArrayList<EntityChange>() }
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
@@ -63,7 +62,7 @@ class EntityCache(private val transaction: Transaction) {
                 }
                 batch.execute(transaction)
                 updatedEntities.forEach {
-                    EntityHook.registerChange(transaction, EntityChange(it.klass, it.id, EntityChangeType.Updated))
+                    transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
                 }
             }
         }
@@ -128,7 +127,7 @@ class EntityCache(private val transaction: Transaction) {
 
                     entry.storeWrittenValues()
                     store(entry)
-                    EntityHook.registerChange(transaction, EntityChange(entry.klass, entry.id, EntityChangeType.Created))
+                    transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
                 }
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())

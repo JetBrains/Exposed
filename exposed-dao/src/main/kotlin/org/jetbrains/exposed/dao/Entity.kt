@@ -135,7 +135,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
-        EntityHook.registerChange(TransactionManager.current(), EntityChange(klass, id, EntityChangeType.Removed))
+        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {

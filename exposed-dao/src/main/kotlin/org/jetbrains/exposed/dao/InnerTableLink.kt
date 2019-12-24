@@ -67,13 +67,13 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         }
 
         // current entity updated
-        EntityHook.registerChange(tx, EntityChange(o.klass, o.id, EntityChangeType.Updated))
+        tx.registerChange(o.klass, o.id, EntityChangeType.Updated)
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
-                EntityHook.registerChange(tx, EntityChange(targetClass, it, EntityChangeType.Updated))
+                tx.registerChange(targetClass, it, EntityChangeType.Updated)
             }
         }
     }
