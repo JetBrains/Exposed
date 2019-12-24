@@ -236,36 +236,26 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         return newColumn
     }
 
-    var isCustomPKNameDefined = false
+    internal fun isCustomPKNameDefined() : Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
 
     /**
      * The primary key class.
-     */
-    inner class PrimaryKey {
-        val columns: List<Column<*>>
-        val name: String
+     * Define the columns in the primary key of the current table. You can also provide the name of primary key constraint
+     * by passing the "name" argument. Example : PrimaryKey(id1, id2, id3..., name = "CustomPKName")
+     *
+     * @param columns list of columns in the primary key
+     * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
+    */
+    inner class PrimaryKey(
+        vararg val columns: Column<*>,
+        val name: String = "pk_$tableName"
+    ) {
 
-        /**
-         * Define the columns in the primary key of the current table. You can also provide the name of primary key constraint
-         * by passing the "name" argument. Example : PrimaryKey(id1, id2, id3..., name = "CustomPKName")
-         *
-         * @param columns list of columns in the primary key
-         * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
-         */
-        constructor(vararg columns: Column<*>, name: String = "") {
-            this.columns = columns.toList()
-
+        init {
             checkMultipleDeclaration()
 
             for (column in columns) {
                 column.markPrimaryKey()
-            }
-
-            if (name.isEmpty()) {
-                this.name = "pk_${tableName}"
-            } else {
-                this.name = name
-                isCustomPKNameDefined = true
             }
         }
 
@@ -274,10 +264,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
          *
         * This constructor must be removed when [primaryKey] method is no longer supported.
         */
-        internal constructor(columns: List<Column<*>>) {
-            this.columns = columns
-            this.name = "pk_${tableName}"
-        }
+        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
 
         /**
          * Mark @receiver column as an element of primary key.
@@ -309,14 +296,17 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     /**
-     * Represents the primary key of the table. It is initialized with existing keys.
+     * Represents the primary key of the table if present.
+     * It is initialized with existing keys defined by [Column.primaryKey] function for a backward compatibility,
+     * but you have to define it explicitly by overriding that val instead.
      */
-    open val primaryKey by lazy { PrimaryKey(getPrimaryKeyColumns()) }
+    open val primaryKey: PrimaryKey? by lazy { getPrimaryKeyColumns()?.let { PrimaryKey(it) } }
 
     /**
-     * Returns the list of columns in the primary key.
+     * Returns the list of columns in the primary key if present.
      */
-    private fun getPrimaryKeyColumns(): List<Column<*>> = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+    private fun getPrimaryKeyColumns(): List<Column<*>>?
+            = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK })).takeIf { it.isNotEmpty() }
 
     /**
      * Mark @receiver column as primary key.
@@ -329,7 +319,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     @Deprecated("This function will be no longer supported. Please use the new declarations of primary key by " +
                 "overriding the primaryKey property in the current table. " +
-                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(columns, name = \"CustomPKConstraintName\") }")
+                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }")
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> {
         if (indx != null && table.columns.any { it.indexInPK == indx } ) throw IllegalArgumentException("Table $tableName already contains PK at $indx")
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
@@ -716,7 +706,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-                if (isCustomPKNameDefined || columns.none { it.isOneColumnPK() }) {
+                if (isCustomPKNameDefined() || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let {
                         append(", $it")
                     }
@@ -749,17 +739,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     internal fun primaryKeyConstraint(): String? {
-        val pkey = primaryKey.columns
-
-        if (pkey.isNotEmpty()) {
+        return primaryKey?.let { primaryKey ->
             val tr = TransactionManager.current()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
-            return pkey.joinToString(
+            return primaryKey.columns.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)
             }
         }
-        return null
     }
 
     override fun dropStatement() : List<String> {
