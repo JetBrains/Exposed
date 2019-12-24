@@ -6,7 +6,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -22,8 +21,6 @@ import org.junit.Test
 import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
-import kotlin.test.assertFails
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -791,6 +788,10 @@ class DDLTests : DatabaseTestsBase() {
                     it[enumColumn] = Foo.Bar
                 }
                 assertEquals(Foo.Bar,  EnumTable.selectAll().single()[EnumTable.enumColumn])
+
+                EnumTable.update {
+                    it[enumColumn] = Foo.Baz
+                }
 
                 val entity = EnumClass.new {
                     enum = Foo.Baz
