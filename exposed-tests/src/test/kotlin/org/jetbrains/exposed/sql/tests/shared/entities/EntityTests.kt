@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -483,7 +484,8 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     @Test fun `test new(id) with get`() {
-        withTables(Parents, Children) {
+        // SQL Server doesn't support an explicit id for auto-increment table
+        withTables(listOf(TestDB.SQLSERVER), Parents, Children) {
             val parentId = Parent.new {
                 name = "parent1"
             }.id.value
