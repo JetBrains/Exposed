@@ -56,7 +56,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
-    private fun allColumnsInDataSet() = allColumnsInDataSet + data.last().keys
+    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys ?: error("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
