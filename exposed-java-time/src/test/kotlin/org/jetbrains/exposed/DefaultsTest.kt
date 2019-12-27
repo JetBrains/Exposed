@@ -118,10 +118,21 @@ class DefaultsTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun testRawBatchInsertFails02() {
+    fun testBatchInsertNotFails01() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.batchInsert(initBatch) { foo ->
                 foo(this)
+            }
+        }
+    }
+
+    @Test
+    fun testBatchInsertFails01() {
+        withTables(TableWithDBDefault) {
+            expectException<BatchDataInconsistentException> {
+                TableWithDBDefault.batchInsert(listOf(1)) {
+                    this[TableWithDBDefault.t1] = LocalDateTime.now()
+                }
             }
         }
     }
