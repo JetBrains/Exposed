@@ -1,5 +1,7 @@
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1) [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed-core/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed-core/_latestVersion)
+[![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
+[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1) 
+[![Download](https://api.bintray.com/packages/kotlin/exposed/exposed-core/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed-core/_latestVersion)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
 Exposed - Kotlin SQL Library
@@ -269,4 +271,5 @@ Outputs:
     Adults: b, c
 ```
 
-Find more examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki).
+Find more examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki). 
+If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
