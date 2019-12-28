@@ -12,10 +12,10 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.full.valueParameters
 
-fun <T:Any> KClass<T>.exposedTable() : Table = EntityTableRegistry.forClass(this)
+val <T:Any> KClass<T>.exposedTable : Table get() = EntityTableRegistry.forClass(this)
 
-inline fun <reified T:Any, R> KProperty1<T, R>.exposedColumn() : Column<R> = EntityTableRegistry {
-    T::class.exposedTable()[this@exposedColumn] as Column<R>
+inline val <reified T:Any, R> KProperty1<T, R>.exposedColumn : Column<R> get() = EntityTableRegistry {
+    T::class.exposedTable[this@exposedColumn]
 }
 
 object EntityTableRegistry {
