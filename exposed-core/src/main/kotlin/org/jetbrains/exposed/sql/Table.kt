@@ -282,9 +282,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
          * This function must be removed when [primaryKey] method is no longer supported.
          */
         private fun checkMultipleDeclaration() {
-            if (this@Table.columns.any { it.indexInPK != null }) {
+            val table = this@Table
+            if (table.columns.any { it.indexInPK != null }) {
                 removeOldPrimaryKey()
-                exposedLogger.error("Confusion between multiple declarations of primary key. " +
+                exposedLogger.error("Confusion between multiple declarations of primary key on ${table.tableName}. " +
                                     "Use only override val primaryKey=PrimaryKey() declaration.")
             }
         }
