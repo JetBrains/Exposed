@@ -40,7 +40,7 @@ abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
  */
 open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
     override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
-    override val primaryKey = PrimaryKey(id)
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -51,7 +51,7 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  */
 open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
     override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
-    override val primaryKey = PrimaryKey(id)
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -68,5 +68,5 @@ open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUI
     override val id: Column<EntityID<UUID>> = uuid(columnName)
             .autoGenerate()
             .entityId()
-    override val primaryKey = PrimaryKey(id)
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
