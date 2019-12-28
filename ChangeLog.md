@@ -1,3 +1,7 @@
+# 0.20.2
+Bug fixes:
+* Predefined `IntIdTable`/`LongIdTable`/`UUIDTable` should respect deprecated primaryKey declaration.
+
 # 0.20.1
 Features:
 * New way to define primary keys on tables were implemented by [hichem-fazai](https://github.com/hichem-fazai) to support custom primary key constraint keys. 
