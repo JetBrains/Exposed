@@ -219,7 +219,7 @@ abstract class FunctionProvider {
  * type:
  * @see java.sql.Types
  */
-data class ColumnMetadata(val name: String, val type: Int, val nullable: Boolean)
+data class ColumnMetadata(val name: String, val type: Int, val nullable: Boolean, val size: Int?)
 
 interface DatabaseDialect {
     val name: String
