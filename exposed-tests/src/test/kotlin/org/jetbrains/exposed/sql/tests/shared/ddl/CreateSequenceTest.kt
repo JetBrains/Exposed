@@ -55,7 +55,7 @@ class CreateSequenceTests : DatabaseTestsBase() {
         val id = integer("id")
         var name = varchar("name", 25)
 
-        override val primaryKey = PrimaryKey(id)
+        override val primaryKey = PrimaryKey(id, name)
     }
     val myseq = Seq(name= "my_sequence",
                     startWith= 4,
