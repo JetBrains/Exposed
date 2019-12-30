@@ -86,7 +86,20 @@ object SchemaUtils {
         } + alters
     }
 
-    fun createSequence(name: String) = Seq(name).createStatement()
+    fun createSequence(vararg seq:Seq, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = seq.flatMap { it.createStatement() }
+            execStatements(inBatch, createStatements)
+            commit()
+        }
+    }
+
+    fun dropSequence(vararg seq:Seq, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val dropStatements = seq.flatMap { it.dropStatement() }
+            execStatements(inBatch, dropStatements)
+        }
+    }
 
     fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
 

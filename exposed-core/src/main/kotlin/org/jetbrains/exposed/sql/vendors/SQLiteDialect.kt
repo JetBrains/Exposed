@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -105,6 +106,14 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return if (index.unique) originalCreateIndex.replace("CREATE INDEX", "CREATE UNIQUE INDEX")
         else originalCreateIndex
     }
+
+    override fun createSequence(identifier: String,
+                                startWith: Int?,
+                                incrementBy: Int?,
+                                minValue: Int?,
+                                maxValue: Int?,
+                                cycle: Boolean?,
+                                cache: Int?): String = throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", this)
 
     companion object {
         const val dialectName = "sqlite"

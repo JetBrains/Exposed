@@ -27,7 +27,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
         if (inserted > 0) {
             val returnedColumns =
-                (if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) autoIncColumns else table.columns).mapNotNull { col ->
+                (if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) autoIncColumns + nextValColumns else table.columns).mapNotNull { col ->
                     try {
                         rs?.findColumn(col.name)?.let { col to it }
                     } catch (e: SQLException) {
@@ -71,7 +71,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
-                    if (col.columnType.isAutoInc)
+                    if (col.columnType.isAutoInc || value is NextVal)
                         map.getOrPut(col) { value }
                     else
                         map[col] = value
@@ -107,7 +107,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
 
     protected open fun PreparedStatementApi.execInsertFunction() : Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
-        val rs = if (autoIncColumns.isNotEmpty()) { resultSet } else null
+        val rs = if (autoIncColumns.isNotEmpty() || nextValColumns.isNotEmpty()) { resultSet } else null
         return inserted to rs
     }
 
@@ -132,6 +132,9 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
             transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
 
+        nextValColumns.isNotEmpty() ->
+            transaction.connection.prepareStatement(sql, nextValColumns.map { it.name.inProperCase() }.toTypedArray())
+
         else ->
             transaction.connection.prepareStatement(sql, true)
     }
@@ -143,6 +146,17 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             val result = (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associate { it to null }).toList().sortedBy { it.first }
             listOf(result).apply { field = this }
         }
+
+    /**
+     * Columns that are set by the sequence [nextVal] function and not in [autoIncColumns] columns.
+     */
+    private val nextValColumns: List<Column<*>> by lazy {
+        arguments!!.flatten().filter {(column, value) ->
+            value is NextVal
+                    && !column.columnType.isAutoInc
+                    && (column.columnType !is EntityIDColumnType<*> || currentDialect.supportsOnlyIdentifiersInGeneratedKeys)
+        }.map { it.first }
+    }
 
     override fun arguments() = arguments!!.map { args ->
         args.filter { (_, value) ->

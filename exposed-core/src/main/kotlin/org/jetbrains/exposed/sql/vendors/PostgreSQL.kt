@@ -119,6 +119,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append(expr)
         append(")")
     }
+
+    override fun nextVal(seq: Seq, builder: QueryBuilder) = builder {
+        append("NEXTVAL('", seq.identifier, "')")
+    }
 }
 
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {

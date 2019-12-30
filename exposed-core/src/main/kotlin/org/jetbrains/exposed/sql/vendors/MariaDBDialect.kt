@@ -2,10 +2,15 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Seq
 
 internal object MariaDBFunctionProvider :  MysqlFunctionProvider() {
     override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
         queryBuilder{ append(expr1, " REGEXP ", pattern) }
+    }
+
+    override fun nextVal(seq: Seq, builder: QueryBuilder) = builder {
+        append("NEXTVAL(", seq.identifier, ")")
     }
 }
 

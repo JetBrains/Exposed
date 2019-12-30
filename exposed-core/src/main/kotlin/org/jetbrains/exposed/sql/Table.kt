@@ -792,9 +792,26 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 }
 
-data class Seq(private val name: String) {
-    private val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
-    fun createStatement() = listOf("CREATE SEQUENCE $identifier")
+/**
+ * Sequence : an object that generates a sequence of numeric values.
+ *
+ * @param name          The name of the sequence
+ * @param startWith     The first sequence number to be generated.
+ * @param incrementBy   The interval between sequence numbers.
+ * @param minValue      The minimum value of the sequence.
+ * @param maxValue      The maximum value of the sequence.
+ * @param cycle         Indicates that the sequence continues to generate values after reaching either its maximum or minimum value.
+ * @param cache         Number of values of the sequence the database preallocates and keeps in memory for faster access.
+ */
+data class Seq(private val name: String,
+               val startWith: Int? = null,
+               val incrementBy: Int? = null,
+               val minValue: Int? = null,
+               val maxValue: Int? = null,
+               val cycle: Boolean? = null,
+               val cache: Int? = null) {
+    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
+    fun createStatement() = listOf(currentDialect.createSequence(identifier, startWith, incrementBy, minValue, maxValue, cycle, cache))
     fun dropStatement() = listOf("DROP SEQUENCE $identifier")
 }
 

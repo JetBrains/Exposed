@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -128,6 +129,14 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     internal val isMysql8 by lazy {
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
     }
+
+    override fun createSequence(identifier: String,
+                                startWith: Int?,
+                                incrementBy: Int?,
+                                minValue: Int?,
+                                maxValue: Int?,
+                                cycle: Boolean?,
+                                cache: Int?): String = throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", this)
 
     companion object {
         const val dialectName = "mysql"
