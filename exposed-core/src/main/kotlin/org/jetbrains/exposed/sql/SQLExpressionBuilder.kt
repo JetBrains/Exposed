@@ -38,7 +38,7 @@ fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
 fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
 fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
 
-fun Seq.nextVal() : Function<Int> = NextVal(this)
+fun Sequence.nextVal() : Function<Int> = NextVal(this)
 
 fun<T:Any?> ExpressionWithColumnType<T>.function(functionName: String) : Function<T?> = CustomFunction(functionName, columnType, this)
 fun CustomStringFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<String?>(functionName, VarCharColumnType(), *params)

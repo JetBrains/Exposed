@@ -96,7 +96,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("DATEPART(YEAR, ", expr, ")")
     }
 
-    override fun nextVal(seq: Seq, builder: QueryBuilder) = builder {
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXT VALUE FOR ", seq.identifier)
     }
 }

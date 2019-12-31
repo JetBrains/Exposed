@@ -86,7 +86,7 @@ object SchemaUtils {
         } + alters
     }
 
-    fun createSequence(vararg seq:Seq, inBatch: Boolean = false) {
+    fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
@@ -94,7 +94,7 @@ object SchemaUtils {
         }
     }
 
-    fun dropSequence(vararg seq:Seq, inBatch: Boolean = false) {
+    fun dropSequence(vararg seq: Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val dropStatements = seq.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)

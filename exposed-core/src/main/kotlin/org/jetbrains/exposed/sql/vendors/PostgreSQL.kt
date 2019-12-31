@@ -120,7 +120,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append(")")
     }
 
-    override fun nextVal(seq: Seq, builder: QueryBuilder) = builder {
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXTVAL('", seq.identifier, "')")
     }
 }

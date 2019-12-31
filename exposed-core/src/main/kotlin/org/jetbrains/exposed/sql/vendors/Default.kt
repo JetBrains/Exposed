@@ -62,7 +62,7 @@ abstract class FunctionProvider {
         append(prefix, "(", expr, ", ", start, ", ", length, ")")
     }
 
-    open fun nextVal(seq: Seq, builder: QueryBuilder) = builder {
+    open fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append(seq.identifier,".NEXTVAL")
     }
 

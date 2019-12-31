@@ -57,11 +57,11 @@ class CreateSequenceTests : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id, name)
     }
-    val myseq = Seq(name= "my_sequence",
-                    startWith= 4,
-                    incrementBy= 2,
-                    minValue= 1,
-                    maxValue= 10,
-                    cycle= true,
-                    cache=20)
+    val myseq = Sequence(name= "my_sequence",
+                        startWith= 4,
+                        incrementBy= 2,
+                        minValue= 1,
+                        maxValue= 10,
+                        cycle= true,
+                        cache=20)
 }

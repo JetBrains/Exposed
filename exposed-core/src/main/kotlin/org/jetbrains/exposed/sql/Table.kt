@@ -696,7 +696,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun createStatement(): List<String> {
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).createStatement()
+            Sequence(it).createStatement()
         }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
@@ -768,7 +768,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             }
         }
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).dropStatement()
+            Sequence(it).dropStatement()
         }.orEmpty()
 
         return listOf(dropTableDDL) + seqDDL
@@ -803,13 +803,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
  * @param cycle         Indicates that the sequence continues to generate values after reaching either its maximum or minimum value.
  * @param cache         Number of values of the sequence the database preallocates and keeps in memory for faster access.
  */
-data class Seq(private val name: String,
-               val startWith: Int? = null,
-               val incrementBy: Int? = null,
-               val minValue: Int? = null,
-               val maxValue: Int? = null,
-               val cycle: Boolean? = null,
-               val cache: Int? = null) {
+data class Sequence(private val name: String,
+                    val startWith: Int? = null,
+                    val incrementBy: Int? = null,
+                    val minValue: Int? = null,
+                    val maxValue: Int? = null,
+                    val cycle: Boolean? = null,
+                    val cache: Int? = null) {
     val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
     fun createStatement() = listOf(currentDialect.createSequence(identifier, startWith, incrementBy, minValue, maxValue, cycle, cache))
     fun dropStatement() = listOf("DROP SEQUENCE $identifier")
