@@ -16,7 +16,6 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Assert.assertThat
-import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
@@ -1462,17 +1461,17 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    // https://github.com/JetBrains/Exposed/issues/743
-    // need to configure the MySQL server with character_set_server=utf8mb4?
-    // https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-charsets.html
-    @Ignore
     @Test fun testInsertEmojis() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 16)
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL), table) {
+        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL), table) {
+            val isOldMySQL = currentDialectTest is MysqlDialect && db.isVersionCovers(BigDecimal("5.5"))
+            if (isOldMySQL) {
+                exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
+            }
             table.insert {
                 it[table.emoji] = emojis
             }
