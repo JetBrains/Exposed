@@ -11,7 +11,7 @@ interface EntityIDFactory {
 object EntityIDFunctionProvider {
     private val factory : EntityIDFactory
     init {
-        factory = ServiceLoader.load(EntityIDFactory::class.java).firstOrNull()
+        factory = ServiceLoader.load(EntityIDFactory::class.java, EntityIDFactory::class.java.classLoader).firstOrNull()
                 ?: object : EntityIDFactory {
                     override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
                         return EntityID(value, table)

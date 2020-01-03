@@ -177,7 +177,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         internal val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
 
         init {
-            ServiceLoader.load(GlobalStatementInterceptor::class.java).forEach {
+            ServiceLoader.load(GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader).forEach {
                 globalInterceptors.add(it)
             }
         }
