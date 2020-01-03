@@ -386,7 +386,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     @Suppress("UNCHECKED_CAST")
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
-        registerColumn<T>(name, object : ColumnType() {
+        registerColumn<T>(name, object : StringColumnType() {
             override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
             override fun valueFromDB(value: Any) = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
             override fun notNullValueToDB(value: Any) = toDb(value as T)
