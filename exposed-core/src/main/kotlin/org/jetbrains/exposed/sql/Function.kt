@@ -23,6 +23,16 @@ open class CustomFunction<T>(val functionName: String, _columnType: IColumnType,
     }
 }
 
+// create a Function corresponding to a SQL binary operator
+open class CustomOperator<T>(val operatorName: String, _columnType: IColumnType, val expr1: Expression<*>, val expr2: Expression<*>) : Function<T>(_columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +"("
+        +expr1
+        +" $operatorName "
+        +expr2
+        +")"
+    }
+}
 class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("LOWER(", expr,")") }
 }
