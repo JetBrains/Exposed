@@ -67,7 +67,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
         when {
             !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
-            isSQLiteAutoIncColumn && !isOneColumnPK() && table.primaryKey != null -> append(currentDialect.dataTypeProvider.integerType())
+            isSQLiteAutoIncColumn && (!isOneColumnPK() || table.isCustomPKNameDefined()) && table.primaryKey != null -> append(currentDialect.dataTypeProvider.integerType())
             else -> append(colType.sqlType())
         }
 

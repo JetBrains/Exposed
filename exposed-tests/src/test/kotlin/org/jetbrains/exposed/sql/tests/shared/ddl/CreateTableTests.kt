@@ -130,6 +130,24 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun addOneColumnPrimaryKeyToTableNotH2Test() {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(Book)) {
+            val tableProperName = Book.tableName.inProperCase()
+            val pkConstraintName = Book.primaryKey.name
+            val id1ProperName = Book.id.name.inProperCase()
+            val ddlId1 = Book.id.ddl
+
+            assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl()}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)", ddlId1.first())
+        }
+    }
+
+    object Book : Table("Book") {
+        val id = integer("id").autoIncrement()
+
+        override val primaryKey = PrimaryKey(id, name = "PKConstraintName")
+    }
+
     object Person : Table("Person") {
         val id1 = integer("id1")
         val id2 = integer("id2")
