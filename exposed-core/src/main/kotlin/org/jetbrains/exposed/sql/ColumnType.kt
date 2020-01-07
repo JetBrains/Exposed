@@ -271,8 +271,11 @@ open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
     }
 }
 
-class BinaryColumnType(val length: Int) : ColumnType() {
-    override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
+/**
+ * Implements the binary column type.
+ */
+open class BasicBinaryColumnType : ColumnType() {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType()
 
     override fun valueFromDB(value: Any): Any {
         if (value is Blob) {
@@ -285,6 +288,15 @@ class BinaryColumnType(val length: Int) : ColumnType() {
         is ByteArray -> value.toString(Charsets.UTF_8)
         else -> "$value"
     }
+}
+
+/**
+ * Implements the binary column type.
+ *
+ * @param length The maximum amount of bytes to store
+ */
+class BinaryColumnType(val length: Int) : BasicBinaryColumnType() {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.binaryType(length)
 }
 
 class BlobColumnType : ColumnType() {

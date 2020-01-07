@@ -104,6 +104,9 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
             if(removeLastData)
                 validateLastBatch()
         } catch (e: BatchDataInconsistentException) {
+            if (this.data.size == 1) {
+                throw e
+            }
             val notTheFirstBatch = this.data.size > 1
             if (notTheFirstBatch) {
                 if (removeLastData) {

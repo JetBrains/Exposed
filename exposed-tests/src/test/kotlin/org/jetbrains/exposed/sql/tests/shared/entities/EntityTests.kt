@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -459,6 +460,45 @@ class EntityTests: DatabaseTestsBase() {
 
             assertEquals(category2, post1.category)
             assertEquals(category1, post2.category)
+        }
+    }
+
+    object Parents : LongIdTable() {
+        val name = varchar("name", 50)
+    }
+
+    class Parent(id: EntityID<Long>) : LongEntity(id) {
+        companion object : LongEntityClass<Parent>(Parents)
+        var name by Parents.name
+    }
+
+    object Children : LongIdTable() {
+        val companyId = reference("company_id", Parents)
+        val name = varchar("name", 80)
+    }
+
+    class Child(id: EntityID<Long>) : LongEntity(id) {
+        companion object : LongEntityClass<Child>(Children)
+        var parent by Parent referencedOn Children.companyId
+        var name by Children.name
+    }
+
+    @Test fun `test new(id) with get`() {
+        // SQL Server doesn't support an explicit id for auto-increment table
+        withTables(listOf(TestDB.SQLSERVER), Parents, Children) {
+            val parentId = Parent.new {
+                name = "parent1"
+            }.id.value
+
+            commit()
+
+            val child = Child.new(100L) {
+                parent = Parent[parentId]
+                name = "child1"
+            }
+
+            assertEquals(100L, child.id.value)
+            assertEquals(parentId, child.parent.id.value)
         }
     }
 

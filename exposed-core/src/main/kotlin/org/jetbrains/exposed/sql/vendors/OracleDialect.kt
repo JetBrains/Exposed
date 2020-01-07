@@ -22,7 +22,12 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun blobType() = "BLOB"
 
-    override fun binaryType(length: Int): String = "BLOB"
+    override fun binaryType(length: Int): String {
+        exposedLogger.warn("The length of the binary column is not required.")
+        return binaryType()
+    }
+
+    override fun binaryType(): String = "BLOB"
 
     override fun booleanType() = "CHAR(1)"
 

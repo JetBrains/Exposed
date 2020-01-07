@@ -61,7 +61,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
         private val connectionInstanceImpl : DatabaseConnectionAutoRegistration =
-                ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
+                ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
 
         init {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }

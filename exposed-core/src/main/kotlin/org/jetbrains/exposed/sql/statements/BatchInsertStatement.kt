@@ -44,26 +44,28 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
     }
 
     internal open fun validateLastBatch() {
+        val tr = TransactionManager.current()
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
-            val columnList = cantBeDefaulted.joinToString { TransactionManager.current().fullIdentity(it) }
-            throw BatchDataInconsistentException("Can't add new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
+            val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
+            throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
         }
         val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
         if (requiredInTargets.any()) {
-            throw BatchDataInconsistentException("Can't add new batch because columns: ${requiredInTargets.joinToString()} don't have default values. DB defaults don't support in batch inserts")
+            val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
+            throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts")
         }
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
-    private fun allColumnsInDataSet() = allColumnsInDataSet + data.last().keys
+    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
-            val nullableColumns = allColumnsInDataSet().filter { it.columnType.nullable }
+            val nullableColumns by lazy { allColumnsInDataSet().filter { it.columnType.nullable } }
             data.map { single ->
                 val valuesAndDefaults = super.valuesAndDefaults(single)
-                (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associate { it to null }).toList().sortedBy { it.first }
+                (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associateWith { null }).toList().sortedBy { it.first }
             }.apply { field = this }
         }
 

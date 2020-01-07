@@ -11,7 +11,7 @@ interface EntityIDFactory {
 object EntityIDFunctionProvider {
     private val factory : EntityIDFactory
     init {
-        factory = ServiceLoader.load(EntityIDFactory::class.java).firstOrNull()
+        factory = ServiceLoader.load(EntityIDFactory::class.java, EntityIDFactory::class.java.classLoader).firstOrNull()
                 ?: object : EntityIDFactory {
                     override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
                         return EntityID(value, table)
@@ -39,7 +39,8 @@ abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
  * @param columnName name for a primary key, "id" by default
  */
 open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
-    override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().primaryKey().entityId()
+    override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -49,7 +50,8 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  * @param columnName name for a primary key, "id" by default
  */
 open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
-    override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().primaryKey().entityId()
+    override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -63,7 +65,8 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  * @param columnName name for a primary key, "id" by default
  */
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
-    override val id: Column<EntityID<UUID>> = uuid(columnName).primaryKey()
+    override val id: Column<EntityID<UUID>> = uuid(columnName)
             .autoGenerate()
             .entityId()
+    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
