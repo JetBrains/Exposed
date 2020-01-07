@@ -180,4 +180,13 @@ class ViaTests : DatabaseTestsBase() {
             assertEquals("ccc", s.text)
         }
     }
+
+    @Test fun testFlush() {
+        withTables(*ViaTestData.allTables) {
+            val s = VString.new { text = "ddd" }.apply {
+                flush()
+            }
+            assertEquals("ddd", s.text)
+        }
+    }
 }
