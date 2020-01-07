@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.EntityChangeType.Updated
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
+import kotlin.test.assertTrue
 
 object ViaTestData {
     object NumbersTable: UUIDTable() {
@@ -178,6 +180,29 @@ class ViaTests : DatabaseTestsBase() {
                 refresh(true)
             }
             assertEquals("ccc", s.text)
+        }
+    }
+
+    @Test fun testUpdateEvent() {
+        var updated = false
+        val action = { change: EntityChange ->
+            if (change.entityClass.javaClass.enclosingClass == VString::class.java && change.changeType == Updated) {
+                updated = true
+            }
+        }
+        try {
+            EntityHook.subscribe(action)
+            withTables(*ViaTestData.allTables) {
+                val s = VString.new { text = "a" }
+                flushCache()
+                s.apply {
+                    text = "b"
+                    flush()
+                }
+            }
+            assertTrue(updated)
+        } finally {
+            EntityHook.unsubscribe(action)
         }
     }
 }
