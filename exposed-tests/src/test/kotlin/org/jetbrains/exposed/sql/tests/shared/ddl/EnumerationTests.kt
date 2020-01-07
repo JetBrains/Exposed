@@ -28,7 +28,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
             }, { value ->
                 when (currentDialectTest) {
-                    is PostgreSQLDialect -> DDLTests.PGEnum("FooEnum", value)
+                    is PostgreSQLDialect -> DDLTests.PGEnum(sql, value)
                     else -> value.name
                 }
             })
