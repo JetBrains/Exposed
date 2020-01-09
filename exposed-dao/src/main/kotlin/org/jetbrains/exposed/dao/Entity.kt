@@ -139,6 +139,10 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
+        if (id._value == null) {
+            TransactionManager.current().entityCache.flushInserts(this.klass.table)
+            return true
+        }
         if (writeValues.isNotEmpty()) {
             if (batch == null) {
                 val table = klass.table

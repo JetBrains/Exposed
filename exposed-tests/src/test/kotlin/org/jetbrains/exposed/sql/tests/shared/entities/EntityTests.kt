@@ -502,6 +502,16 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    @Test fun `newly created entity flushed successfully`() {
+        withTables(Boards) {
+            val board = Board.new { name = "Board1" }.apply {
+                assertEquals(true, flush())
+            }
+
+            assertEquals("Board1", board.name)
+        }
+    }
+
     private fun <T> newTransaction(statement: Transaction.() -> T) =
             inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, null, null, statement)
 
