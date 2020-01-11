@@ -163,6 +163,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
+            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

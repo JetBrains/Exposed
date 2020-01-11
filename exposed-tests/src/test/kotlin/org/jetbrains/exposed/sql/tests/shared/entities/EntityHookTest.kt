@@ -61,12 +61,12 @@ object EntityHookTestData {
 
 class EntityHookTest: DatabaseTestsBase() {
 
-    private fun<T> trackChanges(statement: Transaction.() -> T): Triple<T, Collection<EntityChange>, String> {
+    private fun <T> trackChanges(statement: Transaction.() -> T): Triple<T, Collection<EntityChange>, String> {
         val alreadyChanged = TransactionManager.current().registeredChanges().size
         return transaction {
-                val result = statement()
-                flushCache()
-                Triple(result,registeredChanges().drop(alreadyChanged), id)
+            val result = statement()
+            flushCache()
+            Triple(result, registeredChanges().drop(alreadyChanged), id)
         }
     }
 
@@ -270,4 +270,32 @@ class EntityHookTest: DatabaseTestsBase() {
             }
         }
     }
+
+    @Test fun `single entity flush should trigger events`() {
+        withTables(EntityHookTestData.User.table) {
+            val (user, events, _) = trackChanges {
+                EntityHookTestData.User.new {
+                    name = "John"
+                    age = 30
+                }.apply { flush() }
+            }
+
+            assertEquals(1, events.size)
+            val createEvent = events.single()
+            assertEquals(user.id, createEvent.entityId)
+            assertEquals(EntityChangeType.Created, createEvent.changeType)
+
+            val (_, events2, _) = trackChanges {
+                user.name = "Carl"
+                user.flush()
+            }
+
+            assertEquals("Carl", user.name)
+            assertEquals(1, events2.size)
+            val updateEvent = events2.single()
+            assertEquals(user.id, updateEvent.entityId)
+            assertEquals(EntityChangeType.Updated, updateEvent.changeType)
+        }
+    }ª
+
 }
