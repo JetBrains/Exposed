@@ -296,6 +296,6 @@ class EntityHookTest: DatabaseTestsBase() {
             assertEquals(user.id, updateEvent.entityId)
             assertEquals(EntityChangeType.Updated, updateEvent.changeType)
         }
-    }ª
+    }
 
 }
