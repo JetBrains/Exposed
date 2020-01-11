@@ -90,7 +90,6 @@ object SchemaUtils {
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
-            commit()
         }
     }
 

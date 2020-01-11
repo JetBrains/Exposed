@@ -792,6 +792,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 }
 
+@Deprecated("Use Sequence class instead of Seq class.",
+            ReplaceWith("org.jetbrains.exposed.sql.Sequence"),
+            DeprecationLevel.ERROR)
+data class Seq(private val name: String)
+
 /**
  * Sequence : an object that generates a sequence of numeric values.
  *
