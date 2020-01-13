@@ -38,14 +38,20 @@ object EntityHook {
 }
 
 fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId: EntityID<*>, changeType: EntityChangeType) {
-    val event = EntityChange(entityClass, entityId, changeType, id)
-
-    if (entityEvents.lastOrNull() != event) {
-        entityEvents.add(event)
-        entitySubscribers.forEach {
-            it(event)
+    EntityChange(entityClass, entityId, changeType, id).let {
+        if (entityEvents.lastOrNull() != it) {
+            entityEvents.add(it)
         }
     }
+}
+
+fun Transaction.alertSubscribers() {
+    entityEvents.forEach { e ->
+        entitySubscribers.forEach {
+            it(e)
+        }
+    }
+    entityEvents.clear()
 }
 
 fun Transaction.registeredChanges() = entityEvents.toList()
