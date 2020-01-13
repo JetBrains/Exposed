@@ -26,18 +26,17 @@ dependencies {
 
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
     implementation("mysql", "mysql-connector-mxj", "5.0.12")
-    implementation("org.xerial", "sqlite-jdbc", "3.23.1")
-    implementation("com.h2database", "h2", "1.4.199")
+    implementation("org.xerial", "sqlite-jdbc", "3.30.1")
+    implementation("com.h2database", "h2", "1.4.200")
 
     when (dialect) {
-        "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
-        "mysql" ->      implementation("mysql", "mysql-connector-java", "8.0.16")
+        "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.5.3")
+        "mysql" ->      implementation("mysql", "mysql-connector-java", "8.0.18")
         "oracle" ->     implementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
-        "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
+        "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", "8.1.1.jre8")
         else -> {
-            implementation("com.h2database", "h2", "1.4.199")
-            implementation("mysql", "mysql-connector-java", "5.1.47")
-            implementation("org.postgresql", "postgresql", "42.2.5.jre6")
+            implementation("mysql", "mysql-connector-java", "5.1.48")
+            implementation("org.postgresql", "postgresql", "42.2.9.jre6")
         }
     }
 }
