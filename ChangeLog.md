@@ -1,3 +1,15 @@
+# 0.20.3
+Features:
+* `size` property added for `ColumnMetadata` ([#748](https://github.com/JetBrains/Exposed/issues/748)). Thank you, [kenta.koyama](https://github.com/doyaaaaaken).
+
+Bug fixes: 
+* Can't load implementation for DatabaseConnectionAutoRegistration ([#748](https://github.com/JetBrains/Exposed/issues/748)).
+* Proper length check when using Unicode strings ([#743](https://github.com/JetBrains/Exposed/issues/743)). PR from [pt2121](https://github.com/pt2121), thank you.
+* Custom enumeration not working with default value ([#750](https://github.com/JetBrains/Exposed/issues/750))
+* [SQLite] fixing a bug that happens when creating table with autoInc column and custom primarykey constraint name ([#755](https://github.com/JetBrains/Exposed/issues/755)). Fixed by [hichem-fazai](https://github.com/hichem-fazai).
+* Flushing a new entity fails with an exception ([#761](https://github.com/JetBrains/Exposed/issues/761))
+* Update event wasn't fired on Entity.flush() ([#764](https://github.com/JetBrains/Exposed/issues/764))
+
 # 0.20.2
 Bug fixes:
 * Predefined `IntIdTable`/`LongIdTable`/`UUIDTable` should respect deprecated primaryKey declaration.
