@@ -27,7 +27,7 @@ dependencies {
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
     implementation("mysql", "mysql-connector-mxj", "5.0.12")
     implementation("org.xerial", "sqlite-jdbc", "3.30.1")
-    implementation("com.h2database", "h2", "1.4.200")
+    implementation("com.h2database", "h2", "1.4.199")
 
     when (dialect) {
         "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.5.3")
