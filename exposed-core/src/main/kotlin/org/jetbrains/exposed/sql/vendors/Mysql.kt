@@ -72,6 +72,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 }
 
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANSE) {
+    override val supportsCreateSequence = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
@@ -130,13 +131,6 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
     }
 
-    override fun createSequence(identifier: String,
-                                startWith: Int?,
-                                incrementBy: Int?,
-                                minValue: Int?,
-                                maxValue: Int?,
-                                cycle: Boolean?,
-                                cache: Int?): String = throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", this)
 
     companion object {
         const val dialectName = "mysql"

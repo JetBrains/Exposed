@@ -268,6 +268,8 @@ interface DatabaseDialect {
 
     val supportsOnlyIdentifiersInGeneratedKeys get() = false
 
+    val supportsCreateSequence get() = true
+
     // Specific SQL statements
 
     fun createIndex(index: Index): String
@@ -298,9 +300,9 @@ interface DatabaseDialect {
         appendIfNotNull(" CACHE", cache)
     }
 
-    fun StringBuilder.appendIfNotNull(str: String, strToCheck: Any?) = apply {
-        if (strToCheck != null) {
-            this.append("$str $strToCheck")
+    fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
+        if (str2 != null) {
+            this.append("$str1 $str2")
         }
     }
 }

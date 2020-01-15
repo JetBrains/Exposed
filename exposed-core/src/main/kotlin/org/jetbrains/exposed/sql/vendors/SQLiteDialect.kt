@@ -99,6 +99,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
+    override val supportsCreateSequence = false
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
@@ -106,14 +107,6 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         return if (index.unique) originalCreateIndex.replace("CREATE INDEX", "CREATE UNIQUE INDEX")
         else originalCreateIndex
     }
-
-    override fun createSequence(identifier: String,
-                                startWith: Int?,
-                                incrementBy: Int?,
-                                minValue: Int?,
-                                maxValue: Int?,
-                                cycle: Boolean?,
-                                cache: Int?): String = throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", this)
 
     companion object {
         const val dialectName = "sqlite"

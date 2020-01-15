@@ -11,7 +11,7 @@ class CreateSequenceTests : DatabaseTestsBase() {
     @Test
     fun createSequenceStatementTest() {
         withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.SQLITE)) {
-            val seqDDL = myseq.createStatement()
+            val seqDDL = myseq.ddl
 
             assertEquals("CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " +
                     "START WITH ${myseq.startWith} " +
