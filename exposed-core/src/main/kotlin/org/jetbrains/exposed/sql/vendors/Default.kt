@@ -298,9 +298,9 @@ interface DatabaseDialect {
         appendIfNotNull(" CACHE", cache)
     }
 
-    fun StringBuilder.appendIfNotNull(sentence: String, word: Any?) = apply {
-        if (word != null) {
-            this.append("$sentence $word")
+    fun StringBuilder.appendIfNotNull(str: String, strToCheck: Any?) = apply {
+        if (strToCheck != null) {
+            this.append("$str $strToCheck")
         }
     }
 }
