@@ -23,14 +23,14 @@ open class CustomFunction<T>(val functionName: String, _columnType: IColumnType,
     }
 }
 
-class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("LOWER(", expr,")") }
-}
-
 class NextVal(val seq: Sequence) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.nextVal(seq, queryBuilder)
     }
+}
+
+class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("LOWER(", expr,")") }
 }
 
 class UpperCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {

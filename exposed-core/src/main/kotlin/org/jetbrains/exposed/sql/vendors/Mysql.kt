@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -130,7 +129,6 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     internal val isMysql8 by lazy {
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
     }
-
 
     companion object {
         const val dialectName = "mysql"
