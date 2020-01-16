@@ -95,6 +95,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
     }
+
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
+        append("NEXT VALUE FOR ", seq.identifier)
+    }
 }
 
 open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {

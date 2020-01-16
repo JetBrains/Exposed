@@ -696,7 +696,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun createStatement(): List<String> {
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).createStatement()
+            Sequence(it).createStatement()
         }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
@@ -768,7 +768,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             }
         }
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).dropStatement()
+            Sequence(it).dropStatement()
         }.orEmpty()
 
         return listOf(dropTableDDL) + seqDDL
@@ -792,11 +792,10 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 }
 
-data class Seq(private val name: String) {
-    private val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
-    fun createStatement() = listOf("CREATE SEQUENCE $identifier")
-    fun dropStatement() = listOf("DROP SEQUENCE $identifier")
-}
+@Deprecated("Use Sequence class instead of Seq class.",
+            ReplaceWith("org.jetbrains.exposed.sql.Sequence"),
+            DeprecationLevel.ERROR)
+data class Seq(private val name: String)
 
 fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)

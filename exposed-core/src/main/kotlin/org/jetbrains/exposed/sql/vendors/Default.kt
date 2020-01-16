@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.lang.StringBuilder
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -61,6 +62,9 @@ abstract class FunctionProvider {
         append(prefix, "(", expr, ", ", start, ", ", length, ")")
     }
 
+    open fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
+        append(seq.identifier,".NEXTVAL")
+    }
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
@@ -264,11 +268,43 @@ interface DatabaseDialect {
 
     val supportsOnlyIdentifiersInGeneratedKeys get() = false
 
+    val supportsCreateSequence get() = true
+
     // Specific SQL statements
 
     fun createIndex(index: Index): String
     fun dropIndex(tableName: String, indexName: String): String
     fun modifyColumn(column: Column<*>) : String
+
+    fun createSequence(identifier: String,
+                       startWith: Int?,
+                       incrementBy: Int?,
+                       minValue: Int?,
+                       maxValue: Int?,
+                       cycle: Boolean?,
+                       cache: Int?): String = buildString {
+        append("CREATE SEQUENCE ")
+        if (currentDialect.supportsIfNotExists) {
+            append("IF NOT EXISTS ")
+        }
+        append(identifier)
+        appendIfNotNull(" START WITH", startWith)
+        appendIfNotNull(" INCREMENT BY", incrementBy)
+        appendIfNotNull(" MINVALUE", minValue)
+        appendIfNotNull(" MAXVALUE", maxValue)
+
+        if (cycle == true) {
+            append(" CYCLE")
+        }
+
+        appendIfNotNull(" CACHE", cache)
+    }
+
+    fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
+        if (str2 != null) {
+            this.append("$str1 $str2")
+        }
+    }
 }
 
 abstract class VendorDialect(override val name: String,
