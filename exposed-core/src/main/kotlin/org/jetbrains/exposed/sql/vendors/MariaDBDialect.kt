@@ -4,21 +4,31 @@ import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Sequence
 
-internal object MariaDBFunctionProvider :  MysqlFunctionProvider() {
-    override fun <T : String?> regexp(expr1: Expression<T>, pattern: Expression<String>, caseSensitive: Boolean, queryBuilder: QueryBuilder) {
-        queryBuilder{ append(expr1, " REGEXP ", pattern) }
-    }
-
+internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXTVAL(", seq.identifier, ")")
     }
+
+    override fun <T : String?> regexp(
+        expr1: Expression<T>,
+        pattern: Expression<String>,
+        caseSensitive: Boolean,
+        queryBuilder: QueryBuilder
+    ): Unit = queryBuilder {
+        append(expr1, " REGEXP ", pattern)
+    }
 }
 
+/**
+ * MariaDB dialect implementation.
+ */
 class MariaDBDialect : MysqlDialect() {
-    override val functionProvider : FunctionProvider = MariaDBFunctionProvider
     override val name: String = dialectName
-    override val supportsOnlyIdentifiersInGeneratedKeys = true
+    override val functionProvider: FunctionProvider = MariaDBFunctionProvider
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+
     companion object {
-        const val dialectName = "mariadb"
+        /** MariaDB dialect name */
+        const val dialectName: String = "mariadb"
     }
 }
