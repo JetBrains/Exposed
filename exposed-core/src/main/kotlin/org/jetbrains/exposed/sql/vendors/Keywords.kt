@@ -1,15 +1,11 @@
 package org.jetbrains.exposed.sql.vendors
 
-/**
- * Returns a map of vendor specific keywords.
- */
+/** Returns a map of vendor specific keywords. */
 val VENDORS_KEYWORDS: Map<String, List<String>> = mapOf(
     OracleDialect.dialectName to listOf("COMMENT", "NUMBER", "UID")
 )
 
-/**
- * Returns a set with all the keywords that are part of the SQL:2003 standard.
- */
+/** Returns a set with all the keywords that are part of the SQL:2003 standard. */
 val ANSI_SQL_2003_KEYWORDS: Set<String> = setOf(
     "A",
     "ABS",

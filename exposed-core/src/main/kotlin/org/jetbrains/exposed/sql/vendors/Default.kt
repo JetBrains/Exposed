@@ -17,67 +17,43 @@ internal typealias TableAndColumnName = Pair<String, String>
 abstract class DataTypeProvider {
     // Numeric types
 
-    /**
-     * Numeric type for storing 4-byte integers.
-     */
+    /** Numeric type for storing 4-byte integers. */
     open fun integerType(): String = "INT"
 
-    /**
-     * Numeric type for storing 4-byte integers, marked as auto-increment.
-     */
+    /** Numeric type for storing 4-byte integers, marked as auto-increment. */
     open fun integerAutoincType(): String = "INT AUTO_INCREMENT"
 
-    /**
-     * Numeric type for storing 8-byte integers.
-     */
+    /** Numeric type for storing 8-byte integers. */
     open fun longType(): String = "BIGINT"
 
-    /**
-     * Numeric type for storing 8-byte integers, and marked as auto-increment.
-     */
+    /** Numeric type for storing 8-byte integers, and marked as auto-increment. */
     open fun longAutoincType(): String = "BIGINT AUTO_INCREMENT"
 
-    /**
-     * Numeric type for storing 4-byte (single precision) floating-point numbers.
-     */
+    /** Numeric type for storing 4-byte (single precision) floating-point numbers. */
     open fun floatType(): String = "FLOAT"
 
-    /**
-     * Numeric type for storing 8-byte (double precision) floating-point numbers.
-     */
+    /** Numeric type for storing 8-byte (double precision) floating-point numbers. */
     open fun doubleType(): String = "DOUBLE PRECISION"
 
     // Character types
 
-    /**
-     * Character type for storing strings of variable and _unlimited_ length.
-     */
+    /** Character type for storing strings of variable and _unlimited_ length. */
     open fun textType(): String = "TEXT"
 
     // Binary data types
 
-    /**
-     * Binary type for storing binary strings of variable and _unlimited_ length.
-     */
+    /** Binary type for storing binary strings of variable and _unlimited_ length. */
     abstract fun binaryType(): String
 
-    /**
-     * Binary type for storing binary strings of a specific [length].
-     */
+    /** Binary type for storing binary strings of a specific [length]. */
     open fun binaryType(length: Int): String = "VARBINARY($length)"
 
     open val blobAsStream: Boolean = false
 
-    /**
-     * Binary type for storing BLOBs.
-     */
+    /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
 
-    /**
-     * Binary type for storing UUIDs.
-     *
-     * @see UUID
-     */
+    /** Binary type for storing [UUID]. */
     open fun uuidType(): String = "BINARY(16)"
 
     open fun uuidToDB(value: UUID): Any =
@@ -85,33 +61,23 @@ abstract class DataTypeProvider {
 
     // Date/Time types
 
-    /**
-     * Data type for storing both date and time without a time zone.
-     */
+    /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
 
     // Boolean type
 
-    /**
-     * Data type for storing boolean values.
-     */
+    /** Data type for storing boolean values. */
     open fun booleanType(): String = "BOOLEAN"
 
-    /**
-     * Returns the SQL representation of the specified [bool] value.
-     */
+    /** Returns the SQL representation of the specified [bool] value. */
     open fun booleanToStatementString(bool: Boolean): String = bool.toString()
 
-    /**
-     * Returns the boolean value of the specified SQL [value].
-     */
+    /** Returns the boolean value of the specified SQL [value]. */
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
     // Misc.
 
-    /**
-     * Returns the SQL representation of the specified expression, for it to be used as a column default value.
-     */
+    /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
@@ -212,9 +178,7 @@ abstract class FunctionProvider {
      * Marker interface for the possible pattern matching modes.
      */
     interface MatchMode {
-        /**
-         * SQL representation of the mode.
-         */
+        /** SQL representation of the mode. */
         fun mode(): String
     }
 
@@ -485,9 +449,7 @@ abstract class FunctionProvider {
  * Represents metadata information about a specific column.
  */
 data class ColumnMetadata(
-    /**
-     * Name of the column.
-     */
+    /** Name of the column. */
     val name: String,
     /**
      * Type of the column.
@@ -495,13 +457,9 @@ data class ColumnMetadata(
      * @see java.sql.Types
      */
     val type: Int,
-    /**
-     * Whether the column if nullable or not.
-     */
+    /** Whether the column if nullable or not. */
     val nullable: Boolean,
-    /**
-     * Optional size of the column.
-     */
+    /** Optional size of the column. */
     val size: Int?
 )
 
@@ -509,112 +467,67 @@ data class ColumnMetadata(
  * Common interface for all database dialects.
  */
 interface DatabaseDialect {
-    /**
-     * Name of this dialect.
-     */
+    /** Name of this dialect. */
     val name: String
-    /**
-     * Data type provider of this dialect.
-     */
+    /** Data type provider of this dialect. */
     val dataTypeProvider: DataTypeProvider
-    /**
-     * Function provider of this dialect.
-     */
+    /** Function provider of this dialect. */
     val functionProvider: FunctionProvider
-
-    /**
-     * Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise.
-     */
+    /** Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise. */
     val supportsIfNotExists: Boolean get() = true
-    /**
-     * Returns `true` if the dialect support the creation of sequences, `false` otherwise.
-     */
+    /** Returns `true` if the dialect support the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
-    /**
-     * Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise.
-     */
+    /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
     val needsSequenceToAutoInc: Boolean get() = false
-    /**
-     * Returns the default reference option for the dialect.
-     */
+    /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
-    /**
-     * Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise.
-     */
+    /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
-    /**
-     * Returns `true` if the dialect support returning multiple generated keys as a result of an insert operation, `false` otherwise.
-     */
+    /** Returns `true` if the dialect support returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
 
-    /**
-     * Returns the name of the current database.
-     */
+    /** Returns the name of the current database. */
     fun getDatabase(): String
 
-    /**
-     * Returns a list with the names of all the defined tables.
-     */
+    /** Returns a list with the names of all the defined tables. */
     fun allTablesNames(): List<String>
 
-    /**
-     * Checks if the specified table exists in the database.
-     */
+    /** Checks if the specified table exists in the database. */
     fun tableExists(table: Table): Boolean
 
     fun checkTableMapping(table: Table): Boolean = true
 
-    /**
-     * Returns a map with the column metadata of all the defined columns in each of the specified [tables].
-     */
+    /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
-    /**
-     * Returns a map with the foreign key constraints of all the defined columns in each of the specified [tables].
-     */
+    /** Returns a map with the foreign key constraints of all the defined columns in each of the specified [tables]. */
     fun columnConstraints(vararg tables: Table): Map<TableAndColumnName, List<ForeignKeyConstraint>> = emptyMap()
 
-    /**
-     * Returns a map with all the defined indices in each of the specified [tables].
-     */
+    /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
 
-    /**
-     * Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise.
-     */
+    /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean
 
-    /**
-     * Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise.
-     */
+    /** Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise. */
     fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = e is LiteralOp<*>
 
-    /**
-     * Returns the catalog name of the connection of the specified [transaction].
-     */
+    /** Returns the catalog name of the connection of the specified [transaction]. */
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
 
-    /**
-     * Clears any cached values.
-     */
+    /** Clears any cached values. */
     fun resetCaches()
 
     // Specific SQL statements
 
-    /**
-     * Returns the SQL command that creates the specified [index].
-     */
+    /** Returns the SQL command that creates the specified [index]. */
     fun createIndex(index: Index): String
 
-    /**
-     * Returns the SQL command that drops the specified [indexName] from the specified [tableName].
-     */
+    /** Returns the SQL command that drops the specified [indexName] from the specified [tableName]. */
     fun dropIndex(tableName: String, indexName: String): String
 
-    /**
-     * Returns the SQL command that modifies the specified [column].
-     */
+    /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>): String
 
     /**
@@ -654,9 +567,7 @@ interface DatabaseDialect {
         appendIfNotNull(" CACHE", cache)
     }
 
-    /**
-     * Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`.
-     */
+    /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
     fun StringBuilder.appendIfNotNull(str1: String, str2: Any?): StringBuilder = apply {
         if (str2 != null) {
             this.append("$str1 $str2")
@@ -675,9 +586,7 @@ abstract class VendorDialect(
 
     /* Cached values */
     private var _allTableNames: List<String>? = null
-    /**
-     * Returns a list with the names of all the defined tables.
-     */
+    /** Returns a list with the names of all the defined tables. */
     val allTablesNames: List<String>
         get() {
             if (_allTableNames == null) {
@@ -758,9 +667,7 @@ abstract class VendorDialect(
     override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
 }
 
-/**
- * Returns the dialect used in the current transaction, may trow an exception if there is no current transaction.
- */
+/** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
 val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable: DatabaseDialect?
