@@ -103,7 +103,7 @@ data class ForeignKeyConstraint(
             val t = TransactionManager.current()
             val identifierManager = t.db.identifierManager
             val refName =
-                identifierManager.cutIfNecessaryAndQuote("fk_${fromCol.table.tableNameWithoutScheme}_${fromCol.name}_${targetColumn.name}").inProperCase()
+                identifierManager.cutIfNecessaryAndQuote(fromCol.fkName ?: "fk_${fromCol.table.tableNameWithoutScheme}_${fromCol.name}_${targetColumn.name}").inProperCase()
             return ForeignKeyConstraint(
                 refName,
                 t.identity(targetColumn.table), t.identity(targetColumn),

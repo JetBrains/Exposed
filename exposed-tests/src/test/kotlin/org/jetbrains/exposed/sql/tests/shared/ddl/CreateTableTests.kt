@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -9,7 +11,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
-
+import java.util.*
 import kotlin.test.assertFails
 
 class CreateTableTests : DatabaseTestsBase() {
@@ -168,5 +170,109 @@ class CreateTableTests : DatabaseTestsBase() {
 
     object TableDuplicatedColumnRefereToTable : Table("myTable") {
         val reference = reference("id", TableWithDuplicatedColumn.id1)
+    }
+
+    @Test
+    fun createTableWithExplicitForeignKeyName1() {
+        val fkName = "MyForeignKey1"
+        val parent = object : LongIdTable("parent1") {}
+        val child = object : LongIdTable("child1") {
+            val parentId = reference(
+                    name = "parent_id",
+                    foreign = parent,
+                    onUpdate = ReferenceOption.NO_ACTION,
+                    onDelete = ReferenceOption.NO_ACTION,
+                    fkName = fkName
+            )
+        }
+        withTables(parent, child) {
+            val t = TransactionManager.current()
+            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
+                    " FOREIGN KEY (${t.identity(child.parentId)})" +
+                    " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
+                    ")"
+            assertEquals(expected, child.ddl)
+        }
+    }
+
+    @Test
+    fun createTableWithExplicitForeignKeyName2() {
+        val fkName = "MyForeignKey2"
+        val parent = object : LongIdTable("parent2") {
+            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+        }
+        val child = object : LongIdTable("child2") {
+            val parentId = reference(
+                    name = "parent_id",
+                    refColumn = parent.uniqueId,
+                    onUpdate = ReferenceOption.NO_ACTION,
+                    onDelete = ReferenceOption.NO_ACTION,
+                    fkName = fkName
+            )
+        }
+        withTables(parent, child) {
+            val t = TransactionManager.current()
+            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
+                    " FOREIGN KEY (${t.identity(child.parentId)})" +
+                    " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
+                    ")"
+            assertEquals(expected, child.ddl)
+        }
+    }
+
+    @Test
+    fun createTableWithExplicitForeignKeyName3() {
+        val fkName = "MyForeignKey3"
+        val parent = object : LongIdTable("parent3") {}
+        val child = object : LongIdTable("child3") {
+            val parentId = optReference(
+                    name = "parent_id",
+                    foreign = parent,
+                    onUpdate = ReferenceOption.NO_ACTION,
+                    onDelete = ReferenceOption.NO_ACTION,
+                    fkName = fkName
+            )
+        }
+        withTables(parent, child) {
+            val t = TransactionManager.current()
+            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
+                    " FOREIGN KEY (${t.identity(child.parentId)})" +
+                    " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
+                    ")"
+            assertEquals(expected, child.ddl)
+        }
+    }
+
+    @Test
+    fun createTableWithExplicitForeignKeyName4() {
+        val fkName = "MyForeignKey4"
+        val parent = object : LongIdTable("parent4") {
+            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+        }
+        val child = object : LongIdTable("child4") {
+            val parentId = optReference(
+                    name = "parent_id",
+                    refColumn = parent.uniqueId,
+                    onUpdate = ReferenceOption.NO_ACTION,
+                    onDelete = ReferenceOption.NO_ACTION,
+                    fkName = fkName
+            )
+        }
+        withTables(parent, child) {
+            val t = TransactionManager.current()
+            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
+                    " FOREIGN KEY (${t.identity(child.parentId)})" +
+                    " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
+                    ")"
+            assertEquals(expected, child.ddl)
+        }
     }
 }

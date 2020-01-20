@@ -32,7 +32,7 @@ class Column<T>(
         get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
     internal var onDelete: ReferenceOption? = null
         get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
-
+    var fkName: String? = null
     /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
     var indexInPK: Int? = null
     /** Returns the function that calculates the default value for this column. */
