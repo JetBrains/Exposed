@@ -87,7 +87,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
             } get idTable.id
-            assertEquals(1, id?.value)
+            assertEquals(1, id.value)
         }
     }
 

@@ -14,21 +14,22 @@ import java.util.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id = Cities.integer("cityId").autoIncrement("cities_seq").primaryKey() // PKColumn<Int>
-        val name = Cities.varchar("name", 50) // Column<String>
+        val id = integer("cityId").autoIncrement("cities_seq") // PKColumn<Int>
+        val name = varchar("name", 50) // Column<String>
+        override val primaryKey = PrimaryKey(id)
     }
 
     object Users : Table() {
-        val id = Users.varchar("id", 10).primaryKey() // PKColumn<String>
-        val name =
-            Users.varchar("name", length = 50) // Column<String>
-        val cityId = (Users.integer("city_id") references Cities.id).nullable() // Column<Int?>
+        val id = varchar("id", 10) // PKColumn<String>
+        val name = varchar("name", length = 50) // Column<String>
+        val cityId = reference("city_id", Cities.id).nullable() // Column<Int?>
+        override val primaryKey = PrimaryKey(Cities.id)
     }
 
     object UserData : Table() {
-        val user_id = UserData.varchar("user_id", 10) references Users.id
-        val comment = UserData.varchar("comment", 30)
-        val value = UserData.integer("value")
+        val user_id = varchar("user_id", 10) references Users.id
+        val comment = varchar("comment", 30)
+        val value = integer("value")
     }
 }
 
