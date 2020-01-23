@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -97,7 +98,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInSubQuery01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, _, _ ->
             val r = cities.select { cities.id inSubQuery cities.slice(cities.id).select { cities.id eq 2 } }
             assertEquals(1, r.count())
         }
@@ -120,7 +121,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testCompoundOp() {
-        withCitiesAndUsers { cities, users, _ ->
+        withCitiesAndUsers { _, users, _ ->
             val allUsers = setOf(
                 "Andrey",
                 "Sergey",
@@ -134,6 +135,27 @@ class SelectTests : DatabaseTestsBase() {
 
             val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
             assertEquals(0, users.select(andOp).count())
+        }
+    }
+
+    @Test
+    fun `test select on nullable reference column`() {
+        val firstTable = object : IntIdTable("first") {}
+        val secondTable = object : IntIdTable("second") {
+            val firstOpt = optReference("first", firstTable)
+        }
+
+        withTables(firstTable, secondTable) {
+            val firstId = firstTable.insertAndGetId { }
+            secondTable.insert {
+                it[firstOpt] = firstId
+            }
+            secondTable.insert { }
+
+            assertEquals(2, secondTable.selectAll().count())
+            val secondEntries = secondTable.select { secondTable.firstOpt eq firstId.value }.toList()
+
+            assertEquals(1, secondEntries.size)
         }
     }
 }
