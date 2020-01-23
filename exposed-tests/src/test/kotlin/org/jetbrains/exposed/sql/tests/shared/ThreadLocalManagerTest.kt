@@ -7,6 +7,7 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
