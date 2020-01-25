@@ -23,6 +23,13 @@ open class CustomFunction<T>(val functionName: String, _columnType: IColumnType,
     }
 }
 
+// create a Function corresponding to a SQL binary operator
+open class CustomOperator<T>(val operatorName: String, _columnType: IColumnType, val expr1: Expression<*>, val expr2: Expression<*>) : Function<T>(_columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        append('(', expr1, ' ', operatorName, ' ', expr2, ')')
+    }
+}
+
 class NextVal(val seq: Sequence) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.nextVal(seq, queryBuilder)

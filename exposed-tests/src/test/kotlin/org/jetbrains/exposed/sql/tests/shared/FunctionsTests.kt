@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -257,7 +259,21 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or initialOp or initialOp or initialOp).toString())
             assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or (initialOp or initialOp) or initialOp).toString())
             assertEquals("$initialOp OR ($initialOp AND $initialOp) OR $initialOp", (initialOp or (initialOp and initialOp) or initialOp).toString())
+        }
+    }
 
+    @Test
+    fun testCustomOperator() {
+        // implement a + operator using CustomOperator
+        infix fun Expression<*>.plus(operand: Int) =
+                CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
+
+        withCitiesAndUsers { cities, users, userData ->
+            userData
+                    .select { (userData.value plus 15).eq(35) }
+                    .forEach {
+                        assertEquals(it[userData.value], 20)
+                    }
         }
     }
 }

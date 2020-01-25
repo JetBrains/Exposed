@@ -66,11 +66,13 @@ object SqlExpressionBuilder {
         return EqOp(this, wrap(t))
     }
 
-    infix fun <T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.eq(t: T?) : Op<Boolean> {
+    infix fun <T:Comparable<T>, E:EntityID<T>?> ExpressionWithColumnType<E>.eq(t: T?) : Op<Boolean> {
         if (t == null) {
             return isNull()
         }
-        return EqOp(this, wrap(t))
+        @Suppress("UNCHECKED_CAST") val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
+        val entityID = EntityID(t, table)
+        return EqOp(this, wrap(entityID))
     }
 
     infix fun<T, S1: T?, S2: T?> Expression<in S1>.eq(other: Expression<in S2>) : Op<Boolean> = EqOp(this, other)

@@ -123,7 +123,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return targets.flatMap { it.columns }.filter { column ->
             when {
                 column.columnType.isAutoInc -> true
-                column in nextValExpressionColumns -> true
+                column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
                 column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
                 else -> false
             }
