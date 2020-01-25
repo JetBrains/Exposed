@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
-class CreateSequenceTests : DatabaseTestsBase() {
+class SequencesTests : DatabaseTestsBase() {
     @Test
     fun createSequenceStatementTest() {
         withDb {
@@ -26,9 +26,9 @@ class CreateSequenceTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun SequenceNextValTest() {
+    fun `test insert with sequences`() {
         withTables(Developer) {
-            if (currentDialectTest.supportsCreateSequence) {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
                     SchemaUtils.createSequence(myseq)
 
@@ -37,14 +37,14 @@ class CreateSequenceTests : DatabaseTestsBase() {
                         it[name] = "Hichem"
                     } get Developer.id
 
-                    assertEquals(4, developerId)
+                    assertEquals(myseq.startWith, developerId)
 
                     developerId = Developer.insert {
                         it[id] = myseq.nextVal()
                         it[name] = "Andrey"
                     } get Developer.id
 
-                    assertEquals(6, developerId)
+                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId)
                 } finally {
                     SchemaUtils.dropSequence(myseq)
                 }
@@ -52,17 +52,48 @@ class CreateSequenceTests : DatabaseTestsBase() {
         }
     }
 
-    object Developer : Table() {
+    @Test
+    fun `test select with nextVal`() {
+        withTables(Developer) {
+            if (currentDialectTest.supportsCreateSequence) {
+                try {
+                    SchemaUtils.createSequence(myseq)
+                    val nextVal = myseq.nextVal()
+                    Developer.insert {
+                        it[id] = nextVal
+                        it[name] = "Hichem"
+                    }
+
+                    val firstValue = Developer.slice(nextVal).selectAll().single()[nextVal]
+                    val secondValue = Developer.slice(nextVal).selectAll().single()[nextVal]
+
+                    val expFirstValue = myseq.startWith!! + myseq.incrementBy!!
+                    assertEquals(expFirstValue, firstValue)
+
+                    val expSecondValue = expFirstValue + myseq.incrementBy!!
+                    assertEquals(expSecondValue, secondValue)
+
+                } finally {
+                    SchemaUtils.dropSequence(myseq)
+                }
+            }
+        }
+    }
+
+    private object Developer : Table() {
         val id = integer("id")
         var name = varchar("name", 25)
 
         override val primaryKey = PrimaryKey(id, name)
     }
-    val myseq = Sequence(name= "my_sequence",
-                        startWith= 4,
-                        incrementBy= 2,
-                        minValue= 1,
-                        maxValue= 10,
-                        cycle= true,
-                        cache=20)
+
+    private val myseq = Sequence(
+        name = "my_sequence",
+        startWith = 4,
+        incrementBy = 2,
+        minValue = 1,
+        maxValue = 10,
+        cycle = true,
+        cache = 20
+    )
 }
