@@ -259,7 +259,21 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or initialOp or initialOp or initialOp).toString())
             assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or (initialOp or initialOp) or initialOp).toString())
             assertEquals("$initialOp OR ($initialOp AND $initialOp) OR $initialOp", (initialOp or (initialOp and initialOp) or initialOp).toString())
+        }
+    }
 
+    @Test
+    fun testCustomOperator() {
+        // implement a + operator using CustomOperator
+        infix fun Expression<*>.plus(operand: Int) =
+                CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
+
+        withCitiesAndUsers { cities, users, userData ->
+            userData
+                    .select { (userData.value plus 15).eq(35) }
+                    .forEach {
+                        assertEquals(it[userData.value], 20)
+                    }
         }
     }
 }
