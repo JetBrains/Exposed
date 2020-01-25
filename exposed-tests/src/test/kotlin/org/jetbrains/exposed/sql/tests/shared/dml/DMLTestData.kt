@@ -4,32 +4,29 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import java.util.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id = integer("cityId").autoIncrement("cities_seq") // PKColumn<Int>
-        val name = varchar("name", 50) // Column<String>
+        val id: Column<Int> = integer("cityId").autoIncrement("cities_seq")
+        val name: Column<String> = varchar("name", 50)
         override val primaryKey = PrimaryKey(id)
     }
 
     object Users : Table() {
-        val id = varchar("id", 10) // PKColumn<String>
-        val name = varchar("name", length = 50) // Column<String>
-        val cityId = reference("city_id", Cities.id).nullable() // Column<Int?>
-        override val primaryKey = PrimaryKey(Cities.id)
+        val id: Column<String> = varchar("id", 10)
+        val name: Column<String> = varchar("name", length = 50)
+        val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+        override val primaryKey = PrimaryKey(id)
     }
 
     object UserData : Table() {
-        val user_id = varchar("user_id", 10) references Users.id
-        val comment = varchar("comment", 30)
-        val value = integer("value")
+        val user_id: Column<String> = reference("user_id", Users.id)
+        val comment: Column<String> = varchar("comment", 30)
+        val value: Column<Int> = integer("value")
     }
 }
 
@@ -41,11 +38,11 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
     withTables(exclude, Cities, Users, UserData) {
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
-        } get DMLTestsData.Cities.id
+        } get Cities.id
 
         val munichId = Cities.insert {
             it[name] = "Munich"
-        } get DMLTestsData.Cities.id
+        } get Cities.id
 
         Cities.insert {
             it[name] = "Prague"
