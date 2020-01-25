@@ -2,50 +2,52 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
 class CreateSequenceTests : DatabaseTestsBase() {
     @Test
     fun createSequenceStatementTest() {
-        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.SQLITE)) {
-            val seqDDL = myseq.ddl
-
-            assertEquals("CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " +
-                    "START WITH ${myseq.startWith} " +
-                    "INCREMENT BY ${myseq.incrementBy} " +
-                    "MINVALUE ${myseq.minValue} " +
-                    "MAXVALUE ${myseq.maxValue} " +
-                    "CYCLE " +
-                    "CACHE ${myseq.cache}",
-                    seqDDL)
+        withDb {
+            if (currentDialectTest.supportsCreateSequence) {
+                assertEquals(
+                    "CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " +
+                            "START WITH ${myseq.startWith} " +
+                            "INCREMENT BY ${myseq.incrementBy} " +
+                            "MINVALUE ${myseq.minValue} " +
+                            "MAXVALUE ${myseq.maxValue} " +
+                            "CYCLE " +
+                            "CACHE ${myseq.cache}",
+                    myseq.ddl
+                )
+            }
         }
     }
 
     @Test
     fun SequenceNextValTest() {
+        withTables(Developer) {
+            if (currentDialectTest.supportsCreateSequence) {
+                try {
+                    SchemaUtils.createSequence(myseq)
 
-        // Exclude databases that doesn't support create sequence statement(Mysql and SQLite)
-        withTables(listOf(TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.SQLITE), Developer) {
-            try {
-                SchemaUtils.createSequence(myseq)
+                    var developerId = Developer.insert {
+                        it[id] = myseq.nextVal()
+                        it[name] = "Hichem"
+                    } get Developer.id
 
-                var developerId = Developer.insert {
-                    it[id] = myseq.nextVal()
-                    it[name] = "Hichem"
-                } get Developer.id
+                    assertEquals(4, developerId)
 
-                assertEquals(4, developerId)
+                    developerId = Developer.insert {
+                        it[id] = myseq.nextVal()
+                        it[name] = "Andrey"
+                    } get Developer.id
 
-                developerId = Developer.insert {
-                    it[id] = myseq.nextVal()
-                    it[name] = "Andrey"
-                } get Developer.id
-
-                assertEquals(6, developerId)
-            } finally {
-                SchemaUtils.dropSequence(myseq)
+                    assertEquals(6, developerId)
+                } finally {
+                    SchemaUtils.dropSequence(myseq)
+                }
             }
         }
     }

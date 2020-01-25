@@ -259,7 +259,6 @@ interface DatabaseDialect {
     fun isAllowedAsColumnDefault(e: Expression<*>) = e is LiteralOp<*>
 
     val supportsIfNotExists: Boolean get() = true
-    val needsSequenceToAutoInc: Boolean get() = false
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
 
@@ -269,6 +268,8 @@ interface DatabaseDialect {
     val supportsOnlyIdentifiersInGeneratedKeys get() = false
 
     val supportsCreateSequence get() = true
+    val needsSequenceToAutoInc: Boolean get() = false
+    val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
 
     // Specific SQL statements
 

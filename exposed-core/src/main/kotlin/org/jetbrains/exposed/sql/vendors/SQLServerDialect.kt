@@ -105,9 +105,10 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val supportsIfNotExists = false
     override val needsQuotesWhenSymbolsInNames = false
 
-    override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
+    override val defaultReferenceOption: ReferenceOption = ReferenceOption.NO_ACTION
 
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsSequenceAsGeneratedKeys: Boolean = false
 
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
