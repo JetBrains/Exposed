@@ -475,7 +475,7 @@ interface DatabaseDialect {
     val functionProvider: FunctionProvider
     /** Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise. */
     val supportsIfNotExists: Boolean get() = true
-    /** Returns `true` if the dialect support the creation of sequences, `false` otherwise. */
+    /** Returns `true` if the dialect supports the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
     /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
     val needsSequenceToAutoInc: Boolean get() = false
@@ -483,8 +483,10 @@ interface DatabaseDialect {
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
     /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
-    /** Returns `true` if the dialect support returning multiple generated keys as a result of an insert operation, `false` otherwise. */
+    /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
+    /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
+    val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
 
     /** Returns the name of the current database. */
