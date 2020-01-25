@@ -26,7 +26,7 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
             val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
             host?.let { dockerHost ->
                 "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false"
-            } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&server.initialize-user=false&user=root&password="
+            } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&characterEncoding=UTF-8&server.initialize-user=false&user=root&password="
         },
         driver = "com.mysql.jdbc.Driver",
         beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },

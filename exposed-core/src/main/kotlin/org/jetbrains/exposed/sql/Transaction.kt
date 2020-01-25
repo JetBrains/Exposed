@@ -42,6 +42,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
+    val id = UUID.randomUUID().toString()
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
@@ -176,7 +177,7 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         internal val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
 
         init {
-            ServiceLoader.load(GlobalStatementInterceptor::class.java).forEach {
+            ServiceLoader.load(GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader).forEach {
                 globalInterceptors.add(it)
             }
         }

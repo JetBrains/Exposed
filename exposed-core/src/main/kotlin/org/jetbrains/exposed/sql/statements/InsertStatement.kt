@@ -71,7 +71,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
-                    if (col.columnType.isAutoInc)
+                    if (col.columnType.isAutoInc || value is NextVal)
                         map.getOrPut(col) { value }
                     else
                         map[col] = value
@@ -118,8 +118,16 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
-    protected val autoIncColumns = targets.flatMap { it.columns }.filter {
-        it.columnType.isAutoInc || (it.columnType is EntityIDColumnType<*> && !currentDialect.supportsOnlyIdentifiersInGeneratedKeys)
+    protected val autoIncColumns : List<Column<*>> get() {
+        val nextValExpressionColumns = values.filterValues { it is NextVal }.keys
+        return targets.flatMap { it.columns }.filter { column ->
+            when {
+                column.columnType.isAutoInc -> true
+                column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
+                column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
+                else -> false
+            }
+        }
     }
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {

@@ -31,7 +31,7 @@ dependencies {
         "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
         else -> {
             testImplementation("com.h2database", "h2", "1.4.199")
-            testImplementation("mysql", "mysql-connector-java", "5.1.47")
+            testImplementation("mysql", "mysql-connector-java", "5.1.48")
             testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
         }
     }

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -222,7 +223,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      * Adds a new column to a table.
      */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).apply {
-        _columns.add(this)
+        _columns.addColumn(this)
     }
 
     /**
@@ -231,9 +232,84 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     fun<TColumn: Column<*>> replaceColumn(oldColumn: Column<*>, newColumn: TColumn) : TColumn {
         _columns.remove(oldColumn)
-        _columns.add(newColumn)
+        _columns.addColumn(newColumn)
         return newColumn
     }
+
+    internal fun isCustomPKNameDefined() : Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
+
+    /**
+     * The primary key class.
+     * Define the columns in the primary key of the current table. You can also provide the name of primary key constraint
+     * by passing the "name" argument. Example : PrimaryKey(id1, id2, id3..., name = "CustomPKName")
+     *
+     * @sample org.jetbrains.exposed.sql.tests.demo.sql.Users
+     *
+     * @param columns list of columns in the primary key
+     * @param name the primary key constraint name, by default it will be resolved from the table name with "pk_" prefix
+    */
+    inner class PrimaryKey(
+        vararg val columns: Column<*>,
+        val name: String = "pk_$tableName"
+    ) {
+
+        init {
+            checkMultipleDeclaration()
+
+            for (column in columns) {
+                column.markPrimaryKey()
+            }
+        }
+
+        /**
+         * Initialize PrimaryKey class with columns defined using [primaryKey] method
+         *
+        * This constructor must be removed when [primaryKey] method is no longer supported.
+        */
+        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
+
+        /**
+         * Mark @receiver column as an element of primary key.
+         */
+        private fun <T> Column<T>.markPrimaryKey() {
+            indexInPK = table.columns.count { it.indexInPK != null } + 1
+        }
+
+        /** Check if both old and new declarations of primary key are defined.
+         *
+         * Remove columns from primary key to take columns declared in PrimaryKey class instead.
+         * Log an error.
+         * This function must be removed when [primaryKey] method is no longer supported.
+         */
+        private fun checkMultipleDeclaration() {
+            val table = this@Table
+            if (table.columns.any { it.indexInPK != null }) {
+                removeOldPrimaryKey()
+                exposedLogger.error("Confusion between multiple declarations of primary key on ${table.tableName}. " +
+                                    "Use only override val primaryKey=PrimaryKey() declaration.")
+            }
+        }
+
+        /** This function must be removed when [primaryKey] method is no longer supported. */
+        private fun removeOldPrimaryKey() {
+            for (column in columns.filter { it.indexInPK != null }) {
+                column.indexInPK = null
+            }
+        }
+    }
+
+    /**
+     * Represents the primary key of the table if present.
+     * It is initialized with existing keys defined by [Column.primaryKey] function for a backward compatibility,
+     * but you have to define it explicitly by overriding that val instead.
+     */
+    open val primaryKey: PrimaryKey? by lazy { getPrimaryKeyColumns()?.let { PrimaryKey(it) } }
+
+    /**
+     * Returns the list of columns in the primary key if present.
+     */
+    private fun getPrimaryKeyColumns(): List<Column<*>>?
+            = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK })).takeIf { it.isNotEmpty() }
 
     /**
      * Mark @receiver column as primary key.
@@ -244,6 +320,9 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      *
      * @param indx An optional column index in a primary key
      */
+    @Deprecated("This function will be no longer supported. Please use the new declarations of primary key by " +
+                "overriding the primaryKey property in the current table. " +
+                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }")
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> {
         if (indx != null && table.columns.any { it.indexInPK == indx } ) throw IllegalArgumentException("Table $tableName already contains PK at $indx")
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
@@ -260,7 +339,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
         val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
-        _columns.add(answer)
+        _columns.addColumn(answer)
         return answer
     }
 
@@ -307,7 +386,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
      */
     @Suppress("UNCHECKED_CAST")
     fun <T:Enum<T>> customEnumeration(name: String, sql: String? = null, fromDb: (Any) -> T, toDb: (T) -> Any) =
-        registerColumn<T>(name, object : ColumnType() {
+        registerColumn<T>(name, object : StringColumnType() {
             override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
             override fun valueFromDB(value: Any) = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
             override fun notNullValueToDB(value: Any) = toDb(value as T)
@@ -398,10 +477,23 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     /**
      * A binary column to store an array of bytes.
      *
+     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinary
+     *
      * @param name The column name
-     * @param length The maximum amount of bytes to store
+     * @param length The maximum amount of bytes to store, this parameter is necessary only in H2, SQLite, MySQL,
+     *               MariaDB, and SQL Server dialects.
      */
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
+
+    /**
+     * A binary column to store an array of bytes. This function is supported only by Oracle and PostgeSQL dialects.
+     * If you are using another dialect, please use instead the [binary] function by adding the length parameter.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinaryWithoutLength
+     *
+     * @param name The column name
+     */
+    fun binary(name: String): Column<ByteArray> = registerColumn(name, BasicBinaryColumnType())
 
     /**
      * A uuid column to store a UUID.
@@ -511,7 +603,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
         val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
         val column = Column<T>(this, name, originalType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
-        this._columns.add(column)
+        this._columns.addColumn(column)
         return column
     }
 
@@ -604,7 +696,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     override fun createStatement(): List<String> {
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).createStatement()
+            Sequence(it).createStatement()
         }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
@@ -617,7 +709,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (columns.any()) {
                 append(columns.joinToString(prefix = " (") { it.descriptionDdl() })
-                if (columns.none { it.isOneColumnPK() }) {
+                if (isCustomPKNameDefined() || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let {
                         append(", $it")
                     }
@@ -650,17 +742,14 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     internal fun primaryKeyConstraint(): String? {
-        val pkey = columns.filter { it.indexInPK != null }.sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
-
-        if (pkey.isNotEmpty()) {
+        return primaryKey?.let { primaryKey ->
             val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote("pk_$tableName")
-            return pkey.joinToString(
+            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
+            return primaryKey.columns.joinToString(
                     prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")") {
                 tr.identity(it)
             }
         }
-        return null
     }
 
     override fun dropStatement() : List<String> {
@@ -679,7 +768,7 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
             }
         }
         val seqDDL = autoIncColumn?.autoIncSeqName?.let {
-            Seq(it).dropStatement()
+            Sequence(it).dropStatement()
         }.orEmpty()
 
         return listOf(dropTableDDL) + seqDDL
@@ -693,13 +782,20 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    private fun <T> MutableList<Column<*>>.addColumn(column: Column<T>) {
+        if (this.any { it.name == column.name }) {
+            throw DuplicateColumnException(column.name, tableName)
+        } else {
+            this.add(column)
+        }
+    }
 }
 
-data class Seq(private val name: String) {
-    private val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
-    fun createStatement() = listOf("CREATE SEQUENCE $identifier")
-    fun dropStatement() = listOf("DROP SEQUENCE $identifier")
-}
+@Deprecated("Use Sequence class instead of Seq class.",
+            ReplaceWith("org.jetbrains.exposed.sql.Sequence"),
+            DeprecationLevel.ERROR)
+data class Seq(private val name: String)
 
 fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)
@@ -708,3 +804,4 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
+

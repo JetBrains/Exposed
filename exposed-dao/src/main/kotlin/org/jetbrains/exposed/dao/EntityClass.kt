@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
+import kotlin.sequences.Sequence
 
 @Suppress("UNCHECKED_CAST")
 abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {

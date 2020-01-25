@@ -23,6 +23,11 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidType() = "uniqueidentifier"
 
     override fun uuidToDB(value: UUID) = value.toString()
+
+    override fun binaryType(): String {
+        exposedLogger.error("The length of the Binary column is missing.")
+        error("The length of the Binary column is missing.")
+    }
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
@@ -90,15 +95,20 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
     }
+
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
+        append("NEXT VALUE FOR ", seq.identifier)
+    }
 }
 
 open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvider, SQLServerFunctionProvider) {
     override val supportsIfNotExists = false
     override val needsQuotesWhenSymbolsInNames = false
 
-    override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
+    override val defaultReferenceOption: ReferenceOption = ReferenceOption.NO_ACTION
 
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsSequenceAsGeneratedKeys: Boolean = false
 
     override fun modifyColumn(column: Column<*>) =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")

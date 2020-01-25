@@ -7,6 +7,11 @@ import java.math.BigDecimal
 
 internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
+
+    override fun binaryType(): String {
+        exposedLogger.error("The length of the Binary column is missing.")
+        error("The length of the Binary column is missing.")
+    }
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -66,6 +71,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 }
 
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANSE) {
+    override val supportsCreateSequence = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true

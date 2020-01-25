@@ -18,7 +18,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
         if (!column.columnType.nullable && value == null) {
             error("Trying to set null to not nullable column $column")
         }
-        if (column.columnType is VarCharColumnType && value is String && value.length > column.columnType.colLength) {
+        if (column.columnType is VarCharColumnType && value is String && value.codePointCount(0, value.length) > column.columnType.colLength) {
             error("Value '$value' can't be stored to database column because exceeds length $column.columnType.colLength")
         }
         values[column] = value

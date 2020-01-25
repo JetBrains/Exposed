@@ -3,13 +3,14 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.lang.StringBuilder
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 internal typealias TableAndColumnName = Pair<String, String>
 
-open class DataTypeProvider {
+abstract class DataTypeProvider {
     open fun integerAutoincType() = "INT AUTO_INCREMENT"
 
     open fun integerType() = "INT"
@@ -29,6 +30,8 @@ open class DataTypeProvider {
     open fun blobType(): String = "BLOB"
 
     open fun binaryType(length: Int): String = "VARBINARY($length)"
+
+    open abstract fun binaryType(): String
 
     open fun booleanType(): String = "BOOLEAN"
 
@@ -59,6 +62,9 @@ abstract class FunctionProvider {
         append(prefix, "(", expr, ", ", start, ", ", length, ")")
     }
 
+    open fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
+        append(seq.identifier,".NEXTVAL")
+    }
 
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
@@ -217,7 +223,7 @@ abstract class FunctionProvider {
  * type:
  * @see java.sql.Types
  */
-data class ColumnMetadata(val name: String, val type: Int, val nullable: Boolean)
+data class ColumnMetadata(val name: String, val type: Int, val nullable: Boolean, val size: Int?)
 
 interface DatabaseDialect {
     val name: String
@@ -253,7 +259,6 @@ interface DatabaseDialect {
     fun isAllowedAsColumnDefault(e: Expression<*>) = e is LiteralOp<*>
 
     val supportsIfNotExists: Boolean get() = true
-    val needsSequenceToAutoInc: Boolean get() = false
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
     fun catalog(transaction: Transaction): String = transaction.connection.catalog
 
@@ -262,11 +267,45 @@ interface DatabaseDialect {
 
     val supportsOnlyIdentifiersInGeneratedKeys get() = false
 
+    val supportsCreateSequence get() = true
+    val needsSequenceToAutoInc: Boolean get() = false
+    val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
+
     // Specific SQL statements
 
     fun createIndex(index: Index): String
     fun dropIndex(tableName: String, indexName: String): String
     fun modifyColumn(column: Column<*>) : String
+
+    fun createSequence(identifier: String,
+                       startWith: Int?,
+                       incrementBy: Int?,
+                       minValue: Int?,
+                       maxValue: Int?,
+                       cycle: Boolean?,
+                       cache: Int?): String = buildString {
+        append("CREATE SEQUENCE ")
+        if (currentDialect.supportsIfNotExists) {
+            append("IF NOT EXISTS ")
+        }
+        append(identifier)
+        appendIfNotNull(" START WITH", startWith)
+        appendIfNotNull(" INCREMENT BY", incrementBy)
+        appendIfNotNull(" MINVALUE", minValue)
+        appendIfNotNull(" MAXVALUE", maxValue)
+
+        if (cycle == true) {
+            append(" CYCLE")
+        }
+
+        appendIfNotNull(" CACHE", cache)
+    }
+
+    fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
+        if (str2 != null) {
+            this.append("$str1 $str2")
+        }
+    }
 }
 
 abstract class VendorDialect(override val name: String,

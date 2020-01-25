@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import kotlin.test.assertNotNull

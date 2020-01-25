@@ -33,6 +33,13 @@ open class CustomOperator<T>(val operatorName: String, _columnType: IColumnType,
         +")"
     }
 }
+
+class NextVal(val seq: Sequence) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.nextVal(seq, queryBuilder)
+    }
+}
+
 class LowerCase<T: String?>(val expr: Expression<T>) : Function<T>(VarCharColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("LOWER(", expr,")") }
 }

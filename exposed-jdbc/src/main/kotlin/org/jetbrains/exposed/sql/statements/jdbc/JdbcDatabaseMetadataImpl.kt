@@ -42,7 +42,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val rs =  metadata.getColumns(databaseName, oracleSchema, "%", "%")
         val result = rs.extractColumns(tables) {
-            it.getString("TABLE_NAME") to ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"))
+            //@see java.sql.DatabaseMetaData.getColumns
+            val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
+            it.getString("TABLE_NAME") to columnMetadata
         }
         rs.close()
         return result

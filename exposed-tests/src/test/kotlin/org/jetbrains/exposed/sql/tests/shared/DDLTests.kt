@@ -12,10 +12,8 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
@@ -434,8 +432,42 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testBinaryWithoutLength() {
+        val tableWithBinary = object : Table("TableWithBinary") {
+            val binaryColumn = binary("binaryColumn")
+        }
+
+        fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
+
+        withDb(listOf(TestDB.ORACLE,TestDB.POSTGRESQL)) {
+            val exposedBytes = "Exposed".toByteArray()
+            val kotlinBytes = "Kotlin".toByteArray()
+
+            SchemaUtils.create(tableWithBinary)
+
+            tableWithBinary.insert {
+                it[tableWithBinary.binaryColumn] = exposedBytes
+            }
+            val insertedExposed = tableWithBinary.selectAll().readAsString().single()
+
+            assertEquals("Exposed", insertedExposed)
+
+            tableWithBinary.insert {
+                it[tableWithBinary.binaryColumn] = kotlinBytes
+            }
+
+            assertEqualCollections(tableWithBinary.selectAll().readAsString(), "Exposed", "Kotlin")
+
+            val insertedKotlin = tableWithBinary.select { tableWithBinary.binaryColumn eq kotlinBytes }.readAsString()
+            assertEqualCollections(insertedKotlin, "Kotlin")
+
+            SchemaUtils.drop(tableWithBinary)
+        }
+    }
+
     @Test fun testBinary() {
-        val t = object : Table() {
+        val t = object : Table("t") {
             val binary = binary("bytes", 10)
             val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
@@ -708,68 +740,6 @@ class DDLTests : DatabaseTestsBase() {
         init {
             value = enumValue?.name
             type = enumTypeName
-        }
-    }
-
-    object EnumTable : IntIdTable("EnumTable") {
-        internal var enumColumn: Column<Foo> = enumeration("enumColumn", Foo::class)
-
-        internal fun initEnumColumn(sql: String) {
-            (columns as MutableList<Column<*>>).remove(enumColumn)
-            enumColumn = customEnumeration("enumColumn", sql, { value ->
-                when {
-                    currentDialectTest is H2Dialect && value is Int -> Foo.values()[value]
-                    else -> Foo.valueOf(value as String)
-                }
-            }, { value ->
-                when (currentDialectTest) {
-                    is PostgreSQLDialect -> PGEnum("FooEnum", value)
-                    else -> value.name
-                }
-            })
-        }
-    }
-
-    @Test fun testCustomEnumeration01() {
-        withDb(listOf(TestDB.H2, TestDB.MYSQL, TestDB.POSTGRESQL)) {
-            val sqlType = when (currentDialectTest) {
-                is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "FooEnum"
-                else -> error("Unsupported case")
-            }
-
-            class EnumEntity(id: EntityID<Int>) : IntEntity(id) {
-                var enum by EnumTable.enumColumn
-            }
-
-            val EnumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
-
-            try {
-                if (currentDialectTest is PostgreSQLDialect) {
-                    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
-                }
-                EnumTable.initEnumColumn(sqlType)
-                SchemaUtils.create(EnumTable)
-                EnumTable.insert {
-                    it[enumColumn] = Foo.Bar
-                }
-                assertEquals(Foo.Bar,  EnumTable.selectAll().single()[EnumTable.enumColumn])
-
-                val entity = EnumClass.new {
-                    enum = Foo.Baz
-                }
-                assertEquals(Foo.Baz, entity.enum)
-                entity.id.value // flush entity
-                assertEquals(Foo.Baz, entity.enum)
-                assertEquals(Foo.Baz, EnumClass.reload(entity)!!.enum)
-                entity.enum = Foo.Bar
-//                flushCache()
-                assertEquals(Foo.Bar, EnumClass.reload(entity, true)!!.enum)
-            } finally {
-                try {
-                    SchemaUtils.drop(EnumTable)
-                } catch (ignore: Exception) {}
-            }
         }
     }
 

@@ -38,7 +38,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     override fun beforeCommit(transaction: Transaction) {
         val created = transaction.flushCache()
-        EntityHook.alertSubscribers(transaction)
+        transaction.alertSubscribers()
         val createdByHooks = transaction.flushCache()
         EntityCache.invalidateGlobalCaches(created + createdByHooks)
     }

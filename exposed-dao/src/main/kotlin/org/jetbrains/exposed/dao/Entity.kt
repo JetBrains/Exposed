@@ -135,10 +135,14 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
-        EntityHook.registerChange(TransactionManager.current(), EntityChange(klass, id, EntityChangeType.Removed))
+        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
+        if (id._value == null) {
+            TransactionManager.current().entityCache.flushInserts(this.klass.table)
+            return true
+        }
         if (writeValues.isNotEmpty()) {
             if (batch == null) {
                 val table = klass.table
@@ -159,6 +163,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
+            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

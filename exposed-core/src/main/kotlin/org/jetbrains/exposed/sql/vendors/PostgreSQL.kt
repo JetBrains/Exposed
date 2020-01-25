@@ -17,7 +17,12 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
 
     override fun blobType(): String = "bytea"
 
-    override fun binaryType(length: Int): String = "bytea"
+    override fun binaryType(length: Int): String {
+        exposedLogger.warn("The length of the binary column is not required.")
+        return binaryType()
+    }
+
+    override fun binaryType(): String = "bytea"
 
     override fun uuidToDB(value: UUID): Any = value
 
@@ -113,6 +118,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("Extract(SECOND FROM ")
         append(expr)
         append(")")
+    }
+
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
+        append("NEXTVAL('", seq.identifier, "')")
     }
 }
 

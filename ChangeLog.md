@@ -1,3 +1,34 @@
+# 0.20.3
+Features:
+* `size` property added for `ColumnMetadata` ([#748](https://github.com/JetBrains/Exposed/issues/748)). Thank you, [kenta.koyama](https://github.com/doyaaaaaken).
+
+Bug fixes: 
+* Can't load implementation for DatabaseConnectionAutoRegistration ([#748](https://github.com/JetBrains/Exposed/issues/748)).
+* Proper length check when using Unicode strings ([#743](https://github.com/JetBrains/Exposed/issues/743)). PR from [pt2121](https://github.com/pt2121), thank you.
+* Custom enumeration not working with default value ([#750](https://github.com/JetBrains/Exposed/issues/750))
+* [SQLite] fixing a bug that happens when creating table with autoInc column and custom primarykey constraint name ([#755](https://github.com/JetBrains/Exposed/issues/755)). Fixed by [hichem-fazai](https://github.com/hichem-fazai).
+* Flushing a new entity fails with an exception ([#761](https://github.com/JetBrains/Exposed/issues/761))
+* Update event wasn't fired on Entity.flush() ([#764](https://github.com/JetBrains/Exposed/issues/764))
+
+# 0.20.2
+Bug fixes:
+* Predefined `IntIdTable`/`LongIdTable`/`UUIDTable` should respect deprecated primaryKey declaration.
+
+# 0.20.1
+Features:
+* New way to define primary keys on tables were implemented by [hichem-fazai](https://github.com/hichem-fazai) to support custom primary key constraint keys. 
+If have to use `override val primaryKey: PrimaryKey?` on your table if you want to define a custom name. 
+For all users of predefined `IntIdTable`/`LongIdTable`/`UUIDTable` nothing changed. 
+Old `Column.primaryKey` function was depricated and will be removed in the future releases.
+* `java.time.Instant` supported with `timestamp` column type (`exposed-java-time` module only) ([#724](https://github.com/JetBrains/Exposed/issues/724)). Many thanks to [Lukáš Křečan](https://github.com/lukas-krecan).
+* Support for unsized binary columns (Oracle and PostgreSQL dialects) ([#716](https://github.com/JetBrains/Exposed/issues/716)). Another great PR from [hichem-fazai](https://github.com/hichem-fazai).
+* A unique identifier for `Transaction` instance introduced and supported in EntityHooks/EntityEvents by [mpe85](https://github.com/mpe85).
+
+Bug fixes:
+* Annoying `NoSuchElementException` from 0.19.3 fixed by [Toshiaki Kameyama](https://github.com/t-kameyama) ([#731](https://github.com/JetBrains/Exposed/issues/731))
+* Prevent defining duplicated column name in a table. Now you will get `DuplicateColumnException` at runtime ([#709](https://github.com/JetBrains/Exposed/issues/709)). Nice work [hichem-fazai](https://github.com/hichem-fazai)!
+* `batchInsert` will throw `BatchDataInconsistentException` instead of `NoSuchElementException` when it wasn't possible to make insertion ([#741](https://github.com/JetBrains/Exposed/issues/741)).
+
 # 0.19.3
 Deprecations:
 * `Query.orderBy()` functions with boolean sort parameter were removed

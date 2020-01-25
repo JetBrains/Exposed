@@ -3,8 +3,8 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.tests.shared.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

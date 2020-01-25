@@ -11,6 +11,11 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun dateTimeType(): String  = "NUMERIC"
     override val blobAsStream: Boolean = true
+
+    override fun binaryType(): String {
+        exposedLogger.error("The length of the Binary column is missing.")
+        error("The length of the Binary column is missing.")
+    }
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
@@ -93,6 +98,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsMultipleGeneratedKeys: Boolean = false
+    override val supportsCreateSequence = false
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
