@@ -336,9 +336,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     })
 
     fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
-        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
+        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
+        return entityId(name, originalColumn)
+    }
+
+    fun <ID:Comparable<ID>> entityId(name: String, originalColumn: Column<ID>) : Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
-        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
+        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy)))
         _columns.addColumn(answer)
         return answer
     }
@@ -599,6 +603,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<EntityID<T>> =
             entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
+    @JvmName("referenceByIdColumn")
+    fun <T:Comparable<T>, E: EntityID<T>> reference(name: String, refColumn: Column<E>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E> {
+        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIDColumn.references(refColumn, onDelete, onUpdate)
+    }
+
     fun <T:Comparable<T>> reference(name: String, refColumn: Column<T>,
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
         val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
@@ -614,6 +625,13 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
     fun <T:Comparable<T>> optReference(name: String, refColumn: Column<T>,
                                     onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T?> =
          Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
+
+    @JvmName("optReferenceByIdColumn")
+    fun <T:Comparable<T>, E: EntityID<T>> optReference(name: String, refColumn: Column<E>,
+                                                       onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E?> {
+        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIDColumn.references(refColumn, onDelete, onUpdate).nullable()
+    }
 
     fun <T:Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?> (table, name, columnType)
