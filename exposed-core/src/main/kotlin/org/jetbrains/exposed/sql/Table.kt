@@ -446,10 +446,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Creates an [EntityID] column, with the specified [name], for storing objects of type [ID]. */
-    fun <ID : Comparable<ID>> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
-        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn
+    fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
+        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
+        return entityId(name, originalColumn)
+    }
+
+    fun <ID:Comparable<ID>> entityId(name: String, originalColumn: Column<ID>) : Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
-        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(table, name, columnTypeCopy)))
+        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy)))
         _columns.addColumn(answer)
         return answer
     }
@@ -687,6 +691,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null
     ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
+    @JvmName("referenceByIdColumn")
+    fun <T:Comparable<T>, E: EntityID<T>> reference(name: String, refColumn: Column<E>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E> {
+        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIDColumn.references(refColumn, onDelete, onUpdate)
+    }
+
     /**
      * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
@@ -699,12 +710,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @see ReferenceOption
      */
-    fun <T : Comparable<T>> reference(
-        name: String,
-        refColumn: Column<T>,
-        onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
-    ): Column<T> {
+    fun <T:Comparable<T>> reference(name: String, refColumn: Column<T>,
+                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
         val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
         val column = Column<T>(this, name, originalType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
         _columns.addColumn(column)
@@ -749,11 +756,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null
     ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
 
+    @JvmName("optReferenceByIdColumn")
+    fun <T:Comparable<T>, E: EntityID<T>> optReference(name: String, refColumn: Column<E>,
+                                                       onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E?> {
+        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIDColumn.references(refColumn, onDelete, onUpdate).nullable()
+    }
+
     // Miscellaneous
 
     /** Marks this column as nullable. */
-    fun <T : Any> Column<T>.nullable(): Column<T?> {
-        val newColumn = Column<T?>(table, name, columnType)
+    fun <T:Any> Column<T>.nullable(): Column<T?> {
+        val newColumn = Column<T?> (table, name, columnType)
         newColumn.referee = referee
         newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }

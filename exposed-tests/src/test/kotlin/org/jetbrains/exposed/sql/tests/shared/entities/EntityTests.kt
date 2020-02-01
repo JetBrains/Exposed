@@ -179,14 +179,14 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     object Posts : LongIdTable(name = "posts") {
-        val board = optReference("board", Boards)
+        val board = optReference("board", Boards.id)
         val parent = optReference("parent", this)
         val category = optReference("category", Categories.uniqueId).uniqueIndex()
         val optCategory = optReference("optCategory", Categories.uniqueId)
     }
 
     object Categories : IntIdTable() {
-        val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+        val uniqueId = uuid("uniqueId").autoGenerate().uniqueIndex()
         val title = varchar("title", 50)
     }
 
