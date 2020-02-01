@@ -445,17 +445,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return replaceColumn(this, newColumn)
     }
 
-    /** Creates an [EntityID] column, with the specified [name], for storing objects of type [ID]. */
-    fun <ID:Comparable<ID>> entityId(name: String, table: IdTable<ID>) : Column<EntityID<ID>> {
-        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
-        return entityId(name, originalColumn)
-    }
-
-    fun <ID:Comparable<ID>> entityId(name: String, originalColumn: Column<ID>) : Column<EntityID<ID>> {
+    /** Creates an [EntityID] column, with the specified [name], for storing the same objects as the specified [originalColumn]. */
+    fun <ID : Comparable<ID>> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
         val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy)))
         _columns.addColumn(answer)
         return answer
+    }
+
+    /** Creates an [EntityID] column, with the specified [name], for storing the identifier of the specified [table]. */
+    @Suppress("UNCHECKED_CAST")
+    fun <ID : Comparable<ID>> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
+        val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
+        return entityId(name, originalColumn)
     }
 
     // Numeric columns
@@ -621,6 +623,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Column references
 
     /**
+     * Create reference from a @receiver column to [ref] column.
+     *
+     * It's a short infix version of [references] function with default onDelete and onUpdate behavior.
+     *
+     * @receiver A column from current table where reference values will be stored
+     * @param ref A column from another table which will be used as a "parent".
+     * @see [references]
+     */
+    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
+
+    /**
      * Create reference from a @receiver column to [ref] column with [onDelete] and [onUpdate] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
@@ -662,15 +675,51 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * Create reference from a @receiver column to [ref] column.
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
+     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
+     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
-     * It's a short infix version of [references] function with default onDelete and onUpdate behavior.
+     * @param name Name of the column.
+     * @param refColumn A column from another table which will be used as a "parent".
+     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
+     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
      *
-     * @receiver A column from current table where reference values will be stored
-     * @param ref A column from another table which will be used as a "parent".
-     * @see [references]
+     * @see ReferenceOption
      */
-    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
+    fun <T : Comparable<T>> reference(
+        name: String,
+        refColumn: Column<T>,
+        onDelete: ReferenceOption? = null,
+        onUpdate: ReferenceOption? = null
+    ): Column<T> {
+        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
+        _columns.addColumn(column)
+        return column
+    }
+
+    /**
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
+     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
+     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     *
+     * @param name Name of the column.
+     * @param refColumn A column from another table which will be used as a "parent".
+     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
+     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     *
+     * @see ReferenceOption
+     */
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("referenceByIdColumn")
+    fun <T : Comparable<T>, E : EntityID<T>> reference(
+        name: String,
+        refColumn: Column<E>,
+        onDelete: ReferenceOption? = null,
+        onUpdate: ReferenceOption? = null
+    ): Column<E> {
+        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIDColumn.references(refColumn, onDelete, onUpdate)
+    }
 
     /**
      * Creates a column with the specified [name] with a reference to the `id` column in [foreign] table and with [onDelete] and [onUpdate] options.
@@ -691,15 +740,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null
     ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
 
-    @JvmName("referenceByIdColumn")
-    fun <T:Comparable<T>, E: EntityID<T>> reference(name: String, refColumn: Column<E>,
-                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E> {
-        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIDColumn.references(refColumn, onDelete, onUpdate)
-    }
-
     /**
-     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete] and [onUpdate] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -710,12 +752,35 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @see ReferenceOption
      */
-    fun <T:Comparable<T>> reference(name: String, refColumn: Column<T>,
-                                    onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null): Column<T> {
-        val originalType = (refColumn.columnType as? EntityIDColumnType<*>)?.idColumn?.columnType ?: refColumn.columnType
-        val column = Column<T>(this, name, originalType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
-        _columns.addColumn(column)
-        return column
+    fun <T : Comparable<T>> optReference(
+        name: String,
+        refColumn: Column<T>,
+        onDelete: ReferenceOption? = null,
+        onUpdate: ReferenceOption? = null
+    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
+
+    /**
+     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete] and [onUpdate] options.
+     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
+     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     *
+     * @param name Name of the column.
+     * @param refColumn A column from another table which will be used as a "parent".
+     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
+     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     *
+     * @see ReferenceOption
+     */
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("optReferenceByIdColumn")
+    fun <T : Comparable<T>, E : EntityID<T>> optReference(
+        name: String,
+        refColumn: Column<E>,
+        onDelete: ReferenceOption? = null,
+        onUpdate: ReferenceOption? = null
+    ): Column<E?> {
+        val entityIdColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
+        return entityIdColumn.references(refColumn, onDelete, onUpdate).nullable()
     }
 
     /**
@@ -737,37 +802,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null
     ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
 
-    /**
-     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete] and [onUpdate] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
-     *
-     * @param name Name of the column.
-     * @param refColumn A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
-     *
-     * @see ReferenceOption
-     */
-    fun <T : Comparable<T>> optReference(
-        name: String,
-        refColumn: Column<T>,
-        onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
-    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
-
-    @JvmName("optReferenceByIdColumn")
-    fun <T:Comparable<T>, E: EntityID<T>> optReference(name: String, refColumn: Column<E>,
-                                                       onDelete: ReferenceOption? = null, onUpdate: ReferenceOption? = null) : Column<E?> {
-        val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIDColumn.references(refColumn, onDelete, onUpdate).nullable()
-    }
-
     // Miscellaneous
 
     /** Marks this column as nullable. */
-    fun <T:Any> Column<T>.nullable(): Column<T?> {
-        val newColumn = Column<T?> (table, name, columnType)
+    fun <T : Any> Column<T>.nullable(): Column<T?> {
+        val newColumn = Column<T?>(table, name, columnType)
         newColumn.referee = referee
         newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
         newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
