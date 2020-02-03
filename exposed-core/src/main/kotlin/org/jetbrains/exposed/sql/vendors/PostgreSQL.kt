@@ -172,9 +172,9 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         }
     }
 
-    override fun createDatabase(name: String): String = "END; CREATE DATABASE ${name.inProperCase()}"
+    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
-    override fun dropDatabase(name: String): String = "END; DROP DATABASE ${name.inProperCase()}"
+    override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     companion object {
         /** PostgreSQL dialect name */
