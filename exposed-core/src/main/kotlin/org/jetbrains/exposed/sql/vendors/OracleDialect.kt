@@ -182,6 +182,10 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun modifyColumn(column: Column<*>): String = super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
 
+    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+
+    override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
+
     companion object {
         /** Oracle dialect name */
         const val dialectName: String = "oracle"

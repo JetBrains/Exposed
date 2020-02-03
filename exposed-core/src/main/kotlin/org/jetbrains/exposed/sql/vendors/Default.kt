@@ -576,10 +576,7 @@ interface DatabaseDialect {
         }
     }
 
-    fun createDatabase(name: String) = if (currentDialect.supportsIfNotExists)
-        "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
-    else
-        "CREATE DATABASE ${name.inProperCase()}"
+    fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 }

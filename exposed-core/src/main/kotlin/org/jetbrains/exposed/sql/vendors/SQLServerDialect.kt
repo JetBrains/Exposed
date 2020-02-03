@@ -106,6 +106,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override fun modifyColumn(column: Column<*>): String =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
 
+    override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+
     override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
 
     companion object {
