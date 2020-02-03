@@ -180,6 +180,32 @@ object SchemaUtils {
     }
 
     /**
+     * Creates databases
+     *
+     * @param databases the names of the databases
+     * @param inBatch flag to perform database creation in a single batch
+     */
+    fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
+            execStatements(inBatch, createStatements)
+        }
+    }
+
+    /**
+     * Drops databases
+     *
+     * @param databases the names of the databases
+     * @param inBatch flag to perform database creation in a single batch
+     */
+    fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
+            execStatements(inBatch, createStatements)
+        }
+    }
+
+    /**
      * This function should be used in cases when you want an easy-to-use auto-actualization of database scheme.
      * It will create all absent tables, add missing columns for existing tables if it's possible (columns are nullable or have default values).
      *
