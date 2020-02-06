@@ -575,6 +575,10 @@ interface DatabaseDialect {
             this.append("$str1 $str2")
         }
     }
+
+    fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
+
+    fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 }
 
 /**

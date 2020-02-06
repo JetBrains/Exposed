@@ -103,6 +103,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
+    override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+
+    override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+
     companion object {
         /** H2 dialect name */
         const val dialectName: String = "h2"
