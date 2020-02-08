@@ -1,3 +1,17 @@
+# 0.21.1
+Public methods and classes of database dialects, tables and columns were covered with documentation by [Juan José González Abril](https://github.com/SackCastellon). Thanks a lot!
+
+Features:
+* Sequences support improved: added all parameters like startWith, incrementBy and other, nextVal expression. Thank you [hichem-fazai](https://github.com/hichem-fazai) for such great PR.
+* `CustomOperator` introduced to be used when you need to create an SQL operator. PR from [gelineau](https://github.com/gelineau).
+* `SchemaUtils.createDatabase` and `SchemaUtils.dropDatabase` added by [hichem-fazai](https://github.com/hichem-fazai)
+* GUID values could be stored in UUID columns ([#767](https://github.com/JetBrains/Exposed/issues/767)). Fixed by [hichem-fazai](https://github.com/hichem-fazai).
+
+Bug fixes:
+* spring-configuration-metadata.json is not located inside exposed-spring-boot-starter.jar ([#767](https://github.com/JetBrains/Exposed/issues/767))
+* It wasn't possible to use `eq` operator on nullable entity id column and base column value ([#748](https://github.com/JetBrains/Exposed/issues/748))
+* `java.lang.IllegalStateException` was thrown when one table references to other by id column ([#501](https://github.com/JetBrains/Exposed/issues/501))
+
 # 0.20.3
 Features:
 * `size` property added for `ColumnMetadata` ([#748](https://github.com/JetBrains/Exposed/issues/748)). Thank you, [kenta.koyama](https://github.com/doyaaaaaken).
