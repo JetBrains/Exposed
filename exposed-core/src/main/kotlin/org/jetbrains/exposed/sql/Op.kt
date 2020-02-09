@@ -211,15 +211,15 @@ class notExists(val query: Query) : Op<Boolean>() {
 }
 
 class PlusOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(expr1, '+', expr2) }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append('(',expr1, '+', expr2, ')') }
 }
 
 class MinusOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(expr1, '-', expr2) }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append('(',expr1, '-', expr2, ')') }
 }
 
 class TimesOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(expr1, '*', expr2) }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append('(',expr1, '*', expr2, ')') }
 }
 
 class DivideOp<T, S: T>(val expr1: Expression<T>, val expr2: Expression<S>, override val columnType: IColumnType): ExpressionWithColumnType<T>() {
