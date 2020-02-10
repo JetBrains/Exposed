@@ -59,7 +59,7 @@ class Sequence(private val name: String,
     }
 
     fun dropStatement(): List<String> {
-        if (!currentDialect.supportsCreateSequence ) {
+        if (!currentDialect.supportsCreateSequence) {
             throw UnsupportedByDialectException("The current dialect doesn't support drop sequence statement", currentDialect)
         }
 
@@ -72,7 +72,7 @@ class Sequence(private val name: String,
         }
 
         return listOf(dropSequenceDDL)
-        }
+    }
 
     /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
     fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
