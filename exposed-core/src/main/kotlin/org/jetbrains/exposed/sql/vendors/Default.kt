@@ -532,50 +532,6 @@ interface DatabaseDialect {
     /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>): String
 
-    /**
-     * Returns the SQL command that creates sequence with the specified properties.
-     *
-     * @param identifier Name of the sequence.
-     * @param startWith Beginning of the sequence.
-     * @param incrementBy Value is added to the current sequence value to create a new value.
-     * @param minValue Minimum value a sequence can generate.
-     * @param maxValue Maximum value for the sequence.
-     * @param cycle Allows the sequence to wrap around when the [maxValue] or [minValue] has been reached by an ascending or descending sequence respectively.
-     * @param cache Specifies how many sequence numbers are to be preallocated and stored in memory for faster access.
-     */
-    fun createSequence(
-        identifier: String,
-        startWith: Int?,
-        incrementBy: Int?,
-        minValue: Int?,
-        maxValue: Int?,
-        cycle: Boolean?,
-        cache: Int?
-    ): String = buildString {
-        append("CREATE SEQUENCE ")
-        if (currentDialect.supportsIfNotExists) {
-            append("IF NOT EXISTS ")
-        }
-        append(identifier)
-        appendIfNotNull(" START WITH", startWith)
-        appendIfNotNull(" INCREMENT BY", incrementBy)
-        appendIfNotNull(" MINVALUE", minValue)
-        appendIfNotNull(" MAXVALUE", maxValue)
-
-        if (cycle == true) {
-            append(" CYCLE")
-        }
-
-        appendIfNotNull(" CACHE", cache)
-    }
-
-    /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
-    fun StringBuilder.appendIfNotNull(str1: String, str2: Any?): StringBuilder = apply {
-        if (str2 != null) {
-            this.append("$str1 $str2")
-        }
-    }
-
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
