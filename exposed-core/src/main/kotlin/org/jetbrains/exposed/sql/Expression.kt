@@ -31,32 +31,32 @@ class QueryBuilder(
         internalBuilder.append(postfix)
     }
 
-    /** Appends all arguments to this [QueryBuilder]. */
-    fun append(vararg expr: Any): QueryBuilder = apply {
-        for (item in expr) {
-            when (item) {
-                is Expression<*> -> +item
-                is String -> +item
-                is Char -> +item
-                else -> throw IllegalArgumentException("Can't append $item as it has unknown type")
-            }
-        }
-    }
+
+    /** Appends the specified [value] to this [QueryBuilder]. */
+    fun append(value: Char): QueryBuilder = apply { internalBuilder.append(value) }
+
+    /** Appends the specified [value] to this [QueryBuilder]. */
+    fun append(value: String): QueryBuilder = apply { internalBuilder.append(value) }
+
+    /** Appends the specified [value] to this [QueryBuilder]. */
+    fun append(value: Expression<*>): QueryBuilder = apply(value::toQueryBuilder)
+
 
     /** Appends the receiver [Char] to this [QueryBuilder]. */
-    operator fun Char.unaryPlus(): QueryBuilder = this@QueryBuilder.also { internalBuilder.append(this) }
+    operator fun Char.unaryPlus(): QueryBuilder = append(this)
 
     /** Appends the receiver [String] to this [QueryBuilder]. */
-    operator fun String.unaryPlus(): QueryBuilder = this@QueryBuilder.also { internalBuilder.append(this) }
+    operator fun String.unaryPlus(): QueryBuilder = append(this)
 
     /** Appends the receiver [Expression] to this [QueryBuilder]. */
-    operator fun Expression<*>.unaryPlus(): QueryBuilder = this@QueryBuilder.also(this::toQueryBuilder)
+    operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
+
 
     /** Adds the specified [argument] as a value of the specified [column]. */
     fun <T> registerArgument(column: Column<*>, argument: T) {
         when (argument) {
-            is Expression<*> -> +argument
-            DefaultValueMarker -> +column.dbDefaultValue!!
+            is Expression<*> -> append(argument)
+            DefaultValueMarker -> append(column.dbDefaultValue!!)
             else -> registerArgument(column.columnType, argument)
         }
     }
@@ -84,6 +84,18 @@ class QueryBuilder(
     }
 
     override fun toString(): String = internalBuilder.toString()
+}
+
+/** Appends all arguments to this [QueryBuilder]. */
+fun QueryBuilder.append(vararg expr: Any): QueryBuilder = apply {
+    for (item in expr) {
+        when (item) {
+            is Char -> append(item)
+            is String -> append(item)
+            is Expression<*> -> append(item)
+            else -> throw IllegalArgumentException("Can't append $item as it has unknown type")
+        }
+    }
 }
 
 /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
