@@ -190,6 +190,8 @@ object SqlExpressionBuilder {
 
     infix fun<T> ExpressionWithColumnType<T>.inSubQuery(query: Query): Op<Boolean> = InSubQueryOp(this, query)
 
+    infix fun <T> ExpressionWithColumnType<T>.notInSubQuery(query: Query): Op<Boolean> = NotInSubQueryOp(this, query)
+
     @Suppress("UNCHECKED_CAST")
     fun<T, S: T?> ExpressionWithColumnType<S>.asLiteral(value: T) = when (value) {
         is Boolean -> booleanLiteral(value)
