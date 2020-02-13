@@ -122,6 +122,14 @@ class InSubQueryOp<T>(val expr: Expression<T>, val query: Query): Op<Boolean>() 
     }
 }
 
+class NotInSubQueryOp<T>(val expr: Expression<T>, val query: Query) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        append(expr, " NOT IN (")
+        query.prepareSQL(this)
+        +")"
+    }
+}
+
 class QueryParameter<T>(val value: T, val sqlType: IColumnType) : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { registerArgument(sqlType, value) }
 }
