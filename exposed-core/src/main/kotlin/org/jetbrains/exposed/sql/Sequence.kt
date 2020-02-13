@@ -6,15 +6,15 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.lang.StringBuilder
 
 /**
- * Sequence : an object that generates a sequence of numeric values.
+ * Database Sequence.
  *
- * @param name          The name of the sequence
- * @param startWith     The first sequence number to be generated.
- * @param incrementBy   The interval between sequence numbers.
- * @param minValue      The minimum value of the sequence.
- * @param maxValue      The maximum value of the sequence.
- * @param cycle         Indicates that the sequence continues to generate values after reaching either its maximum or minimum value.
- * @param cache         Number of values of the sequence the database preallocates and keeps in memory for faster access.
+ * @param name          Name of the sequence.
+ * @param startWith     Beginning of the sequence.
+ * @param incrementBy   Value is added to the current sequence value to create a new value.
+ * @param minValue      Minimum value a sequence can generate.
+ * @param maxValue      Maximum value for the sequence.
+ * @param cycle         Allows the sequence to wrap around when the [maxValue] or [minValue] has been reached by an ascending or descending sequence respectively.
+ * @param cache         Specifies how many sequence numbers are to be preallocated and stored in memory for faster access.
  */
 class Sequence(private val name: String,
                     val startWith: Int? = null,
@@ -29,12 +29,15 @@ class Sequence(private val name: String,
     val ddl: List<String>
         get() = createStatement()
 
+    /**
+     * Returns the SQL command that creates sequence with the specified properties.
+     */
     fun createStatement(): List<String> {
         if (!currentDialect.supportsCreateSequence ) {
             throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", currentDialect)
         }
 
-        val createTableDDL = buildString {
+        val createSequenceDDL = buildString {
             append("CREATE SEQUENCE ")
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
@@ -52,14 +55,29 @@ class Sequence(private val name: String,
             appendIfNotNull(" CACHE", cache)
         }
 
-        return listOf(createTableDDL)
+        return listOf(createSequenceDDL)
     }
 
-    fun dropStatement() = listOf("DROP SEQUENCE $identifier")
+    fun dropStatement(): List<String> {
+        if (!currentDialect.supportsCreateSequence) {
+            throw UnsupportedByDialectException("The current dialect doesn't support drop sequence statement", currentDialect)
+        }
 
-    fun StringBuilder.appendIfNotNull(str: String, strToCheck: Any?) = apply {
-        if (strToCheck != null) {
-            this.append("$str $strToCheck")
+        val dropSequenceDDL = buildString {
+            append("DROP SEQUENCE ")
+            if (currentDialect.supportsIfNotExists) {
+                append("IF EXISTS ")
+            }
+            append(identifier)
+        }
+
+        return listOf(dropSequenceDDL)
+    }
+
+    /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
+    fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
+        if (str2 != null) {
+            this.append("$str1 $str2")
         }
     }
 
