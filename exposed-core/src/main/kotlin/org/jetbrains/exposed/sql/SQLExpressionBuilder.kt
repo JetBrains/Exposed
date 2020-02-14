@@ -16,6 +16,10 @@ fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.min()  : ExpressionWit
 
 fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() : ExpressionWithColumnType<T?> = Max<T, S>(this, this.columnType)
 
+/**
+ * Calculates the average value. Typed to BigDecimal because some DBMS return floating point values for AVG, even if column an integral type
+ * See examples [here](https://www.w3resource.com/sql/aggregate-functions/avg-function.php)
+ */
 fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2)  : ExpressionWithColumnType<BigDecimal?> = Avg<T, S>(this, scale)
 
 fun<T:Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
