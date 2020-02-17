@@ -650,10 +650,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
     ): C = apply {
-        this.referee = ref
-        this.onUpdate = onUpdate
-        this.onDelete = onDelete
-        this.fkName = fkName
+        this.foreignKey = ForeignKeyConstraint(
+                target = ref,
+                from = this,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+                name = fkName
+        )
     }
 
     /**
@@ -674,10 +677,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
     ): C = apply {
-        this.referee = ref
-        this.onUpdate = onUpdate
-        this.onDelete = onDelete
-        this.fkName = fkName
+        this.foreignKey = ForeignKeyConstraint(
+                target = ref,
+                from = this,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+                name = fkName
+        )
     }
 
     /**
@@ -825,10 +831,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Marks this column as nullable. */
     fun <T : Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?>(table, name, columnType)
-        newColumn.referee = referee
-        newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
-        newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
-        newColumn.fkName = fkName
+        newColumn.foreignKey = foreignKey
         newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")
         newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
@@ -961,7 +964,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
-        val foreignKeyConstraints = columns.filter { it.referee != null }.map { ForeignKeyConstraint.from(it) }
+        val foreignKeyConstraints = columns.mapNotNull { it.foreignKey }
 
         val createTable = buildString {
             append("CREATE TABLE ")
