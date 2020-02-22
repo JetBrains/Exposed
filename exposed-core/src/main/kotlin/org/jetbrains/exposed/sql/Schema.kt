@@ -25,7 +25,7 @@ class Schema(private val name: String, private val authorization: String? = null
             throw UnsupportedByDialectException("The current dialect doesn't support create schema statement", currentDialect)
         }
 
-        val createTableDDL = buildString {
+        val createSchemaDDL = buildString {
             append("CREATE SCHEMA ")
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
@@ -38,7 +38,7 @@ class Schema(private val name: String, private val authorization: String? = null
             }
         }
 
-        return listOf(createTableDDL)
+        return listOf(createSchemaDDL)
     }
 
     fun dropStatement(): List<String> {
@@ -46,7 +46,7 @@ class Schema(private val name: String, private val authorization: String? = null
             throw UnsupportedByDialectException("The current dialect doesn't support drop schema statement", currentDialect)
         }
 
-        val dropSequenceDDL = buildString {
+        val dropSchemaDDL = buildString {
             append("DROP SCHEMA ")
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
@@ -54,6 +54,6 @@ class Schema(private val name: String, private val authorization: String? = null
             append(identifier)
         }
 
-        return listOf(dropSequenceDDL)
+        return listOf(dropSchemaDDL)
     }
 }
