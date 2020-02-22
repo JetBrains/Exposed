@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 
 class DatabaseTests : DatabaseTestsBase() {
@@ -11,9 +12,11 @@ class DatabaseTests : DatabaseTestsBase() {
     fun `create database test`() {
         // PostgreSQL will be tested in the next test function
         withDb(excludeSettings = listOf(TestDB.POSTGRESQL)) {
-            val dbName = "jetbrains"
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.dropDatabase(dbName)
+            if(currentDialect.supportsCreateDatabase) {
+                val dbName = "jetbrains"
+                SchemaUtils.createDatabase(dbName)
+                SchemaUtils.dropDatabase(dbName)
+            }
         }
     }
 
