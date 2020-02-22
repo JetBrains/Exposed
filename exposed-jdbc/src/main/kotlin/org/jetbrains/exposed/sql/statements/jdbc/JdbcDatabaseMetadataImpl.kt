@@ -34,6 +34,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val (table, columnMetadata) = extract(this)
             val (schemaName, tableName) = table
 
+            mapping["$tableName"]?.let { t ->
+                result.getOrPut(t) { arrayListOf() } += columnMetadata
+            }
+
             mapping["$schemaName.$tableName"]?.let { t ->
                 result.getOrPut(t) { arrayListOf() } += columnMetadata
             }
