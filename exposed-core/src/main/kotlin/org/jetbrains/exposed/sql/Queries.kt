@@ -76,6 +76,14 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
  */
+fun <T:Table> T.insertInSchema(schema: Schema, body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(SchemaTable(schema.identifier, this)).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
+
+/**
+ * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+ */
 fun <T:Table> T.insertInSchema(schema: String, body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(SchemaTable(schema, this)).apply {
     body(this)
     execute(TransactionManager.current())
@@ -92,8 +100,21 @@ fun <T:Table> T.insertInSchema(schema: String, body: T.(InsertStatement<Number>)
  * @param schema schema name
  * @param references tables to make join with. Order of tables is not important.
  */
-fun <T:Table> T.withSchema(schema: String, vararg references: SchemaTable<*>): SchemaTable<T> = SchemaTable(schema, this, references.toList() )
+fun <T:Table> T.withSchema(schema: String, vararg references: SchemaTable<*>): SchemaTable<T> = SchemaTable(schema, this, references.toList())
 
+
+/**
+ * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+ *
+ * By default, the table references tables in the default schema. If you want to join with tables from other schemas, you can pass them
+ * in the [references] parameters.
+ *
+ * example : tableB.withSchema(schema1, tableA.withSchema(schema2)) will create tableB in schema1 that references tableA in schema2
+ *
+ * @param schema the schema of the table
+ * @param references tables to make join with. Order of tables is not important.
+ */
+fun <T:Table> T.withSchema(schema: Schema, vararg references: SchemaTable<*>): SchemaTable<T> = withSchema(schema.identifier, *references)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03

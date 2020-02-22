@@ -160,7 +160,7 @@ class SchemaTests : DatabaseTestsBase() {
     fun `Data Manipulation in schemas Test`() {
 
         withDb {
-            val schema1 = "schema1"
+            val schema1 = Schema("schema1")
             val authorSchema = Author.withSchema(schema1)
 
             try {
@@ -168,7 +168,7 @@ class SchemaTests : DatabaseTestsBase() {
                 if (connection.metadata { supportsSchemasInDataManipulation } || connection.metadata { supportsCatalogsInDataManipulation }) {
 
                     /** create schema  */
-                    SchemaUtils.createSchema(Schema("schema1"))
+                    SchemaUtils.createSchema(schema1)
 
                     /** Create table with schema */
                     SchemaUtils.create(authorSchema)
