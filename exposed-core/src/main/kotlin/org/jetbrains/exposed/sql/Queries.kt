@@ -74,6 +74,20 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 }
 
 /**
+ * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+ */
+fun <T:Table> T.insertInSchema(schema: String, body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(SchemaTable(schema, this)).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
+
+/**
+ * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+ */
+fun <T:Table> T.withSchema(schema: String, vararg references: SchemaTable<*>): SchemaTable<T> = SchemaTable(schema, this, references.toList() )
+
+
+/**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
 fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =

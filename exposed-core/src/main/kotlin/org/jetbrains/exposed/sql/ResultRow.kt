@@ -50,7 +50,22 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? =
-            data[fieldIndex[c] ?: error("$c is not in record set")] as T?
+            data[fieldIndexWithSchema(c) ?: error("$c is not in record set")] as T?
+
+    private fun <T> fieldIndexWithSchema(c: Expression<T>) : Int? {
+        val fields: Map<Expression<*>, Int> = fieldIndex.mapKeys {
+            val key = it.key
+            if (key is Column<*> && key.table is SchemaTable<*>) {
+                key.table.table.columns.single {column ->
+                    column.name == key.name
+                }
+
+            } else {
+                key
+            }
+        }
+        return fields[c]
+    }
 
     override fun toString(): String =
             fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }

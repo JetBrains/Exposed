@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.h2.engine.Mode
 import org.h2.jdbc.JdbcConnection
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -103,9 +104,12 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
-    override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+    override fun createDatabase(name: String) = throw UnsupportedByDialectException("You cannot use create database statement " +
+            "to create databases. By default, if the database specified in the embedded URL does not yet exist, a new (empty) " +
+            "database is created automatically", this)
 
-    override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+    override fun dropDatabase(name: String) = throw UnsupportedByDialectException("the current dialect doesn't support drop "+
+            "database statement", this)
 
     companion object {
         /** H2 dialect name */

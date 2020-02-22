@@ -252,9 +252,17 @@ class Join(
     }
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
-        .map { a_pk -> a_pk to b.columns.filter { it.referee == a_pk } }
-        .filter { it.second.isNotEmpty() }
-        .takeIf { it.isNotEmpty() }
+            .map { a_pk ->
+                a_pk to b.columns.filter {
+                    when {
+                        it.referee == a_pk -> true
+                        a_pk.table is SchemaTable<*> -> it.referee == a_pk.table.table.columns.single { column -> column.name == a_pk.name }
+                        else -> false
+                    }
+                }
+            }
+            .filter { it.second.isNotEmpty() }
+            .takeIf { it.isNotEmpty() }
 
     /** Return `true` if the specified [table] is already in this join, `false` otherwise. */
     fun alreadyInJoin(table: Table): Boolean = joinParts.any { it.joinPart == table }
