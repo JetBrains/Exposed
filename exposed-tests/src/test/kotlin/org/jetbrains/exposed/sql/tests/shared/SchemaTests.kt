@@ -6,13 +6,13 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
 
-object Author : IntIdTable("authork") {
+object Author : IntIdTable("author") {
     val name = varchar("name", 20)
 }
 
-object Book : Table("bookk") {
+object Book : Table("book") {
     val id = integer("id")
-    val authorId = reference("cityId", Author).nullable()
+    val authorId = reference("authorId", Author).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -40,7 +40,7 @@ class SchemaTests : DatabaseTestsBase() {
                     SchemaUtils.create(author)
                     SchemaUtils.create(book)
 
-                    /** insert in Actor table from schema1  */
+                    /** insert in Author table from schema1  */
                     Author.insertInSchema(schema1) {
                         it[name] = "author-name"
                     }
