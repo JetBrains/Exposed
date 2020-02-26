@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Wrapper
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 private val Transaction.isMySQLMode: Boolean
     get() {

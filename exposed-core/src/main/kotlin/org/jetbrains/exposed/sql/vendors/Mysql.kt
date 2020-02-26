@@ -96,7 +96,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override fun fillConstraintCacheForTables(tables: List<Table>) {
-        val allTables = tables.associateBy { it.nameInDatabaseCase() }
+        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         val allTableNames = allTables.keys
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
         val tr = TransactionManager.current()
