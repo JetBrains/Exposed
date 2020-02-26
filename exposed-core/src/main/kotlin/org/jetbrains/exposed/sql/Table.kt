@@ -631,10 +631,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param ref A column from another table which will be used as a "parent".
      * @see [references]
      */
-    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(ref, null, null)
+    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(ref, null, null, null)
 
     /**
-     * Create reference from a @receiver column to [ref] column with [onDelete] and [onUpdate] options.
+     * Create reference from a @receiver column to [ref] column with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -642,19 +642,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param ref A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     * @param fkName Optional foreign key constraint name.
      */
     fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
         ref: Column<T>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
     ): C = apply {
-        this.referee = ref
-        this.onUpdate = onUpdate
-        this.onDelete = onDelete
+        this.foreignKey = ForeignKeyConstraint(
+                target = ref,
+                from = this,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+                name = fkName
+        )
     }
 
     /**
-     * Create reference from a @receiver column to [ref] column with [onDelete] and [onUpdate] options.
+     * Create reference from a @receiver column to [ref] column with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -662,20 +668,26 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param ref A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     * @param fkName Optional foreign key constraint name.
      */
     @JvmName("referencesById")
     fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
         ref: Column<EntityID<T>>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
     ): C = apply {
-        this.referee = ref
-        this.onUpdate = onUpdate
-        this.onDelete = onDelete
+        this.foreignKey = ForeignKeyConstraint(
+                target = ref,
+                from = this,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+                name = fkName
+        )
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -683,6 +695,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -690,15 +703,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
     ): Column<T> {
-        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate)
+        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName)
         _columns.addColumn(column)
         return column
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -706,6 +720,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -715,14 +730,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
     ): Column<E> {
         val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIDColumn.references(refColumn, onDelete, onUpdate)
+        return entityIDColumn.references(refColumn, onDelete, onUpdate, fkName)
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the `id` column in [foreign] table and with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with a reference to the `id` column in [foreign] table and with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -730,6 +746,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param foreign A table with an `id` column which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -737,11 +754,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
-    ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate)
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
+    ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName)
 
     /**
-     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -749,6 +767,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -756,11 +775,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
-    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate).nullable()
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
+    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName).nullable()
 
     /**
-     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -768,6 +788,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -777,14 +798,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
     ): Column<E?> {
         val entityIdColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIdColumn.references(refColumn, onDelete, onUpdate).nullable()
+        return entityIdColumn.references(refColumn, onDelete, onUpdate, fkName).nullable()
     }
 
     /**
-     * Creates a column with the specified [name] with an optional reference to the `id` column in [foreign] table with [onDelete] and [onUpdate] options.
+     * Creates a column with the specified [name] with an optional reference to the `id` column in [foreign] table with [onDelete], [onUpdate], and [fkName] options.
      * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
      * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
      *
@@ -792,6 +814,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param foreign A table with an `id` column which will be used as a "parent".
      * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
      * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param fkName Optional foreign key constraint name.
      *
      * @see ReferenceOption
      */
@@ -799,17 +822,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String,
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,
-        onUpdate: ReferenceOption? = null
-    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate).nullable()
+        onUpdate: ReferenceOption? = null,
+        fkName: String? = null
+    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName).nullable()
 
     // Miscellaneous
 
     /** Marks this column as nullable. */
     fun <T : Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?>(table, name, columnType)
-        newColumn.referee = referee
-        newColumn.onUpdate = onUpdate.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
-        newColumn.onDelete = onDelete.takeIf { it != currentDialectIfAvailable?.defaultReferenceOption }
+        newColumn.foreignKey = foreignKey
         newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")
         newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
@@ -942,7 +964,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
-        val foreignKeyConstraints = columns.filter { it.referee != null }.map { ForeignKeyConstraint.from(it) }
+        val foreignKeyConstraints = columns.mapNotNull { it.foreignKey }
 
         val createTable = buildString {
             append("CREATE TABLE ")
