@@ -41,6 +41,8 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
+fun Transaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on ${currentDialectTest.name}")
+fun Transaction.assertFalse(actual: Boolean) = kotlin.test.assertFalse(actual, "Failed on ${currentDialectTest.name}")
 fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
 fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 

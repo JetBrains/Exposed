@@ -213,7 +213,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
     }
 
     val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }.filter { it.value.size > 1}
-    if (!excessiveIndices.isEmpty()) {
+    if (excessiveIndices.isNotEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach { (triple, indices)->
             exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
