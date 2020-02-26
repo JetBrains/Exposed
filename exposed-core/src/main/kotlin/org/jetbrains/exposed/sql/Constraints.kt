@@ -55,18 +55,25 @@ data class ForeignKeyConstraint(
 ) : DdlAware {
     private val tx: Transaction
         get() = TransactionManager.current()
+    /** Name of the child table. */
     val targetTable: String
         get() = tx.identity(target.table)
+    /** Name of the foreign key column. */
     val targetColumn: String
         get() = tx.identity(target)
+    /** Name of the parent table. */
     val fromTable: String
         get() = tx.identity(from.table)
+    /** Name of the key column from the parent table. */
     val fromColumn
         get() = tx.identity(from)
+    /** Reference option when performing update operations. */
     val updateRule: ReferenceOption?
         get() = onUpdate ?: currentDialectIfAvailable?.defaultReferenceOption
+    /** Reference option when performing delete operations. */
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
+    /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
                 name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
