@@ -84,7 +84,7 @@ class Column<T>(
         }
 
         val defaultValue = dbDefaultValue
-        if (!isPKColumn && defaultValue != null) {
+        if (defaultValue != null) {
             val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(defaultValue)
             if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
                 val clientDefault = when {
