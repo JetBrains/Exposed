@@ -25,6 +25,7 @@ interface TransactionInterface {
 }
 
 const val DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_REPEATABLE_READ
+const val IGNORE_ISOLATION_LEVEL = -1
 
 const val DEFAULT_REPETITION_ATTEMPTS = 3
 

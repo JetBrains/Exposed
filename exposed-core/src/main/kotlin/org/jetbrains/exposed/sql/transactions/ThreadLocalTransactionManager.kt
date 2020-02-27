@@ -39,7 +39,9 @@ class ThreadLocalTransactionManager(private val db: Database,
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
                 autoCommit = false
-                transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                if (this@ThreadLocalTransaction.transactionIsolation != IGNORE_ISOLATION_LEVEL) {
+                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                }
             }
         }
         override val connection: ExposedConnection<*>
