@@ -14,6 +14,7 @@ interface ExposedConnection<OriginalConnection: Any> {
     fun executeInBatch(sqls: List<String>)
 
     val catalog: String
+    val schema: String
 
     fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T
 
@@ -22,4 +23,5 @@ interface ExposedConnection<OriginalConnection: Any> {
     fun releaseSavepoint(savepoint: ExposedSavepoint)
 
     fun rollback(savepoint: ExposedSavepoint)
+    fun setCatlog(catalog: String)
 }

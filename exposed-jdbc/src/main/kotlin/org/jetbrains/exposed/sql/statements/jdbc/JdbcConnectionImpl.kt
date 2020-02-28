@@ -15,8 +15,11 @@ import java.sql.PreparedStatement
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
     // Oracle driver could throw excpection on catalog
-    override val catalog: String by lazy {
-        try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
+    override val catalog: String
+    get() =  try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
+
+    override val schema: String by lazy {
+        connection.schema
     }
 
     override fun commit() {
@@ -114,5 +117,9 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override fun rollback(savepoint: ExposedSavepoint) {
         connection.rollback((savepoint as JdbcSavepoint).savepoint)
+    }
+
+    override fun setCatlog(catalog: String) {
+        connection.catalog = catalog
     }
 }

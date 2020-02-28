@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
@@ -286,6 +286,53 @@ object SchemaUtils {
             val dropStatements = tablesForDeletion.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
             currentDialect.resetCaches()
+        }
+    }
+
+    /**
+     * Sets the current default schema to [schema]
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+     */
+    fun setSchema(schema: Schema) {
+        with(TransactionManager.current()) {
+            val createStatements = schema.setSchemaStatement()
+
+            execStatements(false, createStatements)
+
+            if(currentDialect is MysqlDialect) {
+                connection.setCatlog(schema.identifier)
+            }
+        }
+    }
+
+    /**
+     * Creates schemas
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+     *
+     * @param schemas the names of the schemas
+     * @param inBatch flag to perform schema creation in a single batch
+     */
+    fun createSchema(vararg schemas: Schema, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = schemas.flatMap { it.createStatement() }
+            execStatements(inBatch, createStatements)
+        }
+    }
+
+    /**
+     * Drops schemas
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+     *
+     * @param schemas the names of the schema
+     * @param inBatch flag to perform schema creation in a single batch
+     */
+    fun dropSchema(vararg schemas: Schema, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val dropStatements = schemas.flatMap { it.dropStatement() }
+            execStatements(inBatch, dropStatements)
         }
     }
 }
