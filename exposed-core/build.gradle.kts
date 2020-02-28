@@ -2,6 +2,7 @@ import tanvd.kosogor.proxy.publishJar
 
 plugins {
     kotlin("jvm") apply true
+    id("org.gradle.maven-publish")
 }
 
 repositories {
@@ -16,21 +17,29 @@ dependencies {
     compileOnly("com.h2database", "h2", "1.4.199")
 }
 
-publishJar {
-    publication {
-        artifactId = "exposed-core"
+group = "in.porter.exposed"
+version = "0.21.2"
+
+val sourceJar = task("sourceJar", Jar::class) {
+    dependsOn(JavaPlugin.CLASSES_TASK_NAME)
+    archiveClassifier.set("sources")
+    from(project.the<SourceSetContainer>()["main"].allSource)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("exposed-core") {
+            from(components["java"])
+            artifact(sourceJar)
+        }
     }
 
-    bintray {
-        username = project.properties["bintrayUser"]?.toString() ?: System.getenv("BINTRAY_USER")
-        secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
-        repository = "exposed"
-        info {
-            publish = false
-            githubRepo = "https://github.com/JetBrains/Exposed.git"
-            vcsUrl = "https://github.com/JetBrains/Exposed.git"
-            userOrg = "kotlin"
-            license = "Apache-2.0"
+    repositories {
+        maven {
+            url = uri("s3://porter-maven/releases")
+            authentication {
+                create<AwsImAuthentication>("awsIm")
+            }
         }
     }
 }
