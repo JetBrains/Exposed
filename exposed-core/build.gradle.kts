@@ -18,7 +18,7 @@ dependencies {
 }
 
 group = "in.porter.exposed"
-version = "0.21.2"
+version = "0.21.1"
 
 val sourceJar = task("sourceJar", Jar::class) {
     dependsOn(JavaPlugin.CLASSES_TASK_NAME)
