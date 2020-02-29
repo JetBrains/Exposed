@@ -164,7 +164,11 @@ internal object OracleFunctionProvider : FunctionProvider() {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
         +"UPDATE ("
-        val subQuery = targets.selectAll()
+        val columnsToSelect = columnsAndValues.flatMap {
+            listOfNotNull(it.first, it.second as? Expression<*>)
+        }.mapIndexed { index, expression -> expression to expression.alias("c$index") }.toMap()
+
+        val subQuery = targets.slice(columnsToSelect.values.toList()).selectAll()
         where?.let {
             subQuery.adjustWhere { it }
         }
@@ -172,8 +176,12 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +") x"
 
         columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
-            append("${transaction.identity(col)}=")
-            registerArgument(col, value)
+            val alias = columnsToSelect.getValue(col)
+            +alias.alias
+            +"="
+            (value as? Expression<*>)?.let {
+                +columnsToSelect.getValue(it).alias
+            } ?: registerArgument(col, value)
         }
 
         limit?.let {

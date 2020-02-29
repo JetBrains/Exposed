@@ -63,10 +63,12 @@ class UpdateTests : DatabaseTestsBase() {
             val join = users.innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
+                it[userData.value] = 123
             }
 
             join.selectAll().forEach {
                 assertEquals(it[users.name], it[userData.comment])
+                assertEquals(123, it[userData.value])
             }
         }
     }
