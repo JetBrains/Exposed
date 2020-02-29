@@ -1,12 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.update
 import org.junit.Test
 
 class UpdateTests : DatabaseTestsBase() {
@@ -53,6 +52,21 @@ class UpdateTests : DatabaseTestsBase() {
                 users.update({ users.id like "a%" }, 1) {
                     it[users.id] = "NewName"
                 }
+            }
+        }
+    }
+    
+    @Test
+    fun testUpdateWithJoin() {
+        val dialects = listOf(TestDB.H2, TestDB.SQLITE, TestDB.H2_MYSQL)
+        withCitiesAndUsers(dialects) { cities, users, userData ->
+            val join = users.innerJoin(userData)
+            join.update {
+                it[userData.comment] = users.name
+            }
+
+            join.selectAll().forEach {
+                assertEquals(it[users.name], it[userData.comment])
             }
         }
     }
