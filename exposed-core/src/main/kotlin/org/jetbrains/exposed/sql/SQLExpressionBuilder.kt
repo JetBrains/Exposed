@@ -36,16 +36,16 @@ fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
 
 // General-Purpose Aggregate Functions
 
-/** Returns the minimum value of this expression across all non-null input values. */
+/** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType)
 
-/** Returns the maximum value of this expression across all non-null input values. */
+/** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType)
 
-/** Returns the average (arithmetic mean) value of this expression across all non-null input values. */
+/** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
 
-/** Returns the sum of this expression across all non-null input values. */
+/** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T : Any?> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
 
 /** Returns the number of input rows for which the value of this expression is not null. */
@@ -58,28 +58,28 @@ fun Column<*>.countDistinct(): Count = Count(this, true)
 // Aggregate Functions for Statistics
 
 /**
- * Returns the population standard deviation of the input values.
+ * Returns the population standard deviation of the non-null input values, or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2): StdDevPop<T> = StdDevPop(this, scale)
 
 /**
- * Returns the sample standard deviation of the input values.
+ * Returns the sample standard deviation of the non-null input values, or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2): StdDevSamp<T> = StdDevSamp(this, scale)
 
 /**
- * Returns the population variance of the input values (square of the population standard deviation).
+ * Returns the population variance of the non-null input values (square of the population standard deviation), or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = VarPop(this, scale)
 
 /**
- * Returns the sample variance of the input values (square of the sample standard deviation).
+ * Returns the sample variance of the non-null input values (square of the sample standard deviation), or `null` if there are no non-null values.
  *
  * @param scale The scale of the decimal column expression returned.
  */

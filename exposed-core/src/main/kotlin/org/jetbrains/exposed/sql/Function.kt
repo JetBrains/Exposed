@@ -134,7 +134,7 @@ class Trim<T : String?>(
 // General-Purpose Aggregate Functions
 
 /**
- * Represents an SQL function that returns the minimum value of [expr] across all non-null input values.
+ * Represents an SQL function that returns the minimum value of [expr] across all non-null input values, or `null` if there are no non-null values.
  */
 class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
@@ -145,7 +145,7 @@ class Min<T : Comparable<T>, in S : T?>(
 }
 
 /**
- * Represents an SQL function that returns the maximum value of [expr] across all non-null input values.
+ * Represents an SQL function that returns the maximum value of [expr] across all non-null input values, or `null` if there are no non-null values.
  */
 class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
@@ -156,7 +156,7 @@ class Max<T : Comparable<T>, in S : T?>(
 }
 
 /**
- * Represents an SQL function that returns the average (arithmetic mean) of all non-null input values.
+ * Represents an SQL function that returns the average (arithmetic mean) of all non-null input values, or `null` if there are no non-null values.
  */
 class Avg<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the average is calculated. */
@@ -166,7 +166,7 @@ class Avg<T : Comparable<T>, in S : T?>(
 }
 
 /**
- * Represents an SQL function that returns the sum of [expr] across all non-null input values.
+ * Represents an SQL function that returns the sum of [expr] across all non-null input values, or `null` if there are no non-null values.
  */
 class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
@@ -197,7 +197,8 @@ class Count(
 // Aggregate Functions for Statistics
 
 /**
- * Represents an SQL function that returns the population standard deviation of the input values.
+ * Represents an SQL function that returns the population standard deviation of the non-null input values,
+ * or `null` if there are no non-null values.
  */
 class StdDevPop<T>(
     /** Returns the expression from which the population standard deviation is calculated. */
@@ -208,7 +209,8 @@ class StdDevPop<T>(
 }
 
 /**
- * Represents an SQL function that returns the sample standard deviation of the input values.
+ * Represents an SQL function that returns the sample standard deviation of the non-null input values,
+ * or `null` if there are no non-null values.
  */
 class StdDevSamp<T>(
     /** Returns the expression from which the sample standard deviation is calculated. */
@@ -219,7 +221,8 @@ class StdDevSamp<T>(
 }
 
 /**
- * Represents an SQL function that returns the population variance of the input values (square of the population standard deviation).
+ * Represents an SQL function that returns the population variance of the non-null input values (square of the population standard deviation),
+ * or `null` if there are no non-null values.
  */
 class VarPop<T>(
     /** Returns the expression from which the population variance is calculated. */
@@ -230,7 +233,8 @@ class VarPop<T>(
 }
 
 /**
- * Represents an SQL function that returns the sample variance of the input values (square of the sample standard deviation).
+ * Represents an SQL function that returns the sample variance of the non-null input values (square of the sample standard deviation),
+ * or `null` if there are no non-null values.
  */
 class VarSamp<T>(
     /** Returns the expression from which the sample variance is calculated. */
