@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Wrapper
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 private val Transaction.isMySQLMode: Boolean
     get() {
@@ -102,6 +102,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
         return super.createIndex(index)
     }
+
+    override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+
+    override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
     companion object {
         /** H2 dialect name */

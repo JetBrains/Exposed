@@ -627,7 +627,7 @@ class DDLTests : DatabaseTestsBase() {
             Table2.deleteAll()
 
             if (currentDialectTest !is SQLiteDialect) {
-                exec(ForeignKeyConstraint.from(Table2.table1).dropStatement().single())
+                exec(Table2.table1.foreignKey!!.dropStatement().single())
             }
         }
     }

@@ -26,6 +26,7 @@ abstract class Op<T> : Expression<T>() {
     }
 
     /** Boolean operator corresponding to the SQL value `FALSE` */
+
     object FALSE : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when (currentDialect) {
@@ -199,52 +200,44 @@ class IsNotNullOp(
  */
 class PlusOp<T, S : T>(
     /** Returns the left-hand side operand. */
-    val expr1: Expression<T>,
+    expr1: Expression<T>,
     /** Returns the right-hand side operand. */
-    val expr2: Expression<S>,
+    expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr1, '+', expr2) }
-}
+) : CustomOperator<T>("+", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that subtracts [expr2] from [expr1].
  */
 class MinusOp<T, S : T>(
     /** Returns the left-hand side operand. */
-    val expr1: Expression<T>,
+    expr1: Expression<T>,
     /** Returns the right-hand side operand. */
-    val expr2: Expression<S>,
+    expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr1, '-', expr2) }
-}
+) : CustomOperator<T>("-", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that multiplies [expr1] by [expr2].
  */
 class TimesOp<T, S : T>(
     /** Returns the left-hand side operand. */
-    val expr1: Expression<T>,
+    expr1: Expression<T>,
     /** Returns the right-hand side operand. */
-    val expr2: Expression<S>,
+    expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr1, '*', expr2) }
-}
+) : CustomOperator<T>("*", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that divides [expr1] by [expr2].
  */
 class DivideOp<T, S : T>(
     /** Returns the left-hand side operand. */
-    val expr1: Expression<T>,
+    expr1: Expression<T>,
     /** Returns the right-hand side operand. */
-    val expr2: Expression<S>,
+    expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append('(', expr1, " / ", expr2, ')') }
-}
+) : CustomOperator<T>("/", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that calculates the remainder of dividing [expr1] by [expr2].
@@ -341,6 +334,22 @@ class InSubQueryOp<T>(
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " IN (")
+        query.prepareSQL(this)
+        +")"
+    }
+}
+
+/**
+ * Represents an SQL operator that checks if [expr] is not equals to any row returned from [query].
+ */
+class NotInSubQueryOp<T>(
+    /** Returns the expression compared to each row of the query result. */
+    val expr: Expression<T>,
+    /** Returns the query to check against. */
+    val query: Query
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append(expr, " NOT IN (")
         query.prepareSQL(this)
         +")"
     }

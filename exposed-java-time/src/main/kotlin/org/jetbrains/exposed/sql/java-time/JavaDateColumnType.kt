@@ -93,7 +93,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun notNullValueToDB(value: Any): Any {
         if (value is LocalDateTime) {
-            return java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            return java.sql.Timestamp.from(value.atZone(ZoneId.systemDefault()).toInstant())
         }
         return value
     }

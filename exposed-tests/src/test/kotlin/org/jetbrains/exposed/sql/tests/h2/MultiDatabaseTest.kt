@@ -4,6 +4,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -13,9 +16,6 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class MultiDatabaseTest {
 

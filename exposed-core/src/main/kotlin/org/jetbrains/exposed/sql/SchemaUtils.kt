@@ -100,7 +100,11 @@ object SchemaUtils {
         }
     }
 
-    fun createFKey(reference: Column<*>) = ForeignKeyConstraint.from(reference).createStatement()
+    fun createFKey(reference: Column<*>): List<String> {
+        val foreignKey = reference.foreignKey
+        require(foreignKey != null && (foreignKey.deleteRule != null || foreignKey.updateRule != null)) { "$reference does not reference anything" }
+        return foreignKey.createStatement()
+    }
 
     fun createIndex(index: Index) = index.createStatement()
 
@@ -143,13 +147,14 @@ object SchemaUtils {
 
                 for (table in tables) {
                     for (column in table.columns) {
-                        if (column.referee != null) {
+                        val foreignKey = column.foreignKey
+                        if (foreignKey != null) {
                             val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to identity(column)]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.targetTable != column.referee!!.table.tableName.inProperCase()
-                                    || column.onDelete != existingConstraint.deleteRule
-                                    || column.onUpdate != existingConstraint.updateRule) {
+                            } else if (existingConstraint.targetTable != foreignKey.targetTable
+                                    || foreignKey.deleteRule != existingConstraint.deleteRule
+                                    || foreignKey.updateRule != existingConstraint.updateRule) {
                                 statements.addAll(existingConstraint.dropStatement())
                                 statements.addAll(createFKey(column))
                             }
@@ -176,6 +181,32 @@ object SchemaUtils {
             execStatements(inBatch, createStatements(*tables))
             commit()
             currentDialect.resetCaches()
+        }
+    }
+
+    /**
+     * Creates databases
+     *
+     * @param databases the names of the databases
+     * @param inBatch flag to perform database creation in a single batch
+     */
+    fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
+            execStatements(inBatch, createStatements)
+        }
+    }
+
+    /**
+     * Drops databases
+     *
+     * @param databases the names of the databases
+     * @param inBatch flag to perform database creation in a single batch
+     */
+    fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
+        with(TransactionManager.current()) {
+            val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
+            execStatements(inBatch, createStatements)
         }
     }
 

@@ -319,6 +319,9 @@ object SqlExpressionBuilder {
     /** Checks if this expression is equals to any row returned from [query]. */
     infix fun <T> ExpressionWithColumnType<T>.inSubQuery(query: Query): InSubQueryOp<T> = InSubQueryOp(this, query)
 
+    /** Checks if this expression is not equals to any row returned from [query]. */
+    infix fun <T> ExpressionWithColumnType<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
+
 
     // Array Comparisons
 

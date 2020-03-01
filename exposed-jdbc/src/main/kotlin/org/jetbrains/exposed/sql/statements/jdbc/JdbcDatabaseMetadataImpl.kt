@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -90,19 +87,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
-        return tables.map{ it.nameInDatabaseCase() }.associateWith { table ->
+        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
+        return allTables.keys.associateWith { table ->
             metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
+                val fromColumn = allTables.getValue(fromTableName).columns.first { it.nameInDatabaseCase() == fromColumnName }
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
                 val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("PKCOLUMN_NAME")!!)
+                val targetColumn = allTables.getValue(targetTableName).columns.first { it.nameInDatabaseCase() == targetColumnName }
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
-                ForeignKeyConstraint(constraintName,
-                        targetTableName, targetColumnName,
-                        fromTableName, fromColumnName,
-                        constraintUpdateRule, constraintDeleteRule)
+                ForeignKeyConstraint(
+                        target = targetColumn,
+                        from = fromColumn,
+                        onUpdate = constraintUpdateRule,
+                        onDelete = constraintDeleteRule,
+                        name = constraintName
+                )
             }
         }
     }

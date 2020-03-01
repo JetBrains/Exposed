@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
     // select expressions
@@ -74,7 +75,6 @@ class SelectTests : DatabaseTestsBase() {
     }
 
 
-
     @Test
     fun testInList01() {
         withCitiesAndUsers { cities, users, userData ->
@@ -104,6 +104,28 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testNotInSubQueryNoData() {
+        withCitiesAndUsers { cities, _, _ ->
+            val r = cities.select { cities.id notInSubQuery cities.slice(cities.id).selectAll() }
+            // no data since all ids are selected
+            assertEquals(0, r.count())
+        }
+    }
+
+    @Test
+    fun testNotInSubQuery() {
+        withCitiesAndUsers { cities, _, _ ->
+            val cityId = 2
+            val r = cities.select { cities.id notInSubQuery cities.slice(cities.id).select { cities.id eq cityId } }.map { it[cities.id] }.sorted()
+            assertEquals(2, r.size)
+            // only 2 cities with id 1 and 2 respectively
+            assertEquals(1, r[0])
+            assertEquals(3, r[1])
+            //there is no city with id=2
+            assertNull(r.find { it == cityId })
+        }
+    }
 
     @Test
     fun testSelectDistinct() {
