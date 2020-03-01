@@ -57,6 +57,51 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String = with(QueryBuilder(true)) {
+        if (limit != null) {
+            transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE clause.")
+        }
+        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+        if (tableToUpdate == null) {
+            transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
+        }
+        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
+            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
+        }
+        +"MERGE INTO "
+        tableToUpdate.describe(transaction, this)
+        +" USING "
+
+        if (targets.table != tableToUpdate)
+            targets.table.describe(transaction, this)
+
+        targets.joinParts.forEach {
+            if (it.joinPart != tableToUpdate) {
+                it.joinPart.describe(transaction, this)
+            }
+            + " ON "
+            it.appendConditions(this)
+        }
+        +" WHEN MATCHED THEN UPDATE SET "
+        columnsAndValues.appendTo(this) { (col, value) ->
+            append("${transaction.identity(col)}=")
+            registerArgument(col, value)
+        }
+
+        where?.let {
+            + " WHERE "
+            +it
+        }
+        limit?.let { +" LIMIT $it" }
+        toString()
+    }
+
     override fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
