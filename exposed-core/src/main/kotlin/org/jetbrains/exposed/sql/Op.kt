@@ -198,44 +198,48 @@ class IsNotNullOp(
  * Represents an SQL operator that adds [expr2] to [expr1].
  */
 class PlusOp<T, S : T>(
-    /** Returns the left-hand side operand. */
+    /** The left-hand side operand. */
     expr1: Expression<T>,
-    /** Returns the right-hand side operand. */
+    /** The right-hand side operand. */
     expr2: Expression<S>,
-    override val columnType: IColumnType
+    /** The column type of this expression. */
+    columnType: IColumnType
 ) : CustomOperator<T>("+", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that subtracts [expr2] from [expr1].
  */
 class MinusOp<T, S : T>(
-    /** Returns the left-hand side operand. */
+    /** The left-hand side operand. */
     expr1: Expression<T>,
-    /** Returns the right-hand side operand. */
+    /** The right-hand side operand. */
     expr2: Expression<S>,
-    override val columnType: IColumnType
+    /** The column type of this expression. */
+    columnType: IColumnType
 ) : CustomOperator<T>("-", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that multiplies [expr1] by [expr2].
  */
 class TimesOp<T, S : T>(
-    /** Returns the left-hand side operand. */
+    /** The left-hand side operand. */
     expr1: Expression<T>,
-    /** Returns the right-hand side operand. */
+    /** The right-hand side operand. */
     expr2: Expression<S>,
-    override val columnType: IColumnType
+    /** The column type of this expression. */
+    columnType: IColumnType
 ) : CustomOperator<T>("*", columnType, expr1, expr2)
 
 /**
  * Represents an SQL operator that divides [expr1] by [expr2].
  */
 class DivideOp<T, S : T>(
-    /** Returns the left-hand side operand. */
+    /** The left-hand side operand. */
     expr1: Expression<T>,
-    /** Returns the right-hand side operand. */
+    /** The right-hand side operand. */
     expr2: Expression<S>,
-    override val columnType: IColumnType
+    /** The column type of this expression. */
+    columnType: IColumnType
 ) : CustomOperator<T>("/", columnType, expr1, expr2)
 
 /**
