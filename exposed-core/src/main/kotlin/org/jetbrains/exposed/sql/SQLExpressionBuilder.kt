@@ -1,4 +1,3 @@
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -8,216 +7,375 @@ import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
 
-fun ExpressionWithColumnType<*>.count() : Function<Int> = Count(this)
+// String Functions
 
-fun Column<*>.countDistinct() : Function<Int> = Count(this, true)
+/** Converts this string expression to lower case. */
+fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.min()  : ExpressionWithColumnType<T?> = Min<T, S>(this, this.columnType)
+/** Converts this string expression to upper case. */
+fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.max() : ExpressionWithColumnType<T?> = Max<T, S>(this, this.columnType)
+fun <T : String?> Expression<T>.groupConcat(
+    separator: String? = null,
+    distinct: Boolean = false,
+    orderBy: Pair<Expression<*>, SortOrder>
+): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy)
+
+fun <T : String?> Expression<T>.groupConcat(
+    separator: String? = null,
+    distinct: Boolean = false,
+    orderBy: Array<Pair<Expression<*>, SortOrder>> = emptyArray()
+): GroupConcat<T> = GroupConcat(this, separator, distinct, *orderBy)
+
+/** Extract a substring from this string expression that begins at the specified [start] and with the specified [length]. */
+fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T> = Substring(this, intLiteral(start), intLiteral(length))
+
+/** Removes the longest string containing only spaces from both ends of string expression. */
+fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
+
+
+// General-Purpose Aggregate Functions
+
+/** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType)
+
+/** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType)
+
+/** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
+
+/** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
+fun <T : Any?> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
+
+/** Returns the number of input rows for which the value of this expression is not null. */
+fun ExpressionWithColumnType<*>.count(): Count = Count(this)
+
+/** Returns the number of distinct input rows for which the value of this expression is not null. */
+fun Column<*>.countDistinct(): Count = Count(this, true)
+
+
+// Aggregate Functions for Statistics
 
 /**
- * Calculates the average value. Typed to BigDecimal because some DBMS return floating point values for AVG, even if column an integral type
- * See examples [here](https://www.w3resource.com/sql/aggregate-functions/avg-function.php)
+ * Returns the population standard deviation of the non-null input values, or `null` if there are no non-null values.
+ *
+ * @param scale The scale of the decimal column expression returned.
  */
-fun<T:Comparable<T>, S:T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2)  : ExpressionWithColumnType<BigDecimal?> = Avg<T, S>(this, scale)
+fun <T : Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2): StdDevPop<T> = StdDevPop(this, scale)
 
-fun<T:Any?> ExpressionWithColumnType<T>.stdDevPop(scale: Int = 2) = StdDevPop(this, scale)
+/**
+ * Returns the sample standard deviation of the non-null input values, or `null` if there are no non-null values.
+ *
+ * @param scale The scale of the decimal column expression returned.
+ */
+fun <T : Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2): StdDevSamp<T> = StdDevSamp(this, scale)
 
-fun<T:Any?> ExpressionWithColumnType<T>.stdDevSamp(scale: Int = 2) = StdDevSamp(this, scale)
+/**
+ * Returns the population variance of the non-null input values (square of the population standard deviation), or `null` if there are no non-null values.
+ *
+ * @param scale The scale of the decimal column expression returned.
+ */
+fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = VarPop(this, scale)
 
-fun<T:Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2) = VarPop(this, scale)
-
-fun<T:Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2) = VarSamp(this, scale)
-
-fun<T:Any?> ExpressionWithColumnType<T>.sum() = Sum(this, this.columnType)
-
-fun<R:Any> Expression<*>.castTo(columnType: IColumnType) = Cast<R>(this, columnType)
-
-fun<T:String?> Expression<T>.substring(start: Int, length: Int) : Function<T> =
-        Substring(this, LiteralOp(IntegerColumnType(), start), LiteralOp(IntegerColumnType(), length))
-
-fun<T:String?> Expression<T>.trim() : Function<T> = Trim(this)
-
-fun<T:String?> Expression<T>.lowerCase() : Function<T> = LowerCase(this)
-fun<T:String?> Expression<T>.upperCase() : Function<T> = UpperCase(this)
-
-fun Sequence.nextVal() : Function<Int> = NextVal(this)
-
-fun<T:Any?> ExpressionWithColumnType<T>.function(functionName: String) : Function<T?> = CustomFunction(functionName, columnType, this)
-fun CustomStringFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<String?>(functionName, VarCharColumnType(), *params)
-fun CustomLongFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<Long?>(functionName, LongColumnType(), *params)
-
-fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Pair<Expression<*>,SortOrder>): GroupConcat<T> =
-        GroupConcat(this, separator, distinct, orderBy)
-
-fun <T : String?> Expression<T>.groupConcat(separator: String? = null, distinct: Boolean = false, orderBy: Array<Pair<Expression<*>,SortOrder>> = emptyArray()): GroupConcat<T> =
-        GroupConcat(this, separator, distinct, *orderBy)
+/**
+ * Returns the sample variance of the non-null input values (square of the sample standard deviation), or `null` if there are no non-null values.
+ *
+ * @param scale The scale of the decimal column expression returned.
+ */
+fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
 
+// Sequence Manipulation Functions
+
+/** Advances this sequence and returns the new value. */
+fun Sequence.nextVal(): NextVal = NextVal(this)
+
+
+// Value Expressions
+
+/** Specifies a conversion from one data type to another. */
+fun <R : Any> Expression<*>.castTo(columnType: IColumnType): Cast<R> = Cast(this, columnType)
+
+
+// Misc.
+
+/**
+ * Calls a custom SQL function with the specified [functionName] and passes this expression as its only argument.
+ */
+fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
+
+/**
+ * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
+ */
+fun CustomStringFunction(
+    functionName: String,
+    vararg params: Expression<*>
+): CustomFunction<String?> = CustomFunction(functionName, VarCharColumnType(), *params)
+
+/**
+ * Calls a custom SQL function with the specified [functionName], that returns a long, and passing [params] as its arguments.
+ */
+fun CustomLongFunction(
+    functionName: String,
+    vararg params: Expression<*>
+): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
+
+
+/**
+ * Builder object for creating SQL expressions.
+ */
 object SqlExpressionBuilder {
-    fun <T, S:T?, E:ExpressionWithColumnType<S>, R:T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>) : ExpressionWithColumnType<R> =
-            Coalesce(expr, alternate)
 
-    fun case(value: Expression<*>? = null) = Case(value)
+    // Comparison Operators
 
-    fun<T, S:T?> ExpressionWithColumnType<in S>.wrap(value: T): Expression<T> = QueryParameter(value, columnType)
+    /** Checks if this expression is equals to some [t] value. */
+    infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = if (t == null) isNull() else EqOp(this, wrap(t))
 
-    infix fun <T> ExpressionWithColumnType<T>.eq(t: T) : Op<Boolean> {
+    /** Checks if this expression is equals to some [other] expression. */
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): EqOp = EqOp(this, other)
+
+    /** Checks if this expression is equals to some [t] value. */
+    infix fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.eq(t: T?): Op<Boolean> {
         if (t == null) {
             return isNull()
         }
-        return EqOp(this, wrap(t))
-    }
-
-    infix fun <T:Comparable<T>, E:EntityID<T>?> ExpressionWithColumnType<E>.eq(t: T?) : Op<Boolean> {
-        if (t == null) {
-            return isNull()
-        }
-        @Suppress("UNCHECKED_CAST") val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
+        @Suppress("UNCHECKED_CAST")
+        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
         return EqOp(this, wrap(entityID))
     }
 
-    infix fun<T, S1: T?, S2: T?> Expression<in S1>.eq(other: Expression<in S2>) : Op<Boolean> = EqOp(this, other)
 
-    infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> {
-        if (other == null) {
-            return isNotNull()
-        }
+    /** Checks if this expression is not equals to some [other] value. */
+    infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
 
-        return NeqOp(this, wrap(other))
-    }
+    /** Checks if this expression is not equals to some [other] expression. */
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): NeqOp = NeqOp(this, other)
 
-    infix fun <T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.neq(t: T?) : Op<Boolean> {
-        if (t == null) {
-            return isNotNull()
-        }
-        return NeqOp(this, wrap(t))
-    }
+    /** Checks if this expression is not equals to some [t] value. */
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.neq(t: T?): Op<Boolean> = if (t == null) isNotNull() else NeqOp(this, wrap(t))
 
-    infix fun <T, S1: T?, S2: T?> Expression<in S1>.neq(other: Expression<in S2>) : Op<Boolean> = NeqOp(this, other)
 
-    fun<T> ExpressionWithColumnType<T>.isNull(): Op<Boolean> = IsNullOp(this)
+    /** Checks if this expression is less than some [t] value. */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(t: T): LessOp = LessOp(this, wrap(t))
 
-    fun<T> ExpressionWithColumnType<T>.isNotNull(): Op<Boolean> = IsNotNullOp(this)
+    /** Checks if this expression is less than some [other] expression. */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
 
-    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
-
+    /** Checks if this expression is less than some [t] value. */
     @JvmName("lessEntityID")
-    infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T) : Op<Boolean> = LessOp(this, wrap(t))
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T): LessOp = LessOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.less(other: Expression<in S>) = LessOp(this, other)
 
-    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
+    /** Checks if this expression is less than or equal to some [t] value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
+    /** Checks if this expression is less than or equal to some [other] expression */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
+
+    /** Checks if this expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
-    infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T) : Op<Boolean> = LessEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<in S>) : Op<Boolean> = LessEqOp(this, other)
 
-    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
+    /** Checks if this expression is greater than some [t] value. */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
+    /** Checks if this expression is greater than some [other] expression. */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
+
+    /** Checks if this expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
-    infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T) : Op<Boolean> = GreaterOp(this, wrap(t))
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greater(other: Expression<in S>) : Op<Boolean> = GreaterOp(this, other)
 
-    infix fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp(this, wrap(t))
+    /** Checks if this expression is greater than or equal to some [t] value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
 
+    /** Checks if this expression is greater than or equal to some [other] expression */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
+
+    /** Checks if this expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
-    infix fun<T:Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T) : Op<Boolean> = GreaterEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
 
-    fun<T:Comparable<T>, S: T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<in S>) : Op<Boolean> = GreaterEqOp(this, other)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.plus(other: Expression<S>) : ExpressionWithColumnType<T> = PlusOp(this, other, columnType)
+    // Comparison Predicates
 
-    operator fun<T> ExpressionWithColumnType<T>.plus(t: T) : ExpressionWithColumnType<T> = PlusOp(this, wrap(t), columnType)
+    /** Returns `true` if this expression is between the values [from] and [to], `false` otherwise. */
+    fun <T, S : T?> ExpressionWithColumnType<S>.between(from: T, to: T): Between = Between(this, asLiteral(from), asLiteral(to))
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.minus(other: Expression<S>) : ExpressionWithColumnType<T> = MinusOp(this, other, columnType)
+    /** Returns `true` if this expression is null, `false` otherwise. */
+    fun <T> ExpressionWithColumnType<T>.isNull(): IsNullOp = IsNullOp(this)
 
-    operator fun<T> ExpressionWithColumnType<T>.minus(t: T) : ExpressionWithColumnType<T> = MinusOp(this, wrap(t), columnType)
+    /** Returns `true` if this expression is not null, `false` otherwise. */
+    fun <T> ExpressionWithColumnType<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.times(other: Expression<S>) : ExpressionWithColumnType<T> = TimesOp(this, other, columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.times(t: T) : ExpressionWithColumnType<T> = TimesOp(this, wrap(t), columnType)
+    // Mathematical Operators
 
-    operator fun<T, S: T> ExpressionWithColumnType<T>.div(other: Expression<S>) : ExpressionWithColumnType<T> = DivideOp(this, other, columnType)
+    /** Adds the [t] value to this expression. */
+    infix operator fun <T> ExpressionWithColumnType<T>.plus(t: T): PlusOp<T, T> = PlusOp(this, wrap(t), columnType)
 
-    operator fun<T> ExpressionWithColumnType<T>.div(t: T) : ExpressionWithColumnType<T> = DivideOp(this, wrap(t), columnType)
+    /** Adds the [other] expression to this expression. */
+    infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
 
-    operator fun<T:Number?, S: Number> ExpressionWithColumnType<T>.rem(other: Expression<S>) : ExpressionWithColumnType<T> = ModOp(this, other, columnType)
 
-    operator fun<T:Number?, S: T> ExpressionWithColumnType<T>.rem(t: S) : ExpressionWithColumnType<T> = ModOp(this, wrap(t), columnType)
+    /** Subtracts the [t] value from this expression. */
+    infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
 
-    infix fun<T:Number?, S: Number> ExpressionWithColumnType<T>.mod(other: Expression<S>) : ExpressionWithColumnType<T> = this % other
+    /** Subtracts the [other] expression from this expression. */
+    infix operator fun <T, S : T> ExpressionWithColumnType<T>.minus(other: Expression<S>): MinusOp<T, S> = MinusOp(this, other, columnType)
 
-    infix fun<T:Number?, S: T> ExpressionWithColumnType<T>.mod(t: S) : ExpressionWithColumnType<T> = this % t
 
-    infix fun<T:String?> ExpressionWithColumnType<T>.like(pattern: String): Op<Boolean> = LikeOp(this, QueryParameter(pattern, columnType))
+    /** Multiplies this expression by the [t] value. */
+    infix operator fun <T> ExpressionWithColumnType<T>.times(t: T): TimesOp<T, T> = TimesOp(this, wrap(t), columnType)
 
+    /** Multiplies this expression by the [other] expression. */
+    infix operator fun <T, S : T> ExpressionWithColumnType<T>.times(other: Expression<S>): TimesOp<T, S> = TimesOp(this, other, columnType)
+
+
+    /** Divides this expression by the [t] value. */
+    infix operator fun <T> ExpressionWithColumnType<T>.div(t: T): DivideOp<T, T> = DivideOp(this, wrap(t), columnType)
+
+    /** Divides this expression by the [other] expression. */
+    infix operator fun <T, S : T> ExpressionWithColumnType<T>.div(other: Expression<S>): DivideOp<T, S> = DivideOp(this, other, columnType)
+
+
+    /** Calculates the remainder of dividing this expression by the [t] value. */
+    infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S): ModOp<T, S> = ModOp(this, wrap(t), columnType)
+
+    /** Calculates the remainder of dividing this expression by the [other] expression. */
+    infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>): ModOp<T, S> = ModOp(this, other, columnType)
+
+
+    /** Calculates the remainder of dividing this expression by the [t] value. */
+    infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S): ModOp<T, S> = this % t
+
+    /** Calculates the remainder of dividing this expression by the [other] expression. */
+    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> = this % other
+
+
+    // String Functions
+
+    /** Concatenates the text representations of all the [expr]. */
+    fun <T : String?> concat(vararg expr: Expression<T>): Concat<T> = Concat("", *expr)
+
+    /** Concatenates the text representations of all the [expr] using the specified [separator]. */
+    fun <T : String?> concat(separator: String = "", expr: List<Expression<T>>): Concat<T> = Concat(separator, *expr.toTypedArray())
+
+
+    // Pattern Matching
+
+    /** Checks if this expression matches the specified [pattern]. */
+    infix fun <T : String?> ExpressionWithColumnType<T>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
+
+    /** Checks if this expression matches the specified [pattern]. */
     @JvmName("likeWithEntityID")
-    infix fun ExpressionWithColumnType<EntityID<String>>.like(pattern: String): Op<Boolean> = LikeOp(this, QueryParameter(pattern, columnType))
+    infix fun ExpressionWithColumnType<EntityID<String>>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
 
-    infix fun<T:String?> ExpressionWithColumnType<T>.notLike(pattern: String): Op<Boolean> = NotLikeOp(this, QueryParameter(pattern, columnType))
+    /** Checks if this expression matches the specified [pattern]. */
+    infix fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 
+    /** Checks if this expression matches the specified [pattern] using the specified match [mode]. */
+    fun <T : String?> ExpressionWithColumnType<T>.match(
+        pattern: String,
+        mode: FunctionProvider.MatchMode?
+    ): Op<Boolean> = with(currentDialect.functionProvider) { this@match.match(pattern, mode) }
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
+    infix fun <T : String?> ExpressionWithColumnType<T>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
-    infix fun ExpressionWithColumnType<EntityID<String>>.notLike(pattern: String): Op<Boolean> = NotLikeOp(this, QueryParameter(pattern, columnType))
+    infix fun ExpressionWithColumnType<EntityID<String>>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
 
-    /*
-     * Function will apply case-sensitive regexp function
-     */
-    infix fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> = RegexpOp(this, QueryParameter(pattern, columnType), true)
+    /** Checks if this expression matches the [pattern]. Supports regular expressions. */
+    infix fun <T : String?> ExpressionWithColumnType<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
 
-    fun<T:String?> ExpressionWithColumnType<T>.regexp(pattern: Expression<String>, caseSensitive: Boolean = true): Op<Boolean> = RegexpOp(this, pattern, caseSensitive)
+    /** Checks if this expression matches the [pattern]. Supports regular expressions. */
+    fun <T : String?> ExpressionWithColumnType<T>.regexp(
+        pattern: Expression<String>,
+        caseSensitive: Boolean = true
+    ): RegexpOp<T> = RegexpOp(this, pattern, caseSensitive)
 
-    @Deprecated("Use not(RegexpOp()) instead", level = DeprecationLevel.ERROR)
-    infix fun<T:String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = TODO()
+    /** Checks if this expression doesn't match the [pattern]. Supports regular expressions. */
+    @Deprecated("Use not(RegexpOp()) instead", ReplaceWith("regexp(pattern).not()"), DeprecationLevel.ERROR)
+    infix fun <T : String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = TODO()
 
-    infix fun<T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = true)
 
+    // Conditional Expressions
+
+    /** Returns the first of its arguments that is not null. */
+    fun <T, S : T?, E : ExpressionWithColumnType<S>, R : T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>): Coalesce<T?, S, T?> =
+        Coalesce(expr, alternate)
+
+    fun case(value: Expression<*>? = null): Case = Case(value)
+
+
+    // Subquery Expressions
+
+    /** Checks if this expression is equals to any row returned from [query]. */
+    infix fun <T> ExpressionWithColumnType<T>.inSubQuery(query: Query): InSubQueryOp<T> = InSubQueryOp(this, query)
+
+    /** Checks if this expression is not equals to any row returned from [query]. */
+    infix fun <T> ExpressionWithColumnType<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
+
+
+    // Array Comparisons
+
+    /** Checks if this expression is equals to any element from [list]. */
+    infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListOp<T> = InListOrNotInListOp(this, list, isInList = true)
+
+    /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun<T:Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): Op<Boolean> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return inList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
-    infix fun<T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): Op<Boolean> = InListOrNotInListOp(this, list, isInList = false)
+    /** Checks if this expression is not equals to any element from [list]. */
+    infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListOp<T> = InListOrNotInListOp(this, list, isInList = false)
 
+    /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun<T:Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): Op<Boolean> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return notInList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
-    infix fun<T> ExpressionWithColumnType<T>.inSubQuery(query: Query): Op<Boolean> = InSubQueryOp(this, query)
 
-    infix fun <T> ExpressionWithColumnType<T>.notInSubQuery(query: Query): Op<Boolean> = NotInSubQueryOp(this, query)
+    // Misc.
 
+    /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    fun<T, S: T?> ExpressionWithColumnType<S>.asLiteral(value: T) = when (value) {
+    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
+        is Boolean -> booleanParam(value)
+        is Short -> shortParam(value)
+        is Int -> intParam(value)
+        is Long -> longParam(value)
+        is Float -> floatParam(value)
+        is Double -> doubleParam(value)
+        is String -> stringParam(value)
+        else -> QueryParameter(value, columnType)
+    } as QueryParameter<T>
+
+    /** Returns the specified [value] as a literal of type [T]. */
+    @Suppress("UNCHECKED_CAST")
+    fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
+        is Short -> shortLiteral(value)
         is Int -> intLiteral(value)
         is Long -> longLiteral(value)
+        is Float -> floatLiteral(value)
+        is Double -> doubleLiteral(value)
         is String -> stringLiteral(value)
         is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
         else -> LiteralOp(columnType, value)
     } as LiteralOp<T>
 
-    fun<T, S: T?> ExpressionWithColumnType<S>.between(from: T, to: T): Op<Boolean> = Between(this, asLiteral(from), asLiteral(to))
-
-    fun ExpressionWithColumnType<Int>.intToDecimal(): ExpressionWithColumnType<BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
-
-    fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: FunctionProvider.MatchMode?): Op<Boolean> {
-        return with(currentDialect.functionProvider) {
-            this@match.match(pattern, mode)
-        }
-    }
-
-    infix fun <T: String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
-
-    fun <T:String?> concat(vararg expr: Expression<T>) = Concat("", *expr)
-    fun <T:String?> concat(separator: String = "", expr: List<Expression<T>>) = Concat(separator, *expr.toTypedArray())
+    fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
 }
