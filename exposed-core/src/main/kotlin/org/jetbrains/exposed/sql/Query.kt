@@ -34,9 +34,9 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     var fetchSize: Int? = null
         private set
 
-    override fun copy(): SizedIterable<ResultRow> = Query(set, where).also { copy ->
-        copy.groupedByColumns = groupedByColumns
-        copy.orderByExpressions = orderByExpressions
+    override fun copy(): Query = Query(set, where).also { copy ->
+        copy.groupedByColumns = groupedByColumns.toMutableList()
+        copy.orderByExpressions = orderByExpressions.toMutableList()
         copy.having = having
         copy.distinct = distinct
         copy.forUpdate = forUpdate
