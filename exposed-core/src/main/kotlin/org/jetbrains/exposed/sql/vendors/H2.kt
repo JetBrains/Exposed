@@ -65,7 +65,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
-            transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE clause.")
+            transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
         if (tableToUpdate == null) {
@@ -98,7 +98,6 @@ internal object H2FunctionProvider : FunctionProvider() {
             + " WHERE "
             +it
         }
-        limit?.let { +" LIMIT $it" }
         toString()
     }
 
