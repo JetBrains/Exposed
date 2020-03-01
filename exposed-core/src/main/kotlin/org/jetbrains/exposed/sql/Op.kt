@@ -26,7 +26,6 @@ abstract class Op<T> : Expression<T>() {
     }
 
     /** Boolean operator corresponding to the SQL value `FALSE` */
-
     object FALSE : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when (currentDialect) {
