@@ -107,7 +107,8 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         }
         private fun getDriver(url: String) = when {
             url.startsWith("jdbc:h2") -> "org.h2.Driver"
-            url.startsWith("jdbc:mysql") -> "com.mysql.jdbc.Driver"
+            url.startsWith("jdbc:postgresql") -> "org.postgresql.Driver"
+            url.startsWith("jdbc:mysql") -> "com.mysql.cj.jdbc.Driver"
             url.startsWith("jdbc:oracle") -> "oracle.jdbc.OracleDriver"
             url.startsWith("jdbc:sqlite") -> "org.sqlite.JDBC"
             url.startsWith("jdbc:sqlserver") -> "com.microsoft.sqlserver.jdbc.SQLServerDriver"
