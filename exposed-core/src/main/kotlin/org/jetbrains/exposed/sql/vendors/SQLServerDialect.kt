@@ -130,7 +130,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 
-    override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String {
+    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
     }
 }

@@ -452,7 +452,7 @@ abstract class FunctionProvider {
      * @param offset The number of rows to skip.
      * @param alreadyOrdered Whether the query is already ordered or not.
      */
-    open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String = buildString {
+    open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = buildString {
         if (size > 0) {
             append("LIMIT $size")
             if (offset > 0) {

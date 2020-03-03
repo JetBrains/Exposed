@@ -77,7 +77,7 @@ class GroupByTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                 .groupBy(cities.name)
-                .having { users.id.count() lessEq 42 }
+                .having { users.id.count() lessEq 42L }
                 .orderBy(cities.name)
                 .toList()
 

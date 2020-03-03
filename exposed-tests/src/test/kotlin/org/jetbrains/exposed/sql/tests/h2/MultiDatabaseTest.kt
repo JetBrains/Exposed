@@ -71,13 +71,13 @@ class MultiDatabaseTest {
         }
 
         transaction(db1) {
-            assertEquals(1, DMLTestsData.Cities.selectAll().count())
+            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
             assertEquals("city1", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
             SchemaUtils.drop(DMLTestsData.Cities)
         }
 
         transaction(db2) {
-            assertEquals(1, DMLTestsData.Cities.selectAll().count())
+            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
             assertEquals("city2", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
             SchemaUtils.drop(DMLTestsData.Cities)
         }
@@ -102,12 +102,12 @@ class MultiDatabaseTest {
                 DMLTestsData.Cities.insert {
                     it[DMLTestsData.Cities.name] = "city3"
                 }
-                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
                 SchemaUtils.drop(DMLTestsData.Cities)
             }
 
-            assertEquals(1, DMLTestsData.Cities.selectAll().count())
+            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
             assertEquals("city1", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
             SchemaUtils.drop(DMLTestsData.Cities)
         }
@@ -131,26 +131,26 @@ class MultiDatabaseTest {
                 DMLTestsData.Cities.insert {
                     it[DMLTestsData.Cities.name] = "city3"
                 }
-                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
                 transaction(db1) {
-                    assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city4"
                     }
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city5"
                     }
-                    assertEquals(3, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
                 }
 
-                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
                 SchemaUtils.drop(DMLTestsData.Cities)
             }
 
-            assertEquals(3, DMLTestsData.Cities.selectAll().count())
+            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
             assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }
@@ -175,26 +175,26 @@ class MultiDatabaseTest {
                 DMLTestsData.Cities.insert {
                     it[DMLTestsData.Cities.name] = "city3"
                 }
-                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
                 tr1.suspendedTransaction {
-                    assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city4"
                     }
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city5"
                     }
-                    assertEquals(3, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
                 }
 
-                assertEquals(2, DMLTestsData.Cities.selectAll().count())
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
                 SchemaUtils.drop(DMLTestsData.Cities)
             }
 
-            assertEquals(3, DMLTestsData.Cities.selectAll().count())
+            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
             assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }

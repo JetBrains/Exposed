@@ -160,8 +160,8 @@ class ViaTests : DatabaseTestsBase() {
             }
             child1.parents = SizedCollection(root)
 
-            assertEquals(0, root.parents.count())
-            assertEquals(1, root.children.count())
+            assertEquals(0L, root.parents.count())
+            assertEquals(1L, root.children.count())
 
             val child2 = Node.new { name = "child2" }
             root.children = SizedCollection(listOf(child1, child2))

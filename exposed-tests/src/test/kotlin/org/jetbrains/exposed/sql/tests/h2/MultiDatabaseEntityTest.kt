@@ -68,12 +68,12 @@ class MultiDatabaseEntityTest {
         }
 
         transaction(db1) {
-            assertEquals(1, EntityTestsData.XEntity.all().count())
+            assertEquals(1L, EntityTestsData.XEntity.all().count())
             assertEquals(true, EntityTestsData.XEntity.all().single().b1)
         }
 
         transaction(db2) {
-            assertEquals(2, EntityTestsData.XEntity.all().count())
+            assertEquals(2L, EntityTestsData.XEntity.all().count())
             assertEquals(true, EntityTestsData.XEntity.all().all { !it.b1 })
         }
     }
@@ -85,11 +85,11 @@ class MultiDatabaseEntityTest {
                 this.b1 = true
             }
 
-            assertEquals(1, EntityTestsData.XEntity.all().count())
+            assertEquals(1L, EntityTestsData.XEntity.all().count())
             assertEquals(true, EntityTestsData.XEntity.all().single().b1)
 
             transaction(db2) {
-                assertEquals(0, EntityTestsData.XEntity.all().count())
+                assertEquals(0L, EntityTestsData.XEntity.all().count())
                 EntityTestsData.XEntity.new {
                     this.b1 = false
                 }
@@ -97,11 +97,11 @@ class MultiDatabaseEntityTest {
                 EntityTestsData.XEntity.new {
                     this.b1 = false
                 }
-                assertEquals(2, EntityTestsData.XEntity.all().count())
+                assertEquals(2L, EntityTestsData.XEntity.all().count())
                 assertEquals(true, EntityTestsData.XEntity.all().all { !it.b1 })
             }
 
-            assertEquals(1, EntityTestsData.XEntity.all().count())
+            assertEquals(1L, EntityTestsData.XEntity.all().count())
             assertEquals(true, EntityTestsData.XEntity.all().single().b1)
         }
     }
@@ -113,11 +113,11 @@ class MultiDatabaseEntityTest {
                 this.b1 = true
             }
 
-            assertEquals(1, EntityTestsData.XEntity.all().count())
+            assertEquals(1L, EntityTestsData.XEntity.all().count())
             assertEquals(true, EntityTestsData.XEntity.all().single().b1)
 
             transaction(db2) {
-                assertEquals(0, EntityTestsData.XEntity.all().count())
+                assertEquals(0L, EntityTestsData.XEntity.all().count())
                 EntityTestsData.XEntity.new {
                     this.b1 = false
                 }
@@ -125,7 +125,7 @@ class MultiDatabaseEntityTest {
                 EntityTestsData.XEntity.new {
                     this.b1 = false
                 }
-                assertEquals(2, EntityTestsData.XEntity.all().count())
+                assertEquals(2L, EntityTestsData.XEntity.all().count())
                 assertEquals(true, EntityTestsData.XEntity.all().all { !it.b1 })
 
                 transaction(db1) {
@@ -136,12 +136,12 @@ class MultiDatabaseEntityTest {
                     EntityTestsData.XEntity.new {
                         this.b1 = false
                     }
-                    assertEquals(3, EntityTestsData.XEntity.all().count())
+                    assertEquals(3L, EntityTestsData.XEntity.all().count())
                 }
-                assertEquals(2, EntityTestsData.XEntity.all().count())
+                assertEquals(2L, EntityTestsData.XEntity.all().count())
             }
 
-            assertEquals(3, EntityTestsData.XEntity.all().count())
+            assertEquals(3L, EntityTestsData.XEntity.all().count())
             assertEqualLists(listOf(true, true, false), EntityTestsData.XEntity.all().map { it.b1 })
         }
     }
@@ -156,12 +156,12 @@ class MultiDatabaseEntityTest {
             db1b1 = EntityTestsData.BEntity.new(1) {  }
             
             transaction(db2) {
-                assertEquals(0, EntityTestsData.BEntity.count())
+                assertEquals(0L, EntityTestsData.BEntity.count())
                 db2b1 = EntityTestsData.BEntity.new(2) {  }
                 db2y1 = EntityTestsData.YEntity.new("2") { }
                 db2b1.y = db2y1
             }
-            assertEquals(1, EntityTestsData.BEntity.count())
+            assertEquals(1L, EntityTestsData.BEntity.count())
             assertNotNull(EntityTestsData.BEntity[1])
 
             db1y1 = EntityTestsData.YEntity.new("1") { }
@@ -193,7 +193,7 @@ class MultiDatabaseEntityTest {
             val db1b1 = EntityTestsData.BEntity.new(1) {  }
 
             transaction(db2) {
-                assertEquals(0, EntityTestsData.BEntity.count())
+                assertEquals(0L, EntityTestsData.BEntity.count())
                 db1b1.y = EntityTestsData.YEntity.new("2") { }
             }
         }

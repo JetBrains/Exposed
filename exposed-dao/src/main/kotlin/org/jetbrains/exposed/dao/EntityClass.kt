@@ -192,11 +192,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      *
      * @return The amount of entities that conform to the [op] statement.
      */
-    fun count(op: Op<Boolean>? = null): Int = with(TransactionManager.current()) {
-        val query = table.slice(table.id.count())
-        (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
-                table.id.count()
-        ]
+    fun count(op: Op<Boolean>? = null): Long  {
+        val countExpression = table.id.count()
+        val query = table.slice(countExpression).selectAll().notForUpdate()
+        op?.let { query.adjustWhere { op } }
+        return query.first()[countExpression]
     }
 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T

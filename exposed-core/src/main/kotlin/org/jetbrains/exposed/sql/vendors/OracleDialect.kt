@@ -204,7 +204,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         return super.delete(ignore, table, where, limit, transaction)
     }
 
-    override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String {
+    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
     }
 }

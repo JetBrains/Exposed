@@ -70,7 +70,7 @@ class AliasesTests : DatabaseTestsBase() {
             val innerExp = query.lastQueryAlias!![expAlias]
 
             assertEquals("q0", query.lastQueryAlias?.alias)
-            assertEquals(3, query.selectAll().count())
+            assertEquals(3L, query.selectAll().count())
             assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
         }
     }

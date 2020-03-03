@@ -11,14 +11,14 @@ class CountTests : DatabaseTestsBase() {
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
         withCitiesAndUsers { cities, users, _ ->
-            assertEquals(3, cities.innerJoin(users).selectAll().withDistinct().count())
+            assertEquals(3L, cities.innerJoin(users).selectAll().withDistinct().count())
         }
     }
 
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
         withCitiesAndUsers { cities, users, _ ->
-            assertEquals(3, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
+            assertEquals(3L, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
         }
     }
 
@@ -38,7 +38,7 @@ class CountTests : DatabaseTestsBase() {
                 org = org1
             }
 
-            assertEquals(1, OrgMemberships.selectAll().count())
+            assertEquals(1L, OrgMemberships.selectAll().count())
         }
     }
 }

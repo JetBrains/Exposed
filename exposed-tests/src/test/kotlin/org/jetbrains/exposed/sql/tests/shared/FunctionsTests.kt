@@ -122,7 +122,7 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testRandomFunction01() {
         val t = DMLTestsData.Cities
         withTables(t) {
-            if (t.selectAll().count() == 0) {
+            if (t.selectAll().count() == 0L) {
                 t.insert { it[t.name] = "city-1" }
             }
 
@@ -134,19 +134,19 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test fun testRegexp01() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            assertEquals(2, users.select { users.id regexp "a.+" }.count())
-            assertEquals(1, users.select { users.id regexp "an.+" }.count())
+            assertEquals(2L, users.select { users.id regexp "a.+" }.count())
+            assertEquals(1L, users.select { users.id regexp "an.+" }.count())
             assertEquals(users.selectAll().count(), users.select { users.id regexp ".*" }.count())
-            assertEquals(2, users.select { users.id regexp ".+y" }.count())
+            assertEquals(2L, users.select { users.id regexp ".+y" }.count())
         }
     }
 
     @Test fun testRegexp02() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            assertEquals(2, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
-            assertEquals(1, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
+            assertEquals(2L, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
+            assertEquals(1L, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
             assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
-            assertEquals(2, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
+            assertEquals(2L, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
         }
     }
 

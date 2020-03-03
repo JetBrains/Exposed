@@ -29,7 +29,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         private set
     var limit: Int? = null
         private set
-    var offset: Int = 0
+    var offset: Long = 0
         private set
     var fetchSize: Int? = null
         private set
@@ -179,7 +179,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    override fun limit(n: Int, offset: Int): Query {
+    override fun limit(n: Int, offset: Long): Query {
         this.limit = n
         this.offset = offset
         return this
@@ -222,7 +222,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     }
 
     private var count: Boolean = false
-    override fun count(): Int {
+    override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() = alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
 
@@ -244,7 +244,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
                 count = true
                 transaction.exec(this) {
                     it.next()
-                    it.getInt(1)
+                    it.getLong(1)
                 }!!
             } finally {
                 count = false

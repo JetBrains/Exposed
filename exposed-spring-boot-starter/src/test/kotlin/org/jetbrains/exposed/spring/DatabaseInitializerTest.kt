@@ -28,7 +28,7 @@ open class DatabaseInitializerTest {
         Database.connect("jdbc:h2:mem:test-spring", user = "sa", driver =  "org.h2.Driver")
         transaction {
             DatabaseInitializer(applicationContext, listOf("org.jetbrains.exposed.spring.tables.ignore")).run(null)
-            Assert.assertEquals(0, TestTable.selectAll().count())
+            Assert.assertEquals(0L, TestTable.selectAll().count())
             IgnoreTable.selectAll().count()
         }
     }

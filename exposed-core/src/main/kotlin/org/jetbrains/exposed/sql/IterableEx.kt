@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql
 
 interface SizedIterable<out T>: Iterable<T> {
-    fun limit(n: Int, offset: Int = 0): SizedIterable<T>
-    fun count(): Int
+    fun limit(n: Int, offset: Long = 0): SizedIterable<T>
+    fun count(): Long
     fun empty(): Boolean
     fun forUpdate(): SizedIterable<T> = this
     fun notForUpdate(): SizedIterable<T> = this
@@ -13,9 +13,9 @@ interface SizedIterable<out T>: Iterable<T> {
 fun <T> emptySized() : SizedIterable<T> = EmptySizedIterable()
 
 class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
-    override fun count(): Int = 0
+    override fun count(): Long = 0
 
-    override fun limit(n: Int, offset: Int): SizedIterable<T> = this
+    override fun limit(n: Int, offset: Long): SizedIterable<T> = this
 
     override fun empty(): Boolean = true
 
@@ -34,10 +34,15 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
 
 class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     constructor(vararg values: T) : this(values.toList())
-    override fun limit(n: Int, offset: Int): SizedIterable<T> = SizedCollection(delegate.drop(offset).take(n))
+    override fun limit(n: Int, offset: Long): SizedIterable<T> {
+        return if (offset >= Int.MAX_VALUE)
+            EmptySizedIterable()
+        else
+            SizedCollection(delegate.drop(offset.toInt()).take(n))
+    }
 
     override operator fun iterator() = delegate.iterator()
-    override fun count() = delegate.size
+    override fun count(): Long = delegate.size.toLong()
     override fun empty() = delegate.isEmpty()
     override fun copy(): SizedIterable<T> = SizedCollection(delegate)
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
@@ -47,7 +52,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
     private var delegate: SizedIterable<T> = _delegate
 
     private var _wrapper: List<T>? = null
-    private var _size: Int? = null
+    private var _size: Long? = null
     private var _empty: Boolean? = null
 
     val wrapper: List<T> get() {
@@ -57,9 +62,9 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
         return _wrapper!!
     }
 
-    override fun limit(n: Int, offset: Int): SizedIterable<T> = LazySizedCollection(delegate.limit(n, offset))
+    override fun limit(n: Int, offset: Long): SizedIterable<T> = LazySizedCollection(delegate.limit(n, offset))
     override operator fun iterator() = wrapper.iterator()
-    override fun count() = _wrapper?.size ?: _count()
+    override fun count(): Long = _wrapper?.size?.toLong() ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
     override fun forUpdate(): SizedIterable<T> {
         val localDelegate = delegate
@@ -83,10 +88,10 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
         return this
     }
 
-    private fun _count(): Int {
+    private fun _count(): Long {
         if (_size == null) {
             _size = delegate.count()
-            _empty = (_size == 0)
+            _empty = (_size == 0L)
         }
         return _size!!
     }
@@ -112,10 +117,10 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
 infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
-        override fun limit(n: Int, offset: Int): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
+        override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
         override fun forUpdate(): SizedIterable<R> = source.copy().forUpdate().mapLazy(f)
         override fun notForUpdate(): SizedIterable<R> = source.copy().notForUpdate().mapLazy(f)
-        override fun count(): Int = source.count()
+        override fun count(): Long = source.count()
         override fun empty(): Boolean = source.empty()
         override fun copy(): SizedIterable<R> = source.copy().mapLazy(f)
         override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = source.orderBy(*order).mapLazy(f)
