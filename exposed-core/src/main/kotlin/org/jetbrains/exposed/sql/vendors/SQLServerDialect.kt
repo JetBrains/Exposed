@@ -76,9 +76,53 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("DATEPART(MINUTE, ", expr, ")")
     }
 
-    override fun update(targets: ColumnSet, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
-        val def = super.update(targets, columnsAndValues, null, where, transaction)
+    override fun update(target: Table, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+        val def = super.update(target, columnsAndValues, null, where, transaction)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
+    }
+
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String = with(QueryBuilder(true)) {
+        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+        if (tableToUpdate == null) {
+            transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")
+        }
+        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
+            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
+        }
+        if (limit != null)
+            +"UPDATE TOP($limit)"
+        else
+            +"UPDATE "
+        tableToUpdate.describe(transaction, this)
+        +" SET "
+        columnsAndValues.appendTo(this) { (col, value) ->
+            append("${transaction.identity(col)}=")
+            registerArgument(col, value)
+        }
+        +" FROM "
+        if (targets.table != tableToUpdate)
+            targets.table.describe(transaction, this)
+
+        targets.joinParts.appendTo(this, ",") {
+            if (it.joinPart != tableToUpdate)
+                it.joinPart.describe(transaction, this)
+        }
+        +" WHERE "
+        targets.joinParts.appendTo(this, " AND ") {
+            it.appendConditions(this)
+        }
+        where?.let {
+            + " AND "
+            +it
+        }
+        limit?.let { +" LIMIT $it" }
+        toString()
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {

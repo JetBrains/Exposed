@@ -350,23 +350,23 @@ abstract class FunctionProvider {
     /**
      * Returns the SQL command that updates one or more rows of a table.
      *
-     * @param targets Column set to update values from.
+     * @param target Table to update values from.
      * @param columnsAndValues Pairs of column to update and values to update with.
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
      */
     open fun update(
-        targets: ColumnSet,
+        target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
-        targets.describe(transaction, this)
-        +" SET "
-        columnsAndValues.appendTo(this) { (col, value) ->
+        target.describe(transaction, this)
+
+        columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
             append("${transaction.identity(col)}=")
             registerArgument(col, value)
         }
@@ -378,6 +378,23 @@ abstract class FunctionProvider {
         limit?.let { +" LIMIT $it" }
         toString()
     }
+
+    /**
+     * Returns the SQL command that updates one or more rows of a join.
+     *
+     * @param targets Join to update values from.
+     * @param columnsAndValues Pairs of column to update and values to update with.
+     * @param limit Maximum number of rows to update.
+     * @param where Condition that decides the rows to update.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.

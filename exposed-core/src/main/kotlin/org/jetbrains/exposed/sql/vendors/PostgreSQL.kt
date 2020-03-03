@@ -102,7 +102,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        targets: ColumnSet,
+        target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
@@ -111,7 +111,51 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(targets, columnsAndValues, limit, where, transaction)
+        return super.update(target, columnsAndValues, limit, where, transaction)
+    }
+
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String = with(QueryBuilder(true)) {
+        if (limit != null) {
+            transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
+        }
+        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+        if (tableToUpdate == null) {
+            transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
+        }
+        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
+            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
+        }
+        +"UPDATE "
+        tableToUpdate.describe(transaction, this)
+        +" SET "
+        columnsAndValues.appendTo(this) { (col, value) ->
+            append("${transaction.identity(col)}=")
+            registerArgument(col, value)
+        }
+        +" FROM "
+        if (targets.table != tableToUpdate)
+            targets.table.describe(transaction, this)
+
+        targets.joinParts.appendTo(this, ",") {
+            if (it.joinPart != tableToUpdate)
+                it.joinPart.describe(transaction, this)
+        }
+        +" WHERE "
+        targets.joinParts.appendTo(this, " AND ") {
+            it.appendConditions(this)
+        }
+        where?.let {
+            + " AND "
+            +it
+        }
+        limit?.let { +" LIMIT $it" }
+        toString()
     }
 
     override fun replace(

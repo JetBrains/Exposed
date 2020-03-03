@@ -74,6 +74,29 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
+
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String = with(QueryBuilder(true)) {
+        +"UPDATE "
+        targets.describe(transaction, this)
+        +" SET "
+        columnsAndValues.appendTo(this) { (col, value) ->
+            append("${transaction.identity(col)}=")
+            registerArgument(col, value)
+        }
+
+        where?.let {
+            +" WHERE "
+            +it
+        }
+        limit?.let { +" LIMIT $it" }
+        toString()
+    }
 }
 
 /**

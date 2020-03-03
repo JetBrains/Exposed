@@ -182,15 +182,7 @@ class Join(
             }
             if (p.joinType != JoinType.CROSS) {
                 append(" ON ")
-                p.conditions.appendTo(this, " AND ") { (pkColumn, fkColumn) -> append(pkColumn, " = ", fkColumn) }
-                if (p.additionalConstraint != null) {
-                    if (p.conditions.isNotEmpty()) {
-                        append(" AND ")
-                    }
-                    append(" (")
-                    append(SqlExpressionBuilder.(p.additionalConstraint)())
-                    append(")")
-                }
+                p.appendConditions(this)
             }
         }
     }
@@ -268,6 +260,19 @@ class Join(
         init {
             require(joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null) { "Missing join condition on $${this.joinPart}" }
         }
+
+        fun appendConditions(builder: QueryBuilder) = builder {
+            conditions.appendTo(this, " AND ") { (pkColumn, fkColumn) -> append(pkColumn, " = ", fkColumn) }
+            if (additionalConstraint != null) {
+                if (conditions.isNotEmpty()) {
+                    append(" AND ")
+                }
+                append(" (")
+                append(SqlExpressionBuilder.(additionalConstraint)())
+                append(")")
+            }
+        }
+
     }
 }
 
