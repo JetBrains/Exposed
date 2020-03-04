@@ -122,10 +122,8 @@ fun CustomLongFunction(
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
 
-/**
- * Builder object for creating SQL expressions.
- */
-object SqlExpressionBuilder {
+
+open class SqlExpressionBuilderClass {
 
     // Comparison Operators
 
@@ -379,3 +377,8 @@ object SqlExpressionBuilder {
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
 }
+
+/**
+ * Builder object for creating SQL expressions.
+ */
+object SqlExpressionBuilder: SqlExpressionBuilderClass()
