@@ -303,7 +303,7 @@ object SchemaUtils {
 
             if(currentDialect is MysqlDialect) {
                 connection.setCatlog(schema.identifier)
-            } else if(currentDialect !is SQLServerDialect) {
+            } else if(currentDialect !is PostgreSQLDialect) {
                 connection.setSchema(schema.identifier)
             }
         }

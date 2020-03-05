@@ -2,16 +2,13 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-object AA: Table("hvkbhih") {
-    val id = integer("id")
-}
+
 class SchemaTests : DatabaseTestsBase() {
     @Test
     fun schemaTests()  {
@@ -30,7 +27,8 @@ class SchemaTests : DatabaseTestsBase() {
             }
         }
 
-        withDb (excludeSettings = listOf(TestDB.MYSQL)) {
+        // MARIADB also uses catalogs in data manipulation
+        withDb (excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             if(currentDialect.supportsCreateSchema) {
                 val schema = if(currentDialect is SQLServerDialect) {
                     exec("GRANT CREATE SCHEMA TO guest")

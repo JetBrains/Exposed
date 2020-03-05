@@ -122,7 +122,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         connection.catalog = catalog
     }
 
-    override fun setSchema(catalog: String) {
-        connection.catalog = catalog
+    override fun setSchema(schema: String) {
+        connection.schema = schema
     }
 }
