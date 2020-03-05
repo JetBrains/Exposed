@@ -33,8 +33,7 @@ class Schema(private val name: String, val authorization: String? = null) {
             }
             append(identifier)
 
-            if(TransactionManager.current().connection.metadata { supportsSchemasInDataManipulation }
-                    || !TransactionManager.current().connection.metadata { supportsCatalogsInDataManipulation }) {
+            if(TransactionManager.current().connection.metadata { supportsSchemasInDataManipulation || !supportsCatalogsInDataManipulation }) {
                 appendIfNotNull(" AUTHORIZATION", authorization)
             }
         }
