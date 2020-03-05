@@ -16,11 +16,10 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     // Oracle driver could throw excpection on catalog
     override val catalog: String
-    get() =  try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
+        get() =  try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
 
-    override val schema: String by lazy {
-        connection.schema
-    }
+    override val schema: String
+        get() =  try { connection.schema } catch (_: Exception) { "" }
 
     override fun commit() {
         connection.commit()
@@ -120,6 +119,10 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
     }
 
     override fun setCatlog(catalog: String) {
+        connection.catalog = catalog
+    }
+
+    override fun setSchema(catalog: String) {
         connection.catalog = catalog
     }
 }

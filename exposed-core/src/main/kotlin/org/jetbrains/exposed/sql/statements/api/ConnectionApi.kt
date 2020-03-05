@@ -24,4 +24,5 @@ interface ExposedConnection<OriginalConnection: Any> {
 
     fun rollback(savepoint: ExposedSavepoint)
     fun setCatlog(catalog: String)
+    fun setSchema(catalog: String)
 }

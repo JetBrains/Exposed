@@ -290,18 +290,21 @@ object SchemaUtils {
     }
 
     /**
-     * Sets the current default schema to [schema]
+     * Sets the current default schema to [schema]. Supported by H2, MariaDB, Mysql, Oracle, PostgreSQL and SQL Server.
+     * SQLite doesn't support schemas.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
      */
-    fun setSchema(schema: Schema) {
+    fun setSchema(schema: Schema, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val createStatements = schema.setSchemaStatement()
 
-            execStatements(false, createStatements)
+            execStatements(inBatch, createStatements)
 
             if(currentDialect is MysqlDialect) {
                 connection.setCatlog(schema.identifier)
+            } else if(currentDialect !is SQLServerDialect) {
+                connection.setSchema(schema.identifier)
             }
         }
     }
