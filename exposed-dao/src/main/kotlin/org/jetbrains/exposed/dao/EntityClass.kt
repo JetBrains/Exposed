@@ -64,7 +64,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             if (currentEntityInCache == null) {
                 get(o.id) // Check that entity is still exists in database
                 warmCache().store(o)
-            } else if (currentEntityInCache != o) {
+            } else if (currentEntityInCache !== o) {
                 exposedLogger.error("Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. Changes on entity could be missed.")
             }
         }
