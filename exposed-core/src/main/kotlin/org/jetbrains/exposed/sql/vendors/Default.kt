@@ -478,8 +478,7 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
     /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
-    val supportsCreateSchema: Boolean get() = TransactionManager.current().connection.metadata { supportsSchemasInDataManipulation }
-            || TransactionManager.current().connection.metadata { supportsCatalogsInDataManipulation }
+    val supportsCreateSchema: Boolean get() = TransactionManager.current().connection.metadata { supportsSchemasInDataManipulation || supportsCatalogsInDataManipulation }
     val needsSequenceToAutoInc: Boolean get() = false
     /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
