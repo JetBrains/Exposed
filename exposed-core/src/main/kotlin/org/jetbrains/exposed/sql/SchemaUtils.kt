@@ -301,10 +301,12 @@ object SchemaUtils {
 
             execStatements(inBatch, createStatements)
 
+            /**
+             * In Mysql jdbc version equal or lower than 5.1.48, the set schema statement doesn't set the connection.catalog
+             * to the new schema. This is a workaround to set it manually.
+             * */
             if(currentDialect is MysqlDialect) {
                 connection.setCatlog(schema.identifier)
-            } else if(currentDialect !is PostgreSQLDialect) {
-                connection.setSchema(schema.identifier)
             }
         }
     }
