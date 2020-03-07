@@ -37,6 +37,7 @@ dependencies {
         else -> {
             implementation("mysql", "mysql-connector-java", "5.1.48")
             implementation("org.postgresql", "postgresql", "42.2.9.jre6")
+            implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")
         }
     }
 }

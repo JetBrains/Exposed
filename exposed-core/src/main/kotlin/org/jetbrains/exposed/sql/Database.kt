@@ -67,6 +67,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
             registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
+            registerDialect(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialect() }
             registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }

@@ -18,6 +18,7 @@ You can inspect project [roadmap](ROADMAP.md) to see what's coming next or look 
 
 Currently supported database dialects:
 * PostgreSQL
+* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC
 * MySQL
 * MariaDB
 * [Oracle](ORACLE.md)
