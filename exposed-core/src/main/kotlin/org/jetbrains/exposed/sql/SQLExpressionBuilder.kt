@@ -351,6 +351,12 @@ interface ISqlExpressionBuilder {
     /** Adds the [other] expression to this expression. */
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
 
+    infix operator fun Expression<String>.plus(t: String) = concat(this, stringParam(t))
+
+    infix operator fun Expression<String>.plus(t: Expression<String>) = concat(this, t)
+
+    infix operator fun String.plus(t: Expression<String>) = concat(stringParam(this), t)
+
     /** Subtracts the [t] value from this expression. */
     infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
 

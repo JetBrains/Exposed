@@ -5,6 +5,7 @@ import org.jetbrains.exposed.crypt.Encryptor
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -594,6 +595,23 @@ class FunctionsTests : DatabaseTestsBase() {
                     assertEquals(1000, it[coalesceExp2])
                 }
             }
+        }
+    }
+
+    @Test
+    fun testConcatUsingPlusOperator() {
+        withCitiesAndUsers { _, users, _ ->
+            val concatField = SqlExpressionBuilder.run { users.id + " - " + users.name }
+            val result = users.select(concatField).where { users.id eq "andrey" }.single()
+            assertEquals("andrey - Andrey", result[concatField])
+
+            val concatField2 = SqlExpressionBuilder.run { users.id + users.name }
+            val result2 = users.select(concatField2).where { users.id eq "andrey" }.single()
+            assertEquals("andreyAndrey", result2[concatField2])
+
+            val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!" }
+            val result3 = users.select(concatField3).where { users.id eq "andrey" }.single()
+            assertEquals("Hi Andrey!", result3[concatField3])
         }
     }
 
