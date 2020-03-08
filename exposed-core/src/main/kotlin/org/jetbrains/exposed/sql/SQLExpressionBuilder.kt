@@ -219,6 +219,7 @@ open class SqlExpressionBuilderClass {
     /** Adds the [other] expression to this expression. */
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
 
+    infix operator fun ExpressionWithColumnType<String>.plus(t: String) = concat(this, wrap(t))
 
     /** Subtracts the [t] value from this expression. */
     infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
