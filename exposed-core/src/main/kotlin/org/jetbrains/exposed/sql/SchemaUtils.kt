@@ -176,8 +176,8 @@ object SchemaUtils {
             }
         }
     }
-    fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun <T : Table> create(db: Database? = null, vararg tables: T, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
             commit()
             currentDialect.resetCaches()
