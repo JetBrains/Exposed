@@ -108,7 +108,7 @@ object SchemaUtils {
 
     fun createIndex(index: Index) = index.createStatement()
 
-    private fun addMissingColumnsStatements(db: Database?, vararg tables: Table): List<String> {
+    private fun addMissingColumnsStatements(db: Database? = null, vararg tables: Table): List<String> {
         with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val statements = ArrayList<String>()
             if (tables.isEmpty())
