@@ -86,15 +86,15 @@ object SchemaUtils {
         } + alters
     }
 
-    fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun createSequence(db: Database? = null, vararg seq: Sequence, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
         }
     }
 
-    fun dropSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun dropSequence(db: Database? = null, vararg seq: Sequence, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val dropStatements = seq.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
         }
@@ -108,8 +108,8 @@ object SchemaUtils {
 
     fun createIndex(index: Index) = index.createStatement()
 
-    private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
-        with(TransactionManager.current()) {
+    private fun addMissingColumnsStatements(db: Database?, vararg tables: Table): List<String> {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val statements = ArrayList<String>()
             if (tables.isEmpty())
                 return statements
@@ -190,8 +190,8 @@ object SchemaUtils {
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
      */
-    fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun createDatabase(db: Database? = null, vararg databases: String, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
             execStatements(inBatch, createStatements)
         }
@@ -203,8 +203,8 @@ object SchemaUtils {
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
      */
-    fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun dropDatabase(db: Database? = null, vararg databases: String, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
             execStatements(inBatch, createStatements)
         }
@@ -226,8 +226,8 @@ object SchemaUtils {
      * To prevent such cases is advised to use any "global" synchronization you prefer (via redis, memcached, etc) or
      * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
      */
-    fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+    fun createMissingTablesAndColumns(db: Database? = null, vararg tables: Table, inBatch: Boolean = false) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             db.dialect.resetCaches()
             val createStatements = logTimeSpent("Preparing create tables statements") {
                 createStatements(*tables)
@@ -278,9 +278,9 @@ object SchemaUtils {
         }
     }
 
-    fun drop(vararg tables: Table, inBatch: Boolean = false) {
+    fun drop(db: Database? = null, vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(db.transactionManager.currentOrNull() ?: TransactionManager.current()) {
             var tablesForDeletion =
                     sortTablesByReferences(tables.toList())
                             .reversed()
