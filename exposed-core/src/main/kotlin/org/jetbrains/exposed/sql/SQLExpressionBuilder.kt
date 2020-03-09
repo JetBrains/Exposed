@@ -159,7 +159,7 @@ open class SqlExpressionBuilderClass {
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(t: T): LessOp = LessOp(this, wrap(t))
 
     /** Checks if this expression is less than some [other] expression. */
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
 
     /** Checks if this expression is less than some [t] value. */
     @JvmName("lessEntityID")
@@ -170,7 +170,7 @@ open class SqlExpressionBuilderClass {
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
     /** Checks if this expression is less than or equal to some [other] expression */
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
 
     /** Checks if this expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
@@ -181,7 +181,7 @@ open class SqlExpressionBuilderClass {
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
     /** Checks if this expression is greater than some [other] expression. */
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
 
     /** Checks if this expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
@@ -192,7 +192,7 @@ open class SqlExpressionBuilderClass {
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
 
     /** Checks if this expression is greater than or equal to some [other] expression */
-    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
 
     /** Checks if this expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
@@ -205,10 +205,10 @@ open class SqlExpressionBuilderClass {
     fun <T, S : T?> ExpressionWithColumnType<S>.between(from: T, to: T): Between = Between(this, asLiteral(from), asLiteral(to))
 
     /** Returns `true` if this expression is null, `false` otherwise. */
-    fun <T> ExpressionWithColumnType<T>.isNull(): IsNullOp = IsNullOp(this)
+    fun <T> Expression<T>.isNull(): IsNullOp = IsNullOp(this)
 
     /** Returns `true` if this expression is not null, `false` otherwise. */
-    fun <T> ExpressionWithColumnType<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
+    fun <T> Expression<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
 
 
     // Mathematical Operators
@@ -267,33 +267,33 @@ open class SqlExpressionBuilderClass {
     // Pattern Matching
 
     /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> ExpressionWithColumnType<T>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
+    infix fun <T : String?> Expression<T>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
 
     /** Checks if this expression matches the specified [pattern]. */
     @JvmName("likeWithEntityID")
-    infix fun ExpressionWithColumnType<EntityID<String>>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
+    infix fun Expression<EntityID<String>>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
 
     /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
+    infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 
     /** Checks if this expression matches the specified [pattern] using the specified match [mode]. */
-    fun <T : String?> ExpressionWithColumnType<T>.match(
+    fun <T : String?> Expression<T>.match(
         pattern: String,
         mode: FunctionProvider.MatchMode?
     ): Op<Boolean> = with(currentDialect.functionProvider) { this@match.match(pattern, mode) }
 
     /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> ExpressionWithColumnType<T>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+    infix fun <T : String?> Expression<T>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
 
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
-    infix fun ExpressionWithColumnType<EntityID<String>>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+    infix fun Expression<EntityID<String>>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
 
     /** Checks if this expression matches the [pattern]. Supports regular expressions. */
-    infix fun <T : String?> ExpressionWithColumnType<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
+    infix fun <T : String?> Expression<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
 
     /** Checks if this expression matches the [pattern]. Supports regular expressions. */
-    fun <T : String?> ExpressionWithColumnType<T>.regexp(
+    fun <T : String?> Expression<T>.regexp(
         pattern: Expression<String>,
         caseSensitive: Boolean = true
     ): RegexpOp<T> = RegexpOp(this, pattern, caseSensitive)
@@ -315,10 +315,10 @@ open class SqlExpressionBuilderClass {
     // Subquery Expressions
 
     /** Checks if this expression is equals to any row returned from [query]. */
-    infix fun <T> ExpressionWithColumnType<T>.inSubQuery(query: Query): InSubQueryOp<T> = InSubQueryOp(this, query)
+    infix fun <T> Expression<T>.inSubQuery(query: Query): InSubQueryOp<T> = InSubQueryOp(this, query)
 
     /** Checks if this expression is not equals to any row returned from [query]. */
-    infix fun <T> ExpressionWithColumnType<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
+    infix fun <T> Expression<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
 
 
     // Array Comparisons
