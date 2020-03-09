@@ -38,7 +38,7 @@ abstract class IdentifierManagerApi {
 
     fun needQuotes (identity: String) : Boolean {
         return checkedIdentities.getOrPut(identity.toLowerCase()) {
-            keywords.any { identity.equals(it, true) } || !identity.isIdentifier()
+            !identity.isAlreadyQuoted() && (keywords.any { identity.equals(it, true) } || !identity.isIdentifier())
         }
     }
 

@@ -225,3 +225,15 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         const val dialectName: String = "postgresql"
     }
 }
+
+/**
+ * PostgreSQL dialect implementation using the pgjdbc-ng jdbc driver.
+ *
+ * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
+ */
+open class PostgreSQLNGDialect : PostgreSQLDialect() {
+    companion object {
+        /** PostgreSQL-NG dialect name */
+        const val dialectName: String = "pgsql"
+    }
+}

@@ -23,6 +23,7 @@ If you have any questions feel free to ask at our [#exposed](https://kotlinlang.
 
 Currently supported database dialects:
 * PostgreSQL
+* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 * MySQL
 * MariaDB
 * [Oracle](ORACLE.md)

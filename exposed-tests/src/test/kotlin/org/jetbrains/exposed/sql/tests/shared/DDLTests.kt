@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
@@ -438,7 +439,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.ORACLE,TestDB.POSTGRESQL)) {
+        withDb(listOf(TestDB.ORACLE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
@@ -792,17 +793,24 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun createTableWithForeignKeyToAnotherSchema() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            exec("CREATE SCHEMA ${"one".inProperCase()}")
-            exec("CREATE SCHEMA ${"two".inProperCase()}")
-            SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
-            val idFromOne = TableFromSchemeOne.insertAndGetId {  }
+            try {
+                exec("CREATE SCHEMA ${"one".inProperCase()}")
+                exec("CREATE SCHEMA ${"two".inProperCase()}")
+                SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
+                val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
-            TableFromSchemeTwo.insert {
-                it[reference] = idFromOne
+                TableFromSchemeTwo.insert {
+                    it[reference] = idFromOne
+                }
+
+                assertEquals(1L, TableFromSchemeOne.selectAll().count())
+                assertEquals(1L, TableFromSchemeTwo.selectAll().count())
+            } finally {
+                if(currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP SCHEMA IF EXISTS ${"one".inProperCase()} CASCADE")
+                    exec("DROP SCHEMA IF EXISTS ${"two".inProperCase()} CASCADE")
+                }
             }
-
-            assertEquals(1L, TableFromSchemeOne.selectAll().count())
-            assertEquals(1L, TableFromSchemeTwo.selectAll().count())
         }
     }
 

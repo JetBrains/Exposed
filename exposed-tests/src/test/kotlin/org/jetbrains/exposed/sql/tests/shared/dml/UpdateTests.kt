@@ -29,7 +29,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit01() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.POSTGRESQL)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) { _, users, _ ->
             val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
             assertEquals(2, aNames.size)
 
@@ -46,7 +46,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit02() {
-        val dialects = TestDB.values().toList() - listOf(TestDB.SQLITE, TestDB.POSTGRESQL)
+        val dialects = TestDB.values().toList() - listOf(TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
         withCitiesAndUsers(dialects) { _, users, _ ->
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
