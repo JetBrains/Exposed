@@ -27,13 +27,13 @@ class InsertTests : DatabaseTestsBase() {
                 it[idTable.name] = "1"
             }
 
-            assertEquals(1, idTable.selectAll().count())
+            assertEquals(1L, idTable.selectAll().count())
 
             idTable.insertAndGetId {
                 it[idTable.name] = "2"
             }
 
-            assertEquals(2, idTable.selectAll().count())
+            assertEquals(2L, idTable.selectAll().count())
 
             assertFailAndRollback("Unique constraint") {
                 idTable.insertAndGetId {
@@ -58,13 +58,13 @@ class InsertTests : DatabaseTestsBase() {
                 it[idTable.name] = "1"
             }
 
-            assertEquals(1, idTable.selectAll().count())
+            assertEquals(1L, idTable.selectAll().count())
 
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "2"
             }
 
-            assertEquals(2, idTable.selectAll().count())
+            assertEquals(2L, idTable.selectAll().count())
 
             val idNull = idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "2"
@@ -112,7 +112,7 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
-            assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
+            assertEquals(userNamesWithCityIds.size.toLong(), users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
         }
     }
 
@@ -265,7 +265,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[table.emoji] = emojis
             }
 
-            assertEquals(1, table.selectAll().count())
+            assertEquals(1L, table.selectAll().count())
         }
     }
 

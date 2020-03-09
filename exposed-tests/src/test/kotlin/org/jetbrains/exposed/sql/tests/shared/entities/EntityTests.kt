@@ -230,7 +230,7 @@ class EntityTests: DatabaseTestsBase() {
         withTables(Boards, Posts) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             Post.new { this.parent = parent } // first flush before referencing
-            assertEquals(2, Post.all().count())
+            assertEquals(2L, Post.all().count())
         }
     }
 
@@ -289,11 +289,11 @@ class EntityTests: DatabaseTestsBase() {
                 this.board = board
                 this.category = Category.new { title = "title" }
             }
-            assertEquals(1, board.posts.count())
+            assertEquals(1L, board.posts.count())
             assertEquals(post1, board.posts.single())
 
             Post.new { this.board = board }
-            assertEquals(2, board.posts.count())
+            assertEquals(2L, board.posts.count())
         }
     }
 
@@ -384,9 +384,9 @@ class EntityTests: DatabaseTestsBase() {
                 parent = post1
             }
 
-            assertEquals(2, Post.all().count())
-            assertEquals(2, category1.posts.count())
-            assertEquals(2, Posts.select { Posts.optCategory eq category1.uniqueId }.count())
+            assertEquals(2L, Post.all().count())
+            assertEquals(2L, category1.posts.count())
+            assertEquals(2L, Posts.select { Posts.optCategory eq category1.uniqueId }.count())
         }
     }
 
@@ -407,11 +407,11 @@ class EntityTests: DatabaseTestsBase() {
             }
             commit()
 
-            assertEquals(2, category1.posts.count())
+            assertEquals(2L, category1.posts.count())
             assertEquals(2, category1.posts.toList().size)
             assertEquals(1, category1.posts.limit(1).toList().size)
-            assertEquals(1, category1.posts.limit(1).count())
-            assertEquals(2, category1.posts.count())
+            assertEquals(1L, category1.posts.limit(1).count())
+            assertEquals(2L, category1.posts.count())
             assertEquals(2, category1.posts.toList().size)
         }
     }

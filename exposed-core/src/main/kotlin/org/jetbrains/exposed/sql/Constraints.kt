@@ -1,10 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
+import org.jetbrains.exposed.sql.vendors.*
 import java.sql.DatabaseMetaData
 
 /**
@@ -50,23 +47,38 @@ enum class ReferenceOption {
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
-    /** Name of this constraint. */
-    val fkName: String,
-    /** Name of the child table. */
-    val targetTable: String,
-    /** Name of the foreign key column. */
-    val targetColumn: String,
-    /** Name of the parent table. */
-    val fromTable: String,
-    /** Name of the primary key column. */
-    val fromColumn: String,
-    /** Reference option when performing update operations. */
-    val updateRule: ReferenceOption,
-    /** Reference option when performing delete operations. */
-    val deleteRule: ReferenceOption
+        val target: Column<*>,
+        val from: Column<*>,
+        private val onUpdate: ReferenceOption?,
+        private val onDelete: ReferenceOption?,
+        private val name: String?
 ) : DdlAware {
-
-    internal val foreignKeyPart: String = buildString {
+    private val tx: Transaction
+        get() = TransactionManager.current()
+    /** Name of the child table. */
+    val targetTable: String
+        get() = tx.identity(target.table)
+    /** Name of the foreign key column. */
+    val targetColumn: String
+        get() = tx.identity(target)
+    /** Name of the parent table. */
+    val fromTable: String
+        get() = tx.identity(from.table)
+    /** Name of the key column from the parent table. */
+    val fromColumn
+        get() = tx.identity(from)
+    /** Reference option when performing update operations. */
+    val updateRule: ReferenceOption?
+        get() = onUpdate ?: currentDialectIfAvailable?.defaultReferenceOption
+    /** Reference option when performing delete operations. */
+    val deleteRule: ReferenceOption?
+        get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
+    /** Name of this constraint. */
+    val fkName: String
+        get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
+                name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
+        ).inProperCase()
+    internal val foreignKeyPart: String get() = buildString {
         if (fkName.isNotBlank()) {
             append("CONSTRAINT $fkName ")
         }
@@ -93,25 +105,6 @@ data class ForeignKeyConstraint(
             else -> "CONSTRAINT"
         }
         return listOf("ALTER TABLE $fromTable DROP $constraintType $fkName")
-    }
-
-    companion object {
-        /** Creates a foreign key constraint from the specified [fromCol]. */
-        fun from(fromCol: Column<*>): ForeignKeyConstraint {
-            val targetColumn = fromCol.referee
-            require(targetColumn != null && (fromCol.onDelete != null || fromCol.onUpdate != null)) { "$fromCol does not reference anything" }
-            val t = TransactionManager.current()
-            val identifierManager = t.db.identifierManager
-            val refName =
-                identifierManager.cutIfNecessaryAndQuote("fk_${fromCol.table.tableNameWithoutScheme}_${fromCol.name}_${targetColumn.name}").inProperCase()
-            return ForeignKeyConstraint(
-                refName,
-                t.identity(targetColumn.table), t.identity(targetColumn),
-                t.identity(fromCol.table), t.identity(fromCol),
-                fromCol.onUpdate ?: ReferenceOption.NO_ACTION,
-                fromCol.onDelete ?: ReferenceOption.NO_ACTION
-            )
-        }
     }
 }
 

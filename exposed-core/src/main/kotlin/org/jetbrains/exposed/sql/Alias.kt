@@ -67,15 +67,17 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
     override val columns: List<Column<*>>
         get() = query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
 
-    private fun <T:Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Any?> get(original: Column<T>): Column<T> =
+        query.set.source.columns.find { it == original }?.clone() as? Column<T>
+            ?: error("Column not found in original table")
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?> get(original: Column<T>): Column<T> = query.set.source.columns.find { it == original }?.
-            let { it.clone() as? Column<T> } ?: error("Column not found in original table")
-
-    @Suppress("UNCHECKED_CAST")
-    operator fun <T: Any?> get(original: Expression<T>): Expression<T> = (query.set.fields.find { it == original } as? ExpressionAlias<T>)?.aliasOnlyExpression()
+    operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
+        val expressionAlias = query.set.fields.find { it == original } as? ExpressionAlias<T>
             ?: error("Field not found in original table fields")
+        return expressionAlias.delegate.alias("$alias.${expressionAlias.alias}").aliasOnlyExpression()
+    }
 
     override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
             Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
@@ -89,6 +91,8 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
     override infix fun fullJoin(otherTable: ColumnSet): Join = Join (this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
+
+    private fun <T:Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
 
 fun <T:Table> T.alias(alias: String) = Alias(this, alias)

@@ -70,7 +70,7 @@ class AliasesTests : DatabaseTestsBase() {
             val innerExp = query.lastQueryAlias!![expAlias]
 
             assertEquals("q0", query.lastQueryAlias?.alias)
-            assertEquals(3, query.selectAll().count())
+            assertEquals(3L, query.selectAll().count())
             assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
         }
     }
@@ -108,6 +108,37 @@ class AliasesTests : DatabaseTestsBase() {
             assertNotNull(entityFromAlias)
             assertEquals(entity1.id, entityFromAlias.id)
             assertEquals(false, entityFromAlias.b1)
+        }
+    }
+
+    @Test
+    fun `test aliased expression with aliased query`() {
+        withTables(EntityTestsData.XTable) {
+            val dataToInsert = listOf(true, true, false, true)
+            EntityTestsData.XTable.batchInsert(dataToInsert) {
+                this[EntityTestsData.XTable.b1] = it
+            }
+            val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
+            val aliasedQuery = EntityTestsData.XTable.
+                slice(EntityTestsData.XTable.b1, aliasedExpression).
+                selectAll().
+                groupBy(EntityTestsData.XTable.b1).
+                alias("maxBoolean")
+
+            val aliasedBool = aliasedQuery[EntityTestsData.XTable.b1]
+            val expressionToCheck = aliasedQuery[aliasedExpression]
+            assertEquals("maxBoolean.maxId", expressionToCheck.toString())
+
+            val resultQuery = aliasedQuery.
+                leftJoin(EntityTestsData.XTable, { this[aliasedExpression]}, { id }).
+                slice(aliasedBool, expressionToCheck).
+                selectAll()
+
+            val result = resultQuery.map {
+                it[aliasedBool] to it[expressionToCheck]!!.value
+            }
+
+            assertEqualCollections(listOf(true to 4, false to 3), result)
         }
     }
 }

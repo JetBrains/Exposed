@@ -135,18 +135,60 @@ internal object OracleFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        targets: ColumnSet,
+        target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
     ): String {
-        val def = super.update(targets, columnsAndValues, null, where, transaction)
+        val def = super.update(target, columnsAndValues, null, where, transaction)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
             limit != null -> "$def WHERE ROWNUM <= $limit"
             else -> def
         }
+    }
+
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String = with(QueryBuilder(true)) {
+        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+        if (tableToUpdate == null) {
+            transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
+        }
+        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
+            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
+        }
+        +"UPDATE ("
+        val columnsToSelect = columnsAndValues.flatMap {
+            listOfNotNull(it.first, it.second as? Expression<*>)
+        }.mapIndexed { index, expression -> expression to expression.alias("c$index") }.toMap()
+
+        val subQuery = targets.slice(columnsToSelect.values.toList()).selectAll()
+        where?.let {
+            subQuery.adjustWhere { it }
+        }
+        subQuery.prepareSQL(this)
+        +") x"
+
+        columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
+            val alias = columnsToSelect.getValue(col)
+            +alias.alias
+            +"="
+            (value as? Expression<*>)?.let {
+                +columnsToSelect.getValue(it).alias
+            } ?: registerArgument(col, value)
+        }
+
+        limit?.let {
+            "WHERE ROWNUM <= $it"
+        }
+
+        toString()
     }
 
     override fun delete(
@@ -162,7 +204,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         return super.delete(ignore, table, where, limit, transaction)
     }
 
-    override fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String {
+    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
     }
 }

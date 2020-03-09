@@ -166,7 +166,7 @@ class CoroutineTests : DatabaseTestsBase() {
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
             transaction {
-                assertEquals(5, Testing.selectAll().count())
+                assertEquals(5L, Testing.selectAll().count())
             }
         }
     }

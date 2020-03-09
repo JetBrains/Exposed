@@ -64,7 +64,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             if (currentEntityInCache == null) {
                 get(o.id) // Check that entity is still exists in database
                 warmCache().store(o)
-            } else if (currentEntityInCache != o) {
+            } else if (currentEntityInCache !== o) {
                 exposedLogger.error("Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. Changes on entity could be missed.")
             }
         }
@@ -192,11 +192,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      *
      * @return The amount of entities that conform to the [op] statement.
      */
-    fun count(op: Op<Boolean>? = null): Int = with(TransactionManager.current()) {
-        val query = table.slice(table.id.count())
-        (if (op == null) query.selectAll() else query.select{op}).notForUpdate().first()[
-                table.id.count()
-        ]
+    fun count(op: Op<Boolean>? = null): Long  {
+        val countExpression = table.id.count()
+        val query = table.slice(countExpression).selectAll().notForUpdate()
+        op?.let { query.adjustWhere { op } }
+        return query.first()[countExpression]
     }
 
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T

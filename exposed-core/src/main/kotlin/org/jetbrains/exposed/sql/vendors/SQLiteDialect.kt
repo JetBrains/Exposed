@@ -99,7 +99,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        targets: ColumnSet,
+        target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
@@ -108,7 +108,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(targets, columnsAndValues, limit, where, transaction)
+        return super.update(target, columnsAndValues, limit, where, transaction)
     }
 
     override fun delete(
