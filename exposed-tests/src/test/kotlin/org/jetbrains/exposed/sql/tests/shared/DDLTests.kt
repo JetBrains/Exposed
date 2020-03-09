@@ -776,7 +776,11 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun createTableWithMultipleIndexes() {
         withDb {
-            SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+            try {
+                SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+            } finally {
+                SchemaUtils.drop(MultipleIndexesTable)
+            }
         }
     }
 

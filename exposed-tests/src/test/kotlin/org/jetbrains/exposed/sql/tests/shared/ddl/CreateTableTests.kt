@@ -2,14 +2,14 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -273,6 +273,33 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     ")"
             assertEquals(expected, child.ddl)
+        }
+    }
+
+    object OneTable : IntIdTable("one") {}
+    object OneOneTable : IntIdTable("one.one") {}
+
+    @Test
+    fun `test create table with same name in different schemas`() {
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            addLogger(StdOutSqlLogger)
+            assertEquals(false, OneTable.exists())
+            assertEquals(false, OneOneTable.exists())
+            try {
+                SchemaUtils.create(OneTable)
+                assertEquals(true, OneTable.exists())
+                assertEquals(false, OneOneTable.exists())
+                exec("CREATE SCHEMA ${"one".inProperCase()}")
+                SchemaUtils.create(OneOneTable)
+                println("${currentDialect.name}: ${currentDialectTest.allTablesNames()}")
+                assertEquals(true, OneTable.exists())
+                assertEquals(true, OneOneTable.exists())
+            } finally {
+                SchemaUtils.drop(OneTable, OneOneTable)
+                try {
+                    exec("DROP SCHEMA ${"one".inProperCase()}")
+                } catch (e: Exception) {}
+            }
         }
     }
 }

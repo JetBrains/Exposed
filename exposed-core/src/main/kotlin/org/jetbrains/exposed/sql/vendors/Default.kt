@@ -564,28 +564,47 @@ abstract class VendorDialect(
 ) : DatabaseDialect {
 
     /* Cached values */
-    private var _allTableNames: List<String>? = null
-    /** Returns a list with the names of all the defined tables. */
+    private var _allTableNames: Map<String, List<String>>? = null
+    /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
-            if (_allTableNames == null) {
-                _allTableNames = allTablesNames()
-            }
-            return _allTableNames!!
+            val connection = TransactionManager.current().connection
+            return getAllTableNamesCache().getValue(connection.metadata { currentScheme })
         }
+
+    private fun getAllTableNamesCache(): Map<String, List<String>> {
+        val connection = TransactionManager.current().connection
+        if (_allTableNames == null) {
+            _allTableNames = connection.metadata { tableNames }
+        }
+        return _allTableNames!!
+    }
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
     /**
-     * Returns a list with the names of all the defined tables.
+     * Returns a list with the names of all the defined tables with schema prefixes if database supports it.
      * This method always re-read data from DB.
      * Using `allTablesNames` field is the preferred way.
      */
-    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata { tableNames }
+    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
+        tableNames.getValue(currentScheme)
+    }
 
-    override fun tableExists(table: Table): Boolean = allTablesNames.any { it == table.nameInDatabaseCase() }
+    override fun tableExists(table: Table): Boolean {
+        val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
+        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
+        val allTables = getAllTableNamesCache().getValue(scheme)
+        return allTables.any {
+            when {
+                tableScheme != null -> it == table.nameInDatabaseCase()
+                scheme.isEmpty() -> it == table.nameInDatabaseCase()
+                else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
+            }
+        }
+    }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
