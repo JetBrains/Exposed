@@ -52,6 +52,7 @@ class EnumerationTests : DatabaseTestsBase() {
 
             try {
                 if (currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP TYPE IF EXISTS FooEnum;")
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
@@ -93,6 +94,7 @@ class EnumerationTests : DatabaseTestsBase() {
             }
             try {
                 if (currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP TYPE IF EXISTS FooEnum2;")
                     exec("CREATE TYPE FooEnum2 AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)

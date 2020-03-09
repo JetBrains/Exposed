@@ -183,7 +183,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 }
 
 /**
- * PostgreSQL dialect implementation using the pgjdbc-ng jdbc.
+ * PostgreSQL dialect implementation using the pgjdbc-ng jdbc driver.
  *
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
