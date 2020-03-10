@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -187,13 +188,16 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
-            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+            val expected = listOfNotNull(
+                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     ")"
-            assertEquals(expected, child.ddl)
+            )
+            assertEqualCollections(expected, child.ddl)
         }
     }
 
@@ -214,13 +218,16 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
-            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+            val expected = listOfNotNull(
+                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     ")"
-            assertEquals(expected, child.ddl)
+            )
+            assertEqualCollections(expected, child.ddl)
         }
     }
 
@@ -239,13 +246,16 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
-            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+            val expected = listOfNotNull(
+                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     ")"
-            assertEquals(expected, child.ddl)
+            )
+            assertEqualCollections(expected, child.ddl)
         }
     }
 
@@ -266,13 +276,16 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
-            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
+            val expected = listOfNotNull(
+                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     ")"
-            assertEquals(expected, child.ddl)
+            )
+            assertEqualCollections(expected, child.ddl)
         }
     }
 
