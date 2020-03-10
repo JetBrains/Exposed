@@ -21,6 +21,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         try {
             when (metadata.driverName) {
                 "pgjdbc-ng" -> "public" // Should be removed after https://github.com/impossibl/pgjdbc-ng/pull/354 will be released
+                "MySQL Connector/J",
                 "MySQL Connector Java" -> connection.catalog.orEmpty()
                 else -> connection.schema.orEmpty()
             }
