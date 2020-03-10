@@ -302,7 +302,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 SchemaUtils.create(OneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
-                exec("CREATE SCHEMA ${"one".inProperCase()}")
+                exec("CREATE SCHEMA IF NOT EXISTS ${"one".inProperCase()}")
                 SchemaUtils.create(OneOneTable)
                 println("${currentDialect.name}: ${currentDialectTest.allTablesNames()}")
                 assertEquals(true, OneTable.exists())
