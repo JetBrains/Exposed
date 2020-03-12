@@ -27,7 +27,7 @@ class InsertSelectTests : DatabaseTestsBase() {
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
             val r = userData.select { userData.value eq 42 }.orderBy(userData.user_id).toList()
-            assertEquals(allUserData, r.size)
+            assertEquals(allUserData, r.size.toLong())
         }
     }
 
@@ -37,7 +37,7 @@ class InsertSelectTests : DatabaseTestsBase() {
             val userCount = users.selectAll().count()
             users.insert(users.slice(Random().castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
             val r = users.select { users.name eq "Foo" }.toList()
-            assertEquals(userCount, r.size)
+            assertEquals(userCount, r.size.toLong())
         }
     }
 
@@ -47,7 +47,7 @@ class InsertSelectTests : DatabaseTestsBase() {
             val userCount = users.selectAll().count()
             users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
             val r = users.select { users.name eq "Foo" }.toList()
-            assertEquals(userCount, r.size)
+            assertEquals(userCount, r.size.toLong())
         }
     }
 

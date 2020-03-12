@@ -67,6 +67,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
             registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
+            registerDialect(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialect() }
             registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
@@ -98,11 +99,22 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         ): Database {
             return doConnect( getNewConnection, manager = manager )
         }
-        fun connect(url: String, driver: String, user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
+        fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }): Database {
+
             Class.forName(driver).newInstance()
 
             return doConnect( { DriverManager.getConnection(url, user, password) }, setupConnection, manager )
+        }
+        private fun getDriver(url: String) = when {
+            url.startsWith("jdbc:h2") -> "org.h2.Driver"
+            url.startsWith("jdbc:postgresql") -> "org.postgresql.Driver"
+            url.startsWith("jdbc:mysql") -> "com.mysql.cj.jdbc.Driver"
+            url.startsWith("jdbc:mariadb") -> "org.mariadb.jdbc.Driver"
+            url.startsWith("jdbc:oracle") -> "oracle.jdbc.OracleDriver"
+            url.startsWith("jdbc:sqlite") -> "org.sqlite.JDBC"
+            url.startsWith("jdbc:sqlserver") -> "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+            else -> throw Exception("Database driver didn't found")
         }
     }
 }

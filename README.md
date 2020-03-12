@@ -10,14 +10,20 @@ Exposed - Kotlin SQL Library
 _Exposed_ is a lightweight SQL library written for [Kotlin](https://github.com/JetBrains/kotlin) language.
 It does have two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects.
 
-Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed/exposed/view#
+Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download) for more information)
+
+Find more examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki). 
 
 You can inspect project [roadmap](ROADMAP.md) to see what's coming next or look into [Change log](ChangeLog.md) for list of bug fixes and improvements.
+
+If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
+
 
 ## Dialects
 
 Currently supported database dialects:
 * PostgreSQL
+* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 * MySQL
 * MariaDB
 * [Oracle](ORACLE.md)
@@ -145,6 +151,7 @@ fun main() {
 
         SchemaUtils.drop (Users, Cities)
     }
+}
 
 ```
 
@@ -186,6 +193,7 @@ Outputs:
 ```kotlin
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -270,6 +278,3 @@ Outputs:
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
 ```
-
-Find more examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki). 
-If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).

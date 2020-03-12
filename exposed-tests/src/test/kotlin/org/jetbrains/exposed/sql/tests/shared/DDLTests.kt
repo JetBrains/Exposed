@@ -14,14 +14,13 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.sql.SQLException
 import java.util.*
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class DDLTests : DatabaseTestsBase() {
 
@@ -440,7 +439,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.ORACLE,TestDB.POSTGRESQL)) {
+        withDb(listOf(TestDB.ORACLE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
@@ -587,13 +586,13 @@ class DDLTests : DatabaseTestsBase() {
                 it[UserToRepo.repo] = repo
             }
 
-            assertEquals(1, UserToRepo.selectAll().count())
+            assertEquals(1L, UserToRepo.selectAll().count())
             UserToRepo.insert {
                 it[UserToRepo.user] = userID
                 it[UserToRepo.repo] = repo
             }
 
-            assertEquals(2, UserToRepo.selectAll().count())
+            assertEquals(2L, UserToRepo.selectAll().count())
         }
     }
 
@@ -616,8 +615,8 @@ class DDLTests : DatabaseTestsBase() {
                 it[table1] = table1id
             }
 
-            assertEquals(1, Table1.selectAll().count())
-            assertEquals(2, Table2.selectAll().count())
+            assertEquals(1L, Table1.selectAll().count())
+            assertEquals(2L, Table2.selectAll().count())
 
             Table2.update {
                 it[table1] = null
@@ -627,7 +626,7 @@ class DDLTests : DatabaseTestsBase() {
             Table2.deleteAll()
 
             if (currentDialectTest !is SQLiteDialect) {
-                exec(ForeignKeyConstraint.from(Table2.table1).dropStatement().single())
+                exec(Table2.table1.foreignKey!!.dropStatement().single())
             }
         }
     }
@@ -682,7 +681,7 @@ class DDLTests : DatabaseTestsBase() {
                 it[negative] = -14
             }
 
-            assertEquals(1, checkTable.selectAll().count())
+            assertEquals(1L, checkTable.selectAll().count())
 
             assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
@@ -716,7 +715,7 @@ class DDLTests : DatabaseTestsBase() {
                 it[negative] = -32
             }
 
-            assertEquals(1, checkTable.selectAll().count())
+            assertEquals(1L, checkTable.selectAll().count())
 
             assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
@@ -770,14 +769,18 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(Subscriptions) {
             val query = Subscriptions.join(Users, JoinType.INNER, additionalConstraint = {Subscriptions.user eq Users.id}).selectAll()
-            assertEquals(0, query.count())
+            assertEquals(0L, query.count())
         }
     }
 
     @Test
     fun createTableWithMultipleIndexes() {
         withDb {
-            SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+            try {
+                SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+            } finally {
+                SchemaUtils.drop(MultipleIndexesTable)
+            }
         }
     }
 
@@ -794,17 +797,24 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun createTableWithForeignKeyToAnotherSchema() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            exec("CREATE SCHEMA ${"one".inProperCase()}")
-            exec("CREATE SCHEMA ${"two".inProperCase()}")
-            SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
-            val idFromOne = TableFromSchemeOne.insertAndGetId {  }
+            try {
+                exec("CREATE SCHEMA ${"one".inProperCase()}")
+                exec("CREATE SCHEMA ${"two".inProperCase()}")
+                SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
+                val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
-            TableFromSchemeTwo.insert {
-                it[reference] = idFromOne
+                TableFromSchemeTwo.insert {
+                    it[reference] = idFromOne
+                }
+
+                assertEquals(1L, TableFromSchemeOne.selectAll().count())
+                assertEquals(1L, TableFromSchemeTwo.selectAll().count())
+            } finally {
+                if(currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP SCHEMA IF EXISTS ${"one".inProperCase()} CASCADE")
+                    exec("DROP SCHEMA IF EXISTS ${"two".inProperCase()} CASCADE")
+                }
             }
-
-            assertEquals(1, TableFromSchemeOne.selectAll().count())
-            assertEquals(1, TableFromSchemeTwo.selectAll().count())
         }
     }
 

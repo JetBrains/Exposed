@@ -27,13 +27,13 @@ class InsertTests : DatabaseTestsBase() {
                 it[idTable.name] = "1"
             }
 
-            assertEquals(1, idTable.selectAll().count())
+            assertEquals(1L, idTable.selectAll().count())
 
             idTable.insertAndGetId {
                 it[idTable.name] = "2"
             }
 
-            assertEquals(2, idTable.selectAll().count())
+            assertEquals(2L, idTable.selectAll().count())
 
             assertFailAndRollback("Unique constraint") {
                 idTable.insertAndGetId {
@@ -44,7 +44,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -58,13 +58,13 @@ class InsertTests : DatabaseTestsBase() {
                 it[idTable.name] = "1"
             }
 
-            assertEquals(1, idTable.selectAll().count())
+            assertEquals(1L, idTable.selectAll().count())
 
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "2"
             }
 
-            assertEquals(2, idTable.selectAll().count())
+            assertEquals(2L, idTable.selectAll().count())
 
             val idNull = idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "2"
@@ -81,7 +81,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL)
+                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
         withTables(insertIgnoreSupportedDB, idTable) {
             val id = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
@@ -112,7 +112,7 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
-            assertEquals(userNamesWithCityIds.size, users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
+            assertEquals(userNamesWithCityIds.size.toLong(), users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
         }
     }
 
@@ -265,7 +265,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[table.emoji] = emojis
             }
 
-            assertEquals(1, table.selectAll().count())
+            assertEquals(1L, table.selectAll().count())
         }
     }
 
@@ -275,7 +275,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL), table) {
+        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
             expectException<IllegalStateException> {
                 table.insert {
                     it[table.emoji] = emojis

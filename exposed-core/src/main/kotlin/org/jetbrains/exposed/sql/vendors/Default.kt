@@ -350,23 +350,23 @@ abstract class FunctionProvider {
     /**
      * Returns the SQL command that updates one or more rows of a table.
      *
-     * @param targets Column set to update values from.
+     * @param target Table to update values from.
      * @param columnsAndValues Pairs of column to update and values to update with.
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
      */
     open fun update(
-        targets: ColumnSet,
+        target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
-        targets.describe(transaction, this)
-        +" SET "
-        columnsAndValues.appendTo(this) { (col, value) ->
+        target.describe(transaction, this)
+
+        columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
             append("${transaction.identity(col)}=")
             registerArgument(col, value)
         }
@@ -378,6 +378,23 @@ abstract class FunctionProvider {
         limit?.let { +" LIMIT $it" }
         toString()
     }
+
+    /**
+     * Returns the SQL command that updates one or more rows of a join.
+     *
+     * @param targets Join to update values from.
+     * @param columnsAndValues Pairs of column to update and values to update with.
+     * @param limit Maximum number of rows to update.
+     * @param where Condition that decides the rows to update.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
@@ -435,7 +452,7 @@ abstract class FunctionProvider {
      * @param offset The number of rows to skip.
      * @param alreadyOrdered Whether the query is already ordered or not.
      */
-    open fun queryLimit(size: Int, offset: Int, alreadyOrdered: Boolean): String = buildString {
+    open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = buildString {
         if (size > 0) {
             append("LIMIT $size")
             if (offset > 0) {
@@ -550,28 +567,47 @@ abstract class VendorDialect(
 ) : DatabaseDialect {
 
     /* Cached values */
-    private var _allTableNames: List<String>? = null
-    /** Returns a list with the names of all the defined tables. */
+    private var _allTableNames: Map<String, List<String>>? = null
+    /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
-            if (_allTableNames == null) {
-                _allTableNames = allTablesNames()
-            }
-            return _allTableNames!!
+            val connection = TransactionManager.current().connection
+            return getAllTableNamesCache().getValue(connection.metadata { currentScheme })
         }
+
+    private fun getAllTableNamesCache(): Map<String, List<String>> {
+        val connection = TransactionManager.current().connection
+        if (_allTableNames == null) {
+            _allTableNames = connection.metadata { tableNames }
+        }
+        return _allTableNames!!
+    }
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
     /**
-     * Returns a list with the names of all the defined tables.
+     * Returns a list with the names of all the defined tables with schema prefixes if database supports it.
      * This method always re-read data from DB.
      * Using `allTablesNames` field is the preferred way.
      */
-    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata { tableNames }
+    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
+        tableNames.getValue(currentScheme)
+    }
 
-    override fun tableExists(table: Table): Boolean = allTablesNames.any { it == table.nameInDatabaseCase() }
+    override fun tableExists(table: Table): Boolean {
+        val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
+        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
+        val allTables = getAllTableNamesCache().getValue(scheme)
+        return allTables.any {
+            when {
+                tableScheme != null -> it == table.nameInDatabaseCase()
+                scheme.isEmpty() -> it == table.nameInDatabaseCase()
+                else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
+            }
+        }
+    }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }

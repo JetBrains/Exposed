@@ -15,8 +15,8 @@ class ConditionsTests : DatabaseTestsBase() {
     fun testTRUEandFALSEOps() {
         withCitiesAndUsers { cities, _, _ ->
             val allSities = cities.selectAll().toCityNameList()
-            assertEquals(0, cities.select { Op.FALSE }.count())
-            assertEquals(allSities.size, cities.select { Op.TRUE }.count())
+            assertEquals(0L, cities.select { Op.FALSE }.count())
+            assertEquals(allSities.size.toLong(), cities.select { Op.TRUE }.count())
         }
     }
 

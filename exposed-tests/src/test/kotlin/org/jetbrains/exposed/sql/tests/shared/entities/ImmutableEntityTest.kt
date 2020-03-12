@@ -52,7 +52,7 @@ class ImmutableEntityTest : DatabaseTestsBase() {
 
                 EOrganization.forceUpdateEntity(org, Schema.Organization.etag, 1)
 
-                assertEquals(1, EOrganization.all().single().etag)
+                assertEquals(1L, EOrganization.all().single().etag)
             }
         }
     }
@@ -91,7 +91,7 @@ class ImmutableEntityTest : DatabaseTestsBase() {
                 val org = ECachedOrganization.all().single()
 
                 assertEquals("JetBrains Gmbh", org.name)
-                assertEquals(1, org.etag)
+                assertEquals(1L, org.etag)
             }
         }
     }

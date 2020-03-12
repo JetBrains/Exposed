@@ -1,3 +1,28 @@
+# 0.22.1
+Documentation on SQL functions was added by [Juan José González Abril](https://github.com/SackCastellon)
+
+Broken Changes:
+* Return type of `SizedIterable.count()` (and `Query.count()` as an inheritor) was changed from Int to Long to support very large tables. 
+
+Also, `offset` parameter of `SizedIterable.limit()` and `DeleteStatement` functions were changed accordingly. `limit` parameter stays untouched to be in sync with Kotlin `Collection.size`
+
+Features:
+* New pgjdbc-ng driver for PostgreSQL supported with help of [hichem-fazai](https://github.com/hichem-fazai)
+* Updates with joins supported ([#671](https://github.com/JetBrains/Exposed/issues/671)), ([#636](https://github.com/JetBrains/Exposed/issues/636)), ([#671](https://github.com/JetBrains/Exposed/issues/671)).
+* Custom names for foreign keys supported by [t-kameyama](https://github.com/t-kameyama) ([#510](https://github.com/JetBrains/Exposed/issues/510)). 
+* Support for `notInSubQuery` expression ([#791](https://github.com/JetBrains/Exposed/issues/791)), thanks for PR, [dolgopolovwork](https://github.com/dolgopolovwork).
+* `Database.connect()` could be used without providing an explicit driver. It will be resolved from a connection url. Improvement provided by [Ali Lozano](https://github.com/AliLozano).
+* Most of SQL operators can be called on Expressions instead of ExpressionWithColumnType #829
+
+Bug fixes:
+* Respect schema in JdbcDatabaseMetadataImpl.tableNames ([#797](https://github.com/JetBrains/Exposed/issues/797)).
+* JavaLocalDateTimeColumnType not setting nanoseconds correctly on Timestamp ([#793](https://github.com/JetBrains/Exposed/issues/793)).
+* Correct precedence for arithmetic operators ([#788](https://github.com/JetBrains/Exposed/issues/788)) fixed by [toefel18](https://github.com/toefel18).
+* Default value was not generated in DDL for columns within a primary key ([#810](https://github.com/JetBrains/Exposed/issues/810)).
+* `QueryAlias.get(original: Expression<T>)` lose query's alias ([#633](https://github.com/JetBrains/Exposed/issues/633)).
+* `Query.copy()` doesn't clone internal lists was fixed by [Ali Lozano](https://github.com/AliLozano).
+* Unable to create entity with overridden equals method due to field initialization error ([#806](https://github.com/JetBrains/Exposed/issues/806)).
+
 # 0.21.1
 Public methods and classes of database dialects, tables and columns were covered with documentation by [Juan José González Abril](https://github.com/SackCastellon). Thanks a lot!
 

@@ -35,6 +35,7 @@ dependencies {
             testImplementation("com.h2database", "h2", "1.4.199")
             testImplementation("mysql", "mysql-connector-java", "5.1.48")
             testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
+            testImplementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")
         }
     }
 }

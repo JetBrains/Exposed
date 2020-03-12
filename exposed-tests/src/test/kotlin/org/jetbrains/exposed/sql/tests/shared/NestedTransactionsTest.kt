@@ -9,7 +9,6 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class NestedTransactionsTest : DatabaseTestsBase() {
 
@@ -24,7 +23,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
                     it[DMLTestsData.Cities.name] = "city1"
                 }
 
-                assertEquals(1, DMLTestsData.Cities.selectAll().count())
+                assertEquals(1L, DMLTestsData.Cities.selectAll().count())
 
                 assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
 

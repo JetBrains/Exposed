@@ -17,7 +17,7 @@ class ReplaceTests : DatabaseTestsBase() {
             val serverID = varchar("serverID", 64).default("")
         }
         // Only MySQL supp
-        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.POSTGRESQL), NewAuth) {
+        withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), NewAuth) {
             NewAuth.replace {
                 it[username] = "username"
                 it[session] = "session".toByteArray()

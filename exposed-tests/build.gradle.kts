@@ -32,11 +32,12 @@ dependencies {
     when (dialect) {
         "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.5.3")
         "mysql" ->      implementation("mysql", "mysql-connector-java", "8.0.18")
-        "oracle" ->     implementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
+        "oracle" ->     implementation("com.oracle.database.jdbc", "ojdbc8", "19.3.0.0")
         "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", "7.4.1.jre8")
         else -> {
             implementation("mysql", "mysql-connector-java", "5.1.48")
             implementation("org.postgresql", "postgresql", "42.2.9.jre6")
+            implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")
         }
     }
 }

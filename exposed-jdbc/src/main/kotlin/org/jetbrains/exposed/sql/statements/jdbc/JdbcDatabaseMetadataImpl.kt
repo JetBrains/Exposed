@@ -1,17 +1,14 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.ColumnMetadata
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
-import java.util.*
+import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
@@ -20,9 +17,42 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val databaseName = database.takeIf { metadata.databaseProductName !== "Oracle" }
     private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
 
-    override val tableNames: List<String> get() = with(metadata) {
-        return getTables(databaseName, oracleSchema, "%", arrayOf("TABLE")).iterate {
-            identifierManager.inProperCase(getString("TABLE_NAME"))
+    override val currentScheme: String by lazyMetadata {
+        try {
+            when (metadata.driverName) {
+                "pgjdbc-ng" -> "public" // Should be removed after https://github.com/impossibl/pgjdbc-ng/pull/354 will be released
+                "MySQL Connector/J",
+                "MySQL Connector Java",
+                "MariaDB Connector/J"-> connection.catalog.orEmpty()
+                else -> connection.schema.orEmpty()
+            }
+        } catch (e: Throwable) { "" }
+    }
+
+    private inner class CachableMapWithDefault<K, V>(private val map:MutableMap<K,V> = mutableMapOf(), val default: (K) -> V) : Map<K,V> by map {
+        override fun get(key: K): V? = map.getOrPut(key, { default(key) })
+        override fun containsKey(key: K): Boolean = true
+        override fun isEmpty(): Boolean = false
+    }
+
+    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(default = { schemeName ->
+        tableNamesFor(schemeName)
+    })
+
+    private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
+        val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
+        val (catalogName, schemeName) = when {
+            useCatalogInsteadOfScheme -> scheme to ""
+            else -> database to scheme
+        }
+        val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
+        return resultSet.iterate {
+            val tableName = getString("TABLE_NAME")!!
+            val fullTableName = when {
+                useCatalogInsteadOfScheme -> getString("TABLE_CAT")?.let { "$it.$tableName" }
+                else -> getString("TABLE_SCHEM")?.let { "$it.$tableName" }
+            } ?: tableName
+            identifierManager.inProperCase(fullTableName)
         }
     }
 
@@ -90,19 +120,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
-        return tables.map{ it.nameInDatabaseCase() }.associateWith { table ->
+        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
+        return allTables.keys.associateWith { table ->
             metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
+                val fromColumn = allTables.getValue(fromTableName).columns.first { it.nameInDatabaseCase() == fromColumnName }
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
                 val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("PKCOLUMN_NAME")!!)
+                val targetColumn = allTables.getValue(targetTableName).columns.first { it.nameInDatabaseCase() == targetColumnName }
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
-                ForeignKeyConstraint(constraintName,
-                        targetTableName, targetColumnName,
-                        fromTableName, fromColumnName,
-                        constraintUpdateRule, constraintDeleteRule)
+                ForeignKeyConstraint(
+                        target = targetColumn,
+                        from = fromColumn,
+                        onUpdate = constraintUpdateRule,
+                        onDelete = constraintDeleteRule,
+                        name = constraintName
+                )
             }
         }
     }

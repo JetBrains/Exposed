@@ -7,8 +7,8 @@ import org.jetbrains.exposed.sql.SortOrder
 import kotlin.reflect.KProperty
 
 class View<out Target: Entity<*>> (val op : Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
-    override fun limit(n: Int, offset: Int): SizedIterable<Target> = factory.find(op).limit(n, offset)
-    override fun count(): Int = factory.find(op).count()
+    override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n, offset)
+    override fun count(): Long = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     override fun forUpdate(): SizedIterable<Target> = factory.find(op).forUpdate()
     override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()

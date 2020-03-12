@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
@@ -21,17 +21,15 @@ class Column<T>(
     /** Data type of the column. */
     override val columnType: IColumnType
 ) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
+    var foreignKey: ForeignKeyConstraint? = null
+
     /** Returns the column that this column references. */
-    var referee: Column<*>? = null
+    val referee: Column<*>?
+        get() = foreignKey?.target
 
     /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
-
-    internal var onUpdate: ReferenceOption? = null
-        get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
-    internal var onDelete: ReferenceOption? = null
-        get() = field ?: currentDialectIfAvailable?.defaultReferenceOption
 
     /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
     var indexInPK: Int? = null
@@ -44,6 +42,8 @@ class Column<T>(
 
     /** Returns the list of DDL statements that create this column. */
     val ddl: List<String> get() = createStatement()
+
+    fun nameInDatabaseCase(): String = name.inProperCase()
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
@@ -84,7 +84,7 @@ class Column<T>(
         }
 
         val defaultValue = dbDefaultValue
-        if (!isPKColumn && defaultValue != null) {
+        if (defaultValue != null) {
             val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(defaultValue)
             if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
                 val clientDefault = when {
