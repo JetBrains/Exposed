@@ -307,7 +307,7 @@ object SchemaUtils {
             execStatements(inBatch, createStatements)
 
             /** Sets manually the database name in connection.catalog for Mysql.
-             * Mysql doesn't change catalog after executing Use */
+             * Mysql doesn't change catalog after executing "Use db" statement*/
             if(currentDialect is MysqlDialect) {
                 connection.catalog = schema.identifier
             }
