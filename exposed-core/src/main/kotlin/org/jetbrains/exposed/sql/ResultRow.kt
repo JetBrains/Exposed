@@ -49,8 +49,13 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> getRaw(c: Expression<T>): T? =
-            data[fieldIndex[c] ?: error("$c is not in record set")] as T?
+    private fun <T> getRaw(c: Expression<T>): T? {
+        val index = fieldIndex[c]
+            ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
+            ?: error("$c is not in record set")
+
+        return data[index] as T?
+    }
 
     override fun toString(): String =
             fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }

@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class InsertTests : DatabaseTestsBase() {
     @Test
@@ -71,6 +72,28 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(null, idNull)
+        }
+    }
+
+    @Test
+    fun `test insert and get id when column has different name`() {
+        val testTableWithId = object : IdTable<Int>("testTableWithId") {
+            val code = integer("code")
+            override val id: Column<EntityID<Int>> = code.entityId()
+        }
+
+        withTables(testTableWithId) {
+            val id1 = testTableWithId.insertAndGetId {
+                it[code] = 1
+            }
+            assertNotNull(id1)
+            assertEquals(1, id1.value)
+
+            val id2 = testTableWithId.insert {
+                it[code] = 2
+            } get testTableWithId.id
+            assertNotNull(id2)
+            assertEquals(2, id2.value)
         }
     }
 
