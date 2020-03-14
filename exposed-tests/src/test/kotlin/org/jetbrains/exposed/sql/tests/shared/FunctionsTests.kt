@@ -173,7 +173,25 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals("andrey!Andrey", result2[concatField2])
         }
     }
+   
+    @Test fun testConcatUsingPlusOperator() {
+        withCitiesAndUsers { _, users, _ ->
 
+            val concatField = SqlExpressionBuilder.run { users.id + " - " + users.name }
+            val result = users.slice(concatField).select{ users.id eq "andrey" }.single()
+            assertEquals("andrey - Andrey", result[concatField])
+
+            val concatField2 = SqlExpressionBuilder.run { users.id + users.name }
+            val result2 = users.slice(concatField2).select{ users.id eq "andrey" }.single()
+            assertEquals("andreyAndrey", result2[concatField2])
+
+            val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!"}
+            val result3 = users.slice(concatField3).select{ users.id eq "andrey" }.single()
+            assertEquals("Hi Andrey!", result3[concatField3])
+
+        }
+    }
+    
     @Test
     fun testCustomStringFunctions01() {
         withCitiesAndUsers { cities, _, _ ->
