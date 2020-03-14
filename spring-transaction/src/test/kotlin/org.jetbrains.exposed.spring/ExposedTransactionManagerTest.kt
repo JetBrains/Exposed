@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
@@ -12,6 +13,7 @@ import org.springframework.test.annotation.Repeat
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import kotlin.test.assertNull
 
 open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
@@ -21,7 +23,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     @Test @Transactional @Commit
     @Repeat(5)
-    fun testConnection() {
+    open fun testConnection() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
         if(pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
 
@@ -36,7 +38,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     @Test @Transactional @Commit
     @Repeat(5)
-    fun testConnection2() {
+    open fun testConnection2() {
         SchemaUtils.create(t1)
         val rnd = Random().nextInt().toString()
         t1.insert {
@@ -47,7 +49,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         SchemaUtils.drop(t1)
     }
 
-    @Test @Transactional @Commit
+    @Test
     @Repeat(5)
     fun testConnectionWithoutAnnotation() {
         transaction {
@@ -58,6 +60,15 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             }
 
             Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
+        }
+        assertNull(TransactionManager.currentOrNull())
+        transaction {
+            val rnd = Random().nextInt().toString()
+            t1.insert {
+                it[t1.c1] = rnd
+            }
+
+            Assert.assertEquals(2, t1.selectAll().count())
             SchemaUtils.drop(t1)
         }
     }

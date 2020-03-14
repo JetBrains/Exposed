@@ -29,11 +29,16 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     private val db = Database.connect(_dataSource) { this }
 
+    private val springTxKey = "SPRING_TX_KEY"
+
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         super.doBegin(transaction, definition)
 
         if (TransactionSynchronizationManager.hasResource(_dataSource)) {
             currentOrNull() ?: initTransaction()
+        }
+        if (!TransactionSynchronizationManager.hasResource(springTxKey)) {
+            TransactionSynchronizationManager.bindResource(springTxKey, transaction)
         }
     }
 
@@ -67,9 +72,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
-        val tDefinition = dataSource?.connection?.transactionIsolation?.takeIf { it != isolation }?.let {
-                DefaultTransactionDefinition().apply { isolationLevel = isolation }
-        }
+        val tDefinition = DefaultTransactionDefinition().apply { isolationLevel = isolation }
 
         getTransaction(tDefinition)
 
@@ -88,7 +91,12 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
 
-    private class SpringTransaction(override val connection: ExposedConnection<*>, override val db: Database, override val transactionIsolation: Int, override val outerTransaction: Transaction?) : TransactionInterface {
+    private inner class SpringTransaction(
+        override val connection: ExposedConnection<*>,
+        override val db: Database,
+        override val transactionIsolation: Int,
+        override val outerTransaction: Transaction?
+    ) : TransactionInterface {
 
         override fun commit() {
             connection.run {
@@ -102,8 +110,14 @@ class SpringTransactionManager(private val _dataSource: DataSource,
             connection.rollback()
         }
 
-        override fun close() { }
-
+        override fun close() {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionSynchronizationManager.getResource(springTxKey)?.let { springTx ->
+                    this@SpringTransactionManager.doCleanupAfterCompletion(springTx)
+                    TransactionSynchronizationManager.unbindResource(springTxKey)
+                }
+            }
+        }
     }
 
 }

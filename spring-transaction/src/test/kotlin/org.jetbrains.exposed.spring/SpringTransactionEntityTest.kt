@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -36,6 +37,7 @@ class OrderDAO(id: EntityID<UUID>): UUIDEntity(id) {
     var product by OrderTable.product
 }
 
+@org.springframework.stereotype.Service
 @Transactional
 open class Service {
     open fun createCustomer(name: String): CustomerDAO {
@@ -56,18 +58,17 @@ open class Service {
     }
 
     open fun findOrderByProduct(product: String) : OrderDAO? {
-        return OrderDAO.find { OrderTable.product eq product }.singleOrNull()?.apply {
-            this.customer // load to cache
-        }
+        return OrderDAO.find { OrderTable.product eq product }.singleOrNull()
     }
 }
 
 open class SpringTransactionEntityTest : SpringTransactionTestBase() {
 
-    val service: Service = Service()
+    @Autowired
+    lateinit var service: Service
 
     @Test @Commit
-    fun test01(){
+    open fun test01() {
         transaction {
             SchemaUtils.create(CustomerTable, OrderTable)
         }
@@ -76,7 +77,9 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
         service.createOrder(customer, "Product1")
         val order = service.findOrderByProduct("Product1")
         assertNotNull(order)
-        assertEquals("Alice1", order.customer.name)
+        transaction {
+            assertEquals("Alice1", order.customer.name)
+        }
     }
 
     @Test @Commit
@@ -84,8 +87,8 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)
-        assertEquals("Bob", order.customer.name)
         transaction {
+        assertEquals("Bob", order.customer.name)
             SchemaUtils.drop(CustomerTable, OrderTable)
         }
     }
