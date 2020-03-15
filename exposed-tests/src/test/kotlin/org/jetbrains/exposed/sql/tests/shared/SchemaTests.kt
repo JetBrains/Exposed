@@ -13,7 +13,7 @@ import org.junit.Test
 class SchemaTests : DatabaseTestsBase() {
     @Test
     fun `create and set schema in mysql`() {
-        withDb(TestDB.MYSQL) {
+        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
@@ -30,9 +30,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `create and set schema tests`() {
-        // MARIADB also uses catalogs in data manipulation
         withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) {
-            currentDialect
             if (currentDialect.supportsCreateSchema) {
                 val schema = if (currentDialect is SQLServerDialect) {
                     exec("GRANT CREATE SCHEMA TO guest")
@@ -67,7 +65,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `table references table with same name in other database in mysql`() {
-        withDb(TestDB.MYSQL) {
+        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)

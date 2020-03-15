@@ -2,6 +2,8 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.lang.StringBuilder
 
@@ -33,8 +35,11 @@ class Schema(private val name: String, val authorization: String? = null) {
             }
             append(identifier)
 
-            if(TransactionManager.current().connection.metadata { supportsSchemasInDataManipulation || !supportsCatalogsInDataManipulation }) {
-                appendIfNotNull(" AUTHORIZATION", authorization)
+            if(currentDialect !is MysqlDialect && currentDialect !is MariaDBDialect) {
+                appendIfNotNull(" AUTHORIZATION ", authorization)
+            } else if (authorization != null) {
+                throw UnsupportedByDialectException("${currentDialect.name} do not have database owners. " +
+                        "You can use GRANT to allow or deny rights on database.", currentDialect)
             }
         }
 

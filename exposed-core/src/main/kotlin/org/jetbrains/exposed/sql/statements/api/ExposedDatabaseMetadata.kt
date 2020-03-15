@@ -17,8 +17,6 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val supportsMultipleResultSets : Boolean
     abstract val supportsSelectForUpdate : Boolean
     abstract val databaseProductVersion: String
-    abstract val supportsSchemasInDataManipulation: Boolean
-    abstract val supportsCatalogsInDataManipulation: Boolean
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",

@@ -152,8 +152,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val supportsAlterTableWithAddColumn by lazyMetadata { supportsAlterTableWithAddColumn() }
     override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
-    override val supportsSchemasInDataManipulation: Boolean by lazyMetadata { supportsSchemasInDataManipulation() }
-    override val supportsCatalogsInDataManipulation: Boolean by lazyMetadata { supportsCatalogsInDataManipulation() }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
