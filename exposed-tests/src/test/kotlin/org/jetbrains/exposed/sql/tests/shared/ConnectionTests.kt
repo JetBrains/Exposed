@@ -29,4 +29,22 @@ class ConnectionTests : DatabaseTestsBase() {
             assertEquals(expected, columnMetadata)
         }
     }
+
+    // GitHub issue #838
+    @Test
+    @Suppress("unused")
+    fun testTableConstraints() {
+        val parent = object : LongIdTable("parent") {
+            val scale = integer("scale").uniqueIndex()
+        }
+        val child = object : LongIdTable("child") {
+            val scale = reference("scale", parent.scale)
+        }
+        withTables(listOf(TestDB.MYSQL), child) {
+            val constraints = connection.metadata {
+                tableConstraints(listOf(child))
+            }
+            assertEquals(2, constraints.keys.size)
+        }
+    }
 }
