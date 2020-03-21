@@ -132,6 +132,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsCreateSequence: Boolean = false
     override val supportsMultipleGeneratedKeys: Boolean = false
+    override val supportsCreateSchema: Boolean = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

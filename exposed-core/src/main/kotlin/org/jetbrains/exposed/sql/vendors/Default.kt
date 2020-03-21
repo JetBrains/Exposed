@@ -505,6 +505,8 @@ interface DatabaseDialect {
     /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
+    /** Returns`true` if the dialect supports schema creation. */
+    val supportsCreateSchema: Boolean get() = true
 
     /** Returns the name of the current database. */
     fun getDatabase(): String
@@ -552,6 +554,8 @@ interface DatabaseDialect {
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
+
+    fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
 }
 
 /**

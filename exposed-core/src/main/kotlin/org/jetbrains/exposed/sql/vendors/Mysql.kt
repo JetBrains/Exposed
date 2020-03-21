@@ -170,6 +170,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override fun dropIndex(tableName: String, indexName: String): String = "ALTER TABLE $tableName DROP INDEX $indexName"
 
+    override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
+
     companion object {
         /** MySQL dialect name */
         const val dialectName: String = "mysql"

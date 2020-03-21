@@ -220,6 +220,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
+    override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
+
     companion object {
         /** PostgreSQL dialect name */
         const val dialectName: String = "postgresql"

@@ -154,6 +154,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
 
+    override fun setSchema(schema: Schema): String = "ALTER USER ${schema.authorization} WITH DEFAULT_SCHEMA = ${schema.identifier}"
+
     companion object {
         /** SQLServer dialect name */
         const val dialectName: String = "sqlserver"

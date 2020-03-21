@@ -228,6 +228,8 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
+    override fun setSchema(schema: Schema): String = "ALTER SESSION SET CURRENT_SCHEMA = ${schema.identifier}"
+
     companion object {
         /** Oracle dialect name */
         const val dialectName: String = "oracle"
