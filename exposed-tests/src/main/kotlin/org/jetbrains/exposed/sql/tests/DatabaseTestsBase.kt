@@ -99,7 +99,7 @@ abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
-    fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
+    fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) {
             exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
             return
@@ -124,17 +124,17 @@ abstract class DatabaseTestsBase {
         val database = dbSettings.db!!
 
         transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
-            statement()
+            statement(dbSettings)
         }
     }
 
-    fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.() -> Unit) {
+    fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         val toTest = db ?: TestDB.enabledInTests() - excludeSettings
-        toTest.forEach {
+        toTest.forEach { dbSettings ->
             try {
-                withDb(it, statement)
+                withDb(dbSettings, statement)
             } catch (e: Exception) {
-                throw AssertionError("Failed on ${it.name}", e)
+                throw AssertionError("Failed on ${dbSettings.name}", e)
             }
         }
     }
