@@ -287,7 +287,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
     fun List<Index>.filterFKeys() = if (isMysql)
-        filterNot { (it.table.tableName.inProperCase() to it.columns.singleOrNull()?.let { c -> tr.identity(c) }) in fKeyConstraints }
+        filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
     else
         this
 

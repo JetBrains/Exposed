@@ -7,8 +7,6 @@ import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-internal typealias TableAndColumnName = Pair<String, String>
-
 /**
  * Provides definitions for all the supported SQL data types.
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific type, or it is
@@ -523,7 +521,7 @@ interface DatabaseDialect {
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
     /** Returns a map with the foreign key constraints of all the defined columns in each of the specified [tables]. */
-    fun columnConstraints(vararg tables: Table): Map<TableAndColumnName, List<ForeignKeyConstraint>> = emptyMap()
+    fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> = emptyMap()
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
@@ -613,15 +611,15 @@ abstract class VendorDialect(
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<String, String>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<String, String>, MutableList<ForeignKeyConstraint>>()
+    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> {
+        val constraints = HashMap<Pair<Table, Column<*>>, MutableList<ForeignKeyConstraint>>()
 
         val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
 
         fillConstraintCacheForTables(tablesToLoad)
         tables.forEach { table ->
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
-                constraints.getOrPut(it.fromTable to it.fromColumn) { arrayListOf() }.add(it)
+                constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
             }
 
         }

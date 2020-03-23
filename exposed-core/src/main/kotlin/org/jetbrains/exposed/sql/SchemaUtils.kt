@@ -149,10 +149,10 @@ object SchemaUtils {
                     for (column in table.columns) {
                         val foreignKey = column.foreignKey
                         if (foreignKey != null) {
-                            val existingConstraint = existingColumnConstraint[table.tableName.inProperCase() to identity(column)]?.firstOrNull()
+                            val existingConstraint = existingColumnConstraint[table to column]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.targetTable != foreignKey.targetTable
+                            } else if (existingConstraint.target.table != foreignKey.target.table
                                     || foreignKey.deleteRule != existingConstraint.deleteRule
                                     || foreignKey.updateRule != existingConstraint.updateRule) {
                                 statements.addAll(existingConstraint.dropStatement())
