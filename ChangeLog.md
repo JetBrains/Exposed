@@ -1,3 +1,14 @@
+# 0.23.1
+Features:
+* Schema support: create/set current/drop. Many thanks to [hichem-fazai](https://github.com/hichem-fazai).
+
+Bug fixes:
+* Spring transaction doesn't close/commit transaction at the end of `transaction` block ([#831](https://github.com/JetBrains/Exposed/issues/831)).
+* SpringTransactionManager has connection leak when used with `transaction` instead of @Transaction annotation  ([#831](https://github.com/JetBrains/Exposed/issues/831)).
+* `id not in record set` when getting by id which alias to another column ([#820](https://github.com/JetBrains/Exposed/issues/820)). 
+* Fixed `tableConstraints` retrieval fails for column names that need quoting fixed by [t-kameyama](https://github.com/t-kameyama), thank you ([#839](https://github.com/JetBrains/Exposed/issues/839)).
+* Fixed attempt to create the same foreign key constraint even if one already exists ([#843](https://github.com/JetBrains/Exposed/issues/843)).  
+
 # 0.22.1
 Documentation on SQL functions was added by [Juan José González Abril](https://github.com/SackCastellon)
 
