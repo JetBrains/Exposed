@@ -54,11 +54,15 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin04() {
         val Numbers = object : Table() {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         val Names = object : Table() {
-            val name = varchar("name", 10).primaryKey()
+            val name = varchar("name", 10)
+
+            override val primaryKey = PrimaryKey(name)
         }
 
         val Map = object : Table() {

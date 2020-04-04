@@ -28,25 +28,33 @@ class SortByReferenceTest {
 
     object TestTables {
         object cities : Table() {
-            val id = integer("id").autoIncrement().primaryKey()
+            val id = integer("id").autoIncrement()
             val name = varchar("name", 50)
             val strange_id = varchar("strange_id", 10).references(strangeTable.id)
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         object users : Table() {
-            val id = varchar("id", 10).primaryKey()
+            val id = varchar("id", 10)
             val name = varchar("name", length = 50)
             val cityId = (integer("city_id") references cities.id).nullable()
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         object noRefereeTable : Table() {
-            val id = varchar("id", 10).primaryKey()
+            val id = varchar("id", 10)
             val col1 = varchar("col1", 10)
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         object refereeTable : Table() {
-            val id = varchar("id", 10).primaryKey()
+            val id = varchar("id", 10)
             val ref = reference("ref", noRefereeTable.id)
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         object referencedTable : IntIdTable() {
@@ -54,10 +62,12 @@ class SortByReferenceTest {
         }
 
         object strangeTable : Table() {
-            val id = varchar("id", 10).primaryKey()
+            val id = varchar("id", 10)
             val user_id = varchar("user_id", 10) references users.id
             val comment = varchar("comment", 30)
             val value = integer("value")
+
+            override val primaryKey = PrimaryKey(id)
         }
     }
 

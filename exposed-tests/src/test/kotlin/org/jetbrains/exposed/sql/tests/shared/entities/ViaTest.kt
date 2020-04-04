@@ -18,8 +18,10 @@ object ViaTestData {
     }
 
     object StringsTable: IdTable<Long>("") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement().primaryKey().entityId()
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
         val text = varchar("text", 10)
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     object ConnectionTable: Table() {

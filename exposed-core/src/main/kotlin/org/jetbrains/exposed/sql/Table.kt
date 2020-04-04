@@ -370,6 +370,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         init {
             checkMultipleDeclaration()
             for (column in columns) column.markPrimaryKey()
+            columns.sortWith(compareBy { !it.columnType.isAutoInc })
         }
 
         /**
@@ -394,10 +395,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             val table = this@Table
             if (table.columns.any { it.indexInPK != null }) {
                 removeOldPrimaryKey()
-                exposedLogger.error(
-                    "Confusion between multiple declarations of primary key on ${table.tableName}. " +
-                            "Use only override val primaryKey=PrimaryKey() declaration."
-                )
             }
         }
 
@@ -436,6 +433,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
         require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
+        exposedLogger.error(
+                "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
+        )
     }
 
     // EntityID columns
