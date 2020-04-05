@@ -122,8 +122,8 @@ fun CustomLongFunction(
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
 
-
-open class SqlExpressionBuilderClass {
+@Suppress("INAPPLICABLE_JVM_NAME")
+interface ISqlExpressionBuilder {
 
     // Comparison Operators
 
@@ -381,4 +381,4 @@ open class SqlExpressionBuilderClass {
 /**
  * Builder object for creating SQL expressions.
  */
-object SqlExpressionBuilder: SqlExpressionBuilderClass()
+object SqlExpressionBuilder: ISqlExpressionBuilder
