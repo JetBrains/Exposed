@@ -43,7 +43,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     ): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val primaryKeys = table.primaryKey?.columns?.toList() ?: emptyList()
-        val uniqueCols = columns.filter { it in uniqueIdxCols } + primaryKeys
+        val uniqueCols = (columns.filter { it in uniqueIdxCols } + primaryKeys).distinct()
         val borderDate = Date(118, 2, 18)
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
