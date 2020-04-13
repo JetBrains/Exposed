@@ -121,9 +121,11 @@ fun CustomLongFunction(
     vararg params: Expression<*>
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
+@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class")
+open class SqlExpressionBuilderClass: ISqlExpressionBuilder
 
-
-open class SqlExpressionBuilderClass {
+@Suppress("INAPPLICABLE_JVM_NAME")
+interface ISqlExpressionBuilder {
 
     // Comparison Operators
 
@@ -381,4 +383,4 @@ open class SqlExpressionBuilderClass {
 /**
  * Builder object for creating SQL expressions.
  */
-object SqlExpressionBuilder: SqlExpressionBuilderClass()
+object SqlExpressionBuilder: ISqlExpressionBuilder
