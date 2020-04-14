@@ -20,6 +20,11 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return row[column]
     }
 
+    infix operator fun <T> get(column: CompositeColumn<T>): T {
+        val row = resultedValues?.firstOrNull() ?: error("No key generated")
+        return row[column]
+    }
+
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
 
     private fun processResults(rs: ResultSet?, inserted: Int): List<ResultRow> {

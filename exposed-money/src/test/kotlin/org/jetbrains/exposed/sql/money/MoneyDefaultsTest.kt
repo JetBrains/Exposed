@@ -17,7 +17,7 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = money("t1", 10).default(Money.of(BigDecimal.ONE, "USD"))
+        val t1 = compositeMoney(10, 0,"t1").default(Money.of(BigDecimal.ONE, "USD"))
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 

@@ -13,6 +13,7 @@ val dialect: String by project
 
 dependencies {
     api(project(":exposed-core"))
+    api(project(":exposed-dao"))
     api("javax.money", "money-api", "1.0.3")
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))

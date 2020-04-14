@@ -28,6 +28,23 @@ interface FieldSet {
     val source: ColumnSet
     /** Returns the field of this field set. */
     val fields: List<Expression<*>>
+
+    /**
+     * Returns all real fields, unrolling composite [CompositeColumn] if present
+     */
+    val realFields: List<Expression<*>>
+        get() {
+            val unrolled = ArrayList<Expression<*>>(fields.size)
+
+            fields.forEach {
+                if (it is CompositeColumn<*>) {
+                    unrolled.addAll(it.getRealColumns())
+                } else unrolled.add(it)
+            }
+
+            return unrolled
+        }
+
 }
 
 /**
@@ -334,6 +351,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).also { _columns.addColumn(it) }
 
+    fun <T : CompositeColumn<*>> registerCompositeColumn(column: T) : T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
+
     /**
      * Replaces the specified [oldColumn] with the specified [newColumn] in the table.
      * Mostly used internally by the library.
@@ -621,6 +640,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T : Any> Column<T>.default(defaultValue: T): Column<T> = apply {
         dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
         defaultValueFun = { defaultValue }
+    }
+
+    /** Sets the default value for this column in the database side. */
+    fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = let { composite ->
+        doWithTable(this@Table) {
+            composite.getRealColumnsWithVales(defaultValue).forEach {
+                (it.key as Column<Any>).default(it.value as Any)
+            }
+        }
+        return composite
     }
 
     /** Sets the default value for this column in the database side. */
@@ -959,7 +988,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         is AutoIncColumnType -> this
         is ColumnType -> {
             val autoIncSequence = idSeqName ?: "${tableName}_${name}_seq"
-            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, autoIncSequence)))
+            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType as ColumnType, autoIncSequence)))
         }
         else -> error("Unsupported column type for auto-increment $columnType")
     }
@@ -1052,6 +1081,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    /**
+     * Allows to invoke extension functions defined in [Table] class from itself
+     */
+    private fun doWithTable(table : Table, receiver : Table.() -> Unit) = table.receiver()
+
 }
 
 @Deprecated(
