@@ -19,6 +19,9 @@ open class MiscTable : Table() {
     val es = enumerationByName("es", 5, E::class)
     val esn = enumerationByName("esn", 5, E::class).nullable()
 
+    val c = varchar("c", 4)
+    val cn = varchar("cn", 4).nullable()
+
     val s = varchar("s", 100)
     val sn = varchar("sn", 100).nullable()
 
@@ -37,11 +40,14 @@ open class MiscTable : Table() {
     }
 }
 
-fun MiscTable.checkRow(row: ResultRow,
-                            sm: Short, smn: Short?,
-                            n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
-                            es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
-                            dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+fun MiscTable.checkRow(
+    row: ResultRow,
+    sm: Short, smn: Short?,
+    n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
+    es: MiscTable.E, esn: MiscTable.E?,
+    c: String, cn: String?, s: String, sn: String?,
+    dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?
+) {
     assertEquals(row[this.sm], sm)
     assertEquals(row[this.smn], smn)
     assertEquals(row[this.n], n)

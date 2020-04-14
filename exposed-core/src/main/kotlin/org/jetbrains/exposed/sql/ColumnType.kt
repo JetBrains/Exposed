@@ -337,6 +337,22 @@ abstract class StringColumnType(
 }
 
 /**
+ * Character column for storing strings with the exact [colLength] length using the specified [collate] type.
+ */
+open class CharColumnType(
+    /** Returns the maximum length of this column. */
+    val colLength: Int = 255,
+    collate: String? = null
+) : StringColumnType(collate) {
+    override fun sqlType(): String = buildString {
+        append("CHAR($colLength)")
+        if (collate != null) {
+            append(" COLLATE ${escape(collate)}")
+        }
+    }
+}
+
+/**
  * Character column for storing strings with the specified maximum [colLength] using the specified [collate] type.
  */
 open class VarCharColumnType(

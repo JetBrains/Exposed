@@ -500,6 +500,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun char(name: String): Column<Char> = registerColumn(name, CharacterColumnType())
 
     /**
+     * Creates a character column, with the specified [name], for storing strings with the specified [length] using the specified text [collate] type.
+     * If no collate type is specified then the database default is used.
+     */
+    fun char(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, CharColumnType(length, collate))
+
+    /**
      * Creates a character column, with the specified [name], for storing strings with the specified maximum [length] using the specified text [collate] type.
      * If no collate type is specified then the database default is used.
      */
