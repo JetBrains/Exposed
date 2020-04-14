@@ -23,6 +23,7 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
@@ -153,6 +154,8 @@ class DefaultsTest : DatabaseTestsBase() {
         val dtConstValue = LocalDate.of(2010, 1, 1)
         val dLiteral = dateLiteral(dtConstValue)
         val dtLiteral = dateTimeLiteral(dtConstValue.atStartOfDay())
+        val tsConstValue = dtConstValue.atStartOfDay(ZoneOffset.UTC).plusSeconds(42).toInstant()
+        val tsLiteral = timestampLiteral(tsConstValue)
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
@@ -162,6 +165,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val t2 = datetime("t2").defaultExpression(nowExpression)
             val t3 = datetime("t3").defaultExpression(dtLiteral)
             val t4 = date("t4").default(dtConstValue)
+            val t5 = timestamp("t5").default(tsConstValue)
+            val t6 = timestamp("t6").defaultExpression(tsLiteral)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -183,7 +188,9 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
                     "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}" +
+                    "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}, " +
+                    "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
+                    "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}" +
                     ")"
 
             val expected = if (currentDialectTest is OracleDialect)
@@ -202,6 +209,8 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEquals('X', row1[TestTable.c])
             assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t3])
             assertEqualDateTime(dtConstValue, row1[TestTable.t4])
+            assertEqualDateTime(tsConstValue, row1[TestTable.t5])
+            assertEqualDateTime(tsConstValue, row1[TestTable.t6])
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.`java-time`
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.*
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.Temporal
@@ -77,9 +78,12 @@ fun <T: Temporal?> Expression<T>.second() = Second(this)
 
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, JavaLocalDateColumnType.INSTANCE)
 fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParameter(value, JavaLocalDateTimeColumnType.INSTANCE)
+fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, JavaInstantColumnType.INSTANCE)
 
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(JavaLocalDateColumnType.INSTANCE, value)
 fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(JavaLocalDateTimeColumnType.INSTANCE, value)
+fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(JavaInstantColumnType.INSTANCE, value)
 
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<LocalDate?>(functionName, JavaLocalDateColumnType.INSTANCE, *params)
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<LocalDateTime?>(functionName, JavaLocalDateTimeColumnType.INSTANCE, *params)
+fun CustomTimeStampFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<Instant?>(functionName, JavaInstantColumnType.INSTANCE, *params)

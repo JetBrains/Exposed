@@ -133,6 +133,10 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         }
         return value
     }
+
+    companion object {
+        internal val INSTANCE = JavaInstantColumnType()
+    }
 }
 
 /**
