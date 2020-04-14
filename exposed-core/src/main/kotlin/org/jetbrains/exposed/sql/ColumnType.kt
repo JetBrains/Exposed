@@ -70,6 +70,15 @@ interface IColumnType {
  */
 abstract class ColumnType(override var nullable: Boolean = false) : IColumnType {
     override fun toString(): String = sqlType()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ColumnType
+
+        if (nullable != other.nullable) return false
+        return true
+    }
 }
 
 /**
@@ -99,6 +108,17 @@ class AutoIncColumnType(
     }
 
     override fun sqlType(): String = resolveAutoIncType(delegate)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AutoIncColumnType
+
+        if (delegate != other.delegate) return false
+
+        return true
+    }
 }
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
@@ -137,6 +157,18 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
         },
         idColumn.table as IdTable<T>
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as EntityIDColumnType<*>
+
+        if (idColumn != other.idColumn) return false
+
+        return true
+    }
+
 }
 
 // Numeric columns
@@ -224,6 +256,19 @@ class DecimalColumnType(
         is Int -> value.toBigDecimal()
         else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
     }.setScale(scale, RoundingMode.HALF_EVEN)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as DecimalColumnType
+
+        if (precision != other.precision) return false
+        if (scale != other.scale) return false
+
+        return true
+    }
 }
 
 // Character columns
@@ -266,6 +311,18 @@ abstract class StringColumnType(
         append('\'')
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as StringColumnType
+
+        if (collate != other.collate) return false
+
+        return true
+    }
+
     companion object {
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",
@@ -274,6 +331,9 @@ abstract class StringColumnType(
             '\n' to "\\n"
         )
     }
+
+
+
 }
 
 /**
@@ -289,6 +349,18 @@ open class VarCharColumnType(
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as VarCharColumnType
+
+        if (colLength != other.colLength) return false
+
+        return true
     }
 }
 
@@ -332,6 +404,23 @@ class BinaryColumnType(
     val length: Int
 ) : BasicBinaryColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType(length)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as BinaryColumnType
+
+        if (length != other.length) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return length
+    }
+
 }
 
 /**
@@ -446,6 +535,18 @@ class EnumerationColumnType<T : Enum<T>>(
         is Enum<*> -> value.ordinal
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.simpleName}")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as EnumerationColumnType<*>
+
+        if (klass != other.klass) return false
+
+        return true
+    }
 }
 
 /**
@@ -466,6 +567,18 @@ class EnumerationNameColumnType<T : Enum<T>>(
         is String -> value
         is Enum<*> -> value.name
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as EnumerationNameColumnType<*>
+
+        if (klass != other.klass) return false
+
+        return true
     }
 }
 
