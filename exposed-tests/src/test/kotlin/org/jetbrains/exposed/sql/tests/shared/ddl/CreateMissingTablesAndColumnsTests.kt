@@ -22,9 +22,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateMissingTablesAndColumns01() {
         val TestTable = object : Table("test_table") {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", length = 42)
             val time = long("time").uniqueIndex()
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
@@ -37,11 +39,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateMissingTablesAndColumns02() {
         val TestTable = object : IdTable<String>("Users2") {
-            override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.primaryKey().entityId()
+            override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.entityId()
 
             val name = varchar("name", 255)
             val email = varchar("email", 255).uniqueIndex()
             val camelCased = varchar("camelCased", 255).index()
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withDb { dbSetting ->

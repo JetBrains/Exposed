@@ -16,9 +16,11 @@ class ImmutableEntityTest : DatabaseTestsBase() {
 
     object Schema {
         object Organization : IdTable<Long>() {
-            override val id = long("id").autoIncrement().primaryKey().entityId()
+            override val id = long("id").autoIncrement().entityId()
             val name = varchar("name", 256)
             val etag = long("etag").default(0)
+
+            override val primaryKey = PrimaryKey(id)
         }
     }
 

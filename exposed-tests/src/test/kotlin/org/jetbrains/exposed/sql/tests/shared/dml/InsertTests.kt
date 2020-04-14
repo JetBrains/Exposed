@@ -150,8 +150,10 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     object LongIdTable : Table() {
-        val id = long("id").autoIncrement("long_id_seq").primaryKey()
+        val id = long("id").autoIncrement("long_id_seq")
         val name = text("name")
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     @Test
