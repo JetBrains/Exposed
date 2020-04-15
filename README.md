@@ -1,4 +1,4 @@
-# <img src="https://github.com/sunalex/Exposed/blob/master/logo.png" alt="Exposed" width="315" />
+<img src="https://github.com/sunalex/Exposed/blob/master/logo.png" alt="Exposed" width="315" />
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
