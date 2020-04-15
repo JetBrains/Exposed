@@ -4,21 +4,25 @@
 [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed-core/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed-core/_latestVersion)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Welcome to **Exposed ORM framework**. We are glad to introduce our official mascot—Cuttlefish, that is best known for its outstanding mimicry abilities letting it blend seamlessly in any environment. Just like Exposed, that can mimic a variety of database engines and **help you build database applications without hard dependencies on any specific database engine, and switch between them with very little or no changes in your code.**
+# Database Apps without Hard Dependencies
 
-* Exposed is a lightweight SQL library written for [Kotlin](https://github.com/JetBrains/kotlin) language.
+Welcome to **Exposed ORM framework**. We are glad to introduce our official mascot—Cuttlefish, that is best known for its outstanding mimicry abilities letting it blend seamlessly in any environment. Just like Exposed, that can mimic a variety of database engines and help you build database applications without hard dependencies on any specific database engine, and switch between them with very little or no changes in your code.
+
+## Features
+
+* Written for [Kotlin language](https://github.com/JetBrains/kotlin).
 * Has two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects.
 
 ## Database Support
 
-* PostgreSQL
-* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
+* H2
 * MySQL
 * MariaDB
 * [Oracle](ORACLE.md)
-* SQLite
-* H2
+* PostgreSQL
+* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 * [SQL Server](SQLServer.md)
+* SQLite
 
 ## Links
 
