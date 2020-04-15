@@ -31,7 +31,8 @@ dependencies {
 
     when (dialect) {
         "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", "2.5.3")
-        "mysql" ->      implementation("mysql", "mysql-connector-java", "8.0.18")
+        "mysql" ->      testImplementation("mysql", "mysql-connector-java", "5.1.48")
+        "mysql8" ->     testImplementation("mysql", "mysql-connector-java", "8.0.19")
         "oracle" ->     implementation("com.oracle.database.jdbc", "ojdbc8", "19.3.0.0")
         "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", "7.4.1.jre8")
         else -> {
