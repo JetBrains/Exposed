@@ -1,3 +1,5 @@
+Welcome to **Exposed ORM framework**. We are glad to introduce our official mascot—Cuttlefish, that is best known for its outstanding mimicry abilities letting it blend seamlessly in any environment. Just like Exposed, that can mimic a variety of database engines and help you build database applications without hard dependencies on any specific database engine, and switch between them with very little or no changes in your code.
+
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 [![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1) 
@@ -6,7 +8,7 @@
 
 # Database Apps without Hard Dependencies
 
-Welcome to **Exposed ORM framework**. We are glad to introduce our official mascot—Cuttlefish, that is best known for its outstanding mimicry abilities letting it blend seamlessly in any environment. Just like Exposed, that can mimic a variety of database engines and help you build database applications without hard dependencies on any specific database engine, and switch between them with very little or no changes in your code.
+
 
 ## Features
 
