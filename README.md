@@ -8,10 +8,6 @@ Welcome to **Exposed ORM framework**. We are glad to introduce our official masc
 
 # Database Apps without Hard Dependencies
 
-
-
-## Features
-
 * Written for [Kotlin language](https://github.com/JetBrains/kotlin).
 * Has two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects.
 
