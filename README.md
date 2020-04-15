@@ -23,7 +23,7 @@ Exposed is written for [Kotlin language](https://github.com/JetBrains/kotlin) an
 
 ## Links
 
-Exposed is currently available for **maven/gradle builds** at https://bintray.com/kotlin/exposed (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download) for more information)
+Exposed is currently available for **maven/gradle builds** at https://bintray.com/kotlin/exposed (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)).
 
 * [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs. 
 * [Roadmap](ROADMAP.md) to see what's coming next.
