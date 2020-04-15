@@ -27,7 +27,7 @@ Exposed is currently available for **maven/gradle builds** at https://bintray.co
 
 * [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs. 
 * [Roadmap](ROADMAP.md) to see what's coming next.
-* [Change log](ChangeLog.md) for list of bug fixes and improvements.
+* [Change log](ChangeLog.md) of improvements and bug fixes.
 
 If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
 
