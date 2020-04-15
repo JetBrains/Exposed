@@ -4,24 +4,13 @@
 [![Download](https://api.bintray.com/packages/kotlin/exposed/exposed-core/images/download.svg) ](https://bintray.com/kotlin/exposed/exposed-core/_latestVersion)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Exposed - Kotlin SQL Library
-==================
+Welcome to **Exposed ORM framework**. We are glad to introduce our official mascot—Cuttlefish, that is best known for its outstanding mimicry abilities letting it blend seamlessly in any environment. Just like Exposed, that can mimic a variety of database engines and **help you build database applications without hard dependencies on any specific database engine, and switch between them with very little or no changes in your code.**
 
-_Exposed_ is a lightweight SQL library written for [Kotlin](https://github.com/JetBrains/kotlin) language.
-It does have two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects.
+* Exposed is a lightweight SQL library written for [Kotlin](https://github.com/JetBrains/kotlin) language.
+* Has two layers of database access: typesafe SQL wrapping DSL and lightweight data access objects.
 
-Exposed is currently available for maven/gradle builds at https://bintray.com/kotlin/exposed (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download) for more information)
+## Database Support
 
-Find more examples and documentation on the [wiki](https://github.com/JetBrains/Exposed/wiki). 
-
-You can inspect project [roadmap](ROADMAP.md) to see what's coming next or look into [Change log](ChangeLog.md) for list of bug fixes and improvements.
-
-If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
-
-
-## Dialects
-
-Currently supported database dialects:
 * PostgreSQL
 * PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 * MySQL
@@ -31,7 +20,21 @@ Currently supported database dialects:
 * H2
 * [SQL Server](SQLServer.md)
 
-## SQL DSL sample:
+## Links
+
+Exposed is currently available for **maven/gradle builds** at https://bintray.com/kotlin/exposed (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download) for more information)
+
+* [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs. 
+* [Roadmap](ROADMAP.md) to see what's coming next.
+* [Change log](ChangeLog.md) for list of bug fixes and improvements.
+
+If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
+
+
+## Examples
+
+### SQL DSL
+
 ```kotlin
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -155,8 +158,8 @@ fun main() {
 
 ```
 
-Outputs:
-```
+Generated SQL:
+```sql
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT PK_Cities_ID PRIMARY KEY (id))
     SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10) NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL, CONSTRAINT PK_User_ID PRIMARY KEY (id))
     SQL: ALTER TABLE Users ADD FOREIGN KEY (city_id) REFERENCES Cities(id)
@@ -189,7 +192,8 @@ Outputs:
     SQL: DROP TABLE Cities
 ```
 
-## DAO sample
+### DAO
+
 ```kotlin
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
@@ -263,8 +267,8 @@ fun main() {
 }
 ```
 
-Outputs:
-```
+Generated SQL:
+```sql
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT pk_Cities PRIMARY KEY (id))
     SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL, CONSTRAINT pk_Users PRIMARY KEY (id))
     SQL: CREATE INDEX Users_name ON Users (name)
@@ -278,3 +282,7 @@ Outputs:
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
 ```
+
+## License
+
+Apache License, Version 2.0, ([LICENSE](LICENSE.txt) or https://www.apache.org/licenses/LICENSE-2.0)
