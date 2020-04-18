@@ -13,7 +13,10 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+<<<<<<< HEAD
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
+=======
+>>>>>>> refs/heads/master
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
@@ -25,8 +28,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun tableExists01() {
         val TestTable = object : Table() {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables {
@@ -36,8 +41,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun tableExists02() {
         val TestTable = object : Table() {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(TestTable) {
@@ -60,8 +67,10 @@ class DDLTests : DatabaseTestsBase() {
 
     // Placed outside test function to shorten generated name
     val UnnamedTable = object : Table() {
-        val id = integer("id").primaryKey()
+        val id = integer("id")
         val name = varchar("name", length = 42)
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     @Test fun unnamedTableWithQuotesSQL() {
@@ -88,8 +97,10 @@ class DDLTests : DatabaseTestsBase() {
     @Test fun tableWithDifferentColumnTypesSQL01() {
         val TestTable = object : Table("different_column_types") {
             val id = integer("id").autoIncrement()
-            val name = varchar("name", 42).primaryKey()
+            val name = varchar("name", 42)
             val age = integer("age").nullable()
+
+            override val primaryKey = PrimaryKey(name)
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE), tables = *arrayOf(TestTable)) {
@@ -102,9 +113,11 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun tableWithDifferentColumnTypesSQL02() {
         val TestTable = object : Table("with_different_column_types") {
-            val id = integer("id").primaryKey()
-            val name = varchar("name", 42).primaryKey()
+            val id = integer("id")
+            val name = varchar("name", 42)
             val age = integer("age").nullable()
+
+            override val primaryKey = PrimaryKey(id, name)
         }
 
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
@@ -117,8 +130,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun tableWithMultiPKandAutoIncrement() {
         val Foo = object : IdTable<Long>("FooTable") {
-            val bar = integer("bar").primaryKey()
-            override val id: Column<EntityID<Long>> = long("id").entityId().autoIncrement().primaryKey()
+            val bar = integer("bar")
+            override val id: Column<EntityID<Long>> = long("id").entityId().autoIncrement()
+
+            override val primaryKey = PrimaryKey(bar, id)
         }
 
         withTables(Foo) {
@@ -138,8 +153,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testIndices01() {
         val t = object : Table("t1") {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", 255).index()
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(t) {
@@ -151,10 +168,12 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testIndices02() {
         val t = object : Table("t2") {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val lvalue = integer("lvalue")
             val rvalue = integer("rvalue")
             val name = varchar("name", 255).index()
+
+            override val primaryKey = PrimaryKey(id)
 
             init {
                 index (false, lvalue, rvalue)
@@ -174,8 +193,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testUniqueIndices01() {
         val t = object : Table("t1") {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", 255).uniqueIndex()
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(t) {
@@ -191,8 +212,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testUniqueIndicesCustomName() {
         val t = object : Table("t1") {
-            val id = integer("id").primaryKey()
+            val id = integer("id")
             val name = varchar("name", 255).uniqueIndex("U_T1_NAME")
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(t) {
@@ -318,8 +341,10 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testBlob() {
         val t = object: Table("t1") {
-            val id = integer("id").autoIncrement("t1_seq").primaryKey()
+            val id = integer("id").autoIncrement("t1_seq")
             val b = blob("blob")
+
+            override val primaryKey = PrimaryKey(id)
         }
 
         withTables(t) {
@@ -424,7 +449,9 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     private abstract class EntityTable(name: String = "") : IdTable<String>(name) {
-        override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.primaryKey().entityId()
+        override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.entityId()
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     @Test fun complexTest01() {

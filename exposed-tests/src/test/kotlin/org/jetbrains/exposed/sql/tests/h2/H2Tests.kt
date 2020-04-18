@@ -39,11 +39,15 @@ class H2Tests : DatabaseTestsBase() {
     }
 
     object Testing : Table("H2_TESTING") {
-        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
+        val id = integer("id").autoIncrement() // Column<Int>
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     object RefTable : Table() {
-        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
+        val id = integer("id").autoIncrement() // Column<Int>
         val ref = reference("test", Testing.id)
+
+        override val primaryKey = PrimaryKey(id)
     }
 }

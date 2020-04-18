@@ -371,6 +371,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         init {
             checkMultipleDeclaration()
             for (column in columns) column.markPrimaryKey()
+            columns.sortWith(compareBy { !it.columnType.isAutoInc })
         }
 
         /**
@@ -395,10 +396,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             val table = this@Table
             if (table.columns.any { it.indexInPK != null }) {
                 removeOldPrimaryKey()
-                exposedLogger.error(
-                    "Confusion between multiple declarations of primary key on ${table.tableName}. " +
-                            "Use only override val primaryKey=PrimaryKey() declaration."
-                )
             }
         }
 
@@ -437,6 +434,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
         require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
+        exposedLogger.error(
+                "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
+        )
     }
 
     // EntityID columns
@@ -499,6 +499,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Creates a character column, with the specified [name], for storing single characters. */
     fun char(name: String): Column<Char> = registerColumn(name, CharacterColumnType())
+
+    /**
+     * Creates a character column, with the specified [name], for storing strings with the specified [length] using the specified text [collate] type.
+     * If no collate type is specified then the database default is used.
+     */
+    fun char(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, CharColumnType(length, collate))
 
     /**
      * Creates a character column, with the specified [name], for storing strings with the specified maximum [length] using the specified text [collate] type.

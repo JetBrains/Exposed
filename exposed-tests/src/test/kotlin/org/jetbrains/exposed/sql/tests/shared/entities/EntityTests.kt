@@ -27,12 +27,14 @@ import kotlin.test.assertNull
 object EntityTestsData {
 
     object YTable: IdTable<String>("YTable") {
-        override val id: Column<EntityID<String>> = varchar("uuid", 36).primaryKey().entityId().clientDefault {
+        override val id: Column<EntityID<String>> = varchar("uuid", 36).entityId().clientDefault {
             EntityID(UUID.randomUUID().toString(), YTable)
         }
 
         val x = bool("x").default(true)
         val blob = blob("content").nullable()
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     object XTable: IntIdTable("XTable") {
@@ -566,8 +568,10 @@ class EntityTests: DatabaseTestsBase() {
     }
 
     object SchoolHolidays : Table(name = "school_holidays") {
-        val school          = reference("school_id", Schools, ReferenceOption.CASCADE, ReferenceOption.CASCADE).primaryKey(0)
-        val holiday         = reference("holiday_id", Holidays, ReferenceOption.CASCADE, ReferenceOption.CASCADE).primaryKey(1)
+        val school          = reference("school_id", Schools, ReferenceOption.CASCADE, ReferenceOption.CASCADE)
+        val holiday         = reference("holiday_id", Holidays, ReferenceOption.CASCADE, ReferenceOption.CASCADE)
+
+        override val primaryKey = PrimaryKey(school, holiday)
     }
 
     object Schools : IntIdTable(name = "school") {

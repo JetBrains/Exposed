@@ -175,8 +175,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
         val def = super.insert(false, table, columns, sql, transaction)
 
-        val uniqueCols = columns.filter { it.indexInPK != null }.sortedBy { it.indexInPK }
-        if (uniqueCols.isEmpty()) {
+        val uniqueCols = table.primaryKey?.columns
+        if (uniqueCols.isNullOrEmpty()) {
             transaction.throwUnsupportedException("PostgreSQL replace table must supply at least one primary key.")
         }
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }

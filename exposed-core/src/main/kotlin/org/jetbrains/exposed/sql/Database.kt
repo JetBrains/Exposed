@@ -114,7 +114,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             url.startsWith("jdbc:oracle") -> "oracle.jdbc.OracleDriver"
             url.startsWith("jdbc:sqlite") -> "org.sqlite.JDBC"
             url.startsWith("jdbc:sqlserver") -> "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-            else -> throw Exception("Database driver didn't found")
+            else -> throw Exception("Database driver not found")
         }
     }
 }

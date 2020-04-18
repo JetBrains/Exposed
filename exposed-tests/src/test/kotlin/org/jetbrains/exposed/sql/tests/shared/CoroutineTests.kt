@@ -18,7 +18,9 @@ import java.sql.Connection
 class CoroutineTests : DatabaseTestsBase() {
 
     object Testing : Table("COROUTINE_TESTING") {
-        val id = integer("id").primaryKey().autoIncrement() // Column<Int>
+        val id = integer("id").autoIncrement() // Column<Int>
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     @Rule

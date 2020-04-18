@@ -11,10 +11,12 @@ class ReplaceTests : DatabaseTestsBase() {
     @Test
     fun testReplace01() {
         val NewAuth = object : Table() {
-            val username = varchar("username", 16).primaryKey()
+            val username = varchar("username", 16)
             val session = binary("session", 64)
             val timestamp = long("timestamp").default(0)
             val serverID = varchar("serverID", 64).default("")
+
+            override val primaryKey = PrimaryKey(username)
         }
         // Only MySQL supp
         withTables(TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), NewAuth) {
