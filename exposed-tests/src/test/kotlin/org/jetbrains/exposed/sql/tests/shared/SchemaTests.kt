@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -36,6 +37,8 @@ class SchemaTests : DatabaseTestsBase() {
                     exec("GRANT CREATE SCHEMA TO guest")
                     exec("SETUSER 'guest'")
                     Schema("MYSCHEMA", "guest")
+                } else if (currentDialect is OracleDialect) {
+                    Schema("MYSCHEMA", password = "pwd4myschema", defaultTablespace = "tbs_perm_01", quota = "20M", on = "tbs_perm_01")
                 } else {
                     Schema("MYSCHEMA")
                 }
@@ -44,7 +47,7 @@ class SchemaTests : DatabaseTestsBase() {
                     SchemaUtils.createSchema(schema)
                     SchemaUtils.setSchema(schema)
 
-                    val schemaName = if(currentDialect is PostgreSQLNGDialect) {
+                    val schemaName = if (currentDialect is PostgreSQLNGDialect) {
                         /** connection.schema in Pstgresql-ng always return null in current pgjdbc-ng version (0.8.3).
                          * This is fixed in pgjdbc-ng repo but not yet released. So here we retrieve the current
                          * schema using sql query rather than connection.schema */
@@ -82,6 +85,45 @@ class SchemaTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.dropSchema(schema)
             }
+        }
+    }
+
+    @Test
+    fun `schemas exists tests`() {
+        val schema = Schema("exposedschema")
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            try {
+                /** Assert that schema initially doesn't exist */
+                assertFalse(schema.exists())
+
+                SchemaUtils.createSchema(schema)
+                /** Assert that schema exists after creation */
+                assertTrue(schema.exists())
+
+                SchemaUtils.dropSchema(schema)
+                /** Assert that schema doesn't exist after dropping */
+                assertFalse(schema.exists())
+            } finally {
+                SchemaUtils.dropSchema(schema)
+            }
+        }
+    }
+
+    @Test
+    fun `create existing schema and drop nonexistent schemas`() {
+        val schema1 = Schema("redundant")
+        val schema2 = Schema("redundant")
+        val schemasTryingToCreate = listOf(schema1, schema1, schema2)
+
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = *arrayOf(schema1, schema1, schema2)) {
+            val toCreate = schemasTryingToCreate.filterNot { it.exists() }
+            /** schema1 and schema2 have been created, so there is no remaining schema to be created */
+            assertTrue(toCreate.isEmpty())
+
+            /** schema1 and schema2 variables have the same schema name */
+            SchemaUtils.dropSchema(schema1)
+            assertFalse(schema2.exists())
         }
     }
 }

@@ -650,25 +650,18 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun createTableWithForeignKeyToAnotherSchema() {
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            try {
-                exec("CREATE SCHEMA ${"one".inProperCase()}")
-                exec("CREATE SCHEMA ${"two".inProperCase()}")
-                SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
-                val idFromOne = TableFromSchemeOne.insertAndGetId { }
+        val one = Schema("one")
+        val two = Schema("two")
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = *arrayOf(two, one)) {
+            SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
+            val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
-                TableFromSchemeTwo.insert {
-                    it[reference] = idFromOne
-                }
-
-                assertEquals(1L, TableFromSchemeOne.selectAll().count())
-                assertEquals(1L, TableFromSchemeTwo.selectAll().count())
-            } finally {
-                if(currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP SCHEMA IF EXISTS ${"one".inProperCase()} CASCADE")
-                    exec("DROP SCHEMA IF EXISTS ${"two".inProperCase()} CASCADE")
-                }
+            TableFromSchemeTwo.insert {
+                it[reference] = idFromOne
             }
+
+            assertEquals(1L, TableFromSchemeOne.selectAll().count())
+            assertEquals(1L, TableFromSchemeTwo.selectAll().count())
         }
     }
 
