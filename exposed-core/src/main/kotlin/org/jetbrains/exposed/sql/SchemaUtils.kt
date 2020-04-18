@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 object SchemaUtils {
@@ -87,14 +87,14 @@ object SchemaUtils {
     }
 
     fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
         }
     }
 
     fun dropSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val dropStatements = seq.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
         }
@@ -109,7 +109,7 @@ object SchemaUtils {
     fun createIndex(index: Index) = index.createStatement()
 
     private fun addMissingColumnsStatements(vararg tables: Table): List<String> {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val statements = ArrayList<String>()
             if (tables.isEmpty())
                 return statements
@@ -167,7 +167,7 @@ object SchemaUtils {
         }
     }
 
-    private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
+    private fun ITransaction.execStatements(inBatch: Boolean, statements: List<String>) {
         if (inBatch)
             execInBatch(statements)
         else {
@@ -177,7 +177,7 @@ object SchemaUtils {
         }
     }
     fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
             commit()
             currentDialect.resetCaches()
@@ -191,7 +191,7 @@ object SchemaUtils {
      * @param inBatch flag to perform database creation in a single batch
      */
     fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
             execStatements(inBatch, createStatements)
         }
@@ -204,7 +204,7 @@ object SchemaUtils {
      * @param inBatch flag to perform database creation in a single batch
      */
     fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
             execStatements(inBatch, createStatements)
         }
@@ -227,7 +227,7 @@ object SchemaUtils {
      * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
      */
     fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             db.dialect.resetCaches()
             val createStatements = logTimeSpent("Preparing create tables statements") {
                 createStatements(*tables)
@@ -261,7 +261,7 @@ object SchemaUtils {
      * All code provided in _body_ closure will be executed only if there is no another code which running under "withDataBaseLock" at same time.
      * That means that concurrent execution of long running tasks under "database lock" might lead to that only first of them will be really executed.
      */
-    fun <T> Transaction.withDataBaseLock(body: () -> T) {
+    fun <T> ITransaction.withDataBaseLock(body: () -> T) {
         val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()
         }
@@ -280,7 +280,7 @@ object SchemaUtils {
 
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             var tablesForDeletion =
                     sortTablesByReferences(tables.toList())
                             .reversed()
@@ -301,7 +301,7 @@ object SchemaUtils {
      * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
      */
     fun setSchema(schema: Schema, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val createStatements = schema.setSchemaStatement()
 
             execStatements(inBatch, createStatements)
@@ -323,7 +323,7 @@ object SchemaUtils {
      * @param inBatch flag to perform schema creation in a single batch
      */
     fun createSchema(vararg schemas: Schema, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val createStatements = schemas.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
         }
@@ -338,7 +338,7 @@ object SchemaUtils {
      * @param inBatch flag to perform schema creation in a single batch
      */
     fun dropSchema(vararg schemas: Schema, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(ITransactionManager.current()) {
             val dropStatements = schemas.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
         }

@@ -3,7 +3,7 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -34,10 +34,10 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
      * @throws EntityNotFoundException if entity no longer exists in database
      */
     open fun refresh(flush: Boolean = false) {
-        val cache = TransactionManager.current().entityCache
+        val transaction = DaoTransactionManager.current()
         val isNewEntity = id._value == null
         when {
-            isNewEntity && flush -> cache.flushInserts(klass.table)
+            isNewEntity && flush -> transaction.flushInserts(klass.table)
             flush -> flush()
             isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
             else -> writeValues.clear()
@@ -45,7 +45,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
 
         klass.removeFromCache(this)
         val reloaded = klass[id]
-        cache.store(this)
+        transaction.store(this)
         _readValues = reloaded.readValues
     }
 
@@ -101,13 +101,13 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
-                val entityCache = TransactionManager.current().entityCache
+                val transaction = DaoTransactionManager.current()
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
-                    entityCache.referrers[it]?.remove(this)
+                    transaction.getReferrer(it as EntityID<*>)?.remove(this)
                 }
-                entityCache.removeTablesReferrers(listOf(referee!!.table))
+                transaction.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues[this as Column<Any?>] = value
         }
@@ -135,12 +135,12 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
-        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
+        DaoTransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
         if (id._value == null) {
-            TransactionManager.current().entityCache.flushInserts(this.klass.table)
+            DaoTransactionManager.current().flushInserts(this.klass.table)
             return true
         }
         if (writeValues.isNotEmpty()) {
@@ -163,7 +163,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
-            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+            DaoTransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

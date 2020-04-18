@@ -3,12 +3,13 @@ import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.statements.expandArgs
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.slf4j.LoggerFactory
 import java.util.*
 
 interface SqlLogger {
-    fun log (context: StatementContext, transaction: Transaction)
+    fun log (context: StatementContext, transaction: ITransaction)
 }
 
 val exposedLogger = LoggerFactory.getLogger("Exposed")!!
@@ -21,15 +22,15 @@ inline fun <R> logTimeSpent(message: String, block: ()->R) : R {
 }
 
 object StdOutSqlLogger : SqlLogger {
-    override fun log (context: StatementContext, transaction: Transaction) {
+    override fun log (context: StatementContext, transaction: ITransaction) {
         System.out.println("SQL: ${context.expandArgs(transaction)}")
     }
 }
 
 object Slf4jSqlDebugLogger : SqlLogger {
-    override fun log (context: StatementContext, transaction: Transaction) {
+    override fun log (context: StatementContext, transaction: ITransaction) {
         if (exposedLogger.isDebugEnabled) {
-            exposedLogger.debug(context.expandArgs(TransactionManager.current()))
+            exposedLogger.debug(context.expandArgs(ITransactionManager.current()))
         }
     }
 }
@@ -45,20 +46,20 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         loggers.remove(logger)
     }
 
-    override fun log (context: StatementContext, transaction: Transaction) {
+    override fun log (context: StatementContext, transaction: ITransaction) {
         for (logger in loggers) {
             logger.log(context, transaction)
         }
     }
 
-    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
+    override fun afterExecution(transaction: ITransaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
         contexts.forEach {
             log(it, transaction)
         }
     }
 }
 
-fun Transaction.addLogger(vararg logger: SqlLogger) : CompositeSqlLogger {
+fun ITransaction.addLogger(vararg logger: SqlLogger) : CompositeSqlLogger {
     return CompositeSqlLogger().apply {
         logger.forEach { this.addLogger(it) }
         registerInterceptor(this)

@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.tests.mysql
 
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.test.utils.RepeatableTestRule
 import org.junit.Rule
 import org.junit.Test
@@ -16,7 +16,7 @@ class MysqlTests : DatabaseTestsBase() {
     @Test
     fun testEmbeddedConnection() {
         withDb(TestDB.MYSQL) {
-            assertFalse(TransactionManager.current().exec("SELECT VERSION();") { it.next(); it.getString(1) }.isNullOrEmpty())
+            assertFalse(ITransactionManager.current().exec("SELECT VERSION();") { it.next(); it.getString(1) }.isNullOrEmpty())
         }
     }
 }

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -25,14 +25,14 @@ class MultiDatabaseTest {
 
     @Before
     fun before() {
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        if (ITransactionManager.isInitialized()) {
+            currentDB = ITransactionManager.currentOrNull()?.db
         }
     }
 
     @After
     fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
+        ITransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test

@@ -1,14 +1,13 @@
 package org.jetbrains.exposed.sql.tests.h2
 
+import org.jetbrains.exposed.dao.DaoTransactionManager
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.dao.transaction
+import org.jetbrains.exposed.sql.transactions.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -20,14 +19,14 @@ import kotlin.test.assertNull
 
 class MultiDatabaseEntityTest {
 
-    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
+    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
+    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
     private var currentDB : Database? = null
 
     @Before
     fun before() {
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        if (ITransactionManager.isInitialized()) {
+            currentDB = ITransactionManager.currentOrNull()?.db
         }
         transaction(db1) {
             SchemaUtils.create(EntityTestsData.XTable, EntityTestsData.YTable)
@@ -39,7 +38,7 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
+        ITransactionManager.resetCurrent(currentDB?.transactionManager)
         transaction(db1) {
             SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
         }

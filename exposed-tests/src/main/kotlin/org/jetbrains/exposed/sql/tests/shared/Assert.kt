@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.transactions.ITransaction
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
@@ -41,12 +42,12 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
-fun Transaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on ${currentDialectTest.name}")
-fun Transaction.assertFalse(actual: Boolean) = kotlin.test.assertFalse(actual, "Failed on ${currentDialectTest.name}")
-fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
-fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
+fun ITransaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on ${currentDialectTest.name}")
+fun ITransaction.assertFalse(actual: Boolean) = kotlin.test.assertFalse(actual, "Failed on ${currentDialectTest.name}")
+fun <T> ITransaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
+fun <T> ITransaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 
-fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit) {
+fun ITransaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit) {
     commit()
     assertFails("Failed on ${currentDialectTest.name}. $message") {
         block()

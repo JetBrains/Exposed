@@ -8,7 +8,8 @@ import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 
@@ -76,7 +77,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         val type = types.distinct().singleOrNull() ?: StatementType.OTHER
         val prepStatement = object : Statement<Unit>(type, emptyList()) {
 
-            override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
+            override fun prepared(transaction: ITransaction, sql: String): PreparedStatementApi {
                 val originalStatement = super.prepared(transaction, sql.substringBefore('\n'))
                 val batchStatement = connection.createStatement().apply {
                     sqls.forEach {
@@ -96,16 +97,16 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                 }
             }
 
-            override fun PreparedStatementApi.executeInternal(transaction: Transaction) {
+            override fun PreparedStatementApi.executeInternal(transaction: ITransaction) {
                 executeUpdate()
             }
 
-            override fun prepareSQL(transaction: Transaction): String = sqls.joinToString("\n")
+            override fun prepareSQL(transaction: ITransaction): String = sqls.joinToString("\n")
 
             override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
         }
 
-        prepStatement.execute(TransactionManager.current())
+        prepStatement.execute(ITransactionManager.current())
     }
 
     override fun setSavepoint(name: String): ExposedSavepoint {

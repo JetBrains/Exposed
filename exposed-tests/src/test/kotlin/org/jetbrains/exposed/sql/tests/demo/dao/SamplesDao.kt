@@ -1,10 +1,15 @@
 package org.jetbrains.exposed.sql.tests.demo.dao
 
 import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.transaction
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import kotlin.test.Test
 
 object Users : IntIdTable() {
@@ -33,7 +38,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })
 
     transaction {
         addLogger(StdOutSqlLogger)

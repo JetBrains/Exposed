@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -55,7 +55,7 @@ class SchemaTests : DatabaseTestsBase() {
                         connection.schema
                     }
 
-                    assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), schemaName)
+                    assertEquals(ITransactionManager.current().db.identifierManager.inProperCase(schema.identifier), schemaName)
                 } finally {
                     SchemaUtils.dropSchema(schema)
                 }

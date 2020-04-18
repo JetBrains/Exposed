@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.statements.jdbc
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
@@ -85,7 +85,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
-            val transaction = TransactionManager.current()
+            val transaction = ITransactionManager.current()
 
             existingIndicesCache.getOrPut(table) {
                 val pkNames = metadata.getPrimaryKeys(databaseName, oracleSchema, tableName).let { rs ->

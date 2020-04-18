@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.transactions.ITransaction
 import java.sql.SQLException
 import java.util.*
 
@@ -15,32 +16,32 @@ internal object DefaultValueMarker {
 
 abstract class Statement<out T>(val type: StatementType, val targets: List<Table>) {
 
-    abstract fun PreparedStatementApi.executeInternal(transaction: Transaction): T?
+    abstract fun PreparedStatementApi.executeInternal(transaction: ITransaction): T?
 
-    abstract fun prepareSQL(transaction: Transaction): String
+    abstract fun prepareSQL(transaction: ITransaction): String
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
-    open fun prepared(transaction: Transaction, sql: String) : PreparedStatementApi =
+    open fun prepared(transaction: ITransaction, sql: String) : PreparedStatementApi =
         transaction.connection.prepareStatement(sql, false)
 
     open val isAlwaysBatch: Boolean = false
 
-    fun execute(transaction: Transaction): T? = transaction.exec(this)
+    fun execute(transaction: ITransaction): T? = transaction.exec(this)
 
-    internal fun executeIn(transaction: Transaction): Pair<T?, List<StatementContext>> {
+    internal fun executeIn(transaction: ITransaction): Pair<T?, List<StatementContext>> {
         val arguments = arguments()
         val contexts = if (arguments.count() > 0) {
             arguments.map { args ->
                 val context = StatementContext(this, args)
-                Transaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
-                transaction.interceptors.forEach { it.beforeExecution(transaction, context) }
+                ITransaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
+                transaction.getInterceptors().forEach { it.beforeExecution(transaction, context) }
                 context
             }
         } else {
             val context = StatementContext(this, emptyList())
-            Transaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
-            transaction.interceptors.forEach { it.beforeExecution(transaction, context) }
+            ITransaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
+            transaction.getInterceptors().forEach { it.beforeExecution(transaction, context) }
             listOf(context)
         }
 
@@ -63,19 +64,19 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             throw ExposedSQLException(e, contexts, transaction)
         }
         transaction.currentStatement = null
-        transaction.executedStatements.add(statement)
+        transaction.getExecutedStatements().add(statement)
 
-        Transaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
-        transaction.interceptors.forEach { it.afterExecution(transaction, contexts, statement) }
+        ITransaction.globalInterceptors.forEach { it.afterExecution(transaction, contexts, statement) }
+        transaction.getInterceptors().forEach { it.afterExecution(transaction, contexts, statement) }
         return result to contexts
     }
 }
 
 class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<IColumnType, Any?>>) {
-    fun sql(transaction: Transaction) = statement.prepareSQL(transaction)
+    fun sql(transaction: ITransaction) = statement.prepareSQL(transaction)
 }
 
-fun StatementContext.expandArgs(transaction: Transaction) : String {
+fun StatementContext.expandArgs(transaction: ITransaction) : String {
     val sql = sql(transaction)
     val iterator = args.iterator()
     if (!iterator.hasNext())

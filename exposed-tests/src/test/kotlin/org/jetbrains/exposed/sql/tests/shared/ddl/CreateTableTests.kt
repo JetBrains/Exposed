@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.*
@@ -82,7 +82,7 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withDb() {
             val userNameProperName = user.user_name.name.inProperCase()
-            val tableName = TransactionManager.current().identity(user)
+            val tableName = ITransactionManager.current().identity(user)
 
             // Must generate primary key constraint, because the constraint name was defined.
             assertEquals(
@@ -187,7 +187,7 @@ class CreateTableTests : DatabaseTestsBase() {
             )
         }
         withTables(parent, child) {
-            val t = TransactionManager.current()
+            val t = ITransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
@@ -217,7 +217,7 @@ class CreateTableTests : DatabaseTestsBase() {
             )
         }
         withTables(parent, child) {
-            val t = TransactionManager.current()
+            val t = ITransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
@@ -245,7 +245,7 @@ class CreateTableTests : DatabaseTestsBase() {
             )
         }
         withTables(parent, child) {
-            val t = TransactionManager.current()
+            val t = ITransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
@@ -275,7 +275,7 @@ class CreateTableTests : DatabaseTestsBase() {
             )
         }
         withTables(parent, child) {
-            val t = TransactionManager.current()
+            val t = ITransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +

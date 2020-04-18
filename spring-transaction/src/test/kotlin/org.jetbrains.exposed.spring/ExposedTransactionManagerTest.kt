@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
@@ -61,7 +61,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
             Assert.assertEquals(t1.selectAll().single()[t1.c1], rnd)
         }
-        assertNull(TransactionManager.currentOrNull())
+        assertNull(ITransactionManager.currentOrNull())
         transaction {
             val rnd = Random().nextInt().toString()
             t1.insert {

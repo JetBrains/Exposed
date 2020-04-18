@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -224,7 +224,7 @@ class ConnectionExceptions {
 
     @After
     fun `teardown`(){
-        TransactionManager.resetCurrent(null)
+        ITransactionManager.resetCurrent(null)
     }
 
 }
@@ -234,7 +234,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     fun testReconnection() {
         if (TestDB.MYSQL !in TestDB.enabledInTests()) return
 
-        var secondThreadTm: TransactionManager? = null
+        var secondThreadTm: ITransactionManager? = null
         val db1 = TestDB.MYSQL.connect()
         lateinit var db2: Database
 

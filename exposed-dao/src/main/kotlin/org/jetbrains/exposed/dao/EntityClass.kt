@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -21,7 +21,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     operator fun get(id: ID): T = get(DaoEntityID(id, table))
 
-    protected open fun warmCache(): EntityCache = TransactionManager.current().entityCache
+    protected open fun warmCache(): DaoTransaction = DaoTransactionManager.current()
 
     /**
      * Get an entity by its [id].
@@ -48,7 +48,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
         if (flush) {
             if (entity.id._value == null)
-                TransactionManager.current().entityCache.flushInserts(table)
+                DaoTransactionManager.current().flushInserts(table)
             else
                 entity.flush()
         }
@@ -58,7 +58,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
         val entityAlreadyFlushed = o.id._value != null
-        val sameDatabase = TransactionManager.current().db == o.db
+        val sameDatabase = ITransactionManager.current().db == o.db
         if (entityAlreadyFlushed && sameDatabase) {
             val currentEntityInCache = testCache(o.id)
             if (currentEntityInCache == null) {
@@ -70,14 +70,14 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         }
     }
 
-    fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
+    fun testCache(id: EntityID<ID>): T? =  warmCache().find(this, id)
 
     fun testCache(cacheCheckCondition: T.()->Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
-        cache.referrers.remove(entity.id)
+        cache.removeReferrer(entity.id)
         cache.removeTablesReferrers(listOf(table))
     }
 
@@ -202,8 +202,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        val transaction = TransactionManager.current()
-        return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
+        val transaction = DaoTransactionManager.current()
+        return transaction.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
             new.db = transaction.db
             warmCache().store(this, new)
@@ -234,7 +234,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             DaoEntityID(id, table)
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
-        prototype.db = TransactionManager.current().db
+        prototype.db = ITransactionManager.current().db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeValues[table.id as Column<Any?>] = entityId
@@ -250,8 +250,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 writeValues[col as Column<Any?>] = readValues[col]
             }
             warmCache().scheduleInsert(this, prototype)
-            check(prototype in warmCache().inserts[this.table]!!)
-        }
+            check(warmCache().getInsert(this.table)?.contains(prototype) ?: false)
+            }
         return prototype
     }
 
@@ -305,12 +305,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
-        val cache = TransactionManager.current().entityCache
+        val transaction = DaoTransactionManager.current()
         if (refColumn.columnType is EntityIDColumnType<*>) {
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
             val toLoad = distinctRefIds.filter {
-                cache.referrers[it]?.containsKey(refColumn)?.not() ?: true
+                transaction.getReferrer(it)!!.containsKey(refColumn).not() ?: true
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
@@ -323,11 +323,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 val result = entities.groupBy { it.readValues[refColumn] }
 
                 distinctRefIds.forEach { id ->
-                    cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized<T>() }
+                    transaction.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized<T>() }
                 }
             }
 
-            return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
+            return distinctRefIds.flatMap { transaction.getReferrer(it)!!.get(refColumn)?.toList().orEmpty() } as List<T>
         } else {
             val baseQuery = searchQuery(Op.build{ refColumn inList distinctRefIds })
             val finalQuery = if (parentTable.id in baseQuery.set.fields)
@@ -345,7 +345,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             }.toList().distinct()
 
             entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
-                cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }
+                transaction.getOrPutReferrers(id, refColumn) { SizedCollection(values) }
             }
             return entities
         }
@@ -358,9 +358,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 ?: error("Can't detect source reference column")
         val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID<*>> ?: error("Can't detect target reference column")
 
-        val transaction = TransactionManager.current()
+        val transaction = DaoTransactionManager.current()
 
-        val inCache = transaction.entityCache.referrers.filter { it.key in distinctRefIds && sourceRefColumn in it.value }.mapValues { it.value[sourceRefColumn]!! }
+        val inCache = transaction.getReferrers().filter { it.key in distinctRefIds && sourceRefColumn in it.value }.mapValues { it.value[sourceRefColumn]!! }
         val loaded = (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
@@ -378,7 +378,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
 
             idsToLoad.forEach {
-                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) { SizedCollection(groupedBySourceId[it] ?: emptyList()) }
+                transaction.getOrPutReferrers(it, sourceRefColumn) { SizedCollection(groupedBySourceId[it] ?: emptyList()) }
             }
             entitiesWithRefs.map { it.second }
         }
@@ -398,47 +398,46 @@ abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table:
            so that the next read of this entity using DAO API would return
            actual data from the DB */
 
-        TransactionManager.currentOrNull()?.entityCache?.remove(table, entity)
+        DaoTransactionManager.currentOrNull()?.remove(table, entity)
     }
 }
 
 abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
-    private val cacheLoadingState = Key<Any>()
+    private val cacheLoadingState = org.jetbrains.exposed.sql.transactions.Key<Any>()
     private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
 
     override fun invalidateEntityInCache(o: Entity<ID>) {
         warmCache()
     }
 
-    final override fun warmCache(): EntityCache {
-        val tr = TransactionManager.current()
-        val db = tr.db
-        val transactionCache = super.warmCache()
+    final override fun warmCache(): DaoTransaction {
+        val transaction = super.warmCache()
+        val db = transaction.db
         if (_cachedValues[db] == null) synchronized(this) {
             val cachedValues = _cachedValues[db]
             when {
                 cachedValues != null -> {} // already loaded in another transaction
-                tr.getUserData(cacheLoadingState) != null -> {
-                    return transactionCache // prevent recursive call to warmCache() in .all()
+                transaction.getUserData(cacheLoadingState) != null -> {
+                    return transaction // prevent recursive call to warmCache() in .all()
                 }
                 else -> {
-                    tr.putUserData(cacheLoadingState, this)
+                    transaction.putUserData(cacheLoadingState, this)
                     super.all().toList()  /* force iteration to initialize lazy collection */
-                    _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
-                    tr.removeUserData(cacheLoadingState)
+                    _cachedValues[db] = transaction.getData(table)
+                    transaction.removeUserData(cacheLoadingState)
                 }
             }
         }
-        transactionCache.data[table] = _cachedValues[db]!!
-        return transactionCache
+        transaction.setData(table, _cachedValues[db]!!)
+        return transaction
     }
 
     override fun all(): SizedIterable<T> = SizedCollection(warmCache().findAll(this))
 
     @Synchronized fun expireCache() {
-        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
-            _cachedValues.remove(TransactionManager.current().db)
+        if (ITransactionManager.isInitialized() && ITransactionManager.currentOrNull() != null) {
+            _cachedValues.remove(ITransactionManager.current().db)
         } else {
             _cachedValues.clear()
         }

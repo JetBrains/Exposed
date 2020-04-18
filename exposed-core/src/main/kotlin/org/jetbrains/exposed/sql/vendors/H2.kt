@@ -4,12 +4,13 @@ import org.h2.engine.Mode
 import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.sql.Wrapper
 import java.text.SimpleDateFormat
 import java.util.Date
 
-private val Transaction.isMySQLMode: Boolean
+private val ITransaction.isMySQLMode: Boolean
     get() {
         val h2Connection = (connection.connection as? JdbcConnection)
             ?: (connection.connection as? Wrapper)?.takeIf { it.isWrapperFor(JdbcConnection::class.java) }?.unwrap(JdbcConnection::class.java)
@@ -28,7 +29,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
 internal object H2FunctionProvider : FunctionProvider() {
 
-    private fun dbReleaseDate(transaction: Transaction): Date {
+    private fun dbReleaseDate(transaction: ITransaction): Date {
         val releaseDate = transaction.db.metadata { databaseProductVersion.substringAfterLast('(').substringBeforeLast(')') }
         val formatter = SimpleDateFormat("yyyy-MM-dd")
         return formatter.parse(releaseDate)
@@ -39,7 +40,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val uniqueCols = columns.filter { it.indexInPK != null || it in uniqueIdxCols }
@@ -62,7 +63,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
@@ -104,7 +105,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     override fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (!transaction.isMySQLMode) {
             transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
@@ -126,13 +127,13 @@ internal object H2FunctionProvider : FunctionProvider() {
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
 
     override val name: String
-        get() = when (TransactionManager.currentOrNull()?.isMySQLMode) {
+        get() = when (ITransactionManager.currentOrNull()?.isMySQLMode) {
             true -> "$dialectName (Mysql Mode)"
             else -> dialectName
         }
 
     override val supportsMultipleGeneratedKeys: Boolean = false
-    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !ITransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
         super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }

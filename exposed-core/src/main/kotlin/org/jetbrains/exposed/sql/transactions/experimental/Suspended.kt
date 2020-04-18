@@ -2,15 +2,14 @@ package org.jetbrains.exposed.sql.transactions.experimental
 
 import kotlinx.coroutines.*
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
+internal class TransactionContext(val manager: ITransactionManager?, val transaction: ITransaction?)
 
-internal class TransactionScope(internal val tx: Transaction, parent: CoroutineContext) : CoroutineScope, CoroutineContext.Element {
+internal class TransactionScope(internal val tx: ITransaction, parent: CoroutineContext) : CoroutineScope, CoroutineContext.Element {
     private val baseScope = CoroutineScope(parent)
     override val coroutineContext get() = baseScope.coroutineContext + this
     override val key = Companion
@@ -18,16 +17,16 @@ internal class TransactionScope(internal val tx: Transaction, parent: CoroutineC
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(val newTransaction: Transaction, manager: TransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(val newTransaction: ITransaction, manager: ITransactionManager) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
     private val tlManager = manager as? ThreadLocalTransactionManager
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
-        val currentTransaction = TransactionManager.currentOrNull()
+        val currentTransaction = ITransactionManager.currentOrNull()
         val currentManager = currentTransaction?.db?.transactionManager
         tlManager?.let {
             it.threadLocal.set(newTransaction)
-            TransactionManager.resetCurrent(it)
+            ITransactionManager.resetCurrent(it)
         }
         return TransactionContext(currentManager, currentTransaction)
     }
@@ -38,28 +37,28 @@ internal class TransactionCoroutineElement(val newTransaction: Transaction, mana
             tlManager?.threadLocal?.remove()
         else
             tlManager?.threadLocal?.set(oldState.transaction)
-        TransactionManager.resetCurrent(oldState.manager)
+        ITransactionManager.resetCurrent(oldState.manager)
     }
 
     companion object : CoroutineContext.Key<TransactionCoroutineElement>
 }
 
-suspend fun <T> newSuspendedTransaction(context: CoroutineDispatcher? = null, db: Database? = null, statement: suspend Transaction.() -> T): T =
+suspend fun <T> newSuspendedTransaction(context: CoroutineDispatcher? = null, db: Database? = null, statement: suspend ITransaction.() -> T): T =
     withTransactionScope(context, null, db) {
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
-suspend fun <T> Transaction.suspendedTransaction(context: CoroutineDispatcher? = null, statement: suspend Transaction.() -> T): T =
+suspend fun <T> ITransaction.suspendedTransaction(context: CoroutineDispatcher? = null, statement: suspend ITransaction.() -> T): T =
     withTransactionScope(context, this) {
         suspendedTransactionAsyncInternal(false, statement).await()
     }
 
-private fun Transaction.commitInAsync() {
-    val currentTransaction = TransactionManager.currentOrNull()
+private fun ITransaction.commitInAsync() {
+    val currentTransaction = ITransactionManager.currentOrNull()
     try {
         val temporaryManager = this.db.transactionManager
         (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(this)
-        TransactionManager.resetCurrent(temporaryManager)
+        ITransactionManager.resetCurrent(temporaryManager)
         try {
             commit()
             try {
@@ -79,25 +78,25 @@ private fun Transaction.commitInAsync() {
     } finally {
         val transactionManager = currentTransaction?.db?.transactionManager
         (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
-        TransactionManager.resetCurrent(transactionManager)
+        ITransactionManager.resetCurrent(transactionManager)
     }
 }
 
 suspend fun <T> suspendedTransactionAsync(context: CoroutineDispatcher? = null, db: Database? = null,
-                                          statement: suspend Transaction.() -> T) : Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull()
+                                          statement: suspend ITransaction.() -> T) : Deferred<T> {
+    val currentTransaction = ITransactionManager.currentOrNull()
     return withTransactionScope(context, null, db) {
         suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
     }
 }
 
 private suspend fun <T> withTransactionScope(context: CoroutineContext?,
-                                             currentTransaction: Transaction?,
+                                             currentTransaction: ITransaction?,
                                              db: Database? = null,
                                              body: suspend TransactionScope.() -> T) : T {
     val currentScope = coroutineContext[TransactionScope]
-    suspend fun newScope(_tx: Transaction?) : T {
-        val manager = (_tx?.db ?: db)?.transactionManager ?: TransactionManager.manager
+    suspend fun newScope(_tx: ITransaction?) : T {
+        val manager = (_tx?.db ?: db)?.transactionManager ?: ITransactionManager.manager
 
         val tx = _tx ?: manager.newTransaction(manager.defaultIsolationLevel)
 
@@ -117,7 +116,7 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
 }
 
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(shouldCommit: Boolean,
-                                                          statement: suspend Transaction.() -> T) : Deferred<T>
+                                                          statement: suspend ITransaction.() -> T) : Deferred<T>
     = async {
             try {
                 tx.statement()

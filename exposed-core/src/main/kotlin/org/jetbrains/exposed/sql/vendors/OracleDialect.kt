@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun integerType(): String = "NUMBER(12)"
@@ -68,7 +69,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
         if (expr.orderBy.size != 1) {
-            TransactionManager.current().throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in LISTAGG")
+            ITransactionManager.current().throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in LISTAGG")
         }
         append("LISTAGG(")
         append(expr.expr)
@@ -121,7 +122,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         return table.autoIncColumn?.takeIf { it !in columns }?.let {
             val newExpr = if (expr.isBlank()) {
@@ -139,7 +140,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         val def = super.update(target, columnsAndValues, null, where, transaction)
         return when {
@@ -154,7 +155,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
         if (tableToUpdate == null) {
@@ -196,7 +197,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("Oracle doesn't support LIMIT in DELETE clause.")

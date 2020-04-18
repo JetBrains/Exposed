@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
@@ -19,7 +19,7 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
     var useNestedTransactions: Boolean = false
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
-        val transaction = TransactionManager.currentOrNull()
+        val transaction = ITransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
             try {
@@ -79,28 +79,28 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         }
 
         private fun doConnect(getNewConnection: () -> Connection, setupConnection: (Connection) -> Unit = {},
-                              manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
+                              manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return Database {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                TransactionManager.registerManager(this, manager(this))
+                ITransactionManager.registerManager(this, manager(this))
             }
         }
 
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect( { datasource.connection!! }, setupConnection, manager )
         }
 
         fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect( getNewConnection, manager = manager )
         }
         fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }): Database {
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) }): Database {
 
             Class.forName(driver).newInstance()
 

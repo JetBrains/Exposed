@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -62,7 +62,7 @@ class NonAutoIncEntities : DatabaseTestsBase() {
             val e1 = NotAutoEntity.new(true)
             val e2 = NotAutoEntity.new(false)
 
-            TransactionManager.current().flushCache()
+            ITransactionManager.current().flushCache()
 
             val all = NotAutoEntity.all()
             assert(all.any { it.id == e1.id })

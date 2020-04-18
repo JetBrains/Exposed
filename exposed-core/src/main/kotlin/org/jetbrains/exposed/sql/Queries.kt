@@ -3,11 +3,10 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 /**
@@ -54,23 +53,23 @@ fun FieldSet.selectAllBatched(
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
 fun Table.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
+    DeleteStatement.where(ITransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
 
 fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
+    DeleteStatement.where(ITransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
 fun Table.deleteAll() =
-    DeleteStatement.all(TransactionManager.current(), this@deleteAll)
+    DeleteStatement.all(ITransactionManager.current(), this@deleteAll)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsert01
  */
 fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
-    execute(TransactionManager.current())
+    execute(ITransactionManager.current())
 }
 
 /**
@@ -79,7 +78,7 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
-        execute(TransactionManager.current())
+        execute(ITransactionManager.current())
         get(id)
     }
 
@@ -112,7 +111,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
                 if (removeLastData) {
                     removeLastBatch()
                 }
-                execute(TransactionManager.current())
+                execute(ITransactionManager.current())
                 result += resultedValues.orEmpty()
             }
             statement = newBatchStatement()
@@ -129,7 +128,7 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
         statement.handleBatchException(true) { body(element) }
     }
     if (statement.arguments().isNotEmpty()) {
-        statement.execute(TransactionManager.current())
+        statement.execute(ITransactionManager.current())
         result += statement.resultedValues.orEmpty()
     }
     return result
@@ -137,12 +136,12 @@ fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, b
 
 fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
-    execute(TransactionManager.current())
+    execute(ITransactionManager.current())
 }
 
 fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
     body(this)
-    execute(TransactionManager.current())
+    execute(ITransactionManager.current())
     getOrNull(id)
 }
 
@@ -151,18 +150,18 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Updat
  */
 fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
-    execute(TransactionManager.current())
+    execute(ITransactionManager.current())
 }
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
  */
 fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+    InsertSelectStatement(columns, selectQuery).execute(ITransactionManager.current())
 
 
 fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+    InsertSelectStatement(columns, selectQuery, true).execute(ITransactionManager.current())
 
 
 /**
@@ -171,13 +170,13 @@ fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this
 fun <T:Table> T.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(ITransactionManager.current())!!
 }
 
 fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(ITransactionManager.current())!!
 }
 
 /**
@@ -282,7 +281,7 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
-    val tr = TransactionManager.current()
+    val tr = ITransactionManager.current()
     val isMysql = currentDialect is MysqlDialect
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
@@ -92,7 +93,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return values + columnsWithNotNullDefault.map { it to (it.defaultValueFun?.invoke() ?: DefaultValueMarker) }
     }
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: ITransaction): String {
         val builder = QueryBuilder(true)
         val values = arguments!!.first()
         val sql = if(values.isEmpty()) ""
@@ -111,7 +112,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return inserted to rs
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
+    override fun PreparedStatementApi.executeInternal(transaction: ITransaction): Int {
         val (inserted, rs) = execInsertFunction()
         return inserted.apply {
             resultedValues = processResults(rs, this)
@@ -130,7 +131,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
+    override fun prepared(transaction: ITransaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->

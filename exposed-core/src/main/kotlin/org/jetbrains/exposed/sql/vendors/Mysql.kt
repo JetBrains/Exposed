@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.math.BigDecimal
 
 internal object MysqlDataTypeProvider : DataTypeProvider() {
@@ -47,7 +48,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: ITransaction): String {
         val builder = QueryBuilder(true)
         val columns = data.joinToString { transaction.identity(it.first) }
         val values = builder.apply { data.appendTo { registerArgument(it.first.columnType, it.second) } }.toString()
@@ -65,12 +66,12 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
 
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: ITransaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: ITransaction): String {
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
@@ -80,7 +81,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         targets.describe(transaction, this)
@@ -105,12 +106,12 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANCE) {
 
     internal val isMysql8: Boolean by lazy {
-        TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
+        ITransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
     }
 
     override val supportsCreateSequence: Boolean = false
 
-    fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
+    fun isFractionDateTimeSupported(): Boolean = ITransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
@@ -122,7 +123,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         val allTableNames = allTables.keys
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         val schemaName = "'${getDatabase()}'"
         val constraintsToLoad = HashMap<String, MutableList<ForeignKeyConstraint>>()
         tr.exec(

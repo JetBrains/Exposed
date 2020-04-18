@@ -13,12 +13,11 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
-import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertNotNull
 
@@ -215,7 +214,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val tr = TransactionManager.current()
+            val tr = ITransactionManager.current()
             val id1ProperName = tr.identity(t.id1)
             val id2ProperName = tr.identity(t.id2)
 

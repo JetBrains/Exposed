@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -17,7 +17,7 @@ import java.lang.StringBuilder
  */
 class Schema(private val name: String, val authorization: String? = null) {
 
-    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
+    val identifier get() = ITransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     val ddl: List<String>
         get() = createStatement()

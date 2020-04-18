@@ -5,7 +5,8 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
@@ -40,7 +41,7 @@ abstract class ColumnSet : FieldSet {
     override val fields: List<Expression<*>> get() = columns
 
     /** Appends the SQL representation of this column set to the specified [queryBuilder]. */
-    abstract fun describe(s: Transaction, queryBuilder: QueryBuilder)
+    abstract fun describe(s: ITransaction, queryBuilder: QueryBuilder)
 
     /**
      * Creates a join relation with [otherTable].
@@ -168,7 +169,7 @@ class Join(
         joinParts.addAll(new.joinParts)
     }
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
+    override fun describe(s: ITransaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
         table.describe(s, this)
         for (p in joinParts) {
             append(" ${p.joinType} JOIN ")
@@ -307,7 +308,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
+    override fun describe(s: ITransaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
 
     // Join operations
 
@@ -958,7 +959,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
-            val tr = TransactionManager.current()
+            val tr = ITransactionManager.current()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return primaryKey.columns.joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
         }
@@ -976,7 +977,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(ITransactionManager.current().identity(this@Table))
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { it.descriptionDdl() }
 
@@ -1016,7 +1017,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(ITransactionManager.current().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
             } else if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@Table)) {

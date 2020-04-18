@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -325,14 +326,14 @@ abstract class FunctionProvider {
      * @param table Table to insert the new row into.
      * @param columns Columns to insert the values into.
      * @param expr Expresion with the values to insert.
-     * @param transaction Transaction where the operation is executed.
+     * @param transaction ITransaction where the operation is executed.
      */
     open fun insert(
         ignore: Boolean,
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
@@ -352,14 +353,14 @@ abstract class FunctionProvider {
      * @param columnsAndValues Pairs of column to update and values to update with.
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
-     * @param transaction Transaction where the operation is executed.
+     * @param transaction ITransaction where the operation is executed.
      */
     open fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         target.describe(transaction, this)
@@ -384,14 +385,14 @@ abstract class FunctionProvider {
      * @param columnsAndValues Pairs of column to update and values to update with.
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
-     * @param transaction Transaction where the operation is executed.
+     * @param transaction ITransaction where the operation is executed.
      */
     open fun update(
         targets: Join,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
@@ -405,7 +406,7 @@ abstract class FunctionProvider {
     open fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be vendor specific implementation.")
 
     /**
@@ -417,14 +418,14 @@ abstract class FunctionProvider {
      * @param table Table to delete rows from.
      * @param where Condition that decides the rows to update.
      * @param limit Maximum number of rows to delete.
-     * @param transaction Transaction where the operation is executed.
+     * @param transaction ITransaction where the operation is executed.
      */
     open fun delete(
         ignore: Boolean,
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation.")
@@ -533,7 +534,7 @@ interface DatabaseDialect {
     fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = e is LiteralOp<*>
 
     /** Returns the catalog name of the connection of the specified [transaction]. */
-    fun catalog(transaction: Transaction): String = transaction.connection.catalog
+    fun catalog(transaction: ITransaction): String = transaction.connection.catalog
 
     /** Clears any cached values. */
     fun resetCaches()
@@ -570,12 +571,12 @@ abstract class VendorDialect(
     /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
-            val connection = TransactionManager.current().connection
+            val connection = ITransactionManager.current().connection
             return getAllTableNamesCache().getValue(connection.metadata { currentScheme })
         }
 
     private fun getAllTableNamesCache(): Map<String, List<String>> {
-        val connection = TransactionManager.current().connection
+        val connection = ITransactionManager.current().connection
         if (_allTableNames == null) {
             _allTableNames = connection.metadata { tableNames }
         }
@@ -584,20 +585,20 @@ abstract class VendorDialect(
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
-    override fun getDatabase(): String = catalog(TransactionManager.current())
+    override fun getDatabase(): String = catalog(ITransactionManager.current())
 
     /**
      * Returns a list with the names of all the defined tables with schema prefixes if database supports it.
      * This method always re-read data from DB.
      * Using `allTablesNames` field is the preferred way.
      */
-    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
+    override fun allTablesNames(): List<String> = ITransactionManager.current().connection.metadata {
         tableNames.getValue(currentScheme)
     }
 
     override fun tableExists(table: Table): Boolean {
         val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
-        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
+        val scheme = tableScheme?.inProperCase() ?: ITransactionManager.current().connection.metadata { currentScheme }
         val allTables = getAllTableNamesCache().getValue(scheme)
         return allTables.any {
             when {
@@ -609,7 +610,7 @@ abstract class VendorDialect(
     }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
-        TransactionManager.current().connection.metadata { columns(*tables) }
+        ITransactionManager.current().connection.metadata { columns(*tables) }
 
     override fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<Table, Column<*>>, MutableList<ForeignKeyConstraint>>()
@@ -626,28 +627,28 @@ abstract class VendorDialect(
         return constraints
     }
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = ITransactionManager.current().db.metadata { existingIndices(*tables) }
 
-    private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
+    private val supportsSelectForUpdate: Boolean by lazy { ITransactionManager.current().db.metadata { supportsSelectForUpdate } }
 
     override fun supportsSelectForUpdate(): Boolean = supportsSelectForUpdate
 
-    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction): String =
+    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: ITransaction): String =
         tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
     protected val columnConstraintsCache: MutableMap<String, List<ForeignKeyConstraint>> = ConcurrentHashMap()
 
     protected open fun fillConstraintCacheForTables(tables: List<Table>): Unit =
-        columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })
+        columnConstraintsCache.putAll(ITransactionManager.current().db.metadata { tableConstraints(tables) })
 
     override fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
-        TransactionManager.current().db.metadata { cleanCache() }
+        ITransactionManager.current().db.metadata { cleanCache() }
     }
 
     override fun createIndex(index: Index): String {
-        val t = TransactionManager.current()
+        val t = ITransactionManager.current()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
@@ -660,7 +661,7 @@ abstract class VendorDialect(
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {
-        val identifierManager = TransactionManager.current().db.identifierManager
+        val identifierManager = ITransactionManager.current().db.identifierManager
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
@@ -668,14 +669,14 @@ abstract class VendorDialect(
 }
 
 /** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
-val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
+val currentDialect: DatabaseDialect get() = ITransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+    get() = if (ITransactionManager.isInitialized() && ITransactionManager.currentOrNull() != null) {
         currentDialect
     } else {
         null
     }
 
 internal fun String.inProperCase(): String =
-    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+    ITransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
