@@ -13,10 +13,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
-<<<<<<< HEAD
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
-=======
->>>>>>> refs/heads/master
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test

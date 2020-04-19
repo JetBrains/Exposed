@@ -5,8 +5,6 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.Table
-import java.util.HashMap
-import java.util.LinkedHashMap
 
 interface ICache {
 

@@ -110,33 +110,6 @@ open class DaoTransactionManager(private val db: Database,
 
 	companion object {
 
-//		private val managers = ConcurrentLinkedDeque<DaoTransactionManager>().apply {
-//			push(NotInitializedManager)
-//		}
-//
-//		private val registeredDatabases = ConcurrentHashMap<Database, DaoTransactionManager>()
-//
-//		fun registerManager(database: Database, manager: DaoTransactionManager) {
-//			registeredDatabases[database] = manager
-//			managers.push(manager)
-//		}
-//
-//		fun closeAndUnregister(database: Database) {
-//			val manager = registeredDatabases[database]
-//			manager?.let {
-//				registeredDatabases.remove(database)
-//				managers.remove(it)
-//				if (currentThreadManager.get() == it)
-//					currentThreadManager.remove()
-//			}
-//		}
-//
-//		fun managerFor(database: Database?) = if (database != null) registeredDatabases[database] else manager
-//
-//		internal val currentThreadManager = object : ThreadLocal<DaoTransactionManager>() {
-//			override fun initialValue(): DaoTransactionManager = managers.first
-//		}
-
 		val manager: DaoTransactionManager
 			get() = currentThreadManager.get() as DaoTransactionManager
 

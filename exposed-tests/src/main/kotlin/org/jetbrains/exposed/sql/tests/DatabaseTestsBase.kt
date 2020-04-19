@@ -80,6 +80,8 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 
 	fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 
+	fun connect(manager: (Database) -> ITransactionManager) = Database.connect(connection(), user = user, password = pass, driver = driver, manager = manager)
+
 	companion object {
 		fun enabledInTests(): List<TestDB> {
 			val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
@@ -107,7 +109,11 @@ abstract class DatabaseTestsBase {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 	}
 
-	fun withDb(dbSettings: TestDB, statement: ITransaction.(TestDB) -> Unit) {
+	open fun connectWithManager(dbSettings: TestDB): Database {
+		return dbSettings.connect()
+	}
+
+	open fun withDb(dbSettings: TestDB, statement: ITransaction.(TestDB) -> Unit) {
 		if (dbSettings !in TestDB.enabledInTests()) {
 			exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
 			return
@@ -120,7 +126,7 @@ abstract class DatabaseTestsBase {
 				registeredOnShutdown.remove(dbSettings)
 			})
 			registeredOnShutdown += dbSettings
-			dbSettings.db = dbSettings.connect()
+			dbSettings.db = connectWithManager(dbSettings)
 			val dbManager = ITransactionManager.managerFor(dbSettings.db)!!
 			if (dbSettings == TestDB.SQLITE) {
 				dbManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE

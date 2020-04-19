@@ -4,7 +4,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.ITransaction
-import java.util.*
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache() : ICache {
@@ -39,11 +38,7 @@ class EntityCache() : ICache {
 	}
 
 	override fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-		val insert: MutableList<Entity<*>>? = inserts.get(f.table)
-		if (insert == null) {
-			inserts.put(f.table, arrayListOf())
-		}
-		insert?.add(o as Entity<*>)
+		inserts.getOrPut(f.table) { mutableListOf() }.add(o as Entity<*>)
 	}
 
 	override fun flush() {
