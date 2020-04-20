@@ -1,5 +1,6 @@
 *.iml
-.idea
+**/.idea/*
+!.idea/vcs.xml
 .gradle
 out
 build
