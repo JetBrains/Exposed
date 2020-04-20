@@ -129,13 +129,13 @@ open class DaoTransactionManager(private val db: Database,
 }
 
 fun <T> transaction(db: Database? = null, statement: ITransaction.() -> T): T =
-		transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
+		transaction(db?.getManager()!!.defaultIsolationLevel, db?.getManager()!!.defaultRepetitionAttempts, db, statement)
 
 fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: ITransaction.() -> T): T = keepAndRestoreTransactionRefAfterRun(db) {
 	val outer = ITransactionManager.currentOrNull()
 
 	if (outer != null && (db == null || outer.db == db)) {
-		val outerManager = outer.db.transactionManager
+		val outerManager = outer.db.getManager()
 
 		val transaction = outerManager.newTransaction(transactionIsolation, outer)
 		try {
@@ -147,9 +147,9 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
 			ITransactionManager.resetCurrent(outerManager)
 		}
 	} else {
-        val existingForDb = db?.transactionManager
+        val existingForDb = db?.getManager()
 		existingForDb?.currentOrNull()?.let { transaction ->
-			val currentManager = outer?.db.transactionManager
+			val currentManager = outer?.db?.getManager()
 			try {
 				ITransactionManager.resetCurrent(existingForDb)
 				transaction.statement().also {
@@ -174,11 +174,11 @@ fun <T> inTopLevelTransaction(
 	fun run():T {
 		var repetitions = 0
 
-		val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
+		val outerManager = outerTransaction?.db?.getManager().takeIf { it?.currentOrNull() != null }
 
 		while (true) {
-			db?.let { db.transactionManager.let { m -> ITransactionManager.resetCurrent(m) } }
-			val transaction: ITransaction = db.transactionManager.newTransaction(transactionIsolation, outerTransaction)
+			db?.let { db.getManager().let { m -> ITransactionManager.resetCurrent(m) } }
+			val transaction: ITransaction = db?.getManager()!!.newTransaction(transactionIsolation, outerTransaction)
 
 			try {
 				val answer = transaction.statement()
@@ -227,7 +227,7 @@ fun <T> inTopLevelTransaction(
 }
 
 fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
-	val manager = db.transactionManager as? DaoTransactionManager
+	val manager = db?.getManager() as? DaoTransactionManager
 	val currentTransaction = manager?.currentOrNull()
 	return try {
 		block()

@@ -23,7 +23,7 @@ internal class TransactionCoroutineElement(val newTransaction: ITransaction, man
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
         val currentTransaction = ITransactionManager.currentOrNull()
-        val currentManager = currentTransaction?.db?.transactionManager
+        val currentManager = currentTransaction?.db?.getManager()
         tlManager?.let {
             it.threadLocal.set(newTransaction)
             ITransactionManager.resetCurrent(it)
@@ -56,7 +56,7 @@ suspend fun <T> ITransaction.suspendedTransaction(context: CoroutineDispatcher? 
 private fun ITransaction.commitInAsync() {
     val currentTransaction = ITransactionManager.currentOrNull()
     try {
-        val temporaryManager = this.db.transactionManager
+        val temporaryManager = this.db.getManager()
         (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(this)
         ITransactionManager.resetCurrent(temporaryManager)
         try {
@@ -76,7 +76,7 @@ private fun ITransaction.commitInAsync() {
             throw e
         }
     } finally {
-        val transactionManager = currentTransaction?.db?.transactionManager
+        val transactionManager = currentTransaction?.db?.getManager()
         (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
         ITransactionManager.resetCurrent(transactionManager)
     }
@@ -96,7 +96,7 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
                                              body: suspend TransactionScope.() -> T) : T {
     val currentScope = coroutineContext[TransactionScope]
     suspend fun newScope(_tx: ITransaction?) : T {
-        val manager = (_tx?.db ?: db)?.transactionManager ?: ITransactionManager.manager
+        val manager = (_tx?.db ?: db)?.getManager() ?: ITransactionManager.manager
 
         val tx = _tx ?: manager.newTransaction(manager.defaultIsolationLevel)
 

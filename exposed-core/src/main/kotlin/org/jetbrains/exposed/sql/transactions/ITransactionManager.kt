@@ -62,8 +62,6 @@ interface ITransactionManager {
     }
 }
 
-val Database?.transactionManager: ITransactionManager get() = ITransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")
-
 private object NotInitializedManager : ITransactionManager {
     override var defaultIsolationLevel: Int = -1
 

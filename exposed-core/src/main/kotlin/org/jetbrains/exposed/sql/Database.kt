@@ -17,6 +17,7 @@ import javax.sql.DataSource
 class Database private constructor(val connector: () -> ExposedConnection<*>) {
 
     var useNestedTransactions: Boolean = false
+    private lateinit var manager: ITransactionManager
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
         val transaction = ITransactionManager.currentOrNull()
@@ -57,6 +58,10 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         return this
     }
 
+    fun getManager(): ITransactionManager {
+        return manager ?: throw RuntimeException("database ${this} don't have any transaction manager")
+    }
+
     companion object {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
@@ -84,7 +89,8 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             return Database {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                ITransactionManager.registerManager(this, manager(this))
+                this.manager = manager(this)
+                ITransactionManager.registerManager(this, this.manager)
             }
         }
 

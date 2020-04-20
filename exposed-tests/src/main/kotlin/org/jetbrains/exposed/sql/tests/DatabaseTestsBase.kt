@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
@@ -137,7 +136,7 @@ abstract class DatabaseTestsBase {
 
 		val database = dbSettings.db!!
 
-		transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+		transaction(database.getManager().defaultIsolationLevel, 1, db = database) {
 			statement(dbSettings)
 		}
 	}

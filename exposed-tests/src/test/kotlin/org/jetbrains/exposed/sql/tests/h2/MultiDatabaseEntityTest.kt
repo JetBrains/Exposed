@@ -2,12 +2,15 @@ package org.jetbrains.exposed.sql.tests.h2
 
 import org.jetbrains.exposed.dao.DaoTransactionManager
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.inTopLevelTransaction
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.jetbrains.exposed.dao.transaction
-import org.jetbrains.exposed.sql.transactions.*
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +41,7 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        ITransactionManager.resetCurrent(currentDB?.transactionManager)
+        ITransactionManager.resetCurrent(currentDB?.getManager())
         transaction(db1) {
             SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
         }

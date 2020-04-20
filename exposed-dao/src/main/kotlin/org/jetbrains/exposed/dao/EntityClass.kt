@@ -249,9 +249,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             }.forEach { col ->
                 writeValues[col as Column<Any?>] = readValues[col]
             }
-            warmCache().scheduleInsert(this, prototype)
-            check(warmCache().getInsert(this.table)?.contains(prototype) ?: false)
+            synchronized(this) {
+                val transaction = warmCache()
+                transaction.scheduleInsert(this, prototype)
+                check(transaction.getInsert(this.table)?.contains(prototype) ?: false)
             }
+        }
         return prototype
     }
 
