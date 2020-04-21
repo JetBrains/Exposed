@@ -1,9 +1,9 @@
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -12,7 +12,7 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 
-open class JodaTimeBaseTest : DatabaseTestsBase() {
+open class JodaTimeBaseTest : DaoDatabaseTestsBase() {
     init {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
