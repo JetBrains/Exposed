@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -32,7 +31,7 @@ class MultiDatabaseTest {
 
     @After
     fun after() {
-        ITransactionManager.resetCurrent(currentDB?.transactionManager)
+        ITransactionManager.resetCurrent(currentDB.transactionManager)
     }
 
     @Test

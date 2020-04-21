@@ -17,7 +17,11 @@ import javax.sql.DataSource
 class Database private constructor(val connector: () -> ExposedConnection<*>) {
 
     var useNestedTransactions: Boolean = false
-    private lateinit var manager: ITransactionManager
+    var manager: ITransactionManager? = null
+        get() = field
+        private set (manager) {
+            field = manager
+        }
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
         val transaction = ITransactionManager.currentOrNull()
@@ -58,10 +62,6 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         return this
     }
 
-    fun getManager(): ITransactionManager {
-        return manager ?: throw RuntimeException("database ${this} don't have any transaction manager")
-    }
-
     companion object {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
@@ -89,8 +89,9 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             return Database {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                this.manager = manager(this)
-                ITransactionManager.registerManager(this, this.manager)
+                val manager = manager(this)
+                this.manager = manager
+                ITransactionManager.registerManager(this, manager)
             }
         }
 
@@ -128,3 +129,13 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
 val Database.name : String get() = url.substringAfterLast('/').substringBefore('?')
+
+val Database?.transactionManager: ITransactionManager
+    get() = when(this?.manager) {
+        null -> {
+            ITransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")
+        }
+        else -> {
+            this.manager!!
+        }
+    }

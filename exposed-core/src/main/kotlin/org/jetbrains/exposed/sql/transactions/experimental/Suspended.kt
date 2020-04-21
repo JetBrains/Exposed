@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.transactions.experimental
 import kotlinx.coroutines.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.transactionManager
 import org.jetbrains.exposed.sql.transactions.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -23,7 +24,7 @@ internal class TransactionCoroutineElement(val newTransaction: ITransaction, man
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
         val currentTransaction = ITransactionManager.currentOrNull()
-        val currentManager = currentTransaction?.db?.getManager()
+        val currentManager = currentTransaction?.db.transactionManager
         tlManager?.let {
             it.threadLocal.set(newTransaction)
             ITransactionManager.resetCurrent(it)
@@ -56,7 +57,7 @@ suspend fun <T> ITransaction.suspendedTransaction(context: CoroutineDispatcher? 
 private fun ITransaction.commitInAsync() {
     val currentTransaction = ITransactionManager.currentOrNull()
     try {
-        val temporaryManager = this.db.getManager()
+        val temporaryManager = this.db.transactionManager
         (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(this)
         ITransactionManager.resetCurrent(temporaryManager)
         try {
@@ -76,7 +77,7 @@ private fun ITransaction.commitInAsync() {
             throw e
         }
     } finally {
-        val transactionManager = currentTransaction?.db?.getManager()
+        val transactionManager = currentTransaction?.db.transactionManager
         (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
         ITransactionManager.resetCurrent(transactionManager)
     }
@@ -96,7 +97,7 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
                                              body: suspend TransactionScope.() -> T) : T {
     val currentScope = coroutineContext[TransactionScope]
     suspend fun newScope(_tx: ITransaction?) : T {
-        val manager = (_tx?.db ?: db)?.getManager() ?: ITransactionManager.manager
+        val manager = (_tx?.db ?: db).transactionManager ?: ITransactionManager.manager
 
         val tx = _tx ?: manager.newTransaction(manager.defaultIsolationLevel)
 

@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.ITransaction
 
 @Suppress("UNCHECKED_CAST")
-class EntityCache() : ICache {
+open class EntityCache() : ICache {
 	override lateinit var transaction: DaoTransaction
 	private val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
 	private val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()

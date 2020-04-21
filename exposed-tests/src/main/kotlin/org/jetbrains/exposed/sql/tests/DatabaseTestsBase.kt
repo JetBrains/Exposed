@@ -136,7 +136,7 @@ abstract class DatabaseTestsBase {
 
 		val database = dbSettings.db!!
 
-		transaction(database.getManager().defaultIsolationLevel, 1, db = database) {
+		transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
 			statement(dbSettings)
 		}
 	}
