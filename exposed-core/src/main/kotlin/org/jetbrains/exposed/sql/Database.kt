@@ -62,6 +62,10 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
         return this
     }
 
+//    fun getManager(): ITransactionManager {
+//        return manager ?: throw RuntimeException("database ${this} don't have any transaction manager")
+//    }
+
     companion object {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
