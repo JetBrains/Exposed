@@ -84,9 +84,19 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
     return buildString {
         val quoteStack = Stack<Char>()
         var lastPos = 0
+        var skipChar = false
         for (i in 0..sql.length - 1) {
+            if(skipChar) {
+                skipChar = false
+                continue
+            }
+            
             val char = sql[i]
             if (char == '?') {
+                if (sql.getOrNull(i + 1) == '?') {
+                    skipChar = true
+                    continue
+                }
                 if (quoteStack.isEmpty()) {
                     append(sql.substring(lastPos, i))
                     lastPos = i + 1
