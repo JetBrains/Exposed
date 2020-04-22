@@ -6,9 +6,9 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
@@ -93,7 +93,7 @@ object EntityTestsData {
     }
 }
 
-class EntityTests: DatabaseTestsBase() {
+class EntityTests: DaoDatabaseTestsBase() {
     @Test fun testDefaults01() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new {  }
