@@ -93,11 +93,11 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
             
             val char = sql[i]
             if (char == '?') {
-                if (sql.getOrNull(i + 1) == '?') {
-                    skipChar = true
-                    continue
-                }
                 if (quoteStack.isEmpty()) {
+                    if (sql.getOrNull(i + 1) == '?') {
+                        skipChar = true
+                        continue
+                    }
                     append(sql.substring(lastPos, i))
                     lastPos = i + 1
                     val (col, value) = iterator.next()
