@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.junit.Test
 
-class CountTests : DatabaseTestsBase() {
+class CountTests : DaoDatabaseTestsBase() {
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
         withCitiesAndUsers { cities, users, _ ->

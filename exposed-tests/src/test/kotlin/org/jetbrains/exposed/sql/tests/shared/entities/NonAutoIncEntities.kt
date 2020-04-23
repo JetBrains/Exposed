@@ -4,14 +4,14 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
-class NonAutoIncEntities : DatabaseTestsBase() {
+class NonAutoIncEntities : DaoDatabaseTestsBase() {
 
     abstract class BaseNonAutoIncTable(name : String) : IdTable<Int>(name) {
         override val id = integer("id").entityId()

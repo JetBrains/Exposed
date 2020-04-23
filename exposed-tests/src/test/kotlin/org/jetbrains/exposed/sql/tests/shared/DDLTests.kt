@@ -6,9 +6,9 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
@@ -21,7 +21,7 @@ import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.test.assertNotNull
 
-class DDLTests : DatabaseTestsBase() {
+class DDLTests : DaoDatabaseTestsBase() {
 
     @Test fun tableExists01() {
         val TestTable = object : Table() {

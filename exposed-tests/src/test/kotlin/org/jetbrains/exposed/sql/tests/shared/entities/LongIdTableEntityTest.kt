@@ -4,8 +4,8 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
@@ -27,7 +27,7 @@ object LongIdTables {
         var city by City referencedOn People.cityId
     }
 }
-class LongIdTableEntityTest : DatabaseTestsBase() {
+class LongIdTableEntityTest : DaoDatabaseTestsBase() {
 
     @Test fun `create tables`() {
         withTables(LongIdTables.Cities, LongIdTables.People) {

@@ -45,10 +45,8 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 	POSTGRESQLNG({ "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
 			user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
 	ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
-			connection = {
-				"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-						":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"
-			},
+            connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
+                    ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
 			beforeConnection = {
 				Locale.setDefault(Locale.ENGLISH)
 				val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
@@ -65,16 +63,12 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 				Unit
 			}),
 
-	SQLSERVER({
-		"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
-				":${System.getProperty("exposed.test.sqlserver.port", "32781")}"
-	},
+    SQLSERVER({"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
+            ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"},
 			"com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"),
 
-	MARIADB({
-		"jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
-				":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"
-	},
+    MARIADB({"jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
+            ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"},
 			"org.mariadb.jdbc.Driver");
 
 	fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
@@ -125,13 +119,13 @@ abstract class DatabaseTestsBase {
 				registeredOnShutdown.remove(dbSettings)
 			})
 			registeredOnShutdown += dbSettings
-			dbSettings.db = connectWithManager(dbSettings)
-			val dbManager = ITransactionManager.managerFor(dbSettings.db)!!
-			if (dbSettings == TestDB.SQLITE) {
-				dbManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-			} else if (dbSettings == TestDB.ORACLE) {
-				dbManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-			}
+		}
+		dbSettings.db = connectWithManager(dbSettings)
+		val dbManager = ITransactionManager.managerFor(dbSettings.db)!!
+		if (dbSettings == TestDB.SQLITE) {
+			dbManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+		} else if (dbSettings == TestDB.ORACLE) {
+			dbManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
 		}
 
 		val database = dbSettings.db!!

@@ -4,8 +4,8 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
@@ -28,7 +28,7 @@ object UUIDTables {
         var city by City referencedOn People.cityId
     }
 }
-class UUIDTableEntityTest : DatabaseTestsBase() {
+class UUIDTableEntityTest : DaoDatabaseTestsBase() {
 
     @Test fun `create tables`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
