@@ -177,7 +177,7 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
  * Numeric column for storing 1-byte integers.
  */
 class ByteColumnType : ColumnType() {
-    override fun sqlType(): String = "TINYINT"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.byteType()
     override fun valueFromDB(value: Any): Byte = when (value) {
         is Byte -> value
         is Number -> value.toByte()
