@@ -88,6 +88,10 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun currentOrNull(): ITransaction? = TransactionSynchronizationManager.getResource(this) as ITransaction?
 
+    override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
+        error("This method is never used in Spring")
+    }
+
     private inner class SpringTransaction(
         override val connection: ExposedConnection<*>,
         override val db: Database,

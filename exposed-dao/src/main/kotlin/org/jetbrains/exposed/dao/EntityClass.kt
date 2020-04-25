@@ -311,7 +311,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
             val toLoad = distinctRefIds.filter {
-                transaction?.getReferrer(it)!!.containsKey(refColumn).not() ?: true
+                transaction.getReferrer(it)?.containsKey(refColumn)?.not() ?: true
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }

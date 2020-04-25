@@ -89,9 +89,9 @@ class Database private constructor(val connector: () -> ExposedConnection<*>) {
             return Database {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                val manager = manager(this)
-                this.manager = manager
-                ITransactionManager.registerManager(this, manager)
+                val managerArg = manager(this)
+                this.manager = managerArg
+                ITransactionManager.registerManager(this, managerArg)
             }
         }
 

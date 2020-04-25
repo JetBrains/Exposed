@@ -11,8 +11,6 @@ import org.jetbrains.exposed.sql.transactions.*
 import org.jetbrains.exposed.sql.transactions.ITransactionManager.Companion.currentThreadManager
 import org.jetbrains.exposed.sql.transactions.ITransactionManager.Companion.managers
 import java.sql.SQLException
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedDeque
 
 open class DaoTransactionManager(private val db: Database,
                                  @Volatile override var defaultIsolationLevel: Int,
@@ -109,6 +107,15 @@ open class DaoTransactionManager(private val db: Database,
 			}
 	}
 
+	override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
+		val currentTransaction = this.currentOrNull()
+		return try {
+			block()
+		} finally {
+			this.threadLocal.set(currentTransaction)
+		}
+	}
+
 	companion object {
 
 		val manager: DaoTransactionManager
@@ -132,7 +139,7 @@ open class DaoTransactionManager(private val db: Database,
 fun <T> transaction(db: Database? = null, statement: ITransaction.() -> T): T =
 		transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: ITransaction.() -> T): T = keepAndRestoreTransactionRefAfterRun(db) {
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: ITransaction.() -> T): T = db.transactionManager.keepAndRestoreTransactionRefAfterRun(db) {
 	val outer = ITransactionManager.currentOrNull()
 
 	if (outer != null && (db == null || outer.db == db)) {
@@ -175,7 +182,7 @@ fun <T> inTopLevelTransaction(
 	fun run():T {
 		var repetitions = 0
 
-		val outerManager = outerTransaction?.db.transactionManager.takeIf { it?.currentOrNull() != null }
+		val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
 
 		while (true) {
 			db?.let { db.transactionManager.let { m -> ITransactionManager.resetCurrent(m) } }
@@ -222,18 +229,8 @@ fun <T> inTopLevelTransaction(
 		}
 	}
 
-	return keepAndRestoreTransactionRefAfterRun(db) {
+	return db.transactionManager.keepAndRestoreTransactionRefAfterRun(db) {
 		run()
-	}
-}
-
-fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
-	val manager = db.transactionManager as? DaoTransactionManager
-	val currentTransaction = manager?.currentOrNull()
-	return try {
-		block()
-	} finally {
-		manager?.threadLocal?.set(currentTransaction)
 	}
 }
 

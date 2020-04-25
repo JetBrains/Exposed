@@ -26,6 +26,15 @@ class ThreadLocalTransactionManager(private val db: Database,
 
     override fun currentOrNull(): ITransaction? = threadLocal.get()
 
+    override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
+        val currentTransaction = this.currentOrNull()
+        return try {
+            block()
+        } finally {
+            this.threadLocal.set(currentTransaction)
+        }
+    }
+
     private class ThreadLocalTransaction(
         override val db: Database,
         override val transactionIsolation: Int,
@@ -100,7 +109,7 @@ class ThreadLocalTransactionManager(private val db: Database,
 fun <T> transaction(db: Database? = null, statement: ITransaction.() -> T): T =
     transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: ITransaction.() -> T): T = keepAndRestoreTransactionRefAfterRun(db) {
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: ITransaction.() -> T): T = db.transactionManager.keepAndRestoreTransactionRefAfterRun(db) {
     val outer = ITransactionManager.currentOrNull()
 
     if (outer != null && (db == null || outer.db == db)) {
@@ -190,17 +199,8 @@ fun <T> inTopLevelTransaction(
         }
     }
 
-    return keepAndRestoreTransactionRefAfterRun(db) {
+    return db.transactionManager.keepAndRestoreTransactionRefAfterRun(db) {
         run()
     }
 }
 
-fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
-    val manager = db.transactionManager as? ThreadLocalTransactionManager
-    val currentTransaction = manager?.currentOrNull()
-    return try {
-        block()
-    } finally {
-        manager?.threadLocal?.set(currentTransaction)
-    }
-}

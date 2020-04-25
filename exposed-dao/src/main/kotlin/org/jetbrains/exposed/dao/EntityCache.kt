@@ -138,7 +138,7 @@ open class EntityCache() : ICache {
 		referrers.clear()
 	}
 
-	override fun getReferrer(entityId: EntityID<*>): MutableMap<Column<*>, SizedIterable<*>>? {
+	override fun getReferrer(entityId: Any): MutableMap<Column<*>, SizedIterable<*>>? {
 		return referrers[entityId]
 	}
 

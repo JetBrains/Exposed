@@ -37,7 +37,9 @@ interface ICache {
 
 	fun removeTablesReferrers(insertedTables: Collection<Table>)
 
-	fun getReferrer(entityId: EntityID<*>): MutableMap<Column<*>, SizedIterable<*>>?
+	// Any is effectively the type we used in the static cache when it could access the array directly.
+	// Probably need to go through and make this type safe (which might be a lot of work)
+	fun getReferrer(entityId: Any): MutableMap<Column<*>, SizedIterable<*>>?
 
 	fun getReferrers(): HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>
 
