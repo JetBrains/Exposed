@@ -19,7 +19,6 @@ import javax.sql.DataSource
 
 
 class SpringTransactionManager(private val _dataSource: DataSource,
-                               @Volatile override var defaultIsolationLevel: Int = DEFAULT_ISOLATION_LEVEL,
                                @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
@@ -28,6 +27,14 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     private val db = Database.connect(_dataSource) { this }
+
+    @Volatile override var defaultIsolationLevel: Int = -1
+        get() {
+            if (field == -1) {
+                field = Database.getDefaultIsolationLevel(db)
+            }
+            return field
+        }
 
     private val springTxKey = "SPRING_TX_KEY"
 

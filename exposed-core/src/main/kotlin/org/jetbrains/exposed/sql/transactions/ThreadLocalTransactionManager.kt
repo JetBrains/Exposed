@@ -10,8 +10,15 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(private val db: Database,
-                                    @Volatile override var defaultIsolationLevel: Int,
                                     @Volatile override var defaultRepetitionAttempts: Int) : TransactionManager {
+
+    @Volatile override var defaultIsolationLevel: Int = -1
+        get() {
+            if (field == -1) {
+                field = Database.getDefaultIsolationLevel(db)
+            }
+            return field
+        }
 
     val threadLocal = ThreadLocal<Transaction>()
 

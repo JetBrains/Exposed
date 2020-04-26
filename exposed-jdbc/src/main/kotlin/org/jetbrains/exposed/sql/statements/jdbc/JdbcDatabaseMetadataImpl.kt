@@ -11,11 +11,41 @@ import java.sql.ResultSet
 import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
-    override val url: String by lazyMetadata { url }
-    override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
 
     private val databaseName = database.takeIf { metadata.databaseProductName !== "Oracle" }
     private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
+
+    override val url: String by lazyMetadata { url }
+    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion")}
+
+    override val databaseDialectName: String by lazyMetadata {
+        when (driverName) {
+            "MySQL Connector/J",
+            "MySQL Connector Java" -> MysqlDialect.dialectName
+            "MariaDB Connector/J" -> MariaDBDialect.dialectName
+            "SQLite" -> SQLiteDialect.dialectName
+            "H2 JDBC Driver" -> H2Dialect.dialectName
+            "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
+            "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
+            "Oracle JDBC driver" -> OracleDialect.dialectName
+            else -> {
+                if (driverName.startsWith("Microsoft JDBC Driver "))
+                    SQLServerDialect.dialectName
+                else
+                    error("Unsupported driver $driverName detected")
+            }
+        }
+    }
+
+    override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
+
+    override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
+
+    override val supportsAlterTableWithAddColumn by lazyMetadata { supportsAlterTableWithAddColumn() }
+    override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
+    override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
+
+    override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
 
     override val currentScheme: String by lazyMetadata {
         try {
@@ -152,16 +182,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         existingIndicesCache.clear()
     }
 
-    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion")}
-    override val supportsAlterTableWithAddColumn by lazyMetadata { supportsAlterTableWithAddColumn() }
-    override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
-    override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
-
-    override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
-
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
-
-    override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
 }
 
 fun <T> ResultSet.iterate(body: ResultSet.() -> T) : List<T> {

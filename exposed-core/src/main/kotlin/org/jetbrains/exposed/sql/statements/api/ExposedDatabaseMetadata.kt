@@ -11,12 +11,14 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val url: String
     abstract val version: BigDecimal
 
+    abstract val databaseDialectName: String
+    abstract val databaseProductVersion: String
+
     abstract val defaultIsolationLevel: Int
 
     abstract val supportsAlterTableWithAddColumn : Boolean
     abstract val supportsMultipleResultSets : Boolean
     abstract val supportsSelectForUpdate : Boolean
-    abstract val databaseProductVersion: String
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",

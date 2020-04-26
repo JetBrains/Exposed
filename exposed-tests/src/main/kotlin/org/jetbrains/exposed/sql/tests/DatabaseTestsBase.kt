@@ -113,12 +113,6 @@ abstract class DatabaseTestsBase {
             })
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
-            val dbManager = TransactionManager.managerFor(dbSettings.db)!!
-            if (dbSettings == TestDB.SQLITE) {
-                dbManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-            } else if (dbSettings == TestDB.ORACLE) {
-                dbManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-            }
         }
 
         val database = dbSettings.db!!
