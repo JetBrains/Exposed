@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap
 abstract class DataTypeProvider {
     // Numeric types
 
+    open fun byteType(): String = "TINYINT"
+
     /** Numeric type for storing 4-byte integers. */
     open fun integerType(): String = "INT"
 

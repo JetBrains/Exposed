@@ -354,6 +354,7 @@ interface ISqlExpressionBuilder {
     @Suppress("UNCHECKED_CAST")
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
+        is Byte -> byteParam(value)
         is Short -> shortParam(value)
         is Int -> intParam(value)
         is Long -> longParam(value)
@@ -367,6 +368,7 @@ interface ISqlExpressionBuilder {
     @Suppress("UNCHECKED_CAST")
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
+        is Byte -> byteLiteral(value)
         is Short -> shortLiteral(value)
         is Int -> intLiteral(value)
         is Long -> longLiteral(value)

@@ -7,6 +7,9 @@ import java.math.BigDecimal
 import kotlin.test.assertEquals
 
 open class MiscTable : Table() {
+    val by = byte("by")
+    val byn = byte("byn").nullable()
+
     val sm = short("sm")
     val smn = short("smn").nullable()
 
@@ -42,12 +45,15 @@ open class MiscTable : Table() {
 
 fun MiscTable.checkRow(
     row: ResultRow,
+    by: Byte, byn: Byte?,
     sm: Short, smn: Short?,
     n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
     es: MiscTable.E, esn: MiscTable.E?,
     c: String, cn: String?, s: String, sn: String?,
     dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?
 ) {
+    assertEquals(row[this.by], by)
+    assertEquals(row[this.byn], byn)
     assertEquals(row[this.sm], sm)
     assertEquals(row[this.smn], smn)
     assertEquals(row[this.n], n)
@@ -65,10 +71,13 @@ fun MiscTable.checkRow(
 }
 
 fun MiscTable.checkInsert(row: InsertStatement<Number>,
+                                by: Byte, byn: Byte?,
                                 sm: Short, smn: Short?,
                                 n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
                                 es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
                                 dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+    assertEquals(row[this.by], by)
+    assertEquals(row[this.byn], byn)
     assertEquals(row[this.sm], sm)
     assertEquals(row[this.smn], smn)
     assertEquals(row[this.n], n)
