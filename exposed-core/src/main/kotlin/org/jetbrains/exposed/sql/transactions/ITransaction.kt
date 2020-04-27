@@ -32,7 +32,11 @@ interface ITransaction {
 
     fun commit()
 
+    fun txCommit()
+
     fun rollback()
+
+    fun txRollback()
 
     fun close()
 

@@ -30,12 +30,14 @@ open class DaoTransactionManager(private val db: Database,
 			threadLocal.set(this)
 		}
 
-	override fun currentOrNull(): DaoTransaction? =
-		if (threadLocal.get() != null) {
-			threadLocal.get() as DaoTransaction
+	override fun currentOrNull(): DaoTransaction? {
+		val value = threadLocal.get()
+		if (value != null) {
+			return value as DaoTransaction
 		} else {
-			null
+			return null
 		}
+	}
 
 	private class DaoThreadLocalTransaction(
 			override val db: Database,
@@ -59,7 +61,7 @@ open class DaoTransactionManager(private val db: Database,
 		} else null
 
 
-		override fun commit() {
+		override fun txCommit() {
 			if (connectionLazy.isInitialized()) {
 				if (!useSavePoints) {
 					connection.commit()
@@ -69,7 +71,7 @@ open class DaoTransactionManager(private val db: Database,
 			}
 		}
 
-		override fun rollback() {
+		override fun txRollback() {
 			if (connectionLazy.isInitialized() && !connection.isClosed) {
 				if (useSavePoints && savepoint != null) {
 					connection.rollback(savepoint!!)

@@ -99,7 +99,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
         override val outerTransaction: ITransaction?
     ) : AbstractTransaction(db, transactionIsolation, outerTransaction, null, false) {
 
-        override fun commit() {
+        override fun txCommit() {
             connection.run {
                 if (!autoCommit) {
                     commit()
@@ -107,7 +107,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
             }
         }
 
-        override fun rollback() {
+        override fun txRollback() {
             connection.rollback()
         }
 

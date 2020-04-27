@@ -87,7 +87,7 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
 	}
 }
 
-private val registeredOnShutdown = HashSet<TestDB>()
+val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
 	EmbeddedPostgres.builder()

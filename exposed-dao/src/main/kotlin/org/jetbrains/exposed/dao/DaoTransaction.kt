@@ -19,6 +19,26 @@ abstract class DaoTransaction(db: Database, transactionIsolation: Int, outerTran
 		entityCache.transaction = this
 	}
 
-	var flushingEntities: Boolean = false
+	private val entityEvents: MutableList<EntityChange> = CopyOnWriteArrayList<EntityChange>()
+
+	fun registerChange(entityClass: EntityClass<*, Entity<*>>, entityId: EntityID<*>, changeType: EntityChangeType) {
+		EntityChange(entityClass, entityId, changeType, id).let {
+			if (entityEvents.lastOrNull() != it) {
+				entityEvents.add(it)
+			}
+		}
+	}
+
+	fun alertSubscribers() {
+		entityEvents.forEach { e ->
+			entitySubscribers.forEach {
+				it(e)
+			}
+		}
+		entityEvents.clear()
+	}
+
+	fun registeredChanges() = entityEvents.toList()
+
 
 }

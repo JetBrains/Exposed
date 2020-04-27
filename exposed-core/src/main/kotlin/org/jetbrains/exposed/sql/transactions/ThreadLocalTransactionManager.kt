@@ -57,7 +57,7 @@ class ThreadLocalTransactionManager(private val db: Database,
         } else null
 
 
-        override fun commit() {
+        override fun txCommit() {
             if (connectionLazy.isInitialized()) {
                 if (!useSavePoints) {
                     connection.commit()
@@ -67,7 +67,7 @@ class ThreadLocalTransactionManager(private val db: Database,
             }
         }
 
-        override fun rollback() {
+        override fun txRollback() {
             if (connectionLazy.isInitialized() && !connection.isClosed) {
                 if (useSavePoints && savepoint != null) {
                     connection.rollback(savepoint!!)

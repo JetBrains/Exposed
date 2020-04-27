@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.ITransaction
 
 @Suppress("UNCHECKED_CAST")
 open class EntityCache() : ICache {
+	internal var flushingEntities = false
 	override lateinit var transaction: DaoTransaction
 	private val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
 	private val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
@@ -38,7 +39,7 @@ open class EntityCache() : ICache {
 	}
 
 	override fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-		inserts.getOrPut(f.table) { mutableListOf() }.add(o as Entity<*>)
+		inserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<*>)
 	}
 
 	override fun flush() {
@@ -65,9 +66,9 @@ open class EntityCache() : ICache {
 	}
 
 	override fun flush(tables: Iterable<IdTable<*>>) {
-		if (transaction.flushingEntities) return
+		if (flushingEntities) return
 		try {
-			transaction.flushingEntities = true
+			flushingEntities = true
 			val insertedTables = inserts.keys
 
 			val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
@@ -84,7 +85,7 @@ open class EntityCache() : ICache {
 				removeTablesReferrers(insertedTables)
 			}
 		} finally {
-			transaction.flushingEntities = false
+			flushingEntities = false
 		}
 	}
 
@@ -95,7 +96,9 @@ open class EntityCache() : ICache {
 	}
 
 	override fun flushCache(): List<Entity<*>> {
-		return getNewEntities()
+		val newEntities = this.getInserts().flatMap { it.value }
+		this.flush()
+		return newEntities
 	}
 
 	override fun flushInserts(table: IdTable<*>) {

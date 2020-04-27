@@ -21,8 +21,7 @@ fun<ID: Comparable<ID>,T: Entity<ID>> EntityChange.toEntity(klass: EntityClass<I
     return toEntity<ID, T>()
 }
 
-private val entityEvents: MutableList<EntityChange> = CopyOnWriteArrayList<EntityChange>()
-private val entitySubscribers = CopyOnWriteArrayList<(EntityChange) -> Unit>()
+val entitySubscribers = CopyOnWriteArrayList<(EntityChange) -> Unit>()
 
 object EntityHook {
     fun subscribe(action: (EntityChange) -> Unit): (EntityChange) -> Unit {
@@ -34,25 +33,6 @@ object EntityHook {
         entitySubscribers.remove(action)
     }
 }
-
-fun DaoTransaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId: EntityID<*>, changeType: EntityChangeType) {
-    EntityChange(entityClass, entityId, changeType, id).let {
-        if (entityEvents.lastOrNull() != it) {
-            entityEvents.add(it)
-        }
-    }
-}
-
-fun DaoTransaction.alertSubscribers() {
-    entityEvents.forEach { e ->
-        entitySubscribers.forEach {
-            it(e)
-        }
-    }
-    entityEvents.clear()
-}
-
-fun DaoTransaction.registeredChanges() = entityEvents.toList()
 
 fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {
     EntityHook.subscribe(action)

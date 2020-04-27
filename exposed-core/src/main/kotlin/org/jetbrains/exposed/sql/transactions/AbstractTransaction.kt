@@ -47,7 +47,7 @@ abstract class AbstractTransaction(override val db: Database, override val trans
 	override fun commit() {
 		ITransaction.globalInterceptors.forEach { it.beforeCommit(this) }
 		interceptors.forEach { it.beforeCommit(this) }
-//		transactionImpl.commit()
+		this.txCommit()
 		ITransaction.globalInterceptors.forEach { it.afterCommit() }
 		interceptors.forEach { it.afterCommit() }
 		userdata.clear()
@@ -56,7 +56,7 @@ abstract class AbstractTransaction(override val db: Database, override val trans
 	override fun rollback() {
 		ITransaction.globalInterceptors.forEach { it.beforeRollback(this) }
 		interceptors.forEach { it.beforeRollback(this) }
-//		transactionImpl.rollback()
+		this.txRollback()
 		ITransaction.globalInterceptors.forEach { it.afterRollback() }
 		interceptors.forEach { it.afterRollback() }
 		userdata.clear()
