@@ -79,6 +79,8 @@ abstract class ColumnType(override var nullable: Boolean = false) : IColumnType 
         if (nullable != other.nullable) return false
         return true
     }
+
+    override fun hashCode(): Int = 31 * javaClass.hashCode() + nullable.hashCode()
 }
 
 /**
@@ -169,6 +171,7 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
         return true
     }
 
+    override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
 }
 
 // Numeric columns
@@ -178,6 +181,7 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
  */
 class ByteColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.byteType()
+
     override fun valueFromDB(value: Any): Byte = when (value) {
         is Byte -> value
         is Number -> value.toByte()
@@ -282,6 +286,15 @@ class DecimalColumnType(
 
         return true
     }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + precision
+        result = 31 * result + scale
+        return result
+    }
+
+
 }
 
 // Character columns
@@ -336,6 +349,13 @@ abstract class StringColumnType(
         return true
     }
 
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (collate?.hashCode() ?: 0)
+        return result
+    }
+
+
     companion object {
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",
@@ -363,6 +383,25 @@ open class CharColumnType(
             append(" COLLATE ${escape(collate)}")
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as CharColumnType
+
+        if (collate != other.collate) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + colLength
+        return result
+    }
+
+
 }
 
 /**
@@ -390,6 +429,12 @@ open class VarCharColumnType(
         if (colLength != other.colLength) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + colLength
+        return result
     }
 }
 
@@ -447,9 +492,10 @@ class BinaryColumnType(
     }
 
     override fun hashCode(): Int {
-        return length
+        var result = super.hashCode()
+        result = 31 * result + length
+        return result
     }
-
 }
 
 /**
@@ -576,6 +622,12 @@ class EnumerationColumnType<T : Enum<T>>(
 
         return true
     }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + klass.hashCode()
+        return result
+    }
 }
 
 /**
@@ -608,6 +660,12 @@ class EnumerationNameColumnType<T : Enum<T>>(
         if (klass != other.klass) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + klass.hashCode()
+        return result
     }
 }
 
