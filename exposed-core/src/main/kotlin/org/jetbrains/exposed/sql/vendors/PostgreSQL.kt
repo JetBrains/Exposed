@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
+    override fun byteType(): String = "SMALLINT"
     override fun integerAutoincType(): String = "SERIAL"
     override fun longAutoincType(): String = "BIGSERIAL"
     override fun uuidType(): String = "uuid"

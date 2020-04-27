@@ -37,6 +37,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[by] = 13
                 it[sm] = -10
                 it[n] = 42
                 it[d] = date
@@ -52,7 +53,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row,  13, null,-10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row, date, null, time, null, timestamp)
@@ -69,6 +70,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[by] = 13
+                it[byn] = null
                 it[sm] = -10
                 it[smn] = null
                 it[n] = 42
@@ -93,7 +96,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row, date, null, time, null, timestamp)
@@ -109,6 +112,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[by] = 13
+                it[byn] = 13
                 it[sm] = -10
                 it[smn] = -10
                 it[n] = 42
@@ -134,7 +139,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, -10, -10, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
+                row, 13, 13, -10, -10, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
                 "test", "test", "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89
             )
             tbl.checkRowDates(row, date, date, time, time, timestamp)
@@ -152,6 +157,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         withTables(tbl) {
             tbl.insert {
+                it[by] = 13
                 it[sm] = -10
                 it[n] = 42
                 it[d] = date
@@ -166,7 +172,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null,
+                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null,
                 shortStringThatNeedsEscaping, null, stringThatNeedsEscaping, null,
                 BigDecimal("239.42"), null, null, null
             )
@@ -183,6 +189,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         withTables(tbl) {
             val row = tbl.insert {
+                it[by] = 13
                 it[sm] = -10
                 it[n] = 42
                 it[d] = date
@@ -198,7 +205,7 @@ class MiscTableTest : DatabaseTestsBase() {
             }
 
             tbl.checkInsert(
-                row, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row.resultedValues!!.single(), date, null, time, null, timestamp, timestamp)
@@ -216,6 +223,7 @@ class MiscTableTest : DatabaseTestsBase() {
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[by] = 13
                 it[sm] = -10
                 it[n] = 42
                 it[d] = date
@@ -230,6 +238,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.n.eq(42) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -254,6 +264,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.nn.isNull() }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -278,6 +290,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.nn.eq(null as Int?) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -303,6 +317,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.d.eq(date) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -327,6 +343,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.dn.isNull() }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -352,6 +370,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.t.eq(time) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -376,6 +396,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.tn.isNull() }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -401,6 +423,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.e.eq(MiscTable.E.ONE) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -425,6 +449,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.en.isNull() }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -449,6 +475,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.en.eq(null as MiscTable.E?) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -474,6 +502,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.s.eq(sTest) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -498,6 +528,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.sn.isNull() }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -522,6 +554,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.sn.eq(null as String?) }.single(),
+                by = 13,
+                byn = null,
                 sm = -10,
                 smn = null,
                 n = 42,
@@ -558,6 +592,8 @@ class MiscTableTest : DatabaseTestsBase() {
             val eOne = MiscTable.E.ONE
             val dec = BigDecimal("239.42")
             tbl.insert {
+                it[by] = 13
+                it[byn] = 13
                 it[sm] = -10
                 it[smn] = -10
                 it[n] = 42
@@ -583,6 +619,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.nn.eq(42) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -607,6 +645,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.nn.neq<Int?>(null) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -632,6 +672,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.dn.eq(date) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -656,6 +698,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.dn.isNotNull() }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -681,6 +725,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.t.eq(time) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -705,6 +751,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.tn.isNotNull() }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -730,6 +778,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.en.eq(eOne) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -754,6 +804,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.en.isNotNull() }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -779,6 +831,8 @@ class MiscTableTest : DatabaseTestsBase() {
 
             tbl.checkRowFull(
                 tbl.select { tbl.sn.eq(sTest) }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -803,6 +857,8 @@ class MiscTableTest : DatabaseTestsBase() {
             )
             tbl.checkRowFull(
                 tbl.select { tbl.sn.isNotNull() }.single(),
+                by = 13,
+                byn = 13,
                 sm = -10,
                 smn = -10,
                 n = 42,
@@ -839,6 +895,8 @@ class MiscTableTest : DatabaseTestsBase() {
             val dec = BigDecimal("239.42")
             val timestamp = Instant.now()
             tbl.insert {
+                it[by] = 13
+                it[byn] = 13
                 it[sm] = -10
                 it[smn] = -10
                 it[n] = 42
@@ -861,6 +919,7 @@ class MiscTableTest : DatabaseTestsBase() {
             }
 
             tbl.update({ tbl.n.eq(42) }) {
+                it[byn] = null
                 it[smn] = null
                 it[nn] = null
                 it[dn] = null
@@ -875,7 +934,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRowFull(
-                row, -10, null, 42, null, date, null, time, null, timestamp,
+                row, 13, null, -10, null, 42, null, date, null, time, null, timestamp,
                 eOne, null, eOne, null,
                 sTest, null, sTest, null,
                 dec, null, null, null
@@ -893,6 +952,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val dec = BigDecimal("239.42")
         withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
             tbl.insert {
+                it[by] = 13
                 it[sm] = -10
                 it[n] = 101
                 it[c] = "1234"
@@ -914,7 +974,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.select { tbl.n eq 101 }.single()
             tbl.checkRowFull(
-                row, -10, null, 101, null, date, null, time,
+                row, 13, null, -10, null, 101, null, date, null, time,
                 null, timestamp, eOne, null, eOne, null,
                 "1234", "1234", "23456789", "3456789",
                 dec, null, null, null
@@ -925,6 +985,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
 fun Misc.checkRowFull(
     row: ResultRow,
+    by: Byte, byn: Byte?,
     sm: Short, smn: Short?,
     n: Int, nn: Int?,
     d: LocalDate, dn: LocalDate?, t: LocalDateTime, tn: LocalDateTime?, ts: Instant,
@@ -933,7 +994,7 @@ fun Misc.checkRowFull(
     c: String, cn: String?, s: String, sn: String?,
     dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?
 ) {
-    checkRow(row, sm, smn, n, nn, e, en, es, esn, c, cn, s, sn, dc, dcn, fcn, dblcn)
+    checkRow(row, by, byn, sm, smn, n, nn, e, en, es, esn, c, cn, s, sn, dc, dcn, fcn, dblcn)
     checkRowDates(row, d, dn, t, tn, ts)
 }
 

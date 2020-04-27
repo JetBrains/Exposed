@@ -54,7 +54,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(db.transactionManager.defaultIsolationLevel, 42, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db) {
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -116,7 +116,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -149,7 +149,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -172,7 +172,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(db.transactionManager.defaultIsolationLevel, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")

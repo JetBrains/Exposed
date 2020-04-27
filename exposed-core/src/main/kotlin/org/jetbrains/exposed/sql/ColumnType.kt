@@ -174,6 +174,19 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
 // Numeric columns
 
 /**
+ * Numeric column for storing 1-byte integers.
+ */
+class ByteColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.byteType()
+    override fun valueFromDB(value: Any): Byte = when (value) {
+        is Byte -> value
+        is Number -> value.toByte()
+        is String -> value.toByte()
+        else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+    }
+}
+
+/**
  * Numeric column for storing 2-byte integers.
  */
 class ShortColumnType : ColumnType() {

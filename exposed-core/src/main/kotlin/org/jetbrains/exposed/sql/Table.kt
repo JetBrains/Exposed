@@ -468,6 +468,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Numeric columns
 
+    /** Creates a numeric column, with the specified [name], for storing 1-byte integers. */
+    fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
+
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
 

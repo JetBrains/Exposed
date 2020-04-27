@@ -421,6 +421,9 @@ class LiteralOp<T>(
 /** Returns the specified [value] as a boolean literal. */
 fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumnType(), value)
 
+/** Returns the specified [value] as a byte literal. */
+fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
+
 /** Returns the specified [value] as a short literal. */
 fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
 
@@ -459,6 +462,9 @@ fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>)
 
 /** Returns the specified [value] as a boolean query parameter. */
 fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType())
+
+/** Returns the specified [value] as a byte query parameter. */
+fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())
 
 /** Returns the specified [value] as a short query parameter. */
 fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())

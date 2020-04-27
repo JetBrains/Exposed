@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
+    override fun byteType(): String = "SMALLINT"
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
     override fun longType(): String = "NUMBER(19)"
