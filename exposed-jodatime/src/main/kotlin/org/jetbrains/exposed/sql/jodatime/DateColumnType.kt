@@ -51,16 +51,26 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
         else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        if (value is DateTime) {
-            val millis = value.millis
-            if (time) {
-                return java.sql.Timestamp(millis)
-            } else {
-                return java.sql.Date(millis)
-            }
-        }
-        return value
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is DateTime && time  -> java.sql.Timestamp(value.millis)
+        value is DateTime -> java.sql.Date(value.millis)
+        else -> value
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is DateColumnType) return false
+        if (!super.equals(other)) return false
+
+        if (time != other.time) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + time.hashCode()
+        return result
     }
 }
 
