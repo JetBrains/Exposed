@@ -17,6 +17,7 @@ val SPRING_FRAMEWORK_VERSION = "5.2.0.RELEASE"
 dependencies {
     api(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
+    implementation(project(":exposed-dao"))
     api("org.springframework", "spring-jdbc", SPRING_FRAMEWORK_VERSION)
     api("org.springframework", "spring-context", SPRING_FRAMEWORK_VERSION)
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")

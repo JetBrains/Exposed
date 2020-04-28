@@ -1,10 +1,7 @@
 package org.jetbrains.exposed.dao
 
-import kotlinx.coroutines.supervisorScope
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.AbstractTransaction
 import org.jetbrains.exposed.sql.transactions.ITransaction

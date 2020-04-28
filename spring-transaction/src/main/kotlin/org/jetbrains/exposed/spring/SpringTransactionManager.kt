@@ -1,9 +1,12 @@
 package org.jetbrains.exposed.spring
 
+import org.jetbrains.exposed.dao.DaoTransaction
+import org.jetbrains.exposed.dao.EntityCache
+import org.jetbrains.exposed.dao.ICache
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
+import org.jetbrains.exposed.sql.transactionManager
 import org.jetbrains.exposed.sql.transactions.*
 import org.springframework.jdbc.datasource.ConnectionHolder
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -96,7 +99,13 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     override fun currentOrNull(): ITransaction? = TransactionSynchronizationManager.getResource(this) as ITransaction?
 
     override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
-        error("This method is never used in Spring")
+        val manager = db.transactionManager as? ThreadLocalTransactionManager
+        val currentTransaction = manager?.currentOrNull()
+        return try {
+            block()
+        } finally {
+            manager?.threadLocal?.set(currentTransaction)
+        }
     }
 
     private inner class SpringTransaction(
@@ -104,7 +113,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
         override val db: Database,
         override val transactionIsolation: Int,
         override val outerTransaction: ITransaction?
-    ) : AbstractTransaction(db, transactionIsolation, outerTransaction, null, false) {
+    ) : DaoTransaction(db, transactionIsolation, outerTransaction, null, false) {
 
         override fun txCommit() {
             connection.run {

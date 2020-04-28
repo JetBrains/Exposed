@@ -123,7 +123,6 @@ open class DaoTransactionManager(private val db: Database,
 		val manager: DaoTransactionManager
 			get() = currentThreadManager.get() as DaoTransactionManager
 
-
 		fun resetCurrent(manager: DaoTransactionManager?) {
 			manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
 		}

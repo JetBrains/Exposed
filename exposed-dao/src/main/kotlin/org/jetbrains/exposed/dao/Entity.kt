@@ -101,7 +101,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             if (referee != null) {
-                val transaction = DaoTransactionManager.current()
+                val transaction = ITransactionManager.current() as DaoTransaction
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
@@ -163,7 +163,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
-            DaoTransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+            (ITransactionManager.current() as DaoTransaction).registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

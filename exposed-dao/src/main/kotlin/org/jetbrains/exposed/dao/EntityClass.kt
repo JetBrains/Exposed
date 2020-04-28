@@ -21,7 +21,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     operator fun get(id: ID): T = get(DaoEntityID(id, table))
 
-    protected open fun warmCache(): DaoTransaction = DaoTransactionManager.current()
+    protected open fun warmCache(): ICache {
+        val transaction = ITransactionManager.current() as DaoTransaction
+        return transaction.entityCache
+    }
 
     /**
      * Get an entity by its [id].
@@ -202,7 +205,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        val transaction = DaoTransactionManager.current()
+        val transaction = ITransactionManager.current() as DaoTransaction
         return transaction.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
             new.db = transaction.db
@@ -412,8 +415,9 @@ abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(
         warmCache()
     }
 
-    final override fun warmCache(): DaoTransaction {
-        val transaction = super.warmCache()
+    final override fun warmCache(): ICache {
+        val cache = super.warmCache()
+        val transaction = cache.transaction
         val db = transaction.db
         if (_cachedValues[db] == null) synchronized(this) {
             val cachedValues = _cachedValues[db]
@@ -431,7 +435,7 @@ abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(
             }
         }
         transaction.setData(table, _cachedValues[db]!!)
-        return transaction
+        return cache
     }
 
     override fun all(): SizedIterable<T> = SizedCollection(warmCache().findAll(this))
