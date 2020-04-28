@@ -23,8 +23,8 @@ import kotlin.test.assertNull
 
 class MultiDatabaseEntityTest {
 
-    private val db1 by lazy { Database.connect("jdbc:h2:/Users/jeffw/git/Exposed/build/db1;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
-    private val db2 by lazy { Database.connect("jdbc:h2:/Users/jeffw/git/Exposed/build/db2;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
+    private val db1 by lazy { Database.connect("jdbc:h2:mem:d1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
+    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", manager = { DaoTransactionManager(it, DEFAULT_ISOLATION_LEVEL, DEFAULT_REPETITION_ATTEMPTS) })}
     private var currentDB : Database? = null
 
     @Before
