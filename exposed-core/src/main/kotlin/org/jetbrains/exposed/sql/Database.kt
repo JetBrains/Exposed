@@ -9,6 +9,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
 class Database private constructor(private val resolvedVendor: String? = null, val connector: () -> ExposedConnection<*>) {
@@ -92,6 +93,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
+        }
+
+        fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        ): Database {
+            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         fun connect(getNewConnection: () -> Connection,
