@@ -148,7 +148,24 @@ abstract class DatabaseTestsBase {
         }
     }
 
+    fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
+        (TestDB.enabledInTests() - excludeSettings).forEach {
+            withDb(it) {
+                SchemaUtils.createSchema(*schemas)
+                try {
+                    statement()
+                    commit() // Need commit to persist data before drop schemas
+                } finally {
+                    SchemaUtils.dropSchema(*schemas, cascade = true)
+                    commit()
+                }
+            }
+        }
+    }
+
     fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+
+    fun withSchemas (vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "

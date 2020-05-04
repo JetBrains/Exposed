@@ -86,6 +86,21 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    /** Returns a list of existing schema names. */
+    override val schemaNames: List<String> get() = schemaNames()
+
+    /** Returns a list of existing schema names. */
+    private fun schemaNames(): List<String> = with(metadata) {
+        val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
+
+        val schemas = when {
+                useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
+                else -> schemas.iterate { getString("TABLE_SCHEM") }
+            }
+
+        return schemas.map { identifierManager.inProperCase(it) }
+    }
+
     private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()

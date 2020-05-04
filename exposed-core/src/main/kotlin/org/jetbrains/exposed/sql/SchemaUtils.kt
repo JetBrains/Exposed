@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 object SchemaUtils {
@@ -323,24 +322,39 @@ object SchemaUtils {
      * @param inBatch flag to perform schema creation in a single batch
      */
     fun createSchema(vararg schemas: Schema, inBatch: Boolean = false) {
+        if (schemas.isEmpty()) return
         with(TransactionManager.current()) {
-            val createStatements = schemas.flatMap { it.createStatement() }
+            val toCreate = schemas.filterNot { it.exists() }
+            val createStatements = toCreate.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
+            commit()
+            currentDialect.resetSchemaCaches()
         }
     }
 
     /**
      * Drops schemas
      *
+     * **Note** that when you are using Mysql or MariaDB, this will fail if you try to drop a schema that
+     * contains a table that is referenced by a table in another schema.
+     *
      * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
      *
      * @param schemas the names of the schema
+     * @param cascade flag to drop schema and all of its objects and all objects that depend on those objects.
+     * You don't have to specify this option when you are using Mysql or MariaDB
+     * because whether you specify it or not, all objects in the schema will be dropped.
      * @param inBatch flag to perform schema creation in a single batch
      */
-    fun dropSchema(vararg schemas: Schema, inBatch: Boolean = false) {
+    fun dropSchema(vararg schemas: Schema, cascade: Boolean = false, inBatch: Boolean = false) {
+        if (schemas.isEmpty()) return
         with(TransactionManager.current()) {
-            val dropStatements = schemas.flatMap { it.dropStatement() }
+            val schemasForDeletion = if (currentDialect.supportsIfNotExists) schemas.toList() else schemas.filter { it.exists() }
+            val dropStatements = schemasForDeletion.flatMap { it.dropStatement(cascade) }
+
             execStatements(inBatch, dropStatements)
+
+            currentDialect.resetSchemaCaches()
         }
     }
 }
