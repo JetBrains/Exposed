@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
@@ -618,6 +619,10 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEquals(1L, TableFromSchemeOne.selectAll().count())
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
+
+            if (currentDialectTest is SQLServerDialect) {
+                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
+            }
         }
     }
 

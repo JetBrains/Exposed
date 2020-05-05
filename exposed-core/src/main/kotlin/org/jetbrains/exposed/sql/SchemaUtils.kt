@@ -324,7 +324,7 @@ object SchemaUtils {
     fun createSchema(vararg schemas: Schema, inBatch: Boolean = false) {
         if (schemas.isEmpty()) return
         with(TransactionManager.current()) {
-            val toCreate = schemas.filterNot { it.exists() }
+            val toCreate = schemas.distinct().filterNot { it.exists() }
             val createStatements = toCreate.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
             commit()
@@ -349,7 +349,7 @@ object SchemaUtils {
     fun dropSchema(vararg schemas: Schema, cascade: Boolean = false, inBatch: Boolean = false) {
         if (schemas.isEmpty()) return
         with(TransactionManager.current()) {
-            val schemasForDeletion = if (currentDialect.supportsIfNotExists) schemas.toList() else schemas.filter { it.exists() }
+            val schemasForDeletion = if (currentDialect.supportsIfNotExists) schemas.distinct() else schemas.distinct().filter { it.exists() }
             val dropStatements = schemasForDeletion.flatMap { it.dropStatement(cascade) }
 
             execStatements(inBatch, dropStatements)

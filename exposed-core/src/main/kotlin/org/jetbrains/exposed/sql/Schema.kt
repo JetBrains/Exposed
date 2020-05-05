@@ -19,7 +19,7 @@ import java.lang.StringBuilder
  *
  *
  */
-class Schema(private val name: String,
+data class Schema(private val name: String,
              val authorization: String? = null,
              val password: String? = null,
              val defaultTablespace: String? = null,
