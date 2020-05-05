@@ -1,3 +1,23 @@
+# 0.24.1
+Features:
+* A lot of improvements on working with `Schema` (checking for existence, additional parameters like password, defaultTablespace, etc). Thanks a lot to [hichem-fazai](https://github.com/hichem-fazai). 
+* `CHAR(N)` column type support ([#858](https://github.com/JetBrains/Exposed/issues/858)).
+* `BYTE` column type support (PR [#876](https://github.com/JetBrains/Exposed/issues/876) from [spand](https://github.com/spand)).
+* `timestampParam`, `timestampLiteral` and `CustomTimeStampFunction` added by [spand](https://github.com/spand) (PR [#876](https://github.com/JetBrains/Exposed/issues/876)).
+*  Support for `javax.sql.ConnectionPoolDataSource` in `Database.connect` ([#902](https://github.com/JetBrains/Exposed/issues/902))
+
+Bug fixes:
+* No need to provide explicit transaction isolation level for SQLite and Oracle
+* [PostgreSQL] Exception when using jsonb question mark operator ('?') ([#890](https://github.com/JetBrains/Exposed/issues/890) fixed by [qoomon](https://github.com/qoomon)) 
+* [Spring Boot] `NoUniqueBeanDefinitionException` thrown ([#869](https://github.com/JetBrains/Exposed/issues/869))  
+* Do not request generated key if no autoinc/sequence columns provided in an insert statement / reWriteBatchedInserts does not work with PostgreSQL ([#881](https://github.com/JetBrains/Exposed/issues/881))
+* `castTo` should return the expression of exact type ([#874](https://github.com/JetBrains/Exposed/issues/874))   
+
+Code specific changes:
+* `SqlExpressionBuilderClass` deprecated in favor to ISqlExpressionBuilder (PR [#859](https://github.com/JetBrains/Exposed/issues/859) from [Ali Lozano](https://github.com/AliLozano)).
+* `equals` and `hashCode` on `ColumnType` (PR [#860](https://github.com/JetBrains/Exposed/issues/860) from [Ali Lozano](https://github.com/AliLozano)).
+ 
+
 # 0.23.1
 Features:
 * Schema support: create/set current/drop. Many thanks to [hichem-fazai](https://github.com/hichem-fazai).
