@@ -141,7 +141,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
 
         else ->
-            transaction.connection.prepareStatement(sql, true)
+            transaction.connection.prepareStatement(sql, false)
     }
 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
