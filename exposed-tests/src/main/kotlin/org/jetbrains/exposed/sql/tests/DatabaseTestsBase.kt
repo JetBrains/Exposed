@@ -149,14 +149,15 @@ abstract class DatabaseTestsBase {
     }
 
     fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach {
-            withDb(it) {
+        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+            withDb(testDB) {
                 SchemaUtils.createSchema(*schemas)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop schemas
                 } finally {
-                    SchemaUtils.dropSchema(*schemas, cascade = true)
+                    val cascade = it != TestDB.SQLSERVER
+                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
                     commit()
                 }
             }
