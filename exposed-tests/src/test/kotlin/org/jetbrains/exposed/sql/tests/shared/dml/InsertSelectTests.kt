@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import java.math.BigDecimal
 
 class InsertSelectTests : DatabaseTestsBase() {
     @Test
@@ -35,7 +36,8 @@ class InsertSelectTests : DatabaseTestsBase() {
     fun testInsertSelect03() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
-            users.insert(users.slice(Random().castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
+            val nullableExpression = Random() as Expression<BigDecimal?>
+            users.insert(users.slice(nullableExpression.castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
             val r = users.select { users.name eq "Foo" }.toList()
             assertEquals(userCount, r.size.toLong())
         }

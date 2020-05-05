@@ -95,7 +95,7 @@ fun Sequence.nextVal(): NextVal = NextVal(this)
 // Value Expressions
 
 /** Specifies a conversion from one data type to another. */
-fun <R : Any> Expression<*>.castTo(columnType: IColumnType): Cast<R> = Cast(this, columnType)
+fun <R> Expression<*>.castTo(columnType: IColumnType): ExpressionWithColumnType<R> = Cast(this, columnType)
 
 
 // Misc.
