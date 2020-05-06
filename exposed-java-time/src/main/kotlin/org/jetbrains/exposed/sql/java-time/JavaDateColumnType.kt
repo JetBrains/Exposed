@@ -16,6 +16,7 @@ import java.util.Locale
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
+private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss.SSS", Locale.ROOT).withZone(ZoneId.systemDefault())  }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
@@ -78,7 +79,10 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        return if (currentDialect is SQLiteDialect)
+            "'${SQLITE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        else
+            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when(value) {
