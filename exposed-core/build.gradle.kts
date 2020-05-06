@@ -1,3 +1,4 @@
+import org.jetbrains.exposed.gradle.Versions
 import tanvd.kosogor.proxy.publishJar
 
 plugins {
@@ -11,9 +12,9 @@ repositories {
 dependencies {
     api(kotlin("stdlib"))
     api(kotlin("reflect"))
-    api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
+    api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
     api("org.slf4j", "slf4j-api", "1.7.25")
-    compileOnly("com.h2database", "h2", "1.4.199")
+    compileOnly("com.h2database", "h2", Versions.h2)
 }
 
 publishJar {

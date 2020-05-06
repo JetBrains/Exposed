@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.exposed.gradle.setupDialectTest
+import org.jetbrains.exposed.gradle.Versions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 import tanvd.kosogor.proxy.publishJar
 
@@ -22,21 +23,21 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
-    testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
-    testImplementation("com.h2database", "h2", "1.4.199")
+    testImplementation("mysql", "mysql-connector-mxj", Versions.mysqlMxj)
+    testImplementation("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
+    testImplementation("com.h2database", "h2", Versions.h2)
 
     when (dialect) {
-        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
-        "mysql" ->      testImplementation("mysql", "mysql-connector-java", "5.1.49")
-        "mysql8" ->     testImplementation("mysql", "mysql-connector-java", "8.0.19")
-        "oracle" ->     testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
-        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
+        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
+        "mysql" ->      testImplementation("mysql", "mysql-connector-java", Versions.mysql51)
+        "mysql8" ->     testImplementation("mysql", "mysql-connector-java", Versions.mysql80)
+        "oracle" ->     testImplementation("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
+        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
         else -> {
-            testImplementation("com.h2database", "h2", "1.4.199")
-            testImplementation("mysql", "mysql-connector-java", "5.1.49")
-            testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
-            testImplementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")
+            testImplementation("com.h2database", "h2", Versions.h2)
+            testImplementation("mysql", "mysql-connector-java", Versions.mysql51)
+            testImplementation("org.postgresql", "postgresql", Versions.postgre)
+            testImplementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
         }
     }
 }
