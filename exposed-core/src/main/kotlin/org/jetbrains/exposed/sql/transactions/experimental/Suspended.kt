@@ -44,15 +44,32 @@ internal class TransactionCoroutineElement(val newTransaction: Transaction, mana
     companion object : CoroutineContext.Key<TransactionCoroutineElement>
 }
 
-suspend fun <T> newSuspendedTransaction(context: CoroutineDispatcher? = null, db: Database? = null, statement: suspend Transaction.() -> T): T =
-    withTransactionScope(context, null, db) {
+suspend fun <T> newSuspendedTransaction(
+    context: CoroutineDispatcher? = null,
+    db: Database? = null,
+    transactionIsolation: Int? = null,
+    statement: suspend Transaction.() -> T
+): T =
+    withTransactionScope(context, null, db, transactionIsolation) {
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
 suspend fun <T> Transaction.suspendedTransaction(context: CoroutineDispatcher? = null, statement: suspend Transaction.() -> T): T =
-    withTransactionScope(context, this) {
+    withTransactionScope(context, this, db = null, transactionIsolation = null) {
         suspendedTransactionAsyncInternal(false, statement).await()
     }
+
+suspend fun <T> suspendedTransactionAsync(
+    context: CoroutineDispatcher? = null,
+    db: Database? = null,
+    transactionIsolation: Int? = null,
+    statement: suspend Transaction.() -> T
+) : Deferred<T> {
+    val currentTransaction = TransactionManager.currentOrNull()
+    return withTransactionScope(context, null, db, transactionIsolation) {
+        suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
+    }
+}
 
 private fun Transaction.commitInAsync() {
     val currentTransaction = TransactionManager.currentOrNull()
@@ -83,23 +100,16 @@ private fun Transaction.commitInAsync() {
     }
 }
 
-suspend fun <T> suspendedTransactionAsync(context: CoroutineDispatcher? = null, db: Database? = null,
-                                          statement: suspend Transaction.() -> T) : Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull()
-    return withTransactionScope(context, null, db) {
-        suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
-    }
-}
-
 private suspend fun <T> withTransactionScope(context: CoroutineContext?,
                                              currentTransaction: Transaction?,
                                              db: Database? = null,
+                                             transactionIsolation: Int?,
                                              body: suspend TransactionScope.() -> T) : T {
     val currentScope = coroutineContext[TransactionScope]
     suspend fun newScope(_tx: Transaction?) : T {
         val manager = (_tx?.db ?: db)?.transactionManager ?: TransactionManager.manager
 
-        val tx = _tx ?: manager.newTransaction(manager.defaultIsolationLevel)
+        val tx = _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
 
         val element = TransactionCoroutineElement(tx, manager)
 
