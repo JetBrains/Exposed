@@ -453,11 +453,9 @@ abstract class FunctionProvider {
      * @param alreadyOrdered Whether the query is already ordered or not.
      */
     open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = buildString {
-        if (size > 0) {
-            append("LIMIT $size")
-            if (offset > 0) {
-                append(" OFFSET $offset")
-            }
+        append("LIMIT $size")
+        if (offset > 0) {
+            append(" OFFSET $offset")
         }
     }
 }
