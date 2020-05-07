@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
@@ -172,6 +173,18 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     override fun dropIndex(tableName: String, indexName: String): String = "ALTER TABLE $tableName DROP INDEX $indexName"
 
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
+
+    override fun createSchema(schema: Schema): String = buildString {
+        append("CREATE SCHEMA IF NOT EXISTS ", schema.identifier)
+
+        if (schema.authorization != null) {
+            throw UnsupportedByDialectException("${currentDialect.name} do not have database owners. " +
+                    "You can use GRANT to allow or deny rights on database.", currentDialect)
+        }
+
+    }
+
+    override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
 
     companion object {
         /** MySQL dialect name */

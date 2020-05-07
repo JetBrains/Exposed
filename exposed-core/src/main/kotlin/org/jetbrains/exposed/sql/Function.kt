@@ -310,6 +310,6 @@ class Cast<T>(
     /** Returns the expression being casted. */
     val expr: Expression<*>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
 }

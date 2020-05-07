@@ -16,35 +16,35 @@ import kotlin.concurrent.thread
 
 enum class TestDB(val connection: () -> String, val driver: String, val user: String = "root", val pass: String = "",
                   val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}, var db: Database? = null) {
-	H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
-	H2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = {
-		Mode.getInstance("MySQL").convertInsertNullToZero = false
-	}),
-	SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
-	MYSQL({
-		val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
-		val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
-		host?.let { dockerHost ->
-			"jdbc:mysql://$dockerHost:$port/testdb?useSSL=false"
-		} ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&characterEncoding=UTF-8&server.initialize-user=false&user=root&password="
-	},
-			driver = "com.mysql.jdbc.Driver",
-			beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
-			afterTestFinished = {
-				try {
-					val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
-					ServerLauncherSocketFactory.shutdown(baseDir, null)
-				} catch (e: MysqldResourceNotFoundException) {
-					exposedLogger.warn(e.message, e)
-				} finally {
-					Files().cleanTestDir()
-				}
-			}),
-	POSTGRESQL({ "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
-			beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-	POSTGRESQLNG({ "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
-			user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-	ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
+    H2({"jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;"}, "org.h2.Driver"),
+    H2_MYSQL({"jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1"}, "org.h2.Driver", beforeConnection = {
+        Mode.getInstance("MySQL").convertInsertNullToZero = false
+    }),
+    SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
+    MYSQL({
+            val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
+            val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
+            host?.let { dockerHost ->
+                "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
+            } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&characterEncoding=UTF-8&server.initialize-user=false&user=root&password="
+        },
+        driver = "com.mysql.jdbc.Driver",
+        beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
+        afterTestFinished = {
+            try {
+                val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
+                ServerLauncherSocketFactory.shutdown(baseDir, null)
+            } catch (e: MysqldResourceNotFoundException) {
+                exposedLogger.warn(e.message, e)
+            } finally {
+                Files().cleanTestDir()
+            }
+        }),
+    POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
+            beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
+    POSTGRESQLNG({"jdbc:pgsql://localhost:12346/template1?user=postgres&password="}, "com.impossibl.postgres.jdbc.PGDriver",
+            user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
+    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
             connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                     ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
 			beforeConnection = {
@@ -160,13 +160,30 @@ abstract class DatabaseTestsBase {
 			}
 		}
 	}
+    fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: ITransaction.() -> Unit) {
+        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+            withDb(testDB) {
+                SchemaUtils.createSchema(*schemas)
+                try {
+                    statement()
+                    commit() // Need commit to persist data before drop schemas
+                } finally {
+                    val cascade = it != TestDB.SQLSERVER
+                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                    commit()
+                }
+            }
+        }
+    }
 
-	fun withTables(vararg tables: Table, statement: ITransaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables (vararg tables: Table, statement: ITransaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
-	fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
-		"IF NOT EXISTS "
-	} else {
-		""
-	}
+    fun withSchemas (vararg schemas: Schema, statement: ITransaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
+
+    fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
+        "IF NOT EXISTS "
+    } else {
+        ""
+    }
 
 }

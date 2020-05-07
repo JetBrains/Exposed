@@ -1,2 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration.exclude=\
+  org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration

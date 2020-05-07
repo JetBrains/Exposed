@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
@@ -673,24 +674,21 @@ class DDLTests : DaoDatabaseTestsBase() {
 
     @Test
     fun createTableWithForeignKeyToAnotherSchema() {
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            try {
-                exec("CREATE SCHEMA ${"one".inProperCase()}")
-                exec("CREATE SCHEMA ${"two".inProperCase()}")
-                SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
-                val idFromOne = TableFromSchemeOne.insertAndGetId { }
+        val one = Schema("one")
+        val two = Schema("two")
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = *arrayOf(two, one)) {
+            SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
+            val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
-                TableFromSchemeTwo.insert {
-                    it[reference] = idFromOne
-                }
+            TableFromSchemeTwo.insert {
+                it[reference] = idFromOne
+            }
 
-                assertEquals(1L, TableFromSchemeOne.selectAll().count())
-                assertEquals(1L, TableFromSchemeTwo.selectAll().count())
-            } finally {
-                if(currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP SCHEMA IF EXISTS ${"one".inProperCase()} CASCADE")
-                    exec("DROP SCHEMA IF EXISTS ${"two".inProperCase()} CASCADE")
-                }
+            assertEquals(1L, TableFromSchemeOne.selectAll().count())
+            assertEquals(1L, TableFromSchemeTwo.selectAll().count())
+
+            if (currentDialectTest is SQLServerDialect) {
+                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }
     }

@@ -232,6 +232,27 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun setSchema(schema: Schema): String = "ALTER SESSION SET CURRENT_SCHEMA = ${schema.identifier}"
 
+    override fun createSchema(schema: Schema): String = buildString {
+        if ((schema.quota == null) xor (schema.on == null)) {
+            throw IllegalArgumentException("You must either provide both <quota> and <on> options or non of them")
+        }
+
+        append("CREATE USER ", schema.identifier)
+        append(" IDENTIFIED BY ", schema.password)
+        appendIfNotNull(" DEFAULT TABLESPACE ", schema.defaultTablespace)
+        appendIfNotNull(" TEMPORARY TABLESPACE ", schema.temporaryTablespace)
+        appendIfNotNull(" QUOTA ", schema.quota)
+        appendIfNotNull(" ON ", schema.on)
+    }
+
+    override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
+        append("DROP USER ", schema.identifier)
+
+        if(cascade) {
+            append(" CASCADE")
+        }
+    }
+
     companion object {
         /** Oracle dialect name */
         const val dialectName: String = "oracle"

@@ -26,6 +26,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     )
     abstract val currentScheme: String
     abstract val tableNames: Map<String, List<String>>
+    abstract val schemaNames: List<String>
 
     abstract fun columns(vararg tables: Table) : Map<Table, List<ColumnMetadata>>
 

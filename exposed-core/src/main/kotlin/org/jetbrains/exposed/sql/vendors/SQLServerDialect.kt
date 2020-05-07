@@ -157,6 +157,19 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     override fun setSchema(schema: Schema): String = "ALTER USER ${schema.authorization} WITH DEFAULT_SCHEMA = ${schema.identifier}"
 
+    override fun createSchema(schema: Schema): String = buildString {
+        append("CREATE SCHEMA ", schema.identifier)
+        appendIfNotNull(" AUTHORIZATION ", schema.authorization)
+    }
+
+    override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
+        append("DROP SCHEMA ", schema.identifier)
+
+        if(cascade) {
+            append(" CASCADE")
+        }
+    }
+
     companion object {
         /** SQLServer dialect name */
         const val dialectName: String = "sqlserver"

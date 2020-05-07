@@ -518,6 +518,9 @@ interface DatabaseDialect {
     /** Checks if the specified table exists in the database. */
     fun tableExists(table: Table): Boolean
 
+    /** Checks if the specified schema exists. */
+    fun schemaExists(schema: Schema): Boolean
+
     fun checkTableMapping(table: Table): Boolean = true
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
@@ -541,6 +544,9 @@ interface DatabaseDialect {
     /** Clears any cached values. */
     fun resetCaches()
 
+    /** Clears any cached values including schema names. */
+    fun resetSchemaCaches()
+
     // Specific SQL statements
 
     /** Returns the SQL command that creates the specified [index]. */
@@ -557,6 +563,20 @@ interface DatabaseDialect {
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
+
+    fun createSchema(schema: Schema): String = buildString {
+        append("CREATE SCHEMA IF NOT EXISTS ")
+        append(schema.identifier)
+        appendIfNotNull(" AUTHORIZATION ", schema.authorization)
+    }
+
+    fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
+        append("DROP SCHEMA IF EXISTS ", schema.identifier)
+
+        if(cascade) {
+            append(" CASCADE")
+        }
+    }
 }
 
 /**
@@ -570,6 +590,7 @@ abstract class VendorDialect(
 
     /* Cached values */
     private var _allTableNames: Map<String, List<String>>? = null
+    private var _allSchemaNames: List<String>? = null
     /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
@@ -583,6 +604,14 @@ abstract class VendorDialect(
             _allTableNames = connection.metadata { tableNames }
         }
         return _allTableNames!!
+    }
+
+    private fun getAllSchemaNamesCache(): List<String> {
+        val connection = ITransactionManager.current().connection
+        if (_allSchemaNames == null) {
+            _allSchemaNames = connection.metadata { schemaNames }
+        }
+        return _allSchemaNames!!
     }
 
     override val supportsMultipleGeneratedKeys: Boolean = true
@@ -609,6 +638,11 @@ abstract class VendorDialect(
                 else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
             }
         }
+    }
+
+    override fun schemaExists(schema: Schema): Boolean {
+        val allSchemas = getAllSchemaNamesCache()
+        return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
@@ -647,6 +681,11 @@ abstract class VendorDialect(
         _allTableNames = null
         columnConstraintsCache.clear()
         ITransactionManager.current().db.metadata { cleanCache() }
+    }
+
+    override fun resetSchemaCaches() {
+        _allSchemaNames = null
+        resetCaches()
     }
 
     override fun createIndex(index: Index): String {

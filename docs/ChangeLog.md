@@ -1,3 +1,36 @@
+# 0.24.1
+Infrastructure:
+* Kotlin 1.3.72
+* Kotlin Coroutines 1.3.5
+* MariaDB driver 2.6.0
+* MySQL drivers 5.1.49 and 8.0.20
+* Oracle driver replaced from Atlasian fork (12.1.0.1) to original 12.2.0.1
+* PostgreSQL driver 42.2.12.jre6
+* PostgreSQL NG driver 0.8.4
+* SQLServer driver 8.2.2.jre8
+* SQLite driver 3.31.1 
+
+Features:
+* A lot of improvements on working with `Schema` (checking for existence, additional parameters like password, defaultTablespace, etc). Thanks a lot to [hichem-fazai](https://github.com/hichem-fazai). 
+* `CHAR(N)` column type support ([#858](https://github.com/JetBrains/Exposed/issues/858)).
+* `BYTE` column type support (PR [#876](https://github.com/JetBrains/Exposed/issues/876) from [spand](https://github.com/spand)).
+* `timestampParam`, `timestampLiteral` and `CustomTimeStampFunction` added by [spand](https://github.com/spand) (PR [#876](https://github.com/JetBrains/Exposed/issues/876)).
+* Support for `javax.sql.ConnectionPoolDataSource` in `Database.connect` ([#902](https://github.com/JetBrains/Exposed/issues/902))
+* Allow to provide transactionIsolation level on newSuspendedTransaction/suspendedTransactionAsync
+
+Bug fixes:
+* No need to provide explicit transaction isolation level for SQLite and Oracle
+* [PostgreSQL] Exception when using jsonb question mark operator ('?') ([#890](https://github.com/JetBrains/Exposed/issues/890) fixed by [qoomon](https://github.com/qoomon)) 
+* [Spring Boot] `NoUniqueBeanDefinitionException` thrown ([#869](https://github.com/JetBrains/Exposed/issues/869))  
+* Do not request generated key if no autoinc/sequence columns provided in an insert statement / reWriteBatchedInserts does not work with PostgreSQL ([#881](https://github.com/JetBrains/Exposed/issues/881))
+* `castTo` should return the expression of exact type ([#874](https://github.com/JetBrains/Exposed/issues/874))
+* DateTime problem with SQLite (using exposed.java-time) / Different amount of millis stored and restored  ([#823](https://github.com/JetBrains/Exposed/issues/823))    
+
+Code specific changes:
+* `SqlExpressionBuilderClass` deprecated in favor to ISqlExpressionBuilder (PR [#859](https://github.com/JetBrains/Exposed/issues/859) from [Ali Lozano](https://github.com/AliLozano)).
+* `equals` and `hashCode` on `ColumnType` (PR [#860](https://github.com/JetBrains/Exposed/issues/860) from [Ali Lozano](https://github.com/AliLozano)).
+ 
+
 # 0.23.1
 Features:
 * Schema support: create/set current/drop. Many thanks to [hichem-fazai](https://github.com/hichem-fazai).

@@ -9,20 +9,20 @@ import org.jetbrains.exposed.sql.transactions.ITransaction
 open class EntityCache() : ICache {
 	internal var flushingEntities = false
 	override lateinit var transaction: DaoTransaction
-	private val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-	private val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
-	private val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
+	protected val cacheData = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+	protected val cacheInserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
+	protected val cacheReferrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
 	private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
 
-	private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
+	private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = cacheData.getOrPut(table) {
 		LinkedHashMap()
 	}
 
 	override fun <ID : Any, R : Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: () -> SizedIterable<R>): SizedIterable<R> =
-			referrers.getOrPut(sourceId) { HashMap() }.getOrPut(key) { LazySizedCollection(refs()) } as SizedIterable<R>
+			cacheReferrers.getOrPut(sourceId) { HashMap() }.getOrPut(key) { LazySizedCollection(refs()) } as SizedIterable<R>
 
-	override fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+	override fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] as T? ?: cacheInserts[f.table]?.firstOrNull { it.id == id } as? T
 
 	override fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
@@ -39,15 +39,15 @@ open class EntityCache() : ICache {
 	}
 
 	override fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-		inserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<*>)
+		cacheInserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<*>)
 	}
 
 	override fun flush() {
-		flush(inserts.keys + data.keys)
+		flush(cacheInserts.keys + cacheData.keys)
 	}
 
-	private fun updateEntities(idTable: IdTable<*>) {
-		data[idTable]?.let { map ->
+	open protected fun updateEntities(idTable: IdTable<*>) {
+		cacheData[idTable]?.let { map ->
 			if (map.isNotEmpty()) {
 				val updatedEntities = HashSet<Entity<*>>()
 				val batch = EntityBatchUpdate(map.values.first().klass)
@@ -69,7 +69,7 @@ open class EntityCache() : ICache {
 		if (flushingEntities) return
 		try {
 			flushingEntities = true
-			val insertedTables = inserts.keys
+			val insertedTables = cacheInserts.keys
 
 			val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
 			updateBeforeInsert.forEach(::updateEntities)
@@ -90,8 +90,8 @@ open class EntityCache() : ICache {
 	}
 
 	override fun removeTablesReferrers(insertedTables: Collection<Table>) {
-		referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
-			referrers.remove(it)
+		cacheReferrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
+			cacheReferrers.remove(it)
 		}
 	}
 
@@ -102,7 +102,7 @@ open class EntityCache() : ICache {
 	}
 
 	override fun flushInserts(table: IdTable<*>) {
-		inserts.remove(table)?.let {
+		cacheInserts.remove(table)?.let {
 			var toFlush: List<Entity<*>> = it
 			do {
 				val partition = toFlush.partition {
@@ -138,49 +138,49 @@ open class EntityCache() : ICache {
 	}
 
 	override fun clearReferrersCache() {
-		referrers.clear()
+		cacheReferrers.clear()
 	}
 
 	override fun getReferrer(entityId: Any): MutableMap<Column<*>, SizedIterable<*>>? {
-		return referrers[entityId]
+		return cacheReferrers[entityId]
 	}
 
 	override fun getReferrers(): HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>> {
-		return referrers
+		return cacheReferrers
 	}
 
 	override fun removeReferrer(entityId: EntityID<*>) {
-		referrers.remove(entityId)
+		cacheReferrers.remove(entityId)
 	}
 
 	override fun clearData() {
-		data.clear()
+		cacheData.clear()
 	}
 
 	override fun getInsert(table: IdTable<*>): MutableList<Entity<*>>? {
-		return inserts.get(table)
+		return cacheInserts.get(table)
 	}
 
 	override fun clearInserts() {
-		inserts.clear()
+		cacheInserts.clear()
 	}
 
 	override fun getNewEntities(): List<Entity<*>> {
-		val newEntities = inserts.flatMap { it.value }
+		val newEntities = cacheInserts.flatMap { it.value }
 		flush()
 		return newEntities
 	}
 
 	override fun getInserts(): LinkedHashMap<IdTable<*>, MutableList<Entity<*>>> {
-		return inserts
+		return cacheInserts
 	}
 
 	override fun getData(table: IdTable<*>): MutableMap<Any, Entity<*>> {
-		return data[table] ?: mutableMapOf()
+		return cacheData[table] ?: mutableMapOf()
 	}
 
 	override fun setData(table: IdTable<*>, entry: MutableMap<Any, Entity<*>>) {
-		data[table] = entry
+		cacheData[table] = entry
 	}
 
 	companion object {
