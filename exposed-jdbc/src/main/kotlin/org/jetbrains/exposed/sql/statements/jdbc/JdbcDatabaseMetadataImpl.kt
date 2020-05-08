@@ -170,9 +170,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
-                val fromColumn = allTables.getValue(fromTableName).columns.first {
+                val fromColumn = allTables.getValue(fromTableName).columns.firstOrNull {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == fromColumnName
-                }
+                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
                 val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("PKCOLUMN_NAME")!!)
@@ -188,7 +188,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                         onDelete = constraintDeleteRule,
                         name = constraintName
                 )
-            }
+            }.filterNotNull()
         }
     }
 
