@@ -23,7 +23,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "MySQL Connector/J",
             "MySQL Connector Java" -> MysqlDialect.dialectName
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
-            "SQLite" -> SQLiteDialect.dialectName
+            "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
             "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
