@@ -479,6 +479,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
+    /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers. */
+    @ExperimentalUnsignedTypes
+    fun ulong(name: String): Column<ULong> = registerColumn(name, ULongColumnType())
+
     /** Creates a numeric column, with the specified [name], for storing 4-byte (single precision) floating-point numbers. */
     fun float(name: String): Column<Float> = registerColumn(name, FloatColumnType())
 

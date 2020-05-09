@@ -433,6 +433,10 @@ fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), valu
 /** Returns the specified [value] as a long literal. */
 fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
 
+/** Returns the specified [value] as a unsigned long literal. */
+@ExperimentalUnsignedTypes
+fun ulongLiteral(value: ULong): LiteralOp<ULong> = LiteralOp(ULongColumnType(), value)
+
 /** Returns the specified [value] as a float literal. */
 fun floatLiteral(value: Float): LiteralOp<Float> = LiteralOp(FloatColumnType(), value)
 
@@ -474,6 +478,10 @@ fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnT
 
 /** Returns the specified [value] as a long query parameter. */
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
+
+/** Returns the specified [value] as a unsigned long query parameter. */
+@ExperimentalUnsignedTypes
+fun ulongParam(value: ULong): Expression<ULong> = QueryParameter(value, ULongColumnType())
 
 /** Returns the specified [value] as a float query parameter. */
 fun floatParam(value: Float): Expression<Float> = QueryParameter(value, FloatColumnType())
