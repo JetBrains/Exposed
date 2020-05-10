@@ -3,9 +3,9 @@ package org.jetbrains.exposed.spring
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.utils.RepeatableTest
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.tests.RepeatableTest
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.annotation.Commit
