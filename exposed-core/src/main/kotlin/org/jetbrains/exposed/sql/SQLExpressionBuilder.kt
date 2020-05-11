@@ -352,7 +352,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    @ExperimentalUnsignedTypes
+//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
         is Byte -> byteParam(value)
@@ -368,7 +368,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    @ExperimentalUnsignedTypes
+//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)
