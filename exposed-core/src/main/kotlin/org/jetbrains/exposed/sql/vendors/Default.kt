@@ -30,6 +30,9 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 8-byte integers. */
     open fun longType(): String = "BIGINT"
 
+    /** Numeric type for storing 8-byte unsigned integers. */
+    open fun ulongType(): String = "BIGINT"
+
     /** Numeric type for storing 8-byte integers, and marked as auto-increment. */
     open fun longAutoincType(): String = "BIGINT AUTO_INCREMENT"
 

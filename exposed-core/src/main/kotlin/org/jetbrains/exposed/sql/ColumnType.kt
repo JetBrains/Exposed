@@ -230,6 +230,33 @@ class LongColumnType : ColumnType() {
 }
 
 /**
+ * Numeric column for storing unsigned 8-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class ULongColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.ulongType()
+    override fun valueFromDB(value: Any): ULong {
+        return when (value) {
+            is ULong -> value
+            is Long -> value.takeIf { it >= 0 }?.toULong()
+            is Number -> value.toLong().takeIf { it >= 0 }?.toULong()
+            is String -> value.toULong()
+            else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is ULong: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is ULong) value.toLong() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is ULong) value.toLong() else value
+        return super.notNullValueToDB(v)
+    }
+}
+
+/**
  * Numeric column for storing 4-byte (single precision) floating-point numbers.
  */
 class FloatColumnType : ColumnType() {
