@@ -183,9 +183,8 @@ class Count(
     /** Returns the expression from which the rows are counted. */
     val expr: Expression<*>,
     /** Returns whether only distinct element should be count. */
-    val distinct: Boolean,
-    _columnType: IColumnType
-) : Function<Long>(_columnType) {
+    val distinct: Boolean = false
+) : Function<Long>(LongColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         +"COUNT("
         if (distinct) +"DISTINCT "

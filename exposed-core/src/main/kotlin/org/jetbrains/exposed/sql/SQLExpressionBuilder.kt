@@ -49,10 +49,10 @@ fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.avg(scale: Int = 
 fun <T : Any?> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
 
 /** Returns the number of input rows for which the value of this expression is not null. */
-fun ExpressionWithColumnType<*>.count(): Count = Count(this, false, this.columnType)
+fun ExpressionWithColumnType<*>.count(): Count = Count(this)
 
 /** Returns the number of distinct input rows for which the value of this expression is not null. */
-fun Column<*>.countDistinct(): Count = Count(this, true, this.columnType)
+fun Column<*>.countDistinct(): Count = Count(this, true)
 
 
 // Aggregate Functions for Statistics
