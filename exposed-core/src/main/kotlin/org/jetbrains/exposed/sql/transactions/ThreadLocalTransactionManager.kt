@@ -31,10 +31,17 @@ class ThreadLocalTransactionManager(private val db: Database,
                 outerTransaction = outerTransaction
             )
         )).apply {
-            threadLocal.set(this)
+            bindTransactionToThread(this)
         }
 
     override fun currentOrNull(): Transaction? = threadLocal.get()
+
+    override fun bindTransactionToThread(transaction: Transaction?) {
+        if (transaction != null)
+            threadLocal.set(transaction)
+        else
+            threadLocal.remove()
+    }
 
     private class ThreadLocalTransaction(
         override val db: Database,
@@ -206,11 +213,11 @@ fun <T> inTopLevelTransaction(
 }
 
 internal fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
-    val manager = db.transactionManager as? ThreadLocalTransactionManager
-    val currentTransaction = manager?.currentOrNull()
+    val manager = db.transactionManager
+    val currentTransaction = manager.currentOrNull()
     return try {
         block()
     } finally {
-        manager?.threadLocal?.set(currentTransaction)
+        manager.bindTransactionToThread(currentTransaction)
     }
 }

@@ -36,6 +36,10 @@ private object NotInitializedManager : TransactionManager {
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = error("Please call Database.connect() before using this code")
 
     override fun currentOrNull(): Transaction? = error("Please call Database.connect() before using this code")
+
+    override fun bindTransactionToThread(transaction: Transaction?) {
+        error("Please call Database.connect() before using this code")
+    }
 }
 
 interface TransactionManager {
@@ -47,6 +51,8 @@ interface TransactionManager {
     fun newTransaction(isolation: Int = defaultIsolationLevel, outerTransaction: Transaction? = null) : Transaction
 
     fun currentOrNull(): Transaction?
+
+    fun bindTransactionToThread(transaction: Transaction?)
 
     companion object {
 

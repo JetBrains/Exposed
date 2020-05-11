@@ -97,6 +97,18 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
+    override fun bindTransactionToThread(transaction: Transaction?) {
+        if (transaction != null) {
+            bindResourceForSure(this, transaction)
+        } else {
+            TransactionSynchronizationManager.unbindResourceIfPossible(this)
+        }
+    }
+
+    private fun bindResourceForSure(key: Any, value: Any) {
+        TransactionSynchronizationManager.unbindResourceIfPossible(key)
+        TransactionSynchronizationManager.bindResource(key, value)
+    }
 
     private inner class SpringTransaction(
         override val connection: ExposedConnection<*>,

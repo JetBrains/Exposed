@@ -18,26 +18,19 @@ internal class TransactionScope(internal val tx: Transaction, parent: CoroutineC
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(val newTransaction: Transaction, manager: TransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(val newTransaction: Transaction, val manager: TransactionManager) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
-    private val tlManager = manager as? ThreadLocalTransactionManager
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
         val currentTransaction = TransactionManager.currentOrNull()
         val currentManager = currentTransaction?.db?.transactionManager
-        tlManager?.let {
-            it.threadLocal.set(newTransaction)
-            TransactionManager.resetCurrent(it)
-        }
+        manager.bindTransactionToThread(newTransaction)
+        TransactionManager.resetCurrent(manager)
         return TransactionContext(currentManager, currentTransaction)
     }
 
     override fun restoreThreadContext(context: CoroutineContext, oldState: TransactionContext) {
-
-        if (oldState.transaction == null)
-            tlManager?.threadLocal?.remove()
-        else
-            tlManager?.threadLocal?.set(oldState.transaction)
+        manager.bindTransactionToThread(oldState.transaction)
         TransactionManager.resetCurrent(oldState.manager)
     }
 
@@ -75,7 +68,7 @@ private fun Transaction.commitInAsync() {
     val currentTransaction = TransactionManager.currentOrNull()
     try {
         val temporaryManager = this.db.transactionManager
-        (temporaryManager as? ThreadLocalTransactionManager)?.threadLocal?.set(this)
+        temporaryManager.bindTransactionToThread(this)
         TransactionManager.resetCurrent(temporaryManager)
         try {
             commit()
@@ -95,7 +88,7 @@ private fun Transaction.commitInAsync() {
         }
     } finally {
         val transactionManager = currentTransaction?.db?.transactionManager
-        (transactionManager as? ThreadLocalTransactionManager)?.threadLocal?.set(currentTransaction)
+        transactionManager?.bindTransactionToThread(currentTransaction)
         TransactionManager.resetCurrent(transactionManager)
     }
 }

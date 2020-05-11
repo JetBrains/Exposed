@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.test.utils.RepeatableTest
+import org.jetbrains.exposed.sql.tests.RepeatableTest
 import org.junit.Rule
 import org.junit.Test
 import java.sql.Connection

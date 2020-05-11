@@ -194,7 +194,7 @@ class ByteColumnType : ColumnType() {
  * Numeric column for storing 2-byte integers.
  */
 class ShortColumnType : ColumnType() {
-    override fun sqlType(): String = "SMALLINT"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.shortType()
     override fun valueFromDB(value: Any): Short = when (value) {
         is Short -> value
         is Number -> value.toShort()

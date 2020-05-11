@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.test.utils
+package org.jetbrains.exposed.sql.tests
 
 import org.junit.rules.TestRule
 import org.junit.runner.Description
