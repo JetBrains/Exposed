@@ -356,8 +356,11 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
         is Byte -> byteParam(value)
+        is UByte -> ubyteParam(value)
         is Short -> shortParam(value)
+        is UShort -> ushortParam(value)
         is Int -> intParam(value)
+        is UInt -> uintParam(value)
         is Long -> longParam(value)
         is ULong -> ulongParam(value)
         is Float -> floatParam(value)
@@ -372,8 +375,11 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)
+        is UByte -> ubyteLiteral(value)
         is Short -> shortLiteral(value)
+        is UShort -> ushortLiteral(value)
         is Int -> intLiteral(value)
+        is UInt -> uintLiteral(value)
         is Long -> longLiteral(value)
         is ULong -> ulongLiteral(value)
         is Float -> floatLiteral(value)
