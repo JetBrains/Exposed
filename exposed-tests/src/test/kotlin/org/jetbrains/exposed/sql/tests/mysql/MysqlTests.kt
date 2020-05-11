@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.tests.mysql
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.ITransactionManager
-import org.jetbrains.exposed.test.utils.RepeatableTestRule
+import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertFalse

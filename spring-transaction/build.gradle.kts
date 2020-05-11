@@ -22,7 +22,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
 
     testImplementation(project(":exposed-dao"))
+    testImplementation(project(":exposed-tests"))
     testImplementation(kotlin("test-junit"))
+    testImplementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
     testImplementation("org.springframework", "spring-test", Versions.springFramework)
     testImplementation("org.slf4j", "slf4j-log4j12", "1.7.26")
     testImplementation("log4j", "log4j", "1.2.17")

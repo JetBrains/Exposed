@@ -15,6 +15,8 @@ interface ITransactionManager {
 
     fun currentOrNull(): ITransaction?
 
+    fun bindTransactionToThread(transaction: ITransaction?)
+
     fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T
 
     companion object {
@@ -72,6 +74,10 @@ private object NotInitializedManager : ITransactionManager {
     override fun newTransaction(isolation: Int, outerTransaction: ITransaction?): ITransaction = error("Please call Database.connect() before using this code")
 
     override fun currentOrNull(): ITransaction? = error("Please call Database.connect() before using this code")
+
+    override fun bindTransactionToThread(transaction: ITransaction?) {
+        error("Please call Database.connect() before using this code")
+    }
 
     override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
         error("Please call Database.connect() before using this code")

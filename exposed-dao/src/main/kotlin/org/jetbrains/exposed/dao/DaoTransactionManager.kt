@@ -118,6 +118,13 @@ open class DaoTransactionManager(private val db: Database,
 		}
 	}
 
+	override fun bindTransactionToThread(transaction: ITransaction?) {
+		if (transaction != null)
+			threadLocal.set(transaction)
+		else
+			threadLocal.remove()
+	}
+
 	companion object {
 
 		val manager: DaoTransactionManager

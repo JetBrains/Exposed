@@ -99,13 +99,26 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     override fun currentOrNull(): ITransaction? = TransactionSynchronizationManager.getResource(this) as ITransaction?
 
     override fun <T> keepAndRestoreTransactionRefAfterRun(db: Database?, block: () -> T): T {
-        val manager = db.transactionManager as? ThreadLocalTransactionManager
-        val currentTransaction = manager?.currentOrNull()
+        val manager = db.transactionManager
+        val currentTransaction = manager.currentOrNull()
         return try {
             block()
         } finally {
-            manager?.threadLocal?.set(currentTransaction)
+            manager.bindTransactionToThread(currentTransaction)
         }
+    }
+
+    override fun bindTransactionToThread(transaction: ITransaction?) {
+        if (transaction != null) {
+            bindResourceForSure(this, transaction)
+        } else {
+            TransactionSynchronizationManager.unbindResourceIfPossible(this)
+        }
+    }
+
+    private fun bindResourceForSure(key: Any, value: Any) {
+        TransactionSynchronizationManager.unbindResourceIfPossible(key)
+        TransactionSynchronizationManager.bindResource(key, value)
     }
 
     private inner class SpringTransaction(
