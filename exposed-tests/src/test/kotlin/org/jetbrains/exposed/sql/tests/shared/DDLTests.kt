@@ -561,6 +561,22 @@ class DDLTests : DaoDatabaseTestsBase() {
         }
     }
 
+    @ExperimentalUnsignedTypes
+    @Test fun testUlongColumnType() {
+        val UlongTable = object: Table("ulongTable") {
+            val ulong = ulong("ulong")
+        }
+
+        withTables(UlongTable){
+            UlongTable.insert {
+                it[ulong] = 123uL
+            }
+            val result = UlongTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123uL, result.single()[UlongTable.ulong])
+        }
+    }
+
     @Test fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {

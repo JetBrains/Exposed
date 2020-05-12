@@ -10,6 +10,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
     override fun longType(): String = "NUMBER(19)"
+    override fun ulongType(): String = "UNSIGNED BIGINT"
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun textType(): String = "CLOB"
     override fun binaryType(): String = "BLOB"
