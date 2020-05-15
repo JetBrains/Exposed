@@ -61,7 +61,7 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
 
         val targetIds = value.map { it.id }
         table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
-        table.batchInsert(targetIds.filter { !existingIds.contains(it) }) { targetId ->
+        table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
             this[sourceRefColumn] = o.id
             this[targetColumn] = targetId
         }

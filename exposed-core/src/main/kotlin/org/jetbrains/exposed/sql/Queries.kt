@@ -86,13 +86,18 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertState
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
-fun <T:Table, E:Any> T.batchInsert(data: Iterable<E>, ignore: Boolean = false, body: BatchInsertStatement.(E)->Unit): List<ResultRow> {
+fun <T:Table, E:Any> T.batchInsert(
+    data: Iterable<E>,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E)->Unit
+): List<ResultRow> {
     if (data.count() == 0) return emptyList()
     fun newBatchStatement() : BatchInsertStatement {
         return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-            SQLServerBatchInsertStatement(this, ignore)
+            SQLServerBatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
         } else {
-            BatchInsertStatement(this, ignore)
+            BatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
         }
     }
     var statement = newBatchStatement()
