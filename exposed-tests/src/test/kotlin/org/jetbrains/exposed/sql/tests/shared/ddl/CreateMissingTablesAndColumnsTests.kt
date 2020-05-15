@@ -189,7 +189,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
 
     @Test fun createTableWithReservedIdentifierInColumnName() {
-        withDb {
+        withDb(TestDB.MYSQL) {
+            addLogger(StdOutSqlLogger)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 
@@ -198,10 +199,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object T1: IntIdTable("ARRAY") {
+    object T1: Table("ARRAY") {
+        val name = integer("name").uniqueIndex()
         val tmp = varchar("temp", 255)
     }
     object T2: Table("CHAIN") {
-        val ref = integer("ref").references(T1.id)
+        val ref = integer("ref").references(T1.name)
     }
 }

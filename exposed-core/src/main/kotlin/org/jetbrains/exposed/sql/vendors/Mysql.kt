@@ -155,7 +155,9 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                     val constraintName = rs.getString("CONSTRAINT_NAME")!!
                     val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
                     val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                    val targetColumn = allTables.getValue(targetTableName).columns.first { it.nameInDatabaseCase() == targetColumnName }
+                    val targetColumn = allTables.getValue(targetTableName).columns.first {
+                        it.nameInDatabaseCase().quoteIdentifierWhenWrongCaseOrNecessary(tr) == targetColumnName
+                    }
                     val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
                     val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
                     constraintsToLoad.getOrPut(fromTableName) { arrayListOf() }.add(
