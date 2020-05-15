@@ -149,22 +149,25 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                 val fromTableName = rs.getString("TABLE_NAME")!!
                 if (fromTableName !in allTableNames) continue
                 val fromColumnName = rs.getString("COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                val fromColumn = allTables.getValue(fromTableName).columns.first { it.nameInDatabaseCase() == fromColumnName }
-                val constraintName = rs.getString("CONSTRAINT_NAME")!!
-                val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-                val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                val targetColumn = allTables.getValue(targetTableName).columns.first { it.nameInDatabaseCase() == targetColumnName }
-                val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
-                val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-                constraintsToLoad.getOrPut(fromTableName) { arrayListOf() }.add(
+                allTables.getValue(fromTableName).columns.firstOrNull {
+                    it.nameInDatabaseCase().quoteIdentifierWhenWrongCaseOrNecessary(tr) == fromColumnName
+                }?.let { fromColumn ->
+                    val constraintName = rs.getString("CONSTRAINT_NAME")!!
+                    val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+                    val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
+                    val targetColumn = allTables.getValue(targetTableName).columns.first { it.nameInDatabaseCase() == targetColumnName }
+                    val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
+                    val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
+                    constraintsToLoad.getOrPut(fromTableName) { arrayListOf() }.add(
                         ForeignKeyConstraint(
-                                target = targetColumn,
-                                from = fromColumn,
-                                onUpdate = constraintUpdateRule,
-                                onDelete = constraintDeleteRule,
-                                name = constraintName
+                            target = targetColumn,
+                            from = fromColumn,
+                            onUpdate = constraintUpdateRule,
+                            onDelete = constraintDeleteRule,
+                            name = constraintName
                         )
-                )
+                    )
+                }
             }
 
             columnConstraintsCache.putAll(constraintsToLoad)
