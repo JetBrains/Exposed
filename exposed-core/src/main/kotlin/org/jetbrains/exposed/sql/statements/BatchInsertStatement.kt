@@ -73,7 +73,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
+    override fun prepared(transaction: ITransaction, sql: String): PreparedStatementApi {
         return if (!shouldReturnGeneratedValues)
             transaction.connection.prepareStatement(sql, false)
         else
