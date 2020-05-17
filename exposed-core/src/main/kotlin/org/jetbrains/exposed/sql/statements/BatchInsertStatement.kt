@@ -9,7 +9,8 @@ import java.util.*
 
 class BatchDataInconsistentException(message : String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertStatement<List<ResultRow>>(table, ignore) {
+open class BatchInsertStatement(table: Table, ignore: Boolean = false,
+                                private val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
 
@@ -71,9 +72,16 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false): InsertSt
         }
 
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
+
+    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
+        return if (!shouldReturnGeneratedValues)
+            transaction.connection.prepareStatement(sql, false)
+        else
+            super.prepared(transaction, sql)
+    }
 }
 
-open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false) : BatchInsertStatement(table, ignore) {
+open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
     private val OUTPUT_PARAMS_LIMIT = 5000
