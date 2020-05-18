@@ -10,7 +10,7 @@ import kotlin.coroutines.coroutineContext
 
 internal class TransactionContext(val manager: ITransactionManager?, val transaction: ITransaction?)
 
-internal class TransactionScope(internal val tx: ITransaction, parent: CoroutineContext) : CoroutineScope, CoroutineContext.Element {
+internal class TransactionScope(internal val tx: Lazy<ITransaction>, parent: CoroutineContext) : CoroutineScope, CoroutineContext.Element {
     private val baseScope = CoroutineScope(parent)
     override val coroutineContext get() = baseScope.coroutineContext + this
     override val key = Companion
@@ -18,13 +18,13 @@ internal class TransactionScope(internal val tx: ITransaction, parent: Coroutine
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(val newTransaction: ITransaction, val manager: ITransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(val newTransaction: Lazy<ITransaction>, val manager: ITransactionManager) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
         val currentTransaction = ITransactionManager.currentOrNull()
         val currentManager = currentTransaction?.db?.transactionManager
-        manager.bindTransactionToThread(newTransaction)
+        manager.bindTransactionToThread(newTransaction.value)
         ITransactionManager.resetCurrent(manager)
         return TransactionContext(currentManager, currentTransaction)
     }
@@ -102,7 +102,7 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
     suspend fun newScope(_tx: ITransaction?) : T {
         val manager = (_tx?.db ?: db).transactionManager ?: ITransactionManager.manager
 
-        val tx = _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
+        val tx = lazy(LazyThreadSafetyMode.NONE){ _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel) }
 
         val element = TransactionCoroutineElement(tx, manager)
 
@@ -123,11 +123,11 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(shouldCommit:
                                                           statement: suspend ITransaction.() -> T) : Deferred<T>
     = async {
             try {
-                tx.statement()
+                tx.value.statement()
             } catch (e: Throwable) {
-                tx.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: ${tx.currentStatement}", it) }
+                tx.value.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: ${tx.value.currentStatement}", it) }
                 throw e
             } finally {
-                if (shouldCommit) tx.commitInAsync()
+                if (shouldCommit) tx.value.commitInAsync()
             }
         }
