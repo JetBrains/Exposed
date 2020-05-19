@@ -467,13 +467,22 @@ open class VarCharColumnType(
 
 /**
  * Character column for storing strings of arbitrary length using the specified [collate] type.
+ * [eagerLoading] means what content will be loaded immediately when data loaded from database.
  */
-open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
+open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
     override fun sqlType(): String = buildString {
         append(currentDialect.dataTypeProvider.textType())
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        val value = super.readObject(rs, index)
+        return if (eagerLoading && value != null)
+            valueFromDB(value)
+        else
+            value
     }
 }
 

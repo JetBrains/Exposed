@@ -521,8 +521,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Creates a character column, with the specified [name], for storing strings of arbitrary length using the specified [collate] type.
      * If no collate type is specified then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (by performance and memory reasons)
+     * what means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
-    fun text(name: String, collate: String? = null): Column<String> = registerColumn(name, TextColumnType(collate))
+    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> = registerColumn(name, TextColumnType(collate, eagerLoading))
 
     // Binary columns
 
