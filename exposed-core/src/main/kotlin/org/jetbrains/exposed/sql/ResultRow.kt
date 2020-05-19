@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.sql.ResultSet
 
 class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
@@ -18,7 +18,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
         val d = getRaw(c)
 
         if (d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable) {
-            exposedLogger.warn("Column ${TransactionManager.current().fullIdentity(c)} is marked as not null, " +
+            exposedLogger.warn("Column ${ITransactionManager.current().fullIdentity(c)} is marked as not null, " +
                     "has default db value, but returns null. Possible have to re-read it from DB.")
         }
 

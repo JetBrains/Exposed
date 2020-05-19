@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.sql.ResultSet
 import java.util.*
 
@@ -19,7 +20,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            throw BatchDataInconsistentException("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
+            throw BatchDataInconsistentException("Can't set $value for ${ITransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
         }
         super.set(column, value)
     }
@@ -45,7 +46,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
     }
 
     internal open fun validateLastBatch() {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
@@ -72,7 +73,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
+    override fun prepared(transaction: ITransaction, sql: String): PreparedStatementApi {
         return if (!shouldReturnGeneratedValues)
             transaction.connection.prepareStatement(sql, false)
         else
@@ -96,7 +97,7 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         }
     }
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: ITransaction): String {
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {

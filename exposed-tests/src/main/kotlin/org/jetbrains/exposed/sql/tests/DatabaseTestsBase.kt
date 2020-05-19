@@ -7,9 +7,9 @@ import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
@@ -47,108 +47,120 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
             connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                     ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
-            beforeConnection = {
-                Locale.setDefault(Locale.ENGLISH)
-                val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
-                transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
-                    try {
-                        exec("DROP USER C##ExposedTest CASCADE")
-                    } catch (e: Exception) { // ignore
-                        exposedLogger.warn("Exception on deleting C##ExposedTest user", e)
-                    }
-                    exec("CREATE USER C##ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
-                    exec("grant all privileges to C##ExposedTest")
-                    exec("grant dba to C##ExposedTest")
-                }
-                Unit
-            }),
+			beforeConnection = {
+				Locale.setDefault(Locale.ENGLISH)
+				val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
+				transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+					try {
+						exec("DROP USER C##ExposedTest CASCADE")
+					} catch (e: Exception) { // ignore
+						exposedLogger.warn("Exception on deleting C##ExposedTest user", e)
+					}
+					exec("CREATE USER C##ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
+					exec("grant all privileges to C##ExposedTest")
+					exec("grant dba to C##ExposedTest")
+				}
+				Unit
+			}),
 
     SQLSERVER({"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
             ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"},
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"),
+			"com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"),
 
     MARIADB({"jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
             ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"},
-            "org.mariadb.jdbc.Driver");
+			"org.mariadb.jdbc.Driver");
 
-    fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
+	fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 
-    companion object {
-        fun enabledInTests(): List<TestDB> {
-            val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
-            val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
-                if (it == "") emptyList()
-                else it.split(',').map { it.trim().toUpperCase() }
-            }
-            return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
-        }
-    }
+	fun connect(manager: (Database) -> ITransactionManager) = Database.connect(connection(), user = user, password = pass, driver = driver, manager = manager)
+
+	companion object {
+		fun enabledInTests(): List<TestDB> {
+			val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
+			val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
+				if (it == "") emptyList()
+				else it.split(',').map { it.trim().toUpperCase() }
+			}
+			return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
+		}
+	}
 }
 
-private val registeredOnShutdown = HashSet<TestDB>()
+val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-    EmbeddedPostgres.builder()
-            .setPgBinaryResolver{ system, _ ->
-                EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-            }
-            .setPort(12346).start()
+	EmbeddedPostgres.builder()
+			.setPgBinaryResolver { system, _ ->
+				EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
+			}
+			.setPort(12346).start()
 }
 
 abstract class DatabaseTestsBase {
-    init {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-    }
-    fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if (dbSettings !in TestDB.enabledInTests()) {
-            exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
-            return
-        }
+	init {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+	}
 
-        if (dbSettings !in registeredOnShutdown) {
-            dbSettings.beforeConnection()
-            Runtime.getRuntime().addShutdownHook(thread(false){
-                dbSettings.afterTestFinished()
-                registeredOnShutdown.remove(dbSettings)
-            })
-            registeredOnShutdown += dbSettings
-            dbSettings.db = dbSettings.connect()
-        }
+	open fun connectWithManager(dbSettings: TestDB): Database {
+		return dbSettings.connect()
+	}
 
-        val database = dbSettings.db!!
+	open fun withDb(dbSettings: TestDB, statement: ITransaction.(TestDB) -> Unit) {
+		if (dbSettings !in TestDB.enabledInTests()) {
+			exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
+			return
+		}
 
-        transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
-            statement(dbSettings)
-        }
-    }
+		if (dbSettings !in registeredOnShutdown) {
+			dbSettings.beforeConnection()
+			Runtime.getRuntime().addShutdownHook(thread(false) {
+				dbSettings.afterTestFinished()
+				registeredOnShutdown.remove(dbSettings)
+			})
+			registeredOnShutdown += dbSettings
+		}
+		dbSettings.db = connectWithManager(dbSettings)
+		val dbManager = ITransactionManager.managerFor(dbSettings.db)!!
+		if (dbSettings == TestDB.SQLITE) {
+			dbManager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+		} else if (dbSettings == TestDB.ORACLE) {
+			dbManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+		}
 
-    fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
-        val toTest = db ?: TestDB.enabledInTests() - excludeSettings
-        toTest.forEach { dbSettings ->
-            try {
-                withDb(dbSettings, statement)
-            } catch (e: Exception) {
-                throw AssertionError("Failed on ${dbSettings.name}", e)
-            }
-        }
-    }
+		val database = dbSettings.db!!
 
-    fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach {
-            withDb(it) {
-                SchemaUtils.create(*tables)
-                try {
-                    statement()
-                    commit() // Need commit to persist data before drop tables
-                } finally {
-                    SchemaUtils.drop(*tables)
-                    commit()
-                }
-            }
-        }
-    }
+		transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+			statement(dbSettings)
+		}
+	}
 
-    fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
+	fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: ITransaction.(TestDB) -> Unit) {
+		val toTest = db ?: TestDB.enabledInTests() - excludeSettings
+		toTest.forEach { dbSettings ->
+			try {
+				withDb(dbSettings, statement)
+			} catch (e: Exception) {
+				throw AssertionError("Failed on ${dbSettings.name}", e)
+			}
+		}
+	}
+
+	fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: ITransaction.() -> Unit) {
+		(TestDB.enabledInTests() - excludeSettings).forEach {
+			withDb(it) {
+				SchemaUtils.create(*tables)
+				try {
+					statement()
+					commit() // Need commit to persist data before drop tables
+				} finally {
+					SchemaUtils.drop(*tables)
+					commit()
+				}
+			}
+		}
+	}
+    fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: ITransaction.() -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
                 SchemaUtils.createSchema(*schemas)
@@ -164,9 +176,9 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables (vararg tables: Table, statement: ITransaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
-    fun withSchemas (vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
+    fun withSchemas (vararg schemas: Schema, statement: ITransaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "

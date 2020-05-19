@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -38,7 +38,7 @@ class Column<T>(
     internal var dbDefaultValue: Expression<T>? = null
 
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = ITransactionManager.current().fullIdentity(this@Column, queryBuilder)
 
     /** Returns the list of DDL statements that create this column. */
     val ddl: List<String> get() = createStatement()
@@ -46,7 +46,7 @@ class Column<T>(
     fun nameInDatabaseCase(): String = name.inProperCase()
 
     override fun createStatement(): List<String> {
-        val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
+        val alterTablePrefix = "ALTER TABLE ${ITransactionManager.current().identity(table)} ADD"
         val isLastColumnInPK = table.primaryKey?.columns?.last() == this
         val columnDefinition = when {
             isOneColumnPK() && table.isCustomPKNameDefined() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
@@ -59,10 +59,10 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${ITransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
 
     override fun dropStatement(): List<String> {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
 
@@ -70,7 +70,7 @@ class Column<T>(
 
     /** Returns the SQL representation of this column. */
     fun descriptionDdl(): String = buildString {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         append(tr.identity(this@Column))
         append(" ")
         val isPKColumn = table.primaryKey?.columns?.contains(this@Column) == true

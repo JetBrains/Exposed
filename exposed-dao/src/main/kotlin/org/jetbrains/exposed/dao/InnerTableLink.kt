@@ -2,7 +2,7 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -46,18 +46,17 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
             - sourceRefColumn).distinct() + sourceRefColumn
 
         val query = {target.wrapRows(entityTables.slice(columns).select{sourceRefColumn eq o.id})}
-        return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
+        return (ITransactionManager.current() as DaoTransaction).getOrPutReferrers(o.id, sourceRefColumn, query)
     }
 
     override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
-        val tx = TransactionManager.current()
-        val entityCache = tx.entityCache
-        entityCache.flush()
+        val transaction = ITransactionManager.current() as DaoTransaction
+        transaction.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
-        entityCache.clearReferrersCache()
+        transaction.clearReferrersCache()
 
         val targetIds = value.map { it.id }
         table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
@@ -67,13 +66,13 @@ class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>
         }
 
         // current entity updated
-        tx.registerChange(o.klass, o.id, EntityChangeType.Updated)
+        transaction.registerChange(o.klass, o.id, EntityChangeType.Updated)
 
         // linked entities updated
         val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
-                tx.registerChange(targetClass, it, EntityChangeType.Updated)
+                transaction.registerChange(targetClass, it, EntityChangeType.Updated)
             }
         }
     }

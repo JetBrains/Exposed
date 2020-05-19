@@ -16,6 +16,7 @@ repositories {
 dependencies {
     api(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
+    implementation(project(":exposed-dao"))
     api("org.springframework", "spring-jdbc", Versions.springFramework)
     api("org.springframework", "spring-context", Versions.springFramework)
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)

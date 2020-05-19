@@ -3,7 +3,8 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -13,7 +14,7 @@ enum class SortOrder {
 }
 
 open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
-    private val transaction get() = TransactionManager.current()
+    private val transaction get() = ITransactionManager.current()
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
     var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
@@ -72,7 +73,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
+    override fun PreparedStatementApi.executeInternal(transaction: ITransaction): ResultSet? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
         if (fetchSize != null) {
             this.fetchSize = fetchSize
@@ -85,7 +86,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
     }
 
-    override fun prepareSQL(transaction: Transaction): String = prepareSQL(QueryBuilder(true))
+    override fun prepareSQL(transaction: ITransaction): String = prepareSQL(QueryBuilder(true))
 
     fun prepareSQL(builder: QueryBuilder): String {
         builder {

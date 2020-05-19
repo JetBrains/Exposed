@@ -6,16 +6,15 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -93,7 +92,7 @@ object EntityTestsData {
     }
 }
 
-class EntityTests: DatabaseTestsBase() {
+class EntityTests: DaoDatabaseTestsBase() {
     @Test fun testDefaults01() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new {  }
@@ -514,8 +513,8 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
-    private fun <T> newTransaction(statement: Transaction.() -> T) =
-            inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, null, null, statement)
+    private fun <T> newTransaction(statement: ITransaction.() -> T) =
+            inTopLevelTransaction(DaoTransactionManager.manager.defaultIsolationLevel, 1, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
@@ -835,16 +834,16 @@ class EntityTests: DatabaseTestsBase() {
             commit()
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
-                val cache           = TransactionManager.current().entityCache
+                val transaction           = DaoTransactionManager.current()
 
                 School.all().with(School::students)
-                assertEquals(true, cache.referrers.containsKey(school1.id))
-                assertEquals(true, cache.referrers.containsKey(school2.id))
-                assertEquals(true, cache.referrers.containsKey(school3.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school2.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school3.id))
 
-                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1)
-                assertEqualCollections(cache.referrers[school2.id]?.get(Students.school)?.toList().orEmpty(), student2)
-                assertEqualCollections(cache.referrers[school3.id]?.get(Students.school)?.toList().orEmpty(), student3, student4)
+                assertEqualCollections(transaction.getReferrers()[school1.id]?.get(Students.school)?.toList().orEmpty(), student1)
+                assertEqualCollections(transaction.getReferrers()[school2.id]?.get(Students.school)?.toList().orEmpty(), student2)
+                assertEqualCollections(transaction.getReferrers()[school3.id]?.get(Students.school)?.toList().orEmpty(), student3, student4)
             }
         }
     }
@@ -880,12 +879,12 @@ class EntityTests: DatabaseTestsBase() {
             commit()
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
-                val cache           = TransactionManager.current().entityCache
+                val transaction           = DaoTransactionManager.current()
 
                 School.find { Schools.id eq school1.id }.first().load(School::students)
-                assertEquals(true, cache.referrers.containsKey(school1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school1.id))
 
-                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2, student3)
+                assertEqualCollections(transaction.getReferrers()[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2, student3)
             }
         }
     }
@@ -928,16 +927,16 @@ class EntityTests: DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
                 School.all().with(School::students, Student::detentions)
-                val cache           = TransactionManager.current().entityCache
+                val transaction           = DaoTransactionManager.current()
 
                 School.all().with(School::students, Student::detentions)
-                assertEquals(true, cache.referrers.containsKey(school1.id))
-                assertEquals(true, cache.referrers.containsKey(student1.id))
-                assertEquals(true, cache.referrers.containsKey(student2.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(student1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(student2.id))
 
-                assertEqualCollections(cache.referrers[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2)
-                assertEqualCollections(cache.referrers[student1.id]?.get(Detentions.student)?.toList().orEmpty(), detention1, detention2)
-                assertEqualCollections(cache.referrers[student2.id]?.get(Detentions.student)?.toList().orEmpty(), emptyList())
+                assertEqualCollections(transaction.getReferrers()[school1.id]?.get(Students.school)?.toList().orEmpty(), student1, student2)
+                assertEqualCollections(transaction.getReferrers()[student1.id]?.get(Detentions.student)?.toList().orEmpty(), detention1, detention2)
+                assertEqualCollections(transaction.getReferrers()[student2.id]?.get(Detentions.student)?.toList().orEmpty(), emptyList())
             }
         }
     }
@@ -994,14 +993,14 @@ class EntityTests: DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
                 School.all().with(School::holidays)
-                val cache = TransactionManager.current().entityCache
-                assertEquals(true, cache.referrers.containsKey(school1.id))
-                assertEquals(true, cache.referrers.containsKey(school2.id))
-                assertEquals(true, cache.referrers.containsKey(school3.id))
+                val transaction = DaoTransactionManager.current()
+                assertEquals(true, transaction.getReferrers().containsKey(school1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school2.id))
+                assertEquals(true, transaction.getReferrers().containsKey(school3.id))
 
-                assertEqualCollections(cache.referrers[school1.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday1, holiday2)
-                assertEqualCollections(cache.referrers[school2.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday3)
-                assertEqualCollections(cache.referrers[school3.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), emptyList())
+                assertEqualCollections(transaction.getReferrers()[school1.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday1, holiday2)
+                assertEqualCollections(transaction.getReferrers()[school2.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), holiday3)
+                assertEqualCollections(transaction.getReferrers()[school3.id]?.get(SchoolHolidays.school)?.toList().orEmpty(), emptyList())
             }
         }
     }
@@ -1057,12 +1056,12 @@ class EntityTests: DatabaseTestsBase() {
                 Schools.id eq school1.id
             }.first().load(School::holidays)
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
+            val transaction           = DaoTransactionManager.current()
+            assertEquals(true, transaction.getReferrers().containsKey(school1.id))
 
-            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday1))
-            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday2))
-            assertEquals(true, cache.referrers[school1.id]?.get(SchoolHolidays.school)?.contains(holiday3))
+            assertEquals(true, transaction.getReferrers()[school1.id]?.get(SchoolHolidays.school)?.contains(holiday1))
+            assertEquals(true, transaction.getReferrers()[school1.id]?.get(SchoolHolidays.school)?.contains(holiday2))
+            assertEquals(true, transaction.getReferrers()[school1.id]?.get(SchoolHolidays.school)?.contains(holiday3))
         }
     }
 
@@ -1102,15 +1101,15 @@ class EntityTests: DatabaseTestsBase() {
 
             School.all().with(School::students, Student::notes)
 
-            val cache           = TransactionManager.current().entityCache
-            assertEquals(true, cache.referrers.containsKey(school1.id))
-            assertEquals(true, cache.referrers.containsKey(student1.id))
-            assertEquals(true, cache.referrers.containsKey(student2.id))
+            val transaction           = DaoTransactionManager.current()
+            assertEquals(true, transaction.getReferrers().containsKey(school1.id))
+            assertEquals(true, transaction.getReferrers().containsKey(student1.id))
+            assertEquals(true, transaction.getReferrers().containsKey(student2.id))
 
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student1))
-            assertEquals(true, cache.referrers[school1.id]?.get(Students.school)?.contains(student2))
-            assertEquals(note1, cache.referrers[student1.id]?.get(Notes.student)?.first())
-            assertEquals(note2, cache.referrers[student2.id]?.get(Notes.student)?.first())
+            assertEquals(true, transaction.getReferrers()[school1.id]?.get(Students.school)?.contains(student1))
+            assertEquals(true, transaction.getReferrers()[school1.id]?.get(Students.school)?.contains(student2))
+            assertEquals(note1, transaction.getReferrers()[student1.id]?.get(Notes.student)?.first())
+            assertEquals(note2, transaction.getReferrers()[student2.id]?.get(Notes.student)?.first())
         }
     }
 
@@ -1150,13 +1149,13 @@ class EntityTests: DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
                 Student.all().with(Student::bio)
-                val cache           = TransactionManager.current().entityCache
+                val transaction           = DaoTransactionManager.current()
 
-                assertEquals(true, cache.referrers.containsKey(student1.id))
-                assertEquals(true, cache.referrers.containsKey(student2.id))
+                assertEquals(true, transaction.getReferrers().containsKey(student1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(student2.id))
 
-                assertEqualCollections(cache.referrers[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
-                assertEqualCollections(cache.referrers[student2.id]?.get(StudentBios.student)?.toList().orEmpty(), bio2)
+                assertEqualCollections(transaction.getReferrers()[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
+                assertEqualCollections(transaction.getReferrers()[student2.id]?.get(StudentBios.student)?.toList().orEmpty(), bio2)
             }
         }
     }
@@ -1197,11 +1196,11 @@ class EntityTests: DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
                 Student.all().first().load(Student::bio)
-                val cache           = TransactionManager.current().entityCache
+                val transaction           = DaoTransactionManager.current()
 
-                assertEquals(true, cache.referrers.containsKey(student1.id))
+                assertEquals(true, transaction.getReferrers().containsKey(student1.id))
 
-                assertEqualCollections(cache.referrers[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
+                assertEqualCollections(transaction.getReferrers()[student1.id]?.get(StudentBios.student)?.toList().orEmpty(), bio1)
             }
         }
     }

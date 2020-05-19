@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql.tests.sqlite
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

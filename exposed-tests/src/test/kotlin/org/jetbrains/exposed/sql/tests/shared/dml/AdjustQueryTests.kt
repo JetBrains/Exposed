@@ -4,7 +4,7 @@ import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -43,7 +43,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
-            fun ColumnSet.repr(): String = QueryBuilder(false).also { this.describe(TransactionManager.current(), it ) }.toString()
+            fun ColumnSet.repr(): String = QueryBuilder(false).also { this.describe(ITransactionManager.current(), it ) }.toString()
 
             assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
             assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())

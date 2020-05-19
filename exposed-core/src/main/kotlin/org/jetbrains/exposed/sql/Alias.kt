@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.transactions.ITransaction
+
 
 class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
 
@@ -58,7 +60,7 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
 
 class QueryAlias(val query: Query, val alias: String): ColumnSet() {
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder{
+    override fun describe(s: ITransaction, queryBuilder: QueryBuilder) = queryBuilder{
         append("(")
         query.prepareSQL(queryBuilder)
         append(") ", alias)

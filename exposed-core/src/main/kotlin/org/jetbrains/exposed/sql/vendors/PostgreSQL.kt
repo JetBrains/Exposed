@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
@@ -29,7 +30,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG function.")
             expr.distinct -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG function.")
@@ -96,7 +97,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) "$def $onConflictIgnore" else def
@@ -107,7 +108,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
@@ -120,7 +121,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
@@ -162,7 +163,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     override fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         val builder = QueryBuilder(true)
         val sql = if (data.isEmpty()) {
@@ -188,7 +189,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in DELETE clause.")
@@ -204,7 +205,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>): String = buildString {
-        val colName = TransactionManager.current().identity(column)
+        val colName = ITransactionManager.current().identity(column)
         append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()},")
         append("ALTER COLUMN $colName ")
         if (column.columnType.nullable)

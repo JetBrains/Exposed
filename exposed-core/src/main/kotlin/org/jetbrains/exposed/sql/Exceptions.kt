@@ -3,13 +3,13 @@ package org.jetbrains.exposed.exceptions
 
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
+import org.jetbrains.exposed.sql.transactions.ITransaction
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
-class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: Transaction) : SQLException(cause) {
+class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: ITransaction) : SQLException(cause) {
     fun causedByQueries() : List<String> = contexts.map {
         try {
             if (transaction.debug) {
@@ -47,4 +47,4 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  */
 class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError("Duplicate column name \"$columnName\" in table \"$tableName\"")
 
-internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)
+internal fun ITransaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)

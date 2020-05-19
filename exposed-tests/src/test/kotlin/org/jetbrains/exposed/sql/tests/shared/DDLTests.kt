@@ -6,13 +6,14 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -21,7 +22,7 @@ import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.test.assertNotNull
 
-class DDLTests : DatabaseTestsBase() {
+class DDLTests : DaoDatabaseTestsBase() {
 
     @Test fun tableExists01() {
         val TestTable = object : Table() {
@@ -223,6 +224,72 @@ class DDLTests : DatabaseTestsBase() {
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
 
+        }
+    }
+
+    @Test fun testCompositePrimaryKeyCreateTable() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("ID2").primaryKey()
+        }
+
+        withTables(t) {
+            val tr = ITransactionManager.current()
+            val id1ProperName = tr.identity(t.id1)
+            val id2ProperName = tr.identity(t.id2)
+
+            assertEquals(
+                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                            "${t.columns.joinToString { it.descriptionDdl() }}, " +
+                            "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                            ")",
+                    t.ddl)
+        }
+    }
+
+    @Test fun testAddCompositePrimaryKeyToTableH2() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+        }
+
+        withDb(TestDB.H2) {
+            val tableProperName = tableName.inProperCase()
+            val id1ProperName = t.id1.name.inProperCase()
+            val ddlId1 = t.id1.ddl
+            val id2ProperName = t.id2.name.inProperCase()
+            val ddlId2 = t.id2.ddl
+
+            assertEquals(1, ddlId1.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id1.descriptionDdl()}", ddlId1.first())
+
+            assertEquals(2, ddlId2.size)
+            assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${t.id2.columnType.sqlType()}", ddlId2.first())
+            assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", t.id2.ddl.last())
+        }
+    }
+
+    @Test fun testAddCompositePrimaryKeyToTableNotH2() {
+        val tableName = "Foo"
+        val t = object : Table(tableName) {
+            val id1 = integer("id1").primaryKey()
+            val id2 = integer("id2").primaryKey()
+        }
+
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(t)) {
+            val tableProperName = tableName.inProperCase()
+            val id1ProperName = t.id1.name.inProperCase()
+            val ddlId1 = t.id1.ddl
+            val id2ProperName = t.id2.name.inProperCase()
+            val ddlId2 = t.id2.ddl
+
+            assertEquals(1, ddlId1.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id1.descriptionDdl()}", ddlId1.first())
+
+            assertEquals(1, ddlId2.size)
+            assertEquals("ALTER TABLE $tableProperName ADD ${t.id2.descriptionDdl()}, ADD CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
         }
     }
 

@@ -4,7 +4,6 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.emptySized
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
@@ -60,7 +59,7 @@ class Referrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentID>, Chil
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {factory.find{reference eq value }}
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
+        return if (cache) DaoTransactionManager.current().getOrPutReferrers(thisRef.id, reference, query) else query()
     }
 }
 
@@ -79,7 +78,7 @@ class OptionalReferrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentI
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {factory.find{reference eq value }}
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query)  else query()
+        return if (cache) DaoTransactionManager.current().getOrPutReferrers(thisRef.id, reference, query)  else query()
     }
 }
 

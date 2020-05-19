@@ -2,7 +2,10 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
-import org.jetbrains.exposed.sql.transactions.*
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
+import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
@@ -15,9 +18,14 @@ import javax.sql.DataSource
 class Database private constructor(private val resolvedVendor: String? = null, val connector: () -> ExposedConnection<*>) {
 
     var useNestedTransactions: Boolean = false
+    var manager: ITransactionManager? = null
+        get() = field
+        private set (manager) {
+            field = manager
+        }
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
-        val transaction = TransactionManager.currentOrNull()
+        val transaction = ITransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
             try {
@@ -80,35 +88,36 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             explicitVendor: String?,
             getNewConnection: () -> Connection,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return Database(explicitVendor) {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                TransactionManager.registerManager(this, manager(this))
+                val managerArg = manager(this)
+                this.manager = managerArg
+                ITransactionManager.registerManager(this, managerArg)
             }
         }
 
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager )
         }
-
         fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> ITransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             Class.forName(driver).newInstance()
 
@@ -151,3 +160,13 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
 val Database.name : String get() = url.substringAfterLast('/').substringBefore('?')
+
+val Database?.transactionManager: ITransactionManager
+    get() = when(this?.manager) {
+        null -> {
+            ITransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")
+        }
+        else -> {
+            this.manager!!
+        }
+    }

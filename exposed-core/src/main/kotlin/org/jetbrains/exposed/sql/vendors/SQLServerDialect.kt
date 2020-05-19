@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
@@ -30,7 +31,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun random(seed: Int?): String = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         return when {
             expr.separator == null -> tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG.")
             expr.orderBy.size > 1 -> tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG.")
@@ -50,7 +51,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         pattern: Expression<String>,
         caseSensitive: Boolean,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+    ): Unit = ITransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
 
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
@@ -76,7 +77,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("DATEPART(MINUTE, ", expr, ")")
     }
 
-    override fun update(target: Table, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+    override fun update(target: Table, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: ITransaction): String {
         val def = super.update(target, columnsAndValues, null, where, transaction)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
@@ -86,7 +87,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
         if (tableToUpdate == null) {
@@ -125,7 +126,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         toString()
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: ITransaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }

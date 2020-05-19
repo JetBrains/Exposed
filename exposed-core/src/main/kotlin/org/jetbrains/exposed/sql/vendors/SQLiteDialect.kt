@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -36,7 +37,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        val tr = ITransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
@@ -49,7 +50,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         pattern: Expression<String>,
         caseSensitive: Boolean,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
+    ): Unit = ITransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
 
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%Y',")
@@ -92,7 +93,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
@@ -103,7 +104,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
@@ -116,7 +117,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: ITransaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")

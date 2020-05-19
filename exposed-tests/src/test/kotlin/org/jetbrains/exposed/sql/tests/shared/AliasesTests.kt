@@ -1,17 +1,17 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.DaoTransaction
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class AliasesTests : DatabaseTestsBase() {
+class AliasesTests : DaoDatabaseTestsBase() {
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
         val Stables = object : UUIDTable("Stables") {
@@ -78,12 +78,13 @@ class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test wrap row with Aliased table`() {
         withTables(EntityTestsData.XTable) {
+            this as DaoTransaction
             val entity1  = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
 
             flushCache()
-            entityCache.data.clear()
+            clearData()
 
             val alias = EntityTestsData.XTable.alias("xAlias")
             val entityFromAlias = alias.selectAll().map { EntityTestsData.XEntity.wrapRow(it, alias) }.singleOrNull()
@@ -96,12 +97,13 @@ class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test wrap row with Aliased query`() {
         withTables(EntityTestsData.XTable) {
+            this as DaoTransaction
             val entity1  = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
 
             flushCache()
-            entityCache.data.clear()
+            clearData()
 
             val alias = EntityTestsData.XTable.selectAll().alias("xAlias")
             val entityFromAlias = alias.selectAll().map { EntityTestsData.XEntity.wrapRow(it, alias) }.singleOrNull()

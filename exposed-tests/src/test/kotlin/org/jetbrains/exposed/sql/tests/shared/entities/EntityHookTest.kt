@@ -3,13 +3,15 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.tests.DaoDatabaseTestsBase
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.AbstractTransaction
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 
@@ -59,14 +61,15 @@ object EntityHookTestData {
     val  allTables = arrayOf(Users, Cities, UsersToCities, Countries)
 }
 
-class EntityHookTest: DatabaseTestsBase() {
+class EntityHookTest: DaoDatabaseTestsBase() {
 
-    private fun <T> trackChanges(statement: Transaction.() -> T): Triple<T, Collection<EntityChange>, String> {
-        val alreadyChanged = TransactionManager.current().registeredChanges().size
+    private fun <T> trackChanges(statement: ITransaction.() -> T): Triple<T, Collection<EntityChange>, String> {
+        val alreadyChanged = DaoTransactionManager.current().registeredChanges().size
         return transaction {
+            this as DaoTransaction
             val result = statement()
             flushCache()
-            Triple(result, registeredChanges().drop(alreadyChanged), id)
+            Triple(result, DaoTransactionManager.current().registeredChanges().drop(alreadyChanged), id)
         }
     }
 

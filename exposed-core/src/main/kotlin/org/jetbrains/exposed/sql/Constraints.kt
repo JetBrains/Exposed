@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.ITransaction
+import org.jetbrains.exposed.sql.transactions.ITransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.sql.DatabaseMetaData
 
@@ -53,8 +54,8 @@ data class ForeignKeyConstraint(
         private val onDelete: ReferenceOption?,
         private val name: String?
 ) : DdlAware {
-    private val tx: Transaction
-        get() = TransactionManager.current()
+    private val tx: ITransaction
+        get() = ITransactionManager.current()
     /** Name of the child table. */
     val targetTable: String
         get() = tx.identity(target.table)
@@ -145,7 +146,7 @@ data class CheckConstraint(
     companion object {
         internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
-            val tr = TransactionManager.current()
+            val tr = ITransactionManager.current()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toString().replace("$tableName.", "")
