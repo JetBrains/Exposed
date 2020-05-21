@@ -270,7 +270,7 @@ private fun FieldSet.selectBatched(
 
         private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
             is EntityID<*> -> when (val value = autoIncVal.value) {
-                is Int ->  value.toLong()
+                is Int -> value.toLong()
                 else -> value as Long
             }
             is Int -> autoIncVal.toLong()
