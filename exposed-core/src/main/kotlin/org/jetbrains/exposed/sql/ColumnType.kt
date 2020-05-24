@@ -495,8 +495,8 @@ open class BasicBinaryColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is Blob -> value.binaryStream.readBytes()
-        is InputStream -> value.readBytes()
+        is Blob -> value.binaryStream.use { it.readBytes() }
+        is InputStream -> value.use { it.readBytes() }
         else -> value
     }
 
@@ -542,8 +542,8 @@ class BlobColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): ExposedBlob = when (value) {
         is ExposedBlob -> value
-        is Blob -> ExposedBlob(value.binaryStream.readBytes())
-        is InputStream -> ExposedBlob(value.readBytes())
+        is Blob -> ExposedBlob(value.binaryStream.use { it.readBytes() })
+        is InputStream -> ExposedBlob(value.use { it.readBytes() })
         is ByteArray -> ExposedBlob(value)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
@@ -562,7 +562,7 @@ class BlobColumnType : ColumnType() {
         return if (currentDialect.dataTypeProvider.blobAsStream) {
             rs.getBytes(index)?.let(::ExposedBlob)
         } else {
-            rs.getBlob(index)?.binaryStream?.readBytes()?.let(::ExposedBlob)
+            rs.getBlob(index)?.binaryStream?.use { ExposedBlob(it.readBytes()) }
         }
     }
 
