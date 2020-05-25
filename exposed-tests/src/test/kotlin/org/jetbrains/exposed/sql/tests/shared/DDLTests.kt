@@ -117,11 +117,37 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = *arrayOf(TestTable)) {
             val q = db.identifierManager.quoteString
-            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL, " +
-                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
+            val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
+            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"
+            val nameDescription = "$q${"name".inProperCase()}$q VARCHAR(42)"
+            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
+            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+
+            assertEquals( "$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", TestTable.ddl)
+        }
+    }
+
+    @Test fun tableWithDifferentColumnTypesInSQLite() {
+        val TestTable = object : Table("with_different_column_types") {
+            val id = integer("id")
+            val name = varchar("name", 42)
+            val age = integer("age").nullable()
+
+            override val primaryKey = PrimaryKey(id, name)
+        }
+
+        withDb(TestDB.SQLITE) {
+            val q = db.identifierManager.quoteString
+
+            val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
+            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} NOT NULL"
+            val nameDescription = "$q${"name".inProperCase()}$q VARCHAR(42) NOT NULL"
+            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
+            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+
+            assertEquals("$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", TestTable.ddl)
         }
     }
 
