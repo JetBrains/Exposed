@@ -494,6 +494,8 @@ open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = f
 open class BasicBinaryColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
+    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getBytes(index)
+
     override fun valueFromDB(value: Any): Any = when (value) {
         is Blob -> value.binaryStream.use { it.readBytes() }
         is InputStream -> value.use { it.readBytes() }
