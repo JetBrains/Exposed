@@ -26,6 +26,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         _readValues!!
     }
 
+    internal fun isNewEntity(): Boolean {
+        val cache = TransactionManager.current().entityCache
+        return cache.inserts[klass.table]?.contains(this) ?: false
+    }
+
     /**
      * Updates entity fields from database.
      * Override function to refresh some additional state if any.
@@ -35,7 +40,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
      */
     open fun refresh(flush: Boolean = false) {
         val cache = TransactionManager.current().entityCache
-        val isNewEntity = id._value == null
+        val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
             flush -> flush()
@@ -139,7 +144,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
-        if (id._value == null) {
+        if (isNewEntity()) {
             TransactionManager.current().entityCache.flushInserts(this.klass.table)
             return true
         }

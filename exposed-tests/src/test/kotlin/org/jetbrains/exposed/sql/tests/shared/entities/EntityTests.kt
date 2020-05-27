@@ -157,6 +157,21 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    @Test fun testNewWithIdAndRefresh() {
+        val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
+        withTables(Humans) { testDb ->
+            val x = Human.new(2) {
+                h = "foo"
+            }
+            x.refresh(flush = true)
+            objectsToVerify.add(x to testDb)
+        }
+        objectsToVerify.forEach { (human, testDb) ->
+            assertEquals("foo", human.h, "Failed on ${testDb.name}" )
+            assertEquals(2, human.id.value, "Failed on ${testDb.name}" )
+        }
+    }
+
     internal object OneAutoFieldTable : IntIdTable("single")
     internal class SingleFieldEntity(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
