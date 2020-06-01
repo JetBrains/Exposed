@@ -162,6 +162,18 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testForeignKeyCreationInPostgres() {
+        val usersTable = object : IntIdTable("users") {}
+        val spacesTable = object : IntIdTable("spaces") {
+            val userId = reference("userId", usersTable)
+        }
+
+        withDb(TestDB.POSTGRESQL) {
+            SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
+        }
+    }
+
     object MultipleIndexesTable: Table("H2_MULTIPLE_INDEXES") {
         val value1 = varchar("value1", 255)
         val value2 = varchar("value2", 255)

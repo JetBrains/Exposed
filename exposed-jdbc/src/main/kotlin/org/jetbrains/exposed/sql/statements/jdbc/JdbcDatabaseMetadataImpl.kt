@@ -171,7 +171,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
                 val fromColumn = allTables.getValue(fromTableName).columns.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == fromColumnName
+                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
