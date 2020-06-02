@@ -12,7 +12,7 @@ abstract class CompositeColumn<T> : Expression<T>() {
      *
      * @return key - real column, value - its parsed value
      */
-    abstract fun getRealColumnsWithVales(compositeValue : T) : Map<Column<*>, Any?>
+    abstract fun getRealColumnsWithValues(compositeValue : T) : Map<Column<*>, Any?>
 
     /**
      * Return list of real columns, wrapped by this composite column
