@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.replace
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -13,15 +10,65 @@ import kotlin.test.assertFailsWith
 class H2Tests : DatabaseTestsBase() {
 
     @Test
-    fun replaceInH2WithMySQLMode() {
+    fun insertInH2WithMySQLMode() {
         withDb(TestDB.H2_MYSQL) {
 
+            SchemaUtils.drop(Testing)
+            SchemaUtils.create(Testing)
+            Testing.insert {
+                it[Testing.id] = 1
+                it[Testing.string] = "one"
+            }
+
+            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+
+        }
+    }
+
+    @Test
+    fun replaceAsInsertInH2WithMySQLMode() {
+        withDb(TestDB.H2_MYSQL) {
+
+            SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
             Testing.replace {
                 it[Testing.id] = 1
+                it[Testing.string] = "one"
             }
 
-            assertEquals(1, Testing.select { Testing.id.eq(1) }.single()[Testing.id])
+            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+
+        }
+    }
+
+    @Test
+    fun replaceAsUpdateInH2WithMySQLMode() {
+        withDb(TestDB.H2_MYSQL) {
+
+            SchemaUtils.drop(Testing)
+            SchemaUtils.create(Testing)
+            Testing.insert {
+                it[Testing.id] = 1
+                it[Testing.string] = "one"
+            }
+
+            Testing.replace {
+                it[Testing.id] = 1
+                it[Testing.string] = "two"
+            }
+
+            assertEquals("two", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+        }
+    }
+
+    @Test
+    fun emptyReplace() {
+        withDb(TestDB.H2_MYSQL) {
+
+            SchemaUtils.drop(Testing)
+            SchemaUtils.create(Testing)
+
+            Testing.replace {}
         }
     }
 
@@ -29,6 +76,7 @@ class H2Tests : DatabaseTestsBase() {
     fun replaceInH2WithoutMySQLMode() {
         withDb(TestDB.SQLITE) {
 
+            SchemaUtils.drop(Testing, RefTable)
             SchemaUtils.create(Testing, RefTable)
             assertFailsWith(UnsupportedOperationException::class) {
                 Testing.replace {
@@ -40,6 +88,7 @@ class H2Tests : DatabaseTestsBase() {
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>
+        val string = varchar("string", 128)
 
         override val primaryKey = PrimaryKey(id)
     }

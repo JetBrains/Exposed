@@ -107,17 +107,17 @@ internal object H2FunctionProvider : FunctionProvider() {
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
-        if (!transaction.isMySQLMode) {
-            transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
+        if (data.isEmpty()) {
+            return ""
         }
 
+        val columns = data.map { it.first }
+
         val builder = QueryBuilder(true)
-        data.appendTo(builder) { registerArgument(it.first.columnType, it.second) }
-        val values = builder.toString()
 
-        val preparedValues = data.map { transaction.identity(it.first) to it.first.columnType.valueToString(it.second) }
+        val sql = data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
 
-        return "INSERT INTO ${transaction.identity(table)} (${preparedValues.joinToString { it.first }}) VALUES ($values) ON DUPLICATE KEY UPDATE ${preparedValues.joinToString { "${it.first}=${it.second}" }}"
+        return super.insert(false, table, columns, sql, transaction).replaceFirst("INSERT", "MERGE")
     }
 }
 
