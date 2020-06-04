@@ -64,3 +64,10 @@ fun Transaction.addLogger(vararg logger: SqlLogger) : CompositeSqlLogger {
         registerInterceptor(this)
     }
 }
+
+fun Transaction.removeLogger(vararg logger: SqlLogger) : CompositeSqlLogger {
+    return CompositeSqlLogger().apply {
+        logger.forEach { this.removeLogger(it) }
+        registerInterceptor(this)
+    }
+}
