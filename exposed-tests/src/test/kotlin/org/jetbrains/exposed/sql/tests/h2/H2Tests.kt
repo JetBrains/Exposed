@@ -10,8 +10,8 @@ import kotlin.test.assertFailsWith
 class H2Tests : DatabaseTestsBase() {
 
     @Test
-    fun insertInH2WithMySQLMode() {
-        withDb(TestDB.H2_MYSQL) {
+    fun insertInH2() {
+        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
 
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
@@ -26,8 +26,8 @@ class H2Tests : DatabaseTestsBase() {
     }
 
     @Test
-    fun replaceAsInsertInH2WithMySQLMode() {
-        withDb(TestDB.H2_MYSQL) {
+    fun replaceAsInsertInH2() {
+        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
 
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
@@ -42,8 +42,8 @@ class H2Tests : DatabaseTestsBase() {
     }
 
     @Test
-    fun replaceAsUpdateInH2WithMySQLMode() {
-        withDb(TestDB.H2_MYSQL) {
+    fun replaceAsUpdateInH2() {
+        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
 
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
@@ -63,26 +63,12 @@ class H2Tests : DatabaseTestsBase() {
 
     @Test
     fun emptyReplace() {
-        withDb(TestDB.H2_MYSQL) {
+        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
 
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
 
             Testing.replace {}
-        }
-    }
-
-    @Test
-    fun replaceInH2WithoutMySQLMode() {
-        withDb(TestDB.SQLITE) {
-
-            SchemaUtils.drop(Testing, RefTable)
-            SchemaUtils.create(Testing, RefTable)
-            assertFailsWith(UnsupportedOperationException::class) {
-                Testing.replace {
-                    it[Testing.id] = 1
-                }
-            }
         }
     }
 
