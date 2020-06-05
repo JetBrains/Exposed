@@ -287,7 +287,6 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
         }
     }
 
-    val tr = TransactionManager.current()
     val isMysql = currentDialect is MysqlDialect
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
