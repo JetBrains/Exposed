@@ -62,6 +62,8 @@ fun MiscTable.checkRow(
     assertEquals(row[this.en], en)
     assertEquals(row[this.es], es)
     assertEquals(row[this.esn], esn)
+    assertEquals(row[this.c], c)
+    assertEquals(row[this.cn], cn)
     assertEquals(row[this.s], s)
     assertEquals(row[this.sn], sn)
     assertEquals(row[this.dc], dc)
