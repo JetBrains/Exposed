@@ -1,3 +1,7 @@
+# 0.25.2
+Bug Fixes:
+*  Upgrading from 0.17.7 to 0.25.1 leading to overload resolution ambiguity, created `Database.connectPool` ([#938](https://github.com/JetBrains/Exposed/issues/938)
+
 # 0.25.1
 Features:
 * UNSIGNED LONG column support (PR by [kenta.koyama](https://github.com/doyaaaaaken))
