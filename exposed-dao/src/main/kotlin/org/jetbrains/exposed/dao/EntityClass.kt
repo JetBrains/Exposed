@@ -47,7 +47,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      */
     fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
         if (flush) {
-            if (entity.id._value == null)
+            if (entity.isNewEntity())
                 TransactionManager.current().entityCache.flushInserts(table)
             else
                 entity.flush()
