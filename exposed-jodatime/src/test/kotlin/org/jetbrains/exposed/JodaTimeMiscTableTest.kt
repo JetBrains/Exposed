@@ -151,7 +151,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
             val row = tbl.selectAll().single()
             tbl.checkRow(
                 row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null,
-                stringThatNeedsEscaping, null,  stringThatNeedsEscaping, null,
+                shortStringThatNeedsEscaping, null,  stringThatNeedsEscaping, null,
                 BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row, date, null, time, null)

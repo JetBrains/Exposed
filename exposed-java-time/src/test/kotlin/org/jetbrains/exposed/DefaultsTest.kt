@@ -211,10 +211,6 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEqualDateTime(dtConstValue, row1[TestTable.t4])
             assertEqualDateTime(tsConstValue, row1[TestTable.t5])
             assertEqualDateTime(tsConstValue, row1[TestTable.t6])
-
-            val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
-
-            val row2 = TestTable.select { TestTable.id eq id2 }.single()
         }
     }
 
