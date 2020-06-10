@@ -223,6 +223,10 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
 
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE INDEX $name ON $table USING $type $columns"
+    }
+
     companion object {
         /** PostgreSQL dialect name */
         const val dialectName: String = "postgresql"

@@ -883,6 +883,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
+     * Creates an index with a custom index type.
+     *
+     * @param customIndexName Name of the index.
+     * @param columns Columns that compose the index.
+     * @param isUnique Whether the index is unique or not.
+     */
+    fun index(customIndexName: String? = null, indexType: String, vararg columns: Column<*>) {
+        _indices.add(Index(columns.toList(), unique = false, customName = customIndexName, indexType = indexType))
+    }
+
+    /**
      * Creates an index composed by this column only.
      *
      * @param customIndexName Name of the index.

@@ -699,10 +699,15 @@ abstract class VendorDialect(
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
+        } else if (index.indexType != null) {
+            return createIndexWithType(name = quotedIndexName, table = quotedTableName, columns = columnsList, type = index.indexType)
         } else {
             "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
         }
+    }
 
+    protected open fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE INDEX $name ON $table $columns USING $type"
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {

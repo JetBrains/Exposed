@@ -137,6 +137,10 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
+        if (index.indexType != null) {
+            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            return ""
+        }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
         return if (index.unique) {
             originalCreateIndex.replace("CREATE INDEX", "CREATE UNIQUE INDEX")
