@@ -260,11 +260,10 @@ interface ISqlExpressionBuilder {
     // String Functions
 
     /** Concatenates the text representations of all the [expr]. */
-    fun <T : String?> concat(vararg expr: Expression<T>): Concat<T> = Concat("", *expr)
+    fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
     /** Concatenates the text representations of all the [expr] using the specified [separator]. */
-    fun <T : String?> concat(separator: String = "", expr: List<Expression<T>>): Concat<T> = Concat(separator, *expr.toTypedArray())
-
+    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, *expr.toTypedArray())
 
     // Pattern Matching
 

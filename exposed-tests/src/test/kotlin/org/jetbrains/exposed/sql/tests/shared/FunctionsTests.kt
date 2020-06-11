@@ -174,6 +174,18 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testConcatWithNumbers() {
+        withCitiesAndUsers { _, _, data ->
+            val concatField = concat(data.user_id, stringLiteral(" - "), data.comment, stringLiteral(" - "), data.value)
+            val result = data.slice(concatField).select{ data.user_id eq "sergey" }.single()
+            assertEquals("sergey - Comment for Sergey - 30", result[concatField])
+
+            val concatField2 = concat("!", listOf(data.user_id, data.comment, data.value))
+            val result2 = data.slice(concatField2).select{ data.user_id eq "sergey" }.single()
+            assertEquals("sergey!Comment for Sergey!30", result2[concatField2])
+        }
+    }
+
     @Test
     fun testCustomStringFunctions01() {
         withCitiesAndUsers { cities, _, _ ->

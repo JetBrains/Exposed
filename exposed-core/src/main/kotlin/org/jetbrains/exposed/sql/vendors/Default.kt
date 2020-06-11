@@ -146,7 +146,7 @@ abstract class FunctionProvider {
      * @param queryBuilder Query builder to append the SQL function to.
      * @param expr String expressions to concatenate.
      */
-    open fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>): Unit = queryBuilder {
+    open fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>): Unit = queryBuilder {
         if (separator == "") {
             append("CONCAT(")
         } else {
