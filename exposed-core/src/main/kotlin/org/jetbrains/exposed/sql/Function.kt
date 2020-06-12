@@ -83,12 +83,12 @@ class UpperCase<T : String?>(
 /**
  * Represents an SQL function that concatenates the text representations of all non-null input values from [expr], separated by [separator].
  */
-class Concat<T : String?>(
+class Concat(
     /** Returns the delimiter. */
     val separator: String,
     /** Returns the expressions being concatenated. */
-    vararg val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+    vararg val expr: Expression<*>
+) : Function<String>(VarCharColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
 }
 

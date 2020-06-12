@@ -27,7 +27,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         prefix: String
     ): Unit = super.substring(expr, start, length, builder, "substr")
 
-    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = queryBuilder {
+    override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) = queryBuilder {
         if (separator == "") {
             expr.toList().appendTo(this, separator = " || ") { +it }
         } else {

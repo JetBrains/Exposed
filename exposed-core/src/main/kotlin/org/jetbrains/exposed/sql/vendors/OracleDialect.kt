@@ -53,10 +53,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         prefix: String
     ): Unit = super.substring(expr, start, length, builder, "SUBSTR")
 
-    override fun <T : String?> concat(
+    override fun concat(
         separator: String,
         queryBuilder: QueryBuilder,
-        vararg expr: Expression<T>
+        vararg expr: Expression<*>
     ): Unit = queryBuilder {
         if (separator == "") {
             expr.toList().appendTo(separator = " || ") { +it }
