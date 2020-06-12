@@ -159,7 +159,7 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test fun testNewWithIdAndRefresh() {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
-        withTables(Humans) { testDb ->
+        withTables(listOf(TestDB.SQLSERVER), Humans) { testDb ->
             val x = Human.new(2) {
                 h = "foo"
             }
