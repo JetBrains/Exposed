@@ -232,13 +232,13 @@ class FunctionsTests : DatabaseTestsBase() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
 
-            val secondOp = Op.build { DMLTestsData.Cities.name eq "bar" }
-            assertEquals("$initialOp AND $secondOp", (initialOp and secondOp).toString())
+            val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
+            assertEquals("($initialOp) AND ($secondOp)", (initialOp and secondOp).toString())
 
-            val thirdOp = Op.build { DMLTestsData.Cities.name eq "baz" }
-            assertEquals("$initialOp AND $thirdOp", (initialOp and thirdOp).toString())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("($initialOp) AND $thirdOp", (initialOp and thirdOp).toString())
 
-            assertEquals("$initialOp AND $secondOp AND $thirdOp",
+            assertEquals("($initialOp) AND ($secondOp) AND $thirdOp",
                     (initialOp and secondOp and thirdOp).toString())
         }
     }
@@ -248,13 +248,13 @@ class FunctionsTests : DatabaseTestsBase() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
 
-            val secondOp = Op.build { DMLTestsData.Cities.name eq "bar" }
-            assertEquals("$initialOp OR $secondOp", (initialOp or secondOp).toString())
+            val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
+            assertEquals("($initialOp) OR ($secondOp)", (initialOp or secondOp).toString())
 
-            val thirdOp = Op.build { DMLTestsData.Cities.name eq "baz" }
-            assertEquals("$initialOp OR $thirdOp", (initialOp or thirdOp).toString())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("($initialOp) OR $thirdOp", (initialOp or thirdOp).toString())
 
-            assertEquals("$initialOp OR $secondOp OR $thirdOp",
+            assertEquals("($initialOp) OR ($secondOp) OR $thirdOp",
                     (initialOp or secondOp or thirdOp).toString())
         }
     }
@@ -263,14 +263,18 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testAndOrCombinations() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
-            assertEquals("($initialOp OR $initialOp) AND $initialOp", (initialOp or initialOp and initialOp).toString())
-            assertEquals("($initialOp AND $initialOp) OR $initialOp", (initialOp and initialOp or initialOp).toString())
-            assertEquals("$initialOp AND ($initialOp OR $initialOp)", (initialOp and (initialOp or initialOp)).toString())
-            assertEquals("($initialOp OR $initialOp) AND ($initialOp OR $initialOp)", ((initialOp or initialOp) and (initialOp or initialOp)).toString())
-            assertEquals("(($initialOp OR $initialOp) AND $initialOp) OR $initialOp", (initialOp or initialOp and initialOp or initialOp).toString())
-            assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or initialOp or initialOp or initialOp).toString())
-            assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or (initialOp or initialOp) or initialOp).toString())
-            assertEquals("$initialOp OR ($initialOp AND $initialOp) OR $initialOp", (initialOp or (initialOp and initialOp) or initialOp).toString())
+            val secondOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("(($initialOp) OR ($initialOp)) AND ($initialOp)", (initialOp or initialOp and initialOp).toString())
+            assertEquals("(($initialOp) OR ($initialOp)) AND $secondOp", (initialOp or initialOp and secondOp).toString())
+            assertEquals("(($initialOp) AND ($initialOp)) OR ($initialOp)", (initialOp and initialOp or initialOp).toString())
+            assertEquals("(($initialOp) AND $secondOp) OR ($initialOp)", (initialOp and secondOp or initialOp).toString())
+            assertEquals("($initialOp) AND (($initialOp) OR ($initialOp))", (initialOp and (initialOp or initialOp)).toString())
+            assertEquals("(($initialOp) OR ($initialOp)) AND (($initialOp) OR ($initialOp))", ((initialOp or initialOp) and (initialOp or initialOp)).toString())
+            assertEquals("((($initialOp) OR ($initialOp)) AND ($initialOp)) OR ($initialOp)", (initialOp or initialOp and initialOp or initialOp).toString())
+            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or initialOp or initialOp or initialOp).toString())
+            assertEquals("$secondOp OR $secondOp OR $secondOp OR $secondOp", (secondOp or secondOp or secondOp or secondOp).toString())
+            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or (initialOp or initialOp) or initialOp).toString())
+            assertEquals("($initialOp) OR ($secondOp AND $secondOp) OR ($initialOp)", (initialOp or (secondOp and secondOp) or initialOp).toString())
         }
     }
 

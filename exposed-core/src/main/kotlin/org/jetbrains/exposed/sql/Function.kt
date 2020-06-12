@@ -276,7 +276,7 @@ class CaseWhen<T>(val value: Expression<*>?) {
     fun <R : T> Else(e: Expression<R>): Expression<R> = CaseWhenElse(this, e)
 }
 
-class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>() {
+class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("CASE ")
         if (caseWhen.value != null)

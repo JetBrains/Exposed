@@ -49,6 +49,12 @@ class NotOp<T>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("NOT (", expr, ")") }
 }
 
+
+/**
+ * Marker interface which indicates that expression should be wrapped with braces when used in compound operators
+ */
+interface ComplexExpression
+
 /**
  * Represent a logical operator that performs an operation between all the specified [expressions].
  * This is the base class for the `and` and `or` operators:
@@ -59,7 +65,7 @@ class NotOp<T>(
 abstract class CompoundBooleanOp<T : CompoundBooleanOp<T>>(
     private val operator: String,
     internal val expressions: List<Expression<Boolean>>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         expressions.appendTo(this, separator = operator) { appendExpression(it) }
     }
@@ -119,7 +125,7 @@ abstract class ComparisonOp(
     val expr2: Expression<*>,
     /** Returns the symbol of the comparison operation. */
     val opSign: String
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         appendExpression(expr1)
         append(" $opSign ")
@@ -167,7 +173,7 @@ class Between(
     val from: LiteralOp<*>,
     /** Returns the upper limit of the range to check against. */
     val to: LiteralOp<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " BETWEEN ", from, " AND ", to) }
 }
 
@@ -177,7 +183,7 @@ class Between(
 class IsNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NULL") }
 }
 
@@ -187,7 +193,7 @@ class IsNullOp(
 class IsNotNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
@@ -283,7 +289,7 @@ class RegexpOp<T : String?>(
     val expr2: Expression<String>,
     /** Returns `true` if the regular expression is case sensitive, `false` otherwise. */
     val caseSensitive: Boolean
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
     }
@@ -334,7 +340,7 @@ class InSubQueryOp<T>(
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: Query
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " IN (")
         query.prepareSQL(this)
@@ -350,7 +356,7 @@ class NotInSubQueryOp<T>(
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: Query
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " NOT IN (")
         query.prepareSQL(this)
@@ -371,7 +377,7 @@ class InListOrNotInListOp<T>(
     val list: Iterable<T>,
     /** Returns `true` if the check is inverted, `false` otherwise. */
     val isInList: Boolean = true
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         list.iterator().let { i ->
             if (!i.hasNext()) {
@@ -508,7 +514,7 @@ class NoOpConversion<T, S>(
 }
 
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
-    if (expr is CompoundBooleanOp<*>) {
+    if (expr is ComplexExpression) {
         append("(", expr, ")")
     } else {
         append(expr)
