@@ -647,13 +647,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Sets the default value for this column in the database side. */
-    fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = let { composite ->
-        doWithTable(this@Table) {
-            composite.getRealColumnsWithVales(defaultValue).forEach {
+    fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
+        with(this@Table) {
+            this@default.getRealColumnsWithValues(defaultValue).forEach {
                 (it.key as Column<Any>).default(it.value as Any)
             }
         }
-        return composite
     }
 
     /** Sets the default value for this column in the database side. */
@@ -1085,12 +1084,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
-
-    /**
-     * Allows to invoke extension functions defined in [Table] class from itself
-     */
-    private fun doWithTable(table : Table, receiver : Table.() -> Unit) = table.receiver()
-
 }
 
 @Deprecated(

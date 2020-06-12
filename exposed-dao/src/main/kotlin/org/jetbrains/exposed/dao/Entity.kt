@@ -125,13 +125,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     operator fun <T> CompositeColumn<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
-        val composite = this
-        doWithEntity(o) {
-            composite.getRealColumnsWithVales(value).forEach {
+        with(o) {
+            this@setValue.getRealColumnsWithValues(value).forEach {
                 (it.key as Column<Any?>).setValue(o, desc, it.value)
             }
         }
-
     }
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
@@ -203,10 +201,4 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         // clear write values
         writeValues.clear()
     }
-
-    /**
-     * Allows to invoke extension functions defined in [Entity] class from itself
-     */
-    private fun doWithEntity(o: Entity<ID>, receiver : Entity<ID>.() -> Unit) = o.receiver()
-
 }

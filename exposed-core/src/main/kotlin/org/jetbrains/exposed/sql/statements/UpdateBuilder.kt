@@ -30,7 +30,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
     open operator fun <T, S:T, E:Expression<S>> set(column: Column<T>, value: E) = update<T, S>(column, value)
 
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {
-        column.getRealColumnsWithVales(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
+        column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
     }
 
     open fun <T, S:T?> update(column: Column<T>, value: Expression<S>) {

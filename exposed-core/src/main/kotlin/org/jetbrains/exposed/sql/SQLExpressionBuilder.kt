@@ -135,9 +135,9 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to some [t] value. */
     infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> {
         // For the composite column, create "EqOps" for each real column and combine it using "and" operator
-        return this.getRealColumnsWithVales(t).entries
-                .map { e -> (e.key as Column<Any?>).eq(e.value) }
-                .reduce { acc, op -> acc.and(op) }
+        return this.getRealColumnsWithValues(t).entries
+            .map { e -> (e.key as Column<Any?>).eq(e.value) }
+            .compoundAnd()
     }
 
     /** Checks if this expression is equals to some [other] expression. */
