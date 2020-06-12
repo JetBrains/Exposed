@@ -42,7 +42,7 @@ abstract class BiCompositeColumn<C1, C2, T>(
 
     override fun getRealColumns(): List<Column<*>> = listOf(column1, column2)
 
-    override fun getRealColumnsWithVales(compositeValue: T): Map<Column<*>, Any?> {
+    override fun getRealColumnsWithValues(compositeValue: T): Map<Column<*>, Any?> {
         val (v1, v2) = transformFromValue(compositeValue)
         return mapOf(column1 to v1, column2 to v2)
     }
