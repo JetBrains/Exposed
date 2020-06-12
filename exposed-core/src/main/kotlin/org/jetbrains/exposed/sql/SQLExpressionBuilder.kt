@@ -132,6 +132,14 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to some [t] value. */
     infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = if (t == null) isNull() else EqOp(this, wrap(t))
 
+    /** Checks if this expression is equals to some [t] value. */
+    infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> {
+        // For the composite column, create "EqOps" for each real column and combine it using "and" operator
+        return this.getRealColumnsWithVales(t).entries
+                .map { e -> (e.key as Column<Any?>).eq(e.value) }
+                .reduce { acc, op -> acc.and(op) }
+    }
+
     /** Checks if this expression is equals to some [other] expression. */
     infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): EqOp = EqOp(this, other)
 

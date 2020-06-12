@@ -84,7 +84,13 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
         reference.setValue(o, desc, refValue)
     }
+
     operator fun <T> Column<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = lookup()
+
+    operator fun <T> CompositeColumn<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
+        val values = this.getRealColumns().associateWith { it.lookup() }
+        return this.restoreValueFromParts(values)
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
@@ -116,6 +122,16 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
             }
             writeValues[this as Column<Any?>] = value
         }
+    }
+
+    operator fun <T> CompositeColumn<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+        val composite = this
+        doWithEntity(o) {
+            composite.getRealColumnsWithVales(value).forEach {
+                (it.key as Column<Any?>).setValue(o, desc, it.value)
+            }
+        }
+
     }
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
@@ -187,4 +203,10 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         // clear write values
         writeValues.clear()
     }
+
+    /**
+     * Allows to invoke extension functions defined in [Entity] class from itself
+     */
+    private fun doWithEntity(o: Entity<ID>, receiver : Entity<ID>.() -> Unit) = o.receiver()
+
 }
