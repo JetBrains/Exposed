@@ -13,6 +13,12 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
 
+    override fun ubyteType(): String = "TINYINT UNSIGNED"
+
+    override fun ushortType(): String = "SMALLINT UNSIGNED"
+
+    override fun uintegerType(): String = "INT UNSIGNED"
+
     override fun ulongType(): String = "BIGINT UNSIGNED"
 }
 

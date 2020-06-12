@@ -495,6 +495,54 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @ExperimentalUnsignedTypes
+    @Test fun testUByteColumnType() {
+        val UbyteTable = object: Table("ubyteTable") {
+            val ubyte = ubyte("ubyte")
+        }
+
+        withTables(UbyteTable){
+            UbyteTable.insert {
+                it[ubyte] = 123u
+            }
+            val result = UbyteTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UbyteTable.ubyte])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test fun testUshortColumnType() {
+        val UshortTable = object: Table("ushortTable") {
+            val ushort = ushort("ushort")
+        }
+
+        withTables(UshortTable){
+            UshortTable.insert {
+                it[ushort] = 123u
+            }
+            val result = UshortTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UshortTable.ushort])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test fun testUintColumnType() {
+        val UintTable = object: Table("uintTable") {
+            val uint = uinteger("uint")
+        }
+
+        withTables(UintTable){
+            UintTable.insert {
+                it[uint] = 123u
+            }
+            val result = UintTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UintTable.uint])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
     @Test fun testUlongColumnType() {
         val UlongTable = object: Table("ulongTable") {
             val ulong = ulong("ulong")

@@ -18,11 +18,20 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 1-byte integers. */
     open fun byteType(): String = "TINYINT"
 
+    /** Numeric type for storing 1-byte unsigned integers. */
+    open fun ubyteType(): String = "TINYINT"
+
     /** Numeric type for storing 2-byte integers. */
     open fun shortType(): String = "SMALLINT"
 
+    /** Numeric type for storing 2-byte unsigned integers. */
+    open fun ushortType(): String = "SMALLINT"
+
     /** Numeric type for storing 4-byte integers. */
     open fun integerType(): String = "INT"
+
+    /** Numeric type for storing 4-byte unsigned integers. */
+    open fun uintegerType(): String = "INT"
 
     /** Numeric type for storing 4-byte integers, marked as auto-increment. */
     open fun integerAutoincType(): String = "INT AUTO_INCREMENT"
