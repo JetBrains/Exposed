@@ -11,7 +11,10 @@ fun Project.setupDialectTest(dialect: String) {
         applyPluginSafely("com.avast.gradle.docker-compose")
         val dialectTest = tasks.create("exposedDialectTestWithDocker", Test::class) {
             group = "verification"
-            systemProperties["exposed.test.dialects"] = dialect
+            systemProperties["exposed.test.dialects"] = when (dialect) {
+                "mysql8" -> "mysql"
+                else -> dialect
+            }
 
             doFirst {
                 _dockerCompose {
