@@ -24,6 +24,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     }
 
     override fun uuidType(): String = "UUID"
+    override fun dateTimeType(): String = "DATETIME(9)"
 }
 
 internal object H2FunctionProvider : FunctionProvider() {

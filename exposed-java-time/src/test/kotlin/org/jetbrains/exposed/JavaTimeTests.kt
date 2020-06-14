@@ -8,10 +8,8 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.*
+import java.time.format.DateTimeFormatter
 import java.time.temporal.Temporal
 import kotlin.test.assertEquals
 
@@ -54,6 +52,12 @@ fun <T:Temporal> assertEqualDateTime(d1: T?, d2: T?) {
             assertEquals(d1.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000, d2.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
         d1 is Instant && d2 is Instant && (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
             assertEquals(d1.toEpochMilli() / 1000, d2.toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
+        d1 is Instant && d2 is Instant -> assertEquals(d1.toEpochMilli(), d2.toEpochMilli(),  "Failed on ${currentDialectTest.name}")
+        d1 is LocalDateTime && d2 is LocalDateTime -> {
+            val d1Millis = Instant.from(d1.atZone(ZoneId.systemDefault())).toEpochMilli()
+            val d2Millis = Instant.from(d2.atZone(ZoneId.systemDefault())).toEpochMilli()
+            assertEquals(d1Millis, d2Millis, "Failed on ${currentDialectTest.name}")
+        }
         else -> assertEquals(d1, d2,   "Failed on ${currentDialectTest.name}")
     }
 }
