@@ -25,10 +25,6 @@ class MariaDBDialect : MysqlDialect() {
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    override fun createIndex(index: Index): String {
-        return super.createIndex(index)
-    }
-
     companion object {
         /** MariaDB dialect name */
         const val dialectName: String = "mariadb"
