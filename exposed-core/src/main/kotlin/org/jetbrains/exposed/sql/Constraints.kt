@@ -163,7 +163,9 @@ data class Index(
     /** Whether the index in unique or not. */
     val unique: Boolean,
     /** Optional custom name for the index. */
-    val customName: String? = null
+    val customName: String? = null,
+    /** Optional custom index type (e.g, BTREE or HASH) */
+    val indexType: String? = null
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table

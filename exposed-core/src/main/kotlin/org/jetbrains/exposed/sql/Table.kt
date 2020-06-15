@@ -917,9 +917,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param customIndexName Name of the index.
      * @param columns Columns that compose the index.
      * @param isUnique Whether the index is unique or not.
+     * @param indexType A custom index type (e.g., "BTREE" or "HASH").
      */
-    fun index(customIndexName: String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
-        _indices.add(Index(columns.toList(), isUnique, customIndexName))
+    fun index(customIndexName: String? = null, isUnique: Boolean = false, vararg columns: Column<*>, indexType: String? = null) {
+        _indices.add(Index(columns.toList(), isUnique, customIndexName, indexType = indexType))
     }
 
     /**

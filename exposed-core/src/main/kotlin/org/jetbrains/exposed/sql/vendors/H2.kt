@@ -146,6 +146,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
             return ""
         }
+        if (index.indexType != null) {
+            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            return ""
+        }
         return super.createIndex(index)
     }
 
