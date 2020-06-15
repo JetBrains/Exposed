@@ -34,7 +34,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byNameHash = index("test_table_by_name", "HASH", name)
+            val byNameHash = index("test_table_by_name", /* isUnique = */ false, name, indexType = "HASH")
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
