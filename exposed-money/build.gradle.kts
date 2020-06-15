@@ -21,10 +21,10 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testImplementation("mysql", "mysql-connector-mxj", "5.0.12")
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
     testImplementation("com.h2database", "h2", "1.4.199")
     testImplementation("org.javamoney", "moneta", "1.3")
+    testRuntimeOnly("org.testcontainers", "testcontainers", "1.14.3")
 
     when (dialect) {
         "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
