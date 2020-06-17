@@ -28,6 +28,23 @@ interface FieldSet {
     val source: ColumnSet
     /** Returns the field of this field set. */
     val fields: List<Expression<*>>
+
+    /**
+     * Returns all real fields, unrolling composite [CompositeColumn] if present
+     */
+    val realFields: List<Expression<*>>
+        get() {
+            val unrolled = ArrayList<Expression<*>>(fields.size)
+
+            fields.forEach {
+                if (it is CompositeColumn<*>) {
+                    unrolled.addAll(it.getRealColumns())
+                } else unrolled.add(it)
+            }
+
+            return unrolled
+        }
+
 }
 
 /**
@@ -334,6 +351,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).also { _columns.addColumn(it) }
 
+    fun <T : CompositeColumn<*>> registerCompositeColumn(column: T) : T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
+
     /**
      * Replaces the specified [oldColumn] with the specified [newColumn] in the table.
      * Mostly used internally by the library.
@@ -470,11 +489,23 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 1-byte integers. */
     fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
 
+    /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers. */
+    @ExperimentalUnsignedTypes
+    fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType())
+
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
 
+    /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers. */
+    @ExperimentalUnsignedTypes
+    fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType())
+
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
+
+    /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers. */
+    @ExperimentalUnsignedTypes
+    fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
@@ -521,8 +552,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Creates a character column, with the specified [name], for storing strings of arbitrary length using the specified [collate] type.
      * If no collate type is specified then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (by performance and memory reasons)
+     * what means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
-    fun text(name: String, collate: String? = null): Column<String> = registerColumn(name, TextColumnType(collate))
+    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> = registerColumn(name, TextColumnType(collate, eagerLoading))
 
     // Binary columns
 
@@ -621,6 +656,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T : Any> Column<T>.default(defaultValue: T): Column<T> = apply {
         dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
         defaultValueFun = { defaultValue }
+    }
+
+    /** Sets the default value for this column in the database side. */
+    fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
+        with(this@Table) {
+            this@default.getRealColumnsWithValues(defaultValue).forEach {
+                (it.key as Column<Any>).default(it.value as Any)
+            }
+        }
     }
 
     /** Sets the default value for this column in the database side. */
@@ -873,9 +917,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param customIndexName Name of the index.
      * @param columns Columns that compose the index.
      * @param isUnique Whether the index is unique or not.
+     * @param indexType A custom index type (e.g., "BTREE" or "HASH").
      */
-    fun index(customIndexName: String? = null, isUnique: Boolean = false, vararg columns: Column<*>) {
-        _indices.add(Index(columns.toList(), isUnique, customIndexName))
+    fun index(customIndexName: String? = null, isUnique: Boolean = false, vararg columns: Column<*>, indexType: String? = null) {
+        _indices.add(Index(columns.toList(), isUnique, customIndexName, indexType = indexType))
     }
 
     /**
@@ -959,7 +1004,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         is AutoIncColumnType -> this
         is ColumnType -> {
             val autoIncSequence = idSeqName ?: "${tableName}_${name}_seq"
-            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, autoIncSequence)))
+            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType as ColumnType, autoIncSequence)))
         }
         else -> error("Unsupported column type for auto-increment $columnType")
     }

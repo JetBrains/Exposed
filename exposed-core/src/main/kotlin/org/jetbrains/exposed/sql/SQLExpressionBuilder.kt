@@ -132,6 +132,14 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to some [t] value. */
     infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = if (t == null) isNull() else EqOp(this, wrap(t))
 
+    /** Checks if this expression is equals to some [t] value. */
+    infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> {
+        // For the composite column, create "EqOps" for each real column and combine it using "and" operator
+        return this.getRealColumnsWithValues(t).entries
+            .map { e -> (e.key as Column<Any?>).eq(e.value) }
+            .compoundAnd()
+    }
+
     /** Checks if this expression is equals to some [other] expression. */
     infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): EqOp = EqOp(this, other)
 
@@ -260,11 +268,10 @@ interface ISqlExpressionBuilder {
     // String Functions
 
     /** Concatenates the text representations of all the [expr]. */
-    fun <T : String?> concat(vararg expr: Expression<T>): Concat<T> = Concat("", *expr)
+    fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
     /** Concatenates the text representations of all the [expr] using the specified [separator]. */
-    fun <T : String?> concat(separator: String = "", expr: List<Expression<T>>): Concat<T> = Concat(separator, *expr.toTypedArray())
-
+    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, *expr.toTypedArray())
 
     // Pattern Matching
 
@@ -356,8 +363,11 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
         is Byte -> byteParam(value)
+        is UByte -> ubyteParam(value)
         is Short -> shortParam(value)
+        is UShort -> ushortParam(value)
         is Int -> intParam(value)
+        is UInt -> uintParam(value)
         is Long -> longParam(value)
         is ULong -> ulongParam(value)
         is Float -> floatParam(value)
@@ -372,8 +382,11 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)
+        is UByte -> ubyteLiteral(value)
         is Short -> shortLiteral(value)
+        is UShort -> ushortLiteral(value)
         is Int -> intLiteral(value)
+        is UInt -> uintLiteral(value)
         is Long -> longLiteral(value)
         is ULong -> ulongLiteral(value)
         is Float -> floatLiteral(value)

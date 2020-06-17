@@ -18,11 +18,20 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 1-byte integers. */
     open fun byteType(): String = "TINYINT"
 
+    /** Numeric type for storing 1-byte unsigned integers. */
+    open fun ubyteType(): String = "TINYINT"
+
     /** Numeric type for storing 2-byte integers. */
     open fun shortType(): String = "SMALLINT"
 
+    /** Numeric type for storing 2-byte unsigned integers. */
+    open fun ushortType(): String = "SMALLINT"
+
     /** Numeric type for storing 4-byte integers. */
     open fun integerType(): String = "INT"
+
+    /** Numeric type for storing 4-byte unsigned integers. */
+    open fun uintegerType(): String = "INT"
 
     /** Numeric type for storing 4-byte integers, marked as auto-increment. */
     open fun integerAutoincType(): String = "INT AUTO_INCREMENT"
@@ -146,7 +155,7 @@ abstract class FunctionProvider {
      * @param queryBuilder Query builder to append the SQL function to.
      * @param expr String expressions to concatenate.
      */
-    open fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>): Unit = queryBuilder {
+    open fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>): Unit = queryBuilder {
         if (separator == "") {
             append("CONCAT(")
         } else {
@@ -699,10 +708,15 @@ abstract class VendorDialect(
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return if (index.unique) {
             "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
+        } else if (index.indexType != null) {
+            return createIndexWithType(name = quotedIndexName, table = quotedTableName, columns = columnsList, type = index.indexType)
         } else {
             "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
         }
+    }
 
+    protected open fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE INDEX $name ON $table $columns USING $type"
     }
 
     override fun dropIndex(tableName: String, indexName: String): String {

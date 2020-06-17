@@ -1,3 +1,24 @@
+# 0.25.2
+Bug Fixes:
+*  Upgrading from 0.17.7 to 0.25.1 leading to overload resolution ambiguity, created `Database.connectPool` ([#938](https://github.com/JetBrains/Exposed/issues/938)
+
+# 0.25.1
+Features:
+* UNSIGNED LONG column support (PR by [kenta.koyama](https://github.com/doyaaaaaken))
+* `shouldReturnGeneratedValues` param added to batchInsert function and statement. Useful when `reWriteBatchedInserts` enabled.
+* Eager loading for text columns / H2: column of 'text' type requires open transaction even if it was already read successfully ([#848](https://github.com/JetBrains/Exposed/issues/848))
+  
+  
+Bug Fixes:
+* Problem with suspended transaction functions and spring transaction manager
+* Using blocking transactions after a suspending transaction causes a "Connection is closed" exception
+* SQLite driver name does not recognize correctly ([#905](https://github.com/JetBrains/Exposed/issues/905))
+* limit(0) doesn't work ([#845](https://github.com/JetBrains/Exposed/issues/845)) 
+* Ignore missing fields instead of crashing
+* DatabaseDialect.modifyColumn doesn't work for H2 ([#911](https://github.com/JetBrains/Exposed/issues/911)) 
+* ClassCastException when using selectBatched with integer autoinc table (PR by [DarkXanteR](https://github.com/DarkXanteR))   
+* ResultSet & Statement leaks in simple query ([#871](https://github.com/JetBrains/Exposed/issues/871))  / Possible fix for not closed inputStreams. 
+
 # 0.24.1
 Infrastructure:
 * Kotlin 1.3.72

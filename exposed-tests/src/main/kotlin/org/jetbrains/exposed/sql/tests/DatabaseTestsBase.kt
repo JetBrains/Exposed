@@ -133,12 +133,12 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach {
-            withDb(it) {
+    fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
+        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+            withDb(testDB) {
                 SchemaUtils.create(*tables)
                 try {
-                    statement()
+                    statement(testDB)
                     commit() // Need commit to persist data before drop tables
                 } finally {
                     SchemaUtils.drop(*tables)
@@ -164,7 +164,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (vararg tables: Table, statement: Transaction.() -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables (vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
     fun withSchemas (vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
 

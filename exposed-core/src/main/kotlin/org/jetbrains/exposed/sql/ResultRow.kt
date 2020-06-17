@@ -50,6 +50,11 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? {
+        if (c is CompositeColumn<T>) {
+            val rawParts = c.getRealColumns().associateWith { getRaw(it) }
+            return c.restoreValueFromParts(rawParts)
+        }
+
         val index = fieldIndex[c]
             ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
             ?: error("$c is not in record set")

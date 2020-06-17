@@ -6,11 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
+    override fun ubyteType(): String = "SMALLINT"
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
+    override fun uintegerType(): String = "NUMBER(13)"
     override fun longType(): String = "NUMBER(19)"
-    override fun ulongType(): String = "UNSIGNED BIGINT"
     override fun longAutoincType(): String = "NUMBER(19)"
+    override fun ulongType(): String = "NUMBER(20)"
     override fun textType(): String = "CLOB"
     override fun binaryType(): String = "BLOB"
     override fun binaryType(length: Int): String {
@@ -53,10 +55,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         prefix: String
     ): Unit = super.substring(expr, start, length, builder, "SUBSTR")
 
-    override fun <T : String?> concat(
+    override fun concat(
         separator: String,
         queryBuilder: QueryBuilder,
-        vararg expr: Expression<T>
+        vararg expr: Expression<*>
     ): Unit = queryBuilder {
         if (separator == "") {
             expr.toList().appendTo(separator = " || ") { +it }

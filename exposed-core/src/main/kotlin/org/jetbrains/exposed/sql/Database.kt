@@ -95,7 +95,14 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
+        @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
         fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        ): Database {
+            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
+        }
+
+        fun connectPool(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
                     manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)

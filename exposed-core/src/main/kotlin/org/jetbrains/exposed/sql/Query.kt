@@ -98,7 +98,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
                 if (distinct) {
                     append("DISTINCT ")
                 }
-                set.fields.appendTo { +it }
+                set.realFields.appendTo { +it }
             }
             append(" FROM ")
             set.source.describe(transaction, this)
@@ -193,11 +193,13 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
     private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
         private var hasNext: Boolean? = null
 
+        private val fields = set.realFields
+
         override operator fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
-            return ResultRow.create(rs, set.fields)
+            return ResultRow.create(rs, fields)
         }
 
         override fun hasNext(): Boolean {

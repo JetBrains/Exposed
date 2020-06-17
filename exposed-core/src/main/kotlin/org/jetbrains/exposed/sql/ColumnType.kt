@@ -191,6 +191,34 @@ class ByteColumnType : ColumnType() {
 }
 
 /**
+ * Numeric column for storing unsigned 1-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UByteColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
+
+    override fun valueFromDB(value: Any): UByte {
+        return when (value) {
+            is UByte -> value
+            is Byte -> value.takeIf { it >= 0 }?.toUByte()
+            is Number -> value.toByte().takeIf { it >= 0 }?.toUByte()
+            is String -> value.toUByte()
+            else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UByte: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UByte) value.toByte() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UByte) value.toByte() else value
+        return super.notNullValueToDB(v)
+    }
+}
+
+/**
  * Numeric column for storing 2-byte integers.
  */
 class ShortColumnType : ColumnType() {
@@ -204,6 +232,33 @@ class ShortColumnType : ColumnType() {
 }
 
 /**
+ * Numeric column for storing unsigned 2-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UShortColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
+    override fun valueFromDB(value: Any): UShort {
+        return when (value) {
+            is UShort -> value
+            is Short -> value.takeIf { it >= 0 }?.toUShort()
+            is Number -> value.toShort().takeIf { it >= 0 }?.toUShort()
+            is String -> value.toUShort()
+            else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UShort: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UShort) value.toShort() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UShort) value.toShort() else value
+        return super.notNullValueToDB(v)
+    }
+}
+
+/**
  * Numeric column for storing 4-byte integers.
  */
 class IntegerColumnType : ColumnType() {
@@ -213,6 +268,33 @@ class IntegerColumnType : ColumnType() {
         is Number -> value.toInt()
         is String -> value.toInt()
         else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+    }
+}
+
+/**
+ * Numeric column for storing unsigned 4-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UIntegerColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
+    override fun valueFromDB(value: Any): UInt {
+        return when (value) {
+            is UInt -> value
+            is Int -> value.takeIf { it >= 0 }?.toUInt()
+            is Number -> value.toInt().takeIf { it >= 0 }?.toUInt()
+            is String -> value.toUInt()
+            else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UInt: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UInt) value.toInt() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UInt) value.toInt() else value
+        return super.notNullValueToDB(v)
     }
 }
 
@@ -467,13 +549,22 @@ open class VarCharColumnType(
 
 /**
  * Character column for storing strings of arbitrary length using the specified [collate] type.
+ * [eagerLoading] means what content will be loaded immediately when data loaded from database.
  */
-open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
+open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
     override fun sqlType(): String = buildString {
         append(currentDialect.dataTypeProvider.textType())
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        val value = super.readObject(rs, index)
+        return if (eagerLoading && value != null)
+            valueFromDB(value)
+        else
+            value
     }
 }
 
@@ -485,9 +576,11 @@ open class TextColumnType(collate: String? = null) : StringColumnType(collate) {
 open class BasicBinaryColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
+    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getBytes(index)
+
     override fun valueFromDB(value: Any): Any = when (value) {
-        is Blob -> value.binaryStream.readBytes()
-        is InputStream -> value.readBytes()
+        is Blob -> value.binaryStream.use { it.readBytes() }
+        is InputStream -> value.use { it.readBytes() }
         else -> value
     }
 
@@ -533,8 +626,8 @@ class BlobColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): ExposedBlob = when (value) {
         is ExposedBlob -> value
-        is Blob -> ExposedBlob(value.binaryStream.readBytes())
-        is InputStream -> ExposedBlob(value.readBytes())
+        is Blob -> ExposedBlob(value.binaryStream.use { it.readBytes() })
+        is InputStream -> ExposedBlob(value.use { it.readBytes() })
         is ByteArray -> ExposedBlob(value)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
@@ -553,7 +646,7 @@ class BlobColumnType : ColumnType() {
         return if (currentDialect.dataTypeProvider.blobAsStream) {
             rs.getBytes(index)?.let(::ExposedBlob)
         } else {
-            rs.getBlob(index)?.binaryStream?.readBytes()?.let(::ExposedBlob)
+            rs.getBlob(index)?.binaryStream?.use { ExposedBlob(it.readBytes()) }
         }
     }
 

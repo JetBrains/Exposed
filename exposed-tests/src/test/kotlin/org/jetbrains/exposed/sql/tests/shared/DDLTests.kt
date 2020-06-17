@@ -71,11 +71,20 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun unnamedTableWithQuotesSQL() {
-        withTables(UnnamedTable) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = *arrayOf(UnnamedTable)) {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
             assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
                     "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} PRIMARY KEY, $q${"name".inProperCase()}$q VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
+        }
+    }
+
+    @Test fun unnamedTableWithQuotesSQLInSQLite() {
+        withDb(TestDB.SQLITE) {
+            val q = db.identifierManager.quoteString
+            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
+            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
+                    "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} NOT NULL PRIMARY KEY, $q${"name".inProperCase()}$q VARCHAR(42) NOT NULL)", UnnamedTable.ddl)
         }
     }
 
@@ -117,11 +126,37 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = *arrayOf(TestTable)) {
             val q = db.identifierManager.quoteString
-            assertEquals("CREATE TABLE " + addIfNotExistsIfSupported() + "${"with_different_column_types".inProperCase()} " +
-                    "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}, $q${"name".inProperCase()}$q VARCHAR(42), ${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL, " +
-                    "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q))", TestTable.ddl)
+            val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
+            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"
+            val nameDescription = "$q${"name".inProperCase()}$q VARCHAR(42)"
+            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
+            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+
+            assertEquals( "$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", TestTable.ddl)
+        }
+    }
+
+    @Test fun tableWithDifferentColumnTypesInSQLite() {
+        val TestTable = object : Table("with_different_column_types") {
+            val id = integer("id")
+            val name = varchar("name", 42)
+            val age = integer("age").nullable()
+
+            override val primaryKey = PrimaryKey(id, name)
+        }
+
+        withDb(TestDB.SQLITE) {
+            val q = db.identifierManager.quoteString
+
+            val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
+            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} NOT NULL"
+            val nameDescription = "$q${"name".inProperCase()}$q VARCHAR(42) NOT NULL"
+            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
+            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+
+            assertEquals("$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", TestTable.ddl)
         }
     }
 
@@ -491,6 +526,54 @@ class DDLTests : DatabaseTestsBase() {
             val result = BoolTable.selectAll().toList()
             assertEquals(1, result.size)
             assertEquals(true, result.single()[BoolTable.bool])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test fun testUByteColumnType() {
+        val UbyteTable = object: Table("ubyteTable") {
+            val ubyte = ubyte("ubyte")
+        }
+
+        withTables(UbyteTable){
+            UbyteTable.insert {
+                it[ubyte] = 123u
+            }
+            val result = UbyteTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UbyteTable.ubyte])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test fun testUshortColumnType() {
+        val UshortTable = object: Table("ushortTable") {
+            val ushort = ushort("ushort")
+        }
+
+        withTables(UshortTable){
+            UshortTable.insert {
+                it[ushort] = 123u
+            }
+            val result = UshortTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UshortTable.ushort])
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test fun testUintColumnType() {
+        val UintTable = object: Table("uintTable") {
+            val uint = uinteger("uint")
+        }
+
+        withTables(UintTable){
+            UintTable.insert {
+                it[uint] = 123u
+            }
+            val result = UintTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(123u, result.single()[UintTable.uint])
         }
     }
 

@@ -20,6 +20,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
+    override fun ubyteType(): String = "SMALLINT"
 }
 
 internal object PostgreSQLFunctionProvider : FunctionProvider() {
@@ -222,6 +223,10 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
+
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE INDEX $name ON $table USING $type $columns"
+    }
 
     companion object {
         /** PostgreSQL dialect name */

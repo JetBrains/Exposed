@@ -24,6 +24,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     }
 
     override fun uuidType(): String = "UUID"
+    override fun dateTimeType(): String = "DATETIME(9)"
 }
 
 internal object H2FunctionProvider : FunctionProvider() {
@@ -107,17 +108,17 @@ internal object H2FunctionProvider : FunctionProvider() {
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
-        if (!transaction.isMySQLMode) {
-            transaction.throwUnsupportedException("REPLACE is only supported in MySQL compatibility mode for H2")
+        if (data.isEmpty()) {
+            return ""
         }
 
+        val columns = data.map { it.first }
+
         val builder = QueryBuilder(true)
-        data.appendTo(builder) { registerArgument(it.first.columnType, it.second) }
-        val values = builder.toString()
 
-        val preparedValues = data.map { transaction.identity(it.first) to it.first.columnType.valueToString(it.second) }
+        val sql = data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
 
-        return "INSERT INTO ${transaction.identity(table)} (${preparedValues.joinToString { it.first }}) VALUES ($values) ON DUPLICATE KEY UPDATE ${preparedValues.joinToString { "${it.first}=${it.second}" }}"
+        return super.insert(false, table, columns, sql, transaction).replaceFirst("INSERT", "MERGE")
     }
 }
 
@@ -145,10 +146,17 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
             return ""
         }
+        if (index.indexType != null) {
+            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            return ""
+        }
         return super.createIndex(index)
     }
 
     override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
+
+    override fun modifyColumn(column: Column<*>): String =
+        super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 

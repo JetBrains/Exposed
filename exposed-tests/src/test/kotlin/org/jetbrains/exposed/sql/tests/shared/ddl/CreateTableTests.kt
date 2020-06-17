@@ -294,6 +294,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun `test create table with same name in different schemas`() {
+        val one = Schema("one")
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             addLogger(StdOutSqlLogger)
             assertEquals(false, OneTable.exists())
@@ -302,19 +303,14 @@ class CreateTableTests : DatabaseTestsBase() {
                 SchemaUtils.create(OneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
-                if (currentDialectTest.supportsIfNotExists)
-                    exec("CREATE SCHEMA IF NOT EXISTS ${"one".inProperCase()}")
-                else
-                    exec("CREATE SCHEMA ${"one".inProperCase()}")
+                SchemaUtils.createSchema(one)
                 SchemaUtils.create(OneOneTable)
                 println("${currentDialect.name}: ${currentDialectTest.allTablesNames()}")
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
             } finally {
                 SchemaUtils.drop(OneTable, OneOneTable)
-                try {
-                    exec("DROP SCHEMA ${"one".inProperCase()}")
-                } catch (e: Exception) {}
+                SchemaUtils.dropSchema(one, cascade = true)
             }
         }
     }

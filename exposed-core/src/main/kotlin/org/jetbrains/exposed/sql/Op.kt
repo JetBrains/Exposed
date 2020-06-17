@@ -49,6 +49,12 @@ class NotOp<T>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("NOT (", expr, ")") }
 }
 
+
+/**
+ * Marker interface which indicates that expression should be wrapped with braces when used in compound operators
+ */
+interface ComplexExpression
+
 /**
  * Represent a logical operator that performs an operation between all the specified [expressions].
  * This is the base class for the `and` and `or` operators:
@@ -59,7 +65,7 @@ class NotOp<T>(
 abstract class CompoundBooleanOp<T : CompoundBooleanOp<T>>(
     private val operator: String,
     internal val expressions: List<Expression<Boolean>>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         expressions.appendTo(this, separator = operator) { appendExpression(it) }
     }
@@ -119,7 +125,7 @@ abstract class ComparisonOp(
     val expr2: Expression<*>,
     /** Returns the symbol of the comparison operation. */
     val opSign: String
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         appendExpression(expr1)
         append(" $opSign ")
@@ -167,7 +173,7 @@ class Between(
     val from: LiteralOp<*>,
     /** Returns the upper limit of the range to check against. */
     val to: LiteralOp<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " BETWEEN ", from, " AND ", to) }
 }
 
@@ -177,7 +183,7 @@ class Between(
 class IsNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NULL") }
 }
 
@@ -187,7 +193,7 @@ class IsNullOp(
 class IsNotNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
@@ -283,7 +289,7 @@ class RegexpOp<T : String?>(
     val expr2: Expression<String>,
     /** Returns `true` if the regular expression is case sensitive, `false` otherwise. */
     val caseSensitive: Boolean
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
     }
@@ -334,7 +340,7 @@ class InSubQueryOp<T>(
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: Query
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " IN (")
         query.prepareSQL(this)
@@ -350,7 +356,7 @@ class NotInSubQueryOp<T>(
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: Query
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " NOT IN (")
         query.prepareSQL(this)
@@ -371,7 +377,7 @@ class InListOrNotInListOp<T>(
     val list: Iterable<T>,
     /** Returns `true` if the check is inverted, `false` otherwise. */
     val isInList: Boolean = true
-) : Op<Boolean>() {
+) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         list.iterator().let { i ->
             if (!i.hasNext()) {
@@ -424,11 +430,23 @@ fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumn
 /** Returns the specified [value] as a byte literal. */
 fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
 
+/** Returns the specified [value] as a unsigned byte literal. */
+@ExperimentalUnsignedTypes
+fun ubyteLiteral(value: UByte): LiteralOp<UByte> = LiteralOp(UByteColumnType(), value)
+
 /** Returns the specified [value] as a short literal. */
 fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
 
+/** Returns the specified [value] as a unsigned short literal. */
+@ExperimentalUnsignedTypes
+fun ushortLiteral(value: UShort): LiteralOp<UShort> = LiteralOp(UShortColumnType(), value)
+
 /** Returns the specified [value] as an int literal. */
 fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), value)
+
+/** Returns the specified [value] as a unsigned int literal. */
+@ExperimentalUnsignedTypes
+fun uintLiteral(value: UInt): LiteralOp<UInt> = LiteralOp(UIntegerColumnType(), value)
 
 /** Returns the specified [value] as a long literal. */
 fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
@@ -470,11 +488,23 @@ fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, Bo
 /** Returns the specified [value] as a byte query parameter. */
 fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())
 
+/** Returns the specified [value] as a unsigned byte query parameter. */
+@ExperimentalUnsignedTypes
+fun ubyteParam(value: UByte): Expression<UByte> = QueryParameter(value, UByteColumnType())
+
 /** Returns the specified [value] as a short query parameter. */
 fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())
 
+/** Returns the specified [value] as a unsigned short query parameter. */
+@ExperimentalUnsignedTypes
+fun ushortParam(value: UShort): Expression<UShort> = QueryParameter(value, UShortColumnType())
+
 /** Returns the specified [value] as an int query parameter. */
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
+
+/** Returns the specified [value] as a unsigned int query parameter. */
+@ExperimentalUnsignedTypes
+fun uintParam(value: UInt): Expression<UInt> = QueryParameter(value, UIntegerColumnType())
 
 /** Returns the specified [value] as a long query parameter. */
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
@@ -508,7 +538,7 @@ class NoOpConversion<T, S>(
 }
 
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
-    if (expr is CompoundBooleanOp<*>) {
+    if (expr is ComplexExpression) {
         append("(", expr, ")")
     } else {
         append(expr)

@@ -26,6 +26,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         _readValues!!
     }
 
+    internal fun isNewEntity(): Boolean {
+        val cache = TransactionManager.current().entityCache
+        return cache.inserts[klass.table]?.contains(this) ?: false
+    }
+
     /**
      * Updates entity fields from database.
      * Override function to refresh some additional state if any.
@@ -35,7 +40,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
      */
     open fun refresh(flush: Boolean = false) {
         val cache = TransactionManager.current().entityCache
-        val isNewEntity = id._value == null
+        val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
             flush -> flush()
@@ -79,7 +84,13 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
         reference.setValue(o, desc, refValue)
     }
+
     operator fun <T> Column<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = lookup()
+
+    operator fun <T> CompositeColumn<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
+        val values = this.getRealColumns().associateWith { it.lookup() }
+        return this.restoreValueFromParts(values)
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
@@ -113,6 +124,14 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
+    operator fun <T> CompositeColumn<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+        with(o) {
+            this@setValue.getRealColumnsWithValues(value).forEach {
+                (it.key as Column<Any?>).setValue(o, desc, it.value)
+            }
+        }
+    }
+
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
             toReal(column.getValue(o, desc))
 
@@ -139,7 +158,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
-        if (id._value == null) {
+        if (isNewEntity()) {
             TransactionManager.current().entityCache.flushInserts(this.klass.table)
             return true
         }

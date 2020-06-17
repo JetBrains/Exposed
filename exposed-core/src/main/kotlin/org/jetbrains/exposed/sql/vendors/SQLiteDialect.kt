@@ -27,7 +27,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         prefix: String
     ): Unit = super.substring(expr, start, length, builder, "substr")
 
-    override fun <T : String?> concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<T>) = queryBuilder {
+    override fun concat(separator: String, queryBuilder: QueryBuilder, vararg expr: Expression<*>) = queryBuilder {
         if (separator == "") {
             expr.toList().appendTo(this, separator = " || ") { +it }
         } else {
@@ -137,6 +137,10 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
+        if (index.indexType != null) {
+            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            return ""
+        }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
         return if (index.unique) {
             originalCreateIndex.replace("CREATE INDEX", "CREATE UNIQUE INDEX")

@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.*
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {

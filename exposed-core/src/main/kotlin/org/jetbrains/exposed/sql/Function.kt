@@ -83,12 +83,12 @@ class UpperCase<T : String?>(
 /**
  * Represents an SQL function that concatenates the text representations of all non-null input values from [expr], separated by [separator].
  */
-class Concat<T : String?>(
+class Concat(
     /** Returns the delimiter. */
     val separator: String,
     /** Returns the expressions being concatenated. */
-    vararg val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+    vararg val expr: Expression<*>
+) : Function<String>(VarCharColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
 }
 
@@ -276,7 +276,7 @@ class CaseWhen<T>(val value: Expression<*>?) {
     fun <R : T> Else(e: Expression<R>): Expression<R> = CaseWhenElse(this, e)
 }
 
-class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>() {
+class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("CASE ")
         if (caseWhen.value != null)

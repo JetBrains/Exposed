@@ -140,6 +140,38 @@ class EntityTests: DatabaseTestsBase() {
         }
     }
 
+    @Test fun testTextFieldOutsideTheTransaction() {
+        val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
+        withTables(Humans) { testDb ->
+            val y1 = Human.new {
+                h = "foo"
+            }
+
+            flushCache()
+            y1.refresh(flush = false)
+
+            objectsToVerify.add(y1 to testDb)
+        }
+        objectsToVerify.forEach { (human, testDb) ->
+            assertEquals("foo", human.h, "Failed on ${testDb.name}" )
+        }
+    }
+
+    @Test fun testNewWithIdAndRefresh() {
+        val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
+        withTables(listOf(TestDB.SQLSERVER), Humans) { testDb ->
+            val x = Human.new(2) {
+                h = "foo"
+            }
+            x.refresh(flush = true)
+            objectsToVerify.add(x to testDb)
+        }
+        objectsToVerify.forEach { (human, testDb) ->
+            assertEquals("foo", human.h, "Failed on ${testDb.name}" )
+            assertEquals(2, human.id.value, "Failed on ${testDb.name}" )
+        }
+    }
+
     internal object OneAutoFieldTable : IntIdTable("single")
     internal class SingleFieldEntity(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
@@ -312,7 +344,7 @@ class EntityTests: DatabaseTestsBase() {
 
 
     object Humans : IntIdTable("human") {
-        val h = text("h")
+        val h = text("h", eagerLoading = true)
     }
 
     object Users : IdTable<Int>("user") {
