@@ -163,14 +163,17 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testForeignKeyCreationInPostgres() {
-        val usersTable = object : IntIdTable("users") {}
+    fun testForeignKeyCreation() {
+        val usersTable = object : IntIdTable("tmpusers") {}
         val spacesTable = object : IntIdTable("spaces") {
             val userId = reference("userId", usersTable)
         }
 
-        withDb(TestDB.POSTGRESQL) {
+        withDb {
             SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
+            assertTrue(usersTable.exists())
+            assertTrue(spacesTable.exists())
+            SchemaUtils.drop(usersTable, spacesTable)
         }
     }
 
