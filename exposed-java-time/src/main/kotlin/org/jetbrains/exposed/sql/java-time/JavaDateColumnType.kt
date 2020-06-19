@@ -7,26 +7,33 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 
-private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
-private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault()) }
-private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss.SSS", Locale.ROOT).withZone(ZoneId.systemDefault())  }
+private val DEFAULT_DATE_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-d HH:mm:ss.SSS",
+        Locale.ROOT
+    ).withZone(ZoneId.systemDefault())
+}
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
-private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
+private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "yyyy-MM-d HH:mm:ss"
-    val newFormat = if(fraction in 1..9)
+    val newFormat = if (fraction in 1..9)
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
     else
         baseFormat
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
@@ -44,12 +51,14 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
         return "'${DEFAULT_DATE_STRING_FORMATTER.format(instant)}'"
     }
 
-    override fun valueFromDB(value: Any): Any = when(value) {
+    override fun valueFromDB(value: Any): Any = when (value) {
         is LocalDate -> value
         is java.sql.Date -> value.toLocalDate()
         is java.sql.Timestamp -> value.toLocalDateTime().toLocalDate()
-        is Int -> Instant.ofEpochMilli(value.toLong()).atZone(ZoneId.systemDefault()).toLocalDate() //LocalDateTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).toLocalDate()
-        is Long -> Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDate() //LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault()).toLocalDate()
+        is Int -> Instant.ofEpochMilli(value.toLong()).atZone(ZoneId.systemDefault())
+            .toLocalDate() //LocalDateTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).toLocalDate()
+        is Long -> Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault())
+            .toLocalDate() //LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault()).toLocalDate()
         is String -> when (currentDialect) {
             is SQLiteDialect -> LocalDate.parse(value)
             else -> value
@@ -68,7 +77,7 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
 }
 
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
-    override fun sqlType(): String  = currentDialect.dataTypeProvider.dateTimeType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -85,7 +94,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
-    override fun valueFromDB(value: Any): Any = when(value) {
+    override fun valueFromDB(value: Any): Any = when (value) {
         is LocalDateTime -> value
         is java.sql.Date -> value.toLocalDate().atStartOfDay()
         is java.sql.Timestamp -> value.toLocalDateTime()
@@ -108,7 +117,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
-    override fun sqlType(): String  = currentDialect.dataTypeProvider.dateTimeType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -121,7 +130,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
-    override fun valueFromDB(value: Any): Instant = when(value) {
+    override fun valueFromDB(value: Any): Instant = when (value) {
         is java.sql.Timestamp -> value.toInstant()
         is String -> Instant.parse(value)
         else -> valueFromDB(value.toString())
@@ -140,6 +149,42 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 
     companion object {
         internal val INSTANCE = JavaInstantColumnType()
+    }
+}
+
+class JavaDurationColumnType : ColumnType(), IDateColumnType {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val duration = when (value) {
+            is String -> return value
+            is Duration -> value
+            is Long -> Duration.ofNanos(value)!!
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${duration.toNanos()}'"
+    }
+
+    override fun valueFromDB(value: Any): Duration = when (value) {
+        is Long -> Duration.ofNanos(value)!!
+        is String -> Duration.parse(value)!!
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return rs.getLong(index)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (value is Duration) {
+            return value.toNanos()
+        }
+        return value
+    }
+
+    companion object {
+        internal val INSTANCE = JavaDurationColumnType()
     }
 }
 
@@ -163,3 +208,10 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, J
  * @param name The column name
  */
 fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
+
+/**
+ * A date column to store a duration.
+ *
+ * @param name The column name
+ */
+fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
