@@ -295,7 +295,7 @@ class CreateTableTests : DatabaseTestsBase() {
     @Test
     fun `test create table with same name in different schemas`() {
         val one = Schema("one")
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             addLogger(StdOutSqlLogger)
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
@@ -310,7 +310,8 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(true, OneOneTable.exists())
             } finally {
                 SchemaUtils.drop(OneTable, OneOneTable)
-                SchemaUtils.dropSchema(one, cascade = true)
+                val cascade = testDb != TestDB.SQLSERVER
+                SchemaUtils.dropSchema(one, cascade = cascade)
             }
         }
     }
