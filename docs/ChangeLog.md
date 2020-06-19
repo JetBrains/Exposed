@@ -1,6 +1,24 @@
-# 0.25.2
+# 0.26.1
+Infrastructure:
+* Gradle 6.5. Thanks to [KushalP](https://github.com/KushalP)
+
+Features:
+* New composite column type to create complex mappings to multiple columns. 
+* Money column type and a new `exposed-money` module. This and above were implemented by [encircled](https://github.com/encircled)   
+* Duration column type (`exposed-java-time` module only) provided by [CommanderTvis](https://github.com/CommanderTvis)
+* `Transaction.exec` functions accept list of parameters. PR by [uuf6429](https://github.com/uuf6429).   
+* [H2] Native `REPLACE` instead of `INSERT... ON DUPLICATE UPDATE` by [pilotclass](https://github.com/pilotclass). 
+* Other unsigned types: ubyte, ushort, uint added by [kenta.koyama](https://github.com/doyaaaaaken).
+* Index type support added by [ryanpbrewster](https://github.com/ryanpbrewster).
+
 Bug Fixes:
-*  Upgrading from 0.17.7 to 0.25.1 leading to overload resolution ambiguity, created `Database.connectPool` ([#938](https://github.com/JetBrains/Exposed/issues/938)
+* Upgrading from 0.17.7 to 0.25.1 leading to overload resolution ambiguity, created `Database.connectPool` ([#938](https://github.com/JetBrains/Exposed/issues/938)
+* Impossible to refresh entity created via new(id: ID?, ...) ([#925](https://github.com/JetBrains/Exposed/issues/925)), PR by [socar-bad](https://github.com/socar-brad) 
+* Concat function should accept any expression not only strings. PR by [palevomr](https://github.com/palevomr).
+* Irregular order of operands in generated CHECK constraint ([#920](https://github.com/JetBrains/Exposed/issues/920)) 
+* [SQLite] allow NOT NULL modifier for PK column. Fixed by [hichem-fazai](https://github.com/hichem-fazai). 
+* `SchemaUtils.createMissingTablesAndColumns` fails with references ([#866](https://github.com/JetBrains/Exposed/issues/866), [#934](https://github.com/JetBrains/Exposed/issues/934), [#952](https://github.com/JetBrains/Exposed/issues/952)). Fixed by [jschmid](https://github.com/jschmid).
+
 
 # 0.25.1
 Features:
