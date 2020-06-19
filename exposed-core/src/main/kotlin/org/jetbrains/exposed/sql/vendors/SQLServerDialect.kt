@@ -169,6 +169,10 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         }
     }
 
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE $type INDEX $name ON $table $columns"
+    }
+
     companion object {
         /** SQLServer dialect name */
         const val dialectName: String = "sqlserver"
