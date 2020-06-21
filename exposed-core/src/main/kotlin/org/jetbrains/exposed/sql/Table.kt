@@ -302,7 +302,9 @@ class Join(
  */
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
-    open val tableName: String = if (name.isNotEmpty()) name else this.javaClass.simpleName.removeSuffix("Table")
+    open val tableName: String = if (name.isNotEmpty()) name
+    else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
     private val _columns = mutableListOf<Column<*>>()
