@@ -19,8 +19,8 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
     MYSQL(
         connection = { "${mySQLProcess.jdbcUrl}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&useSSL=false" },
-        user = mySQLProcess.username,
-        pass = mySQLProcess.password,
+        user = "root",
+        pass = "test",
         driver = "com.mysql.jdbc.Driver",
         beforeConnection = { mySQLProcess },
         afterTestFinished = { mySQLProcess.close() }
@@ -84,9 +84,12 @@ private val postgresSQLProcess by lazy {
 internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<SpecifiedMySQLContainer>(image)
 
 private val mySQLProcess by lazy {
-    SpecifiedMySQLContainer(image = "mysql:5").withDatabaseName("testdb").withExposedPorts().apply {
-        start()
-    }
+    SpecifiedMySQLContainer(image = "mysql:5")
+            .withDatabaseName("testdb")
+            .withEnv("MYSQL_ROOT_PASSWORD", "test")
+            .withExposedPorts().apply {
+               start()
+            }
 }
 
 abstract class DatabaseTestsBase {
