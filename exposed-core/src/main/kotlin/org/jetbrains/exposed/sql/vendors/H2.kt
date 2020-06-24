@@ -1,21 +1,13 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.h2.engine.Mode
-import org.h2.jdbc.JdbcConnection
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.Wrapper
 import java.text.SimpleDateFormat
 import java.util.Date
 
 private val Transaction.isMySQLMode: Boolean
-    get() {
-        val h2Connection = (connection.connection as? JdbcConnection)
-            ?: (connection.connection as? Wrapper)?.takeIf { it.isWrapperFor(JdbcConnection::class.java) }?.unwrap(JdbcConnection::class.java)
-
-        return h2Connection?.let { !it.isClosed && it.settings.mode.enum == Mode.ModeEnum.MySQL } == true
-    }
+    get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -126,6 +118,20 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+
+    private var isMySQLMode : Boolean? = null
+
+    internal fun isMySQLMode() : Boolean {
+        return isMySQLMode
+            ?: TransactionManager.currentOrNull()?.let { tr ->
+                tr.exec("SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'") { rs ->
+                    rs.next()
+                    rs.getString("VALUE")?.equals("MySQL", ignoreCase = true)?.also {
+                        isMySQLMode = it
+                    } ?: false
+                }
+            } ?: false
+    }
 
     override val name: String
         get() = when (TransactionManager.currentOrNull()?.isMySQLMode) {

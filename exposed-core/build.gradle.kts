@@ -14,7 +14,6 @@ dependencies {
     api(kotlin("reflect"))
     api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
     api("org.slf4j", "slf4j-api", "1.7.25")
-    compileOnly("com.h2database", "h2", Versions.h2)
 }
 
 publishJar {
