@@ -212,7 +212,7 @@ interface ISqlExpressionBuilder {
     // Comparison Predicates
 
     /** Returns `true` if this expression is between the values [from] and [to], `false` otherwise. */
-    fun <T, S : T?> ExpressionWithColumnType<S>.between(from: T, to: T): Between = Between(this, asLiteral(from), asLiteral(to))
+    fun <T, S : T?> ExpressionWithColumnType<S>.between(from: T, to: T): Between = Between(this, wrap(from), wrap(to))
 
     /** Returns `true` if this expression is null, `false` otherwise. */
     fun <T> Expression<T>.isNull(): IsNullOp = IsNullOp(this)

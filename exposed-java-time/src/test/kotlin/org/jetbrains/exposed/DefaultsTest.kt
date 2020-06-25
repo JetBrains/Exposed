@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -275,6 +276,25 @@ class DefaultsTest : DatabaseTestsBase() {
             val result2 = foo.select { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
+        }
+    }
+
+    @Test
+    fun testBetweenFunction() {
+        val foo = object : IntIdTable("foo") {
+            val dt = datetime("dateTime")
+        }
+
+        withTables(foo) {
+            val tr = TransactionManager.current()
+            tr.addLogger(StdOutSqlLogger)
+
+            val dt2020 = LocalDateTime.of(2020, 1, 1, 1, 1)
+            foo.insert { it[dt] = LocalDateTime.of(2019, 1, 1, 1, 1) }
+            foo.insert { it[dt] = dt2020 }
+            foo.insert { it[dt] = LocalDateTime.of(2021, 1, 1, 1, 1) }
+            val count = foo.select { foo.dt.between(dt2020.minusWeeks(1), dt2020.plusWeeks(1)) }.count()
+            assertEquals(1, count)
         }
     }
 }

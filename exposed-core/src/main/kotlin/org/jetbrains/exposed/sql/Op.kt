@@ -170,9 +170,9 @@ class Between(
     /** The expression being checked. */
     val expr: Expression<*>,
     /** Returns the lower limit of the range to check against. */
-    val from: LiteralOp<*>,
+    val from: Expression<*>,
     /** Returns the upper limit of the range to check against. */
-    val to: LiteralOp<*>
+    val to: Expression<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " BETWEEN ", from, " AND ", to) }
 }
