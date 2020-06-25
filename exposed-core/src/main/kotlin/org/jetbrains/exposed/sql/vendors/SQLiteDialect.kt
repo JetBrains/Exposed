@@ -105,9 +105,6 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String {
-        if (limit != null) {
-            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
-        }
         return super.update(target, columnsAndValues, limit, where, transaction)
     }
 
@@ -118,9 +115,6 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         limit: Int?,
         transaction: Transaction
     ): String {
-        if (limit != null) {
-            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
-        }
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
