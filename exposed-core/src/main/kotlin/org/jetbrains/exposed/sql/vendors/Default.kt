@@ -207,7 +207,7 @@ abstract class FunctionProvider {
      * @param pattern Pattern the expression is checked against.
      * @param mode Match mode used to check the expression.
      */
-    open fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) {
+    open fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode? = null): Op<Boolean> = with(SqlExpressionBuilder) {
         this@match.like(pattern)
     }
 

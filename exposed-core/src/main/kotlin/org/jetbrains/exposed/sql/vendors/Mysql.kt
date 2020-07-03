@@ -27,7 +27,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override fun random(seed: Int?): String = "RAND(${seed?.toString().orEmpty()})"
 
-    private class MATCH(val expr: ExpressionWithColumnType<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
+    private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
             append("MATCH(", expr, ") AGAINST ('", pattern, "' ", mode.mode(), ")")
         }
@@ -40,7 +40,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         override fun mode() = operator
     }
 
-    override fun <T : String?> ExpressionWithColumnType<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> =
+    override fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> =
         MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
     override fun <T : String?> regexp(
