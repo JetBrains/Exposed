@@ -126,8 +126,12 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
         fun ddlDefault(queryBuilder: QueryBuilder) = queryBuilder {
             currentTimestamp.toQueryBuilder(this)
-            +" ON UPDATE "
-            currentTimestamp.toQueryBuilder(this)
+            if (TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))) {
+                +" ON UPDATE "
+                currentTimestamp.toQueryBuilder(this)
+            } else {
+                exposedLogger.warn("Current MySQL version does not support setting default with `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` syntax. Fallback to `CURRENT_TIMESTAMP`.")
+            }
         }
 
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = currentTimestamp.toQueryBuilder(queryBuilder)
