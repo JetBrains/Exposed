@@ -3,6 +3,8 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
+import java.sql.DriverManager
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -105,6 +107,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String {
+        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
+            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
+        }
         return super.update(target, columnsAndValues, limit, where, transaction)
     }
 
@@ -115,6 +120,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         limit: Int?,
         transaction: Transaction
     ): String {
+        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
+            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
+        }
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
@@ -150,5 +158,19 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     companion object {
         /** SQLite dialect name */
         const val dialectName: String = "sqlite"
+        val ENABLE_UPDATE_DELETE_LIMIT by lazy {
+            (DriverManager.getConnection("jdbc:sqlite::memory:")).use { connection ->
+                (connection.createStatement()).use { statement ->
+                    statement.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                        .use { rs ->
+                            if (rs.next()) {
+                                rs.getBoolean(1)
+                            } else {
+                                false
+                            }
+                        }
+                }
+            }
+        }
     }
 }

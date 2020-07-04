@@ -6,9 +6,18 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 
 class UpdateTests : DatabaseTestsBase() {
+    private val notSupportLimit by lazy {
+        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
+            exclude.add(TestDB.SQLITE)
+        }
+        exclude
+    }
+
 
     @Test
     fun testUpdate01() {
@@ -29,7 +38,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit01() {
-        withCitiesAndUsers(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) { _, users, _ ->
+        withCitiesAndUsers(exclude = notSupportLimit) { _, users, _ ->
             val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
             assertEquals(2, aNames.size)
 
@@ -46,7 +55,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit02() {
-        val dialects = TestDB.values().toList() - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        val dialects = TestDB.values().toList() - notSupportLimit
         withCitiesAndUsers(dialects) { _, users, _ ->
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
