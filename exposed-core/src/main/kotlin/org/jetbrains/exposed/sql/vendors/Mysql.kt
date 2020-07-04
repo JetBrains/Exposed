@@ -22,7 +22,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun ulongType(): String = "BIGINT UNSIGNED"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is MysqlDialect.OnUpdateCurrentTimestamp<*> -> QueryBuilder(false).also(e::ddlDefault).toString()
+        e is MysqlDialect.OnUpdateCurrentTimestamp<*> -> e.ddlDefault()
         else -> super.processForDefaultValue(e)
     }
 }
@@ -124,15 +124,11 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     abstract class OnUpdateCurrentTimestamp<T>(private val currentTimestamp: Expression<T>) : Expression<T>() {
 
-        fun ddlDefault(queryBuilder: QueryBuilder) = queryBuilder {
+        fun ddlDefault():String = QueryBuilder(false).apply {
             currentTimestamp.toQueryBuilder(this)
-            if (TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))) {
-                +" ON UPDATE "
-                currentTimestamp.toQueryBuilder(this)
-            } else {
-                exposedLogger.warn("Current MySQL version does not support setting default with `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` syntax. Fallback to `CURRENT_TIMESTAMP`.")
-            }
-        }
+            +" ON UPDATE "
+            currentTimestamp.toQueryBuilder(this)
+        }.toString()
 
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = currentTimestamp.toQueryBuilder(queryBuilder)
     }
@@ -144,7 +140,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
         val acceptableDefaults = setOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
-        return e.toString().split("ON UPDATE").all { it.trim() in acceptableDefaults } && isFractionDateTimeSupported()
+        val default = if(e is OnUpdateCurrentTimestamp<*>) e.ddlDefault() else e.toString()
+        return default.split("ON UPDATE").all { it.trim() in acceptableDefaults } && isFractionDateTimeSupported()
     }
 
     override fun fillConstraintCacheForTables(tables: List<Table>) {

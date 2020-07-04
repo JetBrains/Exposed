@@ -22,7 +22,9 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
+import java.math.BigDecimal
 import java.time.*
+import kotlin.test.assertNotNull
 
 class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
@@ -290,40 +292,48 @@ class DefaultsTest : DatabaseTestsBase() {
             val name = text("name")
         }
 
-        val initDateTime = LocalDateTime.now()
         withTables(TestDB.values().toList() - TestDB.MYSQL - TestDB.MARIADB, foo) {
 
-            val id = fool.insertAndGetId {
-                it[fool.name] = "bar"
+            var initDateTime: LocalDateTime = LocalDateTime.MAX
+            exec("SELECT CURRENT_TIMESTAMP") {
+                it.next()
+                initDateTime = it.getTimestamp(1).toLocalDateTime()
+            }
+
+            val id = foo.insertAndGetId {
+                it[foo.name] = "bar"
             }
             val result = foo.select { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
-            val firstAutoUpdateTime = result[foo.defaultDateTimeAutoUpdate]
-            assert(firstAutoUpdateTime > initDateTime)
+            val autoUpdateTime = result[foo.defaultDateTimeAutoUpdate]
+            assertNotNull(autoUpdateTime)
+            assert(autoUpdateTime >= initDateTime)
 
+            if (!db.isVersionCovers(BigDecimal("5.6"))) return@withTables
 
-            fool.update({ fool.id eq id }) {
+            // Using another table without "update time" column to insert
+            val id2 = fool.insertAndGetId {
                 it[fool.name] = "baz"
             }
-            val result2 = foo.select { foo.id eq id }.single()
+            val result2 = foo.select { foo.id eq id2 }.single()
 
             assertEquals("baz", result2[foo.name])
-            val secondAutoUpdateTime = result2[foo.defaultDateTimeAutoUpdate]
-            assert(secondAutoUpdateTime > firstAutoUpdateTime)
+            val autoUpdateTime2 = result2[foo.defaultDateTimeAutoUpdate]
+            assert(autoUpdateTime2 > autoUpdateTime)
 
-
-            val id2 = foo.insertAndGetId {
-                it[foo.name] = "bah"
+            // And to update
+            fool.update({ fool.id eq id2 }) {
+                it[fool.name] = "bah"
             }
             val result3 = foo.select { foo.id eq id2 }.single()
 
             assertEquals("bah", result3[foo.name])
-            val thirdAutoUpdateTime = result3[foo.defaultDateTimeAutoUpdate]
-            assert(thirdAutoUpdateTime > secondAutoUpdateTime)
+            val autoUpdateTime3 = result3[foo.defaultDateTimeAutoUpdate]
+            assert(autoUpdateTime3 > autoUpdateTime2)
+
         }
     }
-
 
     @Test
     fun testBetweenFunction() {
