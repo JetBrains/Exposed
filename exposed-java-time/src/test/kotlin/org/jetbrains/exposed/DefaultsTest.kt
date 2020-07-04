@@ -280,6 +280,52 @@ class DefaultsTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testMySQLOnUpdateDefaultExpressions() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTimeAutoUpdate = datetime("defaultDateTimeAutoUpdate").defaultExpression(CurrentTimestampOnUpdateCurrentTimestamp())
+        }
+
+        val fool = object : IntIdTable("foo") {
+            val name = text("name")
+        }
+
+        val initDateTime = LocalDateTime.now()
+        withTables(TestDB.values().toList() - TestDB.MYSQL - TestDB.MARIADB, foo) {
+
+            val id = fool.insertAndGetId {
+                it[fool.name] = "bar"
+            }
+            val result = foo.select { foo.id eq id }.single()
+
+            assertEquals("bar", result[foo.name])
+            val firstAutoUpdateTime = result[foo.defaultDateTimeAutoUpdate]
+            assert(firstAutoUpdateTime > initDateTime)
+
+
+            fool.update({ fool.id eq id }) {
+                it[fool.name] = "baz"
+            }
+            val result2 = foo.select { foo.id eq id }.single()
+
+            assertEquals("baz", result2[foo.name])
+            val secondAutoUpdateTime = result2[foo.defaultDateTimeAutoUpdate]
+            assert(secondAutoUpdateTime > firstAutoUpdateTime)
+
+
+            val id2 = foo.insertAndGetId {
+                it[foo.name] = "bah"
+            }
+            val result3 = foo.select { foo.id eq id2 }.single()
+
+            assertEquals("bah", result3[foo.name])
+            val thirdAutoUpdateTime = result3[foo.defaultDateTimeAutoUpdate]
+            assert(thirdAutoUpdateTime > secondAutoUpdateTime)
+        }
+    }
+
+
+    @Test
     fun testBetweenFunction() {
         val foo = object : IntIdTable("foo") {
             val dt = datetime("dateTime")

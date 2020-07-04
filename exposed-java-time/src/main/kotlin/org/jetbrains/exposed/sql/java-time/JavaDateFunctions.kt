@@ -32,6 +32,11 @@ class CurrentTimestamp<T : Temporal> : Expression<T>() {
     }
 }
 
+/**
+ * Expression of MySQL syntax `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
+ */
+class CurrentTimestampOnUpdateCurrentTimestamp<T : Temporal> : MysqlDialect.OnUpdateCurrentTimestamp<T>(CurrentTimestamp<T>())
+
 class Year<T : Temporal?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         currentDialect.functionProvider.year(expr, queryBuilder)
