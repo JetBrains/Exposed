@@ -4,7 +4,10 @@ import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
+import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -158,18 +161,26 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     companion object {
         /** SQLite dialect name */
         const val dialectName: String = "sqlite"
+
         val ENABLE_UPDATE_DELETE_LIMIT by lazy {
-            (DriverManager.getConnection("jdbc:sqlite::memory:")).use { connection ->
-                (connection.createStatement()).use { statement ->
-                    statement.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
-                        .use { rs ->
-                            if (rs.next()) {
-                                rs.getBoolean(1)
-                            } else {
-                                false
-                            }
-                        }
+            var conn: Connection? = null
+            var stmt: Statement? = null
+            var rs: ResultSet? = null
+            try {
+                conn = DriverManager.getConnection("jdbc:sqlite::memory:")
+                stmt = conn!!.createStatement()
+                rs = stmt!!.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                if (rs!!.next()) {
+                    rs!!.getBoolean(1)
+                } else {
+                    false
                 }
+            } catch (e: Exception) {
+                false
+            } finally {
+                rs?.close()
+                stmt?.close()
+                conn?.close()
             }
         }
     }
