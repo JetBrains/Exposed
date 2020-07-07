@@ -18,12 +18,22 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
     }),
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
     MYSQL(
-        connection = { "${mySQLProcess.jdbcUrl}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&useSSL=false" },
+        connection = {
+            if (runTestContainersMySQL()) {
+                "${mySQLProcess.jdbcUrl}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&useSSL=false"
+            } else {
+                val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
+                val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
+                host.let { dockerHost ->
+                    "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
+                }
+            }
+        },
         user = "root",
-        pass = "test",
+        pass = if (runTestContainersMySQL()) "test" else "",
         driver = "com.mysql.jdbc.Driver",
-        beforeConnection = { mySQLProcess },
-        afterTestFinished = { mySQLProcess.close() }
+        beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
+        afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
@@ -91,6 +101,9 @@ private val mySQLProcess by lazy {
                start()
             }
 }
+
+private fun runTestContainersMySQL(): Boolean =
+    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isBlank()
 
 abstract class DatabaseTestsBase {
     init {
