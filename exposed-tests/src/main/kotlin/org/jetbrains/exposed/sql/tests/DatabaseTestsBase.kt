@@ -103,7 +103,7 @@ private val mySQLProcess by lazy {
 }
 
 private fun runTestContainersMySQL(): Boolean =
-    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isBlank()
+    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
 
 abstract class DatabaseTestsBase {
     init {
