@@ -1,15 +1,11 @@
 package org.jetbrains.exposed.sql.tests
 
-import com.mysql.management.MysqldResource
-import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
-import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
-import com.mysql.management.util.Files
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
@@ -21,25 +17,24 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
         Mode.getInstance("MySQL").convertInsertNullToZero = false
     }),
     SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
-    MYSQL({
-            val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
-            val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
-            host?.let { dockerHost ->
-                "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
-            } ?: "jdbc:mysql:mxj://localhost:12345/testdb1?createDatabaseIfNotExist=true&characterEncoding=UTF-8&server.initialize-user=false&user=root&password="
-        },
-        driver = "com.mysql.jdbc.Driver",
-        beforeConnection = { System.setProperty(Files.USE_TEST_DIR, java.lang.Boolean.TRUE!!.toString()); Files().cleanTestDir(); Unit },
-        afterTestFinished = {
-            try {
-                val baseDir = com.mysql.management.util.Files().tmp(MysqldResource.MYSQL_C_MXJ)
-                ServerLauncherSocketFactory.shutdown(baseDir, null)
-            } catch (e: MysqldResourceNotFoundException) {
-                exposedLogger.warn(e.message, e)
-            } finally {
-                Files().cleanTestDir()
+    MYSQL(
+        connection = {
+            if (runTestContainersMySQL()) {
+                "${mySQLProcess.jdbcUrl}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&useSSL=false"
+            } else {
+                val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
+                val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
+                host.let { dockerHost ->
+                    "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
+                }
             }
-        }),
+        },
+        user = "root",
+        pass = if (runTestContainersMySQL()) "test" else "",
+        driver = "com.mysql.jdbc.Driver",
+        beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
+        afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
+    ),
     POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     POSTGRESQLNG({"jdbc:pgsql://localhost:12346/template1?user=postgres&password="}, "com.impossibl.postgres.jdbc.PGDriver",
@@ -94,6 +89,21 @@ private val postgresSQLProcess by lazy {
             }
             .setPort(12346).start()
 }
+
+// MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
+internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<SpecifiedMySQLContainer>(image)
+
+private val mySQLProcess by lazy {
+    SpecifiedMySQLContainer(image = "mysql:5")
+            .withDatabaseName("testdb")
+            .withEnv("MYSQL_ROOT_PASSWORD", "test")
+            .withExposedPorts().apply {
+               start()
+            }
+}
+
+private fun runTestContainersMySQL(): Boolean =
+    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isBlank()
 
 abstract class DatabaseTestsBase {
     init {

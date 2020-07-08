@@ -27,9 +27,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    implementation("mysql", "mysql-connector-mxj", Versions.mysqlMxj)
     implementation("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
     implementation("com.h2database", "h2", Versions.h2)
+    implementation("org.testcontainers", "testcontainers", "1.14.3")
+    implementation("org.testcontainers", "mysql", "1.14.3")
 
     when (dialect) {
         "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
