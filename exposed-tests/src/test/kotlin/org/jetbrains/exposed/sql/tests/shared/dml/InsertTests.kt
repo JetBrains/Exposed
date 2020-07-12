@@ -301,7 +301,7 @@ class InsertTests : DatabaseTestsBase() {
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
         withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
-            expectException<IllegalStateException> {
+            expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
                 }

@@ -493,6 +493,13 @@ open class CharColumnType(
         }
     }
 
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is String && value.codePointCount(0, value.length) <= colLength) {
+            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+        }
+        return value
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -526,6 +533,13 @@ open class VarCharColumnType(
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is String && value.codePointCount(0, value.length) <= colLength) {
+            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+        }
+        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -598,6 +612,13 @@ class BinaryColumnType(
     val length: Int
 ) : BasicBinaryColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType(length)
+
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is ByteArray && value.size <= length) {
+            "Value '$value' can't be stored to database column because exceeds length ($length)"
+        }
+        return value
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -764,9 +785,9 @@ class EnumerationNameColumnType<T : Enum<T>>(
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: Any): String = when (value) {
-        is String -> value
-        is Enum<*> -> value.name
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is String -> super.notNullValueToDB(value)
+        is Enum<*> -> super.notNullValueToDB(value.name)
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 

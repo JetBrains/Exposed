@@ -15,15 +15,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
         when {
             values.containsKey(column) -> error("$column is already initialized")
             !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
-            column.columnType is VarCharColumnType && value is String && value.codePointCount(0, value.length) > (column.columnType as VarCharColumnType).colLength -> {
-                error("Value '$value' can't be stored to database column because exceeds length ${(column.columnType as VarCharColumnType).colLength}")
-            }
-            column.columnType is CharColumnType && value is String && value.codePointCount(0, value.length) != (column.columnType as CharColumnType).colLength -> {
-                error("Value '$value' can't be stored to database column because length is not equal to ${(column.columnType as CharColumnType).colLength}")
-            }
-            else -> {
-                values[column] = value
-            }
+            else -> values[column] = value
         }
     }
 
