@@ -90,6 +90,7 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 
 /** Advances this sequence and returns the new value. */
 fun Sequence.nextVal(): NextVal = NextVal(this)
+fun Sequence.nextValLong(): NextValLong = NextValLong(this)
 
 
 // Value Expressions

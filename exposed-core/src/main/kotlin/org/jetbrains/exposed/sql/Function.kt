@@ -256,7 +256,12 @@ class NextVal(
 ) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
 }
-
+class NextValLong(
+        /** Returns the sequence from which the next value is obtained. */
+        val seq: Sequence
+) : Function<Long>(LongColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
+}
 
 // Conditional Expressions
 

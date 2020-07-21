@@ -80,8 +80,43 @@ class SequencesTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun `test select with nextValLong`() {
+        withTables(DeveloperLong) {
+            if (currentDialectTest.supportsCreateSequence) {
+                try {
+                    SchemaUtils.createSequence(myseq)
+                    val nextVal = myseq.nextValLong()
+                    DeveloperLong.insert {
+                        it[id] = nextVal
+                        it[name] = "Hichem"
+                    }
+
+                    val firstValue = DeveloperLong.slice(nextVal).selectAll().single()[nextVal]
+                    val secondValue = DeveloperLong.slice(nextVal).selectAll().single()[nextVal]
+
+                    val expFirstValue = myseq.startWith!! + myseq.incrementBy!!.toLong()
+                    assertEquals(expFirstValue, firstValue)
+
+                    val expSecondValue = expFirstValue + myseq.incrementBy!!.toLong()
+                    assertEquals(expSecondValue, secondValue)
+
+                } finally {
+                    SchemaUtils.dropSequence(myseq)
+                }
+            }
+        }
+    }
+
     private object Developer : Table() {
         val id = integer("id")
+        var name = varchar("name", 25)
+
+        override val primaryKey = PrimaryKey(id, name)
+    }
+
+    private object DeveloperLong : Table() {
+        val id = long("id")
         var name = varchar("name", 25)
 
         override val primaryKey = PrimaryKey(id, name)
