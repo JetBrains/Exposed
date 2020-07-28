@@ -507,6 +507,8 @@ open class CharColumnType(
 
         other as CharColumnType
 
+        if (colLength != other.colLength) return false
+
         if (collate != other.collate) return false
         return true
     }
