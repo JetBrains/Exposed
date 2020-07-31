@@ -46,19 +46,7 @@ class SchemaTests : DatabaseTestsBase() {
                 try {
                     SchemaUtils.createSchema(schema)
                     SchemaUtils.setSchema(schema)
-
-                    val schemaName = if (currentDialect is PostgreSQLNGDialect) {
-                        /** connection.schema in Pstgresql-ng always return null in current pgjdbc-ng version (0.8.3).
-                         * This is fixed in pgjdbc-ng repo but not yet released. So here we retrieve the current
-                         * schema using sql query rather than connection.schema */
-                         exec("SELECT current_schema()") { rs ->
-                            if (rs.next()) { rs.getString(1) } else { "" }
-                        }
-                    } else {
-                        connection.schema
-                    }
-
-                    assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), schemaName)
+                    assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), connection.schema)
                 } finally {
                     SchemaUtils.dropSchema(schema)
                 }

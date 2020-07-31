@@ -11,10 +11,6 @@ import java.sql.ResultSet
 import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
-
-    private val databaseName = database.takeIf { metadata.databaseProductName !== "Oracle" }
-    private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
-
     override val url: String by lazyMetadata { url }
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion")}
 
@@ -37,6 +33,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    private val databaseName get() = when(databaseDialectName) {
+         MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+         OracleDialect.dialectName -> null
+         else -> database
+    }
+
+    private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
+
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
     override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
@@ -47,16 +51,23 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
 
-    override val currentScheme: String by lazyMetadata {
-        try {
-            when (metadata.driverName) {
-                "pgjdbc-ng" -> "public" // Should be removed after https://github.com/impossibl/pgjdbc-ng/pull/354 will be released
-                "MySQL Connector/J",
-                "MySQL Connector Java",
-                "MariaDB Connector/J"-> connection.catalog.orEmpty()
-                else -> connection.schema.orEmpty()
+    private var _currentScheme: String? = null
+        get() {
+            if (field == null) {
+                field = try {
+                    when (databaseDialectName) {
+                        MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
+                        else -> metadata.connection.schema.orEmpty()
+                    }
+                } catch (e: Throwable) { "" }
             }
-        } catch (e: Throwable) { "" }
+            return field!!
+        }
+
+    override val currentScheme: String get() = _currentScheme!!
+
+    override fun resetCurrentScheme() {
+        _currentScheme = null
     }
 
     private inner class CachableMapWithDefault<K, V>(private val map:MutableMap<K,V> = mutableMapOf(), val default: (K) -> V) : Map<K,V> by map {
@@ -73,7 +84,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
             useCatalogInsteadOfScheme -> scheme to ""
-            else -> database to scheme
+            else -> databaseName to scheme
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
         return resultSet.iterate {

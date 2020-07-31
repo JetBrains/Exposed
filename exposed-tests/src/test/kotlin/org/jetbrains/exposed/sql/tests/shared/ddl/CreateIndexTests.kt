@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 
@@ -58,6 +60,28 @@ class CreateIndexTests : DatabaseTestsBase() {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
+        }
+    }
+
+    @Test
+    fun `test possibility to create indexes when table exists in defferent schemas`() {
+        val TestTable = object : Table("test_table") {
+            val id = integer("id").uniqueIndex()
+            val name = varchar("name", length = 42).index("test_index")
+            init {
+                index(false, id, name)
+            }
+        }
+        val schema1 = Schema("Schema1")
+        val schema2 = Schema("Schema2")
+        withSchemas(listOf(TestDB.SQLITE), schema1, schema2) {
+            SchemaUtils.setSchema(schema1)
+            SchemaUtils.createMissingTablesAndColumns(TestTable)
+            assertEquals(true, TestTable.exists())
+            SchemaUtils.setSchema(schema2)
+            assertEquals(false, TestTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(TestTable)
+            assertEquals(true, TestTable.exists())
         }
     }
 }

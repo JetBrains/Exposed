@@ -25,6 +25,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         level = DeprecationLevel.WARNING
     )
     abstract val currentScheme: String
+    abstract fun resetCurrentScheme()
     abstract val tableNames: Map<String, List<String>>
     abstract val schemaNames: List<String>
 
