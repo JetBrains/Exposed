@@ -133,7 +133,8 @@ abstract class DatabaseTestsBase {
     }
 
     fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
-        val toTest = db ?: TestDB.enabledInTests() - excludeSettings
+        val enabledInTests = TestDB.enabledInTests()
+        val toTest = db?.intersect(enabledInTests) ?: enabledInTests - excludeSettings
         toTest.forEach { dbSettings ->
             try {
                 withDb(dbSettings, statement)
