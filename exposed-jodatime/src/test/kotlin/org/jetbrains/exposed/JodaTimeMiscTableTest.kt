@@ -385,4 +385,3 @@ fun Misc.checkRowDates(row: ResultRow, d: DateTime, dn: DateTime?, t: DateTime, 
     assertEqualDateTime(row[this.t], t)
     assertEqualDateTime(row[this.tn], tn)
 }
-
