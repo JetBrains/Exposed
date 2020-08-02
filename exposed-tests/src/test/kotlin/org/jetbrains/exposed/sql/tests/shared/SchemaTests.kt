@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
@@ -67,7 +66,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 val firstCatalogName = connection.catalog
 
-                exec("CREATE TABLE test(id INT)")
+                exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
                 exec("CREATE TABLE test(id INT REFERENCES ${firstCatalogName}.test(id))")
 
