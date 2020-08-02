@@ -33,14 +33,18 @@ class SchemaTests : DatabaseTestsBase() {
     fun `create and set schema tests`() {
         withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             if (currentDialect.supportsCreateSchema) {
-                val schema = if (currentDialect is SQLServerDialect) {
-                    exec("GRANT CREATE SCHEMA TO guest")
-                    exec("SETUSER 'guest'")
-                    Schema("MYSCHEMA", "guest")
-                } else if (currentDialect is OracleDialect) {
-                    Schema("MYSCHEMA", password = "pwd4myschema", defaultTablespace = "tbs_perm_01", quota = "20M", on = "tbs_perm_01")
-                } else {
-                    Schema("MYSCHEMA")
+                val schema = when (currentDialect) {
+                    is SQLServerDialect -> {
+                        exec("GRANT CREATE SCHEMA TO guest")
+                        exec("SETUSER 'guest'")
+                        Schema("MYSCHEMA", "guest")
+                    }
+                    is OracleDialect -> {
+                        Schema("MYSCHEMA", password = "pwd4myschema", defaultTablespace = "tbs_perm_01", quota = "20M", on = "tbs_perm_01")
+                    }
+                    else -> {
+                        Schema("MYSCHEMA")
+                    }
                 }
 
                 try {

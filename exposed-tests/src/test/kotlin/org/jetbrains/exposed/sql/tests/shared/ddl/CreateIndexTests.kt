@@ -74,7 +74,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
-        withSchemas(listOf(TestDB.SQLITE), schema1, schema2) {
+        withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertEquals(true, TestTable.exists())
