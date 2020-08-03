@@ -1,3 +1,18 @@
+# 0.26.2
+Infrastructure:
+* MySQL related tests were moved from old embedded-mxj to test-containers ([#957](https://github.com/JetBrains/Exposed/issues/957)). Kudos to [KushalP](https://github.com/KushalP)   
+
+Bug Fixes:
+* Fix for java9+ returns empty string for Class.simpleName of anonymous classes, what cause an empty table name
+* Enable use of Exposed with Quarkus / GraalVM Native Image. Compile time dependency to H2 was removed ([#919](https://github.com/JetBrains/Exposed/issues/919)).
+* Between function doesn't work when run against Oracle database ([#974](https://github.com/JetBrains/Exposed/issues/974)).
+* [MySQL] Infinite recursion in `match` operator ([#978](https://github.com/JetBrains/Exposed/issues/978)).
+* Using `exposed-java-time` module on Android could end with NoSuchMethodError ([#991](https://github.com/JetBrains/Exposed/issues/991)), ([#998](https://github.com/JetBrains/Exposed/issues/998)).
+* Binary type doesn't honor max length. Client-side length validation for BinaryColumnType ([#993](https://github.com/JetBrains/Exposed/issues/993)). 
+* CharColumnType equals doesn't check colLength parameter
+* Creating similar tables/indices on different schemas could fail with an error ([#803](https://github.com/JetBrains/Exposed/issues/803)).   
+* [SQLite] Allow providing `limit` for UPDATE/DELETE statements if SQLite was compiled with `optional_limit_and_order_by_clauses` option ([#979](https://github.com/JetBrains/Exposed/issues/979)). [harry huang](https://github.com/banjiaojuhao), thank you for a PR.  
+
 # 0.26.1
 Infrastructure:
 * Gradle 6.5. Thanks to [KushalP](https://github.com/KushalP)
