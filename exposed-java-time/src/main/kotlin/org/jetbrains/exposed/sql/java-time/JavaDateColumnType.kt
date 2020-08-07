@@ -44,7 +44,7 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
             is String -> return value
             is LocalDate -> Instant.from(value.atStartOfDay(ZoneId.systemDefault()))
             is java.sql.Date -> Instant.ofEpochMilli(value.time)
-            is java.sql.Timestamp -> Instant.ofEpochMilli(value.time)
+            is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
@@ -84,7 +84,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             is String -> return value
             is LocalDateTime -> Instant.from(value.atZone(ZoneId.systemDefault()))
             is java.sql.Date -> Instant.ofEpochMilli(value.time)
-            is java.sql.Timestamp -> Instant.ofEpochMilli(value.time)
+            is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
@@ -97,7 +97,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override fun valueFromDB(value: Any): Any = when (value) {
         is LocalDateTime -> value
         is java.sql.Date -> longToLocalDateTime(value.time)
-        is java.sql.Timestamp -> longToLocalDateTime(value.time)
+        is java.sql.Timestamp -> longToLocalDateTime(value.time / 1000, value.nanos.toLong())
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
         is String -> LocalDateTime.parse(value, formatterForDateString(value))
@@ -111,7 +111,8 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         return value
     }
 
-    private fun longToLocalDateTime(instant: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(instant), ZoneId.systemDefault())
+    private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+    private fun longToLocalDateTime(seconds: Long, nanos: Long) = LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
 
     companion object {
         internal val INSTANCE = JavaLocalDateTimeColumnType()
