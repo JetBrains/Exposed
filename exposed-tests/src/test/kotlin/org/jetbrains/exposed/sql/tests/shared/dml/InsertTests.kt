@@ -244,6 +244,36 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInsertWithColumnExpression() {
+
+        val tbl1 = object : IntIdTable("testInsert1") {
+            val string1 = varchar("stringCol", 20)
+        }
+        val tbl2 = object : IntIdTable("testInsert2") {
+            val string2 = varchar("stringCol", 20).nullable()
+        }
+
+        fun verify(value: String) {
+            val row = tbl2.select{ tbl2.string2 eq value }.single()
+            assertEquals(row[tbl2.string2], value)
+        }
+
+        withTables(tbl1, tbl2) {
+            addLogger(StdOutSqlLogger)
+
+            val id = tbl1.insertAndGetId {
+                it[string1] = " _exp1_ "
+            }
+
+            val expr1 = tbl1.string1.trim().substring(2, 4)
+            tbl2.insert {
+                it[string2] = wrapAsExpression(tbl1.slice(expr1).select { tbl1.id eq id })
+            }
+
+            verify("exp1")
+        }
+    }
+
     private object OrderedDataTable : IntIdTable()
     {
         val name = text("name")

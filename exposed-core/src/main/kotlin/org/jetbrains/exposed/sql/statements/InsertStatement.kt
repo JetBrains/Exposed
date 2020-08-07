@@ -157,9 +157,15 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             listOf(result).apply { field = this }
         }
 
-    override fun arguments() = arguments!!.map { args ->
-        args.filter { (_, value) ->
-            value != DefaultValueMarker  && value !is Expression<*>
-        }.map { it.first.columnType to it.second }
+    override fun arguments() : List<Iterable<Pair<IColumnType, Any?>>> {
+        return arguments!!.map { args ->
+            val builder = QueryBuilder(true)
+            args.filter { (_, value) ->
+                value != DefaultValueMarker
+            }.forEach { (column, value) ->
+                builder.registerArgument(column, value)
+            }
+            builder.args
+        }
     }
 }
