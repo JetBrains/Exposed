@@ -9,13 +9,24 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
-private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
+private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
+
+private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
+private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
+    val baseFormat = "YYYY-MM-dd HH:mm:ss"
+    val newFormat = if(fraction in 1..9)
+        (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
+    else
+        baseFormat
+    return DateTimeFormat.forPattern(newFormat)
+}
 
 class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
     override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
@@ -43,7 +54,7 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
         is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
         is String -> when {
-            currentDialect is SQLiteDialect && time -> SQLITE_DATE_TIME_STRING_FORMATTER.parseDateTime(value)
+            currentDialect is SQLiteDialect && time -> DateTime.parse(value, formatterForDateTimeString(value))
             currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> value
         }
@@ -52,8 +63,7 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
-        value is DateTime && time && currentDialect is SQLiteDialect  -> SQLITE_DATE_TIME_STRING_FORMATTER.print(value)
-        value is DateTime && currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.print(value)
+        value is DateTime && time && currentDialect is SQLiteDialect -> SQLITE_DATE_TIME_STRING_FORMATTER.print(value)
         value is DateTime && time  -> java.sql.Timestamp(value.millis)
         value is DateTime -> java.sql.Date(value.millis)
         else -> value
