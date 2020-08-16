@@ -33,18 +33,18 @@ class SequencesTests : DatabaseTestsBase() {
                     SchemaUtils.createSequence(myseq)
 
                     var developerId = Developer.insert {
-                        it[id] = myseq.nextVal()
+                        it[id] = myseq.nextIntVal()
                         it[name] = "Hichem"
                     } get Developer.id
 
-                    assertEquals(myseq.startWith, developerId)
+                    assertEquals(myseq.startWith, developerId.toLong())
 
                     developerId = Developer.insert {
-                        it[id] = myseq.nextVal()
+                        it[id] = myseq.nextIntVal()
                         it[name] = "Andrey"
                     } get Developer.id
 
-                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId)
+                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.toLong())
                 } finally {
                     SchemaUtils.dropSequence(myseq)
                 }
@@ -58,7 +58,7 @@ class SequencesTests : DatabaseTestsBase() {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.createSequence(myseq)
-                    val nextVal = myseq.nextVal()
+                    val nextVal = myseq.nextIntVal()
                     Developer.insert {
                         it[id] = nextVal
                         it[name] = "Hichem"
@@ -68,10 +68,10 @@ class SequencesTests : DatabaseTestsBase() {
                     val secondValue = Developer.slice(nextVal).selectAll().single()[nextVal]
 
                     val expFirstValue = myseq.startWith!! + myseq.incrementBy!!
-                    assertEquals(expFirstValue, firstValue)
+                    assertEquals(expFirstValue, firstValue.toLong())
 
                     val expSecondValue = expFirstValue + myseq.incrementBy!!
-                    assertEquals(expSecondValue, secondValue)
+                    assertEquals(expSecondValue, secondValue.toLong())
 
                 } finally {
                     SchemaUtils.dropSequence(myseq)

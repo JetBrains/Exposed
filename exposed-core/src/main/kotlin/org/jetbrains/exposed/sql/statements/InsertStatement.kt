@@ -76,7 +76,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
-                    if (col.columnType.isAutoInc || value is NextVal)
+                    if (col.columnType.isAutoInc || value is NextVal<*>)
                         map.getOrPut(col) { value }
                     else
                         map[col] = value
@@ -124,7 +124,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     }
 
     protected val autoIncColumns : List<Column<*>> get() {
-        val nextValExpressionColumns = values.filterValues { it is NextVal }.keys
+        val nextValExpressionColumns = values.filterValues { it is NextVal<*> }.keys
         return targets.flatMap { it.columns }.filter { column ->
             when {
                 column.columnType.isAutoInc -> true

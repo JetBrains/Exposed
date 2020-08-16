@@ -250,11 +250,16 @@ class VarSamp<T>(
 /**
  * Represents an SQL function that advances the specified [seq] and returns the new value.
  */
-class NextVal(
+sealed class NextVal<T> (
     /** Returns the sequence from which the next value is obtained. */
-    val seq: Sequence
-) : Function<Int>(IntegerColumnType()) {
+    val seq: Sequence,
+    columnType: IColumnType
+) : Function<T>(columnType) {
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
+
+    class IntNextVal(seq: Sequence) : NextVal<Int>(seq, IntegerColumnType())
+    class LongNextVal(seq: Sequence) : NextVal<Long>(seq, LongColumnType())
 }
 
 

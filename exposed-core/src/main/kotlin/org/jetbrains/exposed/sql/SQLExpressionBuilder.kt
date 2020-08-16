@@ -89,8 +89,13 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
-fun Sequence.nextVal(): NextVal = NextVal(this)
+@Deprecated("please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"))
+fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
 
+/** Advances this sequence and returns the new value. */
+fun Sequence.nextIntVal(): NextVal<Int> = NextVal.IntNextVal(this)
+/** Advances this sequence and returns the new value. */
+fun Sequence.nextLongVal(): NextVal<Long> = NextVal.LongNextVal(this)
 
 // Value Expressions
 
