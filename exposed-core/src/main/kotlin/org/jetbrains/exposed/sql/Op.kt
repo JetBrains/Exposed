@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import java.math.BigDecimal
 
 /**
  * Represents an SQL operator.
@@ -241,12 +242,26 @@ class TimesOp<T, S : T>(
  */
 class DivideOp<T, S : T>(
     /** The left-hand side operand. */
-    expr1: Expression<T>,
+    private val dividend: Expression<T>,
     /** The right-hand side operand. */
-    expr2: Expression<S>,
+    private val divisor: Expression<S>,
     /** The column type of this expression. */
     columnType: IColumnType
-) : CustomOperator<T>("/", columnType, expr1, expr2)
+) : CustomOperator<T>("/", columnType, dividend, divisor) {
+    companion object {
+        fun <T:BigDecimal?, S : T>  DivideOp<T, S>.withScale(scale: Int) : DivideOp<T, S> {
+            val precision = (columnType as DecimalColumnType).precision + scale
+            val decimalColumnType = DecimalColumnType(precision, scale)
+
+            val newExpression = (dividend as? LiteralOp<BigDecimal>)?.value?.takeIf { it.scale() == 0 }?.let {
+                decimalLiteral(it.setScale(1)) // it is needed to treat dividend as decimal instead of integer in SQL
+            } ?: dividend
+
+            return DivideOp(newExpression as Expression<T>, divisor, decimalColumnType)
+        }
+    }
+}
+
 
 /**
  * Represents an SQL operator that calculates the remainder of dividing [expr1] by [expr2].
@@ -464,6 +479,8 @@ fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType
 /** Returns the specified [value] as a string literal. */
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(VarCharColumnType(), value)
 
+/** Returns the specified [value] as a decimal literal. */
+fun decimalLiteral(value: BigDecimal) : LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
 
 // Query Parameters
 
@@ -521,6 +538,9 @@ fun doubleParam(value: Double): Expression<Double> = QueryParameter(value, Doubl
 
 /** Returns the specified [value] as a string query parameter. */
 fun stringParam(value: String): Expression<String> = QueryParameter(value, VarCharColumnType())
+
+/** Returns the specified [value] as a decimal query parameter. */
+fun decimalParam(value: BigDecimal) : Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
 
 // Misc.
