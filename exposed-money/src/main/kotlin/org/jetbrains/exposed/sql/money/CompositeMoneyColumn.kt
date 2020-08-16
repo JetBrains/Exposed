@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.money
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.BiCompositeColumn
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.DecimalColumnType
+import org.jetbrains.exposed.sql.Table
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.Monetary
@@ -12,25 +15,33 @@ import javax.money.MonetaryAmount
  * @author Vladislav Kisel
  */
 
-class CompositeMoneyColumn(val amount: Column<BigDecimal>, val currency: Column<CurrencyUnit>) : BiCompositeColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
-        amount, currency,
+class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmount?>(val amount: Column<T1>, val currency: Column<T2>) :
+    BiCompositeColumn<T1, T2, R>(
+        column1 = amount,
+        column2 = currency,
         transformFromValue = { money ->
-            val currencyValue = money.currency
-            val amountValue = money.number.numberValue(BigDecimal::class.java)
+            val amountValue = money?.number?.numberValue(BigDecimal::class.java) as? T1
+            val currencyValue = money?.currency as? T2
             amountValue to currencyValue
         },
         transformToValue = { amountVal, currencyVal ->
-            val result = Monetary.getDefaultAmountFactory().setNumber(amountVal as Number)
+            if (amountVal == null || currencyVal == null) {
+                null as R
+            } else {
+                val result = Monetary.getDefaultAmountFactory().setNumber(amountVal as Number)
 
-            if (currencyVal is CurrencyUnit) result.setCurrency(currencyVal)
-            else if (currencyVal is String) result.setCurrency(currencyVal)
+                when (currencyVal) {
+                    is CurrencyUnit -> result.setCurrency(currencyVal)
+                    is String -> result.setCurrency(currencyVal)
+                }
 
-            result.create()
+                result.create() as R
+            }
         }
-) {
-    constructor(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) : this(
-            amount = Column(table, amountName, DecimalColumnType(precision, scale)),
-            currency = Column(table, currencyName, CurrencyColumnType())
-    )
+)
 
-}
+fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
+    CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
+        amount = Column(table, amountName, DecimalColumnType(precision, scale)),
+        currency = Column(table, currencyName, CurrencyColumnType())
+    )

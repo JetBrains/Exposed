@@ -353,7 +353,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).also { _columns.addColumn(it) }
 
-    fun <T : CompositeColumn<*>> registerCompositeColumn(column: T) : T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
+    fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T) : T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
 
     /**
      * Replaces the specified [oldColumn] with the specified [newColumn] in the table.
@@ -902,6 +902,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         newColumn.columnType.nullable = true
         return replaceColumn(this, newColumn)
     }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any, C: CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
+        nullable = true
+        getRealColumns().filter { !it.columnType.nullable }.forEach { (it as Column<Any>).nullable() }
+    } as CompositeColumn<T?>
 
     // Indices
 
