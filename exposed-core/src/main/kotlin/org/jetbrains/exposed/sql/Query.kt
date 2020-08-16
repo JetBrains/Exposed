@@ -47,10 +47,10 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
-     * @param body builder for new column set, current [set.source] used as a receiver, you are expected to slice it
+     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an , you are expected to slice it
      * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQuerySlice
      */
-    fun adjustSlice(body: ColumnSet.() -> FieldSet): Query = apply { set = set.source.body() }
+    fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
      * Changes [set.source] field of a Query, [set.fields] will be preserved
@@ -58,8 +58,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
      * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
-        val oldSlice = set.fields
-        return adjustSlice { body().slice(oldSlice) }
+        return adjustSlice { oldSlice -> body().slice(oldSlice.fields) }
     }
 
     /**
