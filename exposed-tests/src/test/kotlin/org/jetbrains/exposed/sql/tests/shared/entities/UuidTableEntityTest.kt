@@ -108,7 +108,7 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test fun `insert with inner table`() {
-        withTables(UUIDTables.Addresses) {
+        withTables(UUIDTables.Addresses, UUIDTables.Cities, UUIDTables.People) {
             val city1 = UUIDTables.City.new {
                 name = "city1"
             }
