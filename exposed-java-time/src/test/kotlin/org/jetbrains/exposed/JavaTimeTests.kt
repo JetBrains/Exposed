@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.`java-time`.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -38,6 +39,37 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
             assertEquals(now.hour, insertedHour)
             assertEquals(now.minute, insertedMinute)
             assertEquals(now.second, insertedSecond)
+        }
+    }
+
+    // Checks that old numeric datetime columns works fine with new text representation
+    @Test
+    fun testSQLiteDateTimeFieldRegression() {
+        val TestDate = object : IntIdTable("TestDate") {
+            val time = datetime("time").defaultExpression(CurrentDateTime())
+        }
+
+        withDb(TestDB.SQLITE) {
+            try {
+                exec("CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);")
+                TestDate.insert { }
+                val year = TestDate.time.year()
+                val month = TestDate.time.month()
+                val day = TestDate.time.day()
+                val hour = TestDate.time.hour()
+                val minute = TestDate.time.minute()
+
+                val result = TestDate.slice(year, month, day, hour, minute).selectAll().single()
+
+                val now = LocalDateTime.now()
+                assertEquals(now.year, result[year])
+                assertEquals(now.monthValue, result[month])
+                assertEquals(now.dayOfMonth, result[day])
+                assertEquals(now.hour, result[hour])
+                assertEquals(now.minute, result[minute])
+            } finally {
+                SchemaUtils.drop(TestDate)
+            }
         }
     }
 }

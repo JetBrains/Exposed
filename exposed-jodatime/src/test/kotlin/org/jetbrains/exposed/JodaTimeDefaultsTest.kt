@@ -6,10 +6,7 @@ import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.jodatime.CurrentDateTime
-import org.jetbrains.exposed.sql.jodatime.date
-import org.jetbrains.exposed.sql.jodatime.dateLiteral
-import org.jetbrains.exposed.sql.jodatime.datetime
+import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -284,6 +281,37 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEquals(2, TestDate.select { TestDate.time greater middle }.count())
             assertEquals(4, TestDate.select { TestDate.time less    after  }.count())
             assertEquals(0, TestDate.select { TestDate.time greater after  }.count())
+        }
+    }
+
+    // Checks that old numeric datetime columns works fine with new text representation
+    @Test
+    fun testSQLiteDateTimeFieldRegression() {
+        val TestDate = object : IntIdTable("TestDate") {
+            val time = datetime("time").defaultExpression(CurrentDateTime())
+        }
+
+        withDb(TestDB.SQLITE) {
+            try {
+                exec("CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);")
+                TestDate.insert { }
+                val year = TestDate.time.year()
+                val month = TestDate.time.month()
+                val day = TestDate.time.day()
+                val hour = TestDate.time.hour()
+                val minute = TestDate.time.minute()
+
+                val result = TestDate.slice(year, month, day, hour, minute).selectAll().single()
+
+                val now = DateTime.now()
+                assertEquals(now.year, result[year])
+                assertEquals(now.monthOfYear, result[month])
+                assertEquals(now.dayOfMonth, result[day])
+                assertEquals(now.hourOfDay, result[hour])
+                assertEquals(now.minuteOfHour, result[minute])
+            } finally {
+                SchemaUtils.drop(TestDate)
+            }
         }
     }
 }
