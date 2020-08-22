@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -53,6 +54,33 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test insert int IdTable with sequences`() {
+        withTables(DeveloperWithLongId) {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                try {
+                    SchemaUtils.createSequence(myseq)
+
+                    var developerId = DeveloperWithLongId.insertAndGetId {
+                        it[id] = myseq.nextLongVal()
+                        it[name] = "Hichem"
+                    }
+
+                    assertEquals(myseq.startWith, developerId.value)
+
+                    developerId = DeveloperWithLongId.insertAndGetId {
+                        it[id] = myseq.nextLongVal()
+                        it[name] = "Andrey"
+                    }
+                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.value)
+                } finally {
+                    SchemaUtils.dropSequence(myseq)
+                }
+            }
+        }
+    }
+
+
+    @Test
     fun `test select with nextVal`() {
         withTables(Developer) {
             if (currentDialectTest.supportsCreateSequence) {
@@ -85,6 +113,10 @@ class SequencesTests : DatabaseTestsBase() {
         var name = varchar("name", 25)
 
         override val primaryKey = PrimaryKey(id, name)
+    }
+
+    private object DeveloperWithLongId : LongIdTable() {
+        var name = varchar("name", 25)
     }
 
     private val myseq = Sequence(
