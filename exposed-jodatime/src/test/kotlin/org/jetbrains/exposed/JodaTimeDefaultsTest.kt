@@ -19,6 +19,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -255,4 +256,42 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
         }
     }
+
+    @Test
+    fun defaultCurrentDateTimeTest() {
+        val TestDate = object : IntIdTable("TestDate") {
+            val time = datetime("time").defaultExpression(CurrentDateTime())
+        }
+
+        withTables(TestDate) {
+            val duration: Long = 2_000
+
+            val before = currentDateTime()
+            Thread.sleep(duration)
+            for (i in 0..1) {
+                TestDate.insertAndWait(duration)
+            }
+            val middle = currentDateTime()
+            Thread.sleep(duration)
+            for (i in 0..1) {
+                TestDate.insertAndWait(duration)
+            }
+            val after = currentDateTime()
+
+            assertEquals(0, TestDate.select { TestDate.time less    before }.count())
+            assertEquals(4, TestDate.select { TestDate.time greater before }.count())
+            assertEquals(2, TestDate.select { TestDate.time less    middle }.count())
+            assertEquals(2, TestDate.select { TestDate.time greater middle }.count())
+            assertEquals(4, TestDate.select { TestDate.time less    after  }.count())
+            assertEquals(0, TestDate.select { TestDate.time greater after  }.count())
+        }
+    }
 }
+
+fun Table.insertAndWait(duration: Long) {
+    this.insert {  }
+    TransactionManager.current().commit()
+    Thread.sleep(duration)
+}
+
+fun currentDateTime(): DateTime = DateTime.now().withZone(DateTimeZone.getDefault())

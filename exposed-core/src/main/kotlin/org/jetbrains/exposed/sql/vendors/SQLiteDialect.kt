@@ -59,37 +59,37 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%Y',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%m',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%d',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%H',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%M',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%S',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun insert(

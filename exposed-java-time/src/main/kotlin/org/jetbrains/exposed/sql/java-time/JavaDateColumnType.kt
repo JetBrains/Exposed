@@ -104,11 +104,12 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        if (value is LocalDateTime) {
-            return java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-        }
-        return value
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is LocalDateTime && currentDialect is SQLiteDialect ->
+            SQLITE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
+        value is LocalDateTime ->
+            java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        else -> value
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
@@ -143,11 +144,12 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         return rs.getTimestamp(index)
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        if (value is Instant) {
-            return java.sql.Timestamp.from(value)
-        }
-        return value
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is Instant && currentDialect is SQLiteDialect ->
+            SQLITE_DATE_TIME_STRING_FORMATTER.format(value)
+        value is Instant ->
+            java.sql.Timestamp.from(value)
+        else -> value
     }
 
     companion object {
