@@ -20,8 +20,14 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>): 
         }
     }
 
-    @JvmName("setWithEntityIdColumn")
+    @JvmName("setWithEntityIdExpression")
     operator fun <S, ID:EntityID<S>, E: Expression<S>> set(column: Column<ID>, value: E) {
+        require(!values.containsKey(column)) { "$column is already initialized" }
+        values[column] = value
+    }
+
+    @JvmName("setWithEntityIdValue")
+    operator fun <S:Comparable<S>, ID:EntityID<S>, E: S?> set(column: Column<ID>, value: E) {
         require(!values.containsKey(column)) { "$column is already initialized" }
         values[column] = value
     }
