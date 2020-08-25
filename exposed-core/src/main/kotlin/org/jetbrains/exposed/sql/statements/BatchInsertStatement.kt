@@ -83,16 +83,11 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
-    private val OUTPUT_PARAMS_LIMIT = 5000
 
     override fun validateLastBatch() {
         super.validateLastBatch()
         if (data.size > OUTPUT_ROW_LIMIT) {
             throw BatchDataInconsistentException("Too much rows in one batch. Exceed $OUTPUT_ROW_LIMIT limit")
-        }
-        val paramsToInsert = data.firstOrNull()?.size ?: 0
-        if (paramsToInsert * (data.size + 1) > OUTPUT_PARAMS_LIMIT) {
-            throw BatchDataInconsistentException("Too much parameters for batch with OUTPUT. Exceed $OUTPUT_PARAMS_LIMIT limit")
         }
     }
 
