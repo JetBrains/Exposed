@@ -12,9 +12,10 @@ Bug fixes:
  
 * `wrapAsExpression` somehow makes program fail with "debug" log level ([#1006](https://github.com/JetBrains/Exposed/issues/1006))
 * LocalDateTime miss the nanos part ([#1008](https://github.com/JetBrains/Exposed/issues/1008))
-* [SQLServer] Don't use `OUTPUT` clause in inserts when `shouldReturnGeneratedValues=false`                                                                                                            
 * IdTable.new cannot use SEQUENCE nextVal ([#1002](https://github.com/JetBrains/Exposed/issues/1002))
 * [SQLite] `WHERE` clause with DateTime expressions could return wrong result. PR by [hfazai](https://github.com/hfazai).
+* [SQLServer] Don't use `OUTPUT` clause in inserts when `shouldReturnGeneratedValues=false`
+* [SQLServer ] Unnecessary limit for OUTPUT command when using batch insert ([#440](https://github.com/JetBrains/Exposed/issues/440))
 
 # 0.26.2
 Infrastructure:
