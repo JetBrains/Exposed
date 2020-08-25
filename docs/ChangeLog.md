@@ -1,3 +1,21 @@
+# 0.27.1
+Feature:
+* Nullable CompositeColumn support (with CompositeMoneyColumn as a reference implementation)
+* `adjustSlice` now provides current FieldSet as a function parameter
+* New `decimalParam` and `decimalLiteral` introduced
+* DivideOp with BigDecimals could adjust scale with `withScale` function
+* Sequences updated to support Long values with `nextIntVal` and `nextLongVal` functions as replacement of `nextIntVal`
+* [SQLite] DateTime column representation changed from `NUMERIC` (with seconds precision) to `TEXT` (with millis)
+* Allow setting unwrapped value for EntityID columns with UpdateBuilder (insert/update/etc)
+  
+Bug fixes:
+ 
+* `wrapAsExpression` somehow makes program fail with "debug" log level ([#1006](https://github.com/JetBrains/Exposed/issues/1006))
+* LocalDateTime miss the nanos part ([#1008](https://github.com/JetBrains/Exposed/issues/1008))
+* [SQLServer] Don't use `OUTPUT` clause in inserts when `shouldReturnGeneratedValues=false`                                                                                                            
+* IdTable.new cannot use SEQUENCE nextVal ([#1002](https://github.com/JetBrains/Exposed/issues/1002))
+* [SQLite] `WHERE` clause with DateTime expressions could return wrong result. PR by [hfazai](https://github.com/hfazai).
+
 # 0.26.2
 Infrastructure:
 * MySQL related tests were moved from old embedded-mxj to test-containers ([#957](https://github.com/JetBrains/Exposed/issues/957)). Kudos to [KushalP](https://github.com/KushalP)   
