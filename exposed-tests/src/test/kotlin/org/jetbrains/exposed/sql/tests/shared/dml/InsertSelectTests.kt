@@ -53,4 +53,12 @@ class InsertSelectTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun `insert-select with same columns in a query`() {
+        withCitiesAndUsers { cities, users, userData ->
+            val fooParam = stringParam("Foo")
+            users.insert(users.slice(fooParam, fooParam).selectAll().limit(1), columns = listOf(users.name, users.id))
+            assertEquals(1, users.select { users.name eq "Foo" }.count())
+        }
+    }
 }

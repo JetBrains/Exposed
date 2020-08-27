@@ -210,7 +210,12 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
 
     override operator fun iterator(): Iterator<ResultRow> {
-        val resultIterator = ResultIterator(transaction.exec(this)!!)
+        val distinctExpressions = this.set.fields.distinct()
+        val queryToExecute = if (distinctExpressions.size < set.fields.size) {
+            copy().adjustSlice { slice(distinctExpressions) }
+        } else
+            this
+        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
         return if (transaction.db.supportsMultipleResultSets)
             resultIterator
         else {

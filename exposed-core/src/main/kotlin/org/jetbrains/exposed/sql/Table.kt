@@ -95,10 +95,10 @@ abstract class ColumnSet : FieldSet {
     abstract fun crossJoin(otherTable: ColumnSet): Join
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
-    fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.distinct())
+    fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.toList())
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
-    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns.distinct())
+    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
 /** Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
