@@ -158,7 +158,29 @@ interface ISqlExpressionBuilder {
         val entityID = EntityID(t, table)
         return EqOp(this, wrap(entityID))
     }
-
+    
+    //************************************
+    infix fun <T> ExpressionWithColumnType<T>.eqIgnoreCase(t: T): Op<Boolean> = if (t == null) isNull() else EqIgnoreCaseOp(this, wrap(t))
+    
+    infix fun <T> CompositeColumn<T>.eqIgnoreCase(t: T): Op<Boolean> {
+        // For the composite column, create "EqIgnoreCaseOps" for each real column and combine it using "and" operator
+        return this.getRealColumnsWithValues(t).entries
+            .map { e -> (e.key as Column<Any?>).eq(e.value) }
+            .compoundAnd()
+    }
+    
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eqIgnoreCase(other: Expression<in S2>): EqIgnoreCaseOp = EqIgnoreCaseOp(this, other)
+    
+    infix fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.eqIgnoreCase(t: T?): Op<Boolean> {
+        if (t == null) {
+            return isNull()
+        }
+        @Suppress("UNCHECKED_CAST")
+        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
+        val entityID = EntityID(t, table)
+        return EqIgnoreCaseOp(this, wrap(entityID))
+    }
+    //************************************
 
     /** Checks if this expression is not equals to some [other] value. */
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
