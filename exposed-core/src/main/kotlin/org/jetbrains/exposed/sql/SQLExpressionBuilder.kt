@@ -165,7 +165,7 @@ interface ISqlExpressionBuilder {
     infix fun <T> CompositeColumn<T>.eqIgnoreCase(t: T): Op<Boolean> {
         // For the composite column, create "EqIgnoreCaseOps" for each real column and combine it using "and" operator
         return this.getRealColumnsWithValues(t).entries
-            .map { e -> (e.key as Column<Any?>).eq(e.value) }
+            .map { e -> (e.key as Column<Any?>).eqIgnoreCase(e.value) }
             .compoundAnd()
     }
     
