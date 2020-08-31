@@ -477,7 +477,7 @@ fun floatLiteral(value: Float): LiteralOp<Float> = LiteralOp(FloatColumnType(), 
 fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType(), value)
 
 /** Returns the specified [value] as a string literal. */
-fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(VarCharColumnType(), value)
+fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType(), value)
 
 /** Returns the specified [value] as a decimal literal. */
 fun decimalLiteral(value: BigDecimal) : LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
@@ -537,7 +537,7 @@ fun floatParam(value: Float): Expression<Float> = QueryParameter(value, FloatCol
 fun doubleParam(value: Double): Expression<Double> = QueryParameter(value, DoubleColumnType())
 
 /** Returns the specified [value] as a string query parameter. */
-fun stringParam(value: String): Expression<String> = QueryParameter(value, VarCharColumnType())
+fun stringParam(value: String): Expression<String> = QueryParameter(value, TextColumnType())
 
 /** Returns the specified [value] as a decimal query parameter. */
 fun decimalParam(value: BigDecimal) : Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))

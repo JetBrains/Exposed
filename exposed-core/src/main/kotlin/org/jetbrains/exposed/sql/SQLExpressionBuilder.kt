@@ -377,7 +377,7 @@ interface ISqlExpressionBuilder {
         is ULong -> ulongParam(value)
         is Float -> floatParam(value)
         is Double -> doubleParam(value)
-        is String -> stringParam(value)
+        is String -> QueryParameter(value, columnType) // String value should inherit from column
         else -> QueryParameter(value, columnType)
     } as QueryParameter<T>
 
