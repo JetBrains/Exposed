@@ -19,7 +19,7 @@ private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
 }
 private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
-        "yyyy-MM-d HH:mm:ss.SSS",
+        "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
