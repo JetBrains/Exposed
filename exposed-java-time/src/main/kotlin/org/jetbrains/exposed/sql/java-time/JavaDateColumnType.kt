@@ -164,7 +164,8 @@ class JavaDurationColumnType : ColumnType(), IDateColumnType {
         val duration = when (value) {
             is String -> return value
             is Duration -> value
-            is Long -> Duration.ofNanos(value)!!
+            is Long -> Duration.ofNanos(value)
+            is Number -> Duration.ofNanos(value.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
@@ -172,8 +173,9 @@ class JavaDurationColumnType : ColumnType(), IDateColumnType {
     }
 
     override fun valueFromDB(value: Any): Duration = when (value) {
-        is Long -> Duration.ofNanos(value)!!
-        is String -> Duration.parse(value)!!
+        is Long -> Duration.ofNanos(value)
+        is Number -> Duration.ofNanos(value.toLong())
+        is String -> Duration.parse(value)
         else -> valueFromDB(value.toString())
     }
 
