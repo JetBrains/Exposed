@@ -100,7 +100,9 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             }
 
             if(schema != null) {
-                SchemaUtils.setSchema(schema)
+                transaction {
+                    SchemaUtils.setSchema(schema)
+                }
             }
 
             return database
@@ -110,7 +112,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
          * Attempts to make a connection to a database from a [DataSource]
          * for advanced behaviors such as connection pooling.
          *
-         * @param dataSource        the DataSource
+         * @param dataSource        the data source to create the connection
          * @param schema            the default schema to use
          * @param setupConnection   used to apply operations on the [dataSource] connection
          * @param manager           used to register a transaction manager
@@ -130,6 +132,14 @@ class Database private constructor(private val resolvedVendor: String? = null, v
                              manager = manager)
         }
 
+        /**
+         * Attempts to make a pooled connection to a database
+         *
+         * @param dataSource        the data source to create the connection
+         * @param schema            the default schema to use
+         * @param setupConnection   used to apply operations on the [dataSource] connection
+         * @param manager           used to register a transaction manager
+         */
         @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
         fun connect(
             dataSource: ConnectionPoolDataSource,
@@ -146,13 +156,21 @@ class Database private constructor(private val resolvedVendor: String? = null, v
                              manager = manager)
         }
 
+        /**
+         * Attempts to make a pooled connection to a database
+         *
+         * @param dataSource        the data source to create the connection
+         * @param schema            the default schema to use
+         * @param setupConnection   used to apply operations on the [dataSource] connection
+         * @param manager           used to register a transaction manager
+         */
         fun connectPool(
-                dataSource: ConnectionPoolDataSource,
-                schema: Schema? = null,
-                setupConnection: (Connection) -> Unit = {},
-                manager: (Database) -> TransactionManager = {
-                    ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
-                }
+            dataSource: ConnectionPoolDataSource,
+            schema: Schema? = null,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = {
+                ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+            }
         ): Database {
             return doConnect(explicitVendor = null,
                              getNewConnection = { dataSource.pooledConnection.connection!! },
