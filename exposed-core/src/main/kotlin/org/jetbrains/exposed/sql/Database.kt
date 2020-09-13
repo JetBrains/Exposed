@@ -76,50 +76,141 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             dialects[prefix] = dialect
         }
 
+        /**
+         * Attempts to make a connection to a database.
+         *
+         * @param explicitVendor    the vendor name, if it's `null` then it will be resolved
+         * from database dialect name
+         * @param getNewConnection  used to create a new connection
+         * @param schema            the default schema to use
+         * @param setupConnection   used to apply operations on the established connection
+         * @param manager           used to register a transaction manager
+         */
         private fun doConnect(
             explicitVendor: String?,
             getNewConnection: () -> Connection,
+            schema: Schema? = null,
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            return Database(explicitVendor) {
+            val database = Database(explicitVendor) {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
             }
+
+            if(schema != null) {
+                SchemaUtils.setSchema(schema)
+            }
+
+            return database
         }
 
-        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        /**
+         * Attempts to make a connection to a database from a [DataSource]
+         * for advanced behaviors such as connection pooling.
+         *
+         * @param dataSource        the DataSource
+         * @param schema            the default schema to use
+         * @param setupConnection   used to apply operations on the [dataSource] connection
+         * @param manager           used to register a transaction manager
+         */
+        fun connect(
+            dataSource: DataSource,
+            schema: Schema? = null,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = {
+                ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+            }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(explicitVendor = null,
+                             getNewConnection = { dataSource.connection!! },
+                             schema = schema,
+                             setupConnection = setupConnection,
+                             manager = manager)
         }
 
         @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
-        fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        fun connect(
+            dataSource: ConnectionPoolDataSource,
+            schema: Schema? = null,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = {
+                ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+            }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(explicitVendor = null,
+                             getNewConnection = { dataSource.pooledConnection.connection!! },
+                             schema = schema,
+                             setupConnection = setupConnection,
+                             manager = manager)
         }
 
-        fun connectPool(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        fun connectPool(
+                dataSource: ConnectionPoolDataSource,
+                schema: Schema? = null,
+                setupConnection: (Connection) -> Unit = {},
+                manager: (Database) -> TransactionManager = {
+                    ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+                }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(explicitVendor = null,
+                             getNewConnection = { dataSource.pooledConnection.connection!! },
+                             schema = schema,
+                             setupConnection = setupConnection,
+                             manager = manager)
         }
 
-        fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        /**
+         * Attempts to make a connection to a database from a [java.sql.Connection] instance.
+         *
+         * @param getNewConnection  used to create a new JDBC connection
+         * @param schema            the default schema to use
+         * @param manager           used to register a transaction manager
+         */
+        fun connect(
+            getNewConnection: () -> Connection,
+            schema: Schema? = null,
+            manager: (Database) -> TransactionManager = {
+                ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+            }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager )
+            return doConnect(explicitVendor = null,
+                             getNewConnection = getNewConnection,
+                             schema = schema,
+                             manager = manager)
         }
 
-        fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        /**
+         * Attempts to make a connection to a database.
+         *
+         * @param url       the database url
+         * @param driver    the driver class
+         * @param user      the database user who wants to make the connection
+         * @param password  the user's password
+         * @param schema    the default schema to use
+         * @param setupConnection used to apply operations on the JDBC connection made
+         * with the [url], [user] and [password]
+         * @param manager   used to register a transaction manager
+         */
+        fun connect(
+                url: String,
+                driver: String = getDriver(url),
+                user: String = "",
+                password: String = "",
+                schema: Schema? = null,
+                setupConnection: (Connection) -> Unit = {},
+                manager: (Database) -> TransactionManager = {
+                    ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS)
+                }
         ): Database {
             Class.forName(driver).newInstance()
 
-            return doConnect(getDialectName(url), { DriverManager.getConnection(url, user, password) }, setupConnection, manager )
+            return doConnect(getDialectName(url),
+                             { DriverManager.getConnection(url, user, password) },
+                             schema,
+                             setupConnection,
+                             manager)
         }
 
         fun getDefaultIsolationLevel(db: Database) : Int =

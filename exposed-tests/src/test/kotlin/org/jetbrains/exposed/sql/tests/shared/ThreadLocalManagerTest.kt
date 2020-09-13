@@ -52,7 +52,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
     @Test
     fun `connect fail causes repeated connect attempts`(){
         val datasource = ExceptionOnGetConnectionDataSource()
-        val db = Database.connect(datasource = datasource)
+        val db = Database.connect(dataSource = datasource)
 
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db) {
@@ -115,7 +115,7 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
-        val db = Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(dataSource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
@@ -148,7 +148,7 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
-        val db = Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(dataSource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("SELECT 1;")
@@ -171,7 +171,7 @@ class ConnectionExceptions {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
-        val db = Database.connect(datasource = wrappingDataSource)
+        val db = Database.connect(dataSource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
                 this.exec("SELECT 1;")
