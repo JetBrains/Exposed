@@ -100,7 +100,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             }
 
             if(schema != null) {
-                transaction {
+                with(database.transactionManager.newTransaction()) {
                     SchemaUtils.setSchema(schema)
                 }
             }
