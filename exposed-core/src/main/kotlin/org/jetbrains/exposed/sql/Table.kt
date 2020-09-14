@@ -660,6 +660,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         defaultValueFun = { defaultValue }
     }
 
+    /** Sets the default value for this nullable column in the database side. */
+    @JvmName("defaultNullableValue")
+    fun <T : Any> Column<T?>.default(defaultValue: T?): Column<T?> = apply {
+        dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
+        defaultValueFun = { defaultValue }
+    }
+
     /** Sets the default value for this column in the database side. */
     fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
         with(this@Table) {
