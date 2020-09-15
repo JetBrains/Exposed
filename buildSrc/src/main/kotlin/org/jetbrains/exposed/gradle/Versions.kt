@@ -17,6 +17,6 @@ object Versions {
     const val sqlserver = "8.2.2.jre8"
 
     /** Spring **/
-    const val springFramework = "5.2.0.RELEASE"
-    const val springBoot = "2.2.0.RELEASE"
+    const val springFramework = "5.2.9.RELEASE"
+    const val springBoot = "2.3.3.RELEASE"
 }
