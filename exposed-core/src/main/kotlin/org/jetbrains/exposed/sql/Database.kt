@@ -152,6 +152,8 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             when(db.vendor) {
                 SQLiteDialect.dialectName -> Connection.TRANSACTION_SERIALIZABLE
                 OracleDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLNGDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
