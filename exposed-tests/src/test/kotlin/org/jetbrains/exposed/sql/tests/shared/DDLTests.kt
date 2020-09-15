@@ -13,17 +13,49 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 class DDLTests : DatabaseTestsBase() {
 
-    @Test fun tableExists01() {
+    @Test
+    fun checkMappingConsistenceWithExplicitFkName() {
+        val TestTable1 = object : Table("table1") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val TestTable2 = object : Table("table2") {
+            val id = integer("id")
+            val table1ref = integer("table1ref").references(TestTable1.id, fkName = "FK_TABLE2_TABLE1REF_ID_XXXXX")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val tables = arrayOf(TestTable1, TestTable2)
+        withTables {
+            addLogger(StdOutSqlLogger)
+
+            SchemaUtils.create(*tables)
+            val alterStatements = checkMappingConsistence(*tables)
+//            println(alterStatements)
+
+//            12:59:31,686  WARN Test worker Exposed:invoke:283 - Indices exist in database and not mapped in code on class 'TABLE2':
+//            12:59:31,688  WARN Test worker Exposed:invoke:285 - 		Index 'FK_TABLE2_TABLE1REF_ID_XXXXX_INDEX_9' for 'TABLE2' on columns org.jetbrains.exposed.sql.tests.shared.DDLTests$checkMappingConsistenceWithExplicitFkName$TestTable2$1.table1ref
+
+            fail("Exposed produces warnings")
+        }
+    }
+
+    @Test
+    fun tableExists01() {
         val TestTable = object : Table() {
             val id = integer("id")
             val name = varchar("name", length = 42)
