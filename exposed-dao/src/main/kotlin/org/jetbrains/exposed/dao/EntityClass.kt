@@ -281,13 +281,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
 
     infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>)
-            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, false) }
+            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
     fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>, cache: Boolean)
             = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
     infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column : Column<REF?>)
-            = registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, false) }
+            = registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
     fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column: Column<REF?>, cache: Boolean = false) =
             registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
