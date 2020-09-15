@@ -61,6 +61,27 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         private val connectionInstanceImpl : DatabaseConnectionAutoRegistration =
                 ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
 
+        private val driverMapping = mutableMapOf(
+            "jdbc:h2" to "org.h2.Driver",
+            "jdbc:postgresql" to "org.postgresql.Driver",
+            "jdbc:pgsql" to "com.impossibl.postgres.jdbc.PGDriver",
+            "jdbc:mysql" to "com.mysql.cj.jdbc.Driver",
+            "jdbc:mariadb" to "org.mariadb.jdbc.Driver",
+            "jdbc:oracle" to "oracle.jdbc.OracleDriver",
+            "jdbc:sqlite" to "org.sqlite.JDBC",
+            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+        )
+        private val dialectMapping = mutableMapOf(
+            "jdbc:h2" to H2Dialect.dialectName,
+            "jdbc:postgresql" to PostgreSQLDialect.dialectName,
+            "jdbc:pgsql" to PostgreSQLNGDialect.dialectName,
+            "jdbc:mysql" to MysqlDialect.dialectName,
+            "jdbc:mariadb" to MariaDBDialect.dialectName,
+            "jdbc:oracle" to OracleDialect.dialectName,
+            "jdbc:sqlite" to SQLiteDialect.dialectName,
+            "jdbc:sqlserver" to SQLServerDialect.dialectName
+        )
+
         init {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
@@ -74,6 +95,11 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
         fun registerDialect(prefix:String, dialect: () -> DatabaseDialect) {
             dialects[prefix] = dialect
+        }
+
+        fun registerJdbcDriver(prefix: String, driverClassName: String, dialect: String) {
+            driverMapping[prefix] = driverClassName
+            dialectMapping[prefix] = dialect
         }
 
         private fun doConnect(
@@ -129,29 +155,17 @@ class Database private constructor(private val resolvedVendor: String? = null, v
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
-        private fun getDriver(url: String) = when {
-            url.startsWith("jdbc:h2") -> "org.h2.Driver"
-            url.startsWith("jdbc:postgresql") -> "org.postgresql.Driver"
-            url.startsWith("jdbc:pgsql") -> "com.impossibl.postgres.jdbc.PGDriver"
-            url.startsWith("jdbc:mysql") -> "com.mysql.cj.jdbc.Driver"
-            url.startsWith("jdbc:mariadb") -> "org.mariadb.jdbc.Driver"
-            url.startsWith("jdbc:oracle") -> "oracle.jdbc.OracleDriver"
-            url.startsWith("jdbc:sqlite") -> "org.sqlite.JDBC"
-            url.startsWith("jdbc:sqlserver") -> "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-            else -> error("Database driver not found for $url")
-        }
+        private fun getDriver(url: String) = driverMapping.filter {
+            dm -> url.startsWith(dm.key)
+        }.map {
+            dm -> dm.value
+        }.firstOrNull() ?: error("Database driver not found for $url")
 
-        private fun getDialectName(url: String) = when {
-            url.startsWith("jdbc:h2") -> H2Dialect.dialectName
-            url.startsWith("jdbc:postgresql") -> PostgreSQLDialect.dialectName
-            url.startsWith("jdbc:pgsql") -> PostgreSQLNGDialect.dialectName
-            url.startsWith("jdbc:mysql") -> MysqlDialect.dialectName
-            url.startsWith("jdbc:mariadb") -> MariaDBDialect.dialectName
-            url.startsWith("jdbc:oracle") -> OracleDialect.dialectName
-            url.startsWith("jdbc:sqlite") -> SQLiteDialect.dialectName
-            url.startsWith("jdbc:sqlserver") -> SQLServerDialect.dialectName
-            else -> error("Can't resolve dialect for connection: $url")
-        }
+        private fun getDialectName(url: String) = dialectMapping.filter { dm ->
+            url.startsWith(dm.key)
+        }.map { dm ->
+            dm.value
+        }.firstOrNull() ?: error("Can't resolve dialect for connection: $url")
     }
 }
 
