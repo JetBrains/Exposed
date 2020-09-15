@@ -155,17 +155,13 @@ class Database private constructor(private val resolvedVendor: String? = null, v
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
-        private fun getDriver(url: String) = driverMapping.filter {
-            dm -> url.startsWith(dm.key)
-        }.map {
-            dm -> dm.value
-        }.firstOrNull() ?: error("Database driver not found for $url")
+        private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Database driver not found for $url")
 
-        private fun getDialectName(url: String) = dialectMapping.filter { dm ->
-            url.startsWith(dm.key)
-        }.map { dm ->
-            dm.value
-        }.firstOrNull() ?: error("Can't resolve dialect for connection: $url")
+        private fun getDialectName(url: String) = dialectMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Can't resolve dialect for connection: $url")
     }
 }
 
