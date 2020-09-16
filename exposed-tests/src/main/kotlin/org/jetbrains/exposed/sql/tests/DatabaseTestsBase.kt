@@ -66,7 +66,8 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
             ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"},
             "org.mariadb.jdbc.Driver");
 
-    fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
+    fun connect(schema: Schema? = null) =
+            Database.connect(connection(), user = user, password = pass, schema = schema, driver = driver)
 
     companion object {
         fun enabledInTests(): List<TestDB> {

@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.junit.Test
 import java.sql.Types
@@ -45,6 +47,35 @@ class ConnectionTests : DatabaseTestsBase() {
                 tableConstraints(listOf(child))
             }
             assertEquals(2, constraints.keys.size)
+        }
+    }
+
+    @Test
+    fun testConnectAndSpecifySchema() {
+        if (TestDB.MYSQL !in TestDB.enabledInTests()) return
+
+        val schema = Schema("myschema")
+
+        try {
+            // Create the schema
+            TestDB.MYSQL.connect()
+            transaction { SchemaUtils.createSchema(schema) }
+
+            // Connect with specifying [schema] as a default schema
+            TestDB.MYSQL.connect(schema = schema)
+
+            transaction {
+                // Make sure that the used schema is what we set in [connect] method
+                assertEquals(schema.identifier, connection.schema)
+
+                // Test it also in nested transaction
+                transaction {
+                    assertEquals(schema.identifier, connection.schema)
+                }
+            }
+        } finally {
+            // Drop the schema at the end of the test
+            transaction { SchemaUtils.dropSchema(schema) }
         }
     }
 }
