@@ -655,20 +655,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
 
     /** Sets the default value for this column in the database side. */
-    fun <T : Any> Column<T>.default(defaultValue: T): Column<T> = apply {
-        dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
-        defaultValueFun = { defaultValue }
-    }
-
-    /** Sets the default value for this nullable column in the database side. */
-    @JvmName("defaultNullableValue")
-    fun <T : Any> Column<T?>.default(defaultValue: T?): Column<T?> = apply {
+    fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
         dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
         defaultValueFun = { defaultValue }
     }
 
     /** Sets the default value for this column in the database side. */
-    fun <T : Any> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
+    fun <T> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
         with(this@Table) {
             this@default.getRealColumnsWithValues(defaultValue).forEach {
                 (it.key as Column<Any>).default(it.value as Any)
@@ -677,7 +670,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Sets the default value for this column in the database side. */
-    fun <T : Any> Column<T>.defaultExpression(defaultValue: Expression<T>): Column<T> = apply {
+    fun <T> Column<T>.defaultExpression(defaultValue: Expression<T>): Column<T> = apply {
         dbDefaultValue = defaultValue
         defaultValueFun = null
     }
