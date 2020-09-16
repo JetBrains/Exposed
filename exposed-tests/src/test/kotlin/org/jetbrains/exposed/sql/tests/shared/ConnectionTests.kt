@@ -62,7 +62,7 @@ class ConnectionTests : DatabaseTestsBase() {
             transaction { SchemaUtils.createSchema(schema) }
 
             // Connect with specifying [schema] as a default schema
-            TestDB.MYSQL.connect(schema = schema)
+            TestDB.H2.connect(schema = schema)
 
             transaction {
                 val schemaName = db.identifierManager.inProperCase(schema.identifier)
