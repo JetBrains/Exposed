@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.junit.Test
@@ -66,7 +65,7 @@ class ConnectionTests : DatabaseTestsBase() {
             TestDB.MYSQL.connect(schema = schema)
 
             transaction {
-                val schemaName = TransactionManager.current().db.identifierManager.inProperCase(schema.identifier)
+                val schemaName = db.identifierManager.inProperCase(schema.identifier)
 
                 // Make sure that the used schema is what we set in [connect] method
                 assertEquals(schemaName, connection.schema)
