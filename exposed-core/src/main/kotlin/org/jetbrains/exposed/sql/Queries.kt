@@ -86,7 +86,7 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertState
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
-fun <T:Table, E:Any> T.batchInsert(
+fun <T:Table, E> T.batchInsert(
     data: Iterable<E>,
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,

@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.3.72"
-    const val kotlinCoroutines = "1.3.5"
+    const val kotlin = "1.4.10"
+    const val kotlinCoroutines = "1.3.9"
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
@@ -17,6 +17,6 @@ object Versions {
     const val sqlserver = "8.2.2.jre8"
 
     /** Spring **/
-    const val springFramework = "5.2.0.RELEASE"
-    const val springBoot = "2.2.0.RELEASE"
+    const val springFramework = "5.2.9.RELEASE"
+    const val springBoot = "2.3.3.RELEASE"
 }
