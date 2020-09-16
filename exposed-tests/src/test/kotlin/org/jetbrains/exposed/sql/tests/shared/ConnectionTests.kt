@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.junit.Test
@@ -52,25 +53,27 @@ class ConnectionTests : DatabaseTestsBase() {
 
     @Test
     fun testConnectAndSpecifySchema() {
-        if (TestDB.MYSQL !in TestDB.enabledInTests()) return
+        if (TestDB.H2 !in TestDB.enabledInTests()) return
 
         val schema = Schema("myschema")
 
         try {
             // Create the schema
-            TestDB.MYSQL.connect()
+            TestDB.H2.connect()
             transaction { SchemaUtils.createSchema(schema) }
 
             // Connect with specifying [schema] as a default schema
             TestDB.MYSQL.connect(schema = schema)
 
             transaction {
+                val schemaName = TransactionManager.current().db.identifierManager.inProperCase(schema.identifier)
+
                 // Make sure that the used schema is what we set in [connect] method
-                assertEquals(schema.identifier, connection.schema)
+                assertEquals(schemaName, connection.schema)
 
                 // Test it also in nested transaction
                 transaction {
-                    assertEquals(schema.identifier, connection.schema)
+                    assertEquals(schemaName, connection.schema)
                 }
             }
         } finally {
