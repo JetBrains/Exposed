@@ -12,7 +12,9 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
-class Database private constructor(private val resolvedVendor: String? = null, val connector: () -> ExposedConnection<*>) {
+class Database private constructor(private val resolvedVendor: String? = null,
+                                   val schema: Schema? = null,
+                                   val connector: () -> ExposedConnection<*>) {
 
     var useNestedTransactions: Boolean = false
 
@@ -119,7 +121,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            val database = Database(explicitVendor) {
+            val database = Database(explicitVendor, schema = schema) {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))

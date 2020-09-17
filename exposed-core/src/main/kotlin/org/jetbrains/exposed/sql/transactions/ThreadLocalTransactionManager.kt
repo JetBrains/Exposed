@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.transactions
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
@@ -167,6 +168,9 @@ fun <T> inTopLevelTransaction(
             val transaction = db.transactionManager.newTransaction(transactionIsolation, outerTransaction)
 
             try {
+                if(transaction.db.schema != null) {
+                        SchemaUtils.setSchema(transaction.db.schema!!)
+                }
                 val answer = transaction.statement()
                 transaction.commit()
                 return answer

@@ -51,22 +51,23 @@ class ConnectionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testConnectAndSpecifySchema() {
+    fun testConnectAndSpecifySchema1() {
         if (TestDB.H2 !in TestDB.enabledInTests()) return
 
-        val schema = Schema("myschema")
-
+        val schemaName = "MYSCHEMA"
+        val schema = Schema(schemaName)
         try {
-            // Create the schema
+            // Connect and create the schema
             TestDB.H2.connect()
-            transaction { SchemaUtils.createSchema(schema) }
+            transaction {
+                assertEquals("PUBLIC", connection.schema)
+                SchemaUtils.createSchema(schema)
+            }
 
-            // Connect with specifying [schema] as a default schema
+            // Connect and specify [schema] as a default schema
             TestDB.H2.connect(schema = schema)
 
             transaction {
-                val schemaName = db.identifierManager.inProperCase(schema.identifier)
-
                 // Make sure that the used schema is what we set in [connect] method
                 assertEquals(schemaName, connection.schema)
 
@@ -74,6 +75,33 @@ class ConnectionTests : DatabaseTestsBase() {
                 transaction {
                     assertEquals(schemaName, connection.schema)
                 }
+            }
+        } finally {
+            // Drop the schema at the end of the test
+            transaction { SchemaUtils.dropSchema(schema) }
+        }
+    }
+
+    @Test
+    fun testConnectAndSpecifySchema2() {
+        if (TestDB.H2 !in TestDB.enabledInTests()) return
+
+        val schemaName = "MYSCHEMA"
+        val schema = Schema(schemaName)
+        try {
+            // Create the schema
+            TestDB.H2.connect()
+            transaction { SchemaUtils.createSchema(schema) }
+
+            // Connect with specifying [schema] as a default schema
+            transaction {
+                TestDB.H2.connect(schema = schema)
+                // Make sure that the used schema is what we set in [connect] method
+                assertEquals(schemaName, connection.schema)
+            }
+
+            transaction {
+                assertEquals(schemaName, connection.schema)
             }
         } finally {
             // Drop the schema at the end of the test
