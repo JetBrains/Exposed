@@ -708,7 +708,7 @@ class DDLTests : DatabaseTestsBase() {
     fun createTableWithForeignKeyToAnotherSchema() {
         val one = Schema("one")
         val two = Schema("two")
-        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = *arrayOf(two, one)) {
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(two, one)) {
             SchemaUtils.create(TableFromSchemeOne, TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 

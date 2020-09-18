@@ -221,4 +221,21 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     object T2: Table("CHAIN") {
         val ref = integer("ref").references(T1.name)
     }
+
+    @Test
+    fun `test create table with name from system scheme`() {
+        val usersTable = object : IdTable<String>("users") {
+            override var id: Column<EntityID<String>> = varchar("id", 190).entityId()
+
+            override val primaryKey = PrimaryKey(id)
+        }
+        withDb {
+            try {
+                SchemaUtils.createMissingTablesAndColumns(usersTable)
+                assertTrue(usersTable.exists())
+            } finally {
+                SchemaUtils.drop(usersTable)
+            }
+        }
+    }
 }

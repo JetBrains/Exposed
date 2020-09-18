@@ -39,8 +39,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
          else -> database
     }
 
-    private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
-
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
     override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
@@ -126,7 +124,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs =  metadata.getColumns(databaseName, oracleSchema, "%", "%")
+        val rs =  metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             //@see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
@@ -144,7 +142,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val transaction = TransactionManager.current()
 
             existingIndicesCache.getOrPut(table) {
-                val pkNames = metadata.getPrimaryKeys(databaseName, oracleSchema, tableName).let { rs ->
+                val pkNames = metadata.getPrimaryKeys(databaseName, currentScheme, tableName).let { rs ->
                     val names = arrayListOf<String>()
                     while(rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
@@ -152,7 +150,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     rs.close()
                     names
                 }
-                val rs = metadata.getIndexInfo(databaseName, oracleSchema, tableName, false, false)
+                val rs = metadata.getIndexInfo(databaseName, currentScheme, tableName, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
@@ -178,7 +176,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         return allTables.keys.associateWith { table ->
-            metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
+            metadata.getImportedKeys(databaseName, currentScheme, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
                 val fromColumn = allTables.getValue(fromTableName).columns.firstOrNull {

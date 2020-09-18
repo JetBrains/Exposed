@@ -296,7 +296,6 @@ class CreateTableTests : DatabaseTestsBase() {
     fun `test create table with same name in different schemas`() {
         val one = Schema("one")
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
-            addLogger(StdOutSqlLogger)
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
             try {
