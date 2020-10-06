@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.dao.id
 
+import java.util.*
+
 open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
     constructor(id:T, table: IdTable<T>) : this(table, id)
     var _value: Any? = id
@@ -27,3 +29,7 @@ open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>
 
     override fun compareTo(other: EntityID<T>): Int = value.compareTo(other.value)
 }
+
+typealias IntEntityID = EntityID<Int>
+typealias LongEntityID = EntityID<Long>
+typealias UUIDEntityID = EntityID<UUID>
