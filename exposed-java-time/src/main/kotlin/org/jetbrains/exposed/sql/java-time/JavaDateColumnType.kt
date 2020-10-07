@@ -1,9 +1,7 @@
 package org.jetbrains.exposed.sql.`java-time`
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnType
-import org.jetbrains.exposed.sql.IDateColumnType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
@@ -17,7 +15,7 @@ private val DEFAULT_DATE_STRING_FORMATTER by lazy {
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
-private val SQLITE_DATE_TIME_STRING_FORMATTER by lazy {
+private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
@@ -37,6 +35,8 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = false
+
     override fun sqlType(): String = "DATE"
 
     override fun nonNullValueToString(value: Any): String {
@@ -77,6 +77,7 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
 }
 
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Any): String {
@@ -88,10 +89,10 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return if (currentDialect is SQLiteDialect)
-            "'${SQLITE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-        else
-            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        return when (currentDialect) {
+            is SQLiteDialect, is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        }
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
@@ -106,7 +107,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun notNullValueToDB(value: Any): Any = when {
         value is LocalDateTime && currentDialect is SQLiteDialect ->
-            SQLITE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
+            SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
         value is LocalDateTime ->
             java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
         else -> value
@@ -121,6 +122,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Any): String {
@@ -131,7 +133,10 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        return when(currentDialect) {
+            is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        }
     }
 
     override fun valueFromDB(value: Any): Instant = when (value) {
@@ -146,7 +151,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 
     override fun notNullValueToDB(value: Any): Any = when {
         value is Instant && currentDialect is SQLiteDialect ->
-            SQLITE_DATE_TIME_STRING_FORMATTER.format(value)
+            SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)
         value is Instant ->
             java.sql.Timestamp.from(value)
         else -> value
@@ -157,7 +162,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-class JavaDurationColumnType : ColumnType(), IDateColumnType {
+class JavaDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
     override fun nonNullValueToString(value: Any): String {
