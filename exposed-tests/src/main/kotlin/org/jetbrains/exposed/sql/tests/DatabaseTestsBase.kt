@@ -39,21 +39,15 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
             beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
     POSTGRESQLNG({"jdbc:pgsql://localhost:12346/template1?user=postgres&password="}, "com.impossibl.postgres.jdbc.PGDriver",
             user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "C##ExposedTest", pass = "12345",
+    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
             connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                    ":${System.getProperty("exposed.test.oracle.port", "1521")}/xe"},
+                    ":${System.getProperty("exposed.test.oracle.port", "1521")}/XEPDB1"},
             beforeConnection = {
                 Locale.setDefault(Locale.ENGLISH)
                 val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
                 transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
-                    try {
-                        exec("DROP USER C##ExposedTest CASCADE")
-                    } catch (e: Exception) { // ignore
-                        exposedLogger.warn("Exception on deleting C##ExposedTest user", e)
-                    }
-                    exec("CREATE USER C##ExposedTest IDENTIFIED BY 12345 DEFAULT TABLESPACE system QUOTA UNLIMITED ON system")
-                    exec("grant all privileges to C##ExposedTest")
-                    exec("grant dba to C##ExposedTest")
+                    exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
+                    exec("grant all privileges to ExposedTest")
                 }
                 Unit
             }),
@@ -147,6 +141,7 @@ abstract class DatabaseTestsBase {
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
+                addLogger(StdOutSqlLogger)
                 SchemaUtils.create(*tables)
                 try {
                     statement(testDB)

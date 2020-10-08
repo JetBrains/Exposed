@@ -35,7 +35,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     private val databaseName get() = when(databaseDialectName) {
          MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-         OracleDialect.dialectName -> null
          else -> database
     }
 
@@ -55,6 +54,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 field = try {
                     when (databaseDialectName) {
                         MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
+                        OracleDialect.dialectName -> databaseName
                         else -> metadata.connection.schema.orEmpty()
                     }
                 } catch (e: Throwable) { "" }
@@ -81,8 +81,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
-            useCatalogInsteadOfScheme -> scheme to ""
-            else -> databaseName to scheme
+            useCatalogInsteadOfScheme -> scheme to "%"
+            currentDialect is OracleDialect -> databaseName to databaseName
+            else -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
         return resultSet.iterate {

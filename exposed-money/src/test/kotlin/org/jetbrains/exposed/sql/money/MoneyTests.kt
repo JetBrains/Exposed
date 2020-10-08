@@ -97,7 +97,7 @@ class AccountDao(id: EntityID<Int>) : IntEntity(id) {
 
 }
 
-object Account : IntIdTable("Account") {
+object Account : IntIdTable("AccountTable") {
 
     val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money")
 
