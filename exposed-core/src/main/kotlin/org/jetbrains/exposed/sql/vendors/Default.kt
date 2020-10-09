@@ -80,6 +80,9 @@ abstract class DataTypeProvider {
     /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
 
+    /** Time type for storing time without a time zone. */
+    open fun timeType(): String = "TIME"
+
     // Boolean type
 
     /** Data type for storing boolean values. */

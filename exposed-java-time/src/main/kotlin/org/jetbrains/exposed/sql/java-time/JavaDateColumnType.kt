@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.`java-time`
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.IDateColumnType
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -17,9 +20,12 @@ private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
 }
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSS",
-        Locale.ROOT
+            "yyyy-MM-dd HH:mm:ss.SSS",
+            Locale.ROOT
     ).withZone(ZoneId.systemDefault())
+}
+private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
@@ -31,6 +37,7 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
         baseFormat
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+private fun formatterForTimeString(date: String) = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
 
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
@@ -121,6 +128,43 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+class JavaLocalTimeColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val instant = when (value) {
+            is String -> return value
+            is LocalTime -> Instant.from(value)
+            is java.sql.Time -> Instant.ofEpochMilli(value.time)
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
+    }
+
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is LocalTime -> value
+        is java.sql.Time -> longToLocalTime(value.time)
+        is java.sql.Timestamp -> longToLocalTime(value.time / 1000, value.nanos.toLong())
+        is Int -> longToLocalTime(value.toLong())
+        is Long -> longToLocalTime(value)
+        is String -> LocalTime.parse(value, formatterForTimeString(value))
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is LocalDateTime -> DEFAULT_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
+        else -> value
+    }
+
+    private fun longToLocalTime(millis: Long) = LocalTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+    private fun longToLocalTime(seconds: Long, nanos: Long) = LocalTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+
+    companion object {
+        internal val INSTANCE = JavaLocalTimeColumnType()
+    }
+}
+
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -133,7 +177,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return when(currentDialect) {
+        return when (currentDialect) {
             is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
@@ -213,6 +257,14 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocal
  * @param name The column name
  */
 fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+
+/**
+ * A time column to store a time.
+ *
+ * @param name The column name
+ * @author Maxim Vorotynsky
+ */
+fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.
