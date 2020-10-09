@@ -129,7 +129,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 class JavaLocalTimeColumnType : ColumnType() {
-    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -157,8 +157,8 @@ class JavaLocalTimeColumnType : ColumnType() {
         else -> value
     }
 
-    private fun longToLocalTime(millis: Long) = LocalTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
-    private fun longToLocalTime(seconds: Long, nanos: Long) = LocalTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+    private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
+    private fun longToLocalTime(seconds: Long, nanos: Long) = Instant.ofEpochSecond(seconds, nanos).atZone(ZoneId.systemDefault()).toLocalTime()
 
     companion object {
         internal val INSTANCE = JavaLocalTimeColumnType()
