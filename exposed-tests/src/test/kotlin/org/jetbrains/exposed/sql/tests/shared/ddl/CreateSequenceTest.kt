@@ -124,7 +124,7 @@ class SequencesTests : DatabaseTestsBase() {
         startWith = 4,
         incrementBy = 2,
         minValue = 1,
-        maxValue = 10,
+        maxValue = 100,
         cycle = true,
         cache = 20
     )

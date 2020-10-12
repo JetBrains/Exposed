@@ -188,9 +188,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test fun testCreateTableWithReferenceMutipleTimes() {
-        withTables(PlayerTable, SessionTable) {
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionTable)
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionTable)
+        withTables(PlayerTable, SessionsTable) {
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
         }
     }
 
@@ -198,7 +198,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val username = varchar("username", 10).uniqueIndex().nullable()
     }
 
-    object SessionTable: IntIdTable() {
+    object SessionsTable: IntIdTable() {
         val playerId = integer("player_id").references(PlayerTable.id)
     }
 

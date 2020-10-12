@@ -14,14 +14,18 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
     override fun textType(): String = "CLOB"
-    override fun binaryType(): String = "BLOB"
+    override fun binaryType(): String {
+        exposedLogger.error("Binary type is unsupported for Oracle. Please use blob column type instead.")
+        error("Binary type is unsupported for Oracle. Please use blob column type instead.")
+    }
+
     override fun binaryType(length: Int): String {
-        exposedLogger.warn("The length of the binary column is not required.")
-        return binaryType()
+        return if (length < 2000) "RAW ($length)"
+        else binaryType()
     }
 
     override val blobAsStream = true
-    override fun blobType(): String = "BLOB"
+
     override fun uuidType(): String = "RAW(16)"
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun booleanType(): String = "CHAR(1)"

@@ -22,7 +22,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
@@ -39,10 +39,9 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byNameHash = index("test_table_by_name", /* isUnique = */ false, name, indexType = "HASH")
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), tables = arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
         }
     }
 
