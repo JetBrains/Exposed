@@ -46,6 +46,11 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
                 Locale.setDefault(Locale.ENGLISH)
                 val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
                 transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+                    try {
+                        exec("DROP USER ExposedTest CASCADE")
+                    } catch (e: Exception) { // ignore
+                        exposedLogger.warn("Exception on deleting ExposedTest user", e)
+                    }
                     exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
                     exec("grant all privileges to ExposedTest")
                 }
