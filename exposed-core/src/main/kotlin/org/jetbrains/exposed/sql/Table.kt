@@ -177,12 +177,21 @@ class Join(
         otherColumn: Expression<*>? = null,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) : this(table) {
-        val new = if (onColumn != null && otherColumn != null) {
-            join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
-        } else {
-            join(otherTable, joinType, additionalConstraint)
+        val newJoin = when {
+            onColumn != null && otherColumn != null -> {
+                join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+            }
+            onColumn != null || otherColumn != null -> {
+                error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
+            }
+            additionalConstraint != null -> {
+                join(otherTable, joinType, emptyList(), additionalConstraint)
+            }
+            else -> {
+                implicitJoin(otherTable, joinType)
+            }
         }
-        joinParts.addAll(new.joinParts)
+        joinParts.addAll(newJoin.joinParts)
     }
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
@@ -219,33 +228,32 @@ class Join(
         return join(otherTable, joinType, cond, additionalConstraint)
     }
 
-    override infix fun innerJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.INNER)
+    override infix fun innerJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.LEFT)
+    override infix fun leftJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.LEFT)
 
-    override infix fun rightJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.RIGHT)
+    override infix fun rightJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.RIGHT)
 
-    override infix fun fullJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.FULL)
+    override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
-    override infix fun crossJoin(otherTable: ColumnSet): Join = join(otherTable, JoinType.CROSS)
+    override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
 
-    private fun join(
+    private fun implicitJoin(
         otherTable: ColumnSet,
-        joinType: JoinType = JoinType.INNER,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        joinType: JoinType
     ): Join {
         val fkKeys = findKeys(this, otherTable) ?: findKeys(otherTable, this) ?: emptyList()
         return when {
-            joinType != JoinType.CROSS && fkKeys.isEmpty() && additionalConstraint == null -> {
+            joinType != JoinType.CROSS && fkKeys.isEmpty() -> {
                 error("Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing")
             }
-            fkKeys.any { it.second.size > 1 } && additionalConstraint == null -> {
+            fkKeys.any { it.second.size > 1 } -> {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
             else -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
-                join(otherTable, joinType, cond, additionalConstraint)
+                join(otherTable, joinType, cond, null)
             }
         }
     }
