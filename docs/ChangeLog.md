@@ -1,3 +1,33 @@
+# 0.28.1
+Broken Changes:
+* `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 
+  It should help to prevent excessive queries when reading referenced values withing the same transaction but may require more memory to store the cached values.
+* Default isolation level for PostgreSQL now set to `READ_COMMITTED`. PR by [uryyyyyyy](https://github.com/uryyyyyyy)  
+* [Oracle] Binary column type without length prohibited in favour to blob
+
+Infrastructure:
+* Kotlin 1.4.10
+* Kotlin Coroutines 1.3.9
+* Spring Framework 5.2.9
+* Spring Boot 2.3.3
+
+Feature:
+* Custom jdbc-driver registration supported with `Database.registerJdbcDriver` function ([#1023](https://github.com/JetBrains/Exposed/issues/1023)), thanks [rnentjes](https://github.com/rnentjes) for the improvement.  
+
+Bug fixes:
+* Confusing slice api distincts same expressions ([#1020](https://github.com/JetBrains/Exposed/issues/1020))
+* Can't read text column, if it exceeds 255 chars. ([#1029](https://github.com/JetBrains/Exposed/issues/1029))
+* SchemaUtils#addMissingColumnsStatements function made public ([#1030](https://github.com/JetBrains/Exposed/issues/1030))
+* Sum on Duration columns fails with exception ([#1033](https://github.com/JetBrains/Exposed/issues/1033))
+* Batch insert can't be used with nullable collections ([#847](https://github.com/JetBrains/Exposed/issues/847)). PR by [JamiesWhiteShirt](https://github.com/JamiesWhiteShirt)
+* Nullable columns can't have default values. Fixed by [xGabrielDEV](https://github.com/xGabrielDEV)
+* A possible speedup for Schema related operations on fetching metadata
+* It was impossible to make tables join with additional constraint only, implicit join part always added to a join
+* [SQLite] Wrong datetime format used
+* [H2] Problems with creating primary keys ([#841](https://github.com/JetBrains/Exposed/issues/841), [#1051](https://github.com/JetBrains/Exposed/issues/1051))
+* [Oracle] A lot of fixes for datatime column types
+* [Oracle] Tables weren't resolved from
+
 # 0.27.1
 Feature:
 * Nullable CompositeColumn support (with CompositeMoneyColumn as a reference implementation)
