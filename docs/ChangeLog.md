@@ -26,7 +26,7 @@ Bug fixes:
 * [SQLite] Wrong datetime format used
 * [H2] Problems with creating primary keys ([#841](https://github.com/JetBrains/Exposed/issues/841), [#1051](https://github.com/JetBrains/Exposed/issues/1051))
 * [Oracle] A lot of fixes for datatime column types
-* [Oracle] Tables weren't resolved from
+* [Oracle] Tables weren't resolved from Scheme
 
 # 0.27.1
 Feature:
