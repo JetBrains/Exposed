@@ -17,6 +17,7 @@ class DateTimeWithTimeZoneColumnTypeTest {
     fun testDateTimeTzTypeWithString() {
         val columnType = DateTimeWithTimeZoneColumnType()
         val datetime = "2020-10-05T04:03:02.000+02:00"
-        Assert.assertEquals(columnType.nonNullValueToString(datetime), "'${datetime}'")
+        val expectedDatetime = "2020-10-05T02:03:02.000Z"
+        Assert.assertEquals("'${expectedDatetime}'", columnType.nonNullValueToString(datetime), )
     }
 }

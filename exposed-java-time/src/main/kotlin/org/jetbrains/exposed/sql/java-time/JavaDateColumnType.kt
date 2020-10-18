@@ -1,28 +1,42 @@
 package org.jetbrains.exposed.sql.`java-time`
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.IDateColumnType
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_INSTANT
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
-    DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+    ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
-}
-private val DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER by lazy {
-    DateTimeFormatter.ISO_ZONED_DATE_TIME
 }
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
+}
+private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER by lazy {
+    DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+            .optionalEnd()
+            .appendOffset("+HH:mm:ss", "+00") // Weird, default value should be 'Z'.
+            .toFormatter(Locale.ROOT)
 }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
@@ -134,22 +148,22 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
             is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
-
-        return "'${DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER.format(instant)}'"
+        return "'${ISO_INSTANT.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
         is ZonedDateTime -> value
+        is java.sql.Date -> Instant.ofEpochMilli(value.time)
         is java.sql.Timestamp -> longToZonedDateTime(value.time / 1000, value.nanos.toLong())
         is Int -> longToZonedDateTime(value.toLong())
         is Long -> longToZonedDateTime(value)
-        is String -> ZonedDateTime.parse(value, DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER)
-        else -> valueFromDB(value.toString())
+        is String ->
+            value.toLongOrNull()?.let { valueFromDB(it) } ?: ZonedDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER) // Why is the DB not storing the 'T' ?
+        else ->
+            valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
-        value is ZonedDateTime && currentDialect is SQLiteDialect ->
-            SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)
         value is ZonedDateTime ->
             java.sql.Timestamp(value.toInstant().toEpochMilli())
         else -> value
@@ -158,8 +172,8 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean
         get() = true
 
-    private fun longToZonedDateTime(millis: Long) = ZonedDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
-    private fun longToZonedDateTime(seconds: Long, nanos: Long) = ZonedDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+    private fun longToZonedDateTime(millis: Long) = ZonedDateTime. ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC)
+    private fun longToZonedDateTime(seconds: Long, nanos: Long) = ZonedDateTime. ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneOffset.UTC)
 
     companion object {
         internal val INSTANCE = JavaTimeZonedDateTimeColumnType()
@@ -264,7 +278,7 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, J
  *
  * @param name The column name
  */
-fun Table.datetimetz(name: String): Column<ZonedDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+fun Table.datetimetz(name: String): Column<ZonedDateTime> = registerColumn(name, JavaTimeZonedDateTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.

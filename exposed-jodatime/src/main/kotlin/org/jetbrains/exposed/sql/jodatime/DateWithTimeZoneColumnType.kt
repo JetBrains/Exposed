@@ -32,6 +32,9 @@ class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
+    override val hasTimePart: Boolean
+        get() = true
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is DateColumnType) return false

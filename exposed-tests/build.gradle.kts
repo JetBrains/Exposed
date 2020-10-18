@@ -29,7 +29,7 @@ dependencies {
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
     implementation("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
     implementation("com.h2database", "h2", Versions.h2)
-    implementation("org.testcontainers", "testcontainers", "1.14.3")
+    implementation("org.testcontainers", "testcontainers", "1.15.0-rc2")
     implementation("org.testcontainers", "mysql", "1.14.3")
 
     when (dialect) {
