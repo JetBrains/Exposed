@@ -15,6 +15,9 @@ private val DEFAULT_DATE_STRING_FORMATTER by lazy {
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+private val DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_ZONED_DATE_TIME
+}
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
@@ -121,6 +124,48 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeTzType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val instant = when (value) {
+            is String -> return value
+            is ZonedDateTime -> Instant.from(value)
+            is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER.format(instant)}'"
+    }
+
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is ZonedDateTime -> value
+        is java.sql.Timestamp -> longToZonedDateTime(value.time / 1000, value.nanos.toLong())
+        is Int -> longToZonedDateTime(value.toLong())
+        is Long -> longToZonedDateTime(value)
+        is String -> ZonedDateTime.parse(value, DEFAULT_DATE_TIME_WITH_TIMEZONE_STRING_FORMATTER)
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is ZonedDateTime && currentDialect is SQLiteDialect ->
+            SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)
+        value is ZonedDateTime ->
+            java.sql.Timestamp(value.toInstant().toEpochMilli())
+        else -> value
+    }
+
+    override val hasTimePart: Boolean
+        get() = true
+
+    private fun longToZonedDateTime(millis: Long) = ZonedDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+    private fun longToZonedDateTime(seconds: Long, nanos: Long) = ZonedDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+
+    companion object {
+        internal val INSTANCE = JavaTimeZonedDateTimeColumnType()
+    }
+}
+
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -213,6 +258,13 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocal
  * @param name The column name
  */
 fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+
+/**
+ * A datetimetz column to store both a date and a time with timezone.
+ *
+ * @param name The column name
+ */
+fun Table.datetimetz(name: String): Column<ZonedDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.

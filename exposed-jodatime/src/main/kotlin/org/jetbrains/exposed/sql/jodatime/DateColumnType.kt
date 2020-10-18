@@ -35,7 +35,7 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
 
-        val dateTime = when (value) {
+        val dateTime: DateTime = when (value) {
             is DateTime -> value
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)

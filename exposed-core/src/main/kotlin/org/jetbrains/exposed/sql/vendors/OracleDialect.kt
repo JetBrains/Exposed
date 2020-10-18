@@ -28,6 +28,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "RAW(16)"
     override fun dateTimeType(): String = "TIMESTAMP"
+    override fun dateTimeTzType(): String = "TIMESTAMP WITH TIME ZONE"
     override fun booleanType(): String = "CHAR(1)"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun booleanFromStringToBoolean(value: String): Boolean = try {
