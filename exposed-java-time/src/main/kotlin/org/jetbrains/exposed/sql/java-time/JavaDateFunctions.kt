@@ -4,10 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.*
 import java.time.temporal.Temporal
 
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
@@ -15,6 +12,15 @@ class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLoc
 }
 
 class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when {
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            else -> "CURRENT_TIMESTAMP"
+        }
+    }
+}
+
+class CurrentDateTimeWithTimezone : Function<ZonedDateTime>(JavaTimeZonedDateTimeColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -88,6 +94,8 @@ fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value,
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(JavaLocalDateColumnType.INSTANCE, value)
 fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> =
     LiteralOp(JavaLocalDateTimeColumnType.INSTANCE, value)
+fun zonedDateTimeLiteral(value: ZonedDateTime): LiteralOp<ZonedDateTime> =
+        LiteralOp(JavaTimeZonedDateTimeColumnType.INSTANCE, value)
 
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(JavaInstantColumnType.INSTANCE, value)
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(JavaDurationColumnType.INSTANCE, value)

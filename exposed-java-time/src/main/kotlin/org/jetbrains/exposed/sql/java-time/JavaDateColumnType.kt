@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -36,6 +37,16 @@ private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER by lazy {
             .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
             .optionalEnd()
             .appendOffset("+HH:mm:ss", "+00") // Weird, default value should be 'Z'.
+            .toFormatter(Locale.ROOT)
+}
+
+private val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER by lazy {
+    DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+            .optionalEnd()
             .toFormatter(Locale.ROOT)
 }
 
@@ -148,7 +159,10 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
             is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
-        return "'${ISO_INSTANT.format(instant)}'"
+        return when(currentDialect) {
+            is MysqlDialect -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'" // Timezone not actually supported.
+            else -> "'${ISO_INSTANT.format(instant)}'"
+        }
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
@@ -158,7 +172,14 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
         is Int -> longToZonedDateTime(value.toLong())
         is Long -> longToZonedDateTime(value)
         is String ->
-            value.toLongOrNull()?.let { valueFromDB(it) } ?: ZonedDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER) // Why is the DB not storing the 'T' ?
+            value.toLongOrNull()?.let { valueFromDB(it) } ?: when(currentDialect) {
+                is MysqlDialect, is SQLiteDialect ->
+                    ZonedDateTime.of(
+                            LocalDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER),
+                            ZoneOffset.UTC
+                    )
+                else -> ZonedDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER)
+            }
         else ->
             valueFromDB(value.toString())
     }
