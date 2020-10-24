@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -29,6 +30,14 @@ private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER = DateTimeF
                 .appendFractionOfSecond(3, 9)
                 .toParser())
         .appendTimeZoneOffset(null, "+00", true, 2, 2)
+        .toFormatter()
+
+private val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER = DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .appendOptional( DateTimeFormatterBuilder()
+                .appendLiteral('.')
+                .appendFractionOfSecond(3, 9)
+                .toParser())
         .toFormatter()
 
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
@@ -125,7 +134,10 @@ class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
         is Long -> DateTime(value)
         is String ->
             value.toLongOrNull()?.let { DateTime(it) }
-                    ?: DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
+                    ?: when(currentDialect) {
+                        is MysqlDialect, is SQLiteDialect -> DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER.parseDateTime(value) // MySQL doesn't actually support this type.
+                        else -> DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
+                    }
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
