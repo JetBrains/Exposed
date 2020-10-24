@@ -44,14 +44,15 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
     }
 }
 
-fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
+fun assertEqualDateTime(d1: DateTime?, d2: DateTime?, hasTimezone: Boolean = false) {
     when{
         d1 == null && d2 == null -> return
         d1 == null && d2 != null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
         d2 == null -> error ("d1 is not null while d2 is null on ${currentDialectTest.name}")
         d1 == null -> error("Impossible")
         // Mysql doesn't support millis prior 5.6.4
-        (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
+        // This doesn't apply to timestamp with timezone though.
+        (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false && !hasTimezone ->
             assertEquals(d1.millis / 1000, d2.millis / 1000,  "Failed on ${currentDialectTest.name}")
         else -> assertEquals(d1.millis, d2.millis,   "Failed on ${currentDialectTest.name}")
     }
