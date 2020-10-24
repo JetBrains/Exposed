@@ -403,6 +403,6 @@ fun Misc.checkRowDates(row: ResultRow, d: DateTime, dn: DateTime?, t: DateTime, 
     assertEqualDateTime(row[this.dn], dn)
     assertEqualDateTime(row[this.t], t)
     assertEqualDateTime(row[this.tn], tn)
-    assertEqualDateTime(row[this.tz], tz, true)
-    assertEqualDateTime(row[this.tzn], tzn, true)
+    assertEqualDateTime(row[this.tz], tz)
+    assertEqualDateTime(row[this.tzn], tzn)
 }

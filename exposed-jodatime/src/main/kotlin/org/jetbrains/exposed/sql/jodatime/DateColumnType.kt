@@ -124,10 +124,8 @@ class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
         is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
         is String ->
-            value.toLongOrNull()?.let {
-                println("Gotcha!: $it")
-                DateTime(it / 1000) // Rounding issues here?
-            } ?: DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
+            value.toLongOrNull()?.let { DateTime(it) }
+                    ?: DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
