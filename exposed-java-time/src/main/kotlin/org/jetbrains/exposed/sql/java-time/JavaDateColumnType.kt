@@ -178,7 +178,13 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
                             LocalDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER),
                             ZoneOffset.UTC
                     )
-                else -> ZonedDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER)
+                else ->
+                    try {
+                        ZonedDateTime.parse(value, DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER)
+                    } catch (e: IllegalArgumentException) {
+                        println("Error while parsing $value with db $currentDialect")
+                        throw e
+                    }
             }
         else ->
             valueFromDB(value.toString())
