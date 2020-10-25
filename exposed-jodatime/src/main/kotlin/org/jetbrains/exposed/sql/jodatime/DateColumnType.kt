@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.jodatime
 
-import org.h2.api.TimestampWithTimeZone
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
@@ -29,7 +28,7 @@ private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER = DateTimeF
                 .appendLiteral('.')
                 .appendFractionOfSecond(3, 9)
                 .toParser())
-        .appendTimeZoneOffset(null, "+00", true, 2, 2)
+        .appendTimeZoneOffset(null, "+00", true, 1, 3)
         .toFormatter()
 
 private val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER = DateTimeFormatterBuilder()
@@ -127,7 +126,6 @@ class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
 
     override fun valueFromDB(value: Any): Any = when(value) {
         is DateTime -> value
-        is TimestampWithTimeZone -> DateTime.parse(value.toString(), DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER)
         is java.sql.Date ->  DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
         is Int -> DateTime(value.toLong())
@@ -138,7 +136,7 @@ class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
                         is MysqlDialect, is SQLiteDialect -> DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER.parseDateTime(value) // MySQL doesn't actually support this type.
                         else -> DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
                     }
-        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        else -> DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value.toString()) // H2 TimestampWithTimeZone for isntance.
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
