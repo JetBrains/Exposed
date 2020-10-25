@@ -17,6 +17,7 @@ val dialect: String by project
 
 dependencies {
     api(project(":exposed-core"))
+    api("com.h2database", "h2", Versions.h2) // for TimestampWithTimeZone type.
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation("junit", "junit", "4.12")

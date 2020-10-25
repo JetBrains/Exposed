@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.`java-time`
 
+import org.h2.api.TimestampWithTimeZone
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
@@ -36,7 +37,12 @@ private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER by lazy {
             .optionalStart()
             .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
             .optionalEnd()
-            .appendOffset("+HH:mm:ss", "+00") // Weird, default value should be 'Z'.
+            .optionalStart()
+            .appendOffset("+HH:mm:ss", "+00")
+            .optionalEnd()
+            .optionalStart()
+            .appendOffset("+HH", "+00") // H2 format.
+            .optionalEnd()
             .toFormatter(Locale.ROOT)
 }
 
@@ -168,6 +174,7 @@ class JavaTimeZonedDateTimeColumnType : ColumnType(), IDateColumnType {
     override fun valueFromDB(value: Any): Any = when (value) {
         is ZonedDateTime -> value
         is java.sql.Date -> Instant.ofEpochMilli(value.time)
+        is TimestampWithTimeZone -> ZonedDateTime.parse(value.toString(), DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER)
         is java.sql.Timestamp -> longToZonedDateTime(value.time / 1000, value.nanos.toLong())
         is Int -> longToZonedDateTime(value.toLong())
         is Long -> longToZonedDateTime(value)
