@@ -134,7 +134,7 @@ class JavaLocalTimeColumnType : ColumnType() {
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
             is String -> return value
-            is LocalTime -> Instant.from(value)
+            is LocalTime -> return value.toString()
             is java.sql.Time -> Instant.ofEpochMilli(value.time)
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
@@ -142,7 +142,7 @@ class JavaLocalTimeColumnType : ColumnType() {
         return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
-    override fun valueFromDB(value: Any): Any = when (value) {
+    override fun valueFromDB(value: Any): LocalTime = (when (value) {
         is LocalTime -> value
         is java.sql.Time -> longToLocalTime(value.time)
         is java.sql.Timestamp -> longToLocalTime(value.time / 1000, value.nanos.toLong())
@@ -150,7 +150,7 @@ class JavaLocalTimeColumnType : ColumnType() {
         is Long -> longToLocalTime(value)
         is String -> LocalTime.parse(value, formatterForTimeString(value))
         else -> valueFromDB(value.toString())
-    }
+    }.withNano(0))
 
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is LocalDateTime -> DEFAULT_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
@@ -260,6 +260,8 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, J
 
 /**
  * A time column to store a time.
+ *
+ * Doesn't return nanos from database.
  *
  * @param name The column name
  * @author Maxim Vorotynsky

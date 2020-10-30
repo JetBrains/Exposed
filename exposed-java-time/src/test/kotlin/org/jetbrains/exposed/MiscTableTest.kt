@@ -1074,8 +1074,8 @@ fun Misc.checkRowFull(
 fun Misc.checkRowDates(row: ResultRow, d: LocalDate, dn: LocalDate?, t: LocalTime, tn: LocalTime?, dt: LocalDateTime, dtn: LocalDateTime?, ts: Instant, tsn: Instant? = null) {
     assertEqualDateTime(d, row[this.d])
     assertEqualDateTime(dn, row[this.dn])
-    assertEqualDateTime(t, row[this.t])
-    assertEqualDateTime(tn, row[this.tn])
+    assertEqualDateTime(t.withNano(0), row[this.t])
+    assertEqualDateTime(tn?.withNano(0), row[this.tn])
     assertEqualDateTime(dt, row[this.dt])
     assertEqualDateTime(dtn, row[this.dtn])
     assertEqualDateTime(ts, row[this.ts])
