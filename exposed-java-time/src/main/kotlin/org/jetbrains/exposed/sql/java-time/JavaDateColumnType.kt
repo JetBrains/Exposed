@@ -29,15 +29,16 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
-private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER by lazy {
+
+val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER: DateTimeFormatter by lazy {
     DateTimeFormatterBuilder()
-            .parseCaseInsensitive()
+//            .parseCaseInsensitive()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
             .optionalStart()
             .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
             .optionalEnd()
             .optionalStart()
-            .appendOffset("+HH:mm:ss", "+00")
+            .appendOffset("+HH:MM", "+00:00")
             .optionalEnd()
             .optionalStart()
             .appendOffset("+HH", "+00") // H2 format.
@@ -45,7 +46,7 @@ private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER by lazy {
             .toFormatter(Locale.ROOT)
 }
 
-private val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER by lazy {
+val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER: DateTimeFormatter by lazy {
     DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
