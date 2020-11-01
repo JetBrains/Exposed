@@ -18,6 +18,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "uniqueidentifier"
     override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME2"
+    override fun dateTimeTzType(): String = "DATETIMEOFFSET"
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
 }

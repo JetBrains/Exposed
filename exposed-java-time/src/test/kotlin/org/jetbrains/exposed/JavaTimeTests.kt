@@ -82,15 +82,22 @@ fun <T:Temporal> assertEqualDateTime(d1: T?, d2: T?) {
         d1 == null -> error("Impossible")
         d1 is LocalDateTime && d2 is LocalDateTime && (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
             assertEquals(d1.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000, d2.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
-        d1 is Instant && d2 is Instant && (currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
-            assertEquals(d1.toEpochMilli() / 1000, d2.toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}")
-        d1 is Instant && d2 is Instant -> assertEquals(d1.toEpochMilli(), d2.toEpochMilli(),  "Failed on ${currentDialectTest.name}")
+        d1 is ZonedDateTime && d2 is ZonedDateTime && (currentDialectTest is MysqlDialect) ->
+            assertEquals(d1.toInstant().toEpochMilli() / 1000, d2.toInstant().toEpochMilli() / 1000,  "Failed on ${currentDialectTest.name}, ${d1.javaClass.kotlin.qualifiedName}")
+        d1 is Instant && d2 is Instant && (currentDialectTest is MysqlDialect) ->
+            assertEquals(d1.epochSecond, d2.epochSecond,  "Failed on ${currentDialectTest.name}, ${d1.javaClass.kotlin.qualifiedName}")
+        d1 is Instant && d2 is Instant -> assertEquals(d1.toEpochMilli(), d2.toEpochMilli(),  "Failed on ${currentDialectTest.name}, ${d1.javaClass.kotlin.qualifiedName}")
         d1 is LocalDateTime && d2 is LocalDateTime -> {
             val d1Millis = Instant.from(d1.atZone(ZoneId.systemDefault())).toEpochMilli()
             val d2Millis = Instant.from(d2.atZone(ZoneId.systemDefault())).toEpochMilli()
+            assertEquals(d1Millis, d2Millis, "Failed on ${currentDialectTest.name}, ${d1.javaClass.kotlin.qualifiedName}")
+        }
+        d1 is ZonedDateTime && d2 is ZonedDateTime -> {
+            val d1Millis = Instant.from(d1).toEpochMilli()
+            val d2Millis = Instant.from(d2).toEpochMilli()
             assertEquals(d1Millis, d2Millis, "Failed on ${currentDialectTest.name}")
         }
-        else -> assertEquals(d1, d2,   "Failed on ${currentDialectTest.name}")
+        else -> assertEquals(d1, d2,   "Failed on ${currentDialectTest.name}, d1:${d1.javaClass.kotlin.qualifiedName}, d2:${d2.javaClass.kotlin.qualifiedName}")
     }
 }
 
@@ -102,6 +109,7 @@ fun equalDateTime(d1: Temporal?, d2: Temporal?) = try {
 }
 
 val today: LocalDate = LocalDate.now()
+val todayWithZone: ZonedDateTime = ZonedDateTime.now()
 
 object CitiesTime : IntIdTable("CitiesTime") {
     val name = varchar("name", 50) // Column<String>

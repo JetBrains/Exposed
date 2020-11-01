@@ -17,6 +17,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "UUID"
     override fun dateTimeType(): String = "DATETIME(9)"
+    override fun dateTimeTzType(): String = "TIMESTAMP WITH TIME ZONE"
 }
 
 internal object H2FunctionProvider : FunctionProvider() {

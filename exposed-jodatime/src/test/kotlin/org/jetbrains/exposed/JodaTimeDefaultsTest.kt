@@ -30,16 +30,23 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         var cIndex = 0
         val field = varchar("field", 100)
         val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val t2 = datetimetz("t2").defaultExpression(CurrentDateTimeWithTimezone())
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
     class DBDefault(id: EntityID<Int>): IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
+        var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) } ?: false
+            return (other as? DBDefault)?.let {
+                id == it.id
+                        && field == it.field
+                        && equalDateTime(t1, it.t1)
+                        && equalDateTime(t2, it.t2)
+            } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -55,6 +62,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                     DBDefault.new {
                         field = "2"
                         t1 = DateTime.now().minusDays(5)
+                        t2 = DateTime.now().minusDays(5)
                     })
             flushCache()
             created.forEach {
@@ -73,6 +81,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                     DBDefault.new{
                         field = "2"
                         t1 = DateTime.now().minusDays(5)
+                        t2 = DateTime.now().minusDays(5)
                     }, DBDefault.new{ field = "1" })
 
             flushCache()
@@ -102,6 +111,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }, {
         it[TableWithDBDefault.field] = "2"
         it[TableWithDBDefault.t1] = DateTime.now()
+        it[TableWithDBDefault.t2] = DateTime.now()
     })
 
     @Test
@@ -151,6 +161,9 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val t2 = datetime("t2").defaultExpression(nowExpression)
             val t3 = datetime("t3").defaultExpression(dtLiteral)
             val t4 = date("t4").default(dtConstValue)
+            val t5 = datetimetz("t5").defaultExpression(currentDT)
+            val t6 = datetimetz("t6").defaultExpression(nowExpression)
+            val t7 = datetimetz("t7").defaultExpression(dtLiteral)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -161,6 +174,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
+            val dtzType = currentDialectTest.dataTypeProvider.dateTimeTzType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
@@ -172,7 +186,10 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                     "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
                     "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
+                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}, " +
+                    "${"t5".inProperCase()} $dtzType ${currentDT.itOrNull()}, " +
+                    "${"t6".inProperCase()} $dtzType ${nowExpression.itOrNull()}, " +
+                    "${"t7".inProperCase()} $dtzType ${dtLiteral.itOrNull()}" +
                     ")"
 
             val expected = if (currentDialectTest is OracleDialect)
@@ -191,6 +208,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEquals('X', row1[TestTable.c])
             assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t3].withTimeAtStartOfDay())
             assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t4].withTimeAtStartOfDay())
+            assertEqualDateTime(dtConstValue.withTimeAtStartOfDay(), row1[TestTable.t7].withTimeAtStartOfDay())
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
@@ -210,6 +228,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTimeTz = datetimetz("defaultDateTimeTz").defaultExpression(CurrentDateTimeWithTimezone())
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
@@ -220,6 +239,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val result = foo.select { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
+            assertEquals(today, result[foo.defaultDateTimeTz].withTimeAtStartOfDay())
             assertEquals(100, result[foo.defaultInt])
         }
     }

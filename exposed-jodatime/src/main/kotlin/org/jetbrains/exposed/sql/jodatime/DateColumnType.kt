@@ -4,12 +4,14 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
+import org.joda.time.format.DateTimeFormatterBuilder
 import org.joda.time.format.ISODateTimeFormat
 import java.util.*
 
@@ -17,6 +19,25 @@ private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-d
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
+private val DEFAULT_DATE_TIME_WITH_TIMEZONE_FORMATTER = ISODateTimeFormat.dateTime()
+
+
+private val DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER = DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .appendOptional( DateTimeFormatterBuilder()
+                .appendLiteral('.')
+                .appendFractionOfSecond(3, 9)
+                .toParser())
+        .appendTimeZoneOffset(null, "+00", true, 1, 3)
+        .toFormatter()
+
+private val DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER = DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .appendOptional( DateTimeFormatterBuilder()
+                .appendLiteral('.')
+                .appendFractionOfSecond(3, 9)
+                .toParser())
+        .toFormatter()
 
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
@@ -35,7 +56,7 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
 
-        val dateTime = when (value) {
+        val dateTime: DateTime = when (value) {
             is DateTime -> value
             is java.sql.Date -> DateTime(value.time)
             is java.sql.Timestamp -> DateTime(value.time)
@@ -87,6 +108,60 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
     }
 }
 
+class DateTimeWithTimeZoneColumnType: ColumnType(), IDateColumnType {
+    override fun sqlType(): String  = currentDialect.dataTypeProvider.dateTimeTzType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val dateTime = when (value) {
+            is DateTime -> value
+            is java.sql.Date ->  DateTime(value.time)
+            is java.sql.Timestamp -> DateTime(value.time)
+            is Int -> DateTime(value.toLong())
+            is Long -> DateTime(value)
+            is String -> DateTime.parse(value, DEFAULT_DATE_TIME_WITH_TIMEZONE_FORMATTER)
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+        return "'${DEFAULT_DATE_TIME_WITH_TIMEZONE_FORMATTER.print(dateTime)}'"
+    }
+
+    override fun valueFromDB(value: Any): Any = when(value) {
+        is DateTime -> value
+        is java.sql.Date ->  DateTime(value.time)
+        is java.sql.Timestamp -> DateTime(value.time)
+        is Int -> DateTime(value.toLong())
+        is Long -> DateTime(value)
+        is String ->
+            value.toLongOrNull()?.let { DateTime(it) }
+                    ?: when(currentDialect) {
+                        is MysqlDialect, is SQLiteDialect -> DATE_TIME_SPACE_SEPARATED_WITHOUT_TIMEZONE_STRING_FORMATTER.parseDateTime(value) // MySQL doesn't actually support this type.
+                        else -> DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value)
+                    }
+        else -> DATE_TIME_SPACE_SEPARATED_WITH_TIMEZONE_STRING_FORMATTER.parseDateTime(value.toString()) // H2 TimestampWithTimeZone for isntance.
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is DateTime -> java.sql.Timestamp(value.millis)
+        else -> value
+    }
+
+    override val hasTimePart: Boolean
+        get() = true
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is DateTimeWithTimeZoneColumnType) return false
+        if (!super.equals(other)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result *= 31
+        return result
+    }
+}
+
 /**
  * A date column to store a date.
  *
@@ -100,3 +175,12 @@ fun Table.date(name: String): Column<DateTime> = registerColumn(name, DateColumn
  * @param name The column name
  */
 fun Table.datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+
+
+/**
+ * A datetime column to store a date, a time and a timezone.
+ *
+ * @param name The column name
+ */
+fun Table.datetimetz(name: String): Column<DateTime> = registerColumn(name, DateTimeWithTimeZoneColumnType())
+

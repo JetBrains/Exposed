@@ -29,16 +29,23 @@ class DefaultsTest : DatabaseTestsBase() {
         var cIndex = 0
         val field = varchar("field", 100)
         val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val t2 = datetimetz("t2").defaultExpression(CurrentDateTimeWithTimezone())
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
     class DBDefault(id: EntityID<Int>) : IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
+        var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) } ?: false
+            return (other as? DBDefault)?.let {
+                id == it.id
+                        && field == it.field
+                        && equalDateTime(t1, it.t1)
+                        && equalDateTime(t2, it.t2)
+            } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -54,6 +61,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
+                    t2 = ZonedDateTime.now().minusDays(5)
                 })
             commit()
             created.forEach {
@@ -72,6 +80,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
+                    t2 = ZonedDateTime.now().minusDays(5)
                 }, DBDefault.new { field = "1" })
 
             flushCache()
@@ -101,6 +110,7 @@ class DefaultsTest : DatabaseTestsBase() {
     }, {
         it[TableWithDBDefault.field] = "2"
         it[TableWithDBDefault.t1] = LocalDateTime.now()
+        it[TableWithDBDefault.t2] = ZonedDateTime.now()
     })
 
     @Test
@@ -132,6 +142,7 @@ class DefaultsTest : DatabaseTestsBase() {
             expectException<BatchDataInconsistentException> {
                 TableWithDBDefault.batchInsert(listOf(1)) {
                     this[TableWithDBDefault.t1] = LocalDateTime.now()
+                    this[TableWithDBDefault.t2] = ZonedDateTime.now()
                 }
             }
         }
@@ -158,6 +169,20 @@ class DefaultsTest : DatabaseTestsBase() {
         val durConstValue = Duration.between(Instant.EPOCH, tsConstValue)
         val durLiteral = durationLiteral(durConstValue)
 
+        val currentZonedDT = CurrentDateTimeWithTimezone()
+        val zonedNowExpression = object : Expression<ZonedDateTime>() {
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+                +when (val dialect = currentDialectTest) {
+                    is OracleDialect -> "SYSDATE"
+                    is SQLServerDialect -> "GETDATE()"
+                    is MysqlDialect -> if (dialect.isFractionDateTimeSupported()) "NOW(6)" else "NOW()"
+                    else -> "NOW()"
+                }
+            }
+        }
+        val zonedDtConstValue = ZonedDateTime.of(dtConstValue.atStartOfDay(),ZoneOffset.UTC)
+        val zonedDtLiteral = zonedDateTimeLiteral(zonedDtConstValue)
+
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
@@ -171,6 +196,9 @@ class DefaultsTest : DatabaseTestsBase() {
             val t6 = timestamp("t6").defaultExpression(tsLiteral)
             val t7 = duration("t7").default(durConstValue)
             val t8 = duration("t8").defaultExpression(durLiteral)
+            val t9 = datetimetz("t9").defaultExpression(currentZonedDT)
+            val t10 = datetimetz("t10").defaultExpression(zonedNowExpression)
+            val t11 = datetimetz("t11").defaultExpression(zonedDtLiteral)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -181,6 +209,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
+            val zonedDtType = currentDialectTest.dataTypeProvider.dateTimeTzType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -197,7 +226,10 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                     "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                     "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                    "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}" +
+                    "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
+                    "${"t9".inProperCase()} $zonedDtType ${currentZonedDT.itOrNull()}, " +
+                    "${"t10".inProperCase()} $zonedDtType ${zonedNowExpression.itOrNull()}, " +
+                    "${"t11".inProperCase()} $zonedDtType ${zonedDtLiteral.itOrNull()}" +
                     ")"
 
             val expected = if (currentDialectTest is OracleDialect)
@@ -220,6 +252,7 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEqualDateTime(tsConstValue, row1[TestTable.t6])
             assertEquals(durConstValue, row1[TestTable.t7])
             assertEquals(durConstValue, row1[TestTable.t8])
+            assertEqualDateTime(zonedDtConstValue, row1[TestTable.t11])
         }
     }
 

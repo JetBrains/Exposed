@@ -18,6 +18,15 @@ class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     }
 }
 
+class CurrentDateTimeWithTimezone : Function<DateTime>(DateTimeWithTimeZoneColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when {
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            else -> "CURRENT_TIMESTAMP"
+        }
+    }
+}
+
 class Year<T:DateTime?>(val expr: Expression<T>): Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         currentDialect.functionProvider.year(expr, queryBuilder)

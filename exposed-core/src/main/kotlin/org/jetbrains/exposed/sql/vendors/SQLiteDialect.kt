@@ -20,6 +20,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 
     override val blobAsStream: Boolean = true
     override fun dateTimeType(): String = "TEXT"
+    override fun dateTimeTzType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }
 
