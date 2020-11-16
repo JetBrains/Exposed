@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.exposed.gradle.setupDialectTest
-import org.jetbrains.exposed.gradle.Versions
+import org.jetbrains.exposed.gradle.setupTestDriverDependencies
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 import tanvd.kosogor.proxy.publishJar
 
@@ -23,22 +23,10 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testImplementation("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
-    testImplementation("com.h2database", "h2", Versions.h2)
     testRuntimeOnly("org.testcontainers", "testcontainers", "1.14.3")
 
-    when (dialect) {
-        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
-        "mysql" ->      testImplementation("mysql", "mysql-connector-java", Versions.mysql51)
-        "mysql8" ->     testImplementation("mysql", "mysql-connector-java", Versions.mysql80)
-        "oracle" ->     testImplementation("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
-        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
-        else -> {
-            testImplementation("com.h2database", "h2", Versions.h2)
-            testImplementation("mysql", "mysql-connector-java", Versions.mysql51)
-            testImplementation("org.postgresql", "postgresql", Versions.postgre)
-            testImplementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
-        }
+    setupTestDriverDependencies(dialect) { group, artifactId, version ->
+        testImplementation(group, artifactId, version)
     }
 }
 

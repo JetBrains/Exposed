@@ -1,4 +1,5 @@
 import org.jetbrains.exposed.gradle.setupDialectTest
+import org.jetbrains.exposed.gradle.setupTestDriverDependencies
 import tanvd.kosogor.proxy.publishJar
 
 plugins {
@@ -25,18 +26,8 @@ dependencies {
     testImplementation("com.h2database", "h2", "1.4.199")
     testImplementation("org.javamoney", "moneta", "1.3")
     testRuntimeOnly("org.testcontainers", "testcontainers", "1.14.3")
-
-    when (dialect) {
-        "mariadb" ->    testImplementation("org.mariadb.jdbc", "mariadb-java-client", "2.4.1")
-        "mysql" ->      testImplementation("mysql", "mysql-connector-java", "8.0.16")
-        "oracle" ->     testImplementation("com.oracle", "ojdbc6", "12.1.0.1-atlassian-hosted")
-        "sqlserver" ->  testImplementation("com.microsoft.sqlserver", "mssql-jdbc", "7.2.2.jre8")
-        else -> {
-            testImplementation("com.h2database", "h2", "1.4.199")
-            testImplementation("mysql", "mysql-connector-java", "5.1.48")
-            testImplementation("org.postgresql", "postgresql", "42.2.5.jre6")
-            testImplementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")
-        }
+    setupTestDriverDependencies(dialect) { group, artifactId, version ->
+        testImplementation(group, artifactId, version)
     }
 }
 

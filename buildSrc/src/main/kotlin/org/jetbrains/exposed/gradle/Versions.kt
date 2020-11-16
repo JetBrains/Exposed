@@ -6,15 +6,14 @@ object Versions {
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
-    const val mariaDB = "2.6.0"
-    const val mysqlMxj = "5.0.12"
+    const val mariaDB = "2.7.0"
     const val mysql51 = "5.1.49"
-    const val mysql80 = "8.0.20"
+    const val mysql80 = "8.0.22"
     const val oracle12 = "12.2.0.1"
-    const val postgre = "42.2.12.jre6"
-    const val postgreNG = "0.8.4"
-    const val sqlLite3 = "3.31.1"
-    const val sqlserver = "8.2.2.jre8"
+    const val postgre = "42.2.18.jre6"
+    const val postgreNG = "0.8.6"
+    const val sqlLite3 = "3.32.3.2"
+    const val sqlserver = "8.4.1.jre8"
 
     /** Spring **/
     const val springFramework = "5.2.9.RELEASE"
