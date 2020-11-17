@@ -90,6 +90,7 @@ fun <T:Temporal> assertEqualDateTime(d1: T?, d2: T?) {
             val d2Millis = Instant.from(d2.atZone(ZoneId.systemDefault())).toEpochMilli()
             assertEquals(d1Millis, d2Millis, "Failed on ${currentDialectTest.name}")
         }
+        d1 is LocalTime && d2 is LocalTime -> assertEquals(d1, d2, "Failed on ${currentDialectTest.name}")
         else -> assertEquals(d1, d2,   "Failed on ${currentDialectTest.name}")
     }
 }
