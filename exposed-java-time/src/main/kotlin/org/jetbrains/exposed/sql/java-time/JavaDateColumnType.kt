@@ -21,6 +21,9 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
+private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
@@ -200,6 +203,42 @@ class JavaDurationColumnType : ColumnType() {
     }
 }
 
+class JavaLocalTimeColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val instant = when (value) {
+            is String -> return value
+            is LocalTime -> return value.toString()
+            is java.sql.Time -> Instant.ofEpochMilli(value.time)
+            is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
+    }
+
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is LocalTime -> value
+        is java.sql.Time -> longToLocalTime(value.time)
+        is java.sql.Timestamp -> longToLocalTime(value.time)
+        is Int -> longToLocalTime(value.toLong())
+        is Long -> longToLocalTime(value)
+        else -> LocalTime.parse(value.toString())
+    }
+
+    override fun notNullValueToDB(value: Any) = when {
+        value is LocalDate -> java.sql.Date(value.millis)
+        else -> value
+    }
+
+    private fun longToLocalTime(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalTime()
+
+    companion object {
+        internal val INSTANCE = JavaLocalTimeColumnType()
+    }
+}
+
 /**
  * A date column to store a date.
  *
@@ -227,3 +266,10 @@ fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaIn
  * @param name The column name
  */
 fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
+
+/**
+ * A date column to store a time.
+ *
+ * @param name The column name
+ */
+fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
