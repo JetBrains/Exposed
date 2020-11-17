@@ -209,7 +209,7 @@ class JavaLocalTimeColumnType : ColumnType() {
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
             is String -> return value
-            is LocalTime -> return value.toString()
+            is LocalTime -> return "'${value}'"
             is java.sql.Time -> Instant.ofEpochMilli(value.time)
             is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
@@ -227,9 +227,15 @@ class JavaLocalTimeColumnType : ColumnType() {
         else -> LocalTime.parse(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any) = when {
-        value is LocalDate -> java.sql.Date(value.millis)
-        else -> value
+    override fun notNullValueToDB(value: Any) {
+        when {
+            value is LocalTime -> {
+                val epochMilli =
+                    value.atDate(LocalDate.ofEpochDay(0)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                java.sql.Time(epochMilli)
+            }
+            else -> value
+        }
     }
 
     private fun longToLocalTime(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalTime()
