@@ -9,7 +9,7 @@ import java.sql.SQLException
 import java.util.*
 
 
-internal object DefaultValueMarker {
+object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
 
