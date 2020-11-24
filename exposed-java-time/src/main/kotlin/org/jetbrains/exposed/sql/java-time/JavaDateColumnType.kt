@@ -227,8 +227,8 @@ class JavaLocalTimeColumnType : ColumnType() {
         else -> LocalTime.parse(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any) {
-        when {
+    override fun notNullValueToDB(value: Any): Any {
+        return when {
             value is LocalTime -> {
                 val epochMilli =
                     value.atDate(LocalDate.ofEpochDay(0)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
