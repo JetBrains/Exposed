@@ -96,6 +96,12 @@ abstract class ColumnSet : FieldSet {
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.toList())
+    @Deprecated(
+            message = "Specify at least one column",
+            replaceWith = ReplaceWith(""),
+            level = DeprecationLevel.ERROR
+    )
+    fun slice(): FieldSet = Slice(this, columns.toList())
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
