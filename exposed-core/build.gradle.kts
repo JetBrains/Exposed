@@ -14,7 +14,6 @@ dependencies {
     api(kotlin("reflect"))
     api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
     api("org.slf4j", "slf4j-api", "1.7.25")
-    api("org.apache.commons", "commons-lang3", "3.11")
 }
 
 publishJar {
