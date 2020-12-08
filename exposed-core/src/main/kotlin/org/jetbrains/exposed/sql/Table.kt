@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.apache.commons.lang3.SerializationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -7,6 +8,7 @@ import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import java.io.Serializable
 import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
@@ -301,6 +303,11 @@ class Join(
     }
 }
 
+fun <T:Table> T.withSchema(schema: Schema): T = clone(this, schema)
+
+fun <T: Table> clone(table: T, schema: Schema): T =
+        SerializationUtils.clone(table).also { it.schema = schema }
+
 /**
  * Base class for any simple table.
  *
@@ -308,10 +315,16 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "") : ColumnSet(), DdlAware {
-    /** Returns the table name. */
-    open val tableName: String = if (name.isNotEmpty()) name
+open class Table(name: String = "", var schema: Schema? = null) : ColumnSet(), DdlAware, Serializable {
+    private val _tableName = if (name.isNotEmpty()) name
     else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+    /** Returns the table name. */
+    open val tableName: String
+        get() {
+            val schemaName = if(schema != null) "${schema!!.identifier}." else ""
+
+            return schemaName + _tableName
+        }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
@@ -395,7 +408,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         vararg val columns: Column<*>,
         /** Returns the name of the primary key. */
         val name: String = "pk_$tableName"
-    ) {
+    ) : Serializable {
         init {
             checkMultipleDeclaration()
             for (column in columns) column.markPrimaryKey()

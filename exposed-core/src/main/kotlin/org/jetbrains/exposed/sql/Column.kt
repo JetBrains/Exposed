@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
+import java.io.Serializable
 import java.util.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
@@ -13,14 +14,14 @@ private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }
 /**
  * Represents a column.
  */
-class Column<T>(
+class Column<T> (
     /** Table where the columns is declared. */
     val table: Table,
     /** Name of the column. */
     val name: String,
     /** Data type of the column. */
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
+) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>>, Serializable {
     var foreignKey: ForeignKeyConstraint? = null
 
     /** Returns the column that this column references. */

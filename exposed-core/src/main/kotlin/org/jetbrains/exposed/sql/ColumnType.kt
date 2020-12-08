@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
+import java.io.Serializable
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
@@ -20,7 +21,7 @@ import kotlin.reflect.KClass
 /**
  * Interface common to all column types.
  */
-interface IColumnType {
+interface IColumnType : Serializable {
     /** Returns `true` if the column type is nullable, `false` otherwise. */
     var nullable: Boolean
 
