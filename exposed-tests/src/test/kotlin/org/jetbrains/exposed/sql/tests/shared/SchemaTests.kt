@@ -124,8 +124,6 @@ class SchemaTests : DatabaseTestsBase() {
         val schema2 = Schema("schema2")
 
         withSchemas(schema1, schema2) {
-            addLogger(StdOutSqlLogger)
-
             /** Testing only dialects that supports schema. */
             if (currentDialect.supportsCreateSchema) {
 
