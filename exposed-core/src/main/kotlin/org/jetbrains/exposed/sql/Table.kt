@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import javafx.scene.control.Tab
 import org.apache.commons.lang3.SerializationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
@@ -303,10 +304,16 @@ class Join(
     }
 }
 
-fun <T:Table> T.withSchema(schema: Schema): T = clone(this, schema)
+fun <T:Table> T.withSchema(schema: Schema, references: (T.() -> Unit)? = null): T = cloneInSchema(this, schema, references)
 
-fun <T: Table> clone(table: T, schema: Schema): T =
-        SerializationUtils.clone(table).also { it.schema = schema }
+fun <T: Table> cloneInSchema(table: T, schema: Schema, references: (T.() -> Unit)? = null): T {
+    if (references != null) {
+        table.references()
+    }
+    return (table.cloneInSchema() as T).also {
+        it.schema = schema
+    }
+}
 
 /**
  * Base class for any simple table.
@@ -315,7 +322,8 @@ fun <T: Table> clone(table: T, schema: Schema): T =
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "", var schema: Schema? = null) : ColumnSet(), DdlAware, Serializable {
+open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
+    var schema: Schema? = null
     private val _tableName = if (name.isNotEmpty()) name
     else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     /** Returns the table name. */
@@ -1036,6 +1044,26 @@ open class Table(name: String = "", var schema: Schema? = null) : ColumnSet(), D
             this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType as ColumnType, autoIncSequence)))
         }
         else -> error("Unsupported column type for auto-increment $columnType")
+    }
+
+    fun cloneInSchema(): Any =
+            super.clone().also { table ->
+                val table  = table as Table
+                table._columns.replaceAll { col ->
+                    val schema = references[col]
+                    col.clone(mapOf(Column<*>::table to table)).also {
+                        if(schema != null && col.referee != null && col.foreignKey != null) {
+                            val clonedReferee = col.foreignKey!!.target.clone(mapOf(Column<*>::table to col.referee!!.table.withSchema(schema)))
+                            it.foreignKey = col.foreignKey!!.copy(target = clonedReferee)
+                        }
+                    }
+                }
+            }
+
+    val references = mutableMapOf<Column<*>, Schema>()
+
+    infix fun Column<*>.references(schema: Schema) {
+        references[this] = schema
     }
 
     // DDL statements

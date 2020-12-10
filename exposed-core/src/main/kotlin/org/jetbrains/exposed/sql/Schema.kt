@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.io.Serializable
 import java.lang.StringBuilder
 
 /**
@@ -26,7 +25,7 @@ data class Schema(private val name: String,
              val defaultTablespace: String? = null,
              val temporaryTablespace: String? = null,
              val quota: String? = null,
-             val on: String? = null) : Serializable {
+             val on: String? = null) {
 
     val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 

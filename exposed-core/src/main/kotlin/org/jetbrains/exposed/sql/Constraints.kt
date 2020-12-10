@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import java.io.Serializable
 import java.sql.DatabaseMetaData
 
 /**
@@ -53,7 +52,7 @@ data class ForeignKeyConstraint(
         private val onUpdate: ReferenceOption?,
         private val onDelete: ReferenceOption?,
         private val name: String?
-) : DdlAware, Serializable {
+) : DdlAware {
     private val tx: Transaction
         get() = TransactionManager.current()
     /** Name of the child table. */

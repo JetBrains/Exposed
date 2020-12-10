@@ -159,7 +159,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
         if (column.table is Alias<*>)
-            append(db.identifierManager.quoteIfNecessary(column.table.alias))
+            append(db.identifierManager.quoteIfNecessary((column.table as Alias<*>).alias))
         else
             append(db.identifierManager.quoteIfNecessary(column.table.tableName.inProperCase()))
         append('.')
