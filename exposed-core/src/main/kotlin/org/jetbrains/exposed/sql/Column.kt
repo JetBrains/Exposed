@@ -13,7 +13,7 @@ private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }
 /**
  * Represents a column.
  */
-class Column<T> (
+class Column<T>(
     /** Table where the columns is declared. */
     val table: Table,
     /** Name of the column. */

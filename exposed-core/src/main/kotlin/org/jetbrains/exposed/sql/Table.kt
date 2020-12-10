@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.sql
 
-import javafx.scene.control.Tab
-import org.apache.commons.lang3.SerializationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -9,7 +7,6 @@ import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import java.io.Serializable
 import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
@@ -416,7 +413,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
         vararg val columns: Column<*>,
         /** Returns the name of the primary key. */
         val name: String = "pk_$tableName"
-    ) : Serializable {
+    ) {
         init {
             checkMultipleDeclaration()
             for (column in columns) column.markPrimaryKey()
