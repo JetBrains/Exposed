@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.SchemaTests.Book.references
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -129,9 +130,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 /** create tables in schemas */
                 val author = Author.withSchema(schema1)
-                val book = Book.withSchema(schema2) {
-                    authorId references schema1
-                }
+                val book = Book.withSchema(schema2, Book.authorId to schema1, Book.authorId to schema1)
                 SchemaUtils.create(author)
                 SchemaUtils.create(book)
 

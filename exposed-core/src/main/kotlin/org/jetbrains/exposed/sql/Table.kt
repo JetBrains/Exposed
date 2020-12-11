@@ -301,16 +301,8 @@ class Join(
     }
 }
 
-fun <T:Table> T.withSchema(schema: Schema, references: (T.() -> Unit)? = null): T = cloneInSchema(this, schema, references)
-
-fun <T: Table> cloneInSchema(table: T, schema: Schema, references: (T.() -> Unit)? = null): T {
-    if (references != null) {
-        table.references()
-    }
-    return (table.cloneInSchema() as T).also {
-        it.schema = schema
-    }
-}
+fun <T:Table> T.withSchema(schema: Schema, vararg references: Pair<Column<*>, Schema>): T =
+        this.cloneInSchema(schema, references) as T
 
 /**
  * Base class for any simple table.
@@ -1043,11 +1035,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
-    fun cloneInSchema(): Any =
+    fun cloneInSchema(schema: Schema, references: Array<out Pair<Column<*>, Schema>>): Any =
             super.clone().also { table ->
                 val table  = table as Table
                 table._columns.replaceAll { col ->
-                    val schema = references[col]
+                    val schema = references.associate { it } [col]
                     col.clone(mapOf(Column<*>::table to table)).also {
                         if(schema != null && col.referee != null && col.foreignKey != null) {
                             val clonedReferee = col.foreignKey!!.target.clone(mapOf(Column<*>::table to col.referee!!.table.withSchema(schema)))
@@ -1055,13 +1047,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
                         }
                     }
                 }
+                table.schema = schema
             }
-
-    val references = mutableMapOf<Column<*>, Schema>()
-
-    infix fun Column<*>.references(schema: Schema) {
-        references[this] = schema
-    }
 
     // DDL statements
 
