@@ -111,13 +111,19 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
+    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<Pair<String, String>, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
         while (next()) {
-            val (tableName, columnMetadata) = extract(this)
-            mapping[tableName]?.let { t ->
+            val (table, columnMetadata) = extract(this)
+            val (schemaName, tableName) = table
+
+            mapping["$tableName"]?.let { t ->
+                result.getOrPut(t) { arrayListOf() } += columnMetadata
+            }
+
+            mapping["$schemaName.$tableName"]?.let { t ->
                 result.getOrPut(t) { arrayListOf() } += columnMetadata
             }
         }
@@ -125,11 +131,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs =  metadata.getColumns(databaseName, currentScheme, "%", "%")
+        val rs =  metadata.getColumns("%", "%", "%", "%")
         val result = rs.extractColumns(tables) {
             //@see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
-            it.getString("TABLE_NAME") to columnMetadata
+            if(currentDialect.supportsCreateSchema) {
+                (it.getString("TABLE_SCHEM") to it.getString("TABLE_NAME")) to columnMetadata
+            } else {
+                (it.getString("TABLE_CAT") to it.getString("TABLE_NAME")) to columnMetadata
+            }
         }
         rs.close()
         return result
