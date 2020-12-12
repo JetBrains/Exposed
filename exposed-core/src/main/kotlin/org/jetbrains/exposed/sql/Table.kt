@@ -325,7 +325,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
-    private val _columns = mutableListOf<Column<*>>()
+    private var _columns = mutableListOf<Column<*>>()
     /** Returns all the columns defined on the table. */
     override val columns: List<Column<*>> get() = _columns
 
@@ -1038,7 +1038,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
     fun cloneInSchema(schema: Schema, references: Array<out Pair<Column<*>, Schema>>): Any =
             super.clone().also { table ->
                 val table  = table as Table
-                table._columns.replaceAll { col ->
+                table._columns = table._columns.map { col ->
                     val schema = references.associate { it } [col]
                     col.clone(mapOf(Column<*>::table to table)).also {
                         if(schema != null && col.referee != null && col.foreignKey != null) {
@@ -1046,7 +1046,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
                             it.foreignKey = col.foreignKey!!.copy(target = clonedReferee)
                         }
                     }
-                }
+                }.toMutableList()
                 table.schema = schema
             }
 
