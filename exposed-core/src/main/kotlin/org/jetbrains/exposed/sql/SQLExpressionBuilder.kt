@@ -33,6 +33,9 @@ fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T>
 /** Removes the longest string containing only spaces from both ends of string expression. */
 fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
 
+/** Returns the length of the string value. */
+fun <T: String?> Expression<T>.length() : Length<T> = Length(this)
+
 
 // General-Purpose Aggregate Functions
 

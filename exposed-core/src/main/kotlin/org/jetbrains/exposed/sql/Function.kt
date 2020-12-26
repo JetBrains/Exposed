@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
 
@@ -106,6 +107,14 @@ class GroupConcat<T : String?>(
     vararg val orderBy: Pair<Expression<*>, SortOrder>
 ) : Function<T>(VarCharColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.groupConcat(this, queryBuilder)
+}
+
+/**
+ * Returns the length of the string value as a result of [expr].
+ */
+
+class Length<T: String?>(val expr: Expression<T>) : Function<T>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = currentDialect.functionProvider.length(this, queryBuilder)
 }
 
 /**

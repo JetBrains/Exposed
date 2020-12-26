@@ -45,6 +45,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun <T : String?> length(expr: Length<T>, queryBuilder: QueryBuilder) = queryBuilder { append("LEN(", expr, ')') }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,

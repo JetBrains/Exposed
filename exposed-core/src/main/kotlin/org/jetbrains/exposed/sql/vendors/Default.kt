@@ -188,6 +188,17 @@ abstract class FunctionProvider {
         append(")")
     }
 
+    /**
+     * SQL Function that returns the number of characters in a string.
+     *
+     * @param expr Group concat options.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+
+    open fun <T: String?> length(expr: Length<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        queryBuilder { append("LENGTH(", expr, ')') }
+    }
+
     // Pattern matching
 
     /**

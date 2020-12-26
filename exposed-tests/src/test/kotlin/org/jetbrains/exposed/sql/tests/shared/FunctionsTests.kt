@@ -76,15 +76,9 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testLengthWithCount01() {
-        class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
-            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                if (currentDialectTest is SQLServerDialect) append("LEN(", exp, ')')
-                else append("LENGTH(", exp, ')')
-            }
-        }
         withCitiesAndUsers { cities, _, _ ->
-            val sumOfLength = LengthFunction(cities.name).sum()
-            val expectedValue = cities.selectAll().sumBy{ it[cities.name].length }
+            val sumOfLength = Length(cities.name).sum()
+            val expectedValue = cities.selectAll().sumBy { it[cities.name].length }
 
             val results = cities.slice(sumOfLength).selectAll().toList()
             assertEquals(1, results.size)
@@ -132,7 +126,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRegexp01() {
+    @Test
+    fun testRegexp01() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id regexp "a.+" }.count())
             assertEquals(1L, users.select { users.id regexp "an.+" }.count())
@@ -141,7 +136,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRegexp02() {
+    @Test
+    fun testRegexp02() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
             assertEquals(1L, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
@@ -150,7 +146,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConcat01() {
+    @Test
+    fun testConcat01() {
         withCitiesAndUsers { cities, _, _ ->
             val concatField = concat(stringLiteral("Foo"), stringLiteral("Bar"))
             val result = cities.slice(concatField).selectAll().limit(1).single()
@@ -162,26 +159,28 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConcat02() {
+    @Test
+    fun testConcat02() {
         withCitiesAndUsers { _, users, _ ->
             val concatField = concat(users.id, stringLiteral(" - "), users.name)
-            val result = users.slice(concatField).select{ users.id eq "andrey" }.single()
+            val result = users.slice(concatField).select { users.id eq "andrey" }.single()
             assertEquals("andrey - Andrey", result[concatField])
 
             val concatField2 = concat("!", listOf(users.id, users.name))
-            val result2 = users.slice(concatField2).select{ users.id eq "andrey" }.single()
+            val result2 = users.slice(concatField2).select { users.id eq "andrey" }.single()
             assertEquals("andrey!Andrey", result2[concatField2])
         }
     }
 
-    @Test fun testConcatWithNumbers() {
+    @Test
+    fun testConcatWithNumbers() {
         withCitiesAndUsers { _, _, data ->
             val concatField = concat(data.user_id, stringLiteral(" - "), data.comment, stringLiteral(" - "), data.value)
-            val result = data.slice(concatField).select{ data.user_id eq "sergey" }.single()
+            val result = data.slice(concatField).select { data.user_id eq "sergey" }.single()
             assertEquals("sergey - Comment for Sergey - 30", result[concatField])
 
             val concatField2 = concat("!", listOf(data.user_id, data.comment, data.value))
-            val result2 = data.slice(concatField2).select{ data.user_id eq "sergey" }.single()
+            val result2 = data.slice(concatField2).select { data.user_id eq "sergey" }.single()
             assertEquals("sergey!Comment for Sergey!30", result2[concatField2])
         }
     }
