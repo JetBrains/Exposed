@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
 
