@@ -316,7 +316,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }
 }
 
-fun Table.insertAndWait(duration: Long) {
+fun ITable.insertAndWait(duration: Long) {
     this.insert {  }
     TransactionManager.current().commit()
     Thread.sleep(duration)

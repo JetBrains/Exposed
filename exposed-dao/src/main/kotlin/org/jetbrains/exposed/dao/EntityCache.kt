@@ -1,24 +1,23 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
 
 val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this) }
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
     internal var flushingEntities by transactionScope { false }
-    val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
+    val data = LinkedHashMap<IdTableInterface<*>, MutableMap<Any, Entity<*>>>()
+    val inserts = LinkedHashMap<IdTableInterface<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
 
-    private fun getMap(table: IdTable<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
+    private fun getMap(table: IdTableInterface<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
         LinkedHashMap()
     }
 
@@ -37,7 +36,7 @@ class EntityCache(private val transaction: Transaction) {
         getMap(o.klass.table)[o.id.value] = o
     }
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> remove(table: IdTable<ID>, o: T) {
+    fun <ID:Comparable<ID>, T: Entity<ID>> remove(table: IdTableInterface<ID>, o: T) {
         getMap(table).remove(o.id.value)
     }
 
@@ -49,7 +48,7 @@ class EntityCache(private val transaction: Transaction) {
         flush(inserts.keys + data.keys)
     }
 
-    private fun updateEntities(idTable: IdTable<*>) {
+    private fun updateEntities(idTable: IdTableInterface<*>) {
         data[idTable]?.let { map ->
             if (map.isNotEmpty()) {
                 val updatedEntities = HashSet<Entity<*>>()
@@ -68,16 +67,16 @@ class EntityCache(private val transaction: Transaction) {
         }
     }
 
-    fun flush(tables: Iterable<IdTable<*>>) {
+    fun flush(tables: Iterable<IdTableInterface<*>>) {
         if (flushingEntities) return
         try {
             flushingEntities = true
             val insertedTables = inserts.keys
 
-            val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
+            val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTableInterface<*>>()
             updateBeforeInsert.forEach(::updateEntities)
 
-            SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
+            SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTableInterface<*>>().forEach(::flushInserts)
 
             val updateTheRestTables = tables - updateBeforeInsert
             for (t in updateTheRestTables) {
@@ -92,13 +91,13 @@ class EntityCache(private val transaction: Transaction) {
         }
     }
 
-    internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
+    internal fun removeTablesReferrers(insertedTables: Collection<ITable>) {
         referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
             referrers.remove(it)
         }
     }
 
-    internal fun flushInserts(table: IdTable<*>) {
+    internal fun flushInserts(table: IdTableInterface<*>) {
         inserts.remove(table)?.let {
             var toFlush: List<Entity<*>> = it
             do {

@@ -139,7 +139,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix fun <TID:Comparable<TID>, Target: Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
+    infix fun <TID:Comparable<TID>, Target: Entity<TID>> EntityClass<TID, Target>.via(table: ITable): InnerTableLink<ID, Entity<ID>, TID, Target> =
             InnerTableLink(table, this@via)
 
     fun <TID:Comparable<TID>, Target: Entity<TID>> EntityClass<TID, Target>.via(sourceColumn: Column<EntityID<ID>>, targetColumn: Column<EntityID<TID>>) =

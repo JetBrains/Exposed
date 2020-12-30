@@ -149,7 +149,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         return answer.first?.let { stmt.body(it) }
     }
 
-    fun identity(table: Table): String =
+    fun identity(table: ITable): String =
             (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
                 ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 

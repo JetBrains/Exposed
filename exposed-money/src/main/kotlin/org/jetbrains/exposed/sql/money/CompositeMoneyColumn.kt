@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.money
 import org.jetbrains.exposed.sql.BiCompositeColumn
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.DecimalColumnType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.ITable
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.Monetary
@@ -40,7 +40,7 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
         }
 )
 
-fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
+fun CompositeMoneyColumn(table: ITable, precision: Int, scale: Int, amountName: String, currencyName: String) =
     CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
         amount = Column(table, amountName, DecimalColumnType(precision, scale)),
         currency = Column(table, currencyName, CurrencyColumnType())

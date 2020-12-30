@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.IColumnType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.ITable
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.SQLException
@@ -13,7 +13,7 @@ internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
 
-abstract class Statement<out T>(val type: StatementType, val targets: List<Table>) {
+abstract class Statement<out T>(val type: StatementType, val targets: List<ITable>) {
 
     abstract fun PreparedStatementApi.executeInternal(transaction: Transaction): T?
 

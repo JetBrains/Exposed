@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.sql.SQLException
 
-open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
+open class InsertStatement<Key:Any>(val table: ITable, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
     var resultedValues: List<ResultRow>? = null
         private set
 

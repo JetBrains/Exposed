@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.dao
 
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.emptySized
@@ -11,7 +11,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
+private fun checkReference(reference: Column<*>, factoryTable: IdTableInterface<*>) {
     val refColumn = reference.referee ?: error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factoryTable != targetTable) {

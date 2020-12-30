@@ -347,7 +347,7 @@ abstract class FunctionProvider {
      */
     open fun insert(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction
@@ -373,7 +373,7 @@ abstract class FunctionProvider {
      * @param transaction Transaction where the operation is executed.
      */
     open fun update(
-        target: Table,
+        target: ITable,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
@@ -421,7 +421,7 @@ abstract class FunctionProvider {
      * @param data Pairs of column to replace and values to replace with.
      */
     open fun replace(
-        table: Table,
+        table: ITable,
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be vendor specific implementation.")
@@ -439,7 +439,7 @@ abstract class FunctionProvider {
      */
     open fun delete(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         where: String?,
         limit: Int?,
         transaction: Transaction
@@ -529,21 +529,21 @@ interface DatabaseDialect {
     fun allTablesNames(): List<String>
 
     /** Checks if the specified table exists in the database. */
-    fun tableExists(table: Table): Boolean
+    fun tableExists(table: ITable): Boolean
 
     /** Checks if the specified schema exists. */
     fun schemaExists(schema: Schema): Boolean
 
-    fun checkTableMapping(table: Table): Boolean = true
+    fun checkTableMapping(table: ITable): Boolean = true
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
-    fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
+    fun tableColumns(vararg tables: ITable): Map<ITable, List<ColumnMetadata>> = emptyMap()
 
     /** Returns a map with the foreign key constraints of all the defined columns in each of the specified [tables]. */
-    fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> = emptyMap()
+    fun columnConstraints(vararg tables: ITable): Map<Pair<ITable, Column<*>>, List<ForeignKeyConstraint>> = emptyMap()
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
-    fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
+    fun existingIndices(vararg tables: ITable): Map<ITable, List<Index>> = emptyMap()
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean
@@ -640,7 +640,7 @@ abstract class VendorDialect(
         tableNames.getValue(currentScheme)
     }
 
-    override fun tableExists(table: Table): Boolean {
+    override fun tableExists(table: ITable): Boolean {
         val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
         val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
         val allTables = getAllTableNamesCache().getValue(scheme)
@@ -658,11 +658,11 @@ abstract class VendorDialect(
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
-    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
+    override fun tableColumns(vararg tables: ITable): Map<ITable, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<Table, Column<*>>, MutableList<ForeignKeyConstraint>>()
+    override fun columnConstraints(vararg tables: ITable): Map<Pair<ITable, Column<*>>, List<ForeignKeyConstraint>> {
+        val constraints = HashMap<Pair<ITable, Column<*>>, MutableList<ForeignKeyConstraint>>()
 
         val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
 
@@ -676,7 +676,7 @@ abstract class VendorDialect(
         return constraints
     }
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
+    override fun existingIndices(vararg tables: ITable): Map<ITable, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
 
     private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
 
@@ -687,7 +687,7 @@ abstract class VendorDialect(
 
     protected val columnConstraintsCache: MutableMap<String, List<ForeignKeyConstraint>> = ConcurrentHashMap()
 
-    protected open fun fillConstraintCacheForTables(tables: List<Table>): Unit =
+    protected open fun fillConstraintCacheForTables(tables: List<ITable>): Unit =
         columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })
 
     override fun resetCaches() {

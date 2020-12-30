@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -25,7 +25,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
  */
 interface FieldSet {
     /** Return the column set that contains this field set. */
-    val source: ColumnSet
+    val source: IColumnSet
     /** Returns the field of this field set. */
     val fields: List<Expression<*>>
 
@@ -50,29 +50,29 @@ interface FieldSet {
 /**
  * Represents a set of columns.
  */
-abstract class ColumnSet : FieldSet {
-    override val source: ColumnSet get() = this
+interface IColumnSet : FieldSet {
+    override val source: IColumnSet get() = this
     /** Returns the columns of this column set. */
-    abstract val columns: List<Column<*>>
+    val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
 
     /** Appends the SQL representation of this column set to the specified [queryBuilder]. */
-    abstract fun describe(s: Transaction, queryBuilder: QueryBuilder)
+    fun describe(s: Transaction, queryBuilder: QueryBuilder)
 
     /**
      * Creates a join relation with [otherTable].
      * When all joining options are absent Exposed will try to resolve referencing columns by itself.
      *
-     * @param otherTable [ColumnSet] to join with.
+     * @param otherTable [IColumnSet] to join with.
      * @param joinType See [JoinType] for available options.
-     * @param onColumn The column from a current [ColumnSet], may be skipped then [additionalConstraint] will be used.
+     * @param onColumn The column from a current [IColumnSet], may be skipped then [additionalConstraint] will be used.
      * @param otherColumn The column from an [otherTable], may be skipped then [additionalConstraint] will be used.
      * @param additionalConstraint The condition to join which will be placed in ON part of SQL query.
      *
      * @throws IllegalStateException If join could not be prepared. See exception message for more details.
      */
-    abstract fun join(
-        otherTable: ColumnSet,
+    fun join(
+        otherTable: IColumnSet,
         joinType: JoinType,
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
@@ -80,57 +80,60 @@ abstract class ColumnSet : FieldSet {
     ): Join
 
     /** Creates an inner join relation with [otherTable]. */
-    abstract fun innerJoin(otherTable: ColumnSet): Join
+    fun innerJoin(otherTable: IColumnSet): Join
 
     /** Creates a left outer join relation with [otherTable]. */
-    abstract fun leftJoin(otherTable: ColumnSet): Join
+    fun leftJoin(otherTable: IColumnSet): Join
 
     /** Creates a right outer join relation with [otherTable]. */
-    abstract fun rightJoin(otherTable: ColumnSet): Join
+    fun rightJoin(otherTable: IColumnSet): Join
 
     /** Creates a full outer join relation with [otherTable]. */
-    abstract fun fullJoin(otherTable: ColumnSet): Join
+    fun fullJoin(otherTable: IColumnSet): Join
 
     /** Creates a cross join relation with [otherTable]. */
-    abstract fun crossJoin(otherTable: ColumnSet): Join
+    fun crossJoin(otherTable: IColumnSet): Join
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    /** Specifies a subset of [columns] of this [IColumnSet]. */
     fun slice(vararg columns: Expression<*>): FieldSet = Slice(this, columns.toList())
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    /** Specifies a subset of [columns] of this [IColumnSet]. */
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 }
 
+@Deprecated("Use IColumnSet instead.")
+abstract class ColumnSet: IColumnSet, FieldSet
+
 /** Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
-fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
+fun <C1 : IColumnSet, C2 : IColumnSet> C1.innerJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
     otherColumn: C2.() -> Expression<*>
 ): Join = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
 
 /** Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
-fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
+fun <C1 : IColumnSet, C2 : IColumnSet> C1.leftJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
     otherColumn: C2.() -> Expression<*>
 ): Join = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn())
 
 /** Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
-fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
+fun <C1 : IColumnSet, C2 : IColumnSet> C1.rightJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
     otherColumn: C2.() -> Expression<*>
 ): Join = join(otherTable, JoinType.RIGHT, onColumn(), otherTable.otherColumn())
 
 /** Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
-fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
+fun <C1 : IColumnSet, C2 : IColumnSet> C1.fullJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
     otherColumn: C2.() -> Expression<*>
 ): Join = join(otherTable, JoinType.FULL, onColumn(), otherTable.otherColumn())
 
 /** Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
-fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
+fun <C1 : IColumnSet, C2 : IColumnSet> C1.crossJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
     otherColumn: C2.() -> Expression<*>
@@ -139,7 +142,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
 /**
  * Represents a subset of [fields] from a given [source].
  */
-class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet
+class Slice(override val source: IColumnSet, override val fields: List<Expression<*>>) : FieldSet
 
 /**
  * Represents column set join types.
@@ -162,16 +165,16 @@ enum class JoinType {
  */
 class Join(
     /** The column set to which others will be joined. */
-    val table: ColumnSet
-) : ColumnSet() {
+    val table: IColumnSet
+) : IColumnSet {
 
     override val columns: List<Column<*>> get() = joinParts.flatMapTo(table.columns.toMutableList()) { it.joinPart.columns }
 
     internal val joinParts: MutableList<JoinPart> = mutableListOf()
 
     constructor(
-        table: ColumnSet,
-        otherTable: ColumnSet,
+        table: IColumnSet,
+        otherTable: IColumnSet,
         joinType: JoinType = JoinType.INNER,
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
@@ -214,7 +217,7 @@ class Join(
     }
 
     override fun join(
-        otherTable: ColumnSet,
+        otherTable: IColumnSet,
         joinType: JoinType,
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
@@ -228,18 +231,18 @@ class Join(
         return join(otherTable, joinType, cond, additionalConstraint)
     }
 
-    override infix fun innerJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.INNER)
+    override infix fun innerJoin(otherTable: IColumnSet): Join = implicitJoin(otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.LEFT)
+    override infix fun leftJoin(otherTable: IColumnSet): Join = implicitJoin(otherTable, JoinType.LEFT)
 
-    override infix fun rightJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.RIGHT)
+    override infix fun rightJoin(otherTable: IColumnSet): Join = implicitJoin(otherTable, JoinType.RIGHT)
 
-    override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
+    override infix fun fullJoin(otherTable: IColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
-    override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
+    override infix fun crossJoin(otherTable: IColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
 
     private fun implicitJoin(
-        otherTable: ColumnSet,
+        otherTable: IColumnSet,
         joinType: JoinType
     ): Join {
         val fkKeys = findKeys(this, otherTable) ?: findKeys(otherTable, this) ?: emptyList()
@@ -259,7 +262,7 @@ class Join(
     }
 
     private fun join(
-        otherTable: ColumnSet,
+        otherTable: IColumnSet,
         joinType: JoinType,
         cond: List<JoinCondition>,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
@@ -268,17 +271,17 @@ class Join(
         it.joinParts.add(JoinPart(joinType, otherTable, cond, additionalConstraint))
     }
 
-    private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
+    private fun findKeys(a: IColumnSet, b: IColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
         .map { a_pk -> a_pk to b.columns.filter { it.referee == a_pk } }
         .filter { it.second.isNotEmpty() }
         .takeIf { it.isNotEmpty() }
 
     /** Return `true` if the specified [table] is already in this join, `false` otherwise. */
-    fun alreadyInJoin(table: Table): Boolean = joinParts.any { it.joinPart == table }
+    fun alreadyInJoin(table: ITable): Boolean = joinParts.any { it.joinPart == table }
 
     internal class JoinPart(
         val joinType: JoinType,
-        val joinPart: ColumnSet,
+        val joinPart: IColumnSet,
         val conditions: List<JoinCondition>,
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
@@ -302,31 +305,69 @@ class Join(
 }
 
 /**
- * Base class for any simple table.
+ * Represents a primary key composed by the specified [columns], and with the specified [name].
  *
- * If you want to reference your table use [IdTable] instead.
- *
- * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "") : ColumnSet(), DdlAware {
+interface IPrimaryKey {
+    /** The columns that compose the primary key. */
+    val columns: Array<out Column<*>>;
+    /** The name of the primary key. */
+    val name: String;
+}
+
+/**
+ * Represents a primary key composed by the specified [columns], and with the specified [name].
+ * If no name is specified, the table name with the "pk_" prefix will be used instead.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.demo.sql.Users
+ */
+open class PrimaryKey(
+    /** Returns the columns that compose the primary key. */
+    override vararg val columns: Column<*>,
+    /** Returns the name of the primary key. */
+    override val name: String
+): IPrimaryKey {
+    constructor(vararg columns: Column<*>, table: ITable): this(*columns, name= "pk_${table.tableName}")
+}
+
+
+internal val ITable.tableNameWithoutScheme: String get() = this.tableName.substringAfter(".")
+
+internal fun ITable.isCustomPKNameDefined(): Boolean = this.primaryKey?.let { it.name != "pk_$tableName" } == true
+
+internal fun ITable.primaryKeyConstraint(): String? {
+    return primaryKey?.let { primaryKey ->
+        val tr = TransactionManager.current()
+        val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
+        return primaryKey.columns.joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
+    }
+}
+
+/**
+ * Base interface for any simple table.
+ *
+ * If you want to reference your table use [IdTableInterface] instead.
+ *
+ */
+@Suppress("INAPPLICABLE_JVM_NAME")
+interface ITable: IColumnSet, DdlAware {
     /** Returns the table name. */
-    open val tableName: String = if (name.isNotEmpty()) name
-    else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
-
-    internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
-
-    private val _columns = mutableListOf<Column<*>>()
-    /** Returns all the columns defined on the table. */
-    override val columns: List<Column<*>> get() = _columns
+    val tableName: String
 
     /** Returns the first auto-increment column on the table. */
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
-    private val _indices = mutableListOf<Index>()
     /** Returns all indices declared on the table. */
-    val indices: List<Index> get() = _indices
+    val indices: List<Index>
 
-    private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
+    val checkConstraints: List<Pair<String, Op<Boolean>>>
+
+    val primaryKey: IPrimaryKey?
+
+    private val _columns get() = this.columns as MutableList<Column<*>>
+    private val _indices get() = this.indices as MutableList<Index>
+    private val _checkConstraints get() = this.checkConstraints as MutableList<Pair<String, Op<Boolean>>>
+
 
     /**
      * Returns the table name in proper case.
@@ -334,27 +375,27 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@ITable)) }
 
     // Join operations
 
     override fun join(
-        otherTable: ColumnSet,
+        otherTable: IColumnSet,
         joinType: JoinType,
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
     ): Join = Join(this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
+    override infix fun innerJoin(otherTable: IColumnSet): Join = Join(this, otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.LEFT)
+    override infix fun leftJoin(otherTable: IColumnSet): Join = Join(this, otherTable, JoinType.LEFT)
 
-    override infix fun rightJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.RIGHT)
+    override infix fun rightJoin(otherTable: IColumnSet): Join = Join(this, otherTable, JoinType.RIGHT)
 
-    override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
+    override infix fun fullJoin(otherTable: IColumnSet): Join = Join(this, otherTable, JoinType.FULL)
 
-    override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+    override infix fun crossJoin(otherTable: IColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
 
     // Column registration
 
@@ -380,92 +421,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         this.add(column)
     }
 
-    // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
-
-    /**
-     * Represents a primary key composed by the specified [columns], and with the specified [name].
-     * If no name is specified, the table name with the "pk_" prefix will be used instead.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.demo.sql.Users
-     */
-    inner class PrimaryKey(
-        /** Returns the columns that compose the primary key. */
-        vararg val columns: Column<*>,
-        /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
-    ) {
-        init {
-            checkMultipleDeclaration()
-            for (column in columns) column.markPrimaryKey()
-            columns.sortWith(compareBy { !it.columnType.isAutoInc })
-        }
-
-        /**
-         * Initialize PrimaryKey class with columns defined using [primaryKey] method
-         *
-         * This constructor must be removed when [primaryKey] method is no longer supported.
-         */
-        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
-
-        /** Marks the receiver column as an element of primary key. */
-        private fun Column<*>.markPrimaryKey() {
-            indexInPK = table.columns.count { it.indexInPK != null } + 1
-        }
-
-        /** Check if both old and new declarations of primary key are defined.
-         *
-         * Remove columns from primary key to take columns declared in PrimaryKey class instead.
-         * Log an error.
-         * This function must be removed when [primaryKey] method is no longer supported.
-         */
-        private fun checkMultipleDeclaration() {
-            val table = this@Table
-            if (table.columns.any { it.indexInPK != null }) {
-                removeOldPrimaryKey()
-            }
-        }
-
-        /** This function must be removed when [primaryKey] method is no longer supported. */
-        private fun removeOldPrimaryKey() = columns.filter { it.indexInPK != null }.forEach { it.indexInPK = null }
-    }
-
-    /**
-     * Returns the primary key of the table if present, `null` otherwise.
-     *
-     * Currently, it is initialized with existing keys defined by [Column.primaryKey] function for a backward compatibility,
-     * but you have to define it explicitly by overriding that val instead.
-     */
-    open val primaryKey: PrimaryKey? by lazy { getPrimaryKeyColumns()?.let(::PrimaryKey) }
-
-    /** Returns the list of columns in the primary key if present. */
-    private fun getPrimaryKeyColumns(): List<Column<*>>? = columns
-        .filter { it.indexInPK != null }
-        .sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
-        .takeIf { it.isNotEmpty() }
-
-    /**
-     * Mark @receiver column as primary key.
-     *
-     * When you define multiple primary keys on a table it will create composite key.
-     * Order of columns in a primary key will be the same as order of the columns in a table mapping from top to bottom.
-     * If you desire to change the order only in a primary key provide [indx] parameter.
-     *
-     * @param indx An optional column index in a primary key
-     */
-    @Deprecated(
-        "This function will be no longer supported. Please use the new declarations of primary key by " +
-                "overriding the primaryKey property in the current table. " +
-                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }"
-    )
-    fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
-        require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
-        indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
-        exposedLogger.error(
-                "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
-        )
-    }
 
     // EntityID columns
 
@@ -474,7 +430,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T : Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> {
         val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
             it.indexInPK = indexInPK
-            it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
+            it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTableInterface<T>) } }
         }
         return replaceColumn(this, newColumn)
     }
@@ -489,7 +445,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Creates an [EntityID] column, with the specified [name], for storing the identifier of the specified [table]. */
     @Suppress("UNCHECKED_CAST")
-    fun <ID : Comparable<ID>> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
+    fun <ID : Comparable<ID>> entityId(name: String, table: IdTableInterface<ID>): Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
         return entityId(name, originalColumn)
     }
@@ -670,7 +626,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Sets the default value for this column in the database side. */
     fun <T> CompositeColumn<T>.default(defaultValue: T): CompositeColumn<T> = apply {
-        with(this@Table) {
+        with(this@ITable) {
             this@default.getRealColumnsWithValues(defaultValue).forEach {
                 (it.key as Column<Any>).default(it.value as Any)
             }
@@ -824,7 +780,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun <T : Comparable<T>> reference(
         name: String,
-        foreign: IdTable<T>,
+        foreign: IdTableInterface<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
@@ -892,7 +848,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun <T : Comparable<T>> optReference(
         name: String,
-        foreign: IdTable<T>,
+        foreign: IdTableInterface<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
@@ -979,7 +935,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> = apply {
         if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
-            table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
+            table._checkConstraints.add(name to SqlExpressionBuilder.op(this))
         } else {
             exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
         }
@@ -993,10 +949,31 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
         if (name.isEmpty() || checkConstraints.none { it.first.equals(name, true) }) {
-            checkConstraints.add(name to SqlExpressionBuilder.op())
+            _checkConstraints.add(name to SqlExpressionBuilder.op())
         } else {
             exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
         }
+    }
+    /**
+     * Mark @receiver column as primary key.
+     *
+     * When you define multiple primary keys on a table it will create composite key.
+     * Order of columns in a primary key will be the same as order of the columns in a table mapping from top to bottom.
+     * If you desire to change the order only in a primary key provide [indx] parameter.
+     *
+     * @param indx An optional column index in a primary key
+     */
+    @Deprecated(
+        "This function will be no longer supported. Please use the new declarations of primary key by " +
+                "overriding the primaryKey property in the current table. " +
+                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }"
+    )
+    fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
+        require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
+        indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
+        exposedLogger.error(
+            "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
+        )
     }
 
     // Cloning utils
@@ -1030,13 +1007,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the list of DDL statements that create this table. */
     val ddl: List<String> get() = createStatement()
 
-    internal fun primaryKeyConstraint(): String? {
-        return primaryKey?.let { primaryKey ->
-            val tr = TransactionManager.current()
-            val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
-            return primaryKey.columns.joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
-        }
-    }
 
     override fun createStatement(): List<String> {
         val createSequence = autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement() }.orEmpty()
@@ -1050,7 +1020,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(TransactionManager.current().identity(this@ITable))
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { it.descriptionDdl() }
 
@@ -1065,7 +1035,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 if (checkConstraints.isNotEmpty()) {
                     checkConstraints.mapIndexed { index, (name, op) ->
                         val resolvedName = name.ifBlank { "check_${tableName}_$index" }
-                        CheckConstraint.from(this@Table, resolvedName, op).checkPart
+                        CheckConstraint.from(this@ITable, resolvedName, op).checkPart
                     }.joinTo(this, prefix = ", ")
                 }
 
@@ -1090,10 +1060,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(TransactionManager.current().identity(this@ITable))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
-            } else if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@Table)) {
+            } else if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@ITable)) {
                 append(" CASCADE")
             }
         }
@@ -1103,9 +1073,110 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return listOf(dropTable) + dropSequence
     }
 
+
+}
+
+/**
+ * Base class for any simple table.
+ *
+ * If you want to reference your table use [IdTableInterface] instead.
+ *
+ */
+open class Table(name: String = ""): ITable {
+    /** Returns the table name. */
+    override val tableName: String = if (name.isNotEmpty()) name
+    else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+
+    internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
+
+    private val _columns = mutableListOf<Column<*>>()
+
+    /** Returns all the columns defined on the table. */
+    override val columns: List<Column<*>> get() = _columns
+
+    /** Returns the first auto-increment column on the table. */
+    override val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
+
+    private val _indices = mutableListOf<Index>()
+    /** Returns all indices declared on the table. */
+    override val indices: List<Index> get() = _indices
+
+    private val _checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
+
+    override val checkConstraints get(): List<Pair<String, Op<Boolean>>> = _checkConstraints
+
+
+    // Primary keys
+
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
+
+    /**
+     * Represents a primary key composed by the specified [columns], and with the specified [name].
+     * If no name is specified, the table name with the "pk_" prefix will be used instead.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.demo.sql.Users
+     */
+    @Deprecated("Use org.jetbrains.exposed.sql.PrimaryKey instead")
+    inner class PrimaryKey(
+        /** Returns the columns that compose the primary key. */
+        override vararg val columns: Column<*>,
+        /** Returns the name of the primary key. */
+        override val name: String = "pk_$tableName"
+    ): org.jetbrains.exposed.sql.PrimaryKey(*columns,name=name) {
+        init {
+            checkMultipleDeclaration()
+            for (column in columns) column.markPrimaryKey()
+            columns.sortWith(compareBy { !it.columnType.isAutoInc })
+        }
+
+        /**
+         * Initialize PrimaryKey class with columns defined using [primaryKey] method
+         *
+         * This constructor must be removed when [primaryKey] method is no longer supported.
+         */
+        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
+
+        /** Marks the receiver column as an element of primary key. */
+        private fun Column<*>.markPrimaryKey() {
+            indexInPK = table.columns.count { it.indexInPK != null } + 1
+        }
+
+        /** Check if both old and new declarations of primary key are defined.
+         *
+         * Remove columns from primary key to take columns declared in PrimaryKey class instead.
+         * Log an error.
+         * This function must be removed when [primaryKey] method is no longer supported.
+         */
+        private fun checkMultipleDeclaration() {
+            val table = this@Table
+            if (table.columns.any { it.indexInPK != null }) {
+                removeOldPrimaryKey()
+            }
+        }
+
+        /** This function must be removed when [primaryKey] method is no longer supported. */
+        private fun removeOldPrimaryKey() = columns.filter { it.indexInPK != null }.forEach { it.indexInPK = null }
+    }
+
+
+    /**
+     * Returns the primary key of the table if present, `null` otherwise.
+     *
+     * Currently, it is initialized with existing keys defined by [Column.primaryKey] function for a backward compatibility,
+     * but you have to define it explicitly by overriding that val instead.
+     */
+    override val primaryKey: IPrimaryKey? by lazy { getPrimaryKeyColumns()?.let { PrimaryKey() } }
+
+    /** Returns the list of columns in the primary key if present. */
+    private fun getPrimaryKeyColumns(): List<Column<*>>? = columns
+        .filter { it.indexInPK != null }
+        .sortedWith(compareBy({ !it.columnType.isAutoInc }, { it.indexInPK }))
+        .takeIf { it.isNotEmpty() }
+
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Table) return false
+        if (other !is ITable) return false
 
         if (tableName != other.tableName) return false
 
@@ -1123,10 +1194,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 data class Seq(private val name: String)
 
 /** Returns the list of tables to which the columns in this column set belong. */
-fun ColumnSet.targetTables(): List<Table> = when (this) {
+fun IColumnSet.targetTables(): List<ITable> = when (this) {
     is Alias<*> -> listOf(this.delegate)
     is QueryAlias -> this.query.set.source.targetTables()
-    is Table -> listOf(this)
+    is ITable -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }

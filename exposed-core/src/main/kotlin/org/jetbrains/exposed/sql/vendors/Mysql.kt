@@ -56,7 +56,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+    override fun replace(table: ITable, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val columns = data.joinToString { transaction.identity(it.first) }
         val values = builder.apply { data.appendTo { registerArgument(it.first.columnType, it.second) } }.toString()
@@ -74,12 +74,12 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
 
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
+    override fun insert(ignore: Boolean, table: ITable, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
         val def = super.insert(false, table, columns, expr, transaction)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
+    override fun delete(ignore: Boolean, table: ITable, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
@@ -127,7 +127,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
     }
 
-    override fun fillConstraintCacheForTables(tables: List<Table>) {
+    override fun fillConstraintCacheForTables(tables: List<ITable>) {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         val allTableNames = allTables.keys
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")

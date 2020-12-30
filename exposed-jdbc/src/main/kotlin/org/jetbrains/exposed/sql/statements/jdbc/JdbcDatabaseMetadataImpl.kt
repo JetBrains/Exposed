@@ -111,9 +111,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
+    private fun ResultSet.extractColumns(tables: Array<out ITable>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<ITable, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
-        val result = HashMap<Table, MutableList<ColumnMetadata>>()
+        val result = HashMap<ITable, MutableList<ColumnMetadata>>()
 
         while (next()) {
             val (tableName, columnMetadata) = extract(this)
@@ -124,7 +124,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
+    override fun columns(vararg tables: ITable): Map<ITable, List<ColumnMetadata>> {
         val rs =  metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             //@see java.sql.DatabaseMetaData.getColumns
@@ -135,9 +135,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    private val existingIndicesCache = HashMap<Table, List<Index>>()
+    private val existingIndicesCache = HashMap<ITable, List<Index>>()
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
+    override fun existingIndices(vararg tables: ITable): Map<ITable, List<Index>> {
         for(table in tables) {
             val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
@@ -174,7 +174,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     @Synchronized
-    override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
+    override fun tableConstraints(tables: List<ITable>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         return allTables.keys.associateWith { table ->
             metadata.getImportedKeys(databaseName, currentScheme, table).iterate {

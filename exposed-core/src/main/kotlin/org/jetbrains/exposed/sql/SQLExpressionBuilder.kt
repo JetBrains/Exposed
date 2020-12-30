@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -154,7 +154,7 @@ interface ISqlExpressionBuilder {
             return isNull()
         }
         @Suppress("UNCHECKED_CAST")
-        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
+        val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTableInterface<T>
         val entityID = EntityID(t, table)
         return EqOp(this, wrap(entityID))
     }
@@ -344,7 +344,7 @@ interface ISqlExpressionBuilder {
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
-        val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
+        val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTableInterface<T>
         return inList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
@@ -355,7 +355,7 @@ interface ISqlExpressionBuilder {
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
-        val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
+        val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTableInterface<T>
         return notInList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 

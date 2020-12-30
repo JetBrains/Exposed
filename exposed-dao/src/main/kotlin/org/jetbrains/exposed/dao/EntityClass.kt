@@ -3,6 +3,7 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
@@ -13,7 +14,7 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
 @Suppress("UNCHECKED_CAST")
-abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
+abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTableInterface<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.kotlin.primaryConstructor!!
 
@@ -100,7 +101,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         wrapRow(it)
     }
 
-    fun wrapRows(rows: SizedIterable<ResultRow>, alias: Alias<IdTable<*>>) = rows mapLazy {
+    fun wrapRows(rows: SizedIterable<ResultRow>, alias: Alias<IdTableInterface<*>>) = rows mapLazy {
         wrapRow(it, alias)
     }
 
@@ -117,7 +118,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return entity
     }
 
-    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>) : T {
+    fun wrapRow(row: ResultRow, alias: Alias<IdTableInterface<*>>) : T {
         require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected"}
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
             val column = exp as? Column<*>
@@ -179,7 +180,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return if (cached.any()) cached else find(op).asSequence()
     }
 
-    open val dependsOnTables: ColumnSet get() = table
+    open val dependsOnTables: IColumnSet get() = table
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     open fun searchQuery(op: Op<Boolean>): Query =
@@ -301,7 +302,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             = warmUpReferences(references, refColumn as Column<SID>, forUpdate)
 
     fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null): List<T> {
-        val parentTable = refColumn.referee?.table as? IdTable<*>
+        val parentTable = refColumn.referee?.table as? IdTableInterface<*>
         requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
@@ -351,7 +352,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         }
     }
 
-    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null): List<T> {
+    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: ITable, forUpdate: Boolean? = null): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>>
@@ -388,7 +389,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     fun <ID : Comparable<ID>, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
-abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
+abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTableInterface<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
@@ -402,7 +403,7 @@ abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table:
     }
 }
 
-abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
+abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTableInterface<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
     private val cacheLoadingState = Key<Any>()
     private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()

@@ -15,7 +15,7 @@ private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }
  */
 class Column<T>(
     /** Table where the columns is declared. */
-    val table: Table,
+    val table: ITable,
     /** Name of the column. */
     val name: String,
     /** Data type of the column. */

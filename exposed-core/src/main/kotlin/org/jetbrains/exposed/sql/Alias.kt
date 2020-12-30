@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 
-class Alias<out T:Table>(val delegate: T, val alias: String) : Table() {
+class Alias<out T:ITable>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
@@ -56,7 +56,8 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
     }
 }
 
-class QueryAlias(val query: Query, val alias: String): ColumnSet() {
+
+class QueryAlias(val query: Query, val alias: String): IColumnSet {
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder{
         append("(")
@@ -79,23 +80,23 @@ class QueryAlias(val query: Query, val alias: String): ColumnSet() {
         return expressionAlias.delegate.alias("$alias.${expressionAlias.alias}").aliasOnlyExpression()
     }
 
-    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
+    override fun join(otherTable: IColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.()->Op<Boolean>)? ) : Join =
             Join (this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
-    override infix fun innerJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
+    override infix fun innerJoin(otherTable: IColumnSet) : Join = Join (this, otherTable, JoinType.INNER)
 
-    override infix fun leftJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
+    override infix fun leftJoin(otherTable: IColumnSet) : Join = Join (this, otherTable, JoinType.LEFT)
 
-    override infix fun rightJoin(otherTable: ColumnSet): Join  = Join (this, otherTable, JoinType.RIGHT)
+    override infix fun rightJoin(otherTable: IColumnSet): Join  = Join (this, otherTable, JoinType.RIGHT)
 
-    override infix fun fullJoin(otherTable: ColumnSet): Join = Join (this, otherTable, JoinType.FULL)
+    override infix fun fullJoin(otherTable: IColumnSet): Join = Join (this, otherTable, JoinType.FULL)
 
-    override infix fun crossJoin(otherTable: ColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
+    override infix fun crossJoin(otherTable: IColumnSet) : Join = Join (this, otherTable, JoinType.CROSS)
 
     private fun <T:Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
 
-fun <T:Table> T.alias(alias: String) = Alias(this, alias)
+fun <T:ITable> T.alias(alias: String) = Alias(this, alias)
 fun <T:Query> T.alias(alias: String) = QueryAlias(this, alias)
 fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
 
@@ -104,7 +105,7 @@ fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinTyp
     return join (qAlias, joinType, additionalConstraint =  { on(qAlias) } )
 }
 
-fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> Query)
+fun ITable.joinQuery(on: (SqlExpressionBuilder.(QueryAlias)->Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> Query)
     = Join(this).joinQuery(on, joinType, joinPart)
 
 val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()

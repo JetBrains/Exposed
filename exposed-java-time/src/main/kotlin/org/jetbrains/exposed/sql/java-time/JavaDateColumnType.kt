@@ -205,25 +205,25 @@ class JavaDurationColumnType : ColumnType() {
  *
  * @param name The column name
  */
-fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType())
+fun ITable.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType())
 
 /**
  * A datetime column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+fun ITable.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
+fun ITable.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
 
 /**
  * A date column to store a duration.
  *
  * @param name The column name
  */
-fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
+fun ITable.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.money
 
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.ITable
 import org.jetbrains.exposed.sql.VarCharColumnType
 import javax.money.CurrencyUnit
 import javax.money.Monetary
@@ -31,4 +31,4 @@ class CurrencyColumnType : VarCharColumnType(3) {
 
 }
 
-fun Table.currency(name: String): Column<CurrencyUnit> = registerColumn(name, CurrencyColumnType())
+fun ITable.currency(name: String): Column<CurrencyUnit> = registerColumn(name, CurrencyColumnType())

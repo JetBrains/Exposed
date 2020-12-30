@@ -1,13 +1,12 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 
 /**
@@ -53,22 +52,22 @@ fun FieldSet.selectAllBatched(
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
-fun Table.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+fun ITable.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
 
-fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+fun ITable.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
-fun Table.deleteAll() =
+fun ITable.deleteAll() =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsert01
  */
-fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
+fun <T:ITable> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -76,7 +75,7 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
-fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =
+fun <Key:Comparable<Key>, T: IdTableInterface<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -86,7 +85,7 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertState
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
-fun <T:Table, E> T.batchInsert(
+fun <T:ITable, E> T.batchInsert(
     data: Iterable<E>,
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
@@ -140,12 +139,12 @@ fun <T:Table, E> T.batchInsert(
     return result
 }
 
-fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+fun <T:ITable> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
 
-fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
+fun <Key:Comparable<Key>, T: IdTableInterface<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
     body(this)
     execute(TransactionManager.current())
     getOrNull(id)
@@ -154,7 +153,7 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Updat
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
  */
-fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
+fun <T:ITable> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -162,18 +161,18 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
  */
-fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
+fun <T:ITable> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 
-fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
+fun <T:ITable> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testUpdate01
  */
-fun <T:Table> T.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
+fun <T:ITable> T.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
@@ -188,17 +187,17 @@ fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: In
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
  */
-fun Table.exists(): Boolean = currentDialect.tableExists(this)
+fun ITable.exists(): Boolean = currentDialect.tableExists(this)
 
 /**
  * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them
  */
-fun checkMappingConsistence(vararg tables: Table): List<String> {
+fun checkMappingConsistence(vararg tables: ITable): List<String> {
     checkExcessiveIndices(*tables)
     return checkMissingIndices(*tables).flatMap { it.createStatement() }
 }
 
-fun checkExcessiveIndices(vararg tables: Table) {
+fun checkExcessiveIndices(vararg tables: ITable) {
 
     val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
@@ -277,7 +276,7 @@ private fun FieldSet.selectBatched(
 }
 
 /** Returns list of indices missed in database **/
-private fun checkMissingIndices(vararg tables: Table): List<Index> {
+private fun checkMissingIndices(vararg tables: ITable): List<Index> {
     fun Collection<Index>.log(mainMessage: String) {
         if (isNotEmpty()) {
             exposedLogger.warn(mainMessage)

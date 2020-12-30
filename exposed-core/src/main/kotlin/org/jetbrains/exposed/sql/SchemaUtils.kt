@@ -5,17 +5,17 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.util.*
 
 object SchemaUtils {
-    private class TableDepthGraph(val tables: List<Table>) {
+    private class TableDepthGraph(val tables: List<ITable>) {
         val graph = fetchAllTables().associate { t ->
             t to t.columns.mapNotNull { c ->
                 c.referee?.let{ it.table to c.columnType.nullable }
             }.toMap()
         }
 
-        private fun fetchAllTables(): HashSet<Table> {
-            val result = HashSet<Table>()
+        private fun fetchAllTables(): HashSet<ITable> {
+            val result = HashSet<ITable>()
 
-            fun parseTable(table: Table) {
+            fun parseTable(table: ITable) {
                 if (result.add(table)) {
                     table.columns.forEach {
                         it.referee?.table?.let(::parseTable)
@@ -26,11 +26,11 @@ object SchemaUtils {
             return result
         }
 
-        fun sorted() : List<Table> {
-            val visited = mutableSetOf<Table>()
-            val result = arrayListOf<Table>()
+        fun sorted() : List<ITable> {
+            val visited = mutableSetOf<ITable>()
+            val result = arrayListOf<ITable>()
 
-            fun traverse(table: Table) {
+            fun traverse(table: ITable) {
                 if (table !in visited) {
                     visited += table
                     graph.getValue(table).forEach { (t, _) ->
@@ -47,12 +47,12 @@ object SchemaUtils {
         }
 
         fun hasCycle() : Boolean {
-            val visited = mutableSetOf<Table>()
-            val recursion = mutableSetOf<Table>()
+            val visited = mutableSetOf<ITable>()
+            val recursion = mutableSetOf<ITable>()
 
             val sortedTables = sorted()
 
-            fun traverse(table: Table) : Boolean {
+            fun traverse(table: ITable) : Boolean {
                 if (table in recursion) return true
                 if (table in visited) return false
                 recursion += table
@@ -68,10 +68,10 @@ object SchemaUtils {
         }
     }
 
-    fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables.toList()).sorted()
-    fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
+    fun sortTablesByReferences(tables: Iterable<ITable>) = TableDepthGraph(tables.toList()).sorted()
+    fun checkCycle(vararg tables: ITable) = TableDepthGraph(tables.toList()).hasCycle()
 
-    fun createStatements(vararg tables: Table): List<String> {
+    fun createStatements(vararg tables: ITable): List<String> {
         if (tables.isEmpty())
             return emptyList()
 
@@ -107,7 +107,7 @@ object SchemaUtils {
 
     fun createIndex(index: Index) = index.createStatement()
 
-    fun addMissingColumnsStatements(vararg tables: Table): List<String> {
+    fun addMissingColumnsStatements(vararg tables: ITable): List<String> {
         with(TransactionManager.current()) {
             val statements = ArrayList<String>()
             if (tables.isEmpty())
@@ -175,7 +175,7 @@ object SchemaUtils {
             }
         }
     }
-    fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
+    fun <T : ITable> create(vararg tables: T, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
             commit()
@@ -225,7 +225,7 @@ object SchemaUtils {
      * To prevent such cases is advised to use any "global" synchronization you prefer (via redis, memcached, etc) or
      * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
      */
-    fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false) {
+    fun createMissingTablesAndColumns(vararg tables: ITable, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             db.dialect.resetCaches()
             val createStatements = logTimeSpent("Preparing create tables statements") {
@@ -277,7 +277,7 @@ object SchemaUtils {
         }
     }
 
-    fun drop(vararg tables: Table, inBatch: Boolean = false) {
+    fun drop(vararg tables: ITable, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
             var tablesForDeletion =

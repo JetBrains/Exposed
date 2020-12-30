@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.jodatime
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.ITable
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -92,11 +92,11 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
  *
  * @param name The column name
  */
-fun Table.date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+fun ITable.date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
 
 /**
  * A datetime column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+fun ITable.datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))

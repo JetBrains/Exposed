@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.dao
 
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
@@ -52,7 +52,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     private fun Transaction.flushEntities(query: Query) {
         // Flush data before executing query or results may be unpredictable
-        val tables = query.set.source.columns.map { it.table }.filterIsInstance(IdTable::class.java).toSet()
+        val tables = query.set.source.columns.map { it.table }.filterIsInstance(IdTableInterface::class.java).toSet()
         entityCache.flush(tables)
     }
 }

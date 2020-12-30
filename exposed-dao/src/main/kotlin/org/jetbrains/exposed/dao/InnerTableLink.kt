@@ -8,10 +8,10 @@ import kotlin.reflect.KProperty
 
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID:Comparable<SID>, Source: Entity<SID>, ID:Comparable<ID>, Target: Entity<ID>>(
-        val table: Table,
-        val target: EntityClass<ID, Target>,
-        val sourceColumn: Column<EntityID<SID>>? = null,
-        _targetColumn: Column<EntityID<ID>>? = null) : ReadWriteProperty<Source, SizedIterable<Target>> {
+    val table: ITable,
+    val target: EntityClass<ID, Target>,
+    val sourceColumn: Column<EntityID<SID>>? = null,
+    _targetColumn: Column<EntityID<ID>>? = null) : ReadWriteProperty<Source, SizedIterable<Target>> {
     init {
         _targetColumn?.let {
             requireNotNull(sourceColumn) { "Both source and target columns should be specified"}

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.util.*
 
-open class BatchUpdateStatement(val table: IdTable<*>): UpdateStatement(table, null) {
+open class BatchUpdateStatement(val table: IdTableInterface<*>): UpdateStatement(table, null) {
     val data = ArrayList<Pair<EntityID<*>, Map<Column<*>, Any?>>>()
 
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()

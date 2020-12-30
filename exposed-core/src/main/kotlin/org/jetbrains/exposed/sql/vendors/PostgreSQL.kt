@@ -94,7 +94,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     override fun insert(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction
@@ -104,7 +104,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        target: Table,
+        target: ITable,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
@@ -161,7 +161,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun replace(
-        table: Table,
+        table: ITable,
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
@@ -186,7 +186,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     override fun delete(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         where: String?,
         limit: Int?,
         transaction: Transaction

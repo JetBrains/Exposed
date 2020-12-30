@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTableInterface
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
@@ -132,7 +132,7 @@ val Column<*>.autoIncSeqName: String?
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
     init {
-        require(idColumn.table is IdTable<*>) { "EntityId supported only for IdTables" }
+        require(idColumn.table is IdTableInterface<*>) { "EntityId supported only for IdTables" }
     }
 
     override fun sqlType(): String = idColumn.columnType.sqlType()
@@ -157,7 +157,7 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
             is EntityID<*> -> value.value as T
             else -> idColumn.columnType.valueFromDB(value) as T
         },
-        idColumn.table as IdTable<T>
+        idColumn.table as IdTableInterface<T>
     )
 
     override fun equals(other: Any?): Boolean {

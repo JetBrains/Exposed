@@ -29,7 +29,7 @@ internal object H2FunctionProvider : FunctionProvider() {
 
     override fun insert(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction
@@ -96,7 +96,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     }
 
     override fun replace(
-        table: Table,
+        table: ITable,
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
@@ -142,7 +142,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsMultipleGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
+    override fun existingIndices(vararg tables: ITable): Map<ITable, List<Index>> =
         super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.ITable
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -33,11 +33,11 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
     }
 }
 
-fun discoverExposedTables(applicationContext: ApplicationContext, excludedPackages: List<String>): List<Table> {
+fun discoverExposedTables(applicationContext: ApplicationContext, excludedPackages: List<String>): List<ITable> {
     val provider = ClassPathScanningCandidateComponentProvider(false)
-    provider.addIncludeFilter(AssignableTypeFilter(Table::class.java))
+    provider.addIncludeFilter(AssignableTypeFilter(ITable::class.java))
     excludedPackages.forEach { provider.addExcludeFilter(RegexPatternTypeFilter(Pattern.compile(it.replace(".", "\\.") + ".*"))) }
     val packages = AutoConfigurationPackages.get(applicationContext)
     val components = packages.map { provider.findCandidateComponents(it) }.flatten()
-    return components.map { Class.forName(it.beanClassName).kotlin.objectInstance as Table }
+    return components.map { Class.forName(it.beanClassName).kotlin.objectInstance as ITable }
 }

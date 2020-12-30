@@ -94,7 +94,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun insert(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction
@@ -104,7 +104,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        target: Table,
+        target: ITable,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
@@ -118,7 +118,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun delete(
         ignore: Boolean,
-        table: Table,
+        table: ITable,
         where: String?,
         limit: Int?,
         transaction: Transaction

@@ -8,7 +8,7 @@ import java.util.*
 
 class BatchDataInconsistentException(message : String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false,
+open class BatchInsertStatement(table: ITable, ignore: Boolean = false,
                                 protected val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
@@ -80,7 +80,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
     }
 }
 
-open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
+open class SQLServerBatchInsertStatement(table: ITable, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
 

@@ -143,7 +143,7 @@ data class CheckConstraint(
     }
 
     companion object {
-        internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+        internal fun from(table: ITable, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
             val tr = TransactionManager.current()
             val identifierManager = tr.db.identifierManager
@@ -168,7 +168,7 @@ data class Index(
     val indexType: String? = null
 ) : DdlAware {
     /** Table where the index is defined. */
-    val table: Table
+    val table: ITable
     /** Name of the index. */
     val indexName: String
         get() = customName ?: buildString {

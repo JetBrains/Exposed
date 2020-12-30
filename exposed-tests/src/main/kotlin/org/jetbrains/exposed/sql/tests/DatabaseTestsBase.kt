@@ -143,7 +143,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
+    fun withTables (excludeSettings: List<TestDB>, vararg tables: ITable, statement: Transaction.(TestDB) -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
                 addLogger(StdOutSqlLogger)
@@ -175,7 +175,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables (vararg tables: ITable, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
     fun withSchemas (vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
 
