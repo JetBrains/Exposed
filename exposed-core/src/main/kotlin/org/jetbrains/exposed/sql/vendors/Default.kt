@@ -512,6 +512,8 @@ interface DatabaseDialect {
     val needsSequenceToAutoInc: Boolean get() = false
     /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
+    /** Returns the default constraint timing for the dialect. */
+    val defaultDeferrabilityOption: DeferrabilityOption? get() = null
     /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */

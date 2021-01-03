@@ -172,6 +172,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                             from = fromColumn,
                             onUpdate = constraintUpdateRule,
                             onDelete = constraintDeleteRule,
+                            deferrable = null,
                             name = constraintName
                         )
                     )
