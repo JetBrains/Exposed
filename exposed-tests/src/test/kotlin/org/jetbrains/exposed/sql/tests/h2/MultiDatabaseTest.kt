@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.h2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
@@ -16,6 +17,7 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class MultiDatabaseTest {
 
@@ -198,5 +200,29 @@ class MultiDatabaseTest {
             assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }
+    }
+
+    @Test
+    fun `when default database is not explicitly set - should return the latest connection`() {
+        db1
+        db2
+        assertEquals(TransactionManager.defaultDatabase, db2)
+    }
+
+    @Test
+    fun `when default database is explicitly set - should return the set connection`() {
+        db1
+        db2
+        TransactionManager.defaultDatabase = db1
+        assertEquals(TransactionManager.defaultDatabase, db1)
+    }
+
+    @Test
+    fun `when set default database is removed - should return the latest connection`() {
+        db1
+        db2
+        TransactionManager.defaultDatabase = db1
+        TransactionManager.closeAndUnregister(db1)
+        assertEquals(TransactionManager.defaultDatabase, db2)
     }
 }
