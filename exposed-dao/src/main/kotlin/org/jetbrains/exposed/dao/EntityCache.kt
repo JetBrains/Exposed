@@ -14,6 +14,7 @@ class EntityCache(private val transaction: Transaction) {
     internal var flushingEntities by transactionScope { false }
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
@@ -45,25 +46,27 @@ class EntityCache(private val transaction: Transaction) {
         inserts.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
     }
 
+    fun <ID:Comparable<ID>, T: Entity<ID>> scheduleUpdate(f: EntityClass<ID, T>, o: T) {
+        updates.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
+    }
+
     fun flush() {
-        flush(inserts.keys + data.keys)
+        flush(inserts.keys + updates.keys)
     }
 
     private fun updateEntities(idTable: IdTable<*>) {
-        data[idTable]?.let { map ->
-            if (map.isNotEmpty()) {
-                val updatedEntities = HashSet<Entity<*>>()
-                val batch = EntityBatchUpdate(map.values.first().klass)
-                for ((_, entity) in map) {
-                    if (entity.flush(batch)) {
-                        check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
-                        updatedEntities.add(entity)
-                    }
+        updates.remove(idTable)?.takeIf { it.isNotEmpty() }?.let {
+            val updatedEntities = HashSet<Entity<*>>()
+            val batch = EntityBatchUpdate(it.first().klass)
+            for (entity in it) {
+                if (entity.flush(batch)) {
+                    check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
+                    updatedEntities.add(entity)
                 }
-                batch.execute(transaction)
-                updatedEntities.forEach {
-                    transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
-                }
+            }
+            batch.execute(transaction)
+            updatedEntities.forEach {
+                transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
             }
         }
     }

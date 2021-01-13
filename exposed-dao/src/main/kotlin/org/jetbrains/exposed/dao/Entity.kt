@@ -111,8 +111,8 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.invalidateEntityInCache(o)
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
+            val entityCache = TransactionManager.current().entityCache
             if (referee != null) {
-                val entityCache = TransactionManager.current().entityCache
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
@@ -121,6 +121,10 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues[this as Column<Any?>] = value
+            // TODO: Can this be simplified?
+            if (o.id._value?.let { entityCache.data[table]?.contains(it) } == true) {
+                entityCache.scheduleUpdate(klass, o)
+            }
         }
     }
 
