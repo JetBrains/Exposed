@@ -76,7 +76,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert and get id when column has different name`() {
+    fun `test insert and get id when column has different name and get value by id column`() {
         val testTableWithId = object : IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -94,6 +94,25 @@ class InsertTests : DatabaseTestsBase() {
             } get testTableWithId.id
             assertNotNull(id2)
             assertEquals(2, id2.value)
+        }
+    }
+
+    @Test
+    fun `test id and column have different names and get value by original column`() {
+        val exampleTable = object : IdTable<String>() {
+            val exampleColumn = varchar("example_column", 200)
+            override val id = exampleColumn.entityId()
+        }
+
+        withTables(exampleTable) {
+            val value = "value"
+            exampleTable.insert {
+                it[exampleColumn] = value
+            }
+
+            val resultValues: List<String> = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+
+            assertEquals(value, resultValues.first())
         }
     }
 
