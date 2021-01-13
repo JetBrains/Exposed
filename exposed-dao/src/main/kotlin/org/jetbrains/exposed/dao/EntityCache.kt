@@ -12,15 +12,19 @@ val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
     internal var flushingEntities by transactionScope { false }
-    val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
-    val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
-    val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
+    internal val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
+    internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    internal val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
 
     private fun getMap(table: IdTable<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
         LinkedHashMap()
+    }
+
+    fun <R: Entity<*>> getReferrers(sourceId: EntityID<*>, key: Column<*>): SizedIterable<R>? {
+        return referrers[key]?.get(sourceId) as? SizedIterable<R>
     }
 
     fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
@@ -134,6 +138,14 @@ class EntityCache(private val transaction: Transaction) {
                 toFlush = partition.second
             } while(toFlush.isNotEmpty())
         }
+    }
+
+    fun clear(flush: Boolean = true) {
+        if (flush) flush()
+        data.clear()
+        inserts.clear()
+        updates.clear()
+        clearReferrersCache()
     }
 
     fun clearReferrersCache() {
