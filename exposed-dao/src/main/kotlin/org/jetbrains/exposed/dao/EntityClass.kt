@@ -9,6 +9,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
@@ -77,7 +78,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
-        cache.referrers.remove(entity.id)
+        refDefinitions.keys.forEach {
+            cache.referrers[it.first]?.remove(entity.id)
+        }
         cache.removeTablesReferrers(listOf(table))
     }
 
@@ -310,7 +313,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
             val toLoad = distinctRefIds.filter {
-                cache.referrers[it]?.containsKey(refColumn)?.not() ?: true
+                cache.referrers[refColumn]?.containsKey(it)?.not() ?: true
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
@@ -360,7 +363,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
         val transaction = TransactionManager.current()
 
-        val inCache = transaction.entityCache.referrers.filter { it.key in distinctRefIds && sourceRefColumn in it.value }.mapValues { it.value[sourceRefColumn]!! }
+        val inCache = transaction.entityCache.referrers[sourceRefColumn] ?: emptyMap()
         val loaded = (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)

@@ -15,7 +15,7 @@ class EntityCache(private val transaction: Transaction) {
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
-    val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
+    val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
 
@@ -23,8 +23,9 @@ class EntityCache(private val transaction: Transaction) {
         LinkedHashMap()
     }
 
-    fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
-            referrers.getOrPut(sourceId){ HashMap() }.getOrPut(key) { LazySizedCollection(refs()) } as SizedIterable<R>
+    fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> {
+        return referrers.getOrPut(key){ HashMap() }.getOrPut(sourceId) { LazySizedCollection(refs()) } as SizedIterable<R>
+    }
 
     fun <ID:Comparable<ID>, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
 
@@ -96,12 +97,7 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
-        referrers.mapNotNull { (entityId, entityReferrers) ->
-            entityReferrers.filterKeys { it.table in insertedTables }.keys.forEach { entityReferrers.remove(it) }
-            entityId.takeIf { entityReferrers.isEmpty() }
-        }.forEach {
-            referrers.remove(it)
-        }
+        referrers.keys.filter { it.table in insertedTables }.forEach { referrers.remove(it) }
     }
 
     internal fun flushInserts(table: IdTable<*>) {

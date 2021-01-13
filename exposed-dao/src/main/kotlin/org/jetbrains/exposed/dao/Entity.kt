@@ -116,7 +116,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
-                    entityCache.referrers[it]?.remove(this)
+                    entityCache.referrers[this]?.remove(it)
                 }
                 entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
