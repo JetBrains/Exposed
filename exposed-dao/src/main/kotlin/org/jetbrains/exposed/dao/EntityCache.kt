@@ -5,7 +5,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.collections.HashMap
 
 val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this) }
 
@@ -13,7 +13,7 @@ val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this
 class EntityCache(private val transaction: Transaction) {
     internal var flushingEntities by transactionScope { false }
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
+    val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
 
     private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
@@ -42,7 +42,7 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     fun <ID:Comparable<ID>, T: Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-        inserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<*>)
+        inserts.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
     }
 
     fun flush() {
@@ -103,7 +103,7 @@ class EntityCache(private val transaction: Transaction) {
 
     internal fun flushInserts(table: IdTable<*>) {
         inserts.remove(table)?.let {
-            var toFlush: List<Entity<*>> = it
+            var toFlush: List<Entity<*>> = it.toList()
             do {
                 val partition = toFlush.partition {
                     it.writeValues.none {
