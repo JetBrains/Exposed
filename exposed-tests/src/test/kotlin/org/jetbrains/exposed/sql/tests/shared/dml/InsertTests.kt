@@ -99,7 +99,7 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `test id and column have different names and get value by original column`() {
-        val exampleTable = object : IdTable<String>() {
+        val exampleTable = object : IdTable<String>("test_id_and_column_table") {
             val exampleColumn = varchar("example_column", 200)
             override val id = exampleColumn.entityId()
         }
