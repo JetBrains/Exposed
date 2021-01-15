@@ -731,8 +731,18 @@ abstract class VendorDialect(
     override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
 }
 
+private val explicitDialect = ThreadLocal<DatabaseDialect?>()
+
+internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T) : T {
+    return try {
+        explicitDialect.set(dialect)
+        body()
+    } finally {
+        explicitDialect.set(null)
+    }
+}
 /** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
-val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
+val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable: DatabaseDialect?
     get() = if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {

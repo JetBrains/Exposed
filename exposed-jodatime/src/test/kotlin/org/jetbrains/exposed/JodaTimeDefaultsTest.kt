@@ -24,6 +24,8 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
@@ -313,6 +315,29 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 SchemaUtils.drop(TestDate)
             }
         }
+    }
+
+    @Test
+    fun `test No transaction in context when accessing datetime field outside the transaction`() {
+        val TestData = object : IntIdTable("TestData") {
+            val name = varchar("name", length = 50)
+            val dateTime = datetime("date-time")
+        }
+
+        val date = DateTime.now()
+        var list1: ResultRow? = null
+        withTables(TestData) {
+            TestData.insert {
+                it[name] = "test1"
+                it[dateTime] = date
+            }
+
+            list1 = assertNotNull(TestData.selectAll().singleOrNull())
+            assertEquals("test1", list1?.get(TestData.name))
+            assertEquals(date.millis, list1?.get(TestData.dateTime)?.millis)
+        }
+        assertEquals("test1", list1?.get(TestData.name))
+        assertEquals(date.millis, list1?.get(TestData.dateTime)?.millis)
     }
 }
 
