@@ -11,7 +11,7 @@ val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
-    internal var flushingEntities by transactionScope { false }
+    private var flushingEntities = false
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
     val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
