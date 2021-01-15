@@ -13,7 +13,6 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override val blobAsStream: Boolean = true
     override fun blobType(): String = "VARBINARY(MAX)"
     override fun uuidType(): String = "uniqueidentifier"
     override fun uuidToDB(value: UUID): Any = value.toString()

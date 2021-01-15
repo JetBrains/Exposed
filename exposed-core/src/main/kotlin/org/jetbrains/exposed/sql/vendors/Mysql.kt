@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
 internal object MysqlDataTypeProvider : DataTypeProvider() {
+
     override fun binaryType(): String {
         exposedLogger.error("The length of the Binary column is missing.")
         error("The length of the Binary column is missing.")

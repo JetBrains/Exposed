@@ -64,8 +64,6 @@ abstract class DataTypeProvider {
     /** Binary type for storing binary strings of a specific [length]. */
     open fun binaryType(length: Int): String = "VARBINARY($length)"
 
-    open val blobAsStream: Boolean = false
-
     /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
 
