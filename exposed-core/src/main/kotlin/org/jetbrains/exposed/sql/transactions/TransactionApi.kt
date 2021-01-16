@@ -67,8 +67,11 @@ interface TransactionManager {
         private val registeredDatabases = ConcurrentHashMap<Database, TransactionManager>()
 
         fun registerManager(database: Database, manager: TransactionManager) {
+            if (defaultDatabase == null) {
+                currentThreadManager.remove()
+            }
             registeredDatabases[database] = manager
-            databases.push(database)
+            databases.push(database)             
         }
 
         fun closeAndUnregister(database: Database) {
@@ -124,4 +127,5 @@ internal inline fun TransactionInterface.closeLoggingException(log: (Exception) 
     }
 }
 
-val Database?.transactionManager: TransactionManager get() = TransactionManager.managerFor(this) ?: throw RuntimeException("database ${this} don't have any transaction manager")
+val Database?.transactionManager: TransactionManager
+    get() = TransactionManager.managerFor(this) ?: throw RuntimeException("database $this don't have any transaction manager")

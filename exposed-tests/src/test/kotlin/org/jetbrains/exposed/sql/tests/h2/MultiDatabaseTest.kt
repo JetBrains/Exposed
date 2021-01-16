@@ -215,6 +215,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         assertEquals(TransactionManager.defaultDatabase, db1)
+        TransactionManager.defaultDatabase = null
     }
 
     @Test
@@ -224,5 +225,6 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
         assertEquals(TransactionManager.defaultDatabase, db2)
+        TransactionManager.defaultDatabase = null
     }
 }
