@@ -328,8 +328,9 @@ class TransactionManagerResetTest {
         val initialManager = TransactionManager.manager
         val db1 = TestDB.H2.connect()
         val db1TransactionManager = TransactionManager.managerFor(db1)
-        assertEquals(db1TransactionManager, TransactionManager.manager)
+        assertEquals(initialManager, TransactionManager.manager)
         transaction(db1) {
+            assertEquals(db1TransactionManager, TransactionManager.manager)
             exec("SELECT 1 from dual;")
         }
         TransactionManager.closeAndUnregister(db1)

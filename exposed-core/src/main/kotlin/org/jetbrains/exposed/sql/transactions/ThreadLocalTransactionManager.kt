@@ -171,17 +171,7 @@ fun <T> inTopLevelTransaction(
                 transaction.commit()
                 return answer
             } catch (e: SQLException) {
-                val exposedSQLException = e as? ExposedSQLException
-                val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n")
-                    ?: "${transaction.currentStatement}"
-                val message = "Transaction attempt #$repetitions failed: ${e.message}. Statement(s): $queriesToLog"
-                exposedSQLException?.contexts?.forEach {
-                    transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
-                        logger.log(it, transaction)
-                    }
-                }
-                exposedLogger.warn(message, e)
-                transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
+                handleSQLException(e, transaction, repetitions)
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
                     throw e
@@ -192,17 +182,7 @@ fun <T> inTopLevelTransaction(
                 throw e
             } finally {
                 TransactionManager.resetCurrent(outerManager)
-                val currentStatement = transaction.currentStatement
-                try {
-                    currentStatement?.let {
-                        it.closeIfPossible()
-                        transaction.currentStatement = null
-                    }
-                    transaction.closeExecutedStatements()
-                } catch (e: Exception) {
-                    exposedLogger.warn("Statements close failed", e)
-                }
-                transaction.closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
+                closeStatementsAndConnection(transaction)
             }
         }
     }
@@ -212,7 +192,7 @@ fun <T> inTopLevelTransaction(
     }
 }
 
-internal fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
+private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
     val manager = db.transactionManager
     val currentTransaction = manager.currentOrNull()
     return try {
@@ -220,4 +200,31 @@ internal fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, bloc
     } finally {
         manager.bindTransactionToThread(currentTransaction)
     }
+}
+
+internal fun handleSQLException(e: SQLException, transaction: Transaction, repetitions: Int) {
+    val exposedSQLException = e as? ExposedSQLException
+    val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
+    val message = "Transaction attempt #$repetitions failed: ${e.message}. Statement(s): $queriesToLog"
+    exposedSQLException?.contexts?.forEach {
+        transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
+            logger.log(it, transaction)
+        }
+    }
+    exposedLogger.warn(message, e)
+    transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
+}
+
+internal fun closeStatementsAndConnection(transaction: Transaction) {
+    val currentStatement = transaction.currentStatement
+    try {
+        currentStatement?.let {
+            it.closeIfPossible()
+            transaction.currentStatement = null
+        }
+        transaction.closeExecutedStatements()
+    } catch (e: Exception) {
+        exposedLogger.warn("Statements close failed", e)
+    }
+    transaction.closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
 }
