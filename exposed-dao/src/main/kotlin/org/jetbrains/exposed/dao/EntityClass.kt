@@ -9,7 +9,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
-import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
@@ -78,10 +77,15 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
-        refDefinitions.keys.forEach {
-            cache.referrers[it.first]?.remove(entity.id)
+        cache.referrers.forEach { (col, referrers) ->
+            // Remove references from entity to other entities
+            referrers.remove(entity.id)
+
+            // Remove references from other entities to this entity
+            if (col.table == table) {
+                with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
+            }
         }
-        cache.removeTablesReferrers(listOf(table))
     }
 
     open fun forEntityIds(ids: List<EntityID<ID>>) : SizedIterable<T> {
