@@ -113,6 +113,24 @@ fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 /** Reduces this list to a single expression by performing an `or` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundOr(): Op<Boolean> = reduce(Op<Boolean>::or)
 
+inline fun Expression<Boolean>.and(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op))
+
+inline fun Expression<Boolean>.or(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op))
+
+@JvmName("not\$receiver\$Expression<Boolean>")
+fun Expression<Boolean>.not(): Op<Boolean> = not(this)
+
+inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op).not())
+
+inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op).not())
+
+inline fun Expression<Boolean>.notAnd(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = not().and(Op.build(op))
+
+inline fun Expression<Boolean>.notOr(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = not().or(Op.build(op))
+
+inline fun Expression<Boolean>.notAndNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = not().andNot(op)
+
+inline fun Expression<Boolean>.notOrNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = not().orNot(op)
 
 // Comparison Operators
 
