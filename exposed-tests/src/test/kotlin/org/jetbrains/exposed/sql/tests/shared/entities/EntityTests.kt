@@ -465,7 +465,6 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test fun `test what update of inserted entities goes before an insert`() {
         withTables(Categories, Posts) {
-            addLogger(StdOutSqlLogger)
             val category1 = Category.new {
                 title = "category1"
             }

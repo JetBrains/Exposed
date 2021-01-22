@@ -240,7 +240,6 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         withTables(tbl) {
-            addLogger(StdOutSqlLogger)
             tbl.insert {
                 it[string] = expression(" _exp1_ ")
             }
@@ -278,8 +277,6 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         withTables(tbl1, tbl2) {
-            addLogger(StdOutSqlLogger)
-
             val id = tbl1.insertAndGetId {
                 it[string1] = " _exp1_ "
             }

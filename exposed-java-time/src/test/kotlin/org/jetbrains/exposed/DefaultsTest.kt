@@ -286,9 +286,6 @@ class DefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val tr = TransactionManager.current()
-            tr.addLogger(StdOutSqlLogger)
-
             val dt2020 = LocalDateTime.of(2020, 1, 1, 1, 1)
             foo.insert { it[dt] = LocalDateTime.of(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
