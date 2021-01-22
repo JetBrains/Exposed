@@ -8,7 +8,7 @@ object Versions {
     const val h2 = "1.4.199"
     const val mariaDB = "2.7.0"
     const val mysql51 = "5.1.49"
-    const val mysql80 = "8.0.22"
+    const val mysql80 = "8.0.23"
     const val oracle12 = "12.2.0.1"
     const val postgre = "42.2.18.jre6"
     const val postgreNG = "0.8.6"
