@@ -150,8 +150,7 @@ class AliasesTests : DatabaseTestsBase() {
             val t2Alias = EntityTestsData.XTable.slice(table2Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t2")
             t1Alias.join(t2Alias, JoinType.INNER) {
                 t1Alias[table1Count] eq t2Alias[table2Count]
-            }.selectAll().toList()
-
+            }.slice(t1Alias[table1Count]).selectAll().toList()
         }
     }
 }
