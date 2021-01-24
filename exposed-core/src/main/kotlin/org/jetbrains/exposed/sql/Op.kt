@@ -113,6 +113,18 @@ fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 /** Reduces this list to a single expression by performing an `or` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundOr(): Op<Boolean> = reduce(Op<Boolean>::or)
 
+/** Returns the result of performing a logical `and` operation between this expression and the [op]. */
+inline fun Expression<Boolean>.and(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op))
+
+/**  Returns the result of performing a logical `or` operation between this expression and the [op].*/
+inline fun Expression<Boolean>.or(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op))
+
+/** Returns the result of performing a logical `and` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(not(Op.build(op)))
+
+/** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
+
 
 // Comparison Operators
 
