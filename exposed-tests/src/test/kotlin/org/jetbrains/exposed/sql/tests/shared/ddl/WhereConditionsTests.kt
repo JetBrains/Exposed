@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.upperCase
 import org.junit.Test
 
 class WhereConditionsTests: DatabaseTestsBase() {
@@ -19,10 +20,10 @@ class WhereConditionsTests: DatabaseTestsBase() {
   fun whereLikeExpressionTest() {
     withTables(User) {
       User.insert {
-        it[name] = "Hichem"
+        it[name] = "HICHEM"
       }
       val namesResult = User.select {
-        User.name like stringLiteral("Hich%")
+        User.name like stringLiteral("Hich%").upperCase()
       }.map { it[User.name] }
 
       assertEquals(1, namesResult.size)
@@ -34,10 +35,10 @@ class WhereConditionsTests: DatabaseTestsBase() {
   fun whereNotLikeExpressionTest() {
     withTables(User) {
       User.insert {
-        it[name] = "Hichem"
+        it[name] = "HICHEM"
       }
       val namesResult = User.select {
-        User.name notLike stringLiteral("Hich%")
+        User.name notLike stringLiteral("Hich%").upperCase()
       }.map { it }
 
       assertTrue(namesResult.isEmpty())
