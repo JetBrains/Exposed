@@ -27,7 +27,7 @@ class WhereConditionsTests: DatabaseTestsBase() {
       }.map { it[User.name] }
 
       assertEquals(1, namesResult.size)
-      assertEquals("Hichem", namesResult.first())
+      assertEquals("HICHEM", namesResult.first())
     }
   }
 
