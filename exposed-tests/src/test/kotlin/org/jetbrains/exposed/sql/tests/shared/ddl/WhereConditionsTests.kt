@@ -11,6 +11,9 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.upperCase
 import org.junit.Test
 
+/**
+ * This class contains tests for logical sql operators
+ */
 class WhereConditionsTests: DatabaseTestsBase() {
   object User: Table() {
     val name = varchar("name", 20)
