@@ -21,6 +21,11 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun uintegerType(): String = "INT UNSIGNED"
 
     override fun ulongType(): String = "BIGINT UNSIGNED"
+
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is MysqlDialect.OnUpdateCurrentTimestamp<*> -> e.ddlDefault()
+        else -> super.processForDefaultValue(e)
+    }
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -118,14 +123,26 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
     }
 
+    abstract class OnUpdateCurrentTimestamp<T>(private val currentTimestamp: Expression<T>) : Expression<T>() {
+
+        fun ddlDefault():String = QueryBuilder(false).apply {
+            currentTimestamp.toQueryBuilder(this)
+            +" ON UPDATE "
+            currentTimestamp.toQueryBuilder(this)
+        }.toString()
+
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = currentTimestamp.toQueryBuilder(queryBuilder)
+    }
+
     override val supportsCreateSequence: Boolean = false
 
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        val acceptableDefaults = arrayOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
-        return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
+        val acceptableDefaults = setOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
+        val default = if(e is OnUpdateCurrentTimestamp<*>) e.ddlDefault() else e.toString()
+        return default.split("ON UPDATE").all { it.trim() in acceptableDefaults } && isFractionDateTimeSupported()
     }
 
     override fun fillConstraintCacheForTables(tables: List<Table>) {

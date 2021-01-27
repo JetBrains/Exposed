@@ -22,7 +22,9 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
+import java.math.BigDecimal
 import java.time.*
+import kotlin.test.assertNotNull
 
 class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
@@ -276,6 +278,60 @@ class DefaultsTest : DatabaseTestsBase() {
             val result2 = foo.select { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
+        }
+    }
+
+    @Test
+    fun testMySQLOnUpdateDefaultExpressions() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTimeAutoUpdate = datetime("defaultDateTimeAutoUpdate").defaultExpression(CurrentTimestampOnUpdateCurrentTimestamp())
+        }
+
+        val fool = object : IntIdTable("foo") {
+            val name = text("name")
+        }
+
+        withTables(TestDB.values().toList() - TestDB.MYSQL - TestDB.MARIADB, foo) {
+
+            var initDateTime: LocalDateTime = LocalDateTime.MAX
+            exec("SELECT CURRENT_TIMESTAMP") {
+                it.next()
+                initDateTime = it.getTimestamp(1).toLocalDateTime()
+            }
+
+            val id = foo.insertAndGetId {
+                it[foo.name] = "bar"
+            }
+            val result = foo.select { foo.id eq id }.single()
+
+            assertEquals("bar", result[foo.name])
+            val autoUpdateTime = result[foo.defaultDateTimeAutoUpdate]
+            assertNotNull(autoUpdateTime)
+            assert(autoUpdateTime >= initDateTime)
+
+            if (!db.isVersionCovers(BigDecimal("5.6"))) return@withTables
+
+            // Using another table without "update time" column to insert
+            val id2 = fool.insertAndGetId {
+                it[fool.name] = "baz"
+            }
+            val result2 = foo.select { foo.id eq id2 }.single()
+
+            assertEquals("baz", result2[foo.name])
+            val autoUpdateTime2 = result2[foo.defaultDateTimeAutoUpdate]
+            assert(autoUpdateTime2 > autoUpdateTime)
+
+            // And to update
+            fool.update({ fool.id eq id2 }) {
+                it[fool.name] = "bah"
+            }
+            val result3 = foo.select { foo.id eq id2 }.single()
+
+            assertEquals("bah", result3[foo.name])
+            val autoUpdateTime3 = result3[foo.defaultDateTimeAutoUpdate]
+            assert(autoUpdateTime3 > autoUpdateTime2)
+
         }
     }
 
