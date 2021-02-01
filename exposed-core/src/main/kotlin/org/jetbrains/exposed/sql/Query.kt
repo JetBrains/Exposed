@@ -189,33 +189,13 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
-        private var hasNext: Boolean? = null
-
-        private val fields = set.realFields
-
-        override operator fun next(): ResultRow {
-            if (hasNext == null) hasNext()
-            if (hasNext == false) throw NoSuchElementException()
-            hasNext = null
-            return ResultRow.create(rs, fields)
-        }
-
-        override fun hasNext(): Boolean {
-            if (hasNext == null) hasNext = rs.next()
-            if (hasNext == false) rs.close()
-            return hasNext!!
-        }
-    }
-
-
     override operator fun iterator(): Iterator<ResultRow> {
         val distinctExpressions = this.set.fields.distinct()
         val queryToExecute = if (distinctExpressions.size < set.fields.size) {
             copy().adjustSlice { slice(distinctExpressions) }
         } else
             this
-        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
+        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!, set.realFields)
         return if (transaction.db.supportsMultipleResultSets)
             resultIterator
         else {
