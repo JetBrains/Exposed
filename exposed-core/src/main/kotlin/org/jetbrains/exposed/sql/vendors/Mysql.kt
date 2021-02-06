@@ -21,6 +21,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun uintegerType(): String = "INT UNSIGNED"
 
     override fun ulongType(): String = "BIGINT UNSIGNED"
+
+    override fun textType(): String = "longtext"
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {

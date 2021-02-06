@@ -19,6 +19,12 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "DATETIME2"
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
+
+    /**
+     * varchar is used instead of "text" because it will be removed in future
+     * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
+     */
+    override fun textType(): String = "VARCHAR(MAX)"
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
