@@ -88,9 +88,9 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
         val dummyDate: LocalDate = LocalDate.now() // Dummy date to build Instant
         val instant = when (value) {
             is String -> return value
-            is LocalTime -> Instant.from(LocalDateTime.of(dummyDate, value))
-            is java.sql.Time -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalTime()))
-            is java.sql.Timestamp -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalDateTime().toLocalTime()))
+            is LocalTime -> Instant.from(LocalDateTime.of(dummyDate, value).atZone(ZoneId.systemDefault()))
+            is java.sql.Time -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalTime()).atZone(ZoneId.systemDefault()))
+            is java.sql.Timestamp -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalDateTime().atZone(ZoneId.systemDefault()).toLocalTime()))
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
