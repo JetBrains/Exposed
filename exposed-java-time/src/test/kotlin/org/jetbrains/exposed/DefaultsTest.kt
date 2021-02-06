@@ -201,8 +201,8 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                     "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                     "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                    "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}" +
-                    "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}" +
+                    "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
+                    "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}, " +
                     "${"t10".inProperCase()} TIME ${tLiteral.itOrNull()}" +
                     ")"
 
