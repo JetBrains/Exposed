@@ -112,14 +112,21 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<Pair<String, String>, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCase() }
+        val mapping = tables.associateBy {
+            if(currentDialect.supportsCreateSchema && it.schema == null) {
+                "$currentScheme.${it.nameInDatabaseCase()}"
+            } else {
+                // if schema is not null nameInDatabaseCase() already returns the format: schema.table
+                it.nameInDatabaseCase()
+            }
+        }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
         while (next()) {
             val (table, columnMetadata) = extract(this)
             val (schemaName, tableName) = table
 
-            mapping["$tableName"]?.let { t ->
+            mapping[tableName]?.let { t ->
                 result.getOrPut(t) { arrayListOf() } += columnMetadata
             }
 
@@ -135,10 +142,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val result = rs.extractColumns(tables) {
             //@see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
-            if(currentDialect.supportsCreateSchema) {
-                (it.getString("TABLE_SCHEM") to it.getString("TABLE_NAME")) to columnMetadata
-            } else {
+            val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
+
+            if(useCatalogInsteadOfScheme) {
                 (it.getString("TABLE_CAT") to it.getString("TABLE_NAME")) to columnMetadata
+            } else {
+                (it.getString("TABLE_SCHEM") to it.getString("TABLE_NAME")) to columnMetadata
             }
         }
         rs.close()
