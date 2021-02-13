@@ -55,12 +55,10 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
             return c.restoreValueFromParts(rawParts)
         }
 
-        val index = if (fieldIndex.keys.indexOf(c) >= 0) {
-            fieldIndex.keys.indexOf(c)
-        } else {
-            ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
-                    ?: error("$c is not in record set")
-        }
+        val index = fieldIndex[c]
+                ?: fieldIndex[fieldIndex.keys.firstOrNull { it == c }]
+                ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
+                ?: error("$c is not in record set")
 
         return data[index] as T?
     }
