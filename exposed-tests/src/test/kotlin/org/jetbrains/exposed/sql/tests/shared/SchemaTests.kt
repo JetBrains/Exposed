@@ -123,7 +123,7 @@ class SchemaTests : DatabaseTestsBase() {
         val schema1 = Schema("schema1")
         val schema2 = Schema("schema2")
 
-        withSchemas(schema1, schema2) {
+        withSchemas(schema2, schema1) {
             /** create tables in schemas */
             Author.columns.first().table.tableName
             val author = Author.withSchema(schema1)
