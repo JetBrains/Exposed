@@ -22,6 +22,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
             "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
+            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
             else -> {
@@ -34,8 +35,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private val databaseName get() = when(databaseDialectName) {
-         MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-         else -> database
+        MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+        else -> database
     }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
@@ -104,9 +105,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
 
         val schemas = when {
-                useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
-                else -> schemas.iterate { getString("TABLE_SCHEM") }
-            }
+            useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
+            else -> schemas.iterate { getString("TABLE_SCHEM") }
+        }
 
         return schemas.map { identifierManager.inProperCase(it) }
     }
@@ -185,7 +186,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
+                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
                     }
             }
         }

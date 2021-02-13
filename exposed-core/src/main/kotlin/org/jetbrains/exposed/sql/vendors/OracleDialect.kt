@@ -24,8 +24,6 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         else binaryType()
     }
 
-    override val blobAsStream = true
-
     override fun uuidType(): String = "RAW(16)"
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun booleanType(): String = "CHAR(1)"

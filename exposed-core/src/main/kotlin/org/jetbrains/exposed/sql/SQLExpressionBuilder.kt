@@ -287,6 +287,13 @@ interface ISqlExpressionBuilder {
     @JvmName("likeWithEntityID")
     infix fun Expression<EntityID<String>>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
 
+    /** Checks if this expression matches the specified [expression]. */
+    infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeOp = LikeOp(this, expression)
+
+    /** Checks if this expression matches the specified [expression]. */
+    @JvmName("likeWithEntityIDAndExpression")
+    infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeOp = LikeOp(this, expression)
+
     /** Checks if this expression matches the specified [pattern]. */
     infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
 
@@ -302,6 +309,13 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
     infix fun Expression<EntityID<String>>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
+    infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): NotLikeOp = NotLikeOp(this, expression)
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
+    @JvmName("notLikeWithEntityIDAndExpression")
+    infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): NotLikeOp = NotLikeOp(this, expression)
 
     /** Checks if this expression matches the [pattern]. Supports regular expressions. */
     infix fun <T : String?> Expression<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
@@ -334,6 +348,11 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equals to any row returned from [query]. */
     infix fun <T> Expression<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
 
+    /** Checks if this expression is equals to single value returned from [query]. */
+    infix fun <T> Expression<T>.eqSubQuery(query: Query): EqSubQueryOp<T> = EqSubQueryOp(this, query)
+
+    /** Checks if this expression is not equals to single value returned from [query]. */
+    infix fun <T> Expression<T>.notEqSubQuery(query: Query): NotEqSubQueryOp<T> = NotEqSubQueryOp(this, query)
 
     // Array Comparisons
 

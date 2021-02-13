@@ -113,6 +113,18 @@ fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 /** Reduces this list to a single expression by performing an `or` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundOr(): Op<Boolean> = reduce(Op<Boolean>::or)
 
+/** Returns the result of performing a logical `and` operation between this expression and the [op]. */
+inline fun Expression<Boolean>.and(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op))
+
+/**  Returns the result of performing a logical `or` operation between this expression and the [op].*/
+inline fun Expression<Boolean>.or(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op))
+
+/** Returns the result of performing a logical `and` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(not(Op.build(op)))
+
+/** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
+
 
 // Comparison Operators
 
@@ -347,37 +359,39 @@ class notExists(
     }
 }
 
-/**
- * Represents an SQL operator that checks if [expr] is equals to any row returned from [query].
- */
-class InSubQueryOp<T>(
+sealed class SubQueryOp<T>(
+    val operator: String,
     /** Returns the expression compared to each row of the query result. */
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: Query
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append(expr, " IN (")
+        append(expr, " $operator (")
         query.prepareSQL(this)
         +")"
     }
 }
 
 /**
+ * Represents an SQL operator that checks if [expr] is equals to any row returned from [query].
+ */
+class InSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("IN", expr, query)
+
+/**
  * Represents an SQL operator that checks if [expr] is not equals to any row returned from [query].
  */
-class NotInSubQueryOp<T>(
-    /** Returns the expression compared to each row of the query result. */
-    val expr: Expression<T>,
-    /** Returns the query to check against. */
-    val query: Query
-) : Op<Boolean>(), ComplexExpression {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append(expr, " NOT IN (")
-        query.prepareSQL(this)
-        +")"
-    }
-}
+class NotInSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("NOT IN", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is equals to single value returned from [query].
+ */
+class EqSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("=", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is not equals to single value returned from [query].
+ */
+class NotEqSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("!=", expr, query)
 
 
 // Array Comparisons

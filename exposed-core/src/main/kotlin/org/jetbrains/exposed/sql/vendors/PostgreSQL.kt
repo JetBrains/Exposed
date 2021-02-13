@@ -16,7 +16,6 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         return binaryType()
     }
 
-    override val blobAsStream: Boolean = true
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"

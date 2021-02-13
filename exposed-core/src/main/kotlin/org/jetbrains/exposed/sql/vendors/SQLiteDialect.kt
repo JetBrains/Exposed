@@ -18,7 +18,6 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override val blobAsStream: Boolean = true
     override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }

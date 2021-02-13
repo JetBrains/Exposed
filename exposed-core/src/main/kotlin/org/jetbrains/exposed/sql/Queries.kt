@@ -4,10 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
+import org.jetbrains.exposed.sql.vendors.*
 import java.util.*
 
 /**
@@ -288,10 +285,17 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     }
 
     val isMysql = currentDialect is MysqlDialect
+    val isSQLite = currentDialect is SQLiteDialect
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
     fun List<Index>.filterFKeys() = if (isMysql)
         filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
+    else
+        this
+
+    // SQLite: indices whose names start with "sqlite_" are meant for internal use
+    fun List<Index>.filterInternalIndices() = if (isSQLite)
+        filter { !it.indexName.startsWith("sqlite_") }
     else
         this
 
@@ -300,8 +304,8 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     val nameDiffers = HashSet<Index>()
 
     for (table in tables) {
-        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys()
-        val mappedIndices = table.indices.filterFKeys()
+        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
+        val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {

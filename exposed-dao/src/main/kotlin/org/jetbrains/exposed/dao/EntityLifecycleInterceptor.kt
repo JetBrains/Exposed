@@ -52,7 +52,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     private fun Transaction.flushEntities(query: Query) {
         // Flush data before executing query or results may be unpredictable
-        val tables = query.set.source.columns.map { it.table }.filterIsInstance(IdTable::class.java).toSet()
+        val tables = query.targets.filterIsInstance(IdTable::class.java).toSet()
         entityCache.flush(tables)
     }
 }

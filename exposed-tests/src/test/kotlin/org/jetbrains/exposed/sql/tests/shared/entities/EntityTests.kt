@@ -105,11 +105,11 @@ class EntityTests: DatabaseTestsBase() {
     @Test fun testDefaults02() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val a: EntityTestsData.AEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.A)
-            assertEquals (a.b1, false, "a.b1 mismatched")
-
             val b: EntityTestsData.BEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.B) as EntityTestsData.BEntity
             val y = EntityTestsData.YEntity.new { x = false }
-            assertEquals (b.b1, false, "a.b1 mismatched")
+
+            assertEquals (a.b1, false, "a.b1 mismatched")
+            assertEquals (b.b1, false, "b.b1 mismatched")
             assertEquals (b.b2, false, "b.b2 mismatched")
 
             b.y = y
@@ -465,7 +465,6 @@ class EntityTests: DatabaseTestsBase() {
 
     @Test fun `test what update of inserted entities goes before an insert`() {
         withTables(Categories, Posts) {
-            addLogger(StdOutSqlLogger)
             val category1 = Category.new {
                 title = "category1"
             }

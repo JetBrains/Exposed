@@ -1,3 +1,28 @@
+# 0.29.1
+Infrastructure:
+* Kotlin 1.4.21
+* Kotlin Coroutines 1.4.1
+* Spring Framework 5.3.3
+* Spring Boot 2.4.2
+
+Feature:
+* Now it's possible to define default Database (it will not be overridden by next `Database.connect()`) ([1125](https://github.com/JetBrains/Exposed/issues/1125)). Fix provided by [jnfeinstein](https://github.com/jnfeinstein). Check [wiki](https://github.com/JetBrains/Exposed/wiki/Transactions#setting-default-database) for details.
+* New `eqSubQuery` and `notEqSubQuery` functions added by [xJoeWoo](https://github.com/xJoeWoo) to compare value with sub-query result.
+* New functions to build expressions in a chain-like manner (`and`, `or`, `andNot`, `orNot`). Idea and realisation by [SchweinchenFuntik](https://github.com/SchweinchenFuntik).
+
+Bug fixes:
+* DatasourceHealthIndicator consumes all the DB connections from the pool when used with Exposed Spring Boot starter ([1077](https://github.com/JetBrains/Exposed/issues/1077)).
+* Ignore internal SQLite indices on check. PR by [hannesbraun](https://github.com/hannesbraun).
+* Narrow scope of referring cache evictions on inserts and deletes. [jnfeinstein](https://github.com/jnfeinstein) thank you for PR.
+* At least one column should be provided in `Table.slice()`. Fixed by [hfazai](https://github.com/hfazai).
+* Multiple attempts to create indices that already exist ([1031](https://github.com/JetBrains/Exposed/issues/1031)) fixed by [gerritc](https://github.com/gerritc).
+* "id not in record set" exception when read value by a column that has related id column ([1032](https://github.com/JetBrains/Exposed/issues/1032))
+* Read datetime fails with "No transaction in context" when called outside the transaction with already fetched data ([1130](https://github.com/JetBrains/Exposed/issues/1130)).
+* Incorrect state for TransactionManager.manager after calling closeAndUnregister ([1100](https://github.com/JetBrains/Exposed/issues/1100)).
+* Connection not available after exceptions with suspendable transaction ([1138](https://github.com/JetBrains/Exposed/issues/1138))
+* Entities weren't flushed when executing query with only expressions in select part. Reported and fixed by [jnfeinstein](https://github.com/jnfeinstein).
+* Fix for exposed-jodatime module to work with MySQL ConnectorJ 8.0.23
+
 # 0.28.1
 Broken Changes:
 * `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 

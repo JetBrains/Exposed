@@ -79,9 +79,9 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String, args: Iterable<Pair<ColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
+    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
 
-    fun <T : Any> exec(stmt: String, args: Iterable<Pair<ColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
+    fun <T : Any> exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
         if (stmt.isEmpty()) return null
 
         val type = StatementType.values().find {
@@ -108,7 +108,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
             override fun prepareSQL(transaction: Transaction): String = stmt
 
-            override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = listOf(args)
+            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
         })
     }
 

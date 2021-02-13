@@ -147,7 +147,6 @@ abstract class DatabaseTestsBase {
     fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
-                addLogger(StdOutSqlLogger)
                 SchemaUtils.create(*tables)
                 try {
                     statement(testDB)

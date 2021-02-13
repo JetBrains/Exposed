@@ -656,7 +656,7 @@ class BlobColumnType : ColumnType() {
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        return if (currentDialect.dataTypeProvider.blobAsStream && value is Blob) {
+        return if (value is Blob) {
             value.binaryStream
         } else {
             value
@@ -665,19 +665,12 @@ class BlobColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String = "?"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return if (currentDialect.dataTypeProvider.blobAsStream) {
-            rs.getBytes(index)?.let(::ExposedBlob)
-        } else {
-            rs.getBlob(index)?.binaryStream?.use { ExposedBlob(it.readBytes()) }
-        }
-    }
+    override fun readObject(rs: ResultSet, index: Int) = rs.getBytes(index)?.let(::ExposedBlob)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value
-        when {
-            currentDialect.dataTypeProvider.blobAsStream && toSetValue is InputStream -> stmt.setInputStream(index, toSetValue)
-            toSetValue == null -> stmt.setInputStream(index, toSetValue)
+        when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
+            is InputStream -> stmt.setInputStream(index, toSetValue)
+            null -> stmt.setInputStream(index, toSetValue)
             else -> super.setParameter(stmt, index, toSetValue)
         }
     }

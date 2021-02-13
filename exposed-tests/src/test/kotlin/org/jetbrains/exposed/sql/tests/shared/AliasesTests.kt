@@ -141,4 +141,16 @@ class AliasesTests : DatabaseTestsBase() {
             assertEqualCollections(listOf(true to 4, false to 3), result)
         }
     }
+
+    @Test fun `test alias for same table with join`() {
+        withTables(EntityTestsData.XTable) {
+            val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
+            val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
+            val t1Alias = EntityTestsData.XTable.slice(table1Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t1")
+            val t2Alias = EntityTestsData.XTable.slice(table2Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t2")
+            t1Alias.join(t2Alias, JoinType.INNER) {
+                t1Alias[table1Count] eq t2Alias[table2Count]
+            }.slice(t1Alias[table1Count]).selectAll().toList()
+        }
+    }
 }

@@ -205,7 +205,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test fun createTableWithReservedIdentifierInColumnName() {
         withDb(TestDB.MYSQL) {
-            addLogger(StdOutSqlLogger)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 

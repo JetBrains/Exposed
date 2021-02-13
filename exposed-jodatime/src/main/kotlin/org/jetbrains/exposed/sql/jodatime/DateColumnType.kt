@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -11,6 +12,7 @@ import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
+import java.sql.ResultSet
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
@@ -55,12 +57,22 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
         is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
         is String -> when {
-            currentDialect is SQLiteDialect && time -> DateTime.parse(value, formatterForDateTimeString(value))
+            time -> DateTime.parse(value, formatterForDateTimeString(value))
             currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
-            else -> value
+            else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
         }
-        // REVIEW
-        else -> DEFAULT_DATE_TIME_STRING_FORMATTER.parseDateTime(value.toString())
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        /*
+         Since MySQL ConnectorJ 8.0.23 driver returns LocalDateTime instead of String for DateTime columns.
+         As exposed-jodatime module should work with Java 1.7 it's necessary to fetch it as String as it was before.
+         */
+        if (time && currentDialect is MysqlDialect) {
+            return rs.getObject(index, String::class.java)
+        }
+        return super.readObject(rs, index)
     }
 
     override fun notNullValueToDB(value: Any): Any = when {

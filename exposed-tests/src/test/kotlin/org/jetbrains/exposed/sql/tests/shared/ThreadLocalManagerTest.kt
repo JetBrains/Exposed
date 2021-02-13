@@ -321,3 +321,24 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         }
     }
 }
+
+class TransactionManagerResetTest {
+    @Test
+    fun `test closeAndUnregister with next Database-connect works fine`() {
+        val initialManager = TransactionManager.manager
+        val db1 = TestDB.H2.connect()
+        val db1TransactionManager = TransactionManager.managerFor(db1)
+        assertEquals(initialManager, TransactionManager.manager)
+        transaction(db1) {
+            assertEquals(db1TransactionManager, TransactionManager.manager)
+            exec("SELECT 1 from dual;")
+        }
+        TransactionManager.closeAndUnregister(db1)
+        assertEquals(initialManager, TransactionManager.manager)
+        val db2 = TestDB.H2.connect()
+        // Check should be made in a separate thread as in current thread manager is already initialized
+        thread {
+            assertEquals(TransactionManager.managerFor(db2), TransactionManager.manager)
+        }.join()
+    }
+}
