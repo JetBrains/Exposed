@@ -26,7 +26,7 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
                 val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
                 val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
                 host.let { dockerHost ->
-                    "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
+                    "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8?nullCatalogMeansCurrent=false"
                 }
             }
         },
