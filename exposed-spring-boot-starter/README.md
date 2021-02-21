@@ -38,7 +38,7 @@ This starter utilizes spring-boot-starter-data-jdbc so all properties that you a
 ### application.properties (h2 example)
 ```properties
 spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.driverClasName=org.h2.Driver
+spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=password
 ```
