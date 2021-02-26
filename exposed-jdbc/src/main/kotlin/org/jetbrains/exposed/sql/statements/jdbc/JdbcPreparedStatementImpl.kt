@@ -23,7 +23,10 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
     override fun executeUpdate(): Int = statement.executeUpdate()
 
     override fun set(index: Int, value: Any?) {
-        statement.setObject(index, value)
+        if (value == null)
+            statement.setNull(index, Types.NULL)
+        else
+            statement.setObject(index, value)
     }
 
     override fun setInputStream(index: Int, inputStream: InputStream?) {

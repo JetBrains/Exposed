@@ -62,7 +62,7 @@ abstract class DataTypeProvider {
     abstract fun binaryType(): String
 
     /** Binary type for storing binary strings of a specific [length]. */
-    open fun binaryType(length: Int): String = "VARBINARY($length)"
+    open fun binaryType(length: Int): String = if (length == Int.MAX_VALUE) "VARBINARY(MAX)" else "VARBINARY($length)"
 
     /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
