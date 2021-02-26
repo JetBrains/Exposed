@@ -66,7 +66,7 @@ class Random(
 class LowerCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("LOWER(", expr, ")") }
 }
 
@@ -76,7 +76,7 @@ class LowerCase<T : String?>(
 class UpperCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("UPPER(", expr, ")") }
 }
 
@@ -88,7 +88,7 @@ class Concat(
     val separator: String,
     /** Returns the expressions being concatenated. */
     vararg val expr: Expression<*>
-) : Function<String>(VarCharColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
 }
 
@@ -104,7 +104,7 @@ class GroupConcat<T : String?>(
     val distinct: Boolean,
     /** Returns the order in which the elements of each group are sorted. */
     vararg val orderBy: Pair<Expression<*>, SortOrder>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.groupConcat(this, queryBuilder)
 }
 
@@ -116,7 +116,7 @@ class Substring<T : String?>(
     private val start: Expression<Int>,
     /** Returns the length of the substring. */
     val length: Expression<Int>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
 }
 
@@ -126,7 +126,7 @@ class Substring<T : String?>(
 class Trim<T : String?>(
     /** Returns the expression being trimmed. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 

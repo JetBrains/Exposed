@@ -116,7 +116,7 @@ fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): Custo
 fun CustomStringFunction(
     functionName: String,
     vararg params: Expression<*>
-): CustomFunction<String?> = CustomFunction(functionName, VarCharColumnType(), *params)
+): CustomFunction<String?> = CustomFunction(functionName, TextColumnType(), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a long, and passing [params] as its arguments.
