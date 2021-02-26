@@ -248,9 +248,9 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         } else {
             try {
                 count = true
-                transaction.exec(this) {
-                    it.next()
-                    it.getLong(1)
+                transaction.exec(this) { rs ->
+                    rs.next()
+                    rs.getLong(1).also { rs.close() }
                 }!!
             } finally {
                 count = false
@@ -263,7 +263,8 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         try {
             if (!isForUpdate())
                 limit = 1
-            return !transaction.exec(this)!!.next()
+            val resultSet = transaction.exec(this)!!
+            return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit
         }
