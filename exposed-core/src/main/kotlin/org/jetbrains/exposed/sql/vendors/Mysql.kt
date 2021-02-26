@@ -98,7 +98,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         targets.describe(transaction, this)
         +" SET "
         columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.identity(col)}=")
+            append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
 

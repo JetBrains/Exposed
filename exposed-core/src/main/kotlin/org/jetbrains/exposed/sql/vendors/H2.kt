@@ -62,9 +62,7 @@ internal object H2FunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
-        }
+            ?: transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -84,7 +82,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
         +" WHEN MATCHED THEN UPDATE SET "
         columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.identity(col)}=")
+            append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
 
