@@ -24,9 +24,11 @@ interface PreparedStatementApi {
 
     val resultSet: ResultSet?
 
-    operator fun set(index: Int, value: Any?)
+    operator fun set(index: Int, value: Any)
 
-    fun setInputStream(index: Int, inputStream: InputStream?)
+    fun setNull(index: Int, columnType: IColumnType)
+
+    fun setInputStream(index: Int, inputStream: InputStream)
 
     fun closeIfPossible()
 
