@@ -116,7 +116,7 @@ class Column<T>(
         if (other !is Column<*>) return false
         if (!super.equals(other)) return false
 
-        if (table.schema == other.table.schema && table != other.table) return false
+        if (table != other.table && table.tableNameWithoutScheme != other.table.tableNameWithoutScheme) return false
         if (name != other.name) return false
         if (columnType != other.columnType) return false
 
