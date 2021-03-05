@@ -32,7 +32,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("NEXT VALUE FOR ", seq.identifier)
     }
 
-    override fun random(seed: Int?): String = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
+    override fun random(seed: Int?): String = if (seed != null) "RAND($seed)" else "RAND(CHECKSUM(NEWID()))"
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
@@ -168,7 +168,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }

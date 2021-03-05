@@ -12,7 +12,7 @@ enum class SortOrder {
     ASC, DESC
 }
 
-open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
+open class Query(set: FieldSet, where: Op<Boolean>?) : SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
     private val transaction get() = TransactionManager.current()
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
@@ -92,8 +92,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
             if (count) {
                 append("COUNT(*)")
-            }
-            else {
+            } else {
                 if (distinct) {
                     append("DISTINCT ")
                 }
@@ -140,7 +139,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return builder.toString()
     }
 
-    override fun forUpdate() : Query {
+    override fun forUpdate(): Query {
         this.forUpdate = true
         return this
     }
@@ -150,7 +149,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    fun withDistinct(value: Boolean = true) : Query {
+    fun withDistinct(value: Boolean = true): Query {
         distinct = value
         return this
     }
@@ -162,10 +161,10 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>) : Query {
+    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): Query {
         val oop = Op.build { op() }
         if (having != null) {
-            error ("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
+            error("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
         }
         having = oop
         return this
@@ -173,7 +172,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
 
     fun orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC) = orderBy(column to order)
 
-    override fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
+    override fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>): Query {
         (orderByExpressions as MutableList).addAll(columns)
         return this
     }
@@ -189,7 +188,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
+    private inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
         private var hasNext: Boolean? = null
 
         private val fields = set.realFields
@@ -207,7 +206,6 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
             return hasNext!!
         }
     }
-
 
     override operator fun iterator(): Iterator<ResultRow> {
         val distinctExpressions = this.set.fields.distinct()
@@ -236,9 +234,11 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
             try {
                 var expInx = 0
                 adjustSlice {
-                    slice(originalSet.fields.map {
-                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
-                    })
+                    slice(
+                        originalSet.fields.map {
+                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                        }
+                    )
                 }
 
                 alias("subquery").selectAll().count()
@@ -277,7 +277,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
  */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if(this == null) expr
+    if (this == null) expr
     else this and expr
 }
 
@@ -287,6 +287,6 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  */
 fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if(this == null) expr
+    if (this == null) expr
     else this or expr
 }

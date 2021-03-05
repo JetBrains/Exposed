@@ -35,7 +35,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
-    class DBDefault(id: EntityID<Int>): IntEntity(id) {
+    class DBDefault(id: EntityID<Int>) : IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
         val clientDefault by TableWithDBDefault.clientDefault
@@ -53,11 +53,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     fun testDefaultsWithExplicit01() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                    DBDefault.new { field = "1" },
-                    DBDefault.new {
-                        field = "2"
-                        t1 = DateTime.now().minusDays(5)
-                    })
+                DBDefault.new { field = "1" },
+                DBDefault.new {
+                    field = "2"
+                    t1 = DateTime.now().minusDays(5)
+                }
+            )
             flushCache()
             created.forEach {
                 DBDefault.removeFromCache(it)
@@ -72,10 +73,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     fun testDefaultsWithExplicit02() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                    DBDefault.new{
-                        field = "2"
-                        t1 = DateTime.now().minusDays(5)
-                    }, DBDefault.new{ field = "1" })
+                DBDefault.new {
+                    field = "2"
+                    t1 = DateTime.now().minusDays(5)
+                },
+                DBDefault.new { field = "1" }
+            )
 
             flushCache()
             created.forEach {
@@ -90,8 +93,8 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     fun testDefaultsInvokedOnlyOncePerEntity() {
         withTables(TableWithDBDefault) {
             TableWithDBDefault.cIndex = 0
-            val db1 = DBDefault.new{ field = "1" }
-            val db2 = DBDefault.new{ field = "2" }
+            val db1 = DBDefault.new { field = "1" }
+            val db2 = DBDefault.new { field = "2" }
             flushCache()
             assertEquals(0, db1.clientDefault)
             assertEquals(1, db2.clientDefault)
@@ -99,12 +102,15 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         }
     }
 
-    private val initBatch = listOf<(BatchInsertStatement) -> Unit>({
-        it[TableWithDBDefault.field] = "1"
-    }, {
-        it[TableWithDBDefault.field] = "2"
-        it[TableWithDBDefault.t1] = DateTime.now()
-    })
+    private val initBatch = listOf<(BatchInsertStatement) -> Unit>(
+        {
+            it[TableWithDBDefault.field] = "1"
+        },
+        {
+            it[TableWithDBDefault.field] = "2"
+            it[TableWithDBDefault.t1] = DateTime.now()
+        }
+    )
 
     @Test
     fun testRawBatchInsertFails01() {
@@ -156,7 +162,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         }
 
         fun Expression<*>.itOrNull() = when {
-            currentDialectTest.isAllowedAsColumnDefault(this)  ->
+            currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
             else -> "NULL"
         }
@@ -165,17 +171,17 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                    "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
-                    "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                    "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                    "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                    "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                    "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
-                    ")"
+                "${"t".inProperCase()} (" +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
+                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
+                "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
+                "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
+                ")"
 
             val expected = if (currentDialectTest is OracleDialect)
                 arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
@@ -184,7 +190,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             assertEqualLists(expected, TestTable.ddl)
 
-            val id1 = TestTable.insertAndGetId {  }
+            val id1 = TestTable.insertAndGetId { }
 
             val row1 = TestTable.select { TestTable.id eq id1 }.single()
             assertEquals("test", row1[TestTable.s])
@@ -246,7 +252,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEquals("bar", result[foo.name])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
 
-            foo.update({foo.id eq id}) {
+            foo.update({ foo.id eq id }) {
                 it[foo.name] = "baz"
             }
 
@@ -277,12 +283,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             }
             val after = currentDateTime()
 
-            assertEquals(0, TestDate.select { TestDate.time less    before }.count())
+            assertEquals(0, TestDate.select { TestDate.time less before }.count())
             assertEquals(4, TestDate.select { TestDate.time greater before }.count())
-            assertEquals(2, TestDate.select { TestDate.time less    middle }.count())
+            assertEquals(2, TestDate.select { TestDate.time less middle }.count())
             assertEquals(2, TestDate.select { TestDate.time greater middle }.count())
-            assertEquals(4, TestDate.select { TestDate.time less    after  }.count())
-            assertEquals(0, TestDate.select { TestDate.time greater after  }.count())
+            assertEquals(4, TestDate.select { TestDate.time less after }.count())
+            assertEquals(0, TestDate.select { TestDate.time greater after }.count())
         }
     }
 
@@ -342,7 +348,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 }
 
 fun Table.insertAndWait(duration: Long) {
-    this.insert {  }
+    this.insert { }
     TransactionManager.current().commit()
     Thread.sleep(duration)
 }

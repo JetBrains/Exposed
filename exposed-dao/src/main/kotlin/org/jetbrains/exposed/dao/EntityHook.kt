@@ -12,18 +12,17 @@ enum class EntityChangeType {
     Removed;
 }
 
-
 data class EntityChange(val entityClass: EntityClass<*, Entity<*>>, val entityId: EntityID<*>, val changeType: EntityChangeType, val transactionId: String)
 
-fun<ID: Comparable<ID>, T: Entity<ID>> EntityChange.toEntity() : T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
+fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
 
-fun<ID: Comparable<ID>,T: Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>) : T? {
+fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
     if (!entityClass.isAssignableTo(klass)) return null
     @Suppress("UNCHECKED_CAST")
     return toEntity<ID, T>()
 }
 
-private val Transaction.entityEvents : MutableList<EntityChange> by transactionScope { CopyOnWriteArrayList<EntityChange>() }
+private val Transaction.entityEvents: MutableList<EntityChange> by transactionScope { CopyOnWriteArrayList<EntityChange>() }
 private val entitySubscribers = CopyOnWriteArrayList<(EntityChange) -> Unit>()
 
 object EntityHook {
@@ -56,14 +55,13 @@ fun Transaction.alertSubscribers() {
 
 fun Transaction.registeredChanges() = entityEvents.toList()
 
-fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {
+fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
             TransactionManager.current().commit()
         }
-    }
-    finally {
+    } finally {
         EntityHook.unsubscribe(action)
     }
 }

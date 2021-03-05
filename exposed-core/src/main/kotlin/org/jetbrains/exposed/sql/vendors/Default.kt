@@ -408,7 +408,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
-    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
+    ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
@@ -584,7 +584,7 @@ interface DatabaseDialect {
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }
@@ -669,7 +669,6 @@ abstract class VendorDialect(
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
                 constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
             }
-
         }
         return constraints
     }
@@ -731,7 +730,7 @@ abstract class VendorDialect(
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()
 
-internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T) : T {
+internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
     return try {
         explicitDialect.set(dialect)
         body()

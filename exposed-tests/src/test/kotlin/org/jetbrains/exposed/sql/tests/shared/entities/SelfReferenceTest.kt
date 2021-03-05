@@ -88,6 +88,5 @@ class SortByReferenceTest {
         assertTrue(SchemaUtils.checkCycle(TestTables.users))
         assertTrue(SchemaUtils.checkCycle(TestTables.cities))
         assertTrue(SchemaUtils.checkCycle(TestTables.strangeTable))
-
     }
 }

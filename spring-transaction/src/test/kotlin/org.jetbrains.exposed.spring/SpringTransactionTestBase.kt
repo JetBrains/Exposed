@@ -28,8 +28,7 @@ open class TestConfig : TransactionManagementConfigurer {
     override fun annotationDrivenTransactionManager(): PlatformTransactionManager? = SpringTransactionManager(ds())
 
     @Bean
-    open fun service() : Service = Service()
-
+    open fun service(): Service = Service()
 }
 
 /**

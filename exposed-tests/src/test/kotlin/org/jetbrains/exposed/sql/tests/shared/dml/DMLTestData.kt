@@ -104,7 +104,6 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
 
         statement(Cities, Users, UserData)
     }
-
 }
 
 object OrgMemberships : IntIdTable() {
@@ -129,6 +128,5 @@ class Org(id: EntityID<Int>) : IntEntity(id) {
     var uid by Orgs.uid
     var name by Orgs.name
 }
-
 
 internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }

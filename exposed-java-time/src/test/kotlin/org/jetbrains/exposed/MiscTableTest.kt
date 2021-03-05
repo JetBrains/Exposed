@@ -53,7 +53,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row,  13, null,-10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row, date, null, time, null, timestamp)
@@ -985,14 +985,29 @@ class MiscTableTest : DatabaseTestsBase() {
 
 fun Misc.checkRowFull(
     row: ResultRow,
-    by: Byte, byn: Byte?,
-    sm: Short, smn: Short?,
-    n: Int, nn: Int?,
-    d: LocalDate, dn: LocalDate?, t: LocalDateTime, tn: LocalDateTime?, ts: Instant,
-    e: MiscTable.E, en: MiscTable.E?,
-    es: MiscTable.E, esn: MiscTable.E?,
-    c: String, cn: String?, s: String, sn: String?,
-    dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?
+    by: Byte,
+    byn: Byte?,
+    sm: Short,
+    smn: Short?,
+    n: Int,
+    nn: Int?,
+    d: LocalDate,
+    dn: LocalDate?,
+    t: LocalDateTime,
+    tn: LocalDateTime?,
+    ts: Instant,
+    e: MiscTable.E,
+    en: MiscTable.E?,
+    es: MiscTable.E,
+    esn: MiscTable.E?,
+    c: String,
+    cn: String?,
+    s: String,
+    sn: String?,
+    dc: BigDecimal,
+    dcn: BigDecimal?,
+    fcn: Float?,
+    dblcn: Double?
 ) {
     checkRow(row, by, byn, sm, smn, n, nn, e, en, es, esn, c, cn, s, sn, dc, dcn, fcn, dblcn)
     checkRowDates(row, d, dn, t, tn, ts)
@@ -1006,4 +1021,3 @@ fun Misc.checkRowDates(row: ResultRow, d: LocalDate, dn: LocalDate?, t: LocalDat
     assertEqualDateTime(ts, row[this.ts])
     assertEqualDateTime(tsn, row[this.tsn])
 }
-

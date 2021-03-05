@@ -6,10 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 import java.util.*
 
-class BatchDataInconsistentException(message : String) : Exception(message)
+class BatchDataInconsistentException(message: String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false,
-                                protected val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
+open class BatchInsertStatement(
+    table: Table,
+    ignore: Boolean = false,
+    protected val shouldReturnGeneratedValues: Boolean = true
+) : InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
 

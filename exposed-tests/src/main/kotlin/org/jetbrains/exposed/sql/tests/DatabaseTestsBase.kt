@@ -10,13 +10,23 @@ import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
 
-enum class TestDB(val connection: () -> String, val driver: String, val user: String = "root", val pass: String = "",
-                  val beforeConnection: () -> Unit = {}, val afterTestFinished: () -> Unit = {}, var db: Database? = null) {
-    H2({"jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;"}, "org.h2.Driver"),
-    H2_MYSQL({"jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1"}, "org.h2.Driver", beforeConnection = {
-        Mode.getInstance("MySQL").convertInsertNullToZero = false
-    }),
-    SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
+enum class TestDB(
+    val connection: () -> String,
+    val driver: String,
+    val user: String = "root",
+    val pass: String = "",
+    val beforeConnection: () -> Unit = {},
+    val afterTestFinished: () -> Unit = {},
+    var db: Database? = null
+) {
+    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
+    H2_MYSQL(
+        { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
+        beforeConnection = {
+            Mode.getInstance("MySQL").convertInsertNullToZero = false
+        }
+    ),
+    SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
             if (runTestContainersMySQL()) {
@@ -35,35 +45,51 @@ enum class TestDB(val connection: () -> String, val driver: String, val user: St
         beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
-    POSTGRESQL({"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
-            beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    POSTGRESQLNG({"jdbc:pgsql://localhost:12346/template1?user=postgres&password="}, "com.impossibl.postgres.jdbc.PGDriver",
-            user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }),
-    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
-            connection = {"jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                    ":${System.getProperty("exposed.test.oracle.port", "1521")}/XEPDB1"},
-            beforeConnection = {
-                Locale.setDefault(Locale.ENGLISH)
-                val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
-                transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
-                    try {
-                        exec("DROP USER ExposedTest CASCADE")
-                    } catch (e: Exception) { // ignore
-                        exposedLogger.warn("Exception on deleting ExposedTest user", e)
-                    }
-                    exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
-                    exec("grant all privileges to ExposedTest")
+    POSTGRESQL(
+        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+    ),
+    POSTGRESQLNG(
+        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
+        user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+    ),
+    ORACLE(
+        driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+        connection = {
+            "jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
+                ":${System.getProperty("exposed.test.oracle.port", "1521")}/XEPDB1"
+        },
+        beforeConnection = {
+            Locale.setDefault(Locale.ENGLISH)
+            val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
+            transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+                try {
+                    exec("DROP USER ExposedTest CASCADE")
+                } catch (e: Exception) { // ignore
+                    exposedLogger.warn("Exception on deleting ExposedTest user", e)
                 }
-                Unit
-            }),
+                exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
+                exec("grant all privileges to ExposedTest")
+            }
+            Unit
+        }
+    ),
 
-    SQLSERVER({"jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
-            ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"},
-            "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"),
+    SQLSERVER(
+        {
+            "jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
+                ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"
+        },
+        "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"
+    ),
 
-    MARIADB({"jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
-            ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"},
-            "org.mariadb.jdbc.Driver");
+    MARIADB(
+        {
+            "jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
+                ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"
+        },
+        "org.mariadb.jdbc.Driver"
+    );
 
     fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 
@@ -83,10 +109,10 @@ private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
     EmbeddedPostgres.builder()
-            .setPgBinaryResolver{ system, _ ->
-                EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-            }
-            .setPort(12346).start()
+        .setPgBinaryResolver { system, _ ->
+            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
+        }
+        .setPort(12346).start()
 }
 
 // MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
@@ -94,11 +120,11 @@ internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<Speci
 
 private val mySQLProcess by lazy {
     SpecifiedMySQLContainer(image = "mysql:5")
-            .withDatabaseName("testdb")
-            .withEnv("MYSQL_ROOT_PASSWORD", "test")
-            .withExposedPorts().apply {
-               start()
-            }
+        .withDatabaseName("testdb")
+        .withEnv("MYSQL_ROOT_PASSWORD", "test")
+        .withExposedPorts().apply {
+            start()
+        }
 }
 
 private fun runTestContainersMySQL(): Boolean =
@@ -116,10 +142,12 @@ abstract class DatabaseTestsBase {
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
-            Runtime.getRuntime().addShutdownHook(thread(false){
-                dbSettings.afterTestFinished()
-                registeredOnShutdown.remove(dbSettings)
-            })
+            Runtime.getRuntime().addShutdownHook(
+                thread(false) {
+                    dbSettings.afterTestFinished()
+                    registeredOnShutdown.remove(dbSettings)
+                }
+            )
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
         }
@@ -131,7 +159,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withDb(db : List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         val enabledInTests = TestDB.enabledInTests()
         val toTest = db?.intersect(enabledInTests) ?: enabledInTests - excludeSettings
         toTest.forEach { dbSettings ->
@@ -143,7 +171,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
+    fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
                 SchemaUtils.create(*tables)
@@ -158,7 +186,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withSchemas (excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
+    fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
                 SchemaUtils.createSchema(*schemas)
@@ -174,14 +202,13 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables (vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
 
-    fun withSchemas (vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
+    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "
     } else {
         ""
     }
-
 }

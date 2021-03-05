@@ -24,5 +24,4 @@ class RepeatableTestRule : TestRule {
         } else
             base
     }
-
 }

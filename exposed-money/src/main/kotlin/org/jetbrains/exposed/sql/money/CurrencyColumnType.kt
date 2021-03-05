@@ -28,7 +28,6 @@ class CurrencyColumnType : VarCharColumnType(3) {
             else -> valueFromDB(value.toString())
         }
     }
-
 }
 
 fun Table.currency(name: String): Column<CurrencyUnit> = registerColumn(name, CurrencyColumnType())

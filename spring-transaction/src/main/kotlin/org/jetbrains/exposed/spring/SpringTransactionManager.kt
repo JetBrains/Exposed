@@ -16,9 +16,9 @@ import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource
 
-
-class SpringTransactionManager(private val _dataSource: DataSource,
-                               @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
+class SpringTransactionManager(
+    private val _dataSource: DataSource,
+    @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
     init {
@@ -140,5 +140,4 @@ class SpringTransactionManager(private val _dataSource: DataSource,
             }
         }
     }
-
 }

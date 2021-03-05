@@ -36,7 +36,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     ): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val primaryKeys = table.primaryKey?.columns?.toList() ?: emptyList()
-        val uniqueCols = (uniqueIdxCols  + primaryKeys).distinct()
+        val uniqueCols = (uniqueIdxCols + primaryKeys).distinct()
         val borderDate = Date(118, 2, 18)
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
@@ -117,9 +117,9 @@ internal object H2FunctionProvider : FunctionProvider() {
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
 
-    private var isMySQLMode : Boolean? = null
+    private var isMySQLMode: Boolean? = null
 
-    internal fun isMySQLMode() : Boolean {
+    internal fun isMySQLMode(): Boolean {
         return isMySQLMode
             ?: TransactionManager.currentOrNull()?.let { tr ->
                 tr.exec("SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'") { rs ->

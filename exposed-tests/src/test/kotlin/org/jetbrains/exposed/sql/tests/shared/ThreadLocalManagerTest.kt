@@ -36,7 +36,7 @@ private open class DataSourceStub : DataSource {
     override fun getLoginTimeout(): Int { throw NotImplementedError() }
 }
 
-class ConnectionTimeoutTest : DatabaseTestsBase(){
+class ConnectionTimeoutTest : DatabaseTestsBase() {
 
     private class ExceptionOnGetConnectionDataSource : DataSourceStub() {
         var connectCount = 0
@@ -50,7 +50,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
     private class GetConnectException : SQLTransientException()
 
     @Test
-    fun `connect fail causes repeated connect attempts`(){
+    fun `connect fail causes repeated connect attempts`() {
         val datasource = ExceptionOnGetConnectionDataSource()
         val db = Database.connect(datasource = datasource)
 
@@ -60,7 +60,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase(){
                 // NO OP
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")
-        } catch (e : ExposedSQLException){
+        } catch (e: ExposedSQLException) {
             assertTrue(e.cause is GetConnectException)
             assertEquals(42, datasource.connectCount)
         }
@@ -111,7 +111,7 @@ class ConnectionExceptions {
     fun `transaction repetition works even if rollback throws exception`() {
         `_transaction repetition works even if rollback throws exception`(::ExceptionOnRollbackConnection)
     }
-    private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy){
+    private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
@@ -121,7 +121,7 @@ class ConnectionExceptions {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
-        } catch (e : SQLException){
+        } catch (e: SQLException) {
             assertThat(e.toString(), Matchers.containsString("BROKEN_SQL_THAT_CAUSES_EXCEPTION"))
             assertEquals(5, wrappingDataSource.connections.size)
             wrappingDataSource.connections.forEach {
@@ -164,10 +164,10 @@ class ConnectionExceptions {
     }
 
     @Test
-    fun `transaction throws exception if all commits throws exception`(){
+    fun `transaction throws exception if all commits throws exception`() {
         `_transaction throws exception if all commits throws exception`(::ExceptionOnCommitConnection)
     }
-    private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy){
+    private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
@@ -177,7 +177,7 @@ class ConnectionExceptions {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
-        } catch (e : CommitException){
+        } catch (e: CommitException) {
             // Yay
         }
     }
@@ -196,12 +196,12 @@ class ConnectionExceptions {
     }
 
     @Test
-    fun `transaction repetition works even if rollback and close throws exception`(){
+    fun `transaction repetition works even if rollback and close throws exception`() {
         `_transaction repetition works even if rollback throws exception`(::ExceptionOnRollbackCloseConnection)
     }
 
     @Test
-    fun `transaction repetition works when commit and close throws exception`(){
+    fun `transaction repetition works when commit and close throws exception`() {
         `_transaction repetition works when commit throws exception`(::ExceptionOnCommitConnection)
     }
 
@@ -218,15 +218,14 @@ class ConnectionExceptions {
     }
 
     @Test
-    fun `transaction throws exception if all commits and close throws exception`(){
+    fun `transaction throws exception if all commits and close throws exception`() {
         `_transaction throws exception if all commits throws exception`(::ExceptionOnCommitCloseConnection)
     }
 
     @After
-    fun `teardown`(){
+    fun `teardown`() {
         TransactionManager.resetCurrent(null)
     }
-
 }
 
 class ThreadLocalManagerTest : DatabaseTestsBase() {
