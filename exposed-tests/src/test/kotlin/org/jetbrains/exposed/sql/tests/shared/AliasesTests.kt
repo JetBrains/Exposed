@@ -83,7 +83,7 @@ class AliasesTests : DatabaseTestsBase() {
             }
 
             flushCache()
-            entityCache.data.clear()
+            entityCache.clear()
 
             val alias = EntityTestsData.XTable.alias("xAlias")
             val entityFromAlias = alias.selectAll().map { EntityTestsData.XEntity.wrapRow(it, alias) }.singleOrNull()
@@ -101,7 +101,7 @@ class AliasesTests : DatabaseTestsBase() {
             }
 
             flushCache()
-            entityCache.data.clear()
+            entityCache.clear()
 
             val alias = EntityTestsData.XTable.selectAll().alias("xAlias")
             val entityFromAlias = alias.selectAll().map { EntityTestsData.XEntity.wrapRow(it, alias) }.singleOrNull()
