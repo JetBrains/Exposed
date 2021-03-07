@@ -26,7 +26,7 @@ internal open class DB2FunctionProvider : FunctionProvider() {
  */
 class DB2Dialect : VendorDialect(dialectName, DB2DataTypeProvider, DB2FunctionProvider.INSTANCE) {
     override val name: String = dialectName
-    override val functionProvider: FunctionProvider = MariaDBFunctionProvider
+    override val functionProvider: FunctionProvider = DB2FunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
 
