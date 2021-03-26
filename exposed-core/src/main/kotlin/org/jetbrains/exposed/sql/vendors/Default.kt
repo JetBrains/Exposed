@@ -519,6 +519,8 @@ interface DatabaseDialect {
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
+    /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
+    val supportsSubqueryUnions: Boolean get() = false
 
     /** Returns the name of the current database. */
     fun getDatabase(): String
