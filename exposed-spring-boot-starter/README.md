@@ -8,9 +8,9 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
 ```mxml
 <repositories>
   <repository>
-    <id>jcenter</id>
-    <name>jcenter</name>
-    <url>http://jcenter.bintray.com</url>
+    <id>mavenCentral</id>
+    <name>mavenCentral</name>
+    <url>https://repo1.maven.org/maven2/</url>
   </repository>
 </repositories>
 
@@ -25,7 +25,7 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
 ### Gradle
 ```groovy
 repositories {
-  jcenter()
+    mavenCentral()
 }
 dependencies {
   implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.29.1'

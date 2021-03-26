@@ -10,7 +10,7 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 val dialect: String by project
