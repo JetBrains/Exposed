@@ -336,7 +336,7 @@ class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(exp
  */
 class exists(
     /** Returns the query being checked. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("EXISTS (")
@@ -350,7 +350,7 @@ class exists(
  */
 class notExists(
     /** Returns the query being checked. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("NOT EXISTS (")
@@ -364,7 +364,7 @@ sealed class SubQueryOp<T>(
     /** Returns the expression compared to each row of the query result. */
     val expr: Expression<T>,
     /** Returns the query to check against. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " $operator (")
@@ -376,22 +376,22 @@ sealed class SubQueryOp<T>(
 /**
  * Represents an SQL operator that checks if [expr] is equals to any row returned from [query].
  */
-class InSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("IN", expr, query)
+class InSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("IN", expr, query)
 
 /**
  * Represents an SQL operator that checks if [expr] is not equals to any row returned from [query].
  */
-class NotInSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("NOT IN", expr, query)
+class NotInSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("NOT IN", expr, query)
 
 /**
  * Represents an SQL operator that checks if [expr] is equals to single value returned from [query].
  */
-class EqSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("=", expr, query)
+class EqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("=", expr, query)
 
 /**
  * Represents an SQL operator that checks if [expr] is not equals to single value returned from [query].
  */
-class NotEqSubQueryOp<T>(expr: Expression<T>, query: Query) : SubQueryOp<T>("!=", expr, query)
+class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("!=", expr, query)
 
 
 // Array Comparisons

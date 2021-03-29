@@ -1,12 +1,9 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.IColumnType
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
-open class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: Query, val isIgnore: Boolean = false): Statement<Int>(StatementType.INSERT, listOf(columns.first().table)) {
+open class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: AbstractQuery<*>, val isIgnore: Boolean = false): Statement<Int>(StatementType.INSERT, listOf(columns.first().table)) {
 
     init {
         if (columns.isEmpty()) error("Can't insert without provided columns")

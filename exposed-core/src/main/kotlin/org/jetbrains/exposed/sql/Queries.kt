@@ -159,11 +159,11 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
  */
-fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
+fun <T:Table> T.insert(selectQuery: AbstractQuery<*>, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 
-fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
+fun <T:Table> T.insertIgnore(selectQuery: AbstractQuery<*>, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
     InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 

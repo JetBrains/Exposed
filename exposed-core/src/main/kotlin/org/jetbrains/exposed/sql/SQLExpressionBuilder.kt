@@ -343,16 +343,16 @@ interface ISqlExpressionBuilder {
     // Subquery Expressions
 
     /** Checks if this expression is equals to any row returned from [query]. */
-    infix fun <T> Expression<T>.inSubQuery(query: Query): InSubQueryOp<T> = InSubQueryOp(this, query)
+    infix fun <T> Expression<T>.inSubQuery(query: AbstractQuery<*>): InSubQueryOp<T> = InSubQueryOp(this, query)
 
     /** Checks if this expression is not equals to any row returned from [query]. */
-    infix fun <T> Expression<T>.notInSubQuery(query: Query): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
+    infix fun <T> Expression<T>.notInSubQuery(query: AbstractQuery<*>): NotInSubQueryOp<T> = NotInSubQueryOp(this, query)
 
     /** Checks if this expression is equals to single value returned from [query]. */
-    infix fun <T> Expression<T>.eqSubQuery(query: Query): EqSubQueryOp<T> = EqSubQueryOp(this, query)
+    infix fun <T> Expression<T>.eqSubQuery(query: AbstractQuery<*>): EqSubQueryOp<T> = EqSubQueryOp(this, query)
 
     /** Checks if this expression is not equals to single value returned from [query]. */
-    infix fun <T> Expression<T>.notEqSubQuery(query: Query): NotEqSubQueryOp<T> = NotEqSubQueryOp(this, query)
+    infix fun <T> Expression<T>.notEqSubQuery(query: AbstractQuery<*>): NotEqSubQueryOp<T> = NotEqSubQueryOp(this, query)
 
     // Array Comparisons
 

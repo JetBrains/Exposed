@@ -8,14 +8,11 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.plugins.signing.SigningExtension
-import io.github.gradlenexus.publishplugin.*
-import org.gradle.api.plugins.JavaPlatformExtension
 import org.gradle.api.plugins.JavaPluginExtension
 
 infix fun <T> Property<T>.by(value: T) {
     set(value)
 }
-
 
 fun MavenPom.configureMavenCentralMetadata(project: Project) {
     name by project.name
