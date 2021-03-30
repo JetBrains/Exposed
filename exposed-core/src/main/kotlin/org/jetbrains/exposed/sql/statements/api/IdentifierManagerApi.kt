@@ -91,7 +91,7 @@ abstract class IdentifierManagerApi {
 
     fun cutIfNecessaryAndQuote(identity: String) = quoteIfNecessary(identity.take(identifierLengthLimit))
 
-    private fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
+    fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
 
     private fun quote(identity: String) = "$quoteString$identity$quoteString".trim()
 }
