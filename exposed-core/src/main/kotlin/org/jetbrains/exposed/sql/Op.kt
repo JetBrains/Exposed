@@ -152,6 +152,11 @@ abstract class ComparisonOp(
 class EqOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "=")
 
 /**
+ * Represents an SQL operator that checks if [expr1] is equals to [expr2] is case insensitive.
+ */
+class EqIgnoreCaseOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "~*")
+
+/**
  * Represents an SQL operator that checks if [expr1] is not equals to [expr2].
  */
 class NeqOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "<>")
