@@ -1,3 +1,28 @@
+# 0.30.1
+Infrastructure:
+* Artifact publishing moved from jcenter/Bintray to Maven Central
+* Kotlin 1.4.32
+* Kotlin Coroutines 1.4.3
+
+Feature:
+* `UNION` and `UNION ALL` set operations support with related `union`, `unionAll` functions ([402](https://github.com/JetBrains/Exposed/issues/402))  
+* `like` and `notLike` methods work with string expression, PR from [hfazai](https://github.com/hfazai)
+* [Eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) now works with any iterable
+
+Performance:
+* Different minor memory improvements in `exposed-dao` module by [jnfeinstein](https://github.com/jnfeinstein)
+* Less entity cache invalidations when works with a single entity
+
+Bug fixes:
+* MySQL text type is now treated as `longtext`, SQLServer is `VARCHAR(MAX)`, thanks to [Dmitry Kolmogortsev](https://github.com/koldn)
+* Fix to support recent PostgreSQL NG driver by [hfazai](https://github.com/hfazai)
+* String functions failed to work with strings longer than 255 characters
+* `Query.count()` and `Query.empty()` functions can lead to ResultSet memory leaks
+* Alias was lost in update with join queries
+* [SQLServer] Problem with blob columns when assigning null value
+* Deleting an entity after it is created does not delete it from cache ([1175](https://github.com/JetBrains/Exposed/issues/1175))
+* EnumerationNameColumnType fails with vague exception when unknown value in DB ([1176](https://github.com/JetBrains/Exposed/issues/1176))
+
 # 0.29.1
 Infrastructure:
 * Kotlin 1.4.21
