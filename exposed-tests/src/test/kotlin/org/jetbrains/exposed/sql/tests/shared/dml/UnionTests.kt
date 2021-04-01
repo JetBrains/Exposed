@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -11,7 +12,7 @@ import kotlin.test.assertTrue
 class UnionTests : DatabaseTestsBase() {
     @Test
     fun `test limit`() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
             andreyQuery.union(sergeyQuery).limit(1).map { it[users.id] }.apply {
@@ -23,7 +24,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test limit with offset`() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
             andreyQuery.union(sergeyQuery).limit(1, 1).map { it[users.id] }.apply {
