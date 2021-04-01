@@ -93,8 +93,13 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
+
+        val insertedTablesSet = insertedTables.toSet()
+        val tablesToRemove: List<Table> = referrers.values.flatMapTo(HashSet()) { it.keys.map { it.table } }
+            .filter { table -> table.columns.any { c -> c.referee?.table in insertedTablesSet } } + insertedTablesSet
+
         referrers.mapNotNull { (entityId, entityReferrers) ->
-            entityReferrers.filterKeys { it.table in insertedTables }.keys.forEach { entityReferrers.remove(it) }
+            entityReferrers.filterKeys { it.table in tablesToRemove }.keys.forEach { entityReferrers.remove(it) }
             entityId.takeIf { entityReferrers.isEmpty() }
         }.forEach {
             referrers.remove(it)
