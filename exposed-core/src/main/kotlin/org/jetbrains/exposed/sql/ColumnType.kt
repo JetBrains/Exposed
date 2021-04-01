@@ -778,7 +778,7 @@ class EnumerationNameColumnType<T : Enum<T>>(
 ) : VarCharColumnType(colLength) {
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> klass.java.enumConstants!!.first { it.name == value }
+        is String -> klass.java.enumConstants!!.firstOrNull { it.name == value } ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
