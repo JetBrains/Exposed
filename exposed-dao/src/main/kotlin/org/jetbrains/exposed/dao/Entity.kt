@@ -151,9 +151,9 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
      * This will remove the entity from the database as well as the cache.
      */
     open fun delete(){
-        klass.removeFromCache(this)
         val table = klass.table
         table.deleteWhere {table.id eq id}
+        klass.removeFromCache(this)
         TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
     }
 
