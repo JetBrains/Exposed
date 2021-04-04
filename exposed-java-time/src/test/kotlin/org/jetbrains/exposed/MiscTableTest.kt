@@ -662,8 +662,9 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[d] = date
                 it[dn] = date
                 it[t] = time
-                it[ts] = timestamp
                 it[tn] = time
+                it[ts] = timestamp
+                it[tsn] = timestamp
                 it[dr] = duration
                 it[drn] = duration
                 it[e] = eOne
@@ -1035,15 +1036,15 @@ class MiscTableTest : DatabaseTestsBase() {
             tbl.checkRowFull(
                 row,
                 by = 13,
-                byn = 13,
+                byn = null,
                 sm = -10,
-                smn = -10,
+                smn = null,
                 n = 42,
-                nn = 42,
+                nn = null,
                 d = date,
-                dn = date,
+                dn = null,
                 t = time,
-                tn = time,
+                tn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -1104,7 +1105,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 byn = null,
                 sm = -10,
                 smn = null,
-                n = 42,
+                n = 101,
                 nn = null,
                 d = date,
                 dn = null,
