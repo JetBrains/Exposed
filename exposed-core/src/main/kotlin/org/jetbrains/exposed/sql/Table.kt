@@ -310,8 +310,11 @@ class Join(
  */
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
-    open val tableName: String = if (name.isNotEmpty()) name
-    else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+    open val tableName: String = when {
+        name.isNotEmpty() -> name
+        javaClass.`package` == null -> javaClass.name.removeSuffix("Table")
+        else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+    }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
