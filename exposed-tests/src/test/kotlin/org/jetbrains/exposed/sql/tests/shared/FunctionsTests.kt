@@ -292,4 +292,20 @@ class FunctionsTests : DatabaseTestsBase() {
                     }
         }
     }
+
+    @Test
+    fun testCoalesceFunction() {
+        withCitiesAndUsers { cities, users, userData ->
+            val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
+
+            users.slice(users.cityId, coalesceExp1).selectAll().forEach {
+                val cityId = it[users.cityId]
+                if (cityId != null)
+                    assertEquals(cityId, it[coalesceExp1])
+                else
+                    assertEquals(1000, it[coalesceExp1])
+            }
+
+        }
+    }
 }

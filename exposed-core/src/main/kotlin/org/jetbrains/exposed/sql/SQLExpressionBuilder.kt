@@ -334,7 +334,8 @@ interface ISqlExpressionBuilder {
     // Conditional Expressions
 
     /** Returns the first of its arguments that is not null. */
-    fun <T, S : T?, E : ExpressionWithColumnType<S>, R : T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>): Coalesce<T?, S, T?> =
+    // out T, S : T?, R : T>
+    fun <T, S : T?, E : ExpressionWithColumnType<S>, R : T> coalesce(expr: E, alternate: ExpressionWithColumnType<out T>): Coalesce<T?, S, R> =
         Coalesce(expr, alternate)
 
     fun case(value: Expression<*>? = null): Case = Case(value)
