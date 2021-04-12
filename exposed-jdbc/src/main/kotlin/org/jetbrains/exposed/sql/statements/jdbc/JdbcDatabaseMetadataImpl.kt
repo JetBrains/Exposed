@@ -192,11 +192,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 }
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                val constraintDeferrable = DeferrabilityOption.resolveRefOptionFromJdbc(getInt("DEFERRABILITY"))
+
                 ForeignKeyConstraint(
                         target = targetColumn,
                         from = fromColumn,
                         onUpdate = constraintUpdateRule,
                         onDelete = constraintDeleteRule,
+                        deferrable = constraintDeferrable,
                         name = constraintName
                 )
             }.filterNotNull()

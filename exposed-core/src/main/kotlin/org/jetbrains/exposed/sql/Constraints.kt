@@ -44,6 +44,28 @@ enum class ReferenceOption {
 }
 
 /**
+ * Represents constraint check timing options
+ * @see <a href="https://www.postgresql.org/docs/9.5/sql-set-constraints.html">PostgreSQL Documentation</a>
+ */
+enum class DeferrabilityOption {
+    NOT_DEFERRABLE,
+    DEFERRABLE_INITIALLY_DEFERRED,
+    DEFERRABLE_INITIALLY_IMMEDIATE;
+
+    override fun toString(): String = name.replace("_", " ")
+
+    companion object {
+        /** Returns the corresponding [DeferrabilityOption] for the specified [refOption] from JDBC. */
+        fun resolveRefOptionFromJdbc(refOption: Int): DeferrabilityOption? = when (refOption) {
+            DatabaseMetaData.importedKeyNotDeferrable -> NOT_DEFERRABLE
+            DatabaseMetaData.importedKeyInitiallyDeferred -> DEFERRABLE_INITIALLY_DEFERRED
+            DatabaseMetaData.importedKeyInitiallyImmediate -> DEFERRABLE_INITIALLY_IMMEDIATE
+            else -> currentDialect.defaultDeferrabilityOption
+        }
+    }
+}
+
+/**
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
@@ -51,6 +73,7 @@ data class ForeignKeyConstraint(
         val from: Column<*>,
         private val onUpdate: ReferenceOption?,
         private val onDelete: ReferenceOption?,
+        private val deferrable: DeferrabilityOption?,
         private val name: String?
 ) : DdlAware {
     private val tx: Transaction
@@ -73,6 +96,9 @@ data class ForeignKeyConstraint(
     /** Reference option when performing delete operations. */
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
+    /** Constraint check timing when supported. */
+    val deferrabilityRule: DeferrabilityOption?
+        get() = deferrable ?: currentDialectIfAvailable?.defaultDeferrabilityOption
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
@@ -91,6 +117,14 @@ data class ForeignKeyConstraint(
                 exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTable table.")
             } else {
                 append(" ON UPDATE $updateRule")
+            }
+        }
+
+        deferrabilityRule?.let {
+            if (currentDialect is MysqlDialect) {
+                exposedLogger.warn("MySQL does not support deferred constraints.")
+            } else {
+                append(" $it")
             }
         }
     }

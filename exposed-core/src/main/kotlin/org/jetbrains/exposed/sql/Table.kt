@@ -723,6 +723,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         ref: Column<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
     ): C = apply {
         this.foreignKey = ForeignKeyConstraint(
@@ -730,6 +731,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 from = this,
                 onUpdate = onUpdate,
                 onDelete = onDelete,
+                deferrable = deferrable,
                 name = fkName
         )
     }
@@ -750,6 +752,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         ref: Column<EntityID<T>>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
     ): C = apply {
         this.foreignKey = ForeignKeyConstraint(
@@ -757,6 +760,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 from = this,
                 onUpdate = onUpdate,
                 onDelete = onDelete,
+                deferrable = deferrable,
                 name = fkName
         )
     }
@@ -779,9 +783,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
     ): Column<T> {
-        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName)
+        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, deferrable, fkName)
         _columns.addColumn(column)
         return column
     }
@@ -806,10 +811,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
     ): Column<E> {
         val entityIDColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIDColumn.references(refColumn, onDelete, onUpdate, fkName)
+        return entityIDColumn.references(refColumn, onDelete, onUpdate, deferrable, fkName)
     }
 
     /**
@@ -830,8 +836,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
-    ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName)
+    ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, deferrable, fkName)
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
@@ -851,8 +858,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
-    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName).nullable()
+    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, deferrable, fkName).nullable()
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
@@ -874,10 +882,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
     ): Column<E?> {
         val entityIdColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIdColumn.references(refColumn, onDelete, onUpdate, fkName).nullable()
+        return entityIdColumn.references(refColumn, onDelete, onUpdate, deferrable, fkName).nullable()
     }
 
     /**
@@ -898,8 +907,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
+        deferrable: DeferrabilityOption? = null,
         fkName: String? = null
-    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName).nullable()
+    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, deferrable, fkName).nullable()
 
     // Miscellaneous
 
