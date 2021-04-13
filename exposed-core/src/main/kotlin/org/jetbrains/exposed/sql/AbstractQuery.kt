@@ -31,7 +31,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     override fun prepareSQL(transaction: Transaction) = prepareSQL(QueryBuilder(true))
 
-    internal abstract fun prepareSQL(builder: QueryBuilder): String
+    abstract fun prepareSQL(builder: QueryBuilder): String
 
     override fun arguments() = QueryBuilder(true).let {
         prepareSQL(it)
