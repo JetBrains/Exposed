@@ -1,10 +1,14 @@
 package org.jetbrains.exposed
 
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.MatcherAssert.assertThat
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.`java-time`.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
@@ -17,12 +21,12 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.time.*
+import java.util.UUID
 
 class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
@@ -292,6 +296,49 @@ class DefaultsTest : DatabaseTestsBase() {
             foo.insert { it[dt] = LocalDateTime.of(2021, 1, 1, 1, 1) }
             val count = foo.select { foo.dt.between(dt2020.minusWeeks(1), dt2020.plusWeeks(1)) }.count()
             assertEquals(1, count)
+        }
+    }
+
+    @Test
+    fun testDefaultExpressionsForTemporalTable() {
+
+        fun databaseGeneratedTimestamp() = object : ExpressionWithColumnType<LocalDateTime>() {
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { +"DEFAULT" }
+            override val columnType: IColumnType = JavaLocalDateTimeColumnType()
+        }
+
+        val temporalTable = object : UUIDTable("TemporalTable") {
+            val name = text("name")
+            val sysStart = datetime("sysStart").defaultExpression(databaseGeneratedTimestamp())
+            val sysEnd = datetime("sysEnd").defaultExpression(databaseGeneratedTimestamp())
+        }
+
+        withDb(TestDB.SQLSERVER) {
+            try {
+                exec("""
+                    CREATE TABLE TemporalTable
+                    (
+                        id       uniqueidentifier PRIMARY KEY,
+                        "name"   VARCHAR(100) NOT NULL,
+                        sysStart DATETIME2 GENERATED ALWAYS AS ROW START,
+                        sysEnd   DATETIME2 GENERATED ALWAYS AS ROW END,
+                        PERIOD FOR SYSTEM_TIME ([sysStart], [sysEnd])
+                    )
+                    """.trimIndent())
+
+                val names = listOf("name")
+                val batchInsert: List<ResultRow> =
+                    temporalTable.batchInsert(names, shouldReturnGeneratedValues = true) { name ->
+                        this[temporalTable.name] = "name"
+                    }
+                val id = batchInsert.first()[temporalTable.id]
+                val result = temporalTable.select { temporalTable.id eq id }.single()
+                assertThat(result[temporalTable.name], `is`("name"))
+                assertThat(result[temporalTable.sysStart], notNullValue())
+                assertThat(result[temporalTable.sysEnd], notNullValue())
+            } finally {
+                SchemaUtils.drop(temporalTable)
+            }
         }
     }
 }
