@@ -77,8 +77,8 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     internal object NotInitializedValue
 
     companion object {
-        fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
-            val fieldsIndex = fields.distinct().mapIndexed { i, field ->
+        fun create(rs: ResultSet, fields: Set<Expression<*>>): ResultRow {
+            val fieldsIndex = fields.mapIndexed { i, field ->
                 val value = (field as? Column<*>)?.columnType?.readObject(rs, i + 1) ?: rs.getObject(i + 1)
                 (field to i) to value
             }.toMap()
