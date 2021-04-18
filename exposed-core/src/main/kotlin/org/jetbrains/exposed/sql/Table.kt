@@ -44,7 +44,6 @@ interface FieldSet {
 
             return unrolled
         }
-
 }
 
 /**
@@ -297,7 +296,6 @@ class Join(
                 append(")")
             }
         }
-
     }
 }
 
@@ -364,7 +362,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
     fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).also { _columns.addColumn(it) }
 
-    fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T) : T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
+    fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T): T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
 
     /**
      * Replaces the specified [oldColumn] with the specified [newColumn] in the table.
@@ -459,14 +457,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     @Deprecated(
         "This function will be no longer supported. Please use the new declarations of primary key by " +
-                "overriding the primaryKey property in the current table. " +
-                "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }"
+            "overriding the primaryKey property in the current table. " +
+            "Example : object TableName : Table() { override val primaryKey = PrimaryKey(column1, column2, name = \"CustomPKConstraintName\") }"
     )
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
         require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
         indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
         exposedLogger.error(
-                "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
+            "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
         )
     }
 
@@ -633,11 +631,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         sql: String? = null,
         fromDb: (Any) -> T,
         toDb: (T) -> Any
-    ): Column<T> = registerColumn(name, object : StringColumnType() {
-        override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
-        override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
-        override fun notNullValueToDB(value: Any): Any = toDb(value as T)
-    })
+    ): Column<T> = registerColumn(
+        name,
+        object : StringColumnType() {
+            override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
+            override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
+            override fun notNullValueToDB(value: Any): Any = toDb(value as T)
+        }
+    )
 
     // Auto-generated values
 
@@ -726,11 +727,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         fkName: String? = null
     ): C = apply {
         this.foreignKey = ForeignKeyConstraint(
-                target = ref,
-                from = this,
-                onUpdate = onUpdate,
-                onDelete = onDelete,
-                name = fkName
+            target = ref,
+            from = this,
+            onUpdate = onUpdate,
+            onDelete = onDelete,
+            name = fkName
         )
     }
 
@@ -753,11 +754,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         fkName: String? = null
     ): C = apply {
         this.foreignKey = ForeignKeyConstraint(
-                target = ref,
-                from = this,
-                onUpdate = onUpdate,
-                onDelete = onDelete,
-                name = fkName
+            target = ref,
+            from = this,
+            onUpdate = onUpdate,
+            onDelete = onDelete,
+            name = fkName
         )
     }
 
@@ -915,7 +916,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any, C: CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
+    fun <T : Any, C : CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
         nullable = true
         getRealColumns().filter { !it.columnType.nullable }.forEach { (it as Column<Any>).nullable() }
     } as CompositeColumn<T?>
@@ -1133,4 +1134,3 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
-

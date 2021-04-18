@@ -21,18 +21,18 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPat
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
-private fun dateTimeWithFractionFormat(fraction: Int) : DateTimeFormatter {
+private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "YYYY-MM-dd HH:mm:ss"
-    val newFormat = if(fraction in 1..9)
+    val newFormat = if (fraction in 1..9)
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
     else
         baseFormat
     return DateTimeFormat.forPattern(newFormat)
 }
 
-class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
+class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = time
-    override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
+    override fun sqlType(): String = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
@@ -50,9 +50,9 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
             "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
     }
 
-    override fun valueFromDB(value: Any): Any = when(value) {
+    override fun valueFromDB(value: Any): Any = when (value) {
         is DateTime -> value
-        is java.sql.Date ->  DateTime(value.time)
+        is java.sql.Date -> DateTime(value.time)
         is java.sql.Timestamp -> DateTime(value.time)
         is Int -> DateTime(value.toLong())
         is Long -> DateTime(value)
@@ -77,7 +77,7 @@ class DateColumnType(val time: Boolean): ColumnType(), IDateColumnType {
 
     override fun notNullValueToDB(value: Any): Any = when {
         value is DateTime && time && currentDialect is SQLiteDialect -> SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.print(value)
-        value is DateTime && time  -> java.sql.Timestamp(value.millis)
+        value is DateTime && time -> java.sql.Timestamp(value.millis)
         value is DateTime -> java.sql.Date(value.millis)
         else -> value
     }

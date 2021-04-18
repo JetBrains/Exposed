@@ -405,8 +405,6 @@ class DecimalColumnType(
         result = 31 * result + scale
         return result
     }
-
-
 }
 
 // Character columns
@@ -467,7 +465,6 @@ abstract class StringColumnType(
         return result
     }
 
-
     companion object {
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",
@@ -476,9 +473,6 @@ abstract class StringColumnType(
             '\n' to "\\n"
         )
     }
-
-
-
 }
 
 /**
@@ -521,8 +515,6 @@ open class CharColumnType(
         result = 31 * result + colLength
         return result
     }
-
-
 }
 
 /**
@@ -774,7 +766,8 @@ class EnumerationColumnType<T : Enum<T>>(
  */
 class EnumerationNameColumnType<T : Enum<T>>(
     /** Returns the enum class used in this column type. */
-    val klass: KClass<T>, colLength: Int
+    val klass: KClass<T>,
+    colLength: Int
 ) : VarCharColumnType(colLength) {
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
@@ -814,5 +807,5 @@ class EnumerationNameColumnType<T : Enum<T>>(
  * Marker interface for date/datetime related column types.
  **/
 interface IDateColumnType {
-    val hasTimePart : Boolean
+    val hasTimePart: Boolean
 }

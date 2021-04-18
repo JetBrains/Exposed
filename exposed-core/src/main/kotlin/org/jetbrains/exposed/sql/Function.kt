@@ -42,7 +42,6 @@ open class CustomOperator<T>(
     }
 }
 
-
 // Mathematical Functions
 
 /**
@@ -56,7 +55,6 @@ class Random(
 ) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +currentDialect.functionProvider.random(seed) }
 }
-
 
 // String Functions
 
@@ -130,7 +128,6 @@ class Trim<T : String?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
-
 // General-Purpose Aggregate Functions
 
 /**
@@ -160,7 +157,8 @@ class Max<T : Comparable<T>, in S : T?>(
  */
 class Avg<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the average is calculated. */
-    val expr: Expression<in S>, scale: Int
+    val expr: Expression<in S>,
+    scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("AVG(", expr, ")") }
 }
@@ -192,7 +190,6 @@ class Count(
         +")"
     }
 }
-
 
 // Aggregate Functions for Statistics
 
@@ -244,7 +241,6 @@ class VarSamp<T>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_SAMP(", expr, ")") }
 }
 
-
 // Sequence Manipulation Functions
 
 /**
@@ -261,7 +257,6 @@ sealed class NextVal<T> (
     class IntNextVal(seq: Sequence) : NextVal<Int>(seq, IntegerColumnType())
     class LongNextVal(seq: Sequence) : NextVal<Long>(seq, LongColumnType())
 }
-
 
 // Conditional Expressions
 
@@ -304,7 +299,6 @@ class Coalesce<out T, S : T?, R : T>(
 ) : Function<R>(alternate.columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("COALESCE(", expr, ", ", alternate, ")") }
 }
-
 
 // Value Expressions
 

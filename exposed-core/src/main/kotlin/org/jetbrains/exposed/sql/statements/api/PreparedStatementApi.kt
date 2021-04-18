@@ -18,9 +18,9 @@ interface PreparedStatementApi {
 
     fun addBatch()
 
-    fun executeQuery() : ResultSet
+    fun executeQuery(): ResultSet
 
-    fun executeUpdate() : Int
+    fun executeUpdate(): Int
 
     val resultSet: ResultSet?
 
@@ -32,5 +32,5 @@ interface PreparedStatementApi {
 
     fun closeIfPossible()
 
-    fun executeBatch() : List<Int>
+    fun executeBatch(): List<Int>
 }

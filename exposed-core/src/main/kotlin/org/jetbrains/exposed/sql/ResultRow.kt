@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
 
 class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
-    private val database : Database? = TransactionManager.currentOrNull()?.db
+    private val database: Database? = TransactionManager.currentOrNull()?.db
     private val data = arrayOfNulls<Any?>(fieldIndex.size)
 
     /**
@@ -20,8 +20,10 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
         val d = getRaw(c)
 
         if (d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable) {
-            exposedLogger.warn("Column ${TransactionManager.current().fullIdentity(c)} is marked as not null, " +
-                    "has default db value, but returns null. Possible have to re-read it from DB.")
+            exposedLogger.warn(
+                "Column ${TransactionManager.current().fullIdentity(c)} is marked as not null, " +
+                    "has default db value, but returns null. Possible have to re-read it from DB."
+            )
         }
 
         return database?.dialect?.let {
@@ -36,7 +38,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
         data[index] = value
     }
 
-    fun <T> hasValue(c: Expression<T>): Boolean = fieldIndex[c]?.let{ data[it] != NotInitializedValue } ?: false
+    fun <T> hasValue(c: Expression<T>): Boolean = fieldIndex[c]?.let { data[it] != NotInitializedValue } ?: false
 
     fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) rawToColumnValue(getRaw(c), c) else null
 
@@ -72,7 +74,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     }
 
     override fun toString(): String =
-            fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
+        fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
 
     internal object NotInitializedValue
 
@@ -85,23 +87,23 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
 
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
-                fieldsIndex.forEach{ (field, index) ->
+                fieldsIndex.forEach { (field, index) ->
                     val value = (field as? Column<*>)?.columnType?.readObject(rs, index + 1) ?: rs.getObject(index + 1)
                     data[index] = value
                 }
             }
         }
 
-        fun createAndFillValues(data: Map<Expression<*>, Any?>) : ResultRow =
-                ResultRow(data.keys.mapIndexed { i, c -> c to i }.toMap()).also { row ->
-                    data.forEach { (c, v) -> row[c] = v }
-                }
+        fun createAndFillValues(data: Map<Expression<*>, Any?>): ResultRow =
+            ResultRow(data.keys.mapIndexed { i, c -> c to i }.toMap()).also { row ->
+                data.forEach { (c, v) -> row[c] = v }
+            }
 
-        fun createAndFillDefaults(columns : List<Column<*>>): ResultRow =
-                ResultRow(columns.mapIndexed { i, c -> c to i }.toMap()).apply {
-                    columns.forEach {
-                        this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
-                    }
+        fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
+            ResultRow(columns.mapIndexed { i, c -> c to i }.toMap()).apply {
+                columns.forEach {
+                    this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
                 }
+            }
     }
 }

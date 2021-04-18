@@ -30,7 +30,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             else -> {
-                if(statement.type.group == StatementGroup.DDL)
+                if (statement.type.group == StatementGroup.DDL)
                     transaction.flushCache()
             }
         }

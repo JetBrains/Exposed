@@ -77,7 +77,6 @@ fun <T : Temporal?> Expression<T>.hour(): Hour<T> = Hour(this)
 fun <T : Temporal?> Expression<T>.minute(): Minute<T> = Minute(this)
 fun <T : Temporal?> Expression<T>.second(): Second<T> = Second(this)
 
-
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, JavaLocalDateColumnType.INSTANCE)
 fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> =
     QueryParameter(value, JavaLocalDateTimeColumnType.INSTANCE)

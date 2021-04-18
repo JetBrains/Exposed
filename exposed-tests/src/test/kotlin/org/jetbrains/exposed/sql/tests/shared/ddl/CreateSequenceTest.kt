@@ -14,12 +14,12 @@ class SequencesTests : DatabaseTestsBase() {
             if (currentDialectTest.supportsCreateSequence) {
                 assertEquals(
                     "CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " +
-                            "START WITH ${myseq.startWith} " +
-                            "INCREMENT BY ${myseq.incrementBy} " +
-                            "MINVALUE ${myseq.minValue} " +
-                            "MAXVALUE ${myseq.maxValue} " +
-                            "CYCLE " +
-                            "CACHE ${myseq.cache}",
+                        "START WITH ${myseq.startWith} " +
+                        "INCREMENT BY ${myseq.incrementBy} " +
+                        "MINVALUE ${myseq.minValue} " +
+                        "MAXVALUE ${myseq.maxValue} " +
+                        "CYCLE " +
+                        "CACHE ${myseq.cache}",
                     myseq.ddl
                 )
             }
@@ -79,7 +79,6 @@ class SequencesTests : DatabaseTestsBase() {
         }
     }
 
-
     @Test
     fun `test select with nextVal`() {
         withTables(Developer) {
@@ -100,7 +99,6 @@ class SequencesTests : DatabaseTestsBase() {
 
                     val expSecondValue = expFirstValue + myseq.incrementBy!!
                     assertEquals(expSecondValue, secondValue.toLong())
-
                 } finally {
                     SchemaUtils.dropSequence(myseq)
                 }

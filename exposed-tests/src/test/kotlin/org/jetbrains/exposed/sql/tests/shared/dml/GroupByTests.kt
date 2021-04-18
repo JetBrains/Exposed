@@ -50,7 +50,7 @@ class GroupByTests : DatabaseTestsBase() {
             val maxExpr = cities.id.max()
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), maxExpr).selectAll()
                 .groupBy(cities.name)
-                .having{users.id.count().eq(maxExpr)}
+                .having { users.id.count().eq(maxExpr) }
                 .orderBy(cities.name)
                 .toList()
 
@@ -156,7 +156,7 @@ class GroupByTests : DatabaseTestsBase() {
     @Test
     fun testGroupConcat() {
         withCitiesAndUsers(listOf(TestDB.SQLITE)) { cities, users, _ ->
-            fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) ->Unit) {
+            fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) -> Unit) {
                 try {
                     val result = cities.leftJoin(users)
                         .slice(cities.name, this)
@@ -166,7 +166,7 @@ class GroupByTests : DatabaseTestsBase() {
                         }
                     assert(result)
                 } catch (e: UnsupportedByDialectException) {
-                    assertTrue(e.dialect::class in dialects, e.message!! )
+                    assertTrue(e.dialect::class in dialects, e.message!!)
                 }
             }
             users.name.groupConcat().checkExcept(PostgreSQLDialect::class, PostgreSQLNGDialect::class, SQLServerDialect::class, OracleDialect::class) {
@@ -197,7 +197,8 @@ class GroupByTests : DatabaseTestsBase() {
             }
 
             users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.ASC).checkExcept(
-                PostgreSQLDialect::class, PostgreSQLNGDialect::class) {
+                PostgreSQLDialect::class, PostgreSQLNGDialect::class
+            ) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 assertEquals("Eugene | Sergey", it["Munich"])
@@ -205,7 +206,8 @@ class GroupByTests : DatabaseTestsBase() {
             }
 
             users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.DESC).checkExcept(
-                PostgreSQLDialect::class, PostgreSQLNGDialect::class) {
+                PostgreSQLDialect::class, PostgreSQLNGDialect::class
+            ) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 assertEquals("Sergey | Eugene", it["Munich"])

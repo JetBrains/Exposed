@@ -58,7 +58,7 @@ suspend fun <T> suspendedTransactionAsync(
     db: Database? = null,
     transactionIsolation: Int? = null,
     statement: suspend Transaction.() -> T
-) : Deferred<T> {
+): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation) {
         suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
@@ -79,22 +79,24 @@ private fun Transaction.closeAsync() {
     }
 }
 
-private suspend fun <T> withTransactionScope(context: CoroutineContext?,
-                                             currentTransaction: Transaction?,
-                                             db: Database? = null,
-                                             transactionIsolation: Int?,
-                                             body: suspend TransactionScope.() -> T) : T {
+private suspend fun <T> withTransactionScope(
+    context: CoroutineContext?,
+    currentTransaction: Transaction?,
+    db: Database? = null,
+    transactionIsolation: Int?,
+    body: suspend TransactionScope.() -> T
+): T {
     val currentScope = coroutineContext[TransactionScope]
-    suspend fun newScope(_tx: Transaction?) : T {
+    suspend fun newScope(_tx: Transaction?): T {
         val manager = (_tx?.db ?: db)?.transactionManager ?: TransactionManager.manager
 
-        val tx = lazy(LazyThreadSafetyMode.NONE){ _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel) }
+        val tx = lazy(LazyThreadSafetyMode.NONE) { _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel) }
 
         val element = TransactionCoroutineElement(tx, manager)
 
         val newContext = context ?: coroutineContext
 
-       return TransactionScope(tx, newContext + element).body()
+        return TransactionScope(tx, newContext + element).body()
     }
     val sameTransaction = currentTransaction == currentScope?.tx
     val sameContext = context == coroutineContext
@@ -106,7 +108,8 @@ private suspend fun <T> withTransactionScope(context: CoroutineContext?,
 }
 
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
-    shouldCommit: Boolean, statement: suspend Transaction.() -> T
+    shouldCommit: Boolean,
+    statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
     val transaction = tx.value
     try {

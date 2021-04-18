@@ -251,7 +251,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP USER ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }

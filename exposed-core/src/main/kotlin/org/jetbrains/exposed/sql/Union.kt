@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 
@@ -13,7 +12,7 @@ class Union(
     init {
         require(rawStatements.isNotEmpty()) { "UNION is empty" }
         require(rawStatements.none { it is Query && it.isForUpdate() }) { "FOR UPDATE is not allowed within UNION" }
-        require(rawStatements.all { it is AbstractQuery<*> }) { "Only Query or Union supported as statements for UNION"}
+        require(rawStatements.all { it is AbstractQuery<*> }) { "Only Query or Union supported as statements for UNION" }
         require(rawStatements.map { (it as AbstractQuery<*>).set.realFields.size }.distinct().size == 1) {
             "Each UNION query must have the same number of columns"
         }
@@ -99,7 +98,6 @@ class Union(
             }
         }
     }
-
 }
 
 fun Query.union(other: Query) = Union(unionAll = false, this, other)
