@@ -77,14 +77,17 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
     internal object NotInitializedValue
 
     companion object {
+
+        @Deprecated(level = DeprecationLevel.ERROR, message = "Consider to use [create] with map param instead")
         fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
-            val fieldsIndex = fields.distinct().mapIndexed { i, field ->
-                val value = (field as? Column<*>)?.columnType?.readObject(rs, i + 1) ?: rs.getObject(i + 1)
-                (field to i) to value
-            }.toMap()
-            return ResultRow(fieldsIndex.keys.toMap()).apply {
-                fieldsIndex.forEach{ (i, f) ->
-                    data[i.second] = f
+            return create(rs, fields.distinct().mapIndexed { index, field -> field to index }.toMap())
+        }
+
+        fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
+            return ResultRow(fieldsIndex).apply {
+                fieldsIndex.forEach{ (field, index) ->
+                    val value = (field as? Column<*>)?.columnType?.readObject(rs, index + 1) ?: rs.getObject(index + 1)
+                    data[index] = value
                 }
             }
         }
