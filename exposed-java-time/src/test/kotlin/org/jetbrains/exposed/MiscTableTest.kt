@@ -2,6 +2,7 @@ package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.`java-time`.date
+import org.jetbrains.exposed.sql.`java-time`.time
 import org.jetbrains.exposed.sql.`java-time`.datetime
 import org.jetbrains.exposed.sql.`java-time`.duration
 import org.jetbrains.exposed.sql.`java-time`.timestamp
@@ -16,14 +17,18 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import kotlin.test.assertEquals
 
 object Misc : MiscTable() {
     val d = date("d")
     val dn = date("dn").nullable()
 
-    val t = datetime("t")
-    val tn = datetime("tn").nullable()
+    val t = time("t")
+    val tn = time("tn").nullable()
+
+    val dt = datetime("dt")
+    val dtn = datetime("dtn").nullable()
 
     val ts = timestamp("ts")
     val tsn = timestamp("tsn").nullable()
@@ -37,7 +42,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsert01() {
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -48,6 +54,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[n] = 42
                 it[d] = date
                 it[t] = time
+                it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
@@ -63,7 +70,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
-            tbl.checkRowDates(row, date, null, time, null, timestamp, null, duration, null)
+            tbl.checkRowDates(row, date, null, time, null, dateTime, null, timestamp, null, duration, null)
             assertEquals('(', row[tbl.char])
         }
     }
@@ -72,7 +79,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsert02() {
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -88,6 +96,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dn] = null
                 it[t] = time
                 it[tn] = null
+                it[dt] = dateTime
+                it[dtn] = null
                 it[ts] = timestamp
                 it[tsn] = null
                 it[dr] = duration
@@ -110,7 +120,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
-            tbl.checkRowDates(row, date, null, time, null, timestamp, null, duration, null)
+            tbl.checkRowDates(row, date, null, time, null, dateTime, null, timestamp, null, duration, null)
         }
     }
 
@@ -118,7 +128,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsert03() {
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -134,6 +145,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dn] = date
                 it[t] = time
                 it[tn] = time
+                it[dt] = dateTime
+                it[dtn] = dateTime
                 it[ts] = timestamp
                 it[tsn] = timestamp
                 it[dr] = duration
@@ -157,7 +170,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 row, 13, 13, -10, -10, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
                 "test", "test", "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89
             )
-            tbl.checkRowDates(row, date, date, time, time, timestamp, timestamp, duration, duration)
+            tbl.checkRowDates(row, date, date, time, time, dateTime, dateTime, timestamp, timestamp, duration, duration)
         }
     }
 
@@ -167,7 +180,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val stringThatNeedsEscaping = "A'braham Barakhyahu"
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -178,6 +192,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[n] = 42
                 it[d] = date
                 it[t] = time
+                it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
@@ -193,7 +208,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 shortStringThatNeedsEscaping, null, stringThatNeedsEscaping, null,
                 BigDecimal("239.42"), null, null, null
             )
-            tbl.checkRowDates(row, date, null, time, null, timestamp, null, duration, null)
+            tbl.checkRowDates(row, date, null, time, null, dateTime, null, timestamp, null, duration, null)
         }
     }
 
@@ -201,7 +216,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsertGet01() {
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -212,8 +228,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[n] = 42
                 it[d] = date
                 it[t] = time
+                it[dt] = dateTime
                 it[ts] = timestamp
-                it[tsn] = timestamp
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
                 it[es] = MiscTable.E.ONE
@@ -227,7 +243,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, BigDecimal("239.42"), null, null, null
             )
-            tbl.checkRowDates(row.resultedValues!!.single(), date, null, time, null, timestamp, timestamp, duration, null)
+            tbl.checkRowDates(row.resultedValues!!.single(), date, null, time, null, dateTime, null, timestamp, null, duration, null)
             assertEquals('(', row[tbl.char])
         }
     }
@@ -237,7 +253,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val tbl = Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = LocalTime.now()
+            val dateTime = LocalDateTime.now()
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
@@ -248,6 +265,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[n] = 42
                 it[d] = date
                 it[t] = time
+                it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
                 it[e] = MiscTable.E.ONE
@@ -266,9 +284,11 @@ class MiscTableTest : DatabaseTestsBase() {
                 n = 42,
                 nn = null,
                 d = date,
-                dn = null,
                 t = time,
                 tn = null,
+                dn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -297,7 +317,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 d = date,
                 dn = null,
                 t = time,
-                tn = null,
+                tn = null,dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -327,6 +348,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -357,6 +380,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -386,6 +411,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -405,7 +432,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.t.eq(time) }.single(),
+                tbl.select { tbl.dt.eq(dateTime) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -416,6 +443,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -434,7 +463,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.tn.isNull() }.single(),
+                tbl.select { tbl.dtn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -445,6 +474,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -475,6 +506,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -504,6 +537,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -533,6 +568,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -563,6 +600,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -592,6 +631,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -621,6 +662,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -646,7 +689,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val tbl = Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = LocalTime.now()
+            val dateTime = LocalDateTime.now()
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
@@ -663,6 +707,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dn] = date
                 it[t] = time
                 it[tn] = time
+                it[dt] = dateTime
+                it[dtn] = dateTime
                 it[ts] = timestamp
                 it[tsn] = timestamp
                 it[dr] = duration
@@ -693,6 +739,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -722,6 +770,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -752,6 +802,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -781,6 +833,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -800,7 +854,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.t.eq(time) }.single(),
+                tbl.select { tbl.dt.eq(dateTime) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -811,6 +865,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -829,7 +885,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.select { tbl.tn.isNotNull() }.single(),
+                tbl.select { tbl.dtn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -840,6 +896,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -870,6 +928,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -899,6 +959,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -929,6 +991,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -958,6 +1022,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = date,
                 t = time,
                 tn = time,
+                dt = dateTime,
+                dtn = dateTime,
                 ts = timestamp,
                 tsn = timestamp,
                 dr = duration,
@@ -983,7 +1049,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val tbl = Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = LocalTime.now()
+            val dateTime = LocalDateTime.now()
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -1000,6 +1067,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[dn] = date
                 it[t] = time
                 it[tn] = time
+                it[dt] = dateTime
+                it[dtn] = dateTime
                 it[ts] = timestamp
                 it[tsn] = timestamp
                 it[dr] = duration
@@ -1022,6 +1091,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[nn] = null
                 it[dn] = null
                 it[tn] = null
+                it[dtn] = null
                 it[tsn] = null
                 it[drn] = null
                 it[en] = null
@@ -1045,6 +1115,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                d = dateTime,
+                dn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -1069,7 +1141,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testUpdate03() {
         val tbl = Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = LocalTime.now()
+        val dateTime = LocalDateTime.now()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
@@ -1085,6 +1158,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it[sn] = "123456789"
                 it[d] = date
                 it[t] = time
+                it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
                 it[e] = eOne
@@ -1111,6 +1185,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
+                d = dateTime,
+                dn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -1140,10 +1216,10 @@ fun Misc.checkRowFull(
     smn: Short?,
     n: Int,
     nn: Int?,
-    d: LocalDate,
-    dn: LocalDate?,
-    t: LocalDateTime,
-    tn: LocalDateTime?,
+    t: LocalDate,
+    tn: LocalDate?,
+    dt: LocalDateTime,
+    dtn: LocalDateTime?,
     ts: Instant,
     tsn: Instant?,
     dr: Duration,
@@ -1162,7 +1238,7 @@ fun Misc.checkRowFull(
     dblcn: Double?
 ) {
     checkRow(row, by, byn, sm, smn, n, nn, e, en, es, esn, c, cn, s, sn, dc, dcn, fcn, dblcn)
-    checkRowDates(row, d, dn, t, tn, ts, tsn, dr, drn)
+    checkRowDates(row, d, dn, t, tn, dt, dtn, ts, tsn, dr, drn)
 }
 
 fun Misc.checkRowDates(
@@ -1178,8 +1254,10 @@ fun Misc.checkRowDates(
 ) {
     assertEqualDateTime(d, row[this.d])
     assertEqualDateTime(dn, row[this.dn])
-    assertEqualDateTime(t, row[this.t])
-    assertEqualDateTime(tn, row[this.tn])
+    assertEqualDateTime(t.withNano(0), row[this.t])
+    assertEqualDateTime(tn?.withNano(0), row[this.tn])
+    assertEqualDateTime(dt, row[this.dt])
+    assertEqualDateTime(dtn, row[this.dtn])
     assertEqualDateTime(ts, row[this.ts])
     assertEqualDateTime(tsn, row[this.tsn])
     assertEquals(dr, row[this.dr])
