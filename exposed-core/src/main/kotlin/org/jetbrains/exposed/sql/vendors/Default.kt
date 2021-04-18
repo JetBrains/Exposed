@@ -95,6 +95,7 @@ abstract class DataTypeProvider {
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
+        currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
     }
 }

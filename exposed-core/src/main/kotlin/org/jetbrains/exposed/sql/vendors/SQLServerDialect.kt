@@ -149,7 +149,12 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val supportsSequenceAsGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+    private val nonAcceptableDefaults = arrayOf("DEFAULT")
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
+        val columnDefault = e.toString().toUpperCase().trim()
+        return columnDefault !in nonAcceptableDefaults
+    }
 
     override fun modifyColumn(column: Column<*>): String =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
