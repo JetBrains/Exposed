@@ -2,9 +2,9 @@ package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.`java-time`.date
-import org.jetbrains.exposed.sql.`java-time`.time
 import org.jetbrains.exposed.sql.`java-time`.datetime
 import org.jetbrains.exposed.sql.`java-time`.duration
+import org.jetbrains.exposed.sql.`java-time`.time
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -317,7 +317,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 d = date,
                 dn = null,
                 t = time,
-                tn = null,dt = dateTime,
+                tn = null,
+                dt = dateTime,
                 dtn = null,
                 ts = timestamp,
                 tsn = null,
@@ -1115,8 +1116,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
-                d = dateTime,
-                dn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -1147,7 +1148,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10
@@ -1185,8 +1186,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dn = null,
                 t = time,
                 tn = null,
-                d = dateTime,
-                dn = null,
+                dt = dateTime,
+                dtn = null,
                 ts = timestamp,
                 tsn = null,
                 dr = duration,
@@ -1216,8 +1217,10 @@ fun Misc.checkRowFull(
     smn: Short?,
     n: Int,
     nn: Int?,
-    t: LocalDate,
-    tn: LocalDate?,
+    d: LocalDate,
+    dn: LocalDate?,
+    t: LocalTime,
+    tn: LocalTime?,
     dt: LocalDateTime,
     dtn: LocalDateTime?,
     ts: Instant,
@@ -1245,8 +1248,10 @@ fun Misc.checkRowDates(
     row: ResultRow,
     d: LocalDate,
     dn: LocalDate?,
-    t: LocalDateTime,
-    tn: LocalDateTime?,
+    t: LocalTime,
+    tn: LocalTime?,
+    dt: LocalDateTime,
+    dtn: LocalDateTime?,
     ts: Instant,
     tsn: Instant? = null,
     dr: Duration,
@@ -1254,8 +1259,8 @@ fun Misc.checkRowDates(
 ) {
     assertEqualDateTime(d, row[this.d])
     assertEqualDateTime(dn, row[this.dn])
-    assertEqualDateTime(t.withNano(0), row[this.t])
-    assertEqualDateTime(tn?.withNano(0), row[this.tn])
+    assertEqualDateTime(t, row[this.t])
+    assertEqualDateTime(tn, row[this.tn])
     assertEqualDateTime(dt, row[this.dt])
     assertEqualDateTime(dtn, row[this.dtn])
     assertEqualDateTime(ts, row[this.ts])

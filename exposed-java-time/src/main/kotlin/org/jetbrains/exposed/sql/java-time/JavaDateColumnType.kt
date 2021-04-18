@@ -15,16 +15,13 @@ import java.util.*
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
-private val DEFAULT_TIME_STRING_FORMATTER by lazy {
-    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
-}
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
-            "yyyy-MM-dd HH:mm:ss.SSS",
-            Locale.ROOT
+        "yyyy-MM-dd HH:mm:ss.SSS",
+        Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
 private val DEFAULT_TIME_STRING_FORMATTER by lazy {
@@ -86,49 +83,6 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
-    override val hasTimePart: Boolean = true
-
-    override fun sqlType(): String = "TIME"
-
-    override fun nonNullValueToString(value: Any): String {
-        val dummyDate: LocalDate = LocalDate.now() // Dummy date to build Instant
-        val instant = when (value) {
-            is String -> return value
-            is LocalTime -> Instant.from(LocalDateTime.of(dummyDate, value).atZone(ZoneId.systemDefault()))
-            is java.sql.Time -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalTime()).atZone(ZoneId.systemDefault()))
-            is java.sql.Timestamp -> Instant.from(LocalDateTime.of(dummyDate, value.toLocalDateTime().atZone(ZoneId.systemDefault()).toLocalTime()))
-            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
-        }
-
-        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
-    }
-
-    override fun valueFromDB(value: Any): Any = when (value) {
-        is LocalTime -> value
-        is java.sql.Time -> value.toLocalTime()
-        is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
-        is Int -> longToLocalTime(value.toLong())
-        is Long -> longToLocalTime(value)
-        is String -> when (currentDialect) {
-            is SQLiteDialect -> LocalTime.parse(value)
-            else -> value
-        }
-        else -> LocalTime.parse(value.toString())
-    }
-
-    override fun notNullValueToDB(value: Any): Any = when {
-        value is LocalTime -> java.sql.Time.valueOf(value)
-        else -> value
-    }
-
-    private fun longToLocalTime(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalTime()
-
-    companion object {
-        internal val INSTANCE = JavaLocalTimeColumnType()
-    }
-}
-
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -174,37 +128,39 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-class JavaLocalTimeColumnType : ColumnType() {
+class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
+
     override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
             is String -> return value
-            is LocalTime -> return value.toString()
-            is java.sql.Time -> Instant.ofEpochMilli(value.time)
+            is LocalTime -> value
+            is java.sql.Time -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
+            is java.sql.Timestamp -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
-    override fun valueFromDB(value: Any): LocalTime = (when (value) {
+    override fun valueFromDB(value: Any): LocalTime = when (value) {
         is LocalTime -> value
-        is java.sql.Time -> longToLocalTime(value.time)
-        is java.sql.Timestamp -> longToLocalTime(value.time / 1000, value.nanos.toLong())
+        is java.sql.Time -> value.toLocalTime()
+        is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
         is Int -> longToLocalTime(value.toLong())
         is Long -> longToLocalTime(value)
         is String -> LocalTime.parse(value, formatterForTimeString(value))
         else -> valueFromDB(value.toString())
-    }.withNano(0))
+    }
 
     override fun notNullValueToDB(value: Any): Any = when (value) {
-        is LocalDateTime -> DEFAULT_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
+        is LocalTime -> java.sql.Time.valueOf(value)
         else -> value
     }
 
     private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
-    private fun longToLocalTime(seconds: Long, nanos: Long) = Instant.ofEpochSecond(seconds, nanos).atZone(ZoneId.systemDefault()).toLocalTime()
 
     companion object {
         internal val INSTANCE = JavaLocalTimeColumnType()
@@ -297,13 +253,6 @@ class JavaDurationColumnType : ColumnType() {
  * @param name The column name
  */
 fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType())
-
-/**
- * A time column to store a time.
- *
- * @param name The column name
- */
-fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
 
 /**
  * A datetime column to store both a date and a time.
