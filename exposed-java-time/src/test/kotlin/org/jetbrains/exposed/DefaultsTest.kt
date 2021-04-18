@@ -162,6 +162,8 @@ class DefaultsTest : DatabaseTestsBase() {
         val tsLiteral = timestampLiteral(tsConstValue)
         val durConstValue = Duration.between(Instant.EPOCH, tsConstValue)
         val durLiteral = durationLiteral(durConstValue)
+        val tmConstValue = LocalTime.of(12, 0)
+        val tLiteral = timeLiteral(tmConstValue)
 
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
@@ -176,6 +178,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val t6 = timestamp("t6").defaultExpression(tsLiteral)
             val t7 = duration("t7").default(durConstValue)
             val t8 = duration("t8").defaultExpression(durLiteral)
+            val t9 = time("t9").default(tmConstValue)
+            val t10 = time("t10").defaultExpression(tLiteral)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -202,7 +206,9 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                 "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}" +
+                "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
+                "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}, " +
+                "${"t10".inProperCase()} TIME ${tLiteral.itOrNull()}" +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect)
@@ -225,6 +231,8 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEqualDateTime(tsConstValue, row1[TestTable.t6])
             assertEquals(durConstValue, row1[TestTable.t7])
             assertEquals(durConstValue, row1[TestTable.t8])
+            assertEquals(tmConstValue, row1[TestTable.t9])
+            assertEquals(tmConstValue, row1[TestTable.t10])
         }
     }
 
