@@ -37,7 +37,6 @@ abstract class Op<T> : Expression<T>() {
     }
 }
 
-
 // Logical Operators
 
 /**
@@ -49,7 +48,6 @@ class NotOp<T>(
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("NOT (", expr, ")") }
 }
-
 
 /**
  * Marker interface which indicates that expression should be wrapped with braces when used in compound operators
@@ -89,10 +87,12 @@ fun not(op: Expression<Boolean>): Op<Boolean> = NotOp(op)
 infix fun Expression<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
     this is AndOp && op is AndOp -> AndOp(expressions + op.expressions)
     this is AndOp -> AndOp(expressions + op)
-    op is AndOp -> AndOp(ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
-        it.add(this)
-        it.addAll(op.expressions)
-    })
+    op is AndOp -> AndOp(
+        ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
+            it.add(this)
+            it.addAll(op.expressions)
+        }
+    )
     else -> AndOp(listOf(this, op))
 }
 
@@ -100,10 +100,12 @@ infix fun Expression<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
 infix fun Expression<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = when {
     this is OrOp && op is OrOp -> OrOp(expressions + op.expressions)
     this is OrOp -> OrOp(expressions + op)
-    op is OrOp -> OrOp(ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
-        it.add(this)
-        it.addAll(op.expressions)
-    })
+    op is OrOp -> OrOp(
+        ArrayList<Expression<Boolean>>(op.expressions.size + 1).also {
+            it.add(this)
+            it.addAll(op.expressions)
+        }
+    )
     else -> OrOp(listOf(this, op))
 }
 
@@ -113,6 +115,17 @@ fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 /** Reduces this list to a single expression by performing an `or` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundOr(): Op<Boolean> = reduce(Op<Boolean>::or)
 
+/** Returns the result of performing a logical `and` operation between this expression and the [op]. */
+inline fun Expression<Boolean>.and(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(Op.build(op))
+
+/**  Returns the result of performing a logical `or` operation between this expression and the [op].*/
+inline fun Expression<Boolean>.or(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(Op.build(op))
+
+/** Returns the result of performing a logical `and` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = and(not(Op.build(op)))
+
+/** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
+inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
 
 // Comparison Operators
 
@@ -198,7 +211,6 @@ class IsNotNullOp(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
-
 // Mathematical Operators
 
 /**
@@ -249,7 +261,7 @@ class DivideOp<T, S : T>(
     columnType: IColumnType
 ) : CustomOperator<T>("/", columnType, dividend, divisor) {
     companion object {
-        fun <T:BigDecimal?, S : T>  DivideOp<T, S>.withScale(scale: Int) : DivideOp<T, S> {
+        fun <T : BigDecimal?, S : T> DivideOp<T, S>.withScale(scale: Int): DivideOp<T, S> {
             val precision = (columnType as DecimalColumnType).precision + scale
             val decimalColumnType = DecimalColumnType(precision, scale)
 
@@ -261,7 +273,6 @@ class DivideOp<T, S : T>(
         }
     }
 }
-
 
 /**
  * Represents an SQL operator that calculates the remainder of dividing [expr1] by [expr2].
@@ -280,7 +291,6 @@ class ModOp<T : Number?, S : Number?>(
         }
     }
 }
-
 
 // Pattern Matching
 
@@ -316,7 +326,6 @@ class RegexpOp<T : String?>(
 @Deprecated("Use NotOp(RegexpOp()) instead", ReplaceWith("NotOp(RegexpOp(expr1, expr2, true))"), DeprecationLevel.ERROR)
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
 
-
 // Subquery Expressions
 
 /**
@@ -324,7 +333,7 @@ class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(exp
  */
 class exists(
     /** Returns the query being checked. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("EXISTS (")
@@ -338,7 +347,7 @@ class exists(
  */
 class notExists(
     /** Returns the query being checked. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("NOT EXISTS (")
@@ -347,38 +356,39 @@ class notExists(
     }
 }
 
-/**
- * Represents an SQL operator that checks if [expr] is equals to any row returned from [query].
- */
-class InSubQueryOp<T>(
+sealed class SubQueryOp<T>(
+    val operator: String,
     /** Returns the expression compared to each row of the query result. */
     val expr: Expression<T>,
     /** Returns the query to check against. */
-    val query: Query
+    val query: AbstractQuery<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append(expr, " IN (")
+        append(expr, " $operator (")
         query.prepareSQL(this)
         +")"
     }
 }
+
+/**
+ * Represents an SQL operator that checks if [expr] is equals to any row returned from [query].
+ */
+class InSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("IN", expr, query)
 
 /**
  * Represents an SQL operator that checks if [expr] is not equals to any row returned from [query].
  */
-class NotInSubQueryOp<T>(
-    /** Returns the expression compared to each row of the query result. */
-    val expr: Expression<T>,
-    /** Returns the query to check against. */
-    val query: Query
-) : Op<Boolean>(), ComplexExpression {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append(expr, " NOT IN (")
-        query.prepareSQL(this)
-        +")"
-    }
-}
+class NotInSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("NOT IN", expr, query)
 
+/**
+ * Represents an SQL operator that checks if [expr] is equals to single value returned from [query].
+ */
+class EqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("=", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is not equals to single value returned from [query].
+ */
+class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("!=", expr, query)
 
 // Array Comparisons
 
@@ -424,7 +434,6 @@ class InListOrNotInListOp<T>(
     }
 }
 
-
 // Literals
 
 /**
@@ -436,7 +445,6 @@ class LiteralOp<T>(
     val value: T
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +columnType.valueToString(value) }
-
 }
 
 /** Returns the specified [value] as a boolean literal. */
@@ -480,7 +488,7 @@ fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType(), value)
 
 /** Returns the specified [value] as a decimal literal. */
-fun decimalLiteral(value: BigDecimal) : LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
+fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
 
 // Query Parameters
 
@@ -540,8 +548,7 @@ fun doubleParam(value: Double): Expression<Double> = QueryParameter(value, Doubl
 fun stringParam(value: String): Expression<String> = QueryParameter(value, TextColumnType())
 
 /** Returns the specified [value] as a decimal query parameter. */
-fun decimalParam(value: BigDecimal) : Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
-
+fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
 // Misc.
 

@@ -17,7 +17,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -54,7 +53,8 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
-                })
+                }
+            )
             commit()
             created.forEach {
                 DBDefault.removeFromCache(it)
@@ -72,7 +72,9 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.new {
                     field = "2"
                     t1 = LocalDateTime.now().minusDays(5)
-                }, DBDefault.new { field = "1" })
+                },
+                DBDefault.new { field = "1" }
+            )
 
             flushCache()
             created.forEach {
@@ -96,12 +98,15 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 
-    private val initBatch = listOf<(BatchInsertStatement) -> Unit>({
-        it[TableWithDBDefault.field] = "1"
-    }, {
-        it[TableWithDBDefault.field] = "2"
-        it[TableWithDBDefault.t1] = LocalDateTime.now()
-    })
+    private val initBatch = listOf<(BatchInsertStatement) -> Unit>(
+        {
+            it[TableWithDBDefault.field] = "1"
+        },
+        {
+            it[TableWithDBDefault.field] = "2"
+            it[TableWithDBDefault.t1] = LocalDateTime.now()
+        }
+    )
 
     @Test
     fun testRawBatchInsertFails01() {
@@ -184,21 +189,21 @@ class DefaultsTest : DatabaseTestsBase() {
             val longType = currentDialectTest.dataTypeProvider.longType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                    "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
-                    "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                    "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                    "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                    "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                    "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                    "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}, " +
-                    "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
-                    "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
-                    "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                    "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}" +
-                    ")"
+                "${"t".inProperCase()} (" +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
+                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
+                "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
+                "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}, " +
+                "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
+                "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
+                "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
+                "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}" +
+                ")"
 
             val expected = if (currentDialectTest is OracleDialect)
                 arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
@@ -286,9 +291,6 @@ class DefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val tr = TransactionManager.current()
-            tr.addLogger(StdOutSqlLogger)
-
             val dt2020 = LocalDateTime.of(2020, 1, 1, 1, 1)
             foo.insert { it[dt] = LocalDateTime.of(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }

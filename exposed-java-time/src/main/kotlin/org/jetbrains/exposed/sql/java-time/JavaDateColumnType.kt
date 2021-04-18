@@ -229,7 +229,8 @@ class JavaDurationColumnType : ColumnType() {
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getLong(index)
+        // ResultSet.getLong returns 0 instead of null
+        return rs.getLong(index).takeIf { rs.getObject(index) != null }
     }
 
     override fun notNullValueToDB(value: Any): Any {

@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.SQLException
 import java.util.*
 
-
 internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
@@ -21,7 +20,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
-    open fun prepared(transaction: Transaction, sql: String) : PreparedStatementApi =
+    open fun prepared(transaction: Transaction, sql: String): PreparedStatementApi =
         transaction.connection.prepareStatement(sql, false)
 
     open val isAlwaysBatch: Boolean = false
@@ -75,7 +74,7 @@ class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<ICol
     fun sql(transaction: Transaction) = statement.prepareSQL(transaction)
 }
 
-fun StatementContext.expandArgs(transaction: Transaction) : String {
+fun StatementContext.expandArgs(transaction: Transaction): String {
     val sql = sql(transaction)
     val iterator = args.iterator()
     if (!iterator.hasNext())
@@ -118,8 +117,6 @@ fun StatementContext.expandArgs(transaction: Transaction) : String {
             append(sql.substring(lastPos))
     }
 }
-
-
 
 enum class StatementGroup {
     DDL, DML

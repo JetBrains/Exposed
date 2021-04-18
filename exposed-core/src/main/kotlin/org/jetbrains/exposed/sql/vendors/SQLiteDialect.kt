@@ -18,7 +18,6 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override val blobAsStream: Boolean = true
     override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }
@@ -45,7 +44,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder)//.replace(" SEPARATOR ", ", ")
+            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 

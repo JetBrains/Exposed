@@ -190,16 +190,16 @@ class JoinTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testNoWarningsOnLeftJoinRegression(){
-        val MainTable = object : Table("maintable"){
+    @Test fun testNoWarningsOnLeftJoinRegression() {
+        val MainTable = object : Table("maintable") {
             val id = integer("idCol")
         }
-        val JoinTable = object : Table("jointable"){
+        val JoinTable = object : Table("jointable") {
             val id = integer("idCol")
             val data = integer("dataCol").default(42)
         }
 
-        withTables(MainTable, JoinTable){
+        withTables(MainTable, JoinTable) {
             MainTable.insert { it[id] = 2 }
 
             MainTable.join(JoinTable, JoinType.LEFT, JoinTable.id, MainTable.id)

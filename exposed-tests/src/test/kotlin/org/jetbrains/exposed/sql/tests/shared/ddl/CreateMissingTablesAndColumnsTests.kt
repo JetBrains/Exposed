@@ -121,7 +121,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(initialTable)
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
@@ -177,7 +176,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object MultipleIndexesTable: Table("H2_MULTIPLE_INDEXES") {
+    object MultipleIndexesTable : Table("H2_MULTIPLE_INDEXES") {
         val value1 = varchar("value1", 255)
         val value2 = varchar("value2", 255)
 
@@ -188,24 +187,22 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test fun testCreateTableWithReferenceMutipleTimes() {
-        withTables(PlayerTable, SessionTable) {
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionTable)
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionTable)
+        withTables(PlayerTable, SessionsTable) {
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
         }
     }
 
-    object PlayerTable: IntIdTable() {
+    object PlayerTable : IntIdTable() {
         val username = varchar("username", 10).uniqueIndex().nullable()
     }
 
-    object SessionTable: IntIdTable() {
+    object SessionsTable : IntIdTable() {
         val playerId = integer("player_id").references(PlayerTable.id)
     }
 
-
     @Test fun createTableWithReservedIdentifierInColumnName() {
         withDb(TestDB.MYSQL) {
-            addLogger(StdOutSqlLogger)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 
@@ -214,11 +211,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object T1: Table("ARRAY") {
+    object T1 : Table("ARRAY") {
         val name = integer("name").uniqueIndex()
         val tmp = varchar("temp", 255)
     }
-    object T2: Table("CHAIN") {
+    object T2 : Table("CHAIN") {
         val ref = integer("ref").references(T1.name)
     }
 

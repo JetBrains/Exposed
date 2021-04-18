@@ -13,7 +13,7 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 
 @Suppress("UNCHECKED_CAST")
-abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
+abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.kotlin.primaryConstructor!!
 
@@ -39,7 +39,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      *
      * @return The entity that has this id or null if no entity was found.
      */
-    open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find{table.id eq id}.firstOrNull()
+    open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find { table.id eq id }.firstOrNull()
 
     /**
      * Reloads entity fields from database as new object.
@@ -72,7 +72,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
-    fun testCache(cacheCheckCondition: T.()->Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
+    fun testCache(cacheCheckCondition: T.() -> Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
@@ -81,7 +81,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         cache.removeTablesReferrers(listOf(table))
     }
 
-    open fun forEntityIds(ids: List<EntityID<ID>>) : SizedIterable<T> {
+    open fun forEntityIds(ids: List<EntityID<ID>>): SizedIterable<T> {
         val distinctIds = ids.distinct()
         if (distinctIds.isEmpty()) return emptySized()
 
@@ -94,7 +94,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return wrapRows(searchQuery(Op.build { table.id inList distinctIds }))
     }
 
-    fun forIds(ids: List<ID>) : SizedIterable<T> = forEntityIds(ids.map { DaoEntityID(it, table) })
+    fun forIds(ids: List<ID>): SizedIterable<T> = forEntityIds(ids.map { DaoEntityID(it, table) })
 
     fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> = rows mapLazy {
         wrapRow(it)
@@ -109,7 +109,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun wrapRow(row: ResultRow) : T {
+    fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
         if (entity._readValues == null)
             entity._readValues = row
@@ -117,8 +117,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return entity
     }
 
-    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>) : T {
-        require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected"}
+    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>): T {
+        require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected" }
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
             val column = exp as? Column<*>
             val value = row[exp]
@@ -132,8 +132,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
     }
 
-    fun wrapRow(row: ResultRow, alias: QueryAlias) : T {
-        require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table"}
+    fun wrapRow(row: ResultRow, alias: QueryAlias): T {
+        require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table" }
         val originalColumns = alias.query.set.source.columns
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
             val value = row[exp]
@@ -141,7 +141,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
                 exp is Column && exp.table is Alias<*> -> {
                     val delegate = (exp.table as Alias<*>).delegate
                     val column = originalColumns.single {
-                        delegate == it.table && exp.name == it.name }
+                        delegate == it.table && exp.name == it.name
+                    }
                     column to value
                 }
                 exp is Column && exp.table == table -> null
@@ -172,9 +173,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      *
      * @return All the entities that conform to the [op] statement.
      */
-    fun find(op: SqlExpressionBuilder.()-> Op<Boolean>): SizedIterable<T> = find(SqlExpressionBuilder.op())
+    fun find(op: SqlExpressionBuilder.() -> Op<Boolean>): SizedIterable<T> = find(SqlExpressionBuilder.op())
 
-    fun findWithCacheCondition(cacheCheckCondition: T.()->Boolean, op: SqlExpressionBuilder.()-> Op<Boolean>): Sequence<T> {
+    fun findWithCacheCondition(cacheCheckCondition: T.() -> Boolean, op: SqlExpressionBuilder.() -> Op<Boolean>): Sequence<T> {
         val cached = testCache(cacheCheckCondition)
         return if (cached.any()) cached else find(op).asSequence()
     }
@@ -183,7 +184,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     open fun searchQuery(op: Op<Boolean>): Query =
-            dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
+        dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
 
     /**
      * Count the amount of entities that conform to the [op] statement.
@@ -192,14 +193,14 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
      *
      * @return The amount of entities that conform to the [op] statement.
      */
-    fun count(op: Op<Boolean>? = null): Long  {
+    fun count(op: Op<Boolean>? = null): Long {
         val countExpression = table.id.count()
         val query = table.slice(countExpression).selectAll().notForUpdate()
         op?.let { query.adjustWhere { op } }
         return query.first()[countExpression]
     }
 
-    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?) : T = ctor.call(entityId) as T
+    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = ctor.call(entityId) as T
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()
@@ -255,50 +256,50 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return prototype
     }
 
-    inline fun view (op: SqlExpressionBuilder.() -> Op<Boolean>)  = View(SqlExpressionBuilder.op(), this)
+    inline fun view(op: SqlExpressionBuilder.() -> Op<Boolean>) = View(SqlExpressionBuilder.op(), this)
 
     private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
 
-    private inline fun <reified R: Any> registerRefRule(column: Column<*>, ref:()-> R): R =
-            refDefinitions.getOrPut(column to R::class, ref) as R
+    private inline fun <reified R : Any> registerRefRule(column: Column<*>, ref: () -> R): R =
+        refDefinitions.getOrPut(column to R::class, ref) as R
 
-    infix fun <REF:Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
+    infix fun <REF : Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 
-    infix fun <REF:Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
+    infix fun <REF : Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF>)
-            : ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF>):
+        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
     @JvmName("backReferencedOnOpt")
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF?>)
-            : ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(column: Column<REF?>):
+        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF>)
-            = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column as Column<REF?>, this) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF>) =
+        registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column as Column<REF?>, this) }
 
     @JvmName("optionalBackReferencedOnOpt")
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF:Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF?>)
-            = registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(column: Column<REF?>) =
+        registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>)
-            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
+        registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
-    fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>, cache: Boolean)
-            = registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
+    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>, cache: Boolean) =
+        registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
-    infix fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column : Column<REF?>)
-            = registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column: Column<REF?>) =
+        registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
-    fun <TargetID: Comparable<TargetID>, Target: Entity<TargetID>, REF: Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column: Column<REF?>, cache: Boolean = false) =
-            registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
+    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(column: Column<REF?>, cache: Boolean = false) =
+        registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
-    fun<TColumn: Any?,TReal: Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
+    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(toColumn: (TReal) -> TColumn, toReal: (TColumn) -> TReal): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T>
-            = warmUpReferences(references, refColumn as Column<SID>, forUpdate)
+    fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T> =
+        warmUpReferences(references, refColumn as Column<SID>, forUpdate)
 
     fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null): List<T> {
         val parentTable = refColumn.referee?.table as? IdTable<*>
@@ -314,7 +315,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
-                val entities = when(forUpdate) {
+                val entities = when (forUpdate) {
                     true -> findQuery.forUpdate()
                     false -> findQuery.notForUpdate()
                     else -> findQuery
@@ -329,16 +330,16 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
 
             return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
         } else {
-            val baseQuery = searchQuery(Op.build{ refColumn inList distinctRefIds })
+            val baseQuery = searchQuery(Op.build { refColumn inList distinctRefIds })
             val finalQuery = if (parentTable.id in baseQuery.set.fields)
                 baseQuery
             else {
-                baseQuery.adjustSlice{ slice(this.fields + parentTable.id) }.
-                        adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
+                baseQuery.adjustSlice { slice(this.fields + parentTable.id) }
+                    .adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
             val findQuery = wrapRows(finalQuery)
-            val entities = when(forUpdate) {
+            val entities = when (forUpdate) {
                 true -> findQuery.forUpdate()
                 false -> findQuery.notForUpdate()
                 else -> findQuery
@@ -355,8 +356,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>>
-                ?: error("Can't detect source reference column")
-        val targetRefColumn = linkTable.columns.singleOrNull {it.referee == table.id}  as? Column<EntityID<*>> ?: error("Can't detect target reference column")
+            ?: error("Can't detect source reference column")
+        val targetRefColumn = linkTable.columns.singleOrNull { it.referee == table.id } as? Column<EntityID<*>> ?: error("Can't detect target reference column")
 
         val transaction = TransactionManager.current()
 
@@ -365,11 +366,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
-            val columns = (dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList())
-                    - sourceRefColumn).distinct() + sourceRefColumn
+            val columns = (
+                dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList()) -
+                    sourceRefColumn
+                ).distinct() + sourceRefColumn
 
             val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
-            val entitiesWithRefs = when(forUpdate) {
+            val entitiesWithRefs = when (forUpdate) {
                 true -> query.forUpdate()
                 false -> query.notForUpdate()
                 else -> query
@@ -385,10 +388,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T: Entity<ID>>(val table: Id
         return inCache.values.flatMap { it.toList() as List<T> } + loaded.orEmpty()
     }
 
-    fun <ID : Comparable<ID>, T: Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
+    fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
-abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
+abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : EntityClass<ID, T>(table, entityType) {
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
@@ -402,7 +405,7 @@ abstract class ImmutableEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table:
     }
 }
 
-abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
+abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) : ImmutableEntityClass<ID, T>(table, entityType) {
 
     private val cacheLoadingState = Key<Any>()
     private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
@@ -424,7 +427,7 @@ abstract class ImmutableCachedEntityClass<ID:Comparable<ID>, out T: Entity<ID>>(
                 }
                 else -> {
                     tr.putUserData(cacheLoadingState, this)
-                    super.all().toList()  /* force iteration to initialize lazy collection */
+                    super.all().toList() /* force iteration to initialize lazy collection */
                     _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
                     tr.removeUserData(cacheLoadingState)
                 }

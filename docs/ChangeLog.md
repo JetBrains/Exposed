@@ -1,3 +1,91 @@
+# 0.30.2
+Bug Fixes:
+* Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
+* Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
+* SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
+* Early versions of MySQL Connector don't work with Exposed ([1203](https://github.com/JetBrains/Exposed/issues/1203)). PR by [MeowRay](https://github.com/MeowRay)
+* `Query.prepareSQL(QueryBuilder)` is made public to allow preparing raw SQLs ([1206](https://github.com/JetBrains/Exposed/issues/1206) 
+
+# 0.30.1
+Infrastructure:
+* Artifact publishing moved from jcenter/Bintray to Maven Central
+* Kotlin 1.4.32
+* Kotlin Coroutines 1.4.3
+
+Feature:
+* `UNION` and `UNION ALL` set operations support with related `union`, `unionAll` functions ([402](https://github.com/JetBrains/Exposed/issues/402))  
+* `like` and `notLike` methods work with string expression, PR from [hfazai](https://github.com/hfazai)
+* [Eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) now works with any iterable
+
+Performance:
+* Different minor memory improvements in `exposed-dao` module by [jnfeinstein](https://github.com/jnfeinstein)
+* Less entity cache invalidations when works with a single entity
+
+Bug fixes:
+* MySQL text type is now treated as `longtext`, SQLServer is `VARCHAR(MAX)`, thanks to [Dmitry Kolmogortsev](https://github.com/koldn)
+* Fix to support recent PostgreSQL NG driver by [hfazai](https://github.com/hfazai)
+* String functions failed to work with strings longer than 255 characters
+* `Query.count()` and `Query.empty()` functions can lead to ResultSet memory leaks
+* Alias was lost in update with join queries
+* [SQLServer] Problem with blob columns when assigning null value
+* Deleting an entity after it is created does not delete it from cache ([1175](https://github.com/JetBrains/Exposed/issues/1175))
+* EnumerationNameColumnType fails with vague exception when unknown value in DB ([1176](https://github.com/JetBrains/Exposed/issues/1176))
+
+# 0.29.1
+Infrastructure:
+* Kotlin 1.4.21
+* Kotlin Coroutines 1.4.1
+* Spring Framework 5.3.3
+* Spring Boot 2.4.2
+
+Feature:
+* Now it's possible to define default Database (it will not be overridden by next `Database.connect()`) ([1125](https://github.com/JetBrains/Exposed/issues/1125)). Fix provided by [jnfeinstein](https://github.com/jnfeinstein). Check [wiki](https://github.com/JetBrains/Exposed/wiki/Transactions#setting-default-database) for details.
+* New `eqSubQuery` and `notEqSubQuery` functions added by [xJoeWoo](https://github.com/xJoeWoo) to compare value with sub-query result.
+* New functions to build expressions in a chain-like manner (`and`, `or`, `andNot`, `orNot`). Idea and realisation by [SchweinchenFuntik](https://github.com/SchweinchenFuntik).
+
+Bug fixes:
+* DatasourceHealthIndicator consumes all the DB connections from the pool when used with Exposed Spring Boot starter ([1077](https://github.com/JetBrains/Exposed/issues/1077)).
+* Ignore internal SQLite indices on check. PR by [hannesbraun](https://github.com/hannesbraun).
+* Narrow scope of referring cache evictions on inserts and deletes. [jnfeinstein](https://github.com/jnfeinstein) thank you for PR.
+* At least one column should be provided in `Table.slice()`. Fixed by [hfazai](https://github.com/hfazai).
+* Multiple attempts to create indices that already exist ([1031](https://github.com/JetBrains/Exposed/issues/1031)) fixed by [gerritc](https://github.com/gerritc).
+* "id not in record set" exception when read value by a column that has related id column ([1032](https://github.com/JetBrains/Exposed/issues/1032))
+* Read datetime fails with "No transaction in context" when called outside the transaction with already fetched data ([1130](https://github.com/JetBrains/Exposed/issues/1130)).
+* Incorrect state for TransactionManager.manager after calling closeAndUnregister ([1100](https://github.com/JetBrains/Exposed/issues/1100)).
+* Connection not available after exceptions with suspendable transaction ([1138](https://github.com/JetBrains/Exposed/issues/1138))
+* Entities weren't flushed when executing query with only expressions in select part. Reported and fixed by [jnfeinstein](https://github.com/jnfeinstein).
+* Fix for exposed-jodatime module to work with MySQL ConnectorJ 8.0.23
+
+# 0.28.1
+Broken Changes:
+* `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 
+  It should help to prevent excessive queries when reading referenced values withing the same transaction but may require more memory to store the cached values.
+* Default isolation level for PostgreSQL now set to `READ_COMMITTED`. PR by [uryyyyyyy](https://github.com/uryyyyyyy)  
+* [Oracle] Binary column type without length prohibited in favour to blob
+
+Infrastructure:
+* Kotlin 1.4.10
+* Kotlin Coroutines 1.3.9
+* Spring Framework 5.2.9
+* Spring Boot 2.3.3
+
+Feature:
+* Custom jdbc-driver registration supported with `Database.registerJdbcDriver` function ([#1023](https://github.com/JetBrains/Exposed/issues/1023)), thanks [rnentjes](https://github.com/rnentjes) for the improvement.  
+
+Bug fixes:
+* Confusing slice api distincts same expressions ([#1020](https://github.com/JetBrains/Exposed/issues/1020))
+* Can't read text column, if it exceeds 255 chars. ([#1029](https://github.com/JetBrains/Exposed/issues/1029))
+* SchemaUtils#addMissingColumnsStatements function made public ([#1030](https://github.com/JetBrains/Exposed/issues/1030))
+* Sum on Duration columns fails with exception ([#1033](https://github.com/JetBrains/Exposed/issues/1033))
+* Batch insert can't be used with nullable collections ([#847](https://github.com/JetBrains/Exposed/issues/847)). PR by [JamiesWhiteShirt](https://github.com/JamiesWhiteShirt)
+* Nullable columns can't have default values. Fixed by [xGabrielDEV](https://github.com/xGabrielDEV)
+* A possible speedup for Schema related operations on fetching metadata
+* It was impossible to make tables join with additional constraint only, implicit join part always added to a join
+* [SQLite] Wrong datetime format used
+* [H2] Problems with creating primary keys ([#841](https://github.com/JetBrains/Exposed/issues/841), [#1051](https://github.com/JetBrains/Exposed/issues/1051))
+* [Oracle] A lot of fixes for datatime column types
+* [Oracle] Tables weren't resolved from Scheme
+
 # 0.27.1
 Feature:
 * Nullable CompositeColumn support (with CompositeMoneyColumn as a reference implementation)

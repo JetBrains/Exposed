@@ -43,7 +43,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
-            fun ColumnSet.repr(): String = QueryBuilder(false).also { this.describe(TransactionManager.current(), it ) }.toString()
+            fun ColumnSet.repr(): String = QueryBuilder(false).also { this.describe(TransactionManager.current(), it) }.toString()
 
             assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
             assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())
@@ -78,7 +78,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
                 .slice(users.name, cities.name)
-                .select{ predicate }
+                .select { predicate }
 
             queryAdjusted.andWhere {
                 predicate

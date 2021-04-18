@@ -45,14 +45,13 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
-
 
         withTables(insertIgnoreSupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
@@ -76,7 +75,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert and get id when column has different name`() {
+    fun `test insert and get id when column has different name and get value by id column`() {
         val testTableWithId = object : IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -98,13 +97,32 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test id and column have different names and get value by original column`() {
+        val exampleTable = object : IdTable<String>("test_id_and_column_table") {
+            val exampleColumn = varchar("example_column", 200)
+            override val id = exampleColumn.entityId()
+        }
+
+        withTables(exampleTable) {
+            val value = "value"
+            exampleTable.insert {
+                it[exampleColumn] = value
+            }
+
+            val resultValues: List<String> = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+
+            assertEquals(value, resultValues.first())
+        }
+    }
+
+    @Test
     fun testInsertIgnoreAndGetIdWithPredefinedId() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
         withTables(insertIgnoreSupportedDB, idTable) {
             val id = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
@@ -113,7 +131,6 @@ class InsertTests : DatabaseTestsBase() {
             assertEquals(1, id.value)
         }
     }
-
 
     @Test
     fun testBatchInsert01() {
@@ -216,12 +233,11 @@ class InsertTests : DatabaseTestsBase() {
         fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
         fun verify(value: String) {
-            val row = tbl.select{ tbl.string eq value }.single()
+            val row = tbl.select { tbl.string eq value }.single()
             assertEquals(row[tbl.string], value)
         }
 
         withTables(tbl) {
-            addLogger(StdOutSqlLogger)
             tbl.insert {
                 it[string] = expression(" _exp1_ ")
             }
@@ -254,13 +270,11 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         fun verify(value: String) {
-            val row = tbl2.select{ tbl2.string2 eq value }.single()
+            val row = tbl2.select { tbl2.string2 eq value }.single()
             assertEquals(row[tbl2.string2], value)
         }
 
         withTables(tbl1, tbl2) {
-            addLogger(StdOutSqlLogger)
-
             val id = tbl1.insertAndGetId {
                 it[string1] = " _exp1_ "
             }
@@ -274,14 +288,12 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private object OrderedDataTable : IntIdTable()
-    {
+    private object OrderedDataTable : IntIdTable() {
         val name = text("name")
         val order = integer("order")
     }
 
-    class OrderedData(id : EntityID<Int>) : IntEntity(id)
-    {
+    class OrderedData(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<OrderedData>(OrderedDataTable)
 
         var name by OrderedDataTable.name

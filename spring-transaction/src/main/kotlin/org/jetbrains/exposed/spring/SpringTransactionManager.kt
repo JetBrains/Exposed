@@ -4,7 +4,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -17,9 +16,9 @@ import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource
 
-
-class SpringTransactionManager(private val _dataSource: DataSource,
-                               @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
+class SpringTransactionManager(
+    private val _dataSource: DataSource,
+    @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
     init {
@@ -53,6 +52,9 @@ class SpringTransactionManager(private val _dataSource: DataSource,
         super.doCleanupAfterCompletion(transaction)
         if (!TransactionSynchronizationManager.hasResource(_dataSource)) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
+        }
+        if (TransactionSynchronizationManager.isSynchronizationActive() && TransactionSynchronizationManager.getSynchronizations().isEmpty()) {
+            TransactionSynchronizationManager.clearSynchronization()
         }
         TransactionManager.resetCurrent(null)
     }
@@ -138,5 +140,4 @@ class SpringTransactionManager(private val _dataSource: DataSource,
             }
         }
     }
-
 }

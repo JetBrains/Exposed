@@ -34,7 +34,7 @@ class ExistsTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val r = users.select {
                 exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
-                        exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
+                    exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
             }
                 .orderBy(users.id).toList()
             assertEquals(2, r.size)

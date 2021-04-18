@@ -79,9 +79,9 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String, args: Iterable<Pair<ColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
+    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
 
-    fun <T : Any> exec(stmt: String, args: Iterable<Pair<ColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
+    fun <T : Any> exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
         if (stmt.isEmpty()) return null
 
         val type = StatementType.values().find {
@@ -108,7 +108,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
             override fun prepareSQL(transaction: Transaction): String = stmt
 
-            override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = listOf(args)
+            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
         })
     }
 
@@ -150,8 +150,8 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     }
 
     fun identity(table: Table): String =
-            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
-                ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
         fullIdentity(column, it)
@@ -165,7 +165,6 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         append('.')
         append(identity(column))
     }
-
 
     fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
 
@@ -186,4 +185,3 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         }
     }
 }
-

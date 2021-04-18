@@ -18,7 +18,6 @@ class UpdateTests : DatabaseTestsBase() {
         exclude
     }
 
-
     @Test
     fun testUpdate01() {
         withCitiesAndUsers { _, users, _ ->
@@ -64,7 +63,7 @@ class UpdateTests : DatabaseTestsBase() {
             }
         }
     }
-    
+
     @Test
     fun testUpdateWithJoin() {
         val dialects = listOf(TestDB.SQLITE)

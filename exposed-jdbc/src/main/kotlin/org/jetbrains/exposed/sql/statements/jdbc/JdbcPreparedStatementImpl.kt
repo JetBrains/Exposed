@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.jetbrains.exposed.sql.BinaryColumnType
+import org.jetbrains.exposed.sql.BlobColumnType
+import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.io.InputStream
 import java.sql.PreparedStatement
@@ -22,15 +25,19 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
 
     override fun executeUpdate(): Int = statement.executeUpdate()
 
-    override fun set(index: Int, value: Any?) {
+    override fun set(index: Int, value: Any) {
         statement.setObject(index, value)
     }
 
-    override fun setInputStream(index: Int, inputStream: InputStream?) {
-        inputStream?.let {
-            statement.setBinaryStream(index, inputStream, inputStream.available())
-        } ?: statement.setNull(index, Types.LONGVARBINARY)
+    override fun setNull(index: Int, columnType: IColumnType) {
+        if (columnType is BinaryColumnType || columnType is BlobColumnType)
+            statement.setNull(index, Types.LONGVARBINARY)
+        else
+            statement.setObject(index, null)
+    }
 
+    override fun setInputStream(index: Int, inputStream: InputStream) {
+        statement.setBinaryStream(index, inputStream, inputStream.available())
     }
 
     override fun closeIfPossible() {

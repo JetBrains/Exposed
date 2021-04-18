@@ -47,11 +47,11 @@ enum class ReferenceOption {
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
-        val target: Column<*>,
-        val from: Column<*>,
-        private val onUpdate: ReferenceOption?,
-        private val onDelete: ReferenceOption?,
-        private val name: String?
+    val target: Column<*>,
+    val from: Column<*>,
+    private val onUpdate: ReferenceOption?,
+    private val onDelete: ReferenceOption?,
+    private val name: String?
 ) : DdlAware {
     private val tx: Transaction
         get() = TransactionManager.current()
@@ -76,7 +76,7 @@ data class ForeignKeyConstraint(
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
-                name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
+            name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
         ).inProperCase()
     internal val foreignKeyPart: String get() = buildString {
         if (fkName.isNotBlank()) {

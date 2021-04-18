@@ -20,10 +20,13 @@ class SelectBatchedTests : DatabaseTestsBase() {
                 .toList().map { it.toCityNameList() }
 
             val expectedNames = names.take(50)
-            assertEqualLists(listOf(
-                expectedNames.take(25),
-                expectedNames.takeLast(25)
-            ), batches)
+            assertEqualLists(
+                listOf(
+                    expectedNames.take(25),
+                    expectedNames.takeLast(25)
+                ),
+                batches
+            )
         }
     }
 
