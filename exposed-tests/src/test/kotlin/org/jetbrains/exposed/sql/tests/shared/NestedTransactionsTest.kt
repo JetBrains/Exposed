@@ -61,7 +61,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
                 inTopLevelTransaction(this.transactionIsolation, 1) {
                     throw IllegalStateException("Should be rethrow")
                 }
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 assertTrue(e is IllegalStateException)
             }
 

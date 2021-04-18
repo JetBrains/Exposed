@@ -32,7 +32,6 @@ class QueryBuilder(
         internalBuilder.append(postfix)
     }
 
-
     /** Appends the specified [value] to this [QueryBuilder]. */
     fun append(value: Char): QueryBuilder = apply { internalBuilder.append(value) }
 
@@ -42,7 +41,6 @@ class QueryBuilder(
     /** Appends the specified [value] to this [QueryBuilder]. */
     fun append(value: Expression<*>): QueryBuilder = apply(value::toQueryBuilder)
 
-
     /** Appends the receiver [Char] to this [QueryBuilder]. */
     operator fun Char.unaryPlus(): QueryBuilder = append(this)
 
@@ -51,7 +49,6 @@ class QueryBuilder(
 
     /** Appends the receiver [Expression] to this [QueryBuilder]. */
     operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
-
 
     /** Adds the specified [argument] as a value of the specified [column]. */
     fun <T> registerArgument(column: Column<*>, argument: T) {
@@ -107,7 +104,6 @@ fun <T> Iterable<T>.appendTo(
     postfix: CharSequence = "",
     transform: QueryBuilder.(T) -> Unit
 ): QueryBuilder = builder.apply { this@appendTo.appendTo(separator, prefix, postfix, transform) }
-
 
 /**
  * Represents an SQL expression of type [T].

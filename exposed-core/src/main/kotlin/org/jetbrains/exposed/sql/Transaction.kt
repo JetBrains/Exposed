@@ -150,8 +150,8 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     }
 
     fun identity(table: Table): String =
-            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
-                ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
         fullIdentity(column, it)
@@ -165,7 +165,6 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         append('.')
         append(identity(column))
     }
-
 
     fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
 
@@ -186,4 +185,3 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         }
     }
 }
-

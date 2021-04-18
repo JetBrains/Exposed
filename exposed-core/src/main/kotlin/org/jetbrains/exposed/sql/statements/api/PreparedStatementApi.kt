@@ -18,17 +18,19 @@ interface PreparedStatementApi {
 
     fun addBatch()
 
-    fun executeQuery() : ResultSet
+    fun executeQuery(): ResultSet
 
-    fun executeUpdate() : Int
+    fun executeUpdate(): Int
 
     val resultSet: ResultSet?
 
-    operator fun set(index: Int, value: Any?)
+    operator fun set(index: Int, value: Any)
 
-    fun setInputStream(index: Int, inputStream: InputStream?)
+    fun setNull(index: Int, columnType: IColumnType)
+
+    fun setInputStream(index: Int, inputStream: InputStream)
 
     fun closeIfPossible()
 
-    fun executeBatch() : List<Int>
+    fun executeBatch(): List<Int>
 }

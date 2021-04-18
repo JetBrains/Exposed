@@ -21,6 +21,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun uintegerType(): String = "INT UNSIGNED"
 
     override fun ulongType(): String = "BIGINT UNSIGNED"
+
+    override fun textType(): String = "longtext"
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -96,7 +98,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         targets.describe(transaction, this)
         +" SET "
         columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.identity(col)}=")
+            append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
 
@@ -120,6 +122,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsCreateSequence: Boolean = false
 
+    override val supportsSubqueryUnions: Boolean = true
+
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
@@ -137,20 +141,20 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         val constraintsToLoad = HashMap<String, MutableList<ForeignKeyConstraint>>()
         tr.exec(
             "SELECT\n" +
-                    "  rc.CONSTRAINT_NAME,\n" +
-                    "  ku.TABLE_NAME,\n" +
-                    "  ku.COLUMN_NAME,\n" +
-                    "  ku.REFERENCED_TABLE_NAME,\n" +
-                    "  ku.REFERENCED_COLUMN_NAME,\n" +
-                    "  rc.UPDATE_RULE,\n" +
-                    "  rc.DELETE_RULE\n" +
-                    "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
-                    "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
-                    "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
-                    "WHERE ku.TABLE_SCHEMA = $schemaName " +
-                    "   AND ku.CONSTRAINT_SCHEMA = $schemaName" +
-                    "   AND rc.CONSTRAINT_SCHEMA = $schemaName" +
-                    "   AND $inTableList"
+                "  rc.CONSTRAINT_NAME,\n" +
+                "  ku.TABLE_NAME,\n" +
+                "  ku.COLUMN_NAME,\n" +
+                "  ku.REFERENCED_TABLE_NAME,\n" +
+                "  ku.REFERENCED_COLUMN_NAME,\n" +
+                "  rc.UPDATE_RULE,\n" +
+                "  rc.DELETE_RULE\n" +
+                "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
+                "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
+                "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
+                "WHERE ku.TABLE_SCHEMA = $schemaName " +
+                "   AND ku.CONSTRAINT_SCHEMA = $schemaName" +
+                "   AND rc.CONSTRAINT_SCHEMA = $schemaName" +
+                "   AND $inTableList"
         ) { rs ->
             while (rs.next()) {
                 val fromTableName = rs.getString("TABLE_NAME")!!
@@ -191,10 +195,12 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         append("CREATE SCHEMA IF NOT EXISTS ", schema.identifier)
 
         if (schema.authorization != null) {
-            throw UnsupportedByDialectException("${currentDialect.name} do not have database owners. " +
-                    "You can use GRANT to allow or deny rights on database.", currentDialect)
+            throw UnsupportedByDialectException(
+                "${currentDialect.name} do not have database owners. " +
+                    "You can use GRANT to allow or deny rights on database.",
+                currentDialect
+            )
         }
-
     }
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"

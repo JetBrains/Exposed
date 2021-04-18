@@ -61,7 +61,10 @@ interface IColumnType {
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        stmt[index] = value
+        if (value == null)
+            stmt.setNull(index, this)
+        else
+            stmt[index] = value
     }
 }
 
@@ -402,8 +405,6 @@ class DecimalColumnType(
         result = 31 * result + scale
         return result
     }
-
-
 }
 
 // Character columns
@@ -464,7 +465,6 @@ abstract class StringColumnType(
         return result
     }
 
-
     companion object {
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",
@@ -473,9 +473,6 @@ abstract class StringColumnType(
             '\n' to "\\n"
         )
     }
-
-
-
 }
 
 /**
@@ -518,8 +515,6 @@ open class CharColumnType(
         result = 31 * result + colLength
         return result
     }
-
-
 }
 
 /**
@@ -670,7 +665,7 @@ class BlobColumnType : ColumnType() {
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
             is InputStream -> stmt.setInputStream(index, toSetValue)
-            null -> stmt.setInputStream(index, toSetValue)
+            null -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
         }
     }
@@ -771,11 +766,12 @@ class EnumerationColumnType<T : Enum<T>>(
  */
 class EnumerationNameColumnType<T : Enum<T>>(
     /** Returns the enum class used in this column type. */
-    val klass: KClass<T>, colLength: Int
+    val klass: KClass<T>,
+    colLength: Int
 ) : VarCharColumnType(colLength) {
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> klass.java.enumConstants!!.first { it.name == value }
+        is String -> klass.java.enumConstants!!.firstOrNull { it.name == value } ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
@@ -811,5 +807,5 @@ class EnumerationNameColumnType<T : Enum<T>>(
  * Marker interface for date/datetime related column types.
  **/
 interface IDateColumnType {
-    val hasTimePart : Boolean
+    val hasTimePart: Boolean
 }

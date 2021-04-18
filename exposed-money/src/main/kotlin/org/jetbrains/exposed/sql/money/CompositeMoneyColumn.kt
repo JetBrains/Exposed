@@ -38,7 +38,7 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
                 result.create() as R
             }
         }
-)
+    )
 
 fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
     CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(

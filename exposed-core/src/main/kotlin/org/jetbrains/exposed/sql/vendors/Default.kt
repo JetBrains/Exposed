@@ -62,7 +62,7 @@ abstract class DataTypeProvider {
     abstract fun binaryType(): String
 
     /** Binary type for storing binary strings of a specific [length]. */
-    open fun binaryType(length: Int): String = "VARBINARY($length)"
+    open fun binaryType(length: Int): String = if (length == Int.MAX_VALUE) "VARBINARY(MAX)" else "VARBINARY($length)"
 
     /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
@@ -77,6 +77,9 @@ abstract class DataTypeProvider {
 
     /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
+
+    /** Time type for storing time without a time zone. */
+    open fun timeType(): String = "TIME"
 
     // Boolean type
 
@@ -95,6 +98,7 @@ abstract class DataTypeProvider {
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
+        currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
     }
 }
@@ -408,7 +412,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
-    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
+    ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
@@ -519,6 +523,8 @@ interface DatabaseDialect {
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
+    /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
+    val supportsSubqueryUnions: Boolean get() = false
 
     /** Returns the name of the current database. */
     fun getDatabase(): String
@@ -584,7 +590,7 @@ interface DatabaseDialect {
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }
@@ -669,7 +675,6 @@ abstract class VendorDialect(
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
                 constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
             }
-
         }
         return constraints
     }
@@ -731,7 +736,7 @@ abstract class VendorDialect(
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()
 
-internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T) : T {
+internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
     return try {
         explicitDialect.set(dialect)
         body()

@@ -14,23 +14,22 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-
-private object CustomerTable: UUIDTable(name = "customer") {
+private object CustomerTable : UUIDTable(name = "customer") {
     val name = varchar(name = "name", length = 255).uniqueIndex()
 }
 
-class CustomerDAO(id: EntityID<UUID>): UUIDEntity(id) {
+class CustomerDAO(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<CustomerDAO>(CustomerTable)
 
     var name by CustomerTable.name
 }
 
-object OrderTable: UUIDTable(name = "orders") {
+object OrderTable : UUIDTable(name = "orders") {
     val customer = reference(name = "customer_id", foreign = CustomerTable)
     val product = varchar(name = "product", length = 255)
 }
 
-class OrderDAO(id: EntityID<UUID>): UUIDEntity(id) {
+class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<OrderDAO>(OrderTable)
 
     var customer by CustomerDAO.referencedOn(OrderTable.customer)
@@ -57,7 +56,7 @@ open class Service {
         return createOrder(createCustomer(name), product)
     }
 
-    open fun findOrderByProduct(product: String) : OrderDAO? {
+    open fun findOrderByProduct(product: String): OrderDAO? {
         return OrderDAO.find { OrderTable.product eq product }.singleOrNull()
     }
 }
@@ -83,12 +82,12 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
     }
 
     @Test @Commit
-    fun test02(){
+    fun test02() {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)
         transaction {
-        assertEquals("Bob", order.customer.name)
+            assertEquals("Bob", order.customer.name)
             SchemaUtils.drop(CustomerTable, OrderTable)
         }
     }

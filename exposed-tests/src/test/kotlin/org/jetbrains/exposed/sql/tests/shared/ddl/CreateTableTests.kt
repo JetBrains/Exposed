@@ -48,11 +48,12 @@ class CreateTableTests : DatabaseTestsBase() {
             val tableName = account.tableName
 
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
-                            "${account.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
-                            ")",
-                    account.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                    "${account.columns.joinToString { it.descriptionDdl() }}, " +
+                    "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    ")",
+                account.ddl
+            )
         }
     }
 
@@ -67,14 +68,15 @@ class CreateTableTests : DatabaseTestsBase() {
             val tableName = Person.tableName
 
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
-                            "${Person.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
-                            ")",
-                    Person.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                    "${Person.columns.joinToString { it.descriptionDdl() }}, " +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    ")",
+                Person.ddl
+            )
         }
 
-        //Table with single column in primary key.
+        // Table with single column in primary key.
         val user = object : Table("User") {
             val user_name = varchar("user_name", 25)
 
@@ -86,11 +88,12 @@ class CreateTableTests : DatabaseTestsBase() {
 
             // Must generate primary key constraint, because the constraint name was defined.
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName (" +
-                            "${user.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT $pkConstraintName PRIMARY KEY ($userNameProperName)" +
-                            ")",
-                    user.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName (" +
+                    "${user.columns.joinToString { it.descriptionDdl() }}, " +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY ($userNameProperName)" +
+                    ")",
+                user.ddl
+            )
         }
     }
 
@@ -179,11 +182,11 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : LongIdTable("parent1") {}
         val child = object : LongIdTable("child1") {
             val parentId = reference(
-                    name = "parent_id",
-                    foreign = parent,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
@@ -209,11 +212,11 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         val child = object : LongIdTable("child2") {
             val parentId = reference(
-                    name = "parent_id",
-                    refColumn = parent.uniqueId,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                refColumn = parent.uniqueId,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
@@ -237,11 +240,11 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : LongIdTable("parent3") {}
         val child = object : LongIdTable("child3") {
             val parentId = optReference(
-                    name = "parent_id",
-                    foreign = parent,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
@@ -267,11 +270,11 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         val child = object : LongIdTable("child4") {
             val parentId = optReference(
-                    name = "parent_id",
-                    refColumn = parent.uniqueId,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                refColumn = parent.uniqueId,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
@@ -289,8 +292,8 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
-    object OneTable : IntIdTable("one") {}
-    object OneOneTable : IntIdTable("one.one") {}
+    object OneTable : IntIdTable("one")
+    object OneOneTable : IntIdTable("one.one")
 
     @Test
     fun `test create table with same name in different schemas`() {

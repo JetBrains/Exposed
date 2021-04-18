@@ -1,12 +1,27 @@
 plugins {
-    kotlin("jvm") version "1.4.21" apply true
-    id("tanvd.kosogor") version "1.0.9" apply true
+    kotlin("jvm") version "1.4.32" apply true
+    id("io.github.gradle-nexus.publish-plugin") apply true
+    id("org.jmailen.kotlinter") version "3.3.0"
 }
 
-subprojects {
-    apply(plugin = "tanvd.kosogor")
+allprojects {
+    apply(plugin = "org.jmailen.kotlinter")
+
+    if (this.name != "exposed-tests" && this != rootProject) {
+        apply(from = rootProject.file("buildScripts/gradle/publishing.gradle.kts"))
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username.set(System.getenv("exposed.sonatype.user"))
+            password.set(System.getenv("exposed.sonatype.password"))
+            useStaging.set(true)
+        }
+    }
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }

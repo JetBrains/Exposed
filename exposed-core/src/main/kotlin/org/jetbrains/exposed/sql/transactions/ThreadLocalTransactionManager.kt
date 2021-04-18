@@ -9,8 +9,10 @@ import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
-class ThreadLocalTransactionManager(private val db: Database,
-                                    @Volatile override var defaultRepetitionAttempts: Int) : TransactionManager {
+class ThreadLocalTransactionManager(
+    private val db: Database,
+    @Volatile override var defaultRepetitionAttempts: Int
+) : TransactionManager {
 
     @Volatile override var defaultIsolationLevel: Int = -1
         get() {
@@ -23,14 +25,16 @@ class ThreadLocalTransactionManager(private val db: Database,
     val threadLocal = ThreadLocal<Transaction>()
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction =
-        (outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
-            ThreadLocalTransaction(
-                db = db,
-                transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-                threadLocal = threadLocal,
-                outerTransaction = outerTransaction
+        (
+            outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
+                ThreadLocalTransaction(
+                    db = db,
+                    transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                    threadLocal = threadLocal,
+                    outerTransaction = outerTransaction
+                )
             )
-        )).apply {
+            ).apply {
             bindTransactionToThread(this)
         }
 
@@ -63,7 +67,6 @@ class ThreadLocalTransactionManager(private val db: Database,
         private var savepoint: ExposedSavepoint? = if (useSavePoints) {
             connection.setSavepoint(savepointName)
         } else null
-
 
         override fun commit() {
             if (connectionLazy.isInitialized()) {
@@ -105,7 +108,7 @@ class ThreadLocalTransactionManager(private val db: Database,
             get() {
                 var nestedLevel = 0
                 var currenTransaction = outerTransaction
-                while(currenTransaction?.outerTransaction != null) {
+                while (currenTransaction?.outerTransaction != null) {
                     nestedLevel++
                     currenTransaction = currenTransaction.outerTransaction
                 }
@@ -126,7 +129,7 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
         val transaction = outerManager.newTransaction(transactionIsolation, outer)
         try {
             transaction.statement().also {
-                if(outer.db.useNestedTransactions)
+                if (outer.db.useNestedTransactions)
                     transaction.commit()
             }
         } finally {
@@ -139,7 +142,7 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
             try {
                 TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    if(db.useNestedTransactions)
+                    if (db.useNestedTransactions)
                         transaction.commit()
                 }
             } finally {
@@ -150,14 +153,14 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
 }
 
 fun <T> inTopLevelTransaction(
-        transactionIsolation: Int,
-        repetitionAttempts: Int,
-        db: Database? = null,
-        outerTransaction: Transaction? = null,
-        statement: Transaction.() -> T
+    transactionIsolation: Int,
+    repetitionAttempts: Int,
+    db: Database? = null,
+    outerTransaction: Transaction? = null,
+    statement: Transaction.() -> T
 ): T {
 
-    fun run():T {
+    fun run(): T {
         var repetitions = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }

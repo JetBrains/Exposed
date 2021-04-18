@@ -4,7 +4,9 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
 
 enum class EntityChangeType {
     Created,
@@ -12,19 +14,18 @@ enum class EntityChangeType {
     Removed;
 }
 
-
 data class EntityChange(val entityClass: EntityClass<*, Entity<*>>, val entityId: EntityID<*>, val changeType: EntityChangeType, val transactionId: String)
 
-fun<ID: Comparable<ID>, T: Entity<ID>> EntityChange.toEntity() : T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
+fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
 
-fun<ID: Comparable<ID>,T: Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>) : T? {
+fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
     if (!entityClass.isAssignableTo(klass)) return null
     @Suppress("UNCHECKED_CAST")
     return toEntity<ID, T>()
 }
 
-private val Transaction.entityEvents : MutableList<EntityChange> by transactionScope { CopyOnWriteArrayList<EntityChange>() }
-private val entitySubscribers = CopyOnWriteArrayList<(EntityChange) -> Unit>()
+private val Transaction.entityEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }
+private val entitySubscribers = ConcurrentLinkedQueue<(EntityChange) -> Unit>()
 
 object EntityHook {
     fun subscribe(action: (EntityChange) -> Unit): (EntityChange) -> Unit {
@@ -39,31 +40,28 @@ object EntityHook {
 
 fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId: EntityID<*>, changeType: EntityChangeType) {
     EntityChange(entityClass, entityId, changeType, id).let {
-        if (entityEvents.lastOrNull() != it) {
-            entityEvents.add(it)
+        if (entityEvents.peekLast() != it) {
+            entityEvents.addLast(it)
         }
     }
 }
 
 fun Transaction.alertSubscribers() {
-    entityEvents.forEach { e ->
-        entitySubscribers.forEach {
-            it(e)
-        }
+    while (true) {
+        val event = entityEvents.pollFirst() ?: break
+        entitySubscribers.forEach { it(event) }
     }
-    entityEvents.clear()
 }
 
 fun Transaction.registeredChanges() = entityEvents.toList()
 
-fun <T> withHook(action: (EntityChange) -> Unit, body: ()->T): T {
+fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
             TransactionManager.current().commit()
         }
-    }
-    finally {
+    } finally {
         EntityHook.unsubscribe(action)
     }
 }

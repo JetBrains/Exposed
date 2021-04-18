@@ -19,6 +19,12 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "DATETIME2"
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
+
+    /**
+     * varchar is used instead of "text" because it will be removed in future
+     * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
+     */
+    override fun textType(): String = "VARCHAR(MAX)"
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
@@ -26,7 +32,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("NEXT VALUE FOR ", seq.identifier)
     }
 
-    override fun random(seed: Int?): String = if (seed != null) "RAND(${seed})" else "RAND(CHECKSUM(NEWID()))"
+    override fun random(seed: Int?): String = if (seed != null) "RAND($seed)" else "RAND(CHECKSUM(NEWID()))"
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
@@ -88,9 +94,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")
-        }
+            ?: transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")
+
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -101,7 +106,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         tableToUpdate.describe(transaction, this)
         +" SET "
         columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.identity(col)}=")
+            append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
         +" FROM "
@@ -144,7 +149,12 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val supportsSequenceAsGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+    private val nonAcceptableDefaults = arrayOf("DEFAULT")
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
+        val columnDefault = e.toString().toUpperCase().trim()
+        return columnDefault !in nonAcceptableDefaults
+    }
 
     override fun modifyColumn(column: Column<*>): String =
         super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
@@ -163,7 +173,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }

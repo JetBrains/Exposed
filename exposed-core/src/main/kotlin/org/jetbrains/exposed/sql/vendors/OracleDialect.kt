@@ -163,10 +163,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
-        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
-        }
+        columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+            ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -253,7 +251,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP USER ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }
