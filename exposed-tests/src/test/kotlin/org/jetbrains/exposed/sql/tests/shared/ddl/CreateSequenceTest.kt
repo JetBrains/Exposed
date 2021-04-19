@@ -1,11 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import kotlin.test.assertNotNull
 
 class SequencesTests : DatabaseTestsBase() {
     @Test
@@ -80,6 +83,30 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test insert LongIdTable with auth-increment with sequence`() {
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                addLogger(StdOutSqlLogger)
+                try {
+                    SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+                    val developerId = DeveloperWithAutoIncrementBySequence.insertAndGetId {
+                        it[name] = "Hichem"
+                    }
+
+                    assertNotNull(developerId)
+
+                    val developerId2 = DeveloperWithAutoIncrementBySequence.insertAndGetId {
+                        it[name] = "Andrey"
+                    }
+                    assertEquals(developerId.value + 1, developerId2.value)
+                } finally {
+                    SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+                }
+            }
+        }
+    }
+
+    @Test
     fun `test select with nextVal`() {
         withTables(Developer) {
             if (currentDialectTest.supportsCreateSequence) {
@@ -114,6 +141,11 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     private object DeveloperWithLongId : LongIdTable() {
+        var name = varchar("name", 25)
+    }
+
+    private object DeveloperWithAutoIncrementBySequence : IdTable<Long>() {
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement("id_seq").entityId()
         var name = varchar("name", 25)
     }
 

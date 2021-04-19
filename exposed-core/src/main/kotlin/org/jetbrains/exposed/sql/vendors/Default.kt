@@ -358,9 +358,17 @@ abstract class FunctionProvider {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
         }
 
-        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
-            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
-        } else "" to DEFAULT_VALUE_EXPRESSION
+        val autoIncColumn = table.autoIncColumn
+
+        val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
+
+        val (columnsToInsert, valuesExpr) = when {
+            nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
+            nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
+            columns.isNotEmpty() -> columns to expr
+            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
+        }
+        val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }

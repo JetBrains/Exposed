@@ -192,7 +192,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -222,7 +222,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -250,7 +250,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -280,7 +280,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl() }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +

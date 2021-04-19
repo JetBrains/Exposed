@@ -1023,8 +1023,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
-            val autoIncSequence = idSeqName ?: "${tableName}_${name}_seq"
-            this@cloneWithAutoInc.clone<Column<T>>(mapOf(Column<T>::columnType to AutoIncColumnType(columnType as ColumnType, autoIncSequence)))
+            this@cloneWithAutoInc.clone(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq")))
         }
         else -> error("Unsupported column type for auto-increment $columnType")
     }
@@ -1043,7 +1042,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val createSequence = autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement() }.orEmpty()
+        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement() }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
@@ -1102,7 +1101,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             }
         }
 
-        val dropSequence = autoIncColumn?.autoIncSeqName?.let { Sequence(it).dropStatement() }.orEmpty()
+        val dropSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).dropStatement() }.orEmpty()
 
         return listOf(dropTable) + dropSequence
     }

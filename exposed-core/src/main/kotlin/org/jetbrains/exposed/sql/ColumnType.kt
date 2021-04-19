@@ -92,17 +92,27 @@ abstract class ColumnType(override var nullable: Boolean = false) : IColumnType 
 class AutoIncColumnType(
     /** Returns the base column type of this auto-increment column. */
     val delegate: ColumnType,
-    _autoincSeq: String
+    private val _autoincSeq: String?,
+    private val fallbackSeqName: String
 ) : IColumnType by delegate {
 
-    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
-    val autoincSeq: String? = _autoincSeq
-        get() = if (currentDialect.needsSequenceToAutoInc) field else null
+    private val nextValValue = run {
+        val sequence = Sequence(_autoincSeq ?: fallbackSeqName)
+        if (delegate is IntegerColumnType) sequence.nextIntVal() else sequence.nextLongVal()
+    }
 
-    private fun resolveAutoIncType(columnType: IColumnType): String = when (columnType) {
-        is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
-        is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
-        is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
+    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
+    val autoincSeq: String?
+        get() = _autoincSeq ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
+
+    val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
+
+    private fun resolveAutoIncType(columnType: IColumnType): String = when {
+        columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
+        columnType is IntegerColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
+        columnType is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
+        columnType is LongColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.longType()
+        columnType is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
         else -> guessAutoIncTypeBy(columnType.sqlType())
     } ?: error("Unsupported type $delegate for auto-increment")
 
@@ -115,22 +125,34 @@ class AutoIncColumnType(
     override fun sqlType(): String = resolveAutoIncType(delegate)
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        return when {
+            other == null -> false
+            this === other -> true
+            this::class != other::class -> false
+            other !is AutoIncColumnType -> false
+            delegate != other.delegate -> false
+            _autoincSeq != other._autoincSeq -> false
+            fallbackSeqName != other.fallbackSeqName -> false
+            else -> true
+        }
+    }
 
-        other as AutoIncColumnType
-
-        if (delegate != other.delegate) return false
-
-        return true
+    override fun hashCode(): Int {
+        var result = delegate.hashCode()
+        result = 31 * result + (_autoincSeq?.hashCode() ?: 0)
+        result = 31 * result + fallbackSeqName.hashCode()
+        return result
     }
 }
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
 /** Returns the name of the auto-increment sequence of this column. */
+val Column<*>.autoIncColumnType: AutoIncColumnType?
+    get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+@Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
 val Column<*>.autoIncSeqName: String?
-    get() = (columnType as? AutoIncColumnType)?.autoincSeq ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.autoIncSeqName
+    get() = autoIncColumnType?.autoincSeq
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
