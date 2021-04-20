@@ -316,7 +316,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test fun testBlob() {
         val t = object : Table("t1") {
-            val id = integer("id").autoIncrement("t1_seq")
+            val id = integer("id").autoIncrement()
             val b = blob("blob")
 
             override val primaryKey = PrimaryKey(id)

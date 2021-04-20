@@ -11,7 +11,7 @@ import java.util.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id: Column<Int> = integer("cityId").autoIncrement("cities_seq")
+        val id: Column<Int> = integer("cityId").autoIncrement()
         val name: Column<String> = varchar("name", 50)
         override val primaryKey = PrimaryKey(id)
     }

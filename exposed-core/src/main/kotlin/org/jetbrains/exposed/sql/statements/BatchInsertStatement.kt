@@ -98,7 +98,10 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val output = table.autoIncColumn?.let { " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS" }?.takeIf { shouldReturnGeneratedValues }.orEmpty()
+            val output = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }?.let {
+                " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
+            }.orEmpty()
+
             QueryBuilder(true).apply {
                 values.appendTo(prefix = "$output VALUES") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->

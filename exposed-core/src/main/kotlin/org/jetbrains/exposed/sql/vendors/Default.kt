@@ -361,7 +361,7 @@ abstract class FunctionProvider {
         val autoIncColumn = table.autoIncColumn
 
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
-        val isInsertFromSelect = expr.isNotEmpty() && !expr.startsWith("VALUES")
+        val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
 
         val (columnsToInsert, valuesExpr) = when {
             isInsertFromSelect -> columns to expr

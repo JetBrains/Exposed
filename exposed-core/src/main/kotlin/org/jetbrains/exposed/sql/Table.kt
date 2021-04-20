@@ -1042,7 +1042,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement() }.orEmpty()
+        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it, startWith = 0, minValue = 0, maxValue = Long.MAX_VALUE).createStatement() }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 

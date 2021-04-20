@@ -124,6 +124,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         val nextValExpressionColumns = values.filterValues { it is NextVal<*> }.keys
         return targets.flatMap { it.columns }.filter { column ->
             when {
+                column.autoIncColumnType?.nextValExpression != null -> currentDialect.supportsSequenceAsGeneratedKeys
                 column.columnType.isAutoInc -> true
                 column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
                 column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
