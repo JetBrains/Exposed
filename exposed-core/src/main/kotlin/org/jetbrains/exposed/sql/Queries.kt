@@ -159,11 +159,15 @@ fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
  */
-fun <T : Table> T.insert(selectQuery: AbstractQuery<*>, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+fun <T : Table> T.insert(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+) = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
-fun <T : Table> T.insertIgnore(selectQuery: AbstractQuery<*>, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+fun <T : Table> T.insertIgnore(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+) = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testUpdate01

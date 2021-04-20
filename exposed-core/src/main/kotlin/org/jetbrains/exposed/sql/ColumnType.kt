@@ -103,7 +103,7 @@ class AutoIncColumnType(
 
     /** Returns the name of the sequence used to generate new values for this auto-increment column. */
     val autoincSeq: String?
-        get() = _autoincSeq ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
+        get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence } ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
 
     val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
 
