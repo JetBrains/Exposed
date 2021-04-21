@@ -45,7 +45,7 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
             statement.close()
     }
 
-    override fun executeBatch() : List<Int> = statement.executeBatch().toList()
+    override fun executeBatch(): List<Int> = statement.executeBatch().toList()
 
     override fun cancel() {
         if (!statement.isClosed)
