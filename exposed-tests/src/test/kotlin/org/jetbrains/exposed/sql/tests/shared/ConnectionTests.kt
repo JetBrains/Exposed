@@ -16,15 +16,15 @@ class ConnectionTests : DatabaseTestsBase() {
 
     @Test
     fun testGettingColumnMetadata() {
-        withDb (TestDB.H2){
+        withDb(TestDB.H2) {
             SchemaUtils.create(People)
 
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
             val expected = setOf(
-                    ColumnMetadata("ID", Types.BIGINT, false, 19),
-                    ColumnMetadata("NAME", Types.VARCHAR, true, 80)
+                ColumnMetadata("ID", Types.BIGINT, false, 19),
+                ColumnMetadata("NAME", Types.VARCHAR, true, 80)
             )
             assertEquals(expected, columnMetadata)
         }

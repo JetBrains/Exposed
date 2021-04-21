@@ -45,14 +45,13 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
-
 
         withTables(insertIgnoreSupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
@@ -123,7 +122,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
         withTables(insertIgnoreSupportedDB, idTable) {
             val id = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
@@ -132,7 +131,6 @@ class InsertTests : DatabaseTestsBase() {
             assertEquals(1, id.value)
         }
     }
-
 
     @Test
     fun testBatchInsert01() {
@@ -169,7 +167,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     object LongIdTable : Table() {
-        val id = long("id").autoIncrement("long_id_seq")
+        val id = long("id").autoIncrement()
         val name = text("name")
 
         override val primaryKey = PrimaryKey(id)
@@ -235,7 +233,7 @@ class InsertTests : DatabaseTestsBase() {
         fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
         fun verify(value: String) {
-            val row = tbl.select{ tbl.string eq value }.single()
+            val row = tbl.select { tbl.string eq value }.single()
             assertEquals(row[tbl.string], value)
         }
 
@@ -272,7 +270,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         fun verify(value: String) {
-            val row = tbl2.select{ tbl2.string2 eq value }.single()
+            val row = tbl2.select { tbl2.string2 eq value }.single()
             assertEquals(row[tbl2.string2], value)
         }
 
@@ -290,14 +288,12 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private object OrderedDataTable : IntIdTable()
-    {
+    private object OrderedDataTable : IntIdTable() {
         val name = text("name")
         val order = integer("order")
     }
 
-    class OrderedData(id : EntityID<Int>) : IntEntity(id)
-    {
+    class OrderedData(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<OrderedData>(OrderedDataTable)
 
         var name by OrderedDataTable.name

@@ -12,7 +12,7 @@ import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
-    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion")}
+    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
 
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {
@@ -35,7 +35,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    private val databaseName get() = when(databaseDialectName) {
+    private val databaseName get() = when (databaseDialectName) {
         MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
         else -> database
     }
@@ -70,15 +70,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         _currentScheme = null
     }
 
-    private inner class CachableMapWithDefault<K, V>(private val map:MutableMap<K,V> = mutableMapOf(), val default: (K) -> V) : Map<K,V> by map {
+    private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
         override fun get(key: K): V? = map.getOrPut(key, { default(key) })
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
     }
 
-    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(default = { schemeName ->
-        tableNamesFor(schemeName)
-    })
+    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(
+        default = { schemeName ->
+            tableNamesFor(schemeName)
+        }
+    )
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
@@ -127,9 +129,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs =  metadata.getColumns(databaseName, currentScheme, "%", "%")
+        val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
-            //@see java.sql.DatabaseMetaData.getColumns
+            // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
             it.getString("TABLE_NAME") to columnMetadata
         }
@@ -140,14 +142,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val existingIndicesCache = HashMap<Table, List<Index>>()
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
-        for(table in tables) {
+        for (table in tables) {
             val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
 
             existingIndicesCache.getOrPut(table) {
                 val pkNames = metadata.getPrimaryKeys(databaseName, currentScheme, tableName).let { rs ->
                     val names = arrayListOf<String>()
-                    while(rs.next()) {
+                    while (rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
                     }
                     rs.close()
@@ -194,11 +196,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
                 ForeignKeyConstraint(
-                        target = targetColumn,
-                        from = fromColumn,
-                        onUpdate = constraintUpdateRule,
-                        onDelete = constraintDeleteRule,
-                        name = constraintName
+                    target = targetColumn,
+                    from = fromColumn,
+                    onUpdate = constraintUpdateRule,
+                    onDelete = constraintDeleteRule,
+                    name = constraintName
                 )
             }.filterNotNull()
         }
@@ -212,9 +214,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
 }
 
-fun <T> ResultSet.iterate(body: ResultSet.() -> T) : List<T> {
+fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
     val result = arrayListOf<T>()
-    while(next()) {
+    while (next()) {
         result.add(body())
     }
     close()

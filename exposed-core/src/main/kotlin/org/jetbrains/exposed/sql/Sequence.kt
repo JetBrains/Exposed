@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.lang.StringBuilder
 
 /**
  * Database Sequence.
@@ -16,13 +15,15 @@ import java.lang.StringBuilder
  * @param cycle         Allows the sequence to wrap around when the [maxValue] or [minValue] has been reached by an ascending or descending sequence respectively.
  * @param cache         Specifies how many sequence numbers are to be preallocated and stored in memory for faster access.
  */
-class Sequence(private val name: String,
-                    val startWith: Long? = null,
-                    val incrementBy: Long? = null,
-                    val minValue: Long? = null,
-                    val maxValue: Long? = null,
-                    val cycle: Boolean? = null,
-                    val cache: Long? = null) {
+class Sequence(
+    private val name: String,
+    val startWith: Long? = null,
+    val incrementBy: Long? = null,
+    val minValue: Long? = null,
+    val maxValue: Long? = null,
+    val cycle: Boolean? = null,
+    val cache: Long? = null
+) {
 
     val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
@@ -33,7 +34,7 @@ class Sequence(private val name: String,
      * Returns the SQL command that creates sequence with the specified properties.
      */
     fun createStatement(): List<String> {
-        if (!currentDialect.supportsCreateSequence ) {
+        if (!currentDialect.supportsCreateSequence) {
             throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", currentDialect)
         }
 

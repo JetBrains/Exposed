@@ -68,7 +68,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
-                exec("CREATE TABLE test(id INT REFERENCES ${firstCatalogName}.test(id))")
+                exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
                 val catalogName = connection.catalog
 

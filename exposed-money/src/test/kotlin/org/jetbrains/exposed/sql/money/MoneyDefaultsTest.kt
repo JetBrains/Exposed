@@ -20,8 +20,8 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
 
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = compositeMoney(10, 0,"t1").default(defaultValue)
-        val t2 = compositeMoney(10, 0,"t2").nullable()
+        val t1 = compositeMoney(10, 0, "t1").default(defaultValue)
+        val t2 = compositeMoney(10, 0, "t2").nullable()
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
@@ -50,11 +50,12 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
     fun testDefaultsWithExplicit() {
         withTables(TableWithDBDefault) {
             val created = listOf(
-                    DBDefault.new { field = "1" },
-                    DBDefault.new {
-                        field = "2"
-                        t1 = Money.of(BigDecimal.TEN, "USD")
-                    })
+                DBDefault.new { field = "1" },
+                DBDefault.new {
+                    field = "2"
+                    t1 = Money.of(BigDecimal.TEN, "USD")
+                }
+            )
             flushCache()
             created.forEach {
                 DBDefault.removeFromCache(it)

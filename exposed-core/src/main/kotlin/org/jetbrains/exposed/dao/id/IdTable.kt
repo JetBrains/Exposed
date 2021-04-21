@@ -5,22 +5,22 @@ import org.jetbrains.exposed.sql.Table
 import java.util.*
 
 interface EntityIDFactory {
-    fun <T:Comparable<T>> createEntityID(value: T, table: IdTable<T>) : EntityID<T>
+    fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T>
 }
 
 object EntityIDFunctionProvider {
-    private val factory : EntityIDFactory
+    private val factory: EntityIDFactory
     init {
         factory = ServiceLoader.load(EntityIDFactory::class.java, EntityIDFactory::class.java.classLoader).firstOrNull()
-                ?: object : EntityIDFactory {
-                    override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
-                        return EntityID(value, table)
-                    }
+            ?: object : EntityIDFactory {
+                override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
+                    return EntityID(value, table)
                 }
+            }
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T:Comparable<T>> createEntityID(value: T, table: IdTable<T>) = factory.createEntityID(value, table)
+    fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>) = factory.createEntityID(value, table)
 }
 
 /**
@@ -28,8 +28,8 @@ object EntityIDFunctionProvider {
  *
  * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
-    abstract val id : Column<EntityID<T>>
+abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
+    abstract val id: Column<EntityID<T>>
 }
 
 /**
@@ -66,7 +66,7 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  */
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
     override val id: Column<EntityID<UUID>> = uuid(columnName)
-            .autoGenerate()
-            .entityId()
+        .autoGenerate()
+        .entityId()
     override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }

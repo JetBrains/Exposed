@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class NonAutoIncEntities : DatabaseTestsBase() {
 
-    abstract class BaseNonAutoIncTable(name : String) : IdTable<Int>(name) {
+    abstract class BaseNonAutoIncTable(name: String) : IdTable<Int>(name) {
         override val id = integer("id").entityId()
         val b1 = bool("b1")
     }
@@ -39,7 +39,6 @@ class NonAutoIncEntities : DatabaseTestsBase() {
             }
         }
     }
-
 
     @Test
     fun testDefaultsWithOverrideNew() {

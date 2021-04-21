@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.tests.h2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
@@ -21,9 +20,9 @@ import kotlin.test.assertEquals
 
 class MultiDatabaseTest {
 
-    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    private var currentDB : Database? = null
+    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
+    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
+    private var currentDB: Database? = null
 
     @Before
     fun before() {
