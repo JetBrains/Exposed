@@ -10,12 +10,11 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(
-        private val db: Database,
-        @Volatile override var defaultReadOnly: Boolean,
-        @Volatile override var defaultRepetitionAttempts: Int,
-        private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
+    private val db: Database,
+    @Volatile override var defaultReadOnly: Boolean,
+    @Volatile override var defaultRepetitionAttempts: Int,
+    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
 ) : TransactionManager {
-
 
     @Volatile override var defaultIsolationLevel: Int = -1
         get() {
@@ -28,109 +27,114 @@ class ThreadLocalTransactionManager(
     val threadLocal = ThreadLocal<Transaction>()
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
-            (outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
-                    ThreadLocalTransaction(
-                            db = db,
-                            setupTxConnection = setupTxConnection,
-                            transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-                            readOnly = outerTransaction?.readOnly ?: readOnly,
-                            threadLocal = threadLocal,
-                            outerTransaction = outerTransaction
-                    )
-            )).apply {
-                bindTransactionToThread(this)
+        (
+            outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
+                ThreadLocalTransaction(
+                    db = db,
+                    setupTxConnection = setupTxConnection,
+                    transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                    readOnly = outerTransaction?.readOnly ?: readOnly,
+                    threadLocal = threadLocal,
+                    outerTransaction = outerTransaction
+                )
+            )
+            ).apply {
+            bindTransactionToThread(this)
+        }
+
+    override fun currentOrNull(): Transaction? = threadLocal.get()
+
+    override fun bindTransactionToThread(transaction: Transaction?) {
+        if (transaction != null)
+            threadLocal.set(transaction)
+        else
+            threadLocal.remove()
+    }
+
+    private class ThreadLocalTransaction(
+        override val db: Database,
+        private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
+        override val transactionIsolation: Int,
+        override val readOnly: Boolean,
+        val threadLocal: ThreadLocal<Transaction>,
+        override val outerTransaction: Transaction?
+    ) : TransactionInterface {
+
+        private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
+            outerTransaction?.connection ?: db.connector().apply {
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                    // The order of `setReadOnly` and `setAutoCommit` is important.
+                    // Some drivers start a transaction right after `setAutoCommit(false)`,
+                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                    isReadOnly = this@ThreadLocalTransaction.readOnly
+                    autoCommit = false
+                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                }
             }
+        }
 
-            override fun currentOrNull(): Transaction? = threadLocal.get()
+        override val connection: ExposedConnection<*>
+            get() = connectionLazy.value
 
-                    override fun bindTransactionToThread(transaction: Transaction?) {
-                if (transaction != null)
-                    threadLocal.set(transaction)
-                else
-                    threadLocal.remove()
+        private val useSavePoints = outerTransaction != null && db.useNestedTransactions
+        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
+            connection.setSavepoint(savepointName)
+        } else null
+
+        override fun commit() {
+            if (connectionLazy.isInitialized()) {
+                if (!useSavePoints) {
+                    connection.commit()
+                } else {
+                    // do nothing in nested. close() will commit everything and release savepoint.
+                }
             }
+        }
 
-                    private class ThreadLocalTransaction(
-                    override val db: Database,
-                    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
-                    override val transactionIsolation: Int,
-                    override val readOnly: Boolean,
-                    val threadLocal: ThreadLocal<Transaction>,
-                    override val outerTransaction: Transaction?
-            ) : TransactionInterface {
-
-                private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
-                    outerTransaction?.connection ?: db.connector().apply {
-                        setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
-                            // The order of `setReadOnly` and `setAutoCommit` is important.
-                            // Some drivers start a transaction right after `setAutoCommit(false)`,
-                            // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                            isReadOnly = this@ThreadLocalTransaction.readOnly
-                            autoCommit = false
-                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                        }
-                    }
+        override fun rollback() {
+            if (connectionLazy.isInitialized() && !connection.isClosed) {
+                if (useSavePoints && savepoint != null) {
+                    connection.rollback(savepoint!!)
+                    savepoint = connection.setSavepoint(savepointName)
+                } else {
+                    connection.rollback()
                 }
-                override val connection: ExposedConnection<*>
-                    get() = connectionLazy.value
-
-                private val useSavePoints = outerTransaction != null && db.useNestedTransactions
-                private var savepoint: ExposedSavepoint? = if (useSavePoints) {
-                    connection.setSavepoint(savepointName)
-                } else null
-
-                override fun commit() {
-                    if (connectionLazy.isInitialized()) {
-                        if (!useSavePoints) {
-                            connection.commit()
-                        } else {
-                            // do nothing in nested. close() will commit everything and release savepoint.
-                        }
-                    }
-                }
-
-                override fun rollback() {
-                    if (connectionLazy.isInitialized() && !connection.isClosed) {
-                        if (useSavePoints && savepoint != null) {
-                            connection.rollback(savepoint!!)
-                            savepoint = connection.setSavepoint(savepointName)
-                        } else {
-                            connection.rollback()
-                        }
-                    }
-                }
-
-                override fun close() {
-                    try {
-                        if (!useSavePoints) {
-                            if (connectionLazy.isInitialized()) connection.close()
-                        } else {
-                            savepoint?.let {
-                                connection.releaseSavepoint(it)
-                                savepoint = null
-                            }
-                        }
-                    } finally {
-                        threadLocal.set(outerTransaction)
-                    }
-                }
-
-                private val savepointName: String
-                    get() {
-                        var nestedLevel = 0
-                        var currenTransaction = outerTransaction
-                        while (currenTransaction?.outerTransaction != null) {
-                            nestedLevel++
-                            currenTransaction = currenTransaction.outerTransaction
-                        }
-                        return "Exposed_savepoint_$nestedLevel"
-                    }
             }
+        }
+
+        override fun close() {
+            try {
+                if (!useSavePoints) {
+                    if (connectionLazy.isInitialized()) connection.close()
+                } else {
+                    savepoint?.let {
+                        connection.releaseSavepoint(it)
+                        savepoint = null
+                    }
+                }
+            } finally {
+                threadLocal.set(outerTransaction)
+            }
+        }
+
+        private val savepointName: String
+            get() {
+                var nestedLevel = 0
+                var currenTransaction = outerTransaction
+                while (currenTransaction?.outerTransaction != null) {
+                    nestedLevel++
+                    currenTransaction = currenTransaction.outerTransaction
+                }
+                return "Exposed_savepoint_$nestedLevel"
+            }
+    }
 }
 
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
-        transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultReadOnly,
-                db.transactionManager.defaultRepetitionAttempts, db, statement)
+    transaction(
+        db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultReadOnly,
+        db.transactionManager.defaultRepetitionAttempts, db, statement
+    )
 
 fun <T> transaction(transactionIsolation: Int, readOnly: Boolean, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T = keepAndRestoreTransactionRefAfterRun(db) {
     val outer = TransactionManager.currentOrNull()
@@ -165,12 +169,12 @@ fun <T> transaction(transactionIsolation: Int, readOnly: Boolean, repetitionAtte
 }
 
 fun <T> inTopLevelTransaction(
-        transactionIsolation: Int,
-        readOnly: Boolean,
-        repetitionAttempts: Int,
-        db: Database? = null,
-        outerTransaction: Transaction? = null,
-        statement: Transaction.() -> T
+    transactionIsolation: Int,
+    readOnly: Boolean,
+    repetitionAttempts: Int,
+    db: Database? = null,
+    outerTransaction: Transaction? = null,
+    statement: Transaction.() -> T
 ): T {
 
     fun run(): T {

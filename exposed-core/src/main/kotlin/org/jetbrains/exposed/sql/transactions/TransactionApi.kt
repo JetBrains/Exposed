@@ -58,7 +58,7 @@ interface TransactionManager {
     var defaultRepetitionAttempts: Int
 
     fun newTransaction(
-        isolation: Int = defaultIsolationLevel, 
+        isolation: Int = defaultIsolationLevel,
         readOnly: Boolean = defaultReadOnly,
         outerTransaction: Transaction? = null
     ): Transaction
