@@ -123,24 +123,6 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(")")
     }
 
-    override fun insert(
-        ignore: Boolean,
-        table: Table,
-        columns: List<Column<*>>,
-        expr: String,
-        transaction: Transaction
-    ): String {
-        return table.autoIncColumn?.takeIf { it !in columns }?.let {
-            val newExpr = if (expr.isBlank()) {
-                "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
-            } else {
-                expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
-            }
-
-            super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
-        } ?: super.insert(ignore, table, columns, expr, transaction)
-    }
-
     override fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
@@ -251,7 +233,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP USER ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }

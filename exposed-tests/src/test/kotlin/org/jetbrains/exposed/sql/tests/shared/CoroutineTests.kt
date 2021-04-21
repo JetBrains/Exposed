@@ -10,18 +10,15 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.RepeatableTest
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
-import org.jetbrains.exposed.sql.tests.RepeatableTest
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Rule
 import org.junit.Test
 import java.lang.Exception
-import java.lang.IllegalStateException
 import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertNotNull
@@ -63,7 +60,6 @@ class CoroutineTests : DatabaseTestsBase() {
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(1, Testing.select { Testing.id.eq(1) }.single()[Testing.id].value)
-
         }
     }
 
@@ -72,7 +68,7 @@ class CoroutineTests : DatabaseTestsBase() {
         withTables(Testing) {
             val job = GlobalScope.async {
                 val launchResult = suspendedTransactionAsync(Dispatchers.IO, db = db) {
-                    Testing.insert{}
+                    Testing.insert {}
 
                     suspendedTransaction {
                         assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value)
@@ -101,7 +97,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
     @Test @RepeatableTest(10)
     fun nestedSuspendTxTest() {
-        suspend fun insertTesting(db : Database) = newSuspendedTransaction(db = db) {
+        suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
             Testing.insert {}
         }
         withTables(listOf(TestDB.SQLITE), Testing) {
@@ -139,7 +135,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
                         repeat(10) {
-                            Testing.insert {  }
+                            Testing.insert { }
                         }
                         commit()
                         (1..10).map {
@@ -171,7 +167,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
                 val results = (1..5).map { indx ->
                     suspendedTransactionAsync(Dispatchers.IO, db = db) {
-                        Testing.insert {  }
+                        Testing.insert { }
                         indx
                     }
                 }.awaitAll()
@@ -188,7 +184,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
     @Test @RepeatableTest(10)
     fun suspendedAndNormalTransactions() {
-        var db : Database? = null
+        var db: Database? = null
         withDb {
             db = this.db
             SchemaUtils.create(Testing)

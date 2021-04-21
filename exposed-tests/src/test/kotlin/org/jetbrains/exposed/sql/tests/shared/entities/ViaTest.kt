@@ -13,41 +13,40 @@ import org.junit.Test
 import java.util.*
 
 object ViaTestData {
-    object NumbersTable: UUIDTable() {
+    object NumbersTable : UUIDTable() {
         val number = integer("number")
     }
 
-    object StringsTable: IdTable<Long>("") {
+    object StringsTable : IdTable<Long>("") {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
         val text = varchar("text", 10)
 
         override val primaryKey = PrimaryKey(id)
     }
 
-    object ConnectionTable: Table() {
+    object ConnectionTable : Table() {
         val numId = reference("numId", NumbersTable, ReferenceOption.CASCADE)
         val stringId = reference("stringId", StringsTable, ReferenceOption.CASCADE)
 
         init {
-           index(true, numId, stringId)
+            index(true, numId, stringId)
         }
     }
 
     val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable)
 }
 
-class VNumber(id: EntityID<UUID>): UUIDEntity(id) {
+class VNumber(id: EntityID<UUID>) : UUIDEntity(id) {
     var number by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
 
     companion object : UUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
 }
 
-class VString(id: EntityID<Long>): Entity<Long>(id) {
+class VString(id: EntityID<Long>) : Entity<Long>(id) {
     var text by ViaTestData.StringsTable.text
     companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
-
 
 class ViaTests : DatabaseTestsBase() {
     @Test fun testConnection01() {
@@ -57,8 +56,8 @@ class ViaTests : DatabaseTestsBase() {
             n.connectedStrings = SizedCollection(listOf(s))
 
             val row = ViaTestData.ConnectionTable.selectAll().single()
-            assertEquals (n.id, row[ViaTestData.ConnectionTable.numId])
-            assertEquals (s.id, row[ViaTestData.ConnectionTable.stringId])
+            assertEquals(n.id, row[ViaTestData.ConnectionTable.numId])
+            assertEquals(s.id, row[ViaTestData.ConnectionTable.stringId])
         }
     }
 
@@ -73,8 +72,8 @@ class ViaTests : DatabaseTestsBase() {
 
             val row = ViaTestData.ConnectionTable.selectAll().toList()
             assertEquals(2, row.count())
-            assertEquals (n1.id, row[0][ViaTestData.ConnectionTable.numId])
-            assertEquals (n1.id, row[1][ViaTestData.ConnectionTable.numId])
+            assertEquals(n1.id, row[0][ViaTestData.ConnectionTable.numId])
+            assertEquals(n1.id, row[1][ViaTestData.ConnectionTable.numId])
             assertEqualCollections(listOf(s1.id, s2.id), row.map { it[ViaTestData.ConnectionTable.stringId] })
         }
     }
@@ -101,12 +100,11 @@ class ViaTests : DatabaseTestsBase() {
             run {
                 val row = ViaTestData.ConnectionTable.selectAll().toList()
                 assertEquals(2, row.count())
-                assertEquals (n2.id, row[0][ViaTestData.ConnectionTable.numId])
-                assertEquals (n2.id, row[1][ViaTestData.ConnectionTable.numId])
+                assertEquals(n2.id, row[0][ViaTestData.ConnectionTable.numId])
+                assertEquals(n2.id, row[1][ViaTestData.ConnectionTable.numId])
                 assertEqualCollections(n1.connectedStrings, emptyList())
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
-
         }
     }
 
@@ -171,7 +169,6 @@ class ViaTests : DatabaseTestsBase() {
             assertEquals(root, child1.parents.singleOrNull())
             assertEquals(root, child2.parents.singleOrNull())
         }
-
     }
 
     @Test fun testRefresh() {

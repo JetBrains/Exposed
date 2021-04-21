@@ -78,6 +78,9 @@ abstract class DataTypeProvider {
     /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
 
+    /** Time type for storing time without a time zone. */
+    open fun timeType(): String = "TIME"
+
     // Boolean type
 
     /** Data type for storing boolean values. */
@@ -95,6 +98,7 @@ abstract class DataTypeProvider {
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
+        currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
     }
 }
@@ -354,9 +358,19 @@ abstract class FunctionProvider {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
         }
 
-        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
-            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
-        } else "" to DEFAULT_VALUE_EXPRESSION
+        val autoIncColumn = table.autoIncColumn
+
+        val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
+        val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
+
+        val (columnsToInsert, valuesExpr) = when {
+            isInsertFromSelect -> columns to expr
+            nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
+            nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
+            columns.isNotEmpty() -> columns to expr
+            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
+        }
+        val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
@@ -408,7 +422,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
-    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
+    ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
@@ -586,7 +600,7 @@ interface DatabaseDialect {
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }
@@ -671,7 +685,6 @@ abstract class VendorDialect(
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
                 constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
             }
-
         }
         return constraints
     }
@@ -733,7 +746,7 @@ abstract class VendorDialect(
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()
 
-internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T) : T {
+internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
     return try {
         explicitDialect.set(dialect)
         body()

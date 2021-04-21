@@ -28,7 +28,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.30.1'
+  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.30.2'
 }
 ```
 

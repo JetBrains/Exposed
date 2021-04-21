@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 interface TransactionInterface {
 
-    val db : Database
+    val db: Database
 
     val connection: ExposedConnection<*>
 
@@ -57,9 +57,11 @@ interface TransactionManager {
 
     var defaultRepetitionAttempts: Int
 
-    fun newTransaction(isolation: Int = defaultIsolationLevel,
-                       readOnly: Boolean = defaultReadOnly,
-                       outerTransaction: Transaction? = null) : Transaction
+    fun newTransaction(
+        isolation: Int = defaultIsolationLevel, 
+        readOnly: Boolean = defaultReadOnly,
+        outerTransaction: Transaction? = null
+    ): Transaction
 
     fun currentOrNull(): Transaction?
 
@@ -81,7 +83,7 @@ interface TransactionManager {
                 currentThreadManager.remove()
             }
             registeredDatabases[database] = manager
-            databases.push(database)             
+            databases.push(database)
         }
 
         fun closeAndUnregister(database: Database) {
@@ -106,8 +108,7 @@ interface TransactionManager {
         val manager: TransactionManager
             get() = currentThreadManager.get()
 
-
-        fun resetCurrent(manager: TransactionManager?)  {
+        fun resetCurrent(manager: TransactionManager?) {
             manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
         }
 
@@ -121,18 +122,18 @@ interface TransactionManager {
     }
 }
 
-internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit){
+internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {
     try {
         rollback()
-    } catch (e: Exception){
+    } catch (e: Exception) {
         log(e)
     }
 }
 
-internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit){
+internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit) {
     try {
         close()
-    } catch (e: Exception){
+    } catch (e: Exception) {
         log(e)
     }
 }

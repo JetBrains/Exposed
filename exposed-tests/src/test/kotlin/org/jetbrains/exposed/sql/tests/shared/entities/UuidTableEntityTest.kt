@@ -38,7 +38,6 @@ object UUIDTables {
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
-
 }
 class UUIDTableEntityTest : DatabaseTestsBase() {
 

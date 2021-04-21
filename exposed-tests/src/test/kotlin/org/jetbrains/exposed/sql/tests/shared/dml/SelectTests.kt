@@ -74,7 +74,6 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-
     @Test
     fun testInList01() {
         withCitiesAndUsers { cities, users, userData ->
@@ -122,7 +121,7 @@ class SelectTests : DatabaseTestsBase() {
             // only 2 cities with id 1 and 2 respectively
             assertEquals(1, r[0])
             assertEquals(3, r[1])
-            //there is no city with id=2
+            // there is no city with id=2
             assertNull(r.find { it == cityId })
         }
     }

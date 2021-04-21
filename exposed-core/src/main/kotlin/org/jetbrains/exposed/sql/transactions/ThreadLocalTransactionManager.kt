@@ -9,10 +9,13 @@ import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
-class ThreadLocalTransactionManager(private val db: Database,
-                                    @Volatile override var defaultReadOnly: Boolean,
-                                    @Volatile override var defaultRepetitionAttempts: Int,
-                                    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null) : TransactionManager {
+class ThreadLocalTransactionManager(
+    private val db: Database,
+    @Volatile override var defaultReadOnly: Boolean,
+    @Volatile override var defaultRepetitionAttempts: Int
+    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
+) : TransactionManager {
+
 
     @Volatile override var defaultIsolationLevel: Int = -1
         get() {
@@ -33,7 +36,6 @@ class ThreadLocalTransactionManager(private val db: Database,
                 readOnly = outerTransaction?.readOnly ?: readOnly,
                 threadLocal = threadLocal,
                 outerTransaction = outerTransaction
-            )
         )).apply {
             bindTransactionToThread(this)
         }
@@ -76,7 +78,6 @@ class ThreadLocalTransactionManager(private val db: Database,
             connection.setSavepoint(savepointName)
         } else null
 
-
         override fun commit() {
             if (connectionLazy.isInitialized()) {
                 if (!useSavePoints) {
@@ -117,7 +118,7 @@ class ThreadLocalTransactionManager(private val db: Database,
             get() {
                 var nestedLevel = 0
                 var currenTransaction = outerTransaction
-                while(currenTransaction?.outerTransaction != null) {
+                while (currenTransaction?.outerTransaction != null) {
                     nestedLevel++
                     currenTransaction = currenTransaction.outerTransaction
                 }
@@ -139,7 +140,7 @@ fun <T> transaction(transactionIsolation: Int, readOnly: Boolean, repetitionAtte
         val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
         try {
             transaction.statement().also {
-                if(outer.db.useNestedTransactions)
+                if (outer.db.useNestedTransactions)
                     transaction.commit()
             }
         } finally {
@@ -152,7 +153,7 @@ fun <T> transaction(transactionIsolation: Int, readOnly: Boolean, repetitionAtte
             try {
                 TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    if(db.useNestedTransactions)
+                    if (db.useNestedTransactions)
                         transaction.commit()
                 }
             } finally {
@@ -163,15 +164,15 @@ fun <T> transaction(transactionIsolation: Int, readOnly: Boolean, repetitionAtte
 }
 
 fun <T> inTopLevelTransaction(
-        transactionIsolation: Int,
-        readOnly: Boolean,
-        repetitionAttempts: Int,
-        db: Database? = null,
-        outerTransaction: Transaction? = null,
-        statement: Transaction.() -> T
+    transactionIsolation: Int,
+    readOnly: Boolean,
+    repetitionAttempts: Int,
+    db: Database? = null,
+    outerTransaction: Transaction? = null,
+    statement: Transaction.() -> T
 ): T {
 
-    fun run():T {
+    fun run(): T {
         var repetitions = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }

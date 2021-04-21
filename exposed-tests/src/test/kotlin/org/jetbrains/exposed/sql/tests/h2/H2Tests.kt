@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
-import kotlin.test.assertFailsWith
 
 class H2Tests : DatabaseTestsBase() {
 
@@ -21,7 +20,6 @@ class H2Tests : DatabaseTestsBase() {
             }
 
             assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
-
         }
     }
 
@@ -37,7 +35,6 @@ class H2Tests : DatabaseTestsBase() {
             }
 
             assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
-
         }
     }
 

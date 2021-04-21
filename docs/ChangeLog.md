@@ -1,3 +1,11 @@
+# 0.30.2
+Bug Fixes:
+* Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
+* Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
+* SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
+* Early versions of MySQL Connector don't work with Exposed ([1203](https://github.com/JetBrains/Exposed/issues/1203)). PR by [MeowRay](https://github.com/MeowRay)
+* `Query.prepareSQL(QueryBuilder)` is made public to allow preparing raw SQLs ([1206](https://github.com/JetBrains/Exposed/issues/1206) 
+
 # 0.30.1
 Infrastructure:
 * Artifact publishing moved from jcenter/Bintray to Maven Central

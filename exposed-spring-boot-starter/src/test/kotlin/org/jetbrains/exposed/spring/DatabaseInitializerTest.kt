@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.spring
 
-
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.spring.tables.TestTable
 import org.jetbrains.exposed.spring.tables.ignore.IgnoreTable
@@ -14,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 
-@SpringBootTest(classes = [Application::class],
-        properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration"])
+@SpringBootTest(
+    classes = [Application::class],
+    properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration"]
+)
 open class DatabaseInitializerTest {
 
     @Autowired

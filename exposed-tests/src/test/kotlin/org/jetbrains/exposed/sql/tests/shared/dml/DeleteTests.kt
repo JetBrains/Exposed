@@ -22,7 +22,6 @@ class DeleteTests : DatabaseTestsBase() {
         exclude
     }
 
-
     @Test
     fun testDelete01() {
         withCitiesAndUsers { cities, users, userData ->

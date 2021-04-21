@@ -25,7 +25,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Repeat(5)
     open fun testConnection() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
-        if(pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
+        if (pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
 
         SchemaUtils.create(t1)
         t1.insert {

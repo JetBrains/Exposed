@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -21,7 +20,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     private var forUpdate: Boolean? = null
 
-    //private set
+    // private set
     var where: Op<Boolean>? = where
         private set
 
@@ -162,9 +161,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             try {
                 var expInx = 0
                 adjustSlice {
-                    slice(originalSet.fields.map {
-                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
-                    })
+                    slice(
+                        originalSet.fields.map {
+                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                        }
+                    )
                 }
 
                 alias("subquery").selectAll().count()

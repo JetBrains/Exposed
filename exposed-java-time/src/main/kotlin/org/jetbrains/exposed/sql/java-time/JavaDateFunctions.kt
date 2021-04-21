@@ -4,14 +4,15 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.*
 import java.time.temporal.Temporal
 
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
+}
+
+class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLocalTimeColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
 }
 
 class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
@@ -77,8 +78,8 @@ fun <T : Temporal?> Expression<T>.hour(): Hour<T> = Hour(this)
 fun <T : Temporal?> Expression<T>.minute(): Minute<T> = Minute(this)
 fun <T : Temporal?> Expression<T>.second(): Second<T> = Second(this)
 
-
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, JavaLocalDateColumnType.INSTANCE)
+fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, JavaLocalTimeColumnType.INSTANCE)
 fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> =
     QueryParameter(value, JavaLocalDateTimeColumnType.INSTANCE)
 
@@ -86,14 +87,17 @@ fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, 
 fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value, JavaDurationColumnType.INSTANCE)
 
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(JavaLocalDateColumnType.INSTANCE, value)
-fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> =
-    LiteralOp(JavaLocalDateTimeColumnType.INSTANCE, value)
+fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(JavaLocalTimeColumnType.INSTANCE, value)
+fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(JavaLocalDateTimeColumnType.INSTANCE, value)
 
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(JavaInstantColumnType.INSTANCE, value)
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(JavaDurationColumnType.INSTANCE, value)
 
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDate?> =
     CustomFunction(functionName, JavaLocalDateColumnType.INSTANCE, *params)
+
+fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
+    CustomFunction(functionName, JavaLocalTimeColumnType.INSTANCE, *params)
 
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDateTime?> =
     CustomFunction(functionName, JavaLocalDateTimeColumnType.INSTANCE, *params)

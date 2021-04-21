@@ -72,13 +72,13 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
     protected inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
         private var hasNext: Boolean? = null
 
-        private val fields = set.realFields
+        private val fieldsIndex = set.realFields.toSet().mapIndexed { index, expression -> expression to index }.toMap()
 
         override operator fun next(): ResultRow {
             if (hasNext == null) hasNext()
             if (hasNext == false) throw NoSuchElementException()
             hasNext = null
-            return ResultRow.create(rs, fields)
+            return ResultRow.create(rs, fieldsIndex)
         }
 
         override fun hasNext(): Boolean {
