@@ -16,6 +16,8 @@ interface TransactionInterface {
 
     val transactionIsolation: Int
 
+    val readOnly: Boolean
+
     val outerTransaction: Transaction?
 
     fun commit()
@@ -32,6 +34,8 @@ const val DEFAULT_REPETITION_ATTEMPTS = 3
 private object NotInitializedManager : TransactionManager {
     override var defaultIsolationLevel: Int = -1
 
+    override var defaultReadOnly: Boolean = false
+
     override var defaultRepetitionAttempts: Int = -1
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = error("Please call Database.connect() before using this code")
@@ -46,6 +50,8 @@ private object NotInitializedManager : TransactionManager {
 interface TransactionManager {
 
     var defaultIsolationLevel: Int
+
+    var defaultReadOnly: Boolean
 
     var defaultRepetitionAttempts: Int
 
