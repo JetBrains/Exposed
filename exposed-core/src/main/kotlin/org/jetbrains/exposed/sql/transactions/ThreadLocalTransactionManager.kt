@@ -10,8 +10,9 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(private val db: Database,
-                                    @Volatile override val readOnly: Boolean,
-                                    @Volatile override var defaultRepetitionAttempts: Int) : TransactionManager {
+                                    @Volatile override var defaultReadOnly: Boolean,
+                                    @Volatile override var defaultRepetitionAttempts: Int,
+                                    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null) : TransactionManager {
 
     @Volatile override var defaultIsolationLevel: Int = -1
         get() {
@@ -27,6 +28,7 @@ class ThreadLocalTransactionManager(private val db: Database,
         (outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
             ThreadLocalTransaction(
                 db = db,
+                setupTxConnection = setupTxConnection,
                 transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                 readOnly = outerTransaction?.readOnly ?: readOnly,
                 threadLocal = threadLocal,
@@ -47,6 +49,7 @@ class ThreadLocalTransactionManager(private val db: Database,
 
     private class ThreadLocalTransaction(
         override val db: Database,
+        private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
         val threadLocal: ThreadLocal<Transaction>,
@@ -55,12 +58,14 @@ class ThreadLocalTransactionManager(private val db: Database,
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                // The order of `setReadOnly` and `setAutoCommit` is important.
-                // Some drivers start a transaction right after `setAutoCommit(false)`,
-                // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                isReadOnly = this@ThreadLocalTransaction.readOnly
-                autoCommit = false
-                transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                    // The order of `setReadOnly` and `setAutoCommit` is important.
+                    // Some drivers start a transaction right after `setAutoCommit(false)`,
+                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                    isReadOnly = this@ThreadLocalTransaction.readOnly
+                    autoCommit = false
+                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                }
             }
         }
         override val connection: ExposedConnection<*>

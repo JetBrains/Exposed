@@ -106,7 +106,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             explicitVendor: String?,
             getNewConnection: () -> Connection,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return Database(explicitVendor) {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
@@ -116,32 +116,32 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         }
 
         fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
         fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         fun connectPool(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
         fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager )
         }
 
         fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_READ_ONLY, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             Class.forName(driver).newInstance()
 
