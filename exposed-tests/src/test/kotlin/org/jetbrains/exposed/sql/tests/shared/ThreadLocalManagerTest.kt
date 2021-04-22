@@ -55,7 +55,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, false, 42, db) {
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -117,7 +117,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, false, 5, db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -150,7 +150,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, false, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -173,7 +173,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, false, 5, db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -264,7 +264,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
     @Test
     fun testRollbackWithoutSavepoints() {
         withTables(RollbackTable) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, false, 1) {
                 RollbackTable.insert { it[value] = "before-dummy" }
                 transaction {
                     assertEquals(1L, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
@@ -287,7 +287,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
         withTables(RollbackTable) {
             try {
                 db.useNestedTransactions = true
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, false, 1) {
                     RollbackTable.insert { it[value] = "before-dummy" }
                     transaction {
                         assertEquals(1L, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
@@ -314,7 +314,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun `test what transaction isolation was applied`() {
         withDb {
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, false, 1) {
                 assertEquals(Connection.TRANSACTION_SERIALIZABLE, this.connection.transactionIsolation)
             }
         }

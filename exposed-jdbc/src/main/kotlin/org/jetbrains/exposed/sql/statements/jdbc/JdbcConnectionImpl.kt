@@ -40,6 +40,10 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         get() = connection.autoCommit
         set(value) { connection.autoCommit = value }
 
+    override var isReadOnly: Boolean
+        get() = connection.isReadOnly
+        set(value) { connection.setReadOnly(value) }
+
     override var transactionIsolation: Int
         get() = connection.transactionIsolation
         set(value) { connection.transactionIsolation = value }

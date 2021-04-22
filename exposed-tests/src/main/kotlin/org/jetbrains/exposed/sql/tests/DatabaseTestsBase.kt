@@ -45,6 +45,7 @@ enum class TestDB(
         beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
+
     POSTGRESQL(
         { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
         beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
@@ -62,7 +63,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
-            transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+            transaction(Connection.TRANSACTION_READ_COMMITTED, false, 1, tmp) {
                 try {
                     exec("DROP USER ExposedTest CASCADE")
                 } catch (e: Exception) { // ignore
@@ -154,7 +155,7 @@ abstract class DatabaseTestsBase {
 
         val database = dbSettings.db!!
 
-        transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+        transaction(database.transactionManager.defaultIsolationLevel, false, 1, db = database) {
             statement(dbSettings)
         }
     }
