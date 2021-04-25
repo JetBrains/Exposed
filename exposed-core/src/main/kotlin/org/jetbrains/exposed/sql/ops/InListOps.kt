@@ -72,7 +72,7 @@ abstract class InListOrNotInListBaseOp<V> (
 }
 
 class SingleValueInListOp<T>(
-    expr : ExpressionWithColumnType<T>,
+    expr: ExpressionWithColumnType<T>,
     list: Iterable<T>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<T>(expr, list, isInList) {
@@ -82,7 +82,7 @@ class SingleValueInListOp<T>(
 }
 
 class PairInListOp<T1, T2>(
-    expr : Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>,
+    expr: Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>,
     list: Iterable<Pair<T1, T2>>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<Pair<T1, T2>>(expr, list, isInList) {
@@ -92,7 +92,7 @@ class PairInListOp<T1, T2>(
 }
 
 class TripleInListOp<T1, T2, T3>(
-    expr : Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>,
+    expr: Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>,
     list: Iterable<Triple<T1, T2, T3>>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<Triple<T1, T2, T3>>(expr, list, isInList) {
