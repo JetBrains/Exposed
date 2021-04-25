@@ -395,6 +395,11 @@ class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQuer
 /**
  * Represents an SQL operator that checks if [expr] is equals to any element from [list].
  */
+@Deprecated(
+    message = "Replace with [SingleValueInListOp]",
+    level = DeprecationLevel.ERROR,
+    replaceWith = ReplaceWith("org.jetbrains.exposed.sql.ops.SingleValueInListOp")
+)
 class InListOrNotInListOp<T>(
     /** Returns the expression compared to each element of the list. */
     val expr: ExpressionWithColumnType<T>,

@@ -3,6 +3,10 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.ops.InListOrNotInListBaseOp
+import org.jetbrains.exposed.sql.ops.PairInListOp
+import org.jetbrains.exposed.sql.ops.SingleValueInListOp
+import org.jetbrains.exposed.sql.ops.TripleInListOp
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -338,23 +342,51 @@ interface ISqlExpressionBuilder {
     // Array Comparisons
 
     /** Checks if this expression is equals to any element from [list]. */
-    infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListOp<T> = InListOrNotInListOp(this, list, isInList = true)
+    infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
+
+    /**
+     * Checks if both expressions are equal to elements from [list].
+     * Doesn't supported by SQLite
+     **/
+    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.inList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>>
+        = PairInListOp(this, list, isInList = true)
+
+    /**
+     * Checks if expressions from triple are equal to elements from [list].
+     * Doesn't supported by SQLite
+     **/
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>>
+            = TripleInListOp(this, list, isInList = true)
 
     /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return inList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
 
     /** Checks if this expression is not equals to any element from [list]. */
-    infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListOp<T> = InListOrNotInListOp(this, list, isInList = false)
+    infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = false)
+
+    /**
+     * Checks if both expressions are not equal to elements from [list].
+     * Doesn't supported by SQLite
+     **/
+    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>>
+            = PairInListOp(this, list, isInList = false)
+
+    /**
+     * Checks if expressions from triple are not equal to elements from [list].
+     * Doesn't supported by SQLite
+     **/
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>>
+            = TripleInListOp(this, list, isInList = false)
 
     /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): InListOrNotInListOp<EntityID<T>> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return notInList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
     }
