@@ -346,14 +346,14 @@ interface ISqlExpressionBuilder {
 
     /**
      * Checks if both expressions are equal to elements from [list].
-     * Doesn't supported by SQLite
+     * This syntax is unsupported by SQLite and SQL Server
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.inList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = true)
 
     /**
      * Checks if expressions from triple are equal to elements from [list].
-     * Doesn't supported by SQLite
+     * This syntax is unsupported by SQLite and SQL Server
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = true)
@@ -371,14 +371,14 @@ interface ISqlExpressionBuilder {
 
     /**
      * Checks if both expressions are not equal to elements from [list].
-     * Doesn't supported by SQLite
+     * This syntax is unsupported by SQLite and SQL Server
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = false)
 
     /**
      * Checks if expressions from triple are not equal to elements from [list].
-     * Doesn't supported by SQLite
+     * This syntax is unsupported by SQLite and SQL Server
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = false)
