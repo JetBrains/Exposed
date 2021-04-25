@@ -1,5 +1,20 @@
-# 0.30.2
+# 0.31.1
+Infrastructure:
+* Linting and formatting with [kotliner](https://github.com/jeremymailen/kotlinter-gradle) gradle plugin added by [jnfeinstein](https://github.com/jnfeinstein)
+
+Features:
+* TIME data type support in `exposed-java-time` module ([224](https://github.com/JetBrains/Exposed/issues/224)). Improvement provided by [vorotynsky](https://github.com/vorotynsky) and [Jhyub](https://github.com/Jhyub)
+* inList with Pairs and Triples support ([643](https://github.com/JetBrains/Exposed/issues/643))
+
 Bug Fixes:
+* Proper support for Sequences as default value or autoincrement ([492](https://github.com/JetBrains/Exposed/issues/492), [1164](https://github.com/JetBrains/Exposed/issues/1164), [1209](https://github.com/JetBrains/Exposed/issues/1209))
+* [SQL Server] Proper support for 'DEFAULT' keyword ([1207](https://github.com/JetBrains/Exposed/issues/1207)). PR by [ahayanm001](https://github.com/ahayanm001)
+
+Performance:
+* Lower footprint on creating ResultRow from ResultSet. Fix was inspired by [maio](https://github.com/maio)
+
+# 0.30.2
+Bug Fixes:                                                                         
 * Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
 * Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
 * SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
