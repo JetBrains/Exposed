@@ -30,7 +30,7 @@ class FunctionsTests : DatabaseTestsBase() {
                 Sum(cities.id + userData.value, IntegerColumnType())
             }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
-                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+                .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
             assertEquals(22, r[0][sum])
@@ -46,7 +46,7 @@ class FunctionsTests : DatabaseTestsBase() {
             val mod1 = Expression.build { sum % 100 }
             val mod2 = Expression.build { sum mod 100 }
             val r = (users innerJoin userData innerJoin cities).slice(users.id, sum, mod1, mod1)
-                    .selectAll().groupBy(users.id).orderBy(users.id).toList()
+                .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
             assertEquals(202, r[0][sum])
@@ -64,7 +64,7 @@ class FunctionsTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = users.name.substring(1, 2)
             val r = (users).slice(users.id, substring)
-                    .selectAll().orderBy(users.id).toList()
+                .selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals("Al", r[0][substring])
             assertEquals("An", r[1][substring])
@@ -76,7 +76,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testLengthWithCount01() {
-        class LengthFunction<T: ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
+        class LengthFunction<T : ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 if (currentDialectTest is SQLServerDialect) append("LEN(", exp, ')')
                 else append("LENGTH(", exp, ')')
@@ -84,14 +84,13 @@ class FunctionsTests : DatabaseTestsBase() {
         }
         withCitiesAndUsers { cities, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()
-            val expectedValue = cities.selectAll().sumBy{ it[cities.name].length }
+            val expectedValue = cities.selectAll().sumBy { it[cities.name].length }
 
             val results = cities.slice(sumOfLength).selectAll().toList()
             assertEquals(1, results.size)
             assertEquals(expectedValue, results.single()[sumOfLength])
         }
     }
-
 
     @Test
     fun testSelectCase01() {
@@ -165,12 +164,24 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test fun testConcat02() {
         withCitiesAndUsers { _, users, _ ->
             val concatField = concat(users.id, stringLiteral(" - "), users.name)
-            val result = users.slice(concatField).select{ users.id eq "andrey" }.single()
+            val result = users.slice(concatField).select { users.id eq "andrey" }.single()
             assertEquals("andrey - Andrey", result[concatField])
 
             val concatField2 = concat("!", listOf(users.id, users.name))
-            val result2 = users.slice(concatField2).select{ users.id eq "andrey" }.single()
+            val result2 = users.slice(concatField2).select { users.id eq "andrey" }.single()
             assertEquals("andrey!Andrey", result2[concatField2])
+        }
+    }
+
+    @Test fun testConcatWithNumbers() {
+        withCitiesAndUsers { _, _, data ->
+            val concatField = concat(data.user_id, stringLiteral(" - "), data.comment, stringLiteral(" - "), data.value)
+            val result = data.slice(concatField).select { data.user_id eq "sergey" }.single()
+            assertEquals("sergey - Comment for Sergey - 30", result[concatField])
+
+            val concatField2 = concat("!", listOf(data.user_id, data.comment, data.value))
+            val result2 = data.slice(concatField2).select { data.user_id eq "sergey" }.single()
+            assertEquals("sergey!Comment for Sergey!30", result2[concatField2])
         }
     }
 
@@ -220,14 +231,16 @@ class FunctionsTests : DatabaseTestsBase() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
 
-            val secondOp = Op.build { DMLTestsData.Cities.name eq "bar" }
-            assertEquals("$initialOp AND $secondOp", (initialOp and secondOp).toString())
+            val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
+            assertEquals("($initialOp) AND ($secondOp)", (initialOp and secondOp).toString())
 
-            val thirdOp = Op.build { DMLTestsData.Cities.name eq "baz" }
-            assertEquals("$initialOp AND $thirdOp", (initialOp and thirdOp).toString())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("($initialOp) AND $thirdOp", (initialOp and thirdOp).toString())
 
-            assertEquals("$initialOp AND $secondOp AND $thirdOp",
-                    (initialOp and secondOp and thirdOp).toString())
+            assertEquals(
+                "($initialOp) AND ($secondOp) AND $thirdOp",
+                (initialOp and secondOp and thirdOp).toString()
+            )
         }
     }
 
@@ -236,14 +249,16 @@ class FunctionsTests : DatabaseTestsBase() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
 
-            val secondOp = Op.build { DMLTestsData.Cities.name eq "bar" }
-            assertEquals("$initialOp OR $secondOp", (initialOp or secondOp).toString())
+            val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
+            assertEquals("($initialOp) OR ($secondOp)", (initialOp or secondOp).toString())
 
-            val thirdOp = Op.build { DMLTestsData.Cities.name eq "baz" }
-            assertEquals("$initialOp OR $thirdOp", (initialOp or thirdOp).toString())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("($initialOp) OR $thirdOp", (initialOp or thirdOp).toString())
 
-            assertEquals("$initialOp OR $secondOp OR $thirdOp",
-                    (initialOp or secondOp or thirdOp).toString())
+            assertEquals(
+                "($initialOp) OR ($secondOp) OR $thirdOp",
+                (initialOp or secondOp or thirdOp).toString()
+            )
         }
     }
 
@@ -251,14 +266,18 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testAndOrCombinations() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
-            assertEquals("($initialOp OR $initialOp) AND $initialOp", (initialOp or initialOp and initialOp).toString())
-            assertEquals("($initialOp AND $initialOp) OR $initialOp", (initialOp and initialOp or initialOp).toString())
-            assertEquals("$initialOp AND ($initialOp OR $initialOp)", (initialOp and (initialOp or initialOp)).toString())
-            assertEquals("($initialOp OR $initialOp) AND ($initialOp OR $initialOp)", ((initialOp or initialOp) and (initialOp or initialOp)).toString())
-            assertEquals("(($initialOp OR $initialOp) AND $initialOp) OR $initialOp", (initialOp or initialOp and initialOp or initialOp).toString())
-            assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or initialOp or initialOp or initialOp).toString())
-            assertEquals("$initialOp OR $initialOp OR $initialOp OR $initialOp", (initialOp or (initialOp or initialOp) or initialOp).toString())
-            assertEquals("$initialOp OR ($initialOp AND $initialOp) OR $initialOp", (initialOp or (initialOp and initialOp) or initialOp).toString())
+            val secondOp = exists(DMLTestsData.Cities.selectAll())
+            assertEquals("(($initialOp) OR ($initialOp)) AND ($initialOp)", (initialOp or initialOp and initialOp).toString())
+            assertEquals("(($initialOp) OR ($initialOp)) AND $secondOp", (initialOp or initialOp and secondOp).toString())
+            assertEquals("(($initialOp) AND ($initialOp)) OR ($initialOp)", (initialOp and initialOp or initialOp).toString())
+            assertEquals("(($initialOp) AND $secondOp) OR ($initialOp)", (initialOp and secondOp or initialOp).toString())
+            assertEquals("($initialOp) AND (($initialOp) OR ($initialOp))", (initialOp and (initialOp or initialOp)).toString())
+            assertEquals("(($initialOp) OR ($initialOp)) AND (($initialOp) OR ($initialOp))", ((initialOp or initialOp) and (initialOp or initialOp)).toString())
+            assertEquals("((($initialOp) OR ($initialOp)) AND ($initialOp)) OR ($initialOp)", (initialOp or initialOp and initialOp or initialOp).toString())
+            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or initialOp or initialOp or initialOp).toString())
+            assertEquals("$secondOp OR $secondOp OR $secondOp OR $secondOp", (secondOp or secondOp or secondOp or secondOp).toString())
+            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or (initialOp or initialOp) or initialOp).toString())
+            assertEquals("($initialOp) OR ($secondOp AND $secondOp) OR ($initialOp)", (initialOp or (secondOp and secondOp) or initialOp).toString())
         }
     }
 
@@ -266,14 +285,29 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testCustomOperator() {
         // implement a + operator using CustomOperator
         infix fun Expression<*>.plus(operand: Int) =
-                CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
+            CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
 
         withCitiesAndUsers { cities, users, userData ->
             userData
-                    .select { (userData.value plus 15).eq(35) }
-                    .forEach {
-                        assertEquals(it[userData.value], 20)
-                    }
+                .select { (userData.value plus 15).eq(35) }
+                .forEach {
+                    assertEquals(it[userData.value], 20)
+                }
+        }
+    }
+
+    @Test
+    fun testCoalesceFunction() {
+        withCitiesAndUsers { cities, users, userData ->
+            val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
+
+            users.slice(users.cityId, coalesceExp1).selectAll().forEach {
+                val cityId = it[users.cityId]
+                if (cityId != null)
+                    assertEquals(cityId, it[coalesceExp1])
+                else
+                    assertEquals(1000, it[coalesceExp1])
+            }
         }
     }
 }

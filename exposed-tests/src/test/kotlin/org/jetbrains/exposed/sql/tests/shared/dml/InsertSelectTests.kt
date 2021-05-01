@@ -11,8 +11,10 @@ class InsertSelectTests : DatabaseTestsBase() {
     @Test
     fun testInsertSelect01() {
         withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
+            val nextVal = cities.id.autoIncColumnType?.nextValExpression
             val substring = users.name.substring(1, 2)
-            cities.insert(users.slice(substring).selectAll().orderBy(users.id).limit(2))
+            val slice = listOfNotNull(nextVal, substring)
+            cities.insert(users.slice(slice).selectAll().orderBy(users.id).limit(2))
 
             val r = cities.slice(cities.name).selectAll().orderBy(cities.id, SortOrder.DESC).limit(2).toList()
             assertEquals(2, r.size)
@@ -53,4 +55,12 @@ class InsertSelectTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun `insert-select with same columns in a query`() {
+        withCitiesAndUsers { cities, users, userData ->
+            val fooParam = stringParam("Foo")
+            users.insert(users.slice(fooParam, fooParam).selectAll().limit(1), columns = listOf(users.name, users.id))
+            assertEquals(1, users.select { users.name eq "Foo" }.count())
+        }
+    }
 }

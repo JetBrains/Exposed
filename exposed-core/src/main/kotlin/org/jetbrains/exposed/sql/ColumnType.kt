@@ -61,7 +61,10 @@ interface IColumnType {
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        stmt[index] = value
+        if (value == null)
+            stmt.setNull(index, this)
+        else
+            stmt[index] = value
     }
 }
 
@@ -89,17 +92,27 @@ abstract class ColumnType(override var nullable: Boolean = false) : IColumnType 
 class AutoIncColumnType(
     /** Returns the base column type of this auto-increment column. */
     val delegate: ColumnType,
-    _autoincSeq: String
+    private val _autoincSeq: String?,
+    private val fallbackSeqName: String
 ) : IColumnType by delegate {
 
-    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
-    val autoincSeq: String? = _autoincSeq
-        get() = if (currentDialect.needsSequenceToAutoInc) field else null
+    private val nextValValue = run {
+        val sequence = Sequence(_autoincSeq ?: fallbackSeqName)
+        if (delegate is IntegerColumnType) sequence.nextIntVal() else sequence.nextLongVal()
+    }
 
-    private fun resolveAutoIncType(columnType: IColumnType): String = when (columnType) {
-        is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
-        is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
-        is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
+    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
+    val autoincSeq: String?
+        get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence } ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
+
+    val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
+
+    private fun resolveAutoIncType(columnType: IColumnType): String = when {
+        columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
+        columnType is IntegerColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.integerType()
+        columnType is IntegerColumnType -> currentDialect.dataTypeProvider.integerAutoincType()
+        columnType is LongColumnType && autoincSeq != null -> currentDialect.dataTypeProvider.longType()
+        columnType is LongColumnType -> currentDialect.dataTypeProvider.longAutoincType()
         else -> guessAutoIncTypeBy(columnType.sqlType())
     } ?: error("Unsupported type $delegate for auto-increment")
 
@@ -112,22 +125,34 @@ class AutoIncColumnType(
     override fun sqlType(): String = resolveAutoIncType(delegate)
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        return when {
+            other == null -> false
+            this === other -> true
+            this::class != other::class -> false
+            other !is AutoIncColumnType -> false
+            delegate != other.delegate -> false
+            _autoincSeq != other._autoincSeq -> false
+            fallbackSeqName != other.fallbackSeqName -> false
+            else -> true
+        }
+    }
 
-        other as AutoIncColumnType
-
-        if (delegate != other.delegate) return false
-
-        return true
+    override fun hashCode(): Int {
+        var result = delegate.hashCode()
+        result = 31 * result + (_autoincSeq?.hashCode() ?: 0)
+        result = 31 * result + fallbackSeqName.hashCode()
+        return result
     }
 }
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
 /** Returns the name of the auto-increment sequence of this column. */
+val Column<*>.autoIncColumnType: AutoIncColumnType?
+    get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+@Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
 val Column<*>.autoIncSeqName: String?
-    get() = (columnType as? AutoIncColumnType)?.autoincSeq ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.autoIncSeqName
+    get() = autoIncColumnType?.autoincSeq
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
@@ -191,6 +216,34 @@ class ByteColumnType : ColumnType() {
 }
 
 /**
+ * Numeric column for storing unsigned 1-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UByteColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
+
+    override fun valueFromDB(value: Any): UByte {
+        return when (value) {
+            is UByte -> value
+            is Byte -> value.takeIf { it >= 0 }?.toUByte()
+            is Number -> value.toByte().takeIf { it >= 0 }?.toUByte()
+            is String -> value.toUByte()
+            else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UByte: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UByte) value.toByte() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UByte) value.toByte() else value
+        return super.notNullValueToDB(v)
+    }
+}
+
+/**
  * Numeric column for storing 2-byte integers.
  */
 class ShortColumnType : ColumnType() {
@@ -204,6 +257,33 @@ class ShortColumnType : ColumnType() {
 }
 
 /**
+ * Numeric column for storing unsigned 2-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UShortColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
+    override fun valueFromDB(value: Any): UShort {
+        return when (value) {
+            is UShort -> value
+            is Short -> value.takeIf { it >= 0 }?.toUShort()
+            is Number -> value.toShort().takeIf { it >= 0 }?.toUShort()
+            is String -> value.toUShort()
+            else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UShort: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UShort) value.toShort() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UShort) value.toShort() else value
+        return super.notNullValueToDB(v)
+    }
+}
+
+/**
  * Numeric column for storing 4-byte integers.
  */
 class IntegerColumnType : ColumnType() {
@@ -213,6 +293,33 @@ class IntegerColumnType : ColumnType() {
         is Number -> value.toInt()
         is String -> value.toInt()
         else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+    }
+}
+
+/**
+ * Numeric column for storing unsigned 4-byte integers.
+ */
+@ExperimentalUnsignedTypes
+class UIntegerColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
+    override fun valueFromDB(value: Any): UInt {
+        return when (value) {
+            is UInt -> value
+            is Int -> value.takeIf { it >= 0 }?.toUInt()
+            is Number -> value.toInt().takeIf { it >= 0 }?.toUInt()
+            is String -> value.toUInt()
+            else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+        } ?: error("negative value but type is UInt: $value")
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val v = if (value is UInt) value.toInt() else value
+        super.setParameter(stmt, index, v)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        val v = if (value is UInt) value.toInt() else value
+        return super.notNullValueToDB(v)
     }
 }
 
@@ -320,8 +427,6 @@ class DecimalColumnType(
         result = 31 * result + scale
         return result
     }
-
-
 }
 
 // Character columns
@@ -382,7 +487,6 @@ abstract class StringColumnType(
         return result
     }
 
-
     companion object {
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",
@@ -391,9 +495,6 @@ abstract class StringColumnType(
             '\n' to "\\n"
         )
     }
-
-
-
 }
 
 /**
@@ -411,12 +512,21 @@ open class CharColumnType(
         }
     }
 
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is String && value.codePointCount(0, value.length) <= colLength) {
+            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+        }
+        return value
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         if (!super.equals(other)) return false
 
         other as CharColumnType
+
+        if (colLength != other.colLength) return false
 
         if (collate != other.collate) return false
         return true
@@ -427,8 +537,6 @@ open class CharColumnType(
         result = 31 * result + colLength
         return result
     }
-
-
 }
 
 /**
@@ -444,6 +552,13 @@ open class VarCharColumnType(
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is String && value.codePointCount(0, value.length) <= colLength) {
+            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+        }
+        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -517,6 +632,13 @@ class BinaryColumnType(
 ) : BasicBinaryColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType(length)
 
+    override fun notNullValueToDB(value: Any): Any {
+        require(value is ByteArray && value.size <= length) {
+            "Value '$value' can't be stored to database column because exceeds length ($length)"
+        }
+        return value
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -551,7 +673,7 @@ class BlobColumnType : ColumnType() {
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        return if (currentDialect.dataTypeProvider.blobAsStream && value is Blob) {
+        return if (value is Blob) {
             value.binaryStream
         } else {
             value
@@ -560,19 +682,12 @@ class BlobColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String = "?"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return if (currentDialect.dataTypeProvider.blobAsStream) {
-            rs.getBytes(index)?.let(::ExposedBlob)
-        } else {
-            rs.getBlob(index)?.binaryStream?.use { ExposedBlob(it.readBytes()) }
-        }
-    }
+    override fun readObject(rs: ResultSet, index: Int) = rs.getBytes(index)?.let(::ExposedBlob)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value
-        when {
-            currentDialect.dataTypeProvider.blobAsStream && toSetValue is InputStream -> stmt.setInputStream(index, toSetValue)
-            toSetValue == null -> stmt.setInputStream(index, toSetValue)
+        when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
+            is InputStream -> stmt.setInputStream(index, toSetValue)
+            null -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
         }
     }
@@ -673,18 +788,19 @@ class EnumerationColumnType<T : Enum<T>>(
  */
 class EnumerationNameColumnType<T : Enum<T>>(
     /** Returns the enum class used in this column type. */
-    val klass: KClass<T>, colLength: Int
+    val klass: KClass<T>,
+    colLength: Int
 ) : VarCharColumnType(colLength) {
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> klass.java.enumConstants!!.first { it.name == value }
+        is String -> klass.java.enumConstants!!.firstOrNull { it.name == value } ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: Any): String = when (value) {
-        is String -> value
-        is Enum<*> -> value.name
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is String -> super.notNullValueToDB(value)
+        is Enum<*> -> super.notNullValueToDB(value.name)
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
 
@@ -712,4 +828,6 @@ class EnumerationNameColumnType<T : Enum<T>>(
 /**
  * Marker interface for date/datetime related column types.
  **/
-interface IDateColumnType
+interface IDateColumnType {
+    val hasTimePart: Boolean
+}

@@ -16,10 +16,10 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         return binaryType()
     }
 
-    override val blobAsStream: Boolean = true
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
+    override fun ubyteType(): String = "SMALLINT"
 }
 
 internal object PostgreSQLFunctionProvider : FunctionProvider() {
@@ -126,9 +126,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
-        }
+            ?: transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -155,7 +153,6 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             + " AND "
             +it
         }
-        limit?.let { +" LIMIT $it" }
         toString()
     }
 
@@ -222,6 +219,10 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
+
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+        return "CREATE INDEX $name ON $table USING $type $columns"
+    }
 
     companion object {
         /** PostgreSQL dialect name */

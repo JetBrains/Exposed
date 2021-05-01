@@ -16,7 +16,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
     var useNestedTransactions: Boolean = false
 
-    internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T) : T {
+    internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
@@ -58,8 +58,31 @@ class Database private constructor(private val resolvedVendor: String? = null, v
     companion object {
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
-        private val connectionInstanceImpl : DatabaseConnectionAutoRegistration =
-                ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
+        private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
+            ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
+
+        private val driverMapping = mutableMapOf(
+            "jdbc:h2" to "org.h2.Driver",
+            "jdbc:postgresql" to "org.postgresql.Driver",
+            "jdbc:pgsql" to "com.impossibl.postgres.jdbc.PGDriver",
+            "jdbc:mysql" to "com.mysql.cj.jdbc.Driver",
+            "jdbc:mariadb" to "org.mariadb.jdbc.Driver",
+            "jdbc:oracle" to "oracle.jdbc.OracleDriver",
+            "jdbc:sqlite" to "org.sqlite.JDBC",
+            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            "jdbc:as400" to "com.ibm.as400.access.AS400JDBCDriver"
+        )
+        private val dialectMapping = mutableMapOf(
+            "jdbc:h2" to H2Dialect.dialectName,
+            "jdbc:postgresql" to PostgreSQLDialect.dialectName,
+            "jdbc:pgsql" to PostgreSQLNGDialect.dialectName,
+            "jdbc:mysql" to MysqlDialect.dialectName,
+            "jdbc:mariadb" to MariaDBDialect.dialectName,
+            "jdbc:oracle" to OracleDialect.dialectName,
+            "jdbc:sqlite" to SQLiteDialect.dialectName,
+            "jdbc:sqlserver" to SQLServerDialect.dialectName,
+            "jdbc:as400" to DB2Dialect.dialectName
+        )
 
         init {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
@@ -73,8 +96,13 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             registerDialect(DB2Dialect.dialectName) { DB2Dialect() }
         }
 
-        fun registerDialect(prefix:String, dialect: () -> DatabaseDialect) {
+        fun registerDialect(prefix: String, dialect: () -> DatabaseDialect) {
             dialects[prefix] = dialect
+        }
+
+        fun registerJdbcDriver(prefix: String, driverClassName: String, dialect: String) {
+            driverMapping[prefix] = driverClassName
+            dialectMapping[prefix] = dialect
         }
 
         private fun doConnect(
@@ -90,67 +118,70 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             }
         }
 
-        fun connect(datasource: DataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        fun connect(
+            datasource: DataSource,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
-        fun connect(datasource: ConnectionPoolDataSource, setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
+        fun connect(
+            datasource: ConnectionPoolDataSource,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
-        fun connect(getNewConnection: () -> Connection,
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        fun connectPool(
+            datasource: ConnectionPoolDataSource,
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager )
+            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
         }
 
-        fun connect(url: String, driver: String=getDriver(url), user: String = "", password: String = "", setupConnection: (Connection) -> Unit = {},
-                    manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        fun connect(
+            getNewConnection: () -> Connection,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+        ): Database {
+            return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager)
+        }
+
+        fun connect(
+            url: String,
+            driver: String = getDriver(url),
+            user: String = "",
+            password: String = "",
+            setupConnection: (Connection) -> Unit = {},
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
             Class.forName(driver).newInstance()
 
-            return doConnect(getDialectName(url), { DriverManager.getConnection(url, user, password) }, setupConnection, manager )
+            return doConnect(getDialectName(url), { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
         }
 
-        fun getDefaultIsolationLevel(db: Database) : Int =
-            when(db.vendor) {
+        fun getDefaultIsolationLevel(db: Database): Int =
+            when (db.vendor) {
                 SQLiteDialect.dialectName -> Connection.TRANSACTION_SERIALIZABLE
                 OracleDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLNGDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
-        private fun getDriver(url: String) = when {
-            url.startsWith("jdbc:h2") -> "org.h2.Driver"
-            url.startsWith("jdbc:postgresql") -> "org.postgresql.Driver"
-            url.startsWith("jdbc:pgsql") -> "com.impossibl.postgres.jdbc.PGDriver"
-            url.startsWith("jdbc:mysql") -> "com.mysql.cj.jdbc.Driver"
-            url.startsWith("jdbc:mariadb") -> "org.mariadb.jdbc.Driver"
-            url.startsWith("jdbc:oracle") -> "oracle.jdbc.OracleDriver"
-            url.startsWith("jdbc:sqlite") -> "org.sqlite.JDBC"
-            url.startsWith("jdbc:sqlserver") -> "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-            url.startsWith("jdbc:as400") -> "com.ibm.as400.access.AS400JDBCDriver"
-            else -> error("Database driver not found for $url")
-        }
+        private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Database driver not found for $url")
 
-        private fun getDialectName(url: String) = when {
-            url.startsWith("jdbc:h2") -> H2Dialect.dialectName
-            url.startsWith("jdbc:postgresql") -> PostgreSQLDialect.dialectName
-            url.startsWith("jdbc:pgsql") -> PostgreSQLNGDialect.dialectName
-            url.startsWith("jdbc:mysql") -> MysqlDialect.dialectName
-            url.startsWith("jdbc:mariadb") -> MariaDBDialect.dialectName
-            url.startsWith("jdbc:oracle") -> OracleDialect.dialectName
-            url.startsWith("jdbc:sqlite") -> SQLiteDialect.dialectName
-            url.startsWith("jdbc:sqlserver") -> SQLServerDialect.dialectName
-            url.startsWith("jdbc:as400") -> DB2Dialect.dialectName
-            else -> error("Can't resolve dialect for connection: $url")
-        }
+        private fun getDialectName(url: String) = dialectMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Can't resolve dialect for connection: $url")
     }
 }
 
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
-val Database.name : String get() = url.substringAfterLast('/').substringBefore('?')
+val Database.name: String get() = url.substringAfterLast('/').substringBefore('?')

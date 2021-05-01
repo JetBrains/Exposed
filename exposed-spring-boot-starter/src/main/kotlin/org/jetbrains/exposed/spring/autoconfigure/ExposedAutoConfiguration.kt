@@ -24,7 +24,6 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     open fun springTransactionManager(datasource: DataSource) = SpringTransactionManager(datasource)
 
     @Bean
-    @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue="true", matchIfMissing = false)
+    @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
     open fun databaseInitializer() = DatabaseInitializer(applicationContext, excludedPackages)
-
 }

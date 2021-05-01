@@ -45,12 +45,24 @@ open class MiscTable : Table() {
 
 fun MiscTable.checkRow(
     row: ResultRow,
-    by: Byte, byn: Byte?,
-    sm: Short, smn: Short?,
-    n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
-    es: MiscTable.E, esn: MiscTable.E?,
-    c: String, cn: String?, s: String, sn: String?,
-    dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?
+    by: Byte,
+    byn: Byte?,
+    sm: Short,
+    smn: Short?,
+    n: Int,
+    nn: Int?,
+    e: MiscTable.E,
+    en: MiscTable.E?,
+    es: MiscTable.E,
+    esn: MiscTable.E?,
+    c: String,
+    cn: String?,
+    s: String,
+    sn: String?,
+    dc: BigDecimal,
+    dcn: BigDecimal?,
+    fcn: Float?,
+    dblcn: Double?
 ) {
     assertEquals(row[this.by], by)
     assertEquals(row[this.byn], byn)
@@ -62,6 +74,8 @@ fun MiscTable.checkRow(
     assertEquals(row[this.en], en)
     assertEquals(row[this.es], es)
     assertEquals(row[this.esn], esn)
+    assertEquals(row[this.c], c)
+    assertEquals(row[this.cn], cn)
     assertEquals(row[this.s], s)
     assertEquals(row[this.sn], sn)
     assertEquals(row[this.dc], dc)
@@ -70,12 +84,25 @@ fun MiscTable.checkRow(
     assertEquals(row[this.dblcn], dblcn)
 }
 
-fun MiscTable.checkInsert(row: InsertStatement<Number>,
-                                by: Byte, byn: Byte?,
-                                sm: Short, smn: Short?,
-                                n: Int, nn: Int?, e: MiscTable.E, en: MiscTable.E?,
-                                es: MiscTable.E, esn: MiscTable.E?, s: String, sn: String?,
-                                dc: BigDecimal, dcn: BigDecimal?, fcn: Float?, dblcn: Double?) {
+fun MiscTable.checkInsert(
+    row: InsertStatement<Number>,
+    by: Byte,
+    byn: Byte?,
+    sm: Short,
+    smn: Short?,
+    n: Int,
+    nn: Int?,
+    e: MiscTable.E,
+    en: MiscTable.E?,
+    es: MiscTable.E,
+    esn: MiscTable.E?,
+    s: String,
+    sn: String?,
+    dc: BigDecimal,
+    dcn: BigDecimal?,
+    fcn: Float?,
+    dblcn: Double?
+) {
     assertEquals(row[this.by], by)
     assertEquals(row[this.byn], byn)
     assertEquals(row[this.sm], sm)

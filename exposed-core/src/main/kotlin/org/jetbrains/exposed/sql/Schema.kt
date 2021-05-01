@@ -19,13 +19,15 @@ import java.lang.StringBuilder
  *
  *
  */
-data class Schema(private val name: String,
-             val authorization: String? = null,
-             val password: String? = null,
-             val defaultTablespace: String? = null,
-             val temporaryTablespace: String? = null,
-             val quota: String? = null,
-             val on: String? = null) {
+data class Schema(
+    private val name: String,
+    val authorization: String? = null,
+    val password: String? = null,
+    val defaultTablespace: String? = null,
+    val temporaryTablespace: String? = null,
+    val quota: String? = null,
+    val on: String? = null
+) {
 
     val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
@@ -39,7 +41,7 @@ data class Schema(private val name: String,
 
     fun createStatement(): List<String> {
 
-        if (!currentDialect.supportsCreateSchema ) {
+        if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support create schema statement", currentDialect)
         }
 
@@ -47,7 +49,7 @@ data class Schema(private val name: String,
     }
 
     fun dropStatement(cascade: Boolean): List<String> {
-        if (!currentDialect.supportsCreateSchema ) {
+        if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support drop schema statement", currentDialect)
         }
 
@@ -55,7 +57,7 @@ data class Schema(private val name: String,
     }
 
     fun setSchemaStatement(): List<String> {
-        if (!currentDialect.supportsCreateSchema ) {
+        if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support schemas", currentDialect)
         }
 
@@ -63,7 +65,7 @@ data class Schema(private val name: String,
     }
 }
 /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
-fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
+internal fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
     if (str2 != null) {
         this.append("$str1 $str2")
     }

@@ -1,16 +1,16 @@
 package org.jetbrains.exposed.sql
 
-interface SizedIterable<out T>: Iterable<T> {
+interface SizedIterable<out T> : Iterable<T> {
     fun limit(n: Int, offset: Long = 0): SizedIterable<T>
     fun count(): Long
     fun empty(): Boolean
     fun forUpdate(): SizedIterable<T> = this
     fun notForUpdate(): SizedIterable<T> = this
-    fun copy() : SizedIterable<T>
-    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) : SizedIterable<T>
+    fun copy(): SizedIterable<T>
+    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
 }
 
-fun <T> emptySized() : SizedIterable<T> = EmptySizedIterable()
+fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 
 class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun count(): Long = 0
@@ -32,7 +32,7 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
-class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
+class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     constructor(vararg values: T) : this(values.toList())
     override fun limit(n: Int, offset: Long): SizedIterable<T> {
         return if (offset >= Int.MAX_VALUE)
@@ -48,7 +48,7 @@ class SizedCollection<out T>(val delegate: Collection<T>): SizedIterable<T> {
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
-class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> {
+class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T> {
     private var delegate: SizedIterable<T> = _delegate
 
     private var _wrapper: List<T>? = null
@@ -79,7 +79,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
 
     override fun notForUpdate(): SizedIterable<T> {
         val localDelegate = delegate
-        if(_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && localDelegate.isForUpdate()) {
+        if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && localDelegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
         if (_wrapper == null) {
@@ -114,7 +114,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>): SizedIterable<T> 
     }
 }
 
-infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
+infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
         override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
@@ -127,12 +127,11 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f:(T)->R):SizedIterable<R> {
 
         override operator fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
-            return object: Iterator<R> {
+            return object : Iterator<R> {
                 override operator fun next(): R = f(sourceIterator.next())
 
                 override fun hasNext(): Boolean = sourceIterator.hasNext()
             }
-
         }
     }
 }

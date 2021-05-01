@@ -1,3 +1,162 @@
+# 0.31.1
+Infrastructure:
+* Linting and formatting with [kotliner](https://github.com/jeremymailen/kotlinter-gradle) gradle plugin added by [jnfeinstein](https://github.com/jnfeinstein)
+
+Features:
+* TIME data type support in `exposed-java-time` module ([224](https://github.com/JetBrains/Exposed/issues/224)). Improvement provided by [vorotynsky](https://github.com/vorotynsky) and [Jhyub](https://github.com/Jhyub)
+* inList with Pairs and Triples support ([643](https://github.com/JetBrains/Exposed/issues/643))
+
+Bug Fixes:
+* Proper support for Sequences as default value or autoincrement ([492](https://github.com/JetBrains/Exposed/issues/492), [1164](https://github.com/JetBrains/Exposed/issues/1164), [1209](https://github.com/JetBrains/Exposed/issues/1209))
+* [SQL Server] Proper support for 'DEFAULT' keyword ([1207](https://github.com/JetBrains/Exposed/issues/1207)). PR by [ahayanm001](https://github.com/ahayanm001)
+
+Performance:
+* Lower footprint on creating ResultRow from ResultSet. Fix was inspired by [maio](https://github.com/maio)
+
+# 0.30.2
+Bug Fixes:                                                                         
+* Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
+* Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
+* SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
+* Early versions of MySQL Connector don't work with Exposed ([1203](https://github.com/JetBrains/Exposed/issues/1203)). PR by [MeowRay](https://github.com/MeowRay)
+* `Query.prepareSQL(QueryBuilder)` is made public to allow preparing raw SQLs ([1206](https://github.com/JetBrains/Exposed/issues/1206) 
+
+# 0.30.1
+Infrastructure:
+* Artifact publishing moved from jcenter/Bintray to Maven Central
+* Kotlin 1.4.32
+* Kotlin Coroutines 1.4.3
+
+Feature:
+* `UNION` and `UNION ALL` set operations support with related `union`, `unionAll` functions ([402](https://github.com/JetBrains/Exposed/issues/402))  
+* `like` and `notLike` methods work with string expression, PR from [hfazai](https://github.com/hfazai)
+* [Eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) now works with any iterable
+
+Performance:
+* Different minor memory improvements in `exposed-dao` module by [jnfeinstein](https://github.com/jnfeinstein)
+* Less entity cache invalidations when works with a single entity
+
+Bug fixes:
+* MySQL text type is now treated as `longtext`, SQLServer is `VARCHAR(MAX)`, thanks to [Dmitry Kolmogortsev](https://github.com/koldn)
+* Fix to support recent PostgreSQL NG driver by [hfazai](https://github.com/hfazai)
+* String functions failed to work with strings longer than 255 characters
+* `Query.count()` and `Query.empty()` functions can lead to ResultSet memory leaks
+* Alias was lost in update with join queries
+* [SQLServer] Problem with blob columns when assigning null value
+* Deleting an entity after it is created does not delete it from cache ([1175](https://github.com/JetBrains/Exposed/issues/1175))
+* EnumerationNameColumnType fails with vague exception when unknown value in DB ([1176](https://github.com/JetBrains/Exposed/issues/1176))
+
+# 0.29.1
+Infrastructure:
+* Kotlin 1.4.21
+* Kotlin Coroutines 1.4.1
+* Spring Framework 5.3.3
+* Spring Boot 2.4.2
+
+Feature:
+* Now it's possible to define default Database (it will not be overridden by next `Database.connect()`) ([1125](https://github.com/JetBrains/Exposed/issues/1125)). Fix provided by [jnfeinstein](https://github.com/jnfeinstein). Check [wiki](https://github.com/JetBrains/Exposed/wiki/Transactions#setting-default-database) for details.
+* New `eqSubQuery` and `notEqSubQuery` functions added by [xJoeWoo](https://github.com/xJoeWoo) to compare value with sub-query result.
+* New functions to build expressions in a chain-like manner (`and`, `or`, `andNot`, `orNot`). Idea and realisation by [SchweinchenFuntik](https://github.com/SchweinchenFuntik).
+
+Bug fixes:
+* DatasourceHealthIndicator consumes all the DB connections from the pool when used with Exposed Spring Boot starter ([1077](https://github.com/JetBrains/Exposed/issues/1077)).
+* Ignore internal SQLite indices on check. PR by [hannesbraun](https://github.com/hannesbraun).
+* Narrow scope of referring cache evictions on inserts and deletes. [jnfeinstein](https://github.com/jnfeinstein) thank you for PR.
+* At least one column should be provided in `Table.slice()`. Fixed by [hfazai](https://github.com/hfazai).
+* Multiple attempts to create indices that already exist ([1031](https://github.com/JetBrains/Exposed/issues/1031)) fixed by [gerritc](https://github.com/gerritc).
+* "id not in record set" exception when read value by a column that has related id column ([1032](https://github.com/JetBrains/Exposed/issues/1032))
+* Read datetime fails with "No transaction in context" when called outside the transaction with already fetched data ([1130](https://github.com/JetBrains/Exposed/issues/1130)).
+* Incorrect state for TransactionManager.manager after calling closeAndUnregister ([1100](https://github.com/JetBrains/Exposed/issues/1100)).
+* Connection not available after exceptions with suspendable transaction ([1138](https://github.com/JetBrains/Exposed/issues/1138))
+* Entities weren't flushed when executing query with only expressions in select part. Reported and fixed by [jnfeinstein](https://github.com/jnfeinstein).
+* Fix for exposed-jodatime module to work with MySQL ConnectorJ 8.0.23
+
+# 0.28.1
+Broken Changes:
+* `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 
+  It should help to prevent excessive queries when reading referenced values withing the same transaction but may require more memory to store the cached values.
+* Default isolation level for PostgreSQL now set to `READ_COMMITTED`. PR by [uryyyyyyy](https://github.com/uryyyyyyy)  
+* [Oracle] Binary column type without length prohibited in favour to blob
+
+Infrastructure:
+* Kotlin 1.4.10
+* Kotlin Coroutines 1.3.9
+* Spring Framework 5.2.9
+* Spring Boot 2.3.3
+
+Feature:
+* Custom jdbc-driver registration supported with `Database.registerJdbcDriver` function ([#1023](https://github.com/JetBrains/Exposed/issues/1023)), thanks [rnentjes](https://github.com/rnentjes) for the improvement.  
+
+Bug fixes:
+* Confusing slice api distincts same expressions ([#1020](https://github.com/JetBrains/Exposed/issues/1020))
+* Can't read text column, if it exceeds 255 chars. ([#1029](https://github.com/JetBrains/Exposed/issues/1029))
+* SchemaUtils#addMissingColumnsStatements function made public ([#1030](https://github.com/JetBrains/Exposed/issues/1030))
+* Sum on Duration columns fails with exception ([#1033](https://github.com/JetBrains/Exposed/issues/1033))
+* Batch insert can't be used with nullable collections ([#847](https://github.com/JetBrains/Exposed/issues/847)). PR by [JamiesWhiteShirt](https://github.com/JamiesWhiteShirt)
+* Nullable columns can't have default values. Fixed by [xGabrielDEV](https://github.com/xGabrielDEV)
+* A possible speedup for Schema related operations on fetching metadata
+* It was impossible to make tables join with additional constraint only, implicit join part always added to a join
+* [SQLite] Wrong datetime format used
+* [H2] Problems with creating primary keys ([#841](https://github.com/JetBrains/Exposed/issues/841), [#1051](https://github.com/JetBrains/Exposed/issues/1051))
+* [Oracle] A lot of fixes for datatime column types
+* [Oracle] Tables weren't resolved from Scheme
+
+# 0.27.1
+Feature:
+* Nullable CompositeColumn support (with CompositeMoneyColumn as a reference implementation)
+* `adjustSlice` now provides current FieldSet as a function parameter
+* New `decimalParam` and `decimalLiteral` introduced
+* DivideOp with BigDecimals could adjust scale with `withScale` function
+* Sequences updated to support Long values with `nextIntVal` and `nextLongVal` functions as replacement of `nextIntVal`
+* [SQLite] DateTime column representation changed from `NUMERIC` (with seconds precision) to `TEXT` (with millis)
+* Allow setting unwrapped value for EntityID columns with UpdateBuilder (insert/update/etc)
+  
+Bug fixes:
+ 
+* `wrapAsExpression` somehow makes program fail with "debug" log level ([#1006](https://github.com/JetBrains/Exposed/issues/1006))
+* LocalDateTime miss the nanos part ([#1008](https://github.com/JetBrains/Exposed/issues/1008))
+* IdTable.new cannot use SEQUENCE nextVal ([#1002](https://github.com/JetBrains/Exposed/issues/1002))
+* [SQLite] `WHERE` clause with DateTime expressions could return wrong result. PR by [hfazai](https://github.com/hfazai).
+* [SQLServer] Don't use `OUTPUT` clause in inserts when `shouldReturnGeneratedValues=false`
+* [SQLServer ] Unnecessary limit for OUTPUT command when using batch insert ([#440](https://github.com/JetBrains/Exposed/issues/440))
+
+# 0.26.2
+Infrastructure:
+* MySQL related tests were moved from old embedded-mxj to test-containers ([#957](https://github.com/JetBrains/Exposed/issues/957)). Kudos to [KushalP](https://github.com/KushalP)   
+
+Bug Fixes:
+* Fix for java9+ returns empty string for Class.simpleName of anonymous classes, what cause an empty table name
+* Enable use of Exposed with Quarkus / GraalVM Native Image. Compile time dependency to H2 was removed ([#919](https://github.com/JetBrains/Exposed/issues/919)).
+* Between function doesn't work when run against Oracle database ([#974](https://github.com/JetBrains/Exposed/issues/974)).
+* [MySQL] Infinite recursion in `match` operator ([#978](https://github.com/JetBrains/Exposed/issues/978)).
+* Using `exposed-java-time` module on Android could end with NoSuchMethodError ([#991](https://github.com/JetBrains/Exposed/issues/991)), ([#998](https://github.com/JetBrains/Exposed/issues/998)).
+* Binary type doesn't honor max length. Client-side length validation for BinaryColumnType ([#993](https://github.com/JetBrains/Exposed/issues/993)). 
+* CharColumnType equals doesn't check colLength parameter
+* Creating similar tables/indices on different schemas could fail with an error ([#803](https://github.com/JetBrains/Exposed/issues/803)).   
+* [SQLite] Allow providing `limit` for UPDATE/DELETE statements if SQLite was compiled with `optional_limit_and_order_by_clauses` option ([#979](https://github.com/JetBrains/Exposed/issues/979)). [harry huang](https://github.com/banjiaojuhao), thank you for a PR.  
+
+# 0.26.1
+Infrastructure:
+* Gradle 6.5. Thanks to [KushalP](https://github.com/KushalP)
+
+Features:
+* New composite column type to create complex mappings to multiple columns. 
+* Money column type and a new `exposed-money` module. This and above were implemented by [encircled](https://github.com/encircled)   
+* Duration column type (`exposed-java-time` module only) provided by [CommanderTvis](https://github.com/CommanderTvis)
+* `Transaction.exec` functions accept list of parameters. PR by [uuf6429](https://github.com/uuf6429).   
+* [H2] Native `REPLACE` instead of `INSERT... ON DUPLICATE UPDATE` by [pilotclass](https://github.com/pilotclass). 
+* Other unsigned types: ubyte, ushort, uint added by [kenta.koyama](https://github.com/doyaaaaaken).
+* Index type support added by [ryanpbrewster](https://github.com/ryanpbrewster).
+
+Bug Fixes:
+* Upgrading from 0.17.7 to 0.25.1 leading to overload resolution ambiguity, created `Database.connectPool` ([#938](https://github.com/JetBrains/Exposed/issues/938)
+* Impossible to refresh entity created via new(id: ID?, ...) ([#925](https://github.com/JetBrains/Exposed/issues/925)), PR by [socar-bad](https://github.com/socar-brad) 
+* Concat function should accept any expression not only strings. PR by [palevomr](https://github.com/palevomr).
+* Irregular order of operands in generated CHECK constraint ([#920](https://github.com/JetBrains/Exposed/issues/920)) 
+* [SQLite] allow NOT NULL modifier for PK column. Fixed by [hfazai](https://github.com/hfazai). 
+* `SchemaUtils.createMissingTablesAndColumns` fails with references ([#866](https://github.com/JetBrains/Exposed/issues/866), [#934](https://github.com/JetBrains/Exposed/issues/934), [#952](https://github.com/JetBrains/Exposed/issues/952)). Fixed by [jschmid](https://github.com/jschmid).
+
+
 # 0.25.1
 Features:
 * UNSIGNED LONG column support (PR by [kenta.koyama](https://github.com/doyaaaaaken))
@@ -28,7 +187,7 @@ Infrastructure:
 * SQLite driver 3.31.1 
 
 Features:
-* A lot of improvements on working with `Schema` (checking for existence, additional parameters like password, defaultTablespace, etc). Thanks a lot to [hichem-fazai](https://github.com/hichem-fazai). 
+* A lot of improvements on working with `Schema` (checking for existence, additional parameters like password, defaultTablespace, etc). Thanks a lot to [hfazai](https://github.com/hfazai). 
 * `CHAR(N)` column type support ([#858](https://github.com/JetBrains/Exposed/issues/858)).
 * `BYTE` column type support (PR [#876](https://github.com/JetBrains/Exposed/issues/876) from [spand](https://github.com/spand)).
 * `timestampParam`, `timestampLiteral` and `CustomTimeStampFunction` added by [spand](https://github.com/spand) (PR [#876](https://github.com/JetBrains/Exposed/issues/876)).
@@ -50,7 +209,7 @@ Code specific changes:
 
 # 0.23.1
 Features:
-* Schema support: create/set current/drop. Many thanks to [hichem-fazai](https://github.com/hichem-fazai).
+* Schema support: create/set current/drop. Many thanks to [hfazai](https://github.com/hfazai).
 
 Bug fixes:
 * Spring transaction doesn't close/commit transaction at the end of `transaction` block ([#831](https://github.com/JetBrains/Exposed/issues/831)).
@@ -68,7 +227,7 @@ Broken Changes:
 Also, `offset` parameter of `SizedIterable.limit()` and `DeleteStatement` functions were changed accordingly. `limit` parameter stays untouched to be in sync with Kotlin `Collection.size`
 
 Features:
-* New pgjdbc-ng driver for PostgreSQL supported with help of [hichem-fazai](https://github.com/hichem-fazai)
+* New pgjdbc-ng driver for PostgreSQL supported with help of [hfazai](https://github.com/hfazai)
 * Updates with joins supported ([#671](https://github.com/JetBrains/Exposed/issues/671)), ([#636](https://github.com/JetBrains/Exposed/issues/636)), ([#671](https://github.com/JetBrains/Exposed/issues/671)).
 * Custom names for foreign keys supported by [t-kameyama](https://github.com/t-kameyama) ([#510](https://github.com/JetBrains/Exposed/issues/510)). 
 * Support for `notInSubQuery` expression ([#791](https://github.com/JetBrains/Exposed/issues/791)), thanks for PR, [dolgopolovwork](https://github.com/dolgopolovwork).
@@ -88,10 +247,10 @@ Bug fixes:
 Public methods and classes of database dialects, tables and columns were covered with documentation by [Juan José González Abril](https://github.com/SackCastellon). Thanks a lot!
 
 Features:
-* Sequences support improved: added all parameters like startWith, incrementBy and other, nextVal expression. Thank you [hichem-fazai](https://github.com/hichem-fazai) for such great PR.
+* Sequences support improved: added all parameters like startWith, incrementBy and other, nextVal expression. Thank you [hfazai](https://github.com/hfazai) for such great PR.
 * `CustomOperator` introduced to be used when you need to create an SQL operator. PR from [gelineau](https://github.com/gelineau).
-* `SchemaUtils.createDatabase` and `SchemaUtils.dropDatabase` added by [hichem-fazai](https://github.com/hichem-fazai)
-* GUID values could be stored in UUID columns ([#767](https://github.com/JetBrains/Exposed/issues/767)). Fixed by [hichem-fazai](https://github.com/hichem-fazai).
+* `SchemaUtils.createDatabase` and `SchemaUtils.dropDatabase` added by [hfazai](https://github.com/hfazai)
+* GUID values could be stored in UUID columns ([#767](https://github.com/JetBrains/Exposed/issues/767)). Fixed by [hfazai](https://github.com/hfazai).
 
 Bug fixes:
 * spring-configuration-metadata.json is not located inside exposed-spring-boot-starter.jar ([#767](https://github.com/JetBrains/Exposed/issues/767))
@@ -106,7 +265,7 @@ Bug fixes:
 * Can't load implementation for DatabaseConnectionAutoRegistration ([#748](https://github.com/JetBrains/Exposed/issues/748)).
 * Proper length check when using Unicode strings ([#743](https://github.com/JetBrains/Exposed/issues/743)). PR from [pt2121](https://github.com/pt2121), thank you.
 * Custom enumeration not working with default value ([#750](https://github.com/JetBrains/Exposed/issues/750))
-* [SQLite] fixing a bug that happens when creating table with autoInc column and custom primarykey constraint name ([#755](https://github.com/JetBrains/Exposed/issues/755)). Fixed by [hichem-fazai](https://github.com/hichem-fazai).
+* [SQLite] fixing a bug that happens when creating table with autoInc column and custom primarykey constraint name ([#755](https://github.com/JetBrains/Exposed/issues/755)). Fixed by [hfazai](https://github.com/hfazai).
 * Flushing a new entity fails with an exception ([#761](https://github.com/JetBrains/Exposed/issues/761))
 * Update event wasn't fired on Entity.flush() ([#764](https://github.com/JetBrains/Exposed/issues/764))
 
@@ -116,17 +275,17 @@ Bug fixes:
 
 # 0.20.1
 Features:
-* New way to define primary keys on tables were implemented by [hichem-fazai](https://github.com/hichem-fazai) to support custom primary key constraint keys. 
+* New way to define primary keys on tables were implemented by [hfazai](https://github.com/hfazai) to support custom primary key constraint keys. 
 If have to use `override val primaryKey: PrimaryKey?` on your table if you want to define a custom name. 
 For all users of predefined `IntIdTable`/`LongIdTable`/`UUIDTable` nothing changed. 
 Old `Column.primaryKey` function was depricated and will be removed in the future releases.
 * `java.time.Instant` supported with `timestamp` column type (`exposed-java-time` module only) ([#724](https://github.com/JetBrains/Exposed/issues/724)). Many thanks to [Lukáš Křečan](https://github.com/lukas-krecan).
-* Support for unsized binary columns (Oracle and PostgreSQL dialects) ([#716](https://github.com/JetBrains/Exposed/issues/716)). Another great PR from [hichem-fazai](https://github.com/hichem-fazai).
+* Support for unsized binary columns (Oracle and PostgreSQL dialects) ([#716](https://github.com/JetBrains/Exposed/issues/716)). Another great PR from [hfazai](https://github.com/hfazai).
 * A unique identifier for `Transaction` instance introduced and supported in EntityHooks/EntityEvents by [mpe85](https://github.com/mpe85).
 
 Bug fixes:
 * Annoying `NoSuchElementException` from 0.19.3 fixed by [Toshiaki Kameyama](https://github.com/t-kameyama) ([#731](https://github.com/JetBrains/Exposed/issues/731))
-* Prevent defining duplicated column name in a table. Now you will get `DuplicateColumnException` at runtime ([#709](https://github.com/JetBrains/Exposed/issues/709)). Nice work [hichem-fazai](https://github.com/hichem-fazai)!
+* Prevent defining duplicated column name in a table. Now you will get `DuplicateColumnException` at runtime ([#709](https://github.com/JetBrains/Exposed/issues/709)). Nice work [hfazai](https://github.com/hfazai)!
 * `batchInsert` will throw `BatchDataInconsistentException` instead of `NoSuchElementException` when it wasn't possible to make insertion ([#741](https://github.com/JetBrains/Exposed/issues/741)).
 
 # 0.19.3
@@ -149,7 +308,7 @@ To help with migration, old classes were deprecated with proper `replaceWith` op
 Features:
 * `selectBatched` and `selectAllBatched` functions added to make queries in batches ([#642](https://github.com/JetBrains/Exposed/issues/642)). Many thanks to [Pin-Sho Feng](https://github.com/red-avtovo) for a PR.
 * Added UpdateBuilder.update expression builder version ([#700](https://github.com/JetBrains/Exposed/issues/700)). Another useful PR from [spand](https://github.com/spand)
-* New SQL datetime functions year, day, hour, minute, second ([#707](https://github.com/JetBrains/Exposed/issues/707)). Helpful PR from [hichem-fazai](https://github.com/hichem-fazai)
+* New SQL datetime functions year, day, hour, minute, second ([#707](https://github.com/JetBrains/Exposed/issues/707)). Helpful PR from [hfazai](https://github.com/hfazai)
 
 Bug fixes:
 * SpringTransactionManager doesn't properly rollback transactions in some cases ([#666](https://github.com/JetBrains/Exposed/issues/666))
@@ -179,7 +338,7 @@ Bug fixes:
 * identifierLengthLimit should not be lazy initialized
 * Immutable entities wasn't invalidated in some cases ([#665](https://github.com/JetBrains/Exposed/issues/665)). PR from [Dmitry Dolzhenko](https://github.com/dsdolzhenko).
 * Rework resolving auto increment type to handle own ColumnType implementation ([#663](https://github.com/JetBrains/Exposed/issues/663)). PR from [Mateusz Śledź](https://github.com/sledzmateusz).
-* Fixing the `month` built-in function in case of all database dialects ([#670](https://github.com/JetBrains/Exposed/issues/670)). PR from [hichem-fazai](https://github.com/hichem-fazai)
+* Fixing the `month` built-in function in case of all database dialects ([#670](https://github.com/JetBrains/Exposed/issues/670)). PR from [hfazai](https://github.com/hfazai)
 * Compilation error Field name 'Oracle12+' cannot be represented in dex format. ([#668](https://github.com/JetBrains/Exposed/issues/668))
 * [SQLite] Problem with `autoIncrement()` and `primaryKey()`. ([#649](https://github.com/JetBrains/Exposed/issues/649)), ([#669](https://github.com/JetBrains/Exposed/issues/669))
 * fixes in error logging of expressions.

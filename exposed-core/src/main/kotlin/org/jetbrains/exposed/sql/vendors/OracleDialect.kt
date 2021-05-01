@@ -6,20 +6,24 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
+    override fun ubyteType(): String = "SMALLINT"
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
+    override fun uintegerType(): String = "NUMBER(13)"
     override fun longType(): String = "NUMBER(19)"
-    override fun ulongType(): String = "UNSIGNED BIGINT"
     override fun longAutoincType(): String = "NUMBER(19)"
+    override fun ulongType(): String = "NUMBER(20)"
     override fun textType(): String = "CLOB"
-    override fun binaryType(): String = "BLOB"
-    override fun binaryType(length: Int): String {
-        exposedLogger.warn("The length of the binary column is not required.")
-        return binaryType()
+    override fun binaryType(): String {
+        exposedLogger.error("Binary type is unsupported for Oracle. Please use blob column type instead.")
+        error("Binary type is unsupported for Oracle. Please use blob column type instead.")
     }
 
-    override val blobAsStream = true
-    override fun blobType(): String = "BLOB"
+    override fun binaryType(length: Int): String {
+        return if (length < 2000) "RAW ($length)"
+        else binaryType()
+    }
+
     override fun uuidType(): String = "RAW(16)"
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun booleanType(): String = "CHAR(1)"
@@ -31,7 +35,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is IDateColumnType -> "DATE ${super.processForDefaultValue(e)}"
+        e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
+        e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
         else -> super.processForDefaultValue(e)
     }
 }
@@ -53,10 +58,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         prefix: String
     ): Unit = super.substring(expr, start, length, builder, "SUBSTR")
 
-    override fun <T : String?> concat(
+    override fun concat(
         separator: String,
         queryBuilder: QueryBuilder,
-        vararg expr: Expression<T>
+        vararg expr: Expression<*>
     ): Unit = queryBuilder {
         if (separator == "") {
             expr.toList().appendTo(separator = " || ") { +it }
@@ -118,24 +123,6 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(")")
     }
 
-    override fun insert(
-        ignore: Boolean,
-        table: Table,
-        columns: List<Column<*>>,
-        expr: String,
-        transaction: Transaction
-    ): String {
-        return table.autoIncColumn?.takeIf { it !in columns }?.let {
-            val newExpr = if (expr.isBlank()) {
-                "VALUES (${it.autoIncSeqName!!}.NEXTVAL)"
-            } else {
-                expr.replace("VALUES (", "VALUES (${it.autoIncSeqName!!}.NEXTVAL, ")
-            }
-
-            super.insert(ignore, table, listOf(it) + columns, newExpr, transaction)
-        } ?: super.insert(ignore, table, columns, expr, transaction)
-    }
-
     override fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
@@ -158,10 +145,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
-        val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
-        }
+        columnsAndValues.map { it.first.table }.distinct().singleOrNull()
+            ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -248,7 +233,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP USER ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }

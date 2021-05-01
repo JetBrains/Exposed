@@ -11,21 +11,19 @@ import java.sql.ResultSet
 import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
-
-    private val databaseName = database.takeIf { metadata.databaseProductName !== "Oracle" }
-    private val oracleSchema = database.takeIf { metadata.databaseProductName == "Oracle" }
-
     override val url: String by lazyMetadata { url }
-    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion")}
+    override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
 
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {
+            "MySQL-AB JDBC Driver",
             "MySQL Connector/J",
             "MySQL Connector Java" -> MysqlDialect.dialectName
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
             "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
+            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
             "AS/400 Toolbox for Java JDBC Driver" -> DB2Dialect.dialectName
@@ -38,6 +36,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    private val databaseName get() = when (databaseDialectName) {
+        MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+        else -> database
+    }
+
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
     override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
@@ -48,33 +51,44 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
 
-    override val currentScheme: String by lazyMetadata {
-        try {
-            when (metadata.driverName) {
-                "pgjdbc-ng" -> "public" // Should be removed after https://github.com/impossibl/pgjdbc-ng/pull/354 will be released
-                "MySQL Connector/J",
-                "MySQL Connector Java",
-                "MariaDB Connector/J"-> connection.catalog.orEmpty()
-                else -> connection.schema.orEmpty()
+    private var _currentScheme: String? = null
+        get() {
+            if (field == null) {
+                field = try {
+                    when (databaseDialectName) {
+                        MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
+                        OracleDialect.dialectName -> databaseName
+                        else -> metadata.connection.schema.orEmpty()
+                    }
+                } catch (e: Throwable) { "" }
             }
-        } catch (e: Throwable) { "" }
+            return field!!
+        }
+
+    override val currentScheme: String get() = _currentScheme!!
+
+    override fun resetCurrentScheme() {
+        _currentScheme = null
     }
 
-    private inner class CachableMapWithDefault<K, V>(private val map:MutableMap<K,V> = mutableMapOf(), val default: (K) -> V) : Map<K,V> by map {
+    private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
         override fun get(key: K): V? = map.getOrPut(key, { default(key) })
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
     }
 
-    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(default = { schemeName ->
-        tableNamesFor(schemeName)
-    })
+    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(
+        default = { schemeName ->
+            tableNamesFor(schemeName)
+        }
+    )
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
-            useCatalogInsteadOfScheme -> scheme to ""
-            else -> database to scheme
+            useCatalogInsteadOfScheme -> scheme to "%"
+            currentDialect is OracleDialect -> databaseName to databaseName
+            else -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
         return resultSet.iterate {
@@ -95,9 +109,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
 
         val schemas = when {
-                useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
-                else -> schemas.iterate { getString("TABLE_SCHEM") }
-            }
+            useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
+            else -> schemas.iterate { getString("TABLE_SCHEM") }
+        }
 
         return schemas.map { identifierManager.inProperCase(it) }
     }
@@ -116,9 +130,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs =  metadata.getColumns(databaseName, oracleSchema, "%", "%")
+        val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
-            //@see java.sql.DatabaseMetaData.getColumns
+            // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
             it.getString("TABLE_NAME") to columnMetadata
         }
@@ -129,20 +143,20 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val existingIndicesCache = HashMap<Table, List<Index>>()
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
-        for(table in tables) {
+        for (table in tables) {
             val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
 
             existingIndicesCache.getOrPut(table) {
-                val pkNames = metadata.getPrimaryKeys(databaseName, oracleSchema, tableName).let { rs ->
+                val pkNames = metadata.getPrimaryKeys(databaseName, currentScheme, tableName).let { rs ->
                     val names = arrayListOf<String>()
-                    while(rs.next()) {
+                    while (rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
                     }
                     rs.close()
                     names
                 }
-                val rs = metadata.getIndexInfo(databaseName, oracleSchema, tableName, false, false)
+                val rs = metadata.getIndexInfo(databaseName, currentScheme, tableName, false, false)
 
                 val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
 
@@ -157,7 +171,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
+                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
                     }
             }
         }
@@ -168,11 +182,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
         return allTables.keys.associateWith { table ->
-            metadata.getImportedKeys(databaseName, oracleSchema, table).iterate {
+            metadata.getImportedKeys(databaseName, currentScheme, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
                 val fromColumn = allTables.getValue(fromTableName).columns.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == fromColumnName
+                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
@@ -183,11 +197,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
                 ForeignKeyConstraint(
-                        target = targetColumn,
-                        from = fromColumn,
-                        onUpdate = constraintUpdateRule,
-                        onDelete = constraintDeleteRule,
-                        name = constraintName
+                    target = targetColumn,
+                    from = fromColumn,
+                    onUpdate = constraintUpdateRule,
+                    onDelete = constraintDeleteRule,
+                    name = constraintName
                 )
             }.filterNotNull()
         }
@@ -201,9 +215,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
 }
 
-fun <T> ResultSet.iterate(body: ResultSet.() -> T) : List<T> {
+fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
     val result = arrayListOf<T>()
-    while(next()) {
+    while (next()) {
         result.add(body())
     }
     close()

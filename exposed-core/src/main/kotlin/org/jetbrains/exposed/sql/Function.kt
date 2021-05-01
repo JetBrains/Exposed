@@ -42,7 +42,6 @@ open class CustomOperator<T>(
     }
 }
 
-
 // Mathematical Functions
 
 /**
@@ -57,7 +56,6 @@ class Random(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +currentDialect.functionProvider.random(seed) }
 }
 
-
 // String Functions
 
 /**
@@ -66,7 +64,7 @@ class Random(
 class LowerCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("LOWER(", expr, ")") }
 }
 
@@ -76,19 +74,19 @@ class LowerCase<T : String?>(
 class UpperCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("UPPER(", expr, ")") }
 }
 
 /**
  * Represents an SQL function that concatenates the text representations of all non-null input values from [expr], separated by [separator].
  */
-class Concat<T : String?>(
+class Concat(
     /** Returns the delimiter. */
     val separator: String,
     /** Returns the expressions being concatenated. */
-    vararg val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+    vararg val expr: Expression<*>
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
 }
 
@@ -104,7 +102,7 @@ class GroupConcat<T : String?>(
     val distinct: Boolean,
     /** Returns the order in which the elements of each group are sorted. */
     vararg val orderBy: Pair<Expression<*>, SortOrder>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.groupConcat(this, queryBuilder)
 }
 
@@ -116,7 +114,7 @@ class Substring<T : String?>(
     private val start: Expression<Int>,
     /** Returns the length of the substring. */
     val length: Expression<Int>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
 }
 
@@ -126,10 +124,9 @@ class Substring<T : String?>(
 class Trim<T : String?>(
     /** Returns the expression being trimmed. */
     val expr: Expression<T>
-) : Function<T>(VarCharColumnType()) {
+) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
-
 
 // General-Purpose Aggregate Functions
 
@@ -160,7 +157,8 @@ class Max<T : Comparable<T>, in S : T?>(
  */
 class Avg<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the average is calculated. */
-    val expr: Expression<in S>, scale: Int
+    val expr: Expression<in S>,
+    scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("AVG(", expr, ")") }
 }
@@ -192,7 +190,6 @@ class Count(
         +")"
     }
 }
-
 
 // Aggregate Functions for Statistics
 
@@ -244,19 +241,22 @@ class VarSamp<T>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_SAMP(", expr, ")") }
 }
 
-
 // Sequence Manipulation Functions
 
 /**
  * Represents an SQL function that advances the specified [seq] and returns the new value.
  */
-class NextVal(
+sealed class NextVal<T> (
     /** Returns the sequence from which the next value is obtained. */
-    val seq: Sequence
-) : Function<Int>(IntegerColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
-}
+    val seq: Sequence,
+    columnType: IColumnType
+) : Function<T>(columnType) {
 
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
+
+    class IntNextVal(seq: Sequence) : NextVal<Int>(seq, IntegerColumnType())
+    class LongNextVal(seq: Sequence) : NextVal<Long>(seq, LongColumnType())
+}
 
 // Conditional Expressions
 
@@ -276,7 +276,7 @@ class CaseWhen<T>(val value: Expression<*>?) {
     fun <R : T> Else(e: Expression<R>): Expression<R> = CaseWhenElse(this, e)
 }
 
-class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>() {
+class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("CASE ")
         if (caseWhen.value != null)
@@ -299,7 +299,6 @@ class Coalesce<out T, S : T?, R : T>(
 ) : Function<R>(alternate.columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("COALESCE(", expr, ", ", alternate, ")") }
 }
-
 
 // Value Expressions
 

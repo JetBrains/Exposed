@@ -8,14 +8,16 @@ import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.sql.SQLException
 
-/**
- * isIgnore is supported for mysql only
- */
-open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
+open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
     var resultedValues: List<ResultRow>? = null
         private set
 
     infix operator fun <T> get(column: Column<T>): T {
+        val row = resultedValues?.firstOrNull() ?: error("No key generated")
+        return row[column]
+    }
+
+    infix operator fun <T> get(column: CompositeColumn<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
         return row[column]
     }
@@ -35,7 +37,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
                     }
                 }
 
-            val firstAutoIncColumn = autoIncColumns.firstOrNull() 
+            val firstAutoIncColumn = autoIncColumns.firstOrNull()
             if (firstAutoIncColumn != null || returnedColumns.isNotEmpty()) {
                 while (rs?.next() == true) {
                     val returnedValues = returnedColumns.associateTo(mutableMapOf()) { it.first to rs.getObject(it.second) }
@@ -71,7 +73,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
-                    if (col.columnType.isAutoInc || value is NextVal)
+                    if (col.columnType.isAutoInc || value is NextVal<*>)
                         map.getOrPut(col) { value }
                     else
                         map[col] = value
@@ -95,7 +97,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val values = arguments!!.first()
-        val sql = if(values.isEmpty()) ""
+        val sql = if (values.isEmpty()) ""
         else with(builder) {
             values.appendTo(prefix = "VALUES (", postfix = ")") { (col, value) ->
                 registerArgument(col, value)
@@ -105,7 +107,7 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
-    protected open fun PreparedStatementApi.execInsertFunction() : Pair<Int, ResultSet?> {
+    protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
         val rs = if (autoIncColumns.isNotEmpty()) { resultSet } else null
         return inserted to rs
@@ -118,10 +120,11 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
         }
     }
 
-    protected val autoIncColumns : List<Column<*>> get() {
-        val nextValExpressionColumns = values.filterValues { it is NextVal }.keys
+    protected val autoIncColumns: List<Column<*>> get() {
+        val nextValExpressionColumns = values.filterValues { it is NextVal<*> }.keys
         return targets.flatMap { it.columns }.filter { column ->
             when {
+                column.autoIncColumnType?.nextValExpression != null -> currentDialect.supportsSequenceAsGeneratedKeys
                 column.columnType.isAutoInc -> true
                 column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
                 column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
@@ -152,9 +155,15 @@ open class InsertStatement<Key:Any>(val table: Table, val isIgnore: Boolean = fa
             listOf(result).apply { field = this }
         }
 
-    override fun arguments() = arguments!!.map { args ->
-        args.filter { (_, value) ->
-            value != DefaultValueMarker  && value !is Expression<*>
-        }.map { it.first.columnType to it.second }
+    override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
+        return arguments!!.map { args ->
+            val builder = QueryBuilder(true)
+            args.filter { (_, value) ->
+                value != DefaultValueMarker
+            }.forEach { (column, value) ->
+                builder.registerArgument(column, value)
+            }
+            builder.args
+        }
     }
 }

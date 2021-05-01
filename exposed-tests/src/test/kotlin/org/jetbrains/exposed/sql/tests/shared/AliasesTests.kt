@@ -38,11 +38,11 @@ class AliasesTests : DatabaseTestsBase() {
             val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
             val sliceColumns = Stables.columns + fAlias[fcAlias]
             val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
-                    .slice(sliceColumns)
-                    .selectAll()
-                    .groupBy(*sliceColumns.toTypedArray()).map {
-                        it[Stables.name] to it[fAlias[fcAlias]]
-                    }.toMap()
+                .slice(sliceColumns)
+                .selectAll()
+                .groupBy(*sliceColumns.toTypedArray()).map {
+                    it[Stables.name] to it[fAlias[fcAlias]]
+                }.toMap()
             assertEquals(2, stats.size)
             assertEquals(1, stats["Stables1"])
             assertNull(stats["Stables2"])
@@ -78,7 +78,7 @@ class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test wrap row with Aliased table`() {
         withTables(EntityTestsData.XTable) {
-            val entity1  = EntityTestsData.XEntity.new {
+            val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
 
@@ -96,7 +96,7 @@ class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test wrap row with Aliased query`() {
         withTables(EntityTestsData.XTable) {
-            val entity1  = EntityTestsData.XEntity.new {
+            val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
 
@@ -119,26 +119,38 @@ class AliasesTests : DatabaseTestsBase() {
                 this[EntityTestsData.XTable.b1] = it
             }
             val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
-            val aliasedQuery = EntityTestsData.XTable.
-                slice(EntityTestsData.XTable.b1, aliasedExpression).
-                selectAll().
-                groupBy(EntityTestsData.XTable.b1).
-                alias("maxBoolean")
+            val aliasedQuery = EntityTestsData.XTable
+                .slice(EntityTestsData.XTable.b1, aliasedExpression)
+                .selectAll()
+                .groupBy(EntityTestsData.XTable.b1)
+                .alias("maxBoolean")
 
             val aliasedBool = aliasedQuery[EntityTestsData.XTable.b1]
             val expressionToCheck = aliasedQuery[aliasedExpression]
             assertEquals("maxBoolean.maxId", expressionToCheck.toString())
 
-            val resultQuery = aliasedQuery.
-                leftJoin(EntityTestsData.XTable, { this[aliasedExpression]}, { id }).
-                slice(aliasedBool, expressionToCheck).
-                selectAll()
+            val resultQuery = aliasedQuery
+                .leftJoin(EntityTestsData.XTable, { this[aliasedExpression] }, { id })
+                .slice(aliasedBool, expressionToCheck)
+                .selectAll()
 
             val result = resultQuery.map {
                 it[aliasedBool] to it[expressionToCheck]!!.value
             }
 
             assertEqualCollections(listOf(true to 4, false to 3), result)
+        }
+    }
+
+    @Test fun `test alias for same table with join`() {
+        withTables(EntityTestsData.XTable) {
+            val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
+            val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
+            val t1Alias = EntityTestsData.XTable.slice(table1Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t1")
+            val t2Alias = EntityTestsData.XTable.slice(table2Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t2")
+            t1Alias.join(t2Alias, JoinType.INNER) {
+                t1Alias[table1Count] eq t2Alias[table2Count]
+            }.slice(t1Alias[table1Count]).selectAll().toList()
         }
     }
 }

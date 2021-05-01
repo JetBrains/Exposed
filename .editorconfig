@@ -1,0 +1,2 @@
+[*.{kt,kts}]
+disabled_rules=filename,no-wildcard-imports

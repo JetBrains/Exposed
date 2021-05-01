@@ -16,11 +16,11 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     // Oracle driver could throw excpection on catalog
     override var catalog: String
-        get() =  try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
+        get() = try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
         set(value) { try { connection.catalog = value } catch (_: Exception) {} }
 
     override var schema: String
-        get() =  try { connection.schema } catch (_: Exception) { "" }
+        get() = try { connection.schema } catch (_: Exception) { "" }
         set(value) { try { connection.schema = value } catch (_: Exception) {} }
 
     override fun commit() {
@@ -50,7 +50,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
 
-    override fun prepareStatement(sql: String, returnKeys: Boolean) : PreparedStatementApi {
+    override fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatementApi {
         val generated = if (returnKeys)
             PreparedStatement.RETURN_GENERATED_KEYS
         else

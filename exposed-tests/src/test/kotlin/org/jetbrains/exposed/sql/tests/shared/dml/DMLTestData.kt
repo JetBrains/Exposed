@@ -11,7 +11,7 @@ import java.util.*
 
 object DMLTestsData {
     object Cities : Table() {
-        val id: Column<Int> = integer("cityId").autoIncrement("cities_seq")
+        val id: Column<Int> = integer("cityId").autoIncrement()
         val name: Column<String> = varchar("name", 50)
         override val primaryKey = PrimaryKey(id)
     }
@@ -104,7 +104,6 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
 
         statement(Cities, Users, UserData)
     }
-
 }
 
 object OrgMemberships : IntIdTable() {
@@ -129,6 +128,5 @@ class Org(id: EntityID<Int>) : IntEntity(id) {
     var uid by Orgs.uid
     var name by Orgs.name
 }
-
 
 internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }

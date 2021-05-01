@@ -6,10 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 import java.util.*
 
-class BatchDataInconsistentException(message : String) : Exception(message)
+class BatchDataInconsistentException(message: String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false,
-                                private val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
+open class BatchInsertStatement(
+    table: Table,
+    ignore: Boolean = false,
+    protected val shouldReturnGeneratedValues: Boolean = true
+) : InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
 
@@ -83,16 +86,11 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
-    private val OUTPUT_PARAMS_LIMIT = 5000
 
     override fun validateLastBatch() {
         super.validateLastBatch()
         if (data.size > OUTPUT_ROW_LIMIT) {
             throw BatchDataInconsistentException("Too much rows in one batch. Exceed $OUTPUT_ROW_LIMIT limit")
-        }
-        val paramsToInsert = data.firstOrNull()?.size ?: 0
-        if (paramsToInsert * (data.size + 1) > OUTPUT_PARAMS_LIMIT) {
-            throw BatchDataInconsistentException("Too much parameters for batch with OUTPUT. Exceed $OUTPUT_PARAMS_LIMIT limit")
         }
     }
 
@@ -100,7 +98,10 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val output = table.autoIncColumn?.let { " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS" }.orEmpty()
+            val output = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }?.let {
+                " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
+            }.orEmpty()
+
             QueryBuilder(true).apply {
                 values.appendTo(prefix = "$output VALUES") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->

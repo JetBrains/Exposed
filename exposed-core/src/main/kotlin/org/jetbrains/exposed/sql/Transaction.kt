@@ -12,6 +12,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class Key<T>
+
 @Suppress("UNCHECKED_CAST")
 open class UserDataHolder {
     protected val userdata = ConcurrentHashMap<Key<*>, Any?>()
@@ -20,18 +21,19 @@ open class UserDataHolder {
         userdata[key] = value
     }
 
-    fun <T:Any> removeUserData(key: Key<T>) = userdata.remove(key)
+    fun <T : Any> removeUserData(key: Key<T>) = userdata.remove(key)
 
-    fun <T:Any> getUserData(key: Key<T>) : T? = userdata[key] as T?
+    fun <T : Any> getUserData(key: Key<T>): T? = userdata[key] as T?
 
-    fun <T:Any> getOrCreate(key: Key<T>, init: ()->T): T = userdata.getOrPut(key, init) as T
+    fun <T : Any> getOrCreate(key: Key<T>, init: () -> T): T = userdata.getOrPut(key, init) as T
 }
 
-open class Transaction(private val transactionImpl: TransactionInterface): UserDataHolder(), TransactionInterface by transactionImpl {
+open class Transaction(private val transactionImpl: TransactionInterface) : UserDataHolder(), TransactionInterface by transactionImpl {
 
     init {
         Companion.globalInterceptors // init interceptors
     }
+
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
     fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
@@ -49,8 +51,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
 
     val statements = StringBuilder()
+
     // prepare statement as key and count to execution time as value
-    val statementStats = hashMapOf<String, Pair<Int,Long>>()
+    val statementStats = hashMapOf<String, Pair<Int, Long>>()
 
     init {
         addLogger(Slf4jSqlDebugLogger)
@@ -76,9 +79,9 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String) = exec(stmt, { })
+    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
 
-    fun <T:Any> exec(stmt: String, transform: (ResultSet) -> T): T? {
+    fun <T : Any> exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
         if (stmt.isEmpty()) return null
 
         val type = StatementType.values().find {
@@ -105,11 +108,11 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
 
             override fun prepareSQL(transaction: Transaction): String = stmt
 
-            override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
+            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
         })
     }
 
-    fun <T> exec(stmt: Statement<T>): T? = exec(stmt, {it})
+    fun <T> exec(stmt: Statement<T>): T? = exec(stmt) { it }
 
     /**
      * Provided statements will be executed in a batch.
@@ -147,8 +150,8 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
     }
 
     fun identity(table: Table): String =
-            (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}"}
-                ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
+        (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
+            ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
 
     fun fullIdentity(column: Column<*>): String = QueryBuilder(false).also {
         fullIdentity(column, it)
@@ -162,7 +165,6 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         append('.')
         append(identity(column))
     }
-
 
     fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
 
@@ -183,4 +185,3 @@ open class Transaction(private val transactionImpl: TransactionInterface): UserD
         }
     }
 }
-

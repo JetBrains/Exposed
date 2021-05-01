@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.exposed.gradle.setupDialectTest
 import org.jetbrains.exposed.gradle.Versions
+import org.jetbrains.exposed.gradle.setupTestDriverDependencies
 
 
 plugins {
@@ -9,7 +10,7 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 val dialect: String by project
@@ -27,22 +28,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    implementation("mysql", "mysql-connector-mxj", Versions.mysqlMxj)
-    implementation("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
+    implementation("org.testcontainers", "testcontainers", "1.14.3")
+    implementation("org.testcontainers", "mysql", "1.14.3")
+
     implementation("com.h2database", "h2", Versions.h2)
 
-    when (dialect) {
-        "mariadb" ->    implementation("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
-        "mysql" ->      implementation("mysql", "mysql-connector-java", Versions.mysql51)
-        "mysql8" ->     implementation("mysql", "mysql-connector-java", Versions.mysql80)
-        "oracle" ->     implementation("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
-        "sqlserver" ->  implementation("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
-        else -> {
-            implementation("com.h2database", "h2", Versions.h2)
-            implementation("mysql", "mysql-connector-java", Versions.mysql51)
-            implementation("org.postgresql", "postgresql", Versions.postgre)
-            implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
-        }
+    setupTestDriverDependencies(dialect) { group, artifactId, version ->
+        testImplementation(group, artifactId, version)
     }
 }
 
