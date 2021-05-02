@@ -89,7 +89,15 @@ enum class TestDB(
                 ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"
         },
         "org.mariadb.jdbc.Driver"
-    );
+    ),
+
+    DB2(
+        {
+            "jdbc:db2:${System.getProperty("exposed.test.db2.host", "192.168.99.100")}" +
+                    ":${System.getProperty("exposed.test.db2.port", "50000")}"
+        },
+        "com.ibm.db2.jcc.DB2Driver", "inst", "yourStrong(!)Password"
+    ),;
 
     fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
 

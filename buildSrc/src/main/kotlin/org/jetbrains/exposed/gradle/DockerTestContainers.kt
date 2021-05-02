@@ -25,6 +25,7 @@ fun Project.setupDialectTest(dialect: String) {
                     systemProperty("exposed.test.mariadb.port", containerInfo.ports[3306] ?: -1)
                     systemProperty("exposed.test.mysql.port", containerInfo.ports[3306] ?: -1)
                     systemProperty("exposed.test.mysql8.port", containerInfo.ports[3306] ?: -1)
+                    systemProperty("exposed.test.db2.port", 50000)
                 }
             }
         }
@@ -50,6 +51,7 @@ fun setupTestDriverDependencies(dialect: String, testImplementationSetup: (group
         "mysql8" -> testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql80)
         "oracle" -> testImplementationSetup("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
         "sqlserver" -> testImplementationSetup("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
+        "db2" -> testImplementationSetup("com.ibm.db2.jcc", "db2jcc", Versions.db2) // Test against db2 luw; testing for db2 as400 is hard
         else -> {
             testImplementationSetup("com.h2database", "h2", Versions.h2)
             testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql51)
