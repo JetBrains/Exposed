@@ -15,8 +15,7 @@ internal object DB2DataTypeProvider : DataTypeProvider() {
     override fun textType(): String = "VARCHAR(32704)"
 }
 
-internal open class DB2FunctionProvider : FunctionProvider() {
-    internal object INSTANCE : DB2FunctionProvider()
+internal object DB2FunctionProvider : FunctionProvider() {
 
     override fun random(seed: Int?) = "RAND(${seed?.toString().orEmpty()})"
 }
@@ -24,9 +23,8 @@ internal open class DB2FunctionProvider : FunctionProvider() {
 /**
  * DB2 dialect implementation.
  */
-class DB2Dialect : VendorDialect(dialectName, DB2DataTypeProvider, DB2FunctionProvider.INSTANCE) {
+class DB2Dialect : VendorDialect(dialectName, DB2DataTypeProvider, DB2FunctionProvider) {
     override val name: String = dialectName
-    override val functionProvider: FunctionProvider = DB2FunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
 
