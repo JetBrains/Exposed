@@ -190,6 +190,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
+            val tsType = currentDialectTest.dataTypeProvider.dateTimeWithTzType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -203,8 +204,8 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
                 "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
                 "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}, " +
-                "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
-                "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
+                "${"t5".inProperCase()} $tsType ${tsLiteral.itOrNull()}, " +
+                "${"t6".inProperCase()} $tsType ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
                 "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
                 "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}, " +

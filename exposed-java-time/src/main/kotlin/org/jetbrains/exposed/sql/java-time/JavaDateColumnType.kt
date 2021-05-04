@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -23,6 +24,18 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
         "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
+}
+private val DEFAULT_DATE_TIME_WITH_TZ_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneOffset.UTC)
+}
+private val MYSQL_DATE_TIME_WITH_TZ_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneOffset.UTC)
+}
+private val SQLITE_AND_ORACLE_DATE_TIME_WITH_TZ_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSX",
+        Locale.ROOT
+    ).withZone(ZoneOffset.UTC)
 }
 private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
@@ -169,7 +182,7 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
 
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
-    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeWithTzType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -180,8 +193,9 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         }
 
         return when (currentDialect) {
-            is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_WITH_TZ_STRING_FORMATTER.format(instant)}'"
+            is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TZ_STRING_FORMATTER.format(instant)}'"
+            else -> "'${DEFAULT_DATE_TIME_WITH_TZ_STRING_FORMATTER.format(instant)}'"
         }
     }
 
@@ -197,7 +211,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 
     override fun notNullValueToDB(value: Any): Any = when {
         value is Instant && currentDialect is SQLiteDialect ->
-            SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)
+            SQLITE_AND_ORACLE_DATE_TIME_WITH_TZ_STRING_FORMATTER.format(value)
         value is Instant ->
             java.sql.Timestamp.from(value)
         else -> value
@@ -252,14 +266,14 @@ class JavaDurationColumnType : ColumnType() {
  *
  * @param name The column name
  */
-fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType())
+fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType.INSTANCE)
 
 /**
  * A datetime column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
+fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType.INSTANCE)
 
 /**
  * A time column to store a time.
@@ -269,18 +283,18 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, J
  * @param name The column name
  * @author Maxim Vorotynsky
  */
-fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
+fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType.INSTANCE)
 
 /**
  * A timestamp column to store both a date and a time.
  *
  * @param name The column name
  */
-fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
+fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType.INSTANCE)
 
 /**
  * A date column to store a duration.
  *
  * @param name The column name
  */
-fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
+fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType.INSTANCE)
