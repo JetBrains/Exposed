@@ -5,6 +5,18 @@ import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.targetTables
+import org.jetbrains.exposed.sql.transactions.transactionScope
+
+private var isExecutedWithinEntityLifecycle by transactionScope { false }
+
+internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
+    return try {
+        isExecutedWithinEntityLifecycle = true
+        body()
+    } finally {
+        isExecutedWithinEntityLifecycle = false
+    }
+}
 
 class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
@@ -15,6 +27,11 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             is DeleteStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             is InsertStatement<*> -> {
@@ -27,6 +44,11 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             is UpdateStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables())
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             else -> {

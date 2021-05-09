@@ -341,6 +341,41 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testCacheInvalidatedOnDSLDelete() {
+        withTables(Boards) {
+            val board1 = Board.new { name = "irrelevant" }
+            assertNotNull(Board.testCache(board1.id))
+            board1.delete()
+            assertNull(Board.testCache(board1.id))
+
+            val board2 = Board.new { name = "irrelevant" }
+            assertNotNull(Board.testCache(board2.id))
+            Boards.deleteWhere { Boards.id eq board2.id }
+            assertNull(Board.testCache(board2.id))
+        }
+    }
+
+    @Test
+    fun testCacheInvalidatedOnDSLUpdate() {
+        withTables(Boards) {
+            val board1 = Board.new { name = "irrelevant" }
+            assertNotNull(Board.testCache(board1.id))
+            board1.name = "relevant"
+            assertEquals("relevant", board1.name)
+
+            val board2 = Board.new { name = "irrelevant2" }
+            assertNotNull(Board.testCache(board2.id))
+            Boards.update({ Boards.id eq board2.id }) {
+                it[Boards.name] = "relevant2"
+            }
+            assertNull(Board.testCache(board2.id))
+            board2.refresh(flush = false)
+            assertNotNull(Board.testCache(board2.id))
+            assertEquals("relevant2", board2.name)
+        }
+    }
+
     object Humans : IntIdTable("human") {
         val h = text("h", eagerLoading = true)
     }
