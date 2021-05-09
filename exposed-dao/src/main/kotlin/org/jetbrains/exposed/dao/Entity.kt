@@ -158,11 +158,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      */
     open fun delete() {
         val table = klass.table
+        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
         executeAsPartOfEntityLifecycle {
             table.deleteWhere { table.id eq id }
         }
         klass.removeFromCache(this)
-        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
@@ -176,6 +176,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 // Store values before update to prevent flush inside UpdateStatement
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
+                // In case of batch all changes will be registered after all entities flushed
+                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
                 executeAsPartOfEntityLifecycle {
                     table.update({ table.id eq id }) {
                         for ((c, v) in _writeValues) {
@@ -191,7 +193,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
-            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

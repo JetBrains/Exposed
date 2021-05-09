@@ -120,19 +120,19 @@ class EntityHookTest : DatabaseTestsBase() {
 
     @Test fun testModifiedSimple01() {
         withTables(*EntityHookTestData.allTables) {
-            transaction {
+            val (_, events1, _) = trackChanges {
                 val ru = EntityHookTestData.Country.new {
                     name = "RU"
                 }
-                val x = EntityHookTestData.City.new {
+                EntityHookTestData.City.new {
                     name = "St. Petersburg"
                     country = ru
                 }
-
-                flushCache()
             }
 
-            val (_, events, txId) = trackChanges {
+            assertEquals(2, events1.count())
+
+            val (_, events2, txId) = trackChanges {
                 val de = EntityHookTestData.Country.new {
                     name = "DE"
                 }
@@ -141,10 +141,10 @@ class EntityHookTest : DatabaseTestsBase() {
                 x.country = de
             }
             // TODO: one may expect change for RU but we do not send it due to performance reasons
-            assertEquals(2, events.count())
-            assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
-            assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
-            events.forEach {
+            assertEquals(2, events2.count())
+            assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
+            assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
+            events2.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -295,6 +295,34 @@ class EntityHookTest : DatabaseTestsBase() {
             val updateEvent = events2.single()
             assertEquals(user.id, updateEvent.entityId)
             assertEquals(EntityChangeType.Updated, updateEvent.changeType)
+        }
+    }
+
+    @Test
+    fun `calling flush notifies EntityHook subscribers`() {
+        withTables(EntityHookTestData.User.table) {
+            var hookCalls = 0
+            val user = EntityHookTestData.User.new {
+                name = "1@test.local"
+                age = 30
+            }
+            user.flush()
+
+            EntityHook.subscribe {
+                hookCalls++
+            }
+
+            user.name = "2@test.local"
+            assertEquals(0, hookCalls)
+
+            user.flush()
+            assertEquals(1, hookCalls)
+
+            user.name = "3@test.local"
+            assertEquals(1, hookCalls)
+
+            commit()
+            assertEquals(2, hookCalls)
         }
     }
 }

@@ -4,17 +4,19 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
 import org.jetbrains.exposed.sql.transactions.transactionScope
 
 private var isExecutedWithinEntityLifecycle by transactionScope { false }
 
 internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
+    val currentExecutionState = isExecutedWithinEntityLifecycle
     return try {
         isExecutedWithinEntityLifecycle = true
         body()
     } finally {
-        isExecutedWithinEntityLifecycle = false
+        isExecutedWithinEntityLifecycle = currentExecutionState
     }
 }
 
@@ -56,6 +58,10 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                     transaction.flushCache()
             }
         }
+    }
+
+    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
+        transaction.alertSubscribers()
     }
 
     override fun beforeCommit(transaction: Transaction) {

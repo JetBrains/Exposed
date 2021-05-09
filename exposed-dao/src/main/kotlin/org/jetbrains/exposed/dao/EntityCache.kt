@@ -143,6 +143,7 @@ class EntityCache(private val transaction: Transaction) {
                 toFlush = partition.second
             } while (toFlush.isNotEmpty())
         }
+        transaction.alertSubscribers()
     }
 
     fun clearReferrersCache() {
