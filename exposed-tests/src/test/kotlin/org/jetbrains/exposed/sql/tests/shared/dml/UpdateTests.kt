@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -8,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
+import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -77,6 +79,24 @@ class UpdateTests : DatabaseTestsBase() {
             join.selectAll().forEach {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(123, it[userData.value])
+            }
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `test that column length checked in update `() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(stringTable) {
+            stringTable.insert {
+                it[name] = "TestName"
+            }
+
+            val veryLongString = "1".repeat(255)
+            stringTable.update({ stringTable.name eq "TestName" }) {
+                it[name] = veryLongString
             }
         }
     }

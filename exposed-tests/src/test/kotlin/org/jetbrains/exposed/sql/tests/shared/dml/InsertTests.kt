@@ -351,6 +351,20 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test(expected = java.lang.IllegalArgumentException::class)
+    fun `test that column length checked on insert`() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(stringTable) {
+            val veryLongString = "1".repeat(255)
+            stringTable.insert {
+                it[name] = veryLongString
+            }
+        }
+    }
+
     /*
     @Test fun testGeneratedKey04() {
         val CharIdTable = object : IdTable<String>("charId") {

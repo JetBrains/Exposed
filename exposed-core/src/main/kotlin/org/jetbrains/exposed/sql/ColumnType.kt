@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
@@ -66,6 +67,13 @@ interface IColumnType {
         else
             stmt[index] = value
     }
+
+    /**
+     * Function checks that provided value suites the column type and throws [IllegalArgumentException] otherwise.
+     * [value] can be of any type (including [Expression])
+     * */
+    @Throws(IllegalArgumentException::class)
+    fun validateValueBeforeUpdate(value: Any?) {}
 }
 
 /**
@@ -512,11 +520,12 @@ open class CharColumnType(
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is String && value.codePointCount(0, value.length) <= colLength) {
-            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is String) {
+            require(value.codePointCount(0, value.length) <= colLength) {
+                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -554,11 +563,12 @@ open class VarCharColumnType(
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is String && value.codePointCount(0, value.length) <= colLength) {
-            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is String) {
+            require(value.codePointCount(0, value.length) <= colLength) {
+                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -632,11 +642,12 @@ class BinaryColumnType(
 ) : BasicBinaryColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType(length)
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is ByteArray && value.size <= length) {
-            "Value '$value' can't be stored to database column because exceeds length ($length)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is ByteArray) {
+            require(value.size <= length) {
+                "Value '$value' can't be stored to database column because exceeds length ($length)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
