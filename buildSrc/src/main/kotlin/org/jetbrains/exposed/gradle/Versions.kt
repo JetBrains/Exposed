@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.4.32"
-    const val kotlinCoroutines = "1.4.3"
+    const val kotlin = "1.5.0"
+    const val kotlinCoroutines = "1.5.0-RC"
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
