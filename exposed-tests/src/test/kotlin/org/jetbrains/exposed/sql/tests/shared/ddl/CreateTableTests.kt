@@ -119,7 +119,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addCompositePrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(Person)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = arrayOf(Person)) {
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -138,7 +138,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addOneColumnPrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(Book)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = arrayOf(Book)) {
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
             val id1ProperName = Book.id.name.inProperCase()
