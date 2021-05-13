@@ -172,7 +172,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     }
 }
 
-fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with2(vararg relations: KProperty1<out REF, Any?>): L =
+fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L =
     also { toList().apply { preloadRelations(*relations) } }
 
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
