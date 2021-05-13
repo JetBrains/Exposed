@@ -26,6 +26,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
+            "IBM Data Server Driver for JDBC and SQLJ",
             "AS/400 Toolbox for Java JDBC Driver" -> DB2Dialect.dialectName
             else -> {
                 if (driverName.startsWith("Microsoft JDBC Driver "))
