@@ -28,8 +28,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
     implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    implementation("org.testcontainers", "testcontainers", "1.14.3")
-    implementation("org.testcontainers", "mysql", "1.14.3")
+    implementation("org.testcontainers", "testcontainers", "1.15.3")
+    implementation("org.testcontainers", "mysql", "1.15.3")
 
     implementation("com.h2database", "h2", Versions.h2)
 
