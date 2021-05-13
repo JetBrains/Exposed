@@ -20,7 +20,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    testRuntimeOnly("org.testcontainers", "testcontainers", "1.14.3")
+    testRuntimeOnly("org.testcontainers", "testcontainers", "1.15.3")
 
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)
