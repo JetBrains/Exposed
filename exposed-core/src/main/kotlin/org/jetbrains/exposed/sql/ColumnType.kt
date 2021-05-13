@@ -726,14 +726,31 @@ class UUIDColumnType : ColumnType() {
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: Any): Any = currentDialect.dataTypeProvider.uuidToDB(valueToUUID(value))
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is UUID -> {
+            if (value.toString().length == 36) {
+                value.toString()
+            } else currentDialect.dataTypeProvider.uuidToDB(value)
+        }
+        else -> {
+            currentDialect.dataTypeProvider.uuidToDB(valueToUUID(value))
+        }
+    }
 
     override fun nonNullValueToString(value: Any): String = "'${valueToUUID(value)}'"
 
     private fun valueToUUID(value: Any): UUID = when (value) {
         is UUID -> value
         is String -> UUID.fromString(value)
-        is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
+        is ByteArray -> {
+            val possibleUUID = String(value)
+
+            if (possibleUUID.matches(uuidRegexp)) {
+                UUID.fromString(possibleUUID)
+            } else {
+                ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
+            }
+        }
         else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
     }
 
