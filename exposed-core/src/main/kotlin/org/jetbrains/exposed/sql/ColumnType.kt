@@ -757,7 +757,6 @@ class UUIDColumnType : ColumnType() {
     companion object {
         private val uuidRegexp = Regex("[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", RegexOption.IGNORE_CASE)
     }
-
 }
 
 // Boolean columns
