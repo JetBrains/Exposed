@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -290,6 +291,44 @@ class ModOp<T : Number?, S : Number?>(
         when (currentDialectIfAvailable) {
             is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
             else -> append('(', expr1, " % ", expr2, ')')
+        }
+    }
+}
+
+/**
+ * Represents an SQL operator that performs a bitwise `and` on [expr1] and [expr2].
+ */
+class AndBitOp<T, S : T>(
+    /** The left-hand side operand. */
+    val expr1: Expression<T>,
+    /** The right-hand side operand. */
+    val expr2: Expression<S>,
+    /** The column type of this expression. */
+    override val columnType: IColumnType
+) : ExpressionWithColumnType<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is OracleDialect, is H2Dialect -> append("BITAND(", expr1, ", ", expr2, ")")
+            else -> append('(', expr1, " & ", expr2, ')')
+        }
+    }
+}
+
+/**
+ * Represents an SQL operator that performs a bitwise `or` on [expr1] and [expr2].
+ */
+class OrBitOp<T, S : T>(
+    /** The left-hand side operand. */
+    val expr1: Expression<T>,
+    /** The right-hand side operand. */
+    val expr2: Expression<S>,
+    /** The column type of this expression. */
+    override val columnType: IColumnType
+) : ExpressionWithColumnType<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is OracleDialect, is H2Dialect -> append("BITOR(", expr1, ", ", expr2, ")")
+            else -> append('(', expr1, " | ", expr2, ')')
         }
     }
 }

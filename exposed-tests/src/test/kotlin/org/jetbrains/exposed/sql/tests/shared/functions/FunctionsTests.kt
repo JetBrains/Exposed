@@ -10,7 +10,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 
@@ -58,6 +60,57 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals(203, r[1][sum])
             assertEquals(3, r[1][mod1])
             assertEquals(3, r[1][mod2])
+        }
+    }
+
+    @Test
+    fun testCalc04() {
+        withCitiesAndUsers { cities, users, userData ->
+            val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
+            val admin = Expression.build { AndBitOp(users.flags, intParam(adminFlag), IntegerColumnType()) eq adminFlag }
+            val r = users.slice(users.id, admin).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            val trueType = when (currentDialectTest) {
+                is MysqlDialect -> 1L
+                is SQLiteDialect -> 1
+                else -> true
+            }
+            val falseType = when (currentDialectTest) {
+                is MysqlDialect -> 0L
+                is SQLiteDialect -> 0
+                else -> false
+            }
+            assertEquals(falseType, r[0][admin])
+            assertEquals(trueType, r[1][admin])
+            assertEquals(falseType, r[2][admin])
+            assertEquals(trueType, r[3][admin])
+            assertEquals(falseType, r[4][admin])
+        }
+    }
+
+    @Test
+    fun testCalc05() {
+        withCitiesAndUsers { cities, users, userData ->
+            val extra = 0b10
+            val flagsWithExtra = Expression.build { OrBitOp(users.flags, intParam(extra), IntegerColumnType()) }
+            val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0010, r[0][flagsWithExtra])
+            assertEquals(0b0011, r[1][flagsWithExtra])
+            assertEquals(0b1010, r[2][flagsWithExtra])
+            assertEquals(0b1011, r[3][flagsWithExtra])
+            assertEquals(0b1010, r[4][flagsWithExtra])
+        }
+    }
+
+    @Test
+    fun testFlag01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
+            val r = users.slice(users.id).select { users.flags hasFlag adminFlag }.orderBy(users.id).toList()
+            assertEquals(2, r.size)
+            assertEquals("andrey", r[0][users.id])
+            assertEquals("sergey", r[1][users.id])
         }
     }
 
