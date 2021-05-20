@@ -706,7 +706,7 @@ abstract class VendorDialect(
     override fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
-        TransactionManager.current().db.metadata { cleanCache() }
+        TransactionManager.defaultDatabase?.metadata { cleanCache() } ?: error("Database required")
     }
 
     override fun resetSchemaCaches() {
