@@ -743,7 +743,7 @@ abstract class VendorDialect(
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
+    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl(true)}"
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()
