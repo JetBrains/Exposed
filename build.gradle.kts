@@ -7,7 +7,7 @@ plugins {
 allprojects {
     apply(plugin = "org.jmailen.kotlinter")
 
-    if (this.name != "exposed-tests" && this != rootProject) {
+    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this != rootProject) {
         apply(from = rootProject.file("buildScripts/gradle/publishing.gradle.kts"))
     }
 }
