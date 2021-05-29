@@ -503,7 +503,9 @@ data class ColumnMetadata(
     /** Whether the column if nullable or not. */
     val nullable: Boolean,
     /** Optional size of the column. */
-    val size: Int?
+    val size: Int?,
+    /** Is the column auto increment */
+    val autoIncrement: Boolean,
 )
 
 /**
