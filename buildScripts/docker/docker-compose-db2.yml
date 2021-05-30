@@ -6,6 +6,9 @@ services:
     image: ibmcom/db2:latest
     ports:
       - "50000:50000"
+    # Hide console output of db2 image
+    logging:
+      driver: "none"
     environment:
       LICENSE: accept
       DB2INSTANCE: "inst"
