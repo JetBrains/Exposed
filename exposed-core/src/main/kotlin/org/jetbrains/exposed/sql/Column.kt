@@ -69,7 +69,7 @@ class Column<T>(
     internal fun isOneColumnPK(): Boolean = table.primaryKey?.columns?.singleOrNull() == this
 
     /** Returns the SQL representation of this column. */
-    fun descriptionDdl(modify: Boolean): String = buildString {
+    fun descriptionDdl(modify: Boolean = false): String = buildString {
         val tr = TransactionManager.current()
         append(tr.identity(this@Column))
         append(" ")
