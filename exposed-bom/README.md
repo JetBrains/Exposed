@@ -12,15 +12,6 @@ Bill of Materials for all Exposed modules
     </repository>
 </repositories>
 
-<!-- Versions after 0.30.1 -->
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <name>jcenter</name>
-        <url>https://jcenter.bintray.com</url>
-    </repository>
-</repositories>
-
 <dependencyManagement>
     <dependencies>
         <dependency>
@@ -37,17 +28,17 @@ Bill of Materials for all Exposed modules
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-core</artifactId>
-        <scope>provided></scope>
+        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-dao</artifactId>
-        <scope>provided></scope>
+        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jdbc</artifactId>
-        <scope>provided></scope>
+        <scope>provided</scope>
     </dependency>
 </dependencies>
 ```
@@ -57,9 +48,6 @@ Bill of Materials for all Exposed modules
 repositories {
   // Versions after 0.30.1
   mavenCentral()
-  
-  // Versions before 0.30.1
-  jcenter()
 }
 
 dependencies {
