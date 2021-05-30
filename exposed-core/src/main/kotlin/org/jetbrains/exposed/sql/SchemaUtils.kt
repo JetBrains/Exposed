@@ -131,11 +131,17 @@ object SchemaUtils {
                         }
                     }
 
-                    // sync nullability of existing columns
-                    val incorrectNullabilityColumns = table.columns.filter { c ->
-                        thisTableExistingColumns.any { c.name.equals(it.name, true) && it.nullable != c.columnType.nullable }
+                    // sync existing columns
+                    val redoColumn = table.columns.filter { c ->
+                        thisTableExistingColumns.any {
+                            if (c.name.equals(it.name, true)) {
+                                val incorrectNullability = it.nullable != c.columnType.nullable
+                                val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
+                                incorrectNullability || incorrectAutoInc
+                            } else false
+                        }
                     }
-                    incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
+                    redoColumn.flatMapTo(statements) { it.modifyStatement() }
                 }
             }
 

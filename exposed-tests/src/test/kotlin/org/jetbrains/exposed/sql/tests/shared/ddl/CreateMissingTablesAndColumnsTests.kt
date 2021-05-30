@@ -96,6 +96,40 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCreateMissingTablesAndColumnsChangeAutoincrement() {
+        val t1 = object : Table("foo") {
+            val id = integer("idcol").autoIncrement()
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            t1.insert { it[foo] = "ABC" }
+
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            assertFailAndRollback("Can't insert without primaryKey value") {
+                t2.insert { it[foo] = "ABC" }
+            }
+
+            t2.insert {
+                it[id] = 3
+                it[foo] = "ABC"
+            }
+
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test
     fun testCreateMissingTablesAndColumnsChangeCascadeType() {
         val fooTable = object : IntIdTable("foo") {
             val foo = varchar("foo", 50)

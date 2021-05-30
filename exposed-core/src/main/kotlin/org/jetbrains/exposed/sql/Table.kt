@@ -1055,7 +1055,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             }
             append(TransactionManager.current().identity(this@Table))
             if (columns.isNotEmpty()) {
-                columns.joinTo(this, prefix = " (") { it.descriptionDdl() }
+                columns.joinTo(this, prefix = " (") { it.descriptionDdl(false) }
 
                 if (isCustomPKNameDefined() || columns.none { it.isOneColumnPK() }) {
                     primaryKeyConstraint()?.let { append(", $it") }
