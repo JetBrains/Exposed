@@ -176,7 +176,7 @@ class MultiDatabaseEntityTest {
                 b2Reread.y = null
             }
         }
-        inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, 1, db1) {
+        inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, false, 1, db1) {
             assertNull(EntityTestsData.BEntity.testCache(db1b1.id))
             val b1Reread = EntityTestsData.BEntity[db1b1.id]
             assertEquals(db1b1.id, b1Reread.id)

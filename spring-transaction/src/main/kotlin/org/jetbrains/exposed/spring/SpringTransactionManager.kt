@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
+import org.jetbrains.exposed.sql.transactions.DEFAULT_READ_ONLY
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -18,6 +19,7 @@ import javax.sql.DataSource
 
 class SpringTransactionManager(
     private val _dataSource: DataSource,
+    override var defaultReadOnly: Boolean = DEFAULT_READ_ONLY,
     @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
@@ -80,8 +82,11 @@ class SpringTransactionManager(
         }
     }
 
-    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
-        val tDefinition = DefaultTransactionDefinition().apply { isolationLevel = isolation }
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
+        val tDefinition = DefaultTransactionDefinition().apply {
+            isReadOnly = readOnly
+            isolationLevel = isolation
+        }
 
         getTransaction(tDefinition)
 
@@ -91,7 +96,7 @@ class SpringTransactionManager(
     private fun initTransaction(): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
 
-        val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
+        val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
@@ -116,6 +121,7 @@ class SpringTransactionManager(
         override val connection: ExposedConnection<*>,
         override val db: Database,
         override val transactionIsolation: Int,
+        override val readOnly: Boolean,
         override val outerTransaction: Transaction?
     ) : TransactionInterface {
 
