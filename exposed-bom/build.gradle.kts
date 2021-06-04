@@ -4,6 +4,7 @@ import org.jetbrains.exposed.gradle.signPublicationIfKeyPresent
 plugins {
     `java-platform`
     `maven-publish`
+    signing
 }
 
 group = "org.jetbrains.exposed"
