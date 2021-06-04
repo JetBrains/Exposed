@@ -97,7 +97,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
-                    StatementType.SELECT -> executeQuery()
+                    StatementType.SELECT, StatementType.EXEC -> executeQuery()
                     else -> {
                         executeUpdate()
                         resultSet
