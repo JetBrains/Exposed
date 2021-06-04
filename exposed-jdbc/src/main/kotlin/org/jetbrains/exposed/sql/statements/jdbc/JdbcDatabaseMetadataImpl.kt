@@ -137,7 +137,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 it.getInt("DATA_TYPE"),
                 it.getBoolean("NULLABLE"),
                 it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                it.getBoolean("IS_AUTOINCREMENT"),
+                it.getString("IS_AUTOINCREMENT") == "YES",
             )
             it.getString("TABLE_NAME") to columnMetadata
         }
