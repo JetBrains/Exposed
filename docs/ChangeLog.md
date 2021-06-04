@@ -5,7 +5,7 @@ Infrastructure:
 * slf4j 1.7.30
 * Spring 5.3.7
 * Spring Boot 2.5.0
-* Bill Of Materials (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
+* [Bill Of Materials](https://github.com/JetBrains/Exposed/tree/master/exposed-bom) (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
 
 Features:
 * Auto-increment columns state change detected (PR from [spand](https://github.com/spand))
