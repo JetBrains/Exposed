@@ -1,4 +1,4 @@
-# 0.32.2
+# 0.32.1
 Infrastructure:
 * Kotlin 1.5.10
 * Kotlin Coroutines 1.5.0
