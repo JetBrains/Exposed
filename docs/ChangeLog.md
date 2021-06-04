@@ -6,11 +6,10 @@ Infrastructure:
 * Spring 5.3.7
 * Spring Boot 2.5.0
 * Bill Of Materials (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
-* 
 
 Features:
 * Auto-increment columns state change detected (PR from [spand](https://github.com/spand))
-* Explicit statementType for `Transaction.exec` functions (also, `EXEC` `StatementType` was introduced). ([390](https://github.com/JetBrains/Exposed/issues/390), ([1249](https://github.com/JetBrains/Exposed/issues/1249)
+* Explicit statementType for `Transaction.exec` functions (also, `EXEC` `StatementType` was introduced). ([390](https://github.com/JetBrains/Exposed/issues/390), [1249](https://github.com/JetBrains/Exposed/issues/1249))
 
 Bug Fixes:
 * Entities should be removed from the cache on update/delete made with DSL queries
