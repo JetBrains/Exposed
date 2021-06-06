@@ -79,7 +79,7 @@ class Column<T>(
 
         when {
             !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
-            isSQLiteAutoIncColumn && (!isOneColumnPK() || table.isCustomPKNameDefined()) && table.primaryKey != null -> append(currentDialect.dataTypeProvider.integerType())
+            isSQLiteAutoIncColumn && (!isOneColumnPK() || table.isCustomPKNameDefined()) && table.primaryKey != null && table.primaryKey.columns[0].name != this@Column.name -> append(currentDialect.dataTypeProvider.integerType())
             else -> append(colType.sqlType())
         }
 
