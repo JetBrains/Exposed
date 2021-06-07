@@ -136,7 +136,6 @@ abstract class DatabaseTestsBase {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if(dbSettings == TestDB.MYSQL) return
         if (dbSettings !in TestDB.enabledInTests()) {
             exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
             return

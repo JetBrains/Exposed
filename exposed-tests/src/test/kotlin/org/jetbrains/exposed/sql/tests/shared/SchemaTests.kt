@@ -256,6 +256,16 @@ class SchemaTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun `Table name contains schema Test`() {
+        val fooTable = object : IntIdTable("A.Foo") {}
+        val newSchema = Schema("NewSchema")
+        withDb {
+            val foo = fooTable.withSchema(newSchema)
+            kotlin.test.assertEquals(foo.tableName, "NewSchema.Foo")
+        }
+    }
+
     object Author : IntIdTable("author") {
         val name = varchar("name", 20)
     }
