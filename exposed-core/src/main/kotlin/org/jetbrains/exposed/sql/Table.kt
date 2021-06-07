@@ -301,9 +301,6 @@ class Join(
     }
 }
 
-fun <T:Table> T.withSchema(schema: Schema, vararg references: Pair<Column<*>, Schema>): T =
-        this.cloneInSchema(schema, references) as T
-
 /**
  * Base class for any simple table.
  *
@@ -311,23 +308,17 @@ fun <T:Table> T.withSchema(schema: Schema, vararg references: Pair<Column<*>, Sc
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
-    var schema: Schema? = null
-    private val _tableName = if (name.isNotEmpty()) name
+open class Table(name: String = "") : ColumnSet(), DdlAware {
+    /** Returns the table name. */
+    open val tableName: String = if (name.isNotEmpty()) name
     else javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     /** Returns the table name. */
-    open val tableName: String
-        get() {
-            val schemaName = if(schema != null) "${schema!!.identifier}." else ""
-
-            return schemaName + _tableName
-        }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
-    private var _columns = mutableListOf<Column<*>>()
+    private val _columns = mutableListOf<Column<*>>()
     /** Returns all the columns defined on the table. */
-    override val columns: List<Column<*>> get() = _columns
+    override val columns: List<out Column<*>> get() = _columns
 
     /** Returns the first auto-increment column on the table. */
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
@@ -1034,21 +1025,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware, Cloneable {
         }
         else -> error("Unsupported column type for auto-increment $columnType")
     }
-
-    fun cloneInSchema(schema: Schema, references: Array<out Pair<Column<*>, Schema>>): Any =
-            super.clone().also { table ->
-                val table  = table as Table
-                table._columns = table._columns.map { col ->
-                    val schema = references.associate { it } [col]
-                    col.clone(mapOf(Column<*>::table to table)).also {
-                        if(schema != null && col.referee != null && col.foreignKey != null) {
-                            val clonedReferee = col.foreignKey!!.target.clone(mapOf(Column<*>::table to col.referee!!.table.withSchema(schema)))
-                            it.foreignKey = col.foreignKey!!.copy(target = clonedReferee)
-                        }
-                    }
-                }.toMutableList()
-                table.schema = schema
-            }
 
     // DDL statements
 

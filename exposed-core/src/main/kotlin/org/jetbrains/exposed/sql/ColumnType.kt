@@ -174,6 +174,31 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
 }
 
+class SchemaTableColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
+
+    override fun sqlType(): String = idColumn.columnType.sqlType()
+
+    override fun notNullValueToDB(value: Any): Any = idColumn.columnType.notNullValueToDB(value)
+
+    override fun nonNullValueToString(value: Any): String = idColumn.columnType.nonNullValueToString(value)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): Any = idColumn.columnType.valueFromDB(value)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SchemaTableColumnType<*>
+
+        if (idColumn != other.idColumn) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
+}
+
 // Numeric columns
 
 /**

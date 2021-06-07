@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.lang.StringBuilder
 
 /**
@@ -61,7 +62,14 @@ data class Schema(private val name: String,
 
         return listOf(currentDialect.setSchema(this))
     }
+
+    /**
+     * Returns the schema name in proper case.
+     * Should be called within transaction or default [schemaName] will be returned.
+     */
+    fun nameInDatabaseCase(): String = name.inProperCase()
 }
+
 /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
 internal fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
     if (str2 != null) {

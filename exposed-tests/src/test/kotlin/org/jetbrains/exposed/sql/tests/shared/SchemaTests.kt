@@ -130,18 +130,18 @@ class SchemaTests : DatabaseTestsBase() {
             author.tableName
             Author.tableName
 
-            val book = Book.withSchema(schema2, Book.authorId to schema1, Book.authorId to schema1)
+            val book = Book.withSchema(schema2, Book.authorId to author)
             SchemaUtils.create(author)
             SchemaUtils.create(book)
 
             /** insert in Author table from schema1  */
             author.insert {
-                it[name] = "author-name"
+                it[Author.name] = "author-name"
             }
 
             /** test inner-joins from different schemas  */
             (author innerJoin book).slice(Book.id, Author.id).selectAll().forEach {
-                println("${it[author.id]} wrote ${it[book.id]}")
+                println("${it[Author.id]} wrote ${it[Book.id]}")
             }
 
             /** test cross-joins from different schemas  */
@@ -151,17 +151,12 @@ class SchemaTests : DatabaseTestsBase() {
 
             /** test right-joins from different schemas  */
             (author rightJoin book).slice(Book.id, Author.id).selectAll().forEach {
-                println("${it[author.id]} wrote ${it[Book.id]}")
+                println("${it[Author.id]} wrote ${it[Book.id]}")
             }
 
             /** test left-joins from different schemas  */
             (book leftJoin author).slice(Book.id, Author.id).selectAll().forEach {
-                println("${it[Author.id]} wrote ${it[book.id]}")
-            }
-
-            /** you can use author and book objects directly  */
-            (author innerJoin book).slice(Book.id, Author.id).selectAll().forEach {
-                println("${it[author.id]} wrote ${it[Book.id]}")
+                println("${it[Author.id]} wrote ${it[Book.id]}")
             }
         }
     }
@@ -180,12 +175,12 @@ class SchemaTests : DatabaseTestsBase() {
 
             /** insert in Actor table from schema1. */
             authorSchema1.insert {
-                it[name] = "author-schema1"
+                it[Author.name] = "author-schema1"
             }
 
             /** insert in Actor table from schema2. */
             authorSchema2.insert {
-                it[name] = "author-schema2"
+                it[Author.name] = "author-schema2"
             }
 
             /** check that author table contains only one row with the inserted data  */
@@ -222,14 +217,14 @@ class SchemaTests : DatabaseTestsBase() {
             SchemaUtils.create(authorSchema)
 
             /** insert into table with schema. */
-            authorSchema.insert { it[name] = "author1" }
+            authorSchema.insert { it[Author.name] = "author1" }
 
             val insertedInSchema1 = authorSchema.slice(Author.name).selectAll().single()[Author.name]
             assertEquals("author1", insertedInSchema1)
 
             /** update table with schema. */
             authorSchema.update({ Author.name eq "author1" }) {
-                it[name] = "hichem"
+                it[Author.name] = "hichem"
             }
 
             val updatedInSchema1 = authorSchema.slice(Author.name).selectAll().single()[Author.name]
@@ -243,10 +238,10 @@ class SchemaTests : DatabaseTestsBase() {
             val deletedInSchema1 = authorSchema.slice(Author.name).selectAll().singleOrNull()?.get(Author.name)
             assertEquals(null, deletedInSchema1)
 
-            authorSchema.insert { it[name] = "hichem" }
+            authorSchema.insert { it[Author.name] = "hichem" }
             /** Different methods of select could be used */
             val inserted = authorSchema.select { Author.name eq "hichem" }.single() [Author.name]
-            val inserted2 = authorSchema.slice(authorSchema.name).select { authorSchema.name eq "hichem" }.single() [Author.name]
+            val inserted2 = authorSchema.slice(Author.name).select { Author.name eq "hichem" }.single() [Author.name]
             val inserted3 = Author.withSchema(schema1).slice(Author.name).select { Author.name eq "hichem" }.single() [Author.name]
 
             listOf(inserted, inserted2, inserted3).forEach { assertEquals("hichem", it) }

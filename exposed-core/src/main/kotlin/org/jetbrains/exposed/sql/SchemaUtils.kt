@@ -120,7 +120,15 @@ object SchemaUtils {
             for (table in tables) {
                 //create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
-                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.name.equals(c.name, true) } }
+                val missingTableColumns = table.columns.filterNot { c ->
+                    val column = if(c.columnType is SchemaTableColumnType<*>) {
+                        c.columnType.idColumn
+                    } else {
+                        c
+                    }
+
+                    thisTableExistingColumns.any { it.name.equals(column.name, true) }
+                }
                 missingTableColumns.flatMapTo(statements) { it.ddl }
 
                 if (db.supportsAlterTableWithAddColumn) {
