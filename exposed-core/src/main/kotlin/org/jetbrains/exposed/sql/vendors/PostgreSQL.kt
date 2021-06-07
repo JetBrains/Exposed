@@ -126,9 +126,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
-        }
+            ?: transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -155,7 +153,6 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             + " AND "
             +it
         }
-        limit?.let { +" LIMIT $it" }
         toString()
     }
 

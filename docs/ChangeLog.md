@@ -1,3 +1,71 @@
+# 0.32.1
+Infrastructure:
+* Kotlin 1.5.10
+* Kotlin Coroutines 1.5.0
+* slf4j 1.7.30
+* Spring 5.3.7
+* Spring Boot 2.5.0
+* [Bill Of Materials](https://github.com/JetBrains/Exposed/tree/master/exposed-bom) (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
+
+Features:
+* Auto-increment columns state change detected (PR from [spand](https://github.com/spand))
+* Explicit statementType for `Transaction.exec` functions (also, `EXEC` `StatementType` was introduced). ([390](https://github.com/JetBrains/Exposed/issues/390), [1249](https://github.com/JetBrains/Exposed/issues/1249))
+
+Bug Fixes:
+* Entities should be removed from the cache on update/delete made with DSL queries
+* Regression: Clientside length validation in ColumnType breaks otherwise harmless where clause ([1204](https://github.com/JetBrains/Exposed/issues/1204), [1222](https://github.com/JetBrains/Exposed/issues/1222))
+* Using Entity.flush does not alert EntityHook subscribers ([1225](https://github.com/JetBrains/Exposed/issues/1225))
+* TransactionScope throws NullPointerException instead of IllegalStateException when used outside the transaction ([1250](https://github.com/JetBrains/Exposed/issues/1250))
+* Spring transaction connection leaks when used with non-exposed transactions ([1167](https://github.com/JetBrains/Exposed/issues/1167))
+
+# 0.31.1
+Infrastructure:
+* Linting and formatting with [kotliner](https://github.com/jeremymailen/kotlinter-gradle) gradle plugin added by [jnfeinstein](https://github.com/jnfeinstein)
+
+Features:
+* TIME data type support in `exposed-java-time` module ([224](https://github.com/JetBrains/Exposed/issues/224)). Improvement provided by [vorotynsky](https://github.com/vorotynsky) and [Jhyub](https://github.com/Jhyub)
+* inList with Pairs and Triples support ([643](https://github.com/JetBrains/Exposed/issues/643))
+
+Bug Fixes:
+* Proper support for Sequences as default value or autoincrement ([492](https://github.com/JetBrains/Exposed/issues/492), [1164](https://github.com/JetBrains/Exposed/issues/1164), [1209](https://github.com/JetBrains/Exposed/issues/1209))
+* [SQL Server] Proper support for 'DEFAULT' keyword ([1207](https://github.com/JetBrains/Exposed/issues/1207)). PR by [ahayanm001](https://github.com/ahayanm001)
+
+Performance:
+* Lower footprint on creating ResultRow from ResultSet. Fix was inspired by [maio](https://github.com/maio)
+
+# 0.30.2
+Bug Fixes:                                                                         
+* Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
+* Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
+* SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
+* Early versions of MySQL Connector don't work with Exposed ([1203](https://github.com/JetBrains/Exposed/issues/1203)). PR by [MeowRay](https://github.com/MeowRay)
+* `Query.prepareSQL(QueryBuilder)` is made public to allow preparing raw SQLs ([1206](https://github.com/JetBrains/Exposed/issues/1206) 
+
+# 0.30.1
+Infrastructure:
+* Artifact publishing moved from jcenter/Bintray to Maven Central
+* Kotlin 1.4.32
+* Kotlin Coroutines 1.4.3
+
+Feature:
+* `UNION` and `UNION ALL` set operations support with related `union`, `unionAll` functions ([402](https://github.com/JetBrains/Exposed/issues/402))  
+* `like` and `notLike` methods work with string expression, PR from [hfazai](https://github.com/hfazai)
+* [Eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) now works with any iterable
+
+Performance:
+* Different minor memory improvements in `exposed-dao` module by [jnfeinstein](https://github.com/jnfeinstein)
+* Less entity cache invalidations when works with a single entity
+
+Bug fixes:
+* MySQL text type is now treated as `longtext`, SQLServer is `VARCHAR(MAX)`, thanks to [Dmitry Kolmogortsev](https://github.com/koldn)
+* Fix to support recent PostgreSQL NG driver by [hfazai](https://github.com/hfazai)
+* String functions failed to work with strings longer than 255 characters
+* `Query.count()` and `Query.empty()` functions can lead to ResultSet memory leaks
+* Alias was lost in update with join queries
+* [SQLServer] Problem with blob columns when assigning null value
+* Deleting an entity after it is created does not delete it from cache ([1175](https://github.com/JetBrains/Exposed/issues/1175))
+* EnumerationNameColumnType fails with vague exception when unknown value in DB ([1176](https://github.com/JetBrains/Exposed/issues/1176))
+
 # 0.29.1
 Infrastructure:
 * Kotlin 1.4.21

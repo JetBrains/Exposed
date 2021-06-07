@@ -49,10 +49,10 @@ class Column<T>(
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isLastColumnInPK = table.primaryKey?.columns?.last() == this
         val columnDefinition = when {
-            isOneColumnPK() && table.isCustomPKNameDefined() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
-            isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
-            !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
-            else -> descriptionDdl()
+            isOneColumnPK() && table.isCustomPKNameDefined() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl(false).removeSuffix(" PRIMARY KEY")
+            !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            else -> descriptionDdl(false)
         }
 
         val addConstr = if (isLastColumnInPK && currentDialect is H2Dialect) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
@@ -69,7 +69,7 @@ class Column<T>(
     internal fun isOneColumnPK(): Boolean = table.primaryKey?.columns?.singleOrNull() == this
 
     /** Returns the SQL representation of this column. */
-    fun descriptionDdl(): String = buildString {
+    fun descriptionDdl(modify: Boolean = false): String = buildString {
         val tr = TransactionManager.current()
         append(tr.identity(this@Column))
         append(" ")
@@ -104,7 +104,7 @@ class Column<T>(
             append(" NOT NULL")
         }
 
-        if (!table.isCustomPKNameDefined() && isOneColumnPK() && !isSQLiteAutoIncColumn) {
+        if (!modify && !table.isCustomPKNameDefined() && isOneColumnPK() && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
     }

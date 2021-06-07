@@ -1,13 +1,21 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.withSchema
 import org.junit.Test
 
 class SchemaTests : DatabaseTestsBase() {
@@ -68,7 +76,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
-                exec("CREATE TABLE test(id INT REFERENCES ${firstCatalogName}.test(id))")
+                exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
                 val catalogName = connection.catalog
 

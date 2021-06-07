@@ -35,7 +35,7 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
+            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
             else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
@@ -50,7 +50,7 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
+            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
             else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
@@ -77,7 +77,7 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if(isNullFirst()) usersWithoutCities + otherUsers
+            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
             else otherUsers + usersWithoutCities
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
@@ -102,11 +102,13 @@ class OrderByTests : DatabaseTestsBase() {
     @Test
     fun testOrderByExpressions() {
         withCitiesAndUsers { cities, users, userData ->
-            val expression = wrapAsExpression<Int>(users
-                .slice(users.id.count())
-                .select {
-                    cities.id eq users.cityId
-                })
+            val expression = wrapAsExpression<Int>(
+                users
+                    .slice(users.id.count())
+                    .select {
+                        cities.id eq users.cityId
+                    }
+            )
 
             val result = cities
                 .selectAll()

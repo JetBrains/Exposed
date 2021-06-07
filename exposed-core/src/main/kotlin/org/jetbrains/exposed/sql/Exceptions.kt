@@ -1,7 +1,7 @@
 @file:Suppress("PackageDirectoryMismatch")
 package org.jetbrains.exposed.exceptions
 
-import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.AbstractQuery
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
 class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: Transaction) : SQLException(cause) {
-    fun causedByQueries() : List<String> = contexts.map {
+    fun causedByQueries(): List<String> = contexts.map {
         try {
             if (transaction.debug) {
                 it.expandArgs(transaction)
@@ -19,7 +19,7 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
             }
         } catch (e: Throwable) {
             try {
-                (it.statement as? Query)?.prepareSQL(QueryBuilder(!transaction.debug))
+                (it.statement as? AbstractQuery<*>)?.prepareSQL(QueryBuilder(!transaction.debug))
             } catch (e: Throwable) {
                 null
             } ?: "Failed on expanding args for ${it.statement.type}: ${it.statement}"
@@ -28,7 +28,7 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
 
     private val originalSQLException = cause as? SQLException
 
-    override fun getSQLState(): String  = originalSQLException?.sqlState.orEmpty()
+    override fun getSQLState(): String = originalSQLException?.sqlState.orEmpty()
 
     override fun getErrorCode(): Int = originalSQLException?.errorCode ?: 0
 

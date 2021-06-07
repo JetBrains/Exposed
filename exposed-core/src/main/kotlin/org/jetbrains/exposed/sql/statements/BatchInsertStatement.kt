@@ -6,10 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 import java.util.*
 
-class BatchDataInconsistentException(message : String) : Exception(message)
+class BatchDataInconsistentException(message: String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false,
-                                protected val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
+open class BatchInsertStatement(
+    table: Table,
+    ignore: Boolean = false,
+    protected val shouldReturnGeneratedValues: Boolean = true
+) : InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
 
@@ -95,7 +98,10 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val output = table.autoIncColumn?.let { " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS" }?.takeIf { shouldReturnGeneratedValues }.orEmpty()
+            val output = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }?.let {
+                " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
+            }.orEmpty()
+
             QueryBuilder(true).apply {
                 values.appendTo(prefix = "$output VALUES") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->

@@ -19,16 +19,16 @@ object EntityHookTestData {
         val age = integer("age")
     }
 
-    object Cities: IntIdTable() {
+    object Cities : IntIdTable() {
         val name = varchar("name", 50)
         val country = reference("country", Countries)
     }
 
-    object Countries: IntIdTable() {
+    object Countries : IntIdTable() {
         val name = varchar("name", 50)
     }
 
-    object UsersToCities: org.jetbrains.exposed.sql.Table() {
+    object UsersToCities : org.jetbrains.exposed.sql.Table() {
         val user = reference("user", Users, onDelete = ReferenceOption.CASCADE)
         val city = reference("city", Cities, onDelete = ReferenceOption.CASCADE)
     }
@@ -49,17 +49,17 @@ object EntityHookTestData {
         var country by Country referencedOn Cities.country
     }
 
-    class Country(id: EntityID<Int>): IntEntity(id) {
+    class Country(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Country>(Countries)
 
         var name by Countries.name
         val cities by City referrersOn Cities.country
     }
 
-    val  allTables = arrayOf(Users, Cities, UsersToCities, Countries)
+    val allTables = arrayOf(Users, Cities, UsersToCities, Countries)
 }
 
-class EntityHookTest: DatabaseTestsBase() {
+class EntityHookTest : DatabaseTestsBase() {
 
     private fun <T> trackChanges(statement: Transaction.() -> T): Triple<T, Collection<EntityChange>, String> {
         val alreadyChanged = TransactionManager.current().registeredChanges().size
@@ -85,7 +85,7 @@ class EntityHookTest: DatabaseTestsBase() {
             assertEquals(2, events.count())
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "RU")
-            events.forEach{
+            events.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -120,19 +120,19 @@ class EntityHookTest: DatabaseTestsBase() {
 
     @Test fun testModifiedSimple01() {
         withTables(*EntityHookTestData.allTables) {
-            transaction {
+            val (_, events1, _) = trackChanges {
                 val ru = EntityHookTestData.Country.new {
                     name = "RU"
                 }
-                val x = EntityHookTestData.City.new {
+                EntityHookTestData.City.new {
                     name = "St. Petersburg"
                     country = ru
                 }
-
-                flushCache()
             }
 
-            val (_, events, txId) = trackChanges {
+            assertEquals(2, events1.count())
+
+            val (_, events2, txId) = trackChanges {
                 val de = EntityHookTestData.Country.new {
                     name = "DE"
                 }
@@ -141,10 +141,10 @@ class EntityHookTest: DatabaseTestsBase() {
                 x.country = de
             }
             // TODO: one may expect change for RU but we do not send it due to performance reasons
-            assertEquals(2, events.count())
-            assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
-            assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
-            events.forEach{
+            assertEquals(2, events2.count())
+            assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
+            assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
+            events2.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -184,7 +184,7 @@ class EntityHookTest: DatabaseTestsBase() {
             assertEquals(2, events.count())
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
-            events.forEach{
+            events.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -225,7 +225,7 @@ class EntityHookTest: DatabaseTestsBase() {
             assertEquals(3, events.count())
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg", "Munich")
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
-            events.forEach{
+            events.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -265,7 +265,7 @@ class EntityHookTest: DatabaseTestsBase() {
             assertEquals(2, events.count())
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "St. Petersburg")
             assertEqualCollections(events.mapNotNull { it.toEntity(EntityHookTestData.User)?.name }, "John")
-            events.forEach{
+            events.forEach {
                 assertEquals(txId, it.transactionId)
             }
         }
@@ -298,4 +298,31 @@ class EntityHookTest: DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun `calling flush notifies EntityHook subscribers`() {
+        withTables(EntityHookTestData.User.table) {
+            var hookCalls = 0
+            val user = EntityHookTestData.User.new {
+                name = "1@test.local"
+                age = 30
+            }
+            user.flush()
+
+            EntityHook.subscribe {
+                hookCalls++
+            }
+
+            user.name = "2@test.local"
+            assertEquals(0, hookCalls)
+
+            user.flush()
+            assertEquals(1, hookCalls)
+
+            user.name = "3@test.local"
+            assertEquals(1, hookCalls)
+
+            commit()
+            assertEquals(2, hookCalls)
+        }
+    }
 }

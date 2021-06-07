@@ -8,7 +8,7 @@ object SchemaUtils {
     private class TableDepthGraph(val tables: List<Table>) {
         val graph = fetchAllTables().associate { t ->
             t to t.columns.mapNotNull { c ->
-                c.referee?.let{ it.table to c.columnType.nullable }
+                c.referee?.let { it.table to c.columnType.nullable }
             }.toMap()
         }
 
@@ -26,7 +26,7 @@ object SchemaUtils {
             return result
         }
 
-        fun sorted() : List<Table> {
+        fun sorted(): List<Table> {
             val visited = mutableSetOf<Table>()
             val result = arrayListOf<Table>()
 
@@ -46,18 +46,18 @@ object SchemaUtils {
             return result
         }
 
-        fun hasCycle() : Boolean {
+        fun hasCycle(): Boolean {
             val visited = mutableSetOf<Table>()
             val recursion = mutableSetOf<Table>()
 
             val sortedTables = sorted()
 
-            fun traverse(table: Table) : Boolean {
+            fun traverse(table: Table): Boolean {
                 if (table in recursion) return true
                 if (table in visited) return false
                 recursion += table
                 visited += table
-                return if (graph[table]!!.any{ traverse(it.key) }) {
+                return if (graph[table]!!.any { traverse(it.key) }) {
                     true
                 } else {
                     recursion -= table
@@ -118,7 +118,7 @@ object SchemaUtils {
             }
 
             for (table in tables) {
-                //create columns
+                // create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
                 val missingTableColumns = table.columns.filterNot { c ->
                     val column = if(c.columnType is SchemaTableColumnType<*>) {
@@ -139,11 +139,17 @@ object SchemaUtils {
                         }
                     }
 
-                    // sync nullability of existing columns
-                    val incorrectNullabilityColumns = table.columns.filter { c ->
-                        thisTableExistingColumns.any { c.name.equals(it.name, true) && it.nullable != c.columnType.nullable }
+                    // sync existing columns
+                    val redoColumn = table.columns.filter { c ->
+                        thisTableExistingColumns.any {
+                            if (c.name.equals(it.name, true)) {
+                                val incorrectNullability = it.nullable != c.columnType.nullable
+                                val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
+                                incorrectNullability || incorrectAutoInc
+                            } else false
+                        }
                     }
-                    incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
+                    redoColumn.flatMapTo(statements) { it.modifyStatement() }
                 }
             }
 
@@ -159,9 +165,10 @@ object SchemaUtils {
                             val existingConstraint = existingColumnConstraint[table to column]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.target.table != foreignKey.target.table
-                                    || foreignKey.deleteRule != existingConstraint.deleteRule
-                                    || foreignKey.updateRule != existingConstraint.updateRule) {
+                            } else if (existingConstraint.target.table != foreignKey.target.table ||
+                                foreignKey.deleteRule != existingConstraint.deleteRule ||
+                                foreignKey.updateRule != existingConstraint.updateRule
+                            ) {
                                 statements.addAll(existingConstraint.dropStatement())
                                 statements.addAll(createFKey(column))
                             }
@@ -261,7 +268,6 @@ object SchemaUtils {
         }
     }
 
-
     /**
      * Creates table with name "busy" (if not present) and single column to be used as "synchronization" point. Table wont be dropped after execution.
      *
@@ -289,9 +295,9 @@ object SchemaUtils {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
             var tablesForDeletion =
-                    sortTablesByReferences(tables.toList())
-                            .reversed()
-                            .filter { it in tables }
+                sortTablesByReferences(tables.toList())
+                    .reversed()
+                    .filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() }
             }

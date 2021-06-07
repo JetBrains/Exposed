@@ -19,33 +19,33 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
     }
 }
 
-class Reference<REF:Comparable<REF>, ID:Comparable<ID>, out Target : Entity<ID>> (val reference: Column<REF>, val factory: EntityClass<ID, Target>) {
+class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>> (val reference: Column<REF>, val factory: EntityClass<ID, Target>) {
     init {
         checkReference(reference, factory.table)
     }
 }
 
-class OptionalReference<REF:Comparable<REF>, ID:Comparable<ID>, out Target : Entity<ID>> (val reference: Column<REF?>, val factory: EntityClass<ID, Target>) {
+class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>> (val reference: Column<REF?>, val factory: EntityClass<ID, Target>) {
     init {
         checkReference(reference, factory.table)
     }
 }
 
-internal class BackReference<ParentID:Comparable<ParentID>, out Parent: Entity<ParentID>, ChildID:Comparable<ChildID>, in Child: Entity<ChildID>, REF>
+internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>
 (reference: Column<REF>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent> {
     internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
 }
 
-class OptionalBackReference<ParentID:Comparable<ParentID>, out Parent: Entity<ParentID>, ChildID:Comparable<ChildID>, in Child: Entity<ChildID>, REF>
+class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>
 (reference: Column<REF?>, factory: EntityClass<ParentID, Parent>) : ReadOnlyProperty<Child, Parent?> {
     internal val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
-    override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull()  // flush entity before to don't miss newly created entities
+    override operator fun getValue(thisRef: Child, property: KProperty<*>) = delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
 }
 
-class Referrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentID>, ChildID:Comparable<ChildID>, out Child: Entity<ChildID>, REF>
+class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>
 (val reference: Column<REF>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     init {
         reference.referee ?: error("Column $reference is not a reference")
@@ -59,12 +59,12 @@ class Referrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentID>, Chil
         val value = thisRef.run { reference.referee<REF>()!!.lookup() }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val query = {factory.find{reference eq value }}
+        val query = { factory.find { reference eq value } }
         return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
     }
 }
 
-class OptionalReferrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentID>, ChildID:Comparable<ChildID>, out Child: Entity<ChildID>, REF>
+class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>
 (val reference: Column<REF?>, val factory: EntityClass<ChildID, Child>, val cache: Boolean) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     init {
         reference.referee ?: error("Column $reference is not a reference")
@@ -78,26 +78,28 @@ class OptionalReferrers<ParentID:Comparable<ParentID>, in Parent: Entity<ParentI
         val value = thisRef.run { reference.referee<REF>()!!.lookup() }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val query = {factory.find{reference eq value }}
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query)  else query()
+        val query = { factory.find { reference eq value } }
+        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
     }
 }
 
-private fun <SRC: Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>) : Any? {
-    property.isAccessible   = true
+private fun <SRC : Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>): Any? {
+    property.isAccessible = true
     return property.getDelegate(entity)
 }
 
-private fun <SRC: Entity<*>> filterRelationsForEntity(entity: SRC, relations: Array<out KProperty1<out Entity<*>, Any?>>): Collection<KProperty1<SRC, Any?>> {
+private fun <SRC : Entity<*>> filterRelationsForEntity(entity: SRC, relations: Array<out KProperty1<out Entity<*>, Any?>>): Collection<KProperty1<SRC, Any?>> {
     val validMembers = entity::class.memberProperties
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relations: KProperty1<out Entity<*>, Any?>,
-                                                                   nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf())  {
-    val entity              = this.firstOrNull() ?: return
-    if(nodesVisited.contains(entity.klass)) {
+private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
+    vararg relations: KProperty1<out Entity<*>, Any?>,
+    nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf()
+) {
+    val entity = this.firstOrNull() ?: return
+    if (nodesVisited.contains(entity.klass)) {
         return
     } else {
         nodesVisited.add(entity.klass)
@@ -105,7 +107,7 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
 
     val directRelations = filterRelationsForEntity(entity, relations)
     directRelations.forEach {
-        when(val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
+        when (val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
@@ -133,7 +135,7 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
-                refObject.target.warmUpLinkedReferences(this.map{ it.id }, refObject.table)
+                refObject.target.warmUpLinkedReferences(this.map { it.id }, refObject.table)
             }
             is BackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
@@ -151,15 +153,15 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
         }
     }
 
-    if(directRelations.isNotEmpty() && relations.size != directRelations.size) {
-        val remainingRelations      = relations.toList() - directRelations
+    if (directRelations.isNotEmpty() && relations.size != directRelations.size) {
+        val remainingRelations = relations.toList() - directRelations
         directRelations.map { relationProperty ->
             val relationsToLoad = this.flatMap {
-                when(val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {
+                when (val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {
                     is SizedIterable<*> -> relation.toList()
                     is Entity<*> -> listOf(relation)
-                    null                -> listOf()
-                    else                -> error("Unrecognised loaded relation")
+                    null -> listOf()
+                    else -> error("Unrecognised loaded relation")
                 } as List<Entity<Int>>
             }.groupBy { it::class }
 
@@ -170,17 +172,10 @@ private fun <ID: Comparable<ID>> List<Entity<ID>>.preloadRelations(vararg relati
     }
 }
 
-
-fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>, REF : Entity<*>> List<SRC>
-        .with(vararg relations: KProperty1<out REF, Any?>) : List<SRC>
-        = this.apply {
+fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>> Iterable<SRC>.with(vararg relations: KProperty1<out REF, Any?>): Iterable<SRC> = toList().apply {
     preloadRelations(*relations)
 }
 
-fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>) : SRC {
+fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)
-    return this
 }
-
-fun <SRCID : Comparable<SRCID>, SRC: Entity<SRCID>> SizedIterable<SRC>.with(vararg relations: KProperty1<out Entity<*>, Any?>) : List<SRC>
-        = this.toList().with(*relations)

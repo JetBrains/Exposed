@@ -44,7 +44,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder)//.replace(" SEPARATOR ", ", ")
+            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 
