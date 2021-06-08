@@ -140,7 +140,12 @@ object SchemaUtils {
                     }
 
                     // sync existing columns
-                    val redoColumn = table.columns.filter { c ->
+                    val redoColumn = table.columns.filter { column ->
+                        val c = if (column.columnType is SchemaTableColumnType<*>) {
+                            column.columnType.idColumn
+                        } else {
+                            column
+                        }
                         thisTableExistingColumns.any {
                             if (c.name.equals(it.name, true)) {
                                 val incorrectNullability = it.nullable != c.columnType.nullable

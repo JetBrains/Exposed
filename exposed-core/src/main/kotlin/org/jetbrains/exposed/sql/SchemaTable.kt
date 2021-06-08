@@ -14,7 +14,7 @@ open class SchemaTable<T : Table>(
         }
     }
 
-    override val tableName: String = "${scheme.identifier}.${delegate.tableNameWithoutScheme}"
+    override val tableName: String = "${scheme.name}.${delegate.tableNameWithoutScheme}"
     override val columns: List<Column<*>> = delegate.columns.map { (it as Column<Comparable<*>>).clone() }
     override val primaryKey: PrimaryKey? = delegate.primaryKey?.clone()
 

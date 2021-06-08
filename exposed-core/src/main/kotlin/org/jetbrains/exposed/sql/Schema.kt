@@ -21,7 +21,7 @@ import java.lang.StringBuilder
  *
  */
 data class Schema(
-    private val name: String,
+    val name: String,
     val authorization: String? = null,
     val password: String? = null,
     val defaultTablespace: String? = null,

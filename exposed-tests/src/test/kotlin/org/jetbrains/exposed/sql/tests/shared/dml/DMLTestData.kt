@@ -106,6 +106,93 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
     }
 }
 
+fun DatabaseTestsBase.withCitiesAndUsersInSchema(exclude: List<TestDB> = emptyList(), schema: Schema, statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
+    val Cities = DMLTestsData.Cities.withSchema(schema)
+    val Users = DMLTestsData.Users.withSchema(schema, DMLTestsData.Users.cityId to Cities)
+    val UserData = DMLTestsData.UserData
+
+    withSchemas(exclude, schema) {
+        try {
+            SchemaUtils.create(Cities, Users, UserData)
+            val saintPetersburgId = Cities.insert {
+                it[DMLTestsData.Cities.name] = "St. Petersburg"
+            } get DMLTestsData.Cities.id
+
+            val munichId = Cities.insert {
+                it[DMLTestsData.Cities.name] = "Munich"
+            } get DMLTestsData.Cities.id
+
+            Cities.insert {
+                it[DMLTestsData.Cities.name] = "Prague"
+            }
+
+            Users.insert {
+                it[DMLTestsData.Users.id] = "andrey"
+                it[DMLTestsData.Users.name] = "Andrey"
+                it[DMLTestsData.Users.cityId] = saintPetersburgId
+            }
+
+            Users.insert {
+                it[DMLTestsData.Users.id] = "sergey"
+                it[DMLTestsData.Users.name] = "Sergey"
+                it[DMLTestsData.Users.cityId] = munichId
+            }
+
+            Users.insert {
+                it[DMLTestsData.Users.id] = "eugene"
+                it[DMLTestsData.Users.name] = "Eugene"
+                it[DMLTestsData.Users.cityId] = munichId
+            }
+
+            Users.insert {
+                it[DMLTestsData.Users.id] = "alex"
+                it[DMLTestsData.Users.name] = "Alex"
+                it[DMLTestsData.Users.cityId] = null
+            }
+
+            Users.insert {
+                it[DMLTestsData.Users.id] = "smth"
+                it[DMLTestsData.Users.name] = "Something"
+                it[DMLTestsData.Users.cityId] = null
+            }
+
+            UserData.insert {
+                it[user_id] = "smth"
+                it[comment] = "Something is here"
+                it[value] = 10
+            }
+
+            UserData.insert {
+                it[user_id] = "smth"
+                it[comment] = "Comment #2"
+                it[value] = 20
+            }
+
+            UserData.insert {
+                it[user_id] = "eugene"
+                it[comment] = "Comment for Eugene"
+                it[value] = 20
+            }
+
+            UserData.insert {
+                it[user_id] = "sergey"
+                it[comment] = "Comment for Sergey"
+                it[value] = 30
+            }
+
+            UserData.insert {
+                it[user_id] = "hichem"
+                it[comment] = "Comment for Hichem"
+                it[value] = 40
+            }
+
+            statement(DMLTestsData.Cities, DMLTestsData.Users, UserData)
+        } catch (exception: Exception) {
+            SchemaUtils.drop(Cities, Users, UserData)
+        }
+    }
+}
+
 object OrgMemberships : IntIdTable() {
     val orgId = reference("org", Orgs.uid)
 }
