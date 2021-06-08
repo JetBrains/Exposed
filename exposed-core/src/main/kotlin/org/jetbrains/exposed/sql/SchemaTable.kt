@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-open class SchemaTable<T:Table>(
+open class SchemaTable<T : Table>(
     val scheme: Schema,
     val delegate: T,
     val references: Map<Column<*>, SchemaTable<*>>? = null
@@ -8,7 +8,7 @@ open class SchemaTable<T:Table>(
 
     init {
         references?.keys?.forEach {
-            if(!delegate.columns.contains(it)) {
+            if (!delegate.columns.contains(it)) {
                 throw Exception("Column ${it.name} doesn't belong to table ${delegate.tableName}")
             }
         }
@@ -21,31 +21,30 @@ open class SchemaTable<T:Table>(
     private fun PrimaryKey.clone(): PrimaryKey? {
         val resolvedPK = columns.map { (it as Column<Comparable<*>>).clone() }.toTypedArray()
 
-        val primaryKey = PrimaryKey(*resolvedPK , name = name)
+        val primaryKey = PrimaryKey(*resolvedPK, name = name)
         return primaryKey
     }
 
-    private fun <U: Comparable<U>> Column<U>.clone(): Column<U> {
-        val column= Column<U>(this@SchemaTable , name, SchemaTableColumnType(this))
+    private fun <U : Comparable<U>> Column<U>.clone(): Column<U> {
+        val column = Column<U>(this@SchemaTable, name, SchemaTableColumnType(this))
         val resolvedReferee = findReferee(referee)
-        if(resolvedReferee != null) {
+        if (resolvedReferee != null) {
             column.foreignKey = foreignKey?.copy(target = resolvedReferee)
         }
         return column
     }
 
-    fun <U: Comparable<U>> Column<U>.findReferee(referee: Column<*>?): Column<*>? =
-        if(references == null || references.isEmpty() || referee == null) {
+    fun <U : Comparable<U>> Column<U>.findReferee(referee: Column<*>?): Column<*>? =
+        if (references == null || references.isEmpty() || referee == null) {
             referee
         } else {
             val reference = references[this]
 
             reference?.columns?.single {
-                (it.columnType as  SchemaTableColumnType<*>).idColumn === referee
+                (it.columnType as SchemaTableColumnType<*>).idColumn === referee
             }
         }
 }
-
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
@@ -60,5 +59,5 @@ open class SchemaTable<T:Table>(
  * @param schema the schema of the table
  * @param references tables to make join with. Order of tables is not important.
  */
-fun <T:Table> T.withSchema(schema: Schema, vararg references: Pair<Column<*>, SchemaTable<*>>): SchemaTable<T> =
+fun <T : Table> T.withSchema(schema: Schema, vararg references: Pair<Column<*>, SchemaTable<*>>): SchemaTable<T> =
     SchemaTable(schema, this, references.toMap())

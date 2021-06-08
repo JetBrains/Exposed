@@ -121,7 +121,7 @@ object SchemaUtils {
                 // create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
                 val missingTableColumns = table.columns.filterNot { c ->
-                    val column = if(c.columnType is SchemaTableColumnType<*>) {
+                    val column = if (c.columnType is SchemaTableColumnType<*>) {
                         c.columnType.idColumn
                     } else {
                         c

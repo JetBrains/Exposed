@@ -120,10 +120,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
         tables.map { table ->
-            val columns = if(table is SchemaTable<*>) {
+            val columns = if (table is SchemaTable<*>) {
                 columnNames.getValue(table.scheme.nameInDatabaseCase())
             } else {
-                if(useCatalogInsteadOfScheme) {
+                if (useCatalogInsteadOfScheme) {
                     columnNames.getValue(databaseName)
                 } else {
                     columnNames.getValue(currentScheme)
@@ -146,10 +146,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     private val columnNamesCache = HashMap<String, Map<String, List<ColumnMetadata>>>()
 
-    private val columnNames: Map<String, Map<String, List<ColumnMetadata>>> = CachableMapWithDefault(map = columnNamesCache,
-                                                                                                     default = { schemeName ->
-        columnNamesFor(schemeName)
-    })
+    private val columnNames: Map<String, Map<String, List<ColumnMetadata>>> = CachableMapWithDefault(
+        map = columnNamesCache,
+        default = { schemeName ->
+            columnNamesFor(schemeName)
+        }
+    )
 
     private fun columnNamesFor(scheme: String): Map<String, List<ColumnMetadata>> = with(metadata) {
         val result = HashMap<String, MutableList<ColumnMetadata>>()
@@ -160,7 +162,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
         val resultSet = getColumns(catalogName, schemeName, "%", "%")
         resultSet.iterate {
-            //@see java.sql.DatabaseMetaData.getColumns
+            // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(
                 getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
                 getInt("DATA_TYPE"),
