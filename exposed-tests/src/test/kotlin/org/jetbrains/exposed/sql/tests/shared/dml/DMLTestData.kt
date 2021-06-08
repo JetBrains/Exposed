@@ -187,7 +187,7 @@ fun DatabaseTestsBase.withCitiesAndUsersInSchema(exclude: List<TestDB> = emptyLi
             }
 
             statement(DMLTestsData.Cities, DMLTestsData.Users, UserData)
-        } catch (exception: Exception) {
+        } finally {
             SchemaUtils.drop(Cities, Users, UserData)
         }
     }

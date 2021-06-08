@@ -408,7 +408,7 @@ class SchemaTests : DatabaseTestsBase() {
                 val rand = Random()
                 val resultRow = t.slice(rand).selectAll().limit(1).single()
                 assertNotNull(resultRow[rand])
-            } catch (exception: Exception) {
+            } finally {
                 SchemaUtils.drop(t)
             }
         }
