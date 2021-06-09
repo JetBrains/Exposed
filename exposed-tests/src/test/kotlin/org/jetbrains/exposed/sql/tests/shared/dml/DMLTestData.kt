@@ -109,12 +109,14 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
 fun DatabaseTestsBase.withCitiesAndUsersInSchema(
     exclude: List<TestDB> = emptyList(),
     schema: Schema,
-    statement: Transaction.(cities: DMLTestsData.Cities,
-                            users: DMLTestsData.Users,
-                            userData: DMLTestsData.UserData,
-                            citiesInSchema: SchemaTable<*>,
-                            usersInSchema: SchemaTable<*>,
-                            userDataInSchema: SchemaTable<*>) -> Unit
+    statement: Transaction.(
+        cities: DMLTestsData.Cities,
+        users: DMLTestsData.Users,
+        userData: DMLTestsData.UserData,
+        citiesInSchema: SchemaTable<*>,
+        usersInSchema: SchemaTable<*>,
+        userDataInSchema: SchemaTable<*>
+    ) -> Unit
 ) {
     val Cities = DMLTestsData.Cities.withSchema(schema)
     val Users = DMLTestsData.Users.withSchema(schema, DMLTestsData.Users.cityId to Cities)
