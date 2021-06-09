@@ -15,7 +15,7 @@ open class SchemaTable<T : Table>(
     }
 
     override val tableName: String = "${scheme.name}.${delegate.tableNameWithoutScheme}"
-    override val columns: List<Column<*>> = delegate.columns.map { (it as Column<Comparable<*>>).clone() }
+    override val columns: List<SchemaTableColumn<*>> = delegate.columns.map { (it as Column<Comparable<*>>).clone() }
     override val primaryKey: PrimaryKey? = delegate.primaryKey?.clone()
 
     private fun PrimaryKey.clone(): PrimaryKey? {
@@ -25,8 +25,8 @@ open class SchemaTable<T : Table>(
         return primaryKey
     }
 
-    private fun <U : Comparable<U>> Column<U>.clone(): Column<U> {
-        val column = Column<U>(this@SchemaTable, name, SchemaTableColumnType(this))
+    private fun <U : Comparable<U>> Column<U>.clone(): SchemaTableColumn<U> {
+        val column = SchemaTableColumn<U>(this@SchemaTable, name, this, columnType)
         val resolvedReferee = findReferee(referee)
         if (resolvedReferee != null) {
             column.foreignKey = foreignKey?.copy(target = resolvedReferee)
@@ -41,7 +41,7 @@ open class SchemaTable<T : Table>(
             val reference = references[this]
 
             reference?.columns?.single {
-                (it.columnType as SchemaTableColumnType<*>).idColumn === referee
+                it.idColumn === referee
             }
         }
 }

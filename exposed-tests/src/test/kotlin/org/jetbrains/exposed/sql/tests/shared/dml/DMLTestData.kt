@@ -106,10 +106,19 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
     }
 }
 
-fun DatabaseTestsBase.withCitiesAndUsersInSchema(exclude: List<TestDB> = emptyList(), schema: Schema, statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
+fun DatabaseTestsBase.withCitiesAndUsersInSchema(
+    exclude: List<TestDB> = emptyList(),
+    schema: Schema,
+    statement: Transaction.(cities: DMLTestsData.Cities,
+                            users: DMLTestsData.Users,
+                            userData: DMLTestsData.UserData,
+                            citiesInSchema: SchemaTable<*>,
+                            usersInSchema: SchemaTable<*>,
+                            userDataInSchema: SchemaTable<*>) -> Unit
+) {
     val Cities = DMLTestsData.Cities.withSchema(schema)
     val Users = DMLTestsData.Users.withSchema(schema, DMLTestsData.Users.cityId to Cities)
-    val UserData = DMLTestsData.UserData
+    val UserData = DMLTestsData.UserData.withSchema(schema, DMLTestsData.UserData.user_id to Users)
 
     withSchemas(exclude, schema) {
         try {
@@ -157,36 +166,30 @@ fun DatabaseTestsBase.withCitiesAndUsersInSchema(exclude: List<TestDB> = emptyLi
             }
 
             UserData.insert {
-                it[user_id] = "smth"
-                it[comment] = "Something is here"
-                it[value] = 10
+                it[DMLTestsData.UserData.user_id] = "smth"
+                it[DMLTestsData.UserData.comment] = "Something is here"
+                it[DMLTestsData.UserData.value] = 10
             }
 
             UserData.insert {
-                it[user_id] = "smth"
-                it[comment] = "Comment #2"
-                it[value] = 20
+                it[DMLTestsData.UserData.user_id] = "smth"
+                it[DMLTestsData.UserData.comment] = "Comment #2"
+                it[DMLTestsData.UserData.value] = 20
             }
 
             UserData.insert {
-                it[user_id] = "eugene"
-                it[comment] = "Comment for Eugene"
-                it[value] = 20
+                it[DMLTestsData.UserData.user_id] = "eugene"
+                it[DMLTestsData.UserData.comment] = "Comment for Eugene"
+                it[DMLTestsData.UserData.value] = 20
             }
 
             UserData.insert {
-                it[user_id] = "sergey"
-                it[comment] = "Comment for Sergey"
-                it[value] = 30
+                it[DMLTestsData.UserData.user_id] = "sergey"
+                it[DMLTestsData.UserData.comment] = "Comment for Sergey"
+                it[DMLTestsData.UserData.value] = 30
             }
 
-            UserData.insert {
-                it[user_id] = "hichem"
-                it[comment] = "Comment for Hichem"
-                it[value] = 40
-            }
-
-            statement(DMLTestsData.Cities, DMLTestsData.Users, UserData)
+            statement(DMLTestsData.Cities, DMLTestsData.Users, DMLTestsData.UserData, Cities, Users, UserData)
         } finally {
             SchemaUtils.drop(Cities, Users, UserData)
         }

@@ -294,8 +294,8 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
-            val r = cities.slice(cities.id.sum()).selectAll().toList()
+        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _, citiesInSchema, _, _ ->
+            val r = citiesInSchema.slice(cities.id.sum()).selectAll().toList()
             assertEquals(1, r.size)
             assertEquals(6, r[0][cities.id.sum()])
         }
@@ -303,11 +303,11 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc02() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData, citiesInSchema, usersInSchema, userDataInSchema ->
             val sum = Expression.build {
                 Sum(cities.id + userData.value, IntegerColumnType())
             }
-            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum)
+            val r = (usersInSchema innerJoin userDataInSchema innerJoin citiesInSchema).slice(users.id, sum)
                 .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -319,11 +319,11 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc03() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData, citiesInSchema, usersInSchema, userDataInSchema ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val mod1 = Expression.build { sum % 100 }
             val mod2 = Expression.build { sum mod 100 }
-            val r = (users innerJoin userData innerJoin cities).slice(users.id, sum, mod1, mod1)
+            val r = (usersInSchema innerJoin userDataInSchema innerJoin citiesInSchema).slice(users.id, sum, mod1, mod1)
                 .selectAll().groupBy(users.id).orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("eugene", r[0][users.id])
@@ -339,9 +339,9 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testSubstring01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, users, _, _, usersInSchema, _ ->
             val substring = users.name.substring(1, 2)
-            val r = (users).slice(users.id, substring)
+            val r = usersInSchema.slice(users.id, substring)
                 .selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals("Al", r[0][substring])
@@ -360,11 +360,11 @@ class SchemaTests : DatabaseTestsBase() {
                 else append("LENGTH(", exp, ')')
             }
         }
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _, citiesInSchema, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()
-            val expectedValue = cities.selectAll().sumBy { it[cities.name].length }
+            val expectedValue = citiesInSchema.selectAll().sumBy { it[cities.name].length }
 
-            val results = cities.slice(sumOfLength).selectAll().toList()
+            val results = citiesInSchema.slice(sumOfLength).selectAll().toList()
             assertEquals(1, results.size)
             assertEquals(expectedValue, results.single()[sumOfLength])
         }
@@ -372,9 +372,9 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectCase01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, users, _, _, usersInSchema, _ ->
             val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
-            val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
+            val r = usersInSchema.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])
             assertEquals("alex", r[0][users.id])
@@ -385,13 +385,13 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testStringFunctions() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, _, citiesInSchema, _, _ ->
 
             val lcase = DMLTestsData.Cities.name.lowerCase()
-            assert(cities.slice(lcase).selectAll().any { it[lcase] == "prague" })
+            assert(citiesInSchema.slice(lcase).selectAll().any { it[lcase] == "prague" })
 
             val ucase = DMLTestsData.Cities.name.upperCase()
-            assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
+            assert(citiesInSchema.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
         }
     }
 
@@ -415,49 +415,49 @@ class SchemaTests : DatabaseTestsBase() {
     }
 
     @Test fun testRegexp01() {
-        withCitiesAndUsersInSchema(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema = schema1) { _, users, _ ->
-            assertEquals(2L, users.select { users.id regexp "a.+" }.count())
-            assertEquals(1L, users.select { users.id regexp "an.+" }.count())
-            assertEquals(users.selectAll().count(), users.select { users.id regexp ".*" }.count())
-            assertEquals(2L, users.select { users.id regexp ".+y" }.count())
+        withCitiesAndUsersInSchema(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema = schema1) { _, users, _, _, usersInSchema, _ ->
+            assertEquals(2L, usersInSchema.select { users.id regexp "a.+" }.count())
+            assertEquals(1L, usersInSchema.select { users.id regexp "an.+" }.count())
+            assertEquals(usersInSchema.selectAll().count(), usersInSchema.select { users.id regexp ".*" }.count())
+            assertEquals(2L, usersInSchema.select { users.id regexp ".+y" }.count())
         }
     }
 
     @Test fun testRegexp02() {
-        withCitiesAndUsersInSchema(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema = schema1) { _, users, _ ->
-            assertEquals(2L, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
-            assertEquals(1L, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
-            assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
-            assertEquals(2L, users.select { users.id.regexp(stringLiteral(".+y")) }.count())
+        withCitiesAndUsersInSchema(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema = schema1) { _, users, _, _, usersInSchema, _ ->
+            assertEquals(2L, usersInSchema.select { users.id.regexp(stringLiteral("a.+")) }.count())
+            assertEquals(1L, usersInSchema.select { users.id.regexp(stringLiteral("an.+")) }.count())
+            assertEquals(usersInSchema.selectAll().count(), usersInSchema.select { users.id.regexp(stringLiteral(".*")) }.count())
+            assertEquals(2L, usersInSchema.select { users.id.regexp(stringLiteral(".+y")) }.count())
         }
     }
 
     @Test fun testConcat01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, _, citiesInSchema, _, _ ->
             val concatField = SqlExpressionBuilder.concat(stringLiteral("Foo"), stringLiteral("Bar"))
-            val result = cities.slice(concatField).selectAll().limit(1).single()
+            val result = citiesInSchema.slice(concatField).selectAll().limit(1).single()
             assertEquals("FooBar", result[concatField])
 
             val concatField2 = SqlExpressionBuilder.concat("!", listOf(stringLiteral("Foo"), stringLiteral("Bar")))
-            val result2 = cities.slice(concatField2).selectAll().limit(1).single()
+            val result2 = citiesInSchema.slice(concatField2).selectAll().limit(1).single()
             assertEquals("Foo!Bar", result2[concatField2])
         }
     }
 
     @Test fun testConcat02() {
-        withCitiesAndUsersInSchema(schema = schema1) { _, users, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, users, _, _, usersInSchema, _ ->
             val concatField = SqlExpressionBuilder.concat(users.id, stringLiteral(" - "), users.name)
-            val result = users.slice(concatField).select { users.id eq "andrey" }.single()
+            val result = usersInSchema.slice(concatField).select { users.id eq "andrey" }.single()
             assertEquals("andrey - Andrey", result[concatField])
 
             val concatField2 = SqlExpressionBuilder.concat("!", listOf(users.id, users.name))
-            val result2 = users.slice(concatField2).select { users.id eq "andrey" }.single()
+            val result2 = usersInSchema.slice(concatField2).select { users.id eq "andrey" }.single()
             assertEquals("andrey!Andrey", result2[concatField2])
         }
     }
 
     @Test fun testConcatWithNumbers() {
-        withCitiesAndUsersInSchema(schema = schema1) { _, _, data ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, data, _, _, userDataInSchema ->
             val concatField = SqlExpressionBuilder.concat(
                 data.user_id,
                 stringLiteral(" - "),
@@ -465,52 +465,52 @@ class SchemaTests : DatabaseTestsBase() {
                 stringLiteral(" - "),
                 data.value
             )
-            val result = data.slice(concatField).select { data.user_id eq "sergey" }.single()
+            val result = userDataInSchema.slice(concatField).select { data.user_id eq "sergey" }.single()
             assertEquals("sergey - Comment for Sergey - 30", result[concatField])
 
             val concatField2 = SqlExpressionBuilder.concat("!", listOf(data.user_id, data.comment, data.value))
-            val result2 = data.slice(concatField2).select { data.user_id eq "sergey" }.single()
+            val result2 = userDataInSchema.slice(concatField2).select { data.user_id eq "sergey" }.single()
             assertEquals("sergey!Comment for Sergey!30", result2[concatField2])
         }
     }
 
     @Test
     fun testCustomStringFunctions01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, _, citiesInSchema, _, _ ->
             val customLower = DMLTestsData.Cities.name.function("lower")
-            assert(cities.slice(customLower).selectAll().any { it[customLower] == "prague" })
+            assert(citiesInSchema.slice(customLower).selectAll().any { it[customLower] == "prague" })
 
             val customUpper = DMLTestsData.Cities.name.function("UPPER")
-            assert(cities.slice(customUpper).selectAll().any { it[customUpper] == "PRAGUE" })
+            assert(citiesInSchema.slice(customUpper).selectAll().any { it[customUpper] == "PRAGUE" })
         }
     }
 
     @Test
     fun testCustomStringFunctions02() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _, citiesInSchema, _, _ ->
             val replace = CustomStringFunction("REPLACE", cities.name, stringParam("gue"), stringParam("foo"))
-            val result = cities.slice(replace).select { cities.name eq "Prague" }.singleOrNull()
+            val result = citiesInSchema.slice(replace).select { cities.name eq "Prague" }.singleOrNull()
             assertEquals("Prafoo", result?.get(replace))
         }
     }
 
     @Test
     fun testCustomIntegerFunctions01() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
-            val ids = cities.selectAll().map { it[DMLTestsData.Cities.id] }.toList()
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, _, citiesInSchema, _, _ ->
+            val ids = citiesInSchema.selectAll().map { it[DMLTestsData.Cities.id] }.toList()
             assertEqualCollections(listOf(1, 2, 3), ids)
 
             val sqrt = DMLTestsData.Cities.id.function("SQRT")
-            val sqrtIds = cities.slice(sqrt).selectAll().map { it[sqrt] }.toList()
+            val sqrtIds = citiesInSchema.slice(sqrt).selectAll().map { it[sqrt] }.toList()
             assertEqualCollections(listOf(1, 1, 1), sqrtIds)
         }
     }
 
     @Test
     fun testCustomIntegerFunctions02() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _ ->
+        withCitiesAndUsersInSchema(schema = schema1) { cities, _, _, citiesInSchema, _, _ ->
             val power = CustomLongFunction("POWER", cities.id, intParam(2))
-            val ids = cities.slice(power).selectAll().map { it[power] }
+            val ids = citiesInSchema.slice(power).selectAll().map { it[power] }
             assertEqualCollections(listOf(1L, 4L, 9L), ids)
         }
     }
@@ -521,8 +521,8 @@ class SchemaTests : DatabaseTestsBase() {
         infix fun Expression<*>.plus(operand: Int) =
             CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
 
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
-            userData
+        withCitiesAndUsersInSchema(schema = schema1) { _, _, userData, citiesInSchema, usersInSchema, userDataInSchema ->
+            userDataInSchema
                 .select { (userData.value plus 15).eq(35) }
                 .forEach {
                     assertEquals(it[userData.value], 20)
@@ -532,10 +532,10 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun testCoalesceFunction() {
-        withCitiesAndUsersInSchema(schema = schema1) { cities, users, userData ->
+        withCitiesAndUsersInSchema(schema = schema1) { _, users, _, citiesInSchema, usersInSchema, userDataInSchema ->
             val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
 
-            users.slice(users.cityId, coalesceExp1).selectAll().forEach {
+            usersInSchema.slice(users.cityId, coalesceExp1).selectAll().forEach {
                 val cityId = it[users.cityId]
                 if (cityId != null)
                     assertEquals(cityId, it[coalesceExp1])

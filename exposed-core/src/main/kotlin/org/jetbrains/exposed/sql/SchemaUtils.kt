@@ -121,13 +121,7 @@ object SchemaUtils {
                 // create columns
                 val thisTableExistingColumns = existingTableColumns[table].orEmpty()
                 val missingTableColumns = table.columns.filterNot { c ->
-                    val column = if (c.columnType is SchemaTableColumnType<*>) {
-                        c.columnType.idColumn
-                    } else {
-                        c
-                    }
-
-                    thisTableExistingColumns.any { it.name.equals(column.name, true) }
+                    thisTableExistingColumns.any { it.name.equals(c.name, true) }
                 }
                 missingTableColumns.flatMapTo(statements) { it.ddl }
 
@@ -140,12 +134,7 @@ object SchemaUtils {
                     }
 
                     // sync existing columns
-                    val redoColumn = table.columns.filter { column ->
-                        val c = if (column.columnType is SchemaTableColumnType<*>) {
-                            column.columnType.idColumn
-                        } else {
-                            column
-                        }
+                    val redoColumn = table.columns.filter { c ->
                         thisTableExistingColumns.any {
                             if (c.name.equals(it.name, true)) {
                                 val incorrectNullability = it.nullable != c.columnType.nullable
