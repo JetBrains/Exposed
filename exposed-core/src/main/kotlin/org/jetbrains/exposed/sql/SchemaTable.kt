@@ -44,6 +44,12 @@ open class SchemaTable<T : Table>(
                 it.idColumn === referee
             }
         }
+
+    operator fun <T> get(column: Column<T>): SchemaTableColumn<T> {
+        return columns.single {
+            it.idColumn == column
+        } as SchemaTableColumn<T>
+    }
 }
 
 /**

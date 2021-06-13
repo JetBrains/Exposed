@@ -55,12 +55,30 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
                     it[CitiesTime.local_time] = now
                 }
 
-                val insertedYear = CitiesTimeInSchema.slice(CitiesTime.local_time.year()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
-                val insertedMonth = CitiesTimeInSchema.slice(CitiesTime.local_time.month()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
-                val insertedDay = CitiesTimeInSchema.slice(CitiesTime.local_time.day()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
-                val insertedHour = CitiesTimeInSchema.slice(CitiesTime.local_time.hour()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
-                val insertedMinute = CitiesTimeInSchema.slice(CitiesTime.local_time.minute()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
-                val insertedSecond = CitiesTimeInSchema.slice(CitiesTime.local_time.second()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+                val insertedYear = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].year())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].year()]
+                val insertedMonth = CitiesTimeInSchema
+                    .slice(CitiesTime.local_time.month())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTime.local_time.month()]
+                val insertedDay = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].day())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].day()]
+                val insertedHour = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].hour())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].hour()]
+                val insertedMinute = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].minute())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].minute()]
+                val insertedSecond = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].second())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].second()]
 
                 assertEquals(now.year, insertedYear)
                 assertEquals(now.month.value, insertedMonth)

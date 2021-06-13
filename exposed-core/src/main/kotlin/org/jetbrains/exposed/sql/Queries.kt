@@ -83,7 +83,7 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertSt
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>, V: SchemaTable<T>> V.insertAndGetId(body: V.(InsertStatement<EntityID<Key>>) -> Unit) =
+fun <Key : Comparable<Key>, T : IdTable<Key>, V : SchemaTable<T>> V.insertAndGetId(body: V.(InsertStatement<EntityID<Key>>) -> Unit) =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
