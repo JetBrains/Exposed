@@ -30,7 +30,7 @@ data class Schema(
     val on: String? = null
 ) {
 
-    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
+    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name.inProperCase())
 
     val ddl: List<String>
         get() = createStatement()
