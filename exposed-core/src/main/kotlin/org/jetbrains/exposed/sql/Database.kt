@@ -2,12 +2,23 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
-import org.jetbrains.exposed.sql.transactions.*
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
+import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
+import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
-import java.util.*
+import java.util.ServiceLoader
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
@@ -59,7 +70,8 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
-            ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull() ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
+            ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()
+                ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
 
         private val driverMapping = mutableMapOf(
             "jdbc:h2" to "org.h2.Driver",
@@ -120,16 +132,30 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(
+                explicitVendor = null,
+                getNewConnection = { datasource.connection!! },
+                setupConnection = setupConnection,
+                manager = manager
+            )
         }
 
-        @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"), message = "Use connectPool instead")
+        @Deprecated(
+            level = DeprecationLevel.ERROR,
+            replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"),
+            message = "Use connectPool instead"
+        )
         fun connect(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(
+                explicitVendor = null,
+                getNewConnection = { datasource.pooledConnection.connection!! },
+                setupConnection = setupConnection,
+                manager = manager
+            )
         }
 
         fun connectPool(
@@ -137,7 +163,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = { datasource.pooledConnection.connection!! }, setupConnection = setupConnection, manager = manager)
+            return doConnect(
+                explicitVendor = null,
+                getNewConnection = { datasource.pooledConnection.connection!! },
+                setupConnection = setupConnection,
+                manager = manager
+            )
         }
 
         fun connect(
@@ -162,11 +193,11 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
         fun getDefaultIsolationLevel(db: Database): Int =
             when (db.vendor) {
-                SQLiteDialect.dialectName -> Connection.TRANSACTION_SERIALIZABLE
-                OracleDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
-                PostgreSQLDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                SQLiteDialect.dialectName       -> Connection.TRANSACTION_SERIALIZABLE
+                OracleDialect.dialectName       -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLDialect.dialectName   -> Connection.TRANSACTION_READ_COMMITTED
                 PostgreSQLNGDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
-                else -> DEFAULT_ISOLATION_LEVEL
+                else                            -> DEFAULT_ISOLATION_LEVEL
             }
 
         private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->

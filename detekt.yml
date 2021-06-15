@@ -1,0 +1,15 @@
+# https://github.com/detekt/detekt/blob/main/detekt-core/src/main/resources/default-detekt-config.yml
+
+build:
+    maxIssues: 86
+
+formatting:
+    MaximumLineLength:
+        maxLineLength: 150
+
+style:
+    MaxLineLength:
+        active: false
+        maxLineLength: 150
+    ReturnCount:
+        active: false

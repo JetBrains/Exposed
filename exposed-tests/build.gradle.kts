@@ -14,6 +14,7 @@ repositories {
 }
 
 val dialect: String by project
+val otjPgEmbeddedVersion: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
@@ -29,7 +30,7 @@ dependencies {
     implementation("org.hamcrest", "hamcrest-library", "1.3")
     implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
-    implementation("com.opentable.components", "otj-pg-embedded", "0.13.3")
+    implementation("com.opentable.components", "otj-pg-embedded", otjPgEmbeddedVersion)
     implementation("org.testcontainers", "testcontainers", "1.15.3")
     implementation("org.testcontainers", "mysql", "1.15.3")
 

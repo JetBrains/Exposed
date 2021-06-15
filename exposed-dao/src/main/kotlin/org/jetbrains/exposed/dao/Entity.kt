@@ -2,9 +2,16 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.*
+import org.jetbrains.exposed.sql.update
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -43,9 +50,9 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
-            flush -> flush()
-            isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
-            else -> writeValues.clear()
+            flush                -> flush()
+            isNewEntity          -> throw EntityNotFoundException(this.id, this.klass)
+            else                 -> writeValues.clear()
         }
 
         klass.removeFromCache(this)
@@ -54,37 +61,61 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         _readValues = reloaded.readValues
     }
 
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(
+        o: Entity<ID>,
+        desc: KProperty<*>
+    ): T {
         return executeAsPartOfEntityLifecycle {
             val refValue = reference.getValue(o, desc)
             when {
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-                else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }
+                else                                                                    -> factory.findWithCacheCondition({
+                                                                                                                              reference.referee!!.getValue(
+                                                                                                                                  this,
+                                                                                                                                  desc
+                                                                                                                              ) == refValue
+                                                                                                                          }) { reference.referee<REF>()!! eq refValue }
                     .singleOrNull()
             } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
         }
     }
 
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.setValue(
+        o: Entity<ID>,
+        desc: KProperty<*>,
+        value: T
+    ) {
         if (db != value.db) error("Can't link entities from different databases.")
         value.id.value // flush before creating reference on it
         val refValue = value.run { reference.referee<REF>()!!.getValue(this, desc) }
         reference.setValue(o, desc, refValue)
     }
 
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T? {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(
+        o: Entity<ID>,
+        desc: KProperty<*>
+    ): T? {
         return executeAsPartOfEntityLifecycle {
             val refValue = reference.getValue(o, desc)
             when {
-                refValue == null -> null
+                refValue == null                                                        -> null
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-                else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }
+                else                                                                    -> factory.findWithCacheCondition({
+                                                                                                                              reference.referee!!.getValue(
+                                                                                                                                  this,
+                                                                                                                                  desc
+                                                                                                                              ) == refValue
+                                                                                                                          }) { reference.referee<REF>()!! eq refValue }
                     .singleOrNull()
             }
         }
     }
 
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T?) {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
+        o: Entity<ID>,
+        desc: KProperty<*>,
+        value: T?
+    ) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
         val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
@@ -107,10 +138,10 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
-        writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
+        writeValues.containsKey(this as Column<out Any?>)               -> writeValues[this as Column<out Any?>] as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
-        columnType.nullable -> readValues[this]
-        else -> readValues[this]!!
+        columnType.nullable                                             -> readValues[this]
+        else                                                            -> readValues[this]!!
     }
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
@@ -148,7 +179,10 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     infix fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
         InnerTableLink(table, this@via)
 
-    fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(sourceColumn: Column<EntityID<ID>>, targetColumn: Column<EntityID<TID>>) =
+    fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
+        sourceColumn: Column<EntityID<ID>>,
+        targetColumn: Column<EntityID<TID>>
+    ) =
         InnerTableLink(sourceColumn.table, this@via, sourceColumn, targetColumn)
 
     /**

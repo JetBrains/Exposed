@@ -1,14 +1,26 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.ColumnMetadata
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
-import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
@@ -18,15 +30,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         when (driverName) {
             "MySQL-AB JDBC Driver",
             "MySQL Connector/J",
-            "MySQL Connector Java" -> MysqlDialect.dialectName
-            "MariaDB Connector/J" -> MariaDBDialect.dialectName
-            "SQLite JDBC" -> SQLiteDialect.dialectName
-            "H2 JDBC Driver" -> H2Dialect.dialectName
-            "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
-            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
+            "MySQL Connector Java"   -> MysqlDialect.dialectName
+            "MariaDB Connector/J"    -> MariaDBDialect.dialectName
+            "SQLite JDBC"            -> SQLiteDialect.dialectName
+            "H2 JDBC Driver"         -> H2Dialect.dialectName
+            "pgjdbc-ng"              -> PostgreSQLNGDialect.dialectName
+            "PostgreSQL JDBC - NG"   -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
-            "Oracle JDBC driver" -> OracleDialect.dialectName
-            else -> {
+            "Oracle JDBC driver"     -> OracleDialect.dialectName
+            else                     -> {
                 if (driverName.startsWith("Microsoft JDBC Driver "))
                     SQLServerDialect.dialectName
                 else
@@ -35,10 +47,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    private val databaseName get() = when (databaseDialectName) {
-        MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-        else -> database
-    }
+    private val databaseName
+        get() = when (databaseDialectName) {
+            MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+            else                                                 -> database
+        }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
@@ -56,10 +69,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 field = try {
                     when (databaseDialectName) {
                         MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
-                        OracleDialect.dialectName -> databaseName
-                        else -> metadata.connection.schema.orEmpty()
+                        OracleDialect.dialectName                            -> databaseName
+                        else                                                 -> metadata.connection.schema.orEmpty()
                     }
-                } catch (e: Throwable) { "" }
+                } catch (e: Throwable) {
+                    ""
+                }
             }
             return field!!
         }
@@ -76,25 +91,26 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         override fun isEmpty(): Boolean = false
     }
 
-    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(
-        default = { schemeName ->
-            tableNamesFor(schemeName)
-        }
-    )
+    override val tableNames: Map<String, List<String>>
+        get() = CachableMapWithDefault(
+            default = { schemeName ->
+                tableNamesFor(schemeName)
+            }
+        )
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
-            useCatalogInsteadOfScheme -> scheme to "%"
+            useCatalogInsteadOfScheme       -> scheme to "%"
             currentDialect is OracleDialect -> databaseName to databaseName
-            else -> databaseName to scheme.ifEmpty { "%" }
+            else                            -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
         return resultSet.iterate {
             val tableName = getString("TABLE_NAME")!!
             val fullTableName = when {
                 useCatalogInsteadOfScheme -> getString("TABLE_CAT")?.let { "$it.$tableName" }
-                else -> getString("TABLE_SCHEM")?.let { "$it.$tableName" }
+                else                      -> getString("TABLE_SCHEM")?.let { "$it.$tableName" }
             } ?: tableName
             identifierManager.inProperCase(fullTableName)
         }
@@ -109,13 +125,16 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
         val schemas = when {
             useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
-            else -> schemas.iterate { getString("TABLE_SCHEM") }
+            else                      -> schemas.iterate { getString("TABLE_SCHEM") }
         }
 
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
+    private fun ResultSet.extractColumns(
+        tables: Array<out Table>,
+        extract: (ResultSet) -> Pair<String, ColumnMetadata>
+    ): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
@@ -133,7 +152,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(
-                it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
+                it.getString("COLUMN_NAME"),/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/
                 it.getInt("DATA_TYPE"),
                 it.getBoolean("NULLABLE"),
                 it.getInt("COLUMN_SIZE").takeIf { it != 0 },
@@ -176,7 +195,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
+                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }
+                            ?.let { c -> Index(c, index.second, index.first) }
                     }
             }
         }

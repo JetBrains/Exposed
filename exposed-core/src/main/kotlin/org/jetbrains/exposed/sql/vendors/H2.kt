@@ -1,7 +1,18 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.TextColumnType
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,10 +55,16 @@ internal object H2FunctionProvider : FunctionProvider() {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
-            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode                                            -> {
                 super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
-            else -> super.insert(ignore, table, columns, expr, transaction)
+            else                                                                                                    -> super.insert(
+                ignore,
+                table,
+                columns,
+                expr,
+                transaction
+            )
         }
     }
 
@@ -77,7 +94,7 @@ internal object H2FunctionProvider : FunctionProvider() {
             if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
             }
-            + " ON "
+            +" ON "
             it.appendConditions(this)
         }
         +" WHEN MATCHED THEN UPDATE SET "
@@ -87,7 +104,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
 
         where?.let {
-            + " WHERE "
+            +" WHERE "
             +it
         }
         toString()
@@ -141,7 +158,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }
+        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
+            .filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

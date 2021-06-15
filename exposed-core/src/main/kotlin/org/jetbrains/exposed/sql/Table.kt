@@ -6,9 +6,14 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -26,6 +31,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 interface FieldSet {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
+
     /** Returns the field of this field set. */
     val fields: List<Expression<*>>
 
@@ -51,6 +57,7 @@ interface FieldSet {
  */
 abstract class ColumnSet : FieldSet {
     override val source: ColumnSet get() = this
+
     /** Returns the columns of this column set. */
     abstract val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
@@ -146,12 +153,16 @@ class Slice(override val source: ColumnSet, override val fields: List<Expression
 enum class JoinType {
     /** Inner join. */
     INNER,
+
     /** Left outer join. */
     LEFT,
+
     /** Right outer join. */
     RIGHT,
+
     /** Full outer join. */
     FULL,
+
     /** Cross join. */
     CROSS
 }
@@ -183,10 +194,10 @@ class Join(
             onColumn != null || otherColumn != null -> {
                 error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
             }
-            additionalConstraint != null -> {
+            additionalConstraint != null            -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
             }
-            else -> {
+            else                                    -> {
                 implicitJoin(otherTable, joinType)
             }
         }
@@ -246,11 +257,11 @@ class Join(
             joinType != JoinType.CROSS && fkKeys.isEmpty() -> {
                 error("Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing")
             }
-            fkKeys.any { it.second.size > 1 } -> {
+            fkKeys.any { it.second.size > 1 }              -> {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
-            else -> {
+            else                                           -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
                 join(otherTable, joinType, cond, null)
             }
@@ -309,14 +320,15 @@ class Join(
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
-        name.isNotEmpty() -> name
+        name.isNotEmpty()           -> name
         javaClass.`package` == null -> javaClass.name.removeSuffix("Table")
-        else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+        else                        -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
     private val _columns = mutableListOf<Column<*>>()
+
     /** Returns all the columns defined on the table. */
     override val columns: List<Column<*>> get() = _columns
 
@@ -324,6 +336,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
     private val _indices = mutableListOf<Index>()
+
     /** Returns all indices declared on the table. */
     val indices: List<Index> get() = _indices
 
@@ -568,7 +581,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * what means that you can obtain column value only within the open transaction.
      * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
-    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> = registerColumn(name, TextColumnType(collate, eagerLoading))
+    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, TextColumnType(collate, eagerLoading))
 
     // Binary columns
 
@@ -612,7 +626,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their name.
      * With the specified maximum [length] for each name value.
      */
-    fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
+    fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> =
+        registerColumn(name, EnumerationNameColumnType(klass, length))
 
     /**
      * Creates an enumeration column with custom SQL type.
@@ -949,7 +964,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param customIndexName Name of the index.
      * @param isUnique Whether the index is unique or not.
      */
-    fun <T> Column<T>.index(customIndexName: String? = null, isUnique: Boolean = false): Column<T> = apply { table.index(customIndexName, isUnique, this) }
+    fun <T> Column<T>.index(customIndexName: String? = null, isUnique: Boolean = false): Column<T> =
+        apply { table.index(customIndexName, isUnique, this) }
 
     /**
      * Creates a unique index composed by this column only.
@@ -1022,10 +1038,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
-        is ColumnType -> {
+        is ColumnType        -> {
             this@cloneWithAutoInc.clone(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq")))
         }
-        else -> error("Unsupported column type for auto-increment $columnType")
+        else                 -> error("Unsupported column type for auto-increment $columnType")
     }
 
     // DDL statements
@@ -1042,7 +1058,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it, startWith = 0, minValue = 0, maxValue = Long.MAX_VALUE).createStatement() }.orEmpty()
+        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+            Sequence(
+                it,
+                startWith = 0,
+                minValue = 0,
+                maxValue = Long.MAX_VALUE
+            ).createStatement()
+        }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
@@ -1127,9 +1150,9 @@ data class Seq(private val name: String)
 
 /** Returns the list of tables to which the columns in this column set belong. */
 fun ColumnSet.targetTables(): List<Table> = when (this) {
-    is Alias<*> -> listOf(this.delegate)
+    is Alias<*>   -> listOf(this.delegate)
     is QueryAlias -> this.query.set.source.targetTables()
-    is Table -> listOf(this)
-    is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
-    else -> error("No target provided for update")
+    is Table      -> listOf(this)
+    is Join       -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
+    else          -> error("No target provided for update")
 }

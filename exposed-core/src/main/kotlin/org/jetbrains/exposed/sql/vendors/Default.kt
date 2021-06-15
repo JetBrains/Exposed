@@ -1,10 +1,29 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.LiteralOp
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendIfNotNull
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -96,10 +115,10 @@ abstract class DataTypeProvider {
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
     open fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> -> "$e"
-        currentDialect is MysqlDialect -> "$e"
+        e is LiteralOp<*>                  -> "$e"
+        currentDialect is MysqlDialect     -> "$e"
         currentDialect is SQLServerDialect -> "$e"
-        else -> "($e)"
+        else                               -> "($e)"
     }
 }
 
@@ -364,11 +383,11 @@ abstract class FunctionProvider {
         val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
 
         val (columnsToInsert, valuesExpr) = when {
-            isInsertFromSelect -> columns to expr
+            isInsertFromSelect                                -> columns to expr
             nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
-            nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
-            columns.isNotEmpty() -> columns to expr
-            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
+            nextValExpression != null                         -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
+            columns.isNotEmpty()                              -> columns to expr
+            else                                              -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
         }
         val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
@@ -514,27 +533,38 @@ data class ColumnMetadata(
 interface DatabaseDialect {
     /** Name of this dialect. */
     val name: String
+
     /** Data type provider of this dialect. */
     val dataTypeProvider: DataTypeProvider
+
     /** Function provider of this dialect. */
     val functionProvider: FunctionProvider
+
     /** Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise. */
     val supportsIfNotExists: Boolean get() = true
+
     /** Returns `true` if the dialect supports the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
+
     /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
     val needsSequenceToAutoInc: Boolean get() = false
+
     /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
+
     /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
+
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
+
     /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
+
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
+
     /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
     val supportsSubqueryUnions: Boolean get() = false
 
@@ -620,6 +650,7 @@ abstract class VendorDialect(
     /* Cached values */
     private var _allTableNames: Map<String, List<String>>? = null
     private var _allSchemaNames: List<String>? = null
+
     /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
@@ -663,8 +694,8 @@ abstract class VendorDialect(
         return allTables.any {
             when {
                 tableScheme != null -> it == table.nameInDatabaseCase()
-                scheme.isEmpty() -> it == table.nameInDatabaseCase()
-                else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
+                scheme.isEmpty()    -> it == table.nameInDatabaseCase()
+                else                -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
             }
         }
     }
@@ -691,7 +722,8 @@ abstract class VendorDialect(
         return constraints
     }
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
+        TransactionManager.current().db.metadata { existingIndices(*tables) }
 
     private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
 
@@ -722,13 +754,13 @@ abstract class VendorDialect(
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return when {
-            index.unique -> {
+            index.unique            -> {
                 "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
             }
             index.indexType != null -> {
                 createIndexWithType(name = quotedIndexName, table = quotedTableName, columns = columnsList, type = index.indexType)
             }
-            else -> {
+            else                    -> {
                 "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
             }
         }
@@ -756,6 +788,7 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
         explicitDialect.set(null)
     }
 }
+
 /** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
 val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
 

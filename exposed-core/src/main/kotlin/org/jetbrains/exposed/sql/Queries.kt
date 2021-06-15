@@ -2,10 +2,20 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.statements.DeleteStatement
+import org.jetbrains.exposed.sql.statements.InsertSelectStatement
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.ReplaceStatement
+import org.jetbrains.exposed.sql.statements.SQLServerBatchInsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
-import java.util.*
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelect01
@@ -97,6 +107,7 @@ fun <T : Table, E> T.batchInsert(
             BatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
         }
     }
+
     var statement = newBatchStatement()
 
     val result = ArrayList<ResultRow>()
@@ -142,11 +153,12 @@ fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatem
     execute(TransactionManager.current())
 }
 
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
-    body(this)
-    execute(TransactionManager.current())
-    getOrNull(id)
-}
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) =
+    InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
+        body(this)
+        execute(TransactionManager.current())
+        getOrNull(id)
+    }
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
@@ -205,7 +217,7 @@ fun checkExcessiveIndices(vararg tables: Table) {
         exposedLogger.warn("List of excessive foreign key constraints:")
         excessiveConstraints.forEach { (pair, fk) ->
             val constraint = fk.first()
-            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t${fk.joinToString(", ") {it.fkName}}")
+            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t${fk.joinToString(", ") { it.fkName }}")
         }
 
         exposedLogger.info("SQL Queries to remove excessive keys:")
@@ -216,11 +228,13 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
     }
 
-    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }.filter { it.value.size > 1 }
+    val excessiveIndices =
+        currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
+            .filter { it.value.size > 1 }
     if (excessiveIndices.isNotEmpty()) {
         exposedLogger.warn("List of excessive indices:")
         excessiveIndices.forEach { (triple, indices) ->
-            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
+            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") { it.indexName }}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {
@@ -269,8 +283,8 @@ private fun FieldSet.selectBatched(
 
         private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
             is EntityID<*> -> toLong(autoIncVal.value)
-            is Int -> autoIncVal.toLong()
-            else -> autoIncVal as Long
+            is Int         -> autoIncVal.toLong()
+            else           -> autoIncVal as Long
         }
     }
 }
@@ -324,6 +338,8 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
     val toCreate = missingIndices.subtract(nameDiffers)
     toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { (name, indexes) -> indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':") }
+    notMappedIndices.forEach { (name, indexes) ->
+        indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':")
+    }
     return toCreate.toList()
 }

@@ -1,10 +1,16 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.EntityIDColumnType
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.isAutoInc
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
-import java.util.*
 
 class BatchDataInconsistentException(message: String) : Exception(message)
 
@@ -22,7 +28,11 @@ open class BatchInsertStatement(
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            throw BatchDataInconsistentException("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
+            throw BatchDataInconsistentException(
+                "Can't set $value for ${
+                    TransactionManager.current().fullIdentity(column)
+                } because previous insertion can't be defaulted for that column."
+            )
         }
         super.set(column, value)
     }
@@ -54,7 +64,8 @@ open class BatchInsertStatement(
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
         }
-        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
+        val requiredInTargets =
+            (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts")
@@ -62,7 +73,8 @@ open class BatchInsertStatement(
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
-    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
+    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys
+        ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
@@ -83,7 +95,8 @@ open class BatchInsertStatement(
     }
 }
 
-open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
+open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) :
+    BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
 

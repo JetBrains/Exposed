@@ -1,9 +1,13 @@
 @file:Suppress("internal")
+
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
-import java.util.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
 
 /**
  * @author max
@@ -14,9 +18,9 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open operator fun <S> set(column: Column<S>, value: S) {
         when {
-            values.containsKey(column) -> error("$column is already initialized")
+            values.containsKey(column)                   -> error("$column is already initialized")
             !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
-            else -> {
+            else                                         -> {
                 column.columnType.validateValueBeforeUpdate(value)
                 values[column] = value
             }

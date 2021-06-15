@@ -3,7 +3,13 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.BatchUpdateStatement
+import org.jetbrains.exposed.sql.statements.DeleteStatement
+import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.statements.StatementGroup
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
 import org.jetbrains.exposed.sql.transactions.transactionScope
@@ -24,9 +30,9 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         when (val statement = context.statement) {
-            is Query -> transaction.flushEntities(statement)
+            is Query                -> transaction.flushEntities(statement)
 
-            is DeleteStatement -> {
+            is DeleteStatement      -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
                 if (!isExecutedWithinEntityLifecycle) {
@@ -36,14 +42,15 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                 }
             }
 
-            is InsertStatement<*> -> {
+            is InsertStatement<*>   -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
             }
 
-            is BatchUpdateStatement -> {}
+            is BatchUpdateStatement -> {
+            }
 
-            is UpdateStatement -> {
+            is UpdateStatement      -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables())
                 if (!isExecutedWithinEntityLifecycle) {
@@ -53,7 +60,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                 }
             }
 
-            else -> {
+            else                    -> {
                 if (statement.type.group == StatementGroup.DDL)
                     transaction.flushCache()
             }

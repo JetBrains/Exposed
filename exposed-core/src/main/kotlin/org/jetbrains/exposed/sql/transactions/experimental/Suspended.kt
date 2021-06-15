@@ -1,10 +1,18 @@
 package org.jetbrains.exposed.sql.transactions.experimental
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ThreadContextElement
+import kotlinx.coroutines.async
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.transactions.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.closeStatementsAndConnection
+import org.jetbrains.exposed.sql.transactions.handleSQLException
+import org.jetbrains.exposed.sql.transactions.rollbackLoggingException
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.SQLException
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -19,7 +27,8 @@ internal class TransactionScope(internal val tx: Lazy<Transaction>, parent: Coro
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(val newTransaction: Lazy<Transaction>, val manager: TransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(val newTransaction: Lazy<Transaction>, val manager: TransactionManager) :
+    ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
@@ -98,12 +107,13 @@ private suspend fun <T> withTransactionScope(
 
         return TransactionScope(tx, newContext + element).body()
     }
+
     val sameTransaction = currentTransaction == currentScope?.tx
     val sameContext = context == coroutineContext
     return when {
-        currentScope == null -> newScope(currentTransaction)
+        currentScope == null           -> newScope(currentTransaction)
         sameTransaction && sameContext -> currentScope.body()
-        else -> newScope(currentTransaction)
+        else                           -> newScope(currentTransaction)
     }
 }
 

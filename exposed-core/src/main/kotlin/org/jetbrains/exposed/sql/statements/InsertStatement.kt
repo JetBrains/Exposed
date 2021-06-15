@@ -1,6 +1,17 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
+import org.jetbrains.exposed.sql.EntityIDColumnType
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.NextVal
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.isAutoInc
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -109,7 +120,9 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
-        val rs = if (autoIncColumns.isNotEmpty()) { resultSet } else null
+        val rs = if (autoIncColumns.isNotEmpty()) {
+            resultSet
+        } else null
         return inserted to rs
     }
 
@@ -120,18 +133,19 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         }
     }
 
-    protected val autoIncColumns: List<Column<*>> get() {
-        val nextValExpressionColumns = values.filterValues { it is NextVal<*> }.keys
-        return targets.flatMap { it.columns }.filter { column ->
-            when {
-                column.autoIncColumnType?.nextValExpression != null -> currentDialect.supportsSequenceAsGeneratedKeys
-                column.columnType.isAutoInc -> true
-                column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
-                column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
-                else -> false
+    protected val autoIncColumns: List<Column<*>>
+        get() {
+            val nextValExpressionColumns = values.filterValues { it is NextVal<*> }.keys
+            return targets.flatMap { it.columns }.filter { column ->
+                when {
+                    column.autoIncColumnType?.nextValExpression != null -> currentDialect.supportsSequenceAsGeneratedKeys
+                    column.columnType.isAutoInc                         -> true
+                    column in nextValExpressionColumns                  -> currentDialect.supportsSequenceAsGeneratedKeys
+                    column.columnType is EntityIDColumnType<*>          -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
+                    else                                                -> false
+                }
             }
         }
-    }
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
@@ -139,11 +153,11 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
-        autoIncColumns.isNotEmpty() ->
+        autoIncColumns.isNotEmpty()                                        ->
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
             transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
 
-        else ->
+        else                                                               ->
             transaction.connection.prepareStatement(sql, false)
     }
 

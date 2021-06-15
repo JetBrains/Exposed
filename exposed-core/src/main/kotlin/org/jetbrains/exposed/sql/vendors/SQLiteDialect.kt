@@ -1,7 +1,16 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
 import java.sql.Connection
@@ -43,8 +52,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
-            expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
+            expr.distinct             -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
+            else                      -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 
@@ -168,7 +177,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
             try {
                 conn = DriverManager.getConnection("jdbc:sqlite::memory:")
                 stmt = conn!!.createStatement()
-                rs = stmt!!.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                rs = stmt!!.executeQuery("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
                 if (rs!!.next()) {
                     rs!!.getBoolean(1)
                 } else {

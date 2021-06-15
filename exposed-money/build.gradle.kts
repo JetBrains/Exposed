@@ -10,6 +10,7 @@ repositories {
 }
 
 val dialect: String by project
+val otjPgEmbeddedVersion: String by project
 
 dependencies {
     api(project(":exposed-core"))
@@ -20,7 +21,7 @@ dependencies {
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
 
-    testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
+    testImplementation("com.opentable.components", "otj-pg-embedded", otjPgEmbeddedVersion)
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
     testImplementation("com.h2database", "h2", "1.4.199")
     testImplementation("org.javamoney", "moneta", "1.3")

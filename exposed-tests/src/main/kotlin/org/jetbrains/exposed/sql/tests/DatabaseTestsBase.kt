@@ -2,12 +2,18 @@ package org.jetbrains.exposed.sql.tests
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
-import java.util.*
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.concurrent.thread
 
 enum class TestDB(
@@ -19,14 +25,14 @@ enum class TestDB(
     val afterTestFinished: () -> Unit = {},
     var db: Database? = null
 ) {
-    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
+    H2({"jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;"}, "org.h2.Driver"),
     H2_MYSQL(
-        { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
+        {"jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1"}, "org.h2.Driver",
         beforeConnection = {
             Mode.getInstance("MySQL").convertInsertNullToZero = false
         }
     ),
-    SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
+    SQLITE({"jdbc:sqlite:file:test?mode=memory&cache=shared"}, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
             if (runTestContainersMySQL()) {
@@ -34,7 +40,7 @@ enum class TestDB(
             } else {
                 val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
                 val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
-                host.let { dockerHost ->
+                host.let {dockerHost ->
                     "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8"
                 }
             }
@@ -42,16 +48,16 @@ enum class TestDB(
         user = "root",
         pass = if (runTestContainersMySQL()) "test" else "",
         driver = "com.mysql.jdbc.Driver",
-        beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
-        afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
+        beforeConnection = {if (runTestContainersMySQL()) mySQLProcess},
+        afterTestFinished = {if (runTestContainersMySQL()) mySQLProcess.close()}
     ),
     POSTGRESQL(
-        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
-        beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        {"jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8"}, "org.postgresql.Driver",
+        beforeConnection = {postgresSQLProcess}, afterTestFinished = {postgresSQLProcess.close()}
     ),
     POSTGRESQLNG(
-        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
-        user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        {"jdbc:pgsql://localhost:12346/template1?user=postgres&password="}, "com.impossibl.postgres.jdbc.PGDriver",
+        user = "postgres", beforeConnection = {postgresSQLProcess}, afterTestFinished = {postgresSQLProcess.close()}
     ),
     ORACLE(
         driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
@@ -98,9 +104,9 @@ enum class TestDB(
             val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
             val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
                 if (it == "") emptyList()
-                else it.split(',').map { it.trim().toUpperCase() }
+                else it.split(',').map {it.trim().toUpperCase()}
             }
-            return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
+            return values().filter {concreteDialects.isEmpty() || it.name in concreteDialects}
         }
     }
 }
@@ -109,7 +115,7 @@ private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
     EmbeddedPostgres.builder()
-        .setPgBinaryResolver { system, _ ->
+        .setPgBinaryResolver {system, _ ->
             EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
         }
         .setPort(12346).start()
@@ -134,6 +140,7 @@ abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
+
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) {
             exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
@@ -162,7 +169,7 @@ abstract class DatabaseTestsBase {
     fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         val enabledInTests = TestDB.enabledInTests()
         val toTest = db?.intersect(enabledInTests) ?: enabledInTests - excludeSettings
-        toTest.forEach { dbSettings ->
+        toTest.forEach {dbSettings ->
             try {
                 withDb(dbSettings, statement)
             } catch (e: Exception) {
@@ -172,7 +179,7 @@ abstract class DatabaseTestsBase {
     }
 
     fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+        (TestDB.enabledInTests() - excludeSettings).forEach {testDB ->
             withDb(testDB) {
                 SchemaUtils.create(*tables)
                 try {
@@ -187,7 +194,7 @@ abstract class DatabaseTestsBase {
     }
 
     fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+        (TestDB.enabledInTests() - excludeSettings).forEach {testDB ->
             withDb(testDB) {
                 SchemaUtils.createSchema(*schemas)
                 try {
@@ -204,7 +211,8 @@ abstract class DatabaseTestsBase {
 
     fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = tables, statement = statement)
 
-    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
+    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) =
+        withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "
