@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -68,8 +69,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         /*
          Since MySQL ConnectorJ 8.0.23 driver returns LocalDateTime instead of String for DateTime columns.
          As exposed-jodatime module should work with Java 1.7 it's necessary to fetch it as String as it was before.
+
+         MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
+          regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
          */
-        if (time && currentDialect is MysqlDialect) {
+        if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
             return rs.getObject(index, String::class.java)
         }
         return super.readObject(rs, index)
