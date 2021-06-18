@@ -105,7 +105,7 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     companion object {
         // https://www.baeldung.com/java-check-class-exists
         private val hasLocalDateTime = try {
-            Class.forName("java.time.LocalDateTime", false, javaClass.classLoader);
+            Class.forName("java.time.LocalDateTime", false, javaClass.classLoader)
             true
         } catch (e: ClassNotFoundException) {
             false
