@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.money
 
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
 import org.jetbrains.exposed.sql.Table
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
@@ -23,5 +24,7 @@ fun Table.compositeMoney(amountColumn: Column<BigDecimal?>, currencyColumn: Colu
         if (amountColumn !in columns && currencyColumn !in columns) {
             registerCompositeColumn(it)
         }
+        // Set CompositeColumn.nullable = true
+        (it as CompositeColumn<MonetaryAmount>).nullable()
     }
 }

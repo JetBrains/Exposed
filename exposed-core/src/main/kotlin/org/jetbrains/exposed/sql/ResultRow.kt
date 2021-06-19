@@ -50,17 +50,24 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
         return when {
             raw == null -> null
             raw == NotInitializedValue -> error("$c is not initialized yet")
+            c is CompositeColumn<T> -> c.restoreValueFromParts(
+                (raw as Map<Column<*>, Any?>).mapValues { (column, rawValue) ->
+                    rawToColumnValue(rawValue, column as Column<Any?>)
+                }
+            )
             c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
             c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
             else -> raw
         } as T
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun <T> getRaw(c: Expression<T>): T? {
         if (c is CompositeColumn<T>) {
             val rawParts = c.getRealColumns().associateWith { getRaw(it) }
-            return c.restoreValueFromParts(rawParts)
+            // Result row for composite is not really defined, and we return Map<Column, ItsRawValue> for now
+            // See https://github.com/JetBrains/Exposed/issues/1278
+            @Suppress("UNCHECKED_CAST")
+            return rawParts as T?
         }
 
         val index = fieldIndex[c]
@@ -70,6 +77,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
             }?.let { fieldIndex[it] }
             ?: error("$c is not in record set")
 
+        @Suppress("UNCHECKED_CAST")
         return data[index] as T?
     }
 

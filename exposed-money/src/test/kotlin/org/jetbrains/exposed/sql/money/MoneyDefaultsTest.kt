@@ -22,6 +22,11 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
         val field = varchar("field", 100)
         val t1 = compositeMoney(10, 0, "t1").default(defaultValue)
         val t2 = compositeMoney(10, 0, "t2").nullable()
+
+        val price_amount = decimal("price_amount", 10, 0).nullable()
+        val price_currency = currency("price_currency").nullable()
+        val price = compositeMoney(price_amount, price_currency) /* it is implicitly nullable since price_amount is nullable */
+
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
@@ -29,6 +34,7 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
         var t2 by TableWithDBDefault.t2
+        var price by TableWithDBDefault.price
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -36,11 +42,7 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is DBDefault) return false
-            if (other.t1 != other.t1) return false
-            if (other.t2 != other.t2) return false
-            if (other.clientDefault != other.clientDefault) return false
-
-            return true
+            return id.value == other.id.value
         }
 
         companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
@@ -89,6 +91,21 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
             assertNull(db1.t2)
             val money = Money.of(BigDecimal.ONE, "USD")
             db1.t2 = money
+            db1.refresh(flush = true)
+            assertEquals(money, db1.t1)
+            assertEquals(TableWithDBDefault.defaultValue, db1.t1)
+        }
+    }
+
+    @Test
+    fun testImplicitlyNullableCompositeColumnType() {
+        withTables(TableWithDBDefault) {
+            TableWithDBDefault.cIndex = 0
+            val db1 = DBDefault.new { field = "1" }
+            flushCache()
+            assertNull(db1.price, "db1.price should be null since it was not set when calling new")
+            val money = Money.of(BigDecimal.ONE, "USD")
+            db1.price = money
             db1.refresh(flush = true)
             assertEquals(money, db1.t1)
             assertEquals(TableWithDBDefault.defaultValue, db1.t1)
