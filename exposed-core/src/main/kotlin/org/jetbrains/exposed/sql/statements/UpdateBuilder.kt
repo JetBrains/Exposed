@@ -37,6 +37,13 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         values[column] = value
     }
 
+    /**
+     * Sets column value to null.
+     * This method is helpful for "optional references" since compiler can't decide between
+     * "null as T?" and "null as EntityID<T>?".
+     */
+    fun <T> setNull(column: Column<T?>) = set(column, null as T?)
+
     open operator fun <S> set(column: Column<S>, value: Expression<out S>) = update(column, value)
 
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {

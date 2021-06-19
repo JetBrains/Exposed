@@ -225,6 +225,9 @@ class EntityTests : DatabaseTestsBase() {
                 // it[EntityTestsData.XTable.y1] = null
                 it[y1] = null as EntityID<String>?
             }
+            EntityTestsData.XTable.insert {
+                it.setNull(y1)
+            }
         }
     }
 

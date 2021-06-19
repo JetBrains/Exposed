@@ -265,6 +265,10 @@ class InsertTests : DatabaseTestsBase() {
             tbl.verifyInsert(null) {
                 it[nullableInt] = LiteralOp(nullableInt.columnType, null)
             }
+
+            tbl.verifyInsert(null) {
+                it.setNull(nullableInt)
+            }
         }
     }
 
