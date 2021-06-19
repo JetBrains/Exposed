@@ -346,13 +346,17 @@ class EntityTests : DatabaseTestsBase() {
         withTables(Boards) {
             val board1 = Board.new { name = "irrelevant" }
             assertNotNull(Board.testCache(board1.id))
+            assertNotNull(Board.testCache(board1.id.value))
             board1.delete()
             assertNull(Board.testCache(board1.id))
+            assertNull(Board.testCache(board1.id.value))
 
             val board2 = Board.new { name = "irrelevant" }
             assertNotNull(Board.testCache(board2.id))
+            assertNotNull(Board.testCache(board2.id.value))
             Boards.deleteWhere { Boards.id eq board2.id }
             assertNull(Board.testCache(board2.id))
+            assertNull(Board.testCache(board2.id.value))
         }
     }
 
