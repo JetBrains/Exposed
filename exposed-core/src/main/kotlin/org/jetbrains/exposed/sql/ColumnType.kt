@@ -46,7 +46,7 @@ interface IColumnType {
      */
     fun valueToString(value: Any?): String = when (value) {
         null -> {
-            check(nullable) { "NULL in non-nullable column" }
+            check(nullable) { "NULL in non-nullable column with type ${sqlType()}" }
             "NULL"
         }
         DefaultValueMarker -> "DEFAULT"

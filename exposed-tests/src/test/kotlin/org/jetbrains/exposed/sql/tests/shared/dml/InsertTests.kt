@@ -17,7 +17,9 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class InsertTests : DatabaseTestsBase() {
@@ -198,6 +200,63 @@ class InsertTests : DatabaseTestsBase() {
                 it[IntIdTestTable.name] = "Foo"
             }
             assertEquals(IntIdTestTable.selectAll().last()[IntIdTestTable.id], id)
+        }
+    }
+
+    @Test
+    fun testInsertNullIntoNonNullableColumn() {
+        val cities = object : IntIdTable("cities") {
+        }
+        val users = object : IntIdTable("users") {
+            val cityId = reference("city_id", cities)
+        }
+
+        withTables(users, cities) {
+            // This is needed so valid inserts to users to succeed
+            cities.insert {
+                it[id] = 42
+            }
+            users.insert {
+                // The assertion would try inserting null, and it ensures the insert would fail before the statement is even generated
+                it.assertInsertNullFails(cityId)
+                // This is needed for insert statement to succeed
+                it[cityId] = 42
+            }
+        }
+    }
+
+    private fun <T : Comparable<T>> UpdateBuilder<Int>.assertInsertNullFails(column: Column<EntityID<T>>) {
+        fun assertInsertNullFails(column: Column<out EntityID<*>>, block: () -> Unit) {
+            val e = assertFailsWith<IllegalArgumentException>(
+                """
+                Unfortunately, type system can't protect from inserting null here
+                since the setter is declared as set(column: Column<out EntityID<S>?>, value: S?),
+                and there's no way to tell that nullness of both arguments should match, so expecting it[${column.name}] = null
+                to fail at runtime
+                """.trimIndent()
+            ) {
+                block()
+            }
+            val message = e.toString()
+            assertContains(
+                message,
+                "${column.table.tableName}.${column.name}", ignoreCase = true,
+                "Exception message should contain table and column name"
+            )
+            assertContains(message, column.columnType.toString(), ignoreCase = true, "Exception message should contain column type")
+        }
+
+        require(!column.columnType.nullable) {
+            "Assertion works for non-nullable columns only. Given column ${column.table.tableName}.${column.name} is nullable ${column.columnType}"
+        }
+        assertInsertNullFails(column) {
+            // This is written explicitly to demonstrate that the code compiles, yet it fails in the runtime
+            // This call resolves to set(column: Column<out EntityID<S>?>, value: S?)
+            this[column] = null
+        }
+        val nullableType = EntityIDColumnType(column).apply { nullable = true }
+        assertInsertNullFails(column) {
+            this[column] = LiteralOp(nullableType, null)
         }
     }
 

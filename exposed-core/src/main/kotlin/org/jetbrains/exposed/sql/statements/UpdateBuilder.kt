@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
-import java.util.*
 
 /**
  * @author max
@@ -13,28 +12,28 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     open operator fun <S> set(column: Column<S>, value: S) {
-        when {
-            values.containsKey(column) -> error("$column is already initialized")
-            !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
-            else -> {
-                column.columnType.validateValueBeforeUpdate(value)
-                values[column] = value
-            }
+        require(column !in values) { "$column is already initialized" }
+        column.validateValueBeforeUpdate(value)
+        values[column] = value
+    }
+
+    private fun Column<*>.validateValueBeforeUpdate(value: Any?) {
+        require(columnType.nullable || value != null && !(value is LiteralOp<*> && value.value == null)) {
+            "Can't set NULL into non-nullable column ${table.tableName}.$name, column type is $columnType"
         }
+        columnType.validateValueBeforeUpdate(value)
     }
 
     @JvmName("setWithEntityIdExpression")
     operator fun <S : Comparable<S>> set(column: Column<out EntityID<S>?>, value: Expression<out S?>) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
-        column.columnType.validateValueBeforeUpdate(value)
-        values[column] = value
+        @Suppress("UNCHECKED_CAST")
+        set(column as Column<Any?>, value as Any?)
     }
 
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>> set(column: Column<out EntityID<S>?>, value: S?) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
-        column.columnType.validateValueBeforeUpdate(value)
-        values[column] = value
+        @Suppress("UNCHECKED_CAST")
+        set(column as Column<Any?>, value as Any?)
     }
 
     /**
@@ -47,19 +46,21 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     open operator fun <S> set(column: Column<S>, value: Expression<out S>) = update(column, value)
 
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {
-        column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
+        column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) ->
+            @Suppress("UNCHECKED_CAST")
+            set(realColumn as Column<Any?>, itsValue)
+        }
     }
 
     open fun <S> update(column: Column<S>, value: Expression<out S>) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
-        column.columnType.validateValueBeforeUpdate(value)
-        values[column] = value
+        @Suppress("UNCHECKED_CAST")
+        set(column as Column<Any?>, value as Any?)
     }
 
     open fun <S> update(column: Column<S>, value: SqlExpressionBuilder.() -> Expression<out S>) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
-        val expression = SqlExpressionBuilder.value()
-        column.columnType.validateValueBeforeUpdate(expression)
-        values[column] = expression
+        // Note: the implementation builds value before it verifies if the column is already initialized
+        // however it makes the implementation easier and the optimization is not that important since
+        // the exceptional case should be rare.
+        set(column, SqlExpressionBuilder.value())
     }
 }
