@@ -1,0 +1,10 @@
+* text=auto
+*.java text
+*.md text
+*.sql text
+*.sh text eol=lf
+*.xml text
+*.yaml text
+*.yml text
+*.bat text eol=crlf
+/docs/ChangeLog.md merge=union
