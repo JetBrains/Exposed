@@ -208,6 +208,26 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testOptionalReference() {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
+            val y = EntityTestsData.YEntity.new { }
+            EntityTestsData.XTable.insert {
+                it[y1] = y.id
+            }
+            EntityTestsData.XTable.insert {
+                // = null can't decide between "null as String?" and "null as EntityId<String>?"
+                // it[EntityTestsData.XTable.y1] = null
+                it[y1] = null as String?
+            }
+            EntityTestsData.XTable.insert {
+                // = null can't decide between "null as String?" and "null as EntityID<String>?"
+                // it[EntityTestsData.XTable.y1] = null
+                it[y1] = null as EntityID<String>?
+            }
+        }
+    }
+
     object Boards : IntIdTable(name = "board") {
         val name = varchar("name", 255).index(isUnique = true)
     }

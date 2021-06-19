@@ -6,10 +6,14 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.*
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
@@ -230,33 +234,37 @@ class InsertTests : DatabaseTestsBase() {
             val string = varchar("stringCol", 20)
         }
 
-        fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
+        fun <T : Table> T.verifyInsert(expectedIntValue: Int?, insertClause: T.(UpdateBuilder<Int>) -> Unit) {
+            fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
-        fun verify(value: String) {
-            val row = tbl.select { tbl.string eq value }.single()
-            assertEquals(row[tbl.string], value)
+            deleteAll()
+            insert {
+                it[tbl.string] = expression(" _test_ ")
+                insertClause(it)
+            }
+            val rows = selectAll().adjustSlice { slice(tbl.string, tbl.nullableInt) }
+                .map { mapOf("string" to it[tbl.string], "nullableInt" to it[tbl.nullableInt]) }
+            assertEquals(
+                listOf(mapOf("string" to "test", "nullableInt" to expectedIntValue)).toString(),
+                rows.toString()
+            )
         }
 
         withTables(tbl) {
-            tbl.insert {
-                it[string] = expression(" _exp1_ ")
+            tbl.verifyInsert(null) {
             }
 
-            verify("exp1")
-
-            tbl.insert {
-                it[string] = expression(" _exp2_ ")
+            tbl.verifyInsert(5) {
                 it[nullableInt] = 5
             }
 
-            verify("exp2")
-
-            tbl.insert {
-                it[string] = expression(" _exp3_ ")
+            tbl.verifyInsert(null) {
                 it[nullableInt] = null
             }
 
-            verify("exp3")
+            tbl.verifyInsert(null) {
+                it[nullableInt] = LiteralOp(nullableInt.columnType, null)
+            }
         }
     }
 
