@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.5.10" apply true
+    kotlin("jvm") version "1.5.20" apply true
     id("io.github.gradle-nexus.publish-plugin") apply true
     id("org.jmailen.kotlinter") version "3.4.4"
 }
