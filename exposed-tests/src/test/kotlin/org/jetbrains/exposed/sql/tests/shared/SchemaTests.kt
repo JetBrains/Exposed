@@ -107,7 +107,7 @@ class SchemaTests : DatabaseTestsBase() {
         val schema2 = Schema("redundant")
         val schemasTryingToCreate = listOf(schema1, schema1, schema2)
 
-        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = *arrayOf(schema1, schema1, schema2)) {
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(schema1, schema1, schema2)) {
             val toCreate = schemasTryingToCreate.filterNot { it.exists() }
             /** schema1 and schema2 have been created, so there is no remaining schema to be created */
             assertTrue(toCreate.isEmpty())

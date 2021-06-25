@@ -31,4 +31,5 @@ tasks.withType(Test::class.java) {
         showStandardStreams = true
         exceptionFormat = TestExceptionFormat.FULL
     }
+    useJUnitPlatform()
 }

@@ -235,9 +235,9 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = *tables, statement = statement)
+    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = tables, statement = statement)
 
-    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = *schemas, statement = statement)
+    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "

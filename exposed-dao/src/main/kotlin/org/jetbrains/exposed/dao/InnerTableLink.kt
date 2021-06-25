@@ -63,10 +63,12 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         entityCache.referrers[o.id]?.remove(sourceRefColumn)
 
         val targetIds = value.map { it.id }
-        table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
-        table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
-            this[sourceRefColumn] = o.id
-            this[targetColumn] = targetId
+        executeAsPartOfEntityLifecycle {
+            table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
+            table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
+                this[sourceRefColumn] = o.id
+                this[targetColumn] = targetId
+            }
         }
 
         // current entity updated

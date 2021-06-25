@@ -24,7 +24,7 @@ dependencies {
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
     testImplementation("com.h2database", "h2", "1.4.199")
     testImplementation("org.javamoney", "moneta", "1.3")
-    testRuntimeOnly("org.testcontainers", "testcontainers", "1.14.3")
+    testRuntimeOnly("org.testcontainers", "testcontainers", "1.15.3")
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)
     }

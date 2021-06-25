@@ -503,7 +503,9 @@ data class ColumnMetadata(
     /** Whether the column if nullable or not. */
     val nullable: Boolean,
     /** Optional size of the column. */
-    val size: Int?
+    val size: Int?,
+    /** Is the column auto increment */
+    val autoIncrement: Boolean,
 )
 
 /**
@@ -741,7 +743,7 @@ abstract class VendorDialect(
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
+    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl(true)}"
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()

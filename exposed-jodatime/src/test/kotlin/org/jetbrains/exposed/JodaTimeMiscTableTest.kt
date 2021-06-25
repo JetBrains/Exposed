@@ -11,6 +11,7 @@ import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 object Misc : MiscTable() {
     val d = date("d")
@@ -347,7 +348,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
         val time = DateTime.now()
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = *arrayOf(tbl)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10
@@ -370,6 +371,48 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
             val row = tbl.select { tbl.n eq 101 }.single()
             tbl.checkRowFull(row, 13, null, -10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "1234", "1234", "23456789", "3456789", dec, null, null, null)
+        }
+    }
+
+    private object ZeroDateTimeTable : Table("zerodatetimetable") {
+        val id = integer("id")
+
+        val dt1 = datetime("dt1").nullable() // We need nullable() to convert '0000-00-00 00:00:00' to null
+        val dt2 = datetime("dt2").nullable()
+        val ts1 = datetime("ts1").nullable() // We need nullable() to convert '0000-00-00 00:00:00' to null
+        val ts2 = datetime("ts2").nullable()
+
+        override val primaryKey = PrimaryKey(id)
+    }
+    private val zeroDateTimeTableDdl = """
+        CREATE TABLE `zerodatetimetable` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `dt1` datetime NOT NULL,
+        `dt2` datetime NULL,
+        `ts1` timestamp NOT NULL,
+        `ts2` timestamp NULL,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB
+    """.trimIndent()
+
+    @Test
+    fun testZeroDateTimeIsNull() {
+        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+            exec(zeroDateTimeTableDdl)
+            try {
+                // Need ignore to bypass strict mode
+                exec("INSERT IGNORE INTO `zerodatetimetable` (dt1,dt2,ts1,ts2) VALUES ('0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00');")
+                val row = ZeroDateTimeTable.selectAll().first()
+
+                for (c in listOf(ZeroDateTimeTable.dt1, ZeroDateTimeTable.dt2, ZeroDateTimeTable.ts1, ZeroDateTimeTable.ts2)) {
+                    val actual = row[c]
+                    assertNull(actual, "$c expected null but was $actual")
+                }
+                commit() // Need commit to persist data before drop tables
+            } finally {
+                SchemaUtils.drop(ZeroDateTimeTable)
+                commit()
+            }
         }
     }
 }

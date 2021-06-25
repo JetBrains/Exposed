@@ -59,7 +59,9 @@ class EntityCache(private val transaction: Transaction) {
                         updatedEntities.add(entity)
                     }
                 }
-                batch.execute(transaction)
+                executeAsPartOfEntityLifecycle {
+                    batch.execute(transaction)
+                }
                 updatedEntities.forEach {
                     transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
                 }
@@ -116,9 +118,11 @@ class EntityCache(private val transaction: Transaction) {
                     }
                 }
                 toFlush = partition.first
-                val ids = table.batchInsert(toFlush) { entry ->
-                    for ((c, v) in entry.writeValues) {
-                        this[c] = v
+                val ids = executeAsPartOfEntityLifecycle {
+                    table.batchInsert(toFlush) { entry ->
+                        for ((c, v) in entry.writeValues) {
+                            this[c] = v
+                        }
                     }
                 }
 
@@ -139,6 +143,7 @@ class EntityCache(private val transaction: Transaction) {
                 toFlush = partition.second
             } while (toFlush.isNotEmpty())
         }
+        transaction.alertSubscribers()
     }
 
     fun clearReferrersCache() {

@@ -70,7 +70,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun unnamedTableWithQuotesSQL() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = *arrayOf(UnnamedTable)) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(UnnamedTable)) {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
             assertEquals(
@@ -114,7 +114,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE), tables = arrayOf(TestTable)) {
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} NOT NULL, " +
@@ -134,7 +134,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = arrayOf(TestTable)) {
             val q = db.identifierManager.quoteString
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
             val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"

@@ -29,7 +29,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
@@ -96,6 +96,40 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCreateMissingTablesAndColumnsChangeAutoincrement() {
+        val t1 = object : Table("foo") {
+            val id = integer("idcol").autoIncrement()
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            t1.insert { it[foo] = "ABC" }
+
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            assertFailAndRollback("Can't insert without primaryKey value") {
+                t2.insert { it[foo] = "ABC" }
+            }
+
+            t2.insert {
+                it[id] = 3
+                it[foo] = "ABC"
+            }
+
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test
     fun testCreateMissingTablesAndColumnsChangeCascadeType() {
         val fooTable = object : IntIdTable("foo") {
             val foo = varchar("foo", 50)
@@ -142,7 +176,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = *arrayOf(initialTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)

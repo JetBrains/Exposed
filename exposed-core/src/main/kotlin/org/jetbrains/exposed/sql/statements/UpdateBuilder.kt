@@ -16,19 +16,24 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         when {
             values.containsKey(column) -> error("$column is already initialized")
             !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
-            else -> values[column] = value
+            else -> {
+                column.columnType.validateValueBeforeUpdate(value)
+                values[column] = value
+            }
         }
     }
 
     @JvmName("setWithEntityIdExpression")
     operator fun <S, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
         require(!values.containsKey(column)) { "$column is already initialized" }
+        column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>, ID : EntityID<S>, E : S?> set(column: Column<ID>, value: E) {
         require(!values.containsKey(column)) { "$column is already initialized" }
+        column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
@@ -40,11 +45,14 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open fun <T, S : T?> update(column: Column<T>, value: Expression<S>) {
         require(!values.containsKey(column)) { "$column is already initialized" }
+        column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
     open fun <T, S : T?> update(column: Column<T>, value: SqlExpressionBuilder.() -> Expression<S>) {
         require(!values.containsKey(column)) { "$column is already initialized" }
-        values[column] = SqlExpressionBuilder.value()
+        val expression = SqlExpressionBuilder.value()
+        column.columnType.validateValueBeforeUpdate(expression)
+        values[column] = expression
     }
 }

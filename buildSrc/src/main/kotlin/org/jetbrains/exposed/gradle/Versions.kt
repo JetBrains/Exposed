@@ -1,8 +1,11 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.4.32"
-    const val kotlinCoroutines = "1.4.3"
+    const val kotlin = "1.5.10"
+    const val kotlinCoroutines = "1.5.0"
+
+    const val slf4j = "1.7.30"
+    const val log4j2 = "2.14.1"
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
@@ -17,6 +20,6 @@ object Versions {
     const val db2 = "11.1.1.1"
 
     /** Spring **/
-    const val springFramework = "5.3.3"
-    const val springBoot = "2.4.2"
+    const val springFramework = "5.3.7"
+    const val springBoot = "2.5.0"
 }

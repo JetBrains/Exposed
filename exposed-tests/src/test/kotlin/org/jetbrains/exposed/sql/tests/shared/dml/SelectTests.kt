@@ -238,4 +238,21 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(1, secondEntries.size)
         }
     }
+
+    @Test
+    fun `test that column length check is not affects select queries`() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(stringTable) {
+            stringTable.insert {
+                it[name] = "TestName"
+            }
+            assertEquals(1, stringTable.select { stringTable.name eq "TestName" }.count())
+
+            val veryLongString = "1".repeat(255)
+            assertEquals(0, stringTable.select { stringTable.name eq veryLongString }.count())
+        }
+    }
 }

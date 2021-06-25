@@ -55,11 +55,14 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
-        val refValue = reference.getValue(o, desc)
-        return when {
-            refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-            else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }.singleOrNull()
-        } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
+        return executeAsPartOfEntityLifecycle {
+            val refValue = reference.getValue(o, desc)
+            when {
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }
+                    .singleOrNull()
+            } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
+        }
     }
 
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
@@ -70,11 +73,14 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T? {
-        val refValue = reference.getValue(o, desc)
-        return when {
-            refValue == null -> null
-            refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-            else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }.singleOrNull()
+        return executeAsPartOfEntityLifecycle {
+            val refValue = reference.getValue(o, desc)
+            when {
+                refValue == null -> null
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }
+                    .singleOrNull()
+            }
         }
     }
 
@@ -152,9 +158,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      */
     open fun delete() {
         val table = klass.table
-        table.deleteWhere { table.id eq id }
-        klass.removeFromCache(this)
         TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
+        executeAsPartOfEntityLifecycle {
+            table.deleteWhere { table.id eq id }
+        }
+        klass.removeFromCache(this)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
@@ -168,9 +176,13 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 // Store values before update to prevent flush inside UpdateStatement
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
-                table.update({ table.id eq id }) {
-                    for ((c, v) in _writeValues) {
-                        it[c] = v
+                // In case of batch all changes will be registered after all entities flushed
+                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+                executeAsPartOfEntityLifecycle {
+                    table.update({ table.id eq id }) {
+                        for ((c, v) in _writeValues) {
+                            it[c] = v
+                        }
                     }
                 }
             } else {
@@ -181,7 +193,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
-            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false

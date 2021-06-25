@@ -4,7 +4,21 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
+import org.jetbrains.exposed.sql.transactions.transactionScope
+
+private var isExecutedWithinEntityLifecycle by transactionScope { false }
+
+internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
+    val currentExecutionState = isExecutedWithinEntityLifecycle
+    return try {
+        isExecutedWithinEntityLifecycle = true
+        body()
+    } finally {
+        isExecutedWithinEntityLifecycle = currentExecutionState
+    }
+}
 
 class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
@@ -15,6 +29,11 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             is DeleteStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             is InsertStatement<*> -> {
@@ -27,6 +46,11 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             is UpdateStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables())
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
             }
 
             else -> {
@@ -34,6 +58,10 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                     transaction.flushCache()
             }
         }
+    }
+
+    override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
+        transaction.alertSubscribers()
     }
 
     override fun beforeCommit(transaction: Transaction) {

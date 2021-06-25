@@ -22,15 +22,17 @@ dependencies {
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
     implementation(kotlin("test-junit"))
-    implementation("org.slf4j", "slf4j-log4j12", "1.7.26")
-    implementation("log4j", "log4j", "1.2.17")
+    implementation("org.slf4j", "slf4j-api", Versions.slf4j)
+    implementation("org.apache.logging.log4j", "log4j-slf4j-impl", Versions.log4j2)
+    implementation("org.apache.logging.log4j", "log4j-api", Versions.log4j2)
+    implementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
     implementation("junit", "junit", "4.12")
     implementation("org.hamcrest", "hamcrest-library", "1.3")
     implementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
-    implementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
-    implementation("org.testcontainers", "testcontainers", "1.14.3")
-    implementation("org.testcontainers", "mysql", "1.14.3")
+    implementation("com.opentable.components", "otj-pg-embedded", "0.13.3")
+    implementation("org.testcontainers", "testcontainers", "1.15.3")
+    implementation("org.testcontainers", "mysql", "1.15.3")
 
     implementation("com.h2database", "h2", Versions.h2)
 

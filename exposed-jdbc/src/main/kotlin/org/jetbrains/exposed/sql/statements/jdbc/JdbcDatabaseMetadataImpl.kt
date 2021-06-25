@@ -134,7 +134,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
-            val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
+            val columnMetadata = ColumnMetadata(
+                it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
+                it.getInt("DATA_TYPE"),
+                it.getBoolean("NULLABLE"),
+                it.getInt("COLUMN_SIZE").takeIf { it != 0 },
+                it.getString("IS_AUTOINCREMENT") == "YES",
+            )
             it.getString("TABLE_NAME") to columnMetadata
         }
         rs.close()
