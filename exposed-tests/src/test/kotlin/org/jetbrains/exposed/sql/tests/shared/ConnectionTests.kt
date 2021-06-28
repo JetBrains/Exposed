@@ -12,6 +12,8 @@ class ConnectionTests : DatabaseTestsBase() {
 
     object People : LongIdTable() {
         val name = varchar("name", 80).nullable()
+        val lastName = varchar("lastname", 42).default("Doe")
+        val age = integer("age").default(18)
     }
 
     @Test
@@ -23,8 +25,10 @@ class ConnectionTests : DatabaseTestsBase() {
                 requireNotNull(columns(People)[People])
             }.toSet()
             val expected = setOf(
-                ColumnMetadata("ID", Types.BIGINT, false, 19, true),
-                ColumnMetadata("NAME", Types.VARCHAR, true, 80, false)
+                ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
+                ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
+                ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "'Doe'"),
+                ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
             )
             assertEquals(expected, columnMetadata)
         }
