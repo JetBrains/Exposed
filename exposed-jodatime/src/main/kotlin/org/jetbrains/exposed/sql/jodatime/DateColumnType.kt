@@ -73,10 +73,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
          MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
           regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
          */
-        if (time && !hasLocalDateTime && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-            return rs.getObject(index, String::class.java)
-        }
-        return super.readObject(rs, index)
+        return if (time && localDateTimeClass != null) {
+            rs.getObject(index, localDateTimeClass)
+        } else if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
+            rs.getObject(index, String::class.java)
+        } else super.readObject(rs, index)
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
@@ -104,11 +105,10 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
 
     companion object {
         // https://www.baeldung.com/java-check-class-exists
-        private val hasLocalDateTime = try {
-            Class.forName("java.time.LocalDateTime", false, javaClass.classLoader)
-            true
+        private val localDateTimeClass = try {
+            Class.forName("java.time.LocalDateTime", false, this::class.java.classLoader)
         } catch (e: ClassNotFoundException) {
-            false
+            null
         }
     }
 }
