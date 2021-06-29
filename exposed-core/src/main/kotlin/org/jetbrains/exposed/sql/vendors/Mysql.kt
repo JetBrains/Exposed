@@ -1,7 +1,22 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StringColumnType
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
@@ -72,7 +87,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = when (type) {
         is StringColumnType -> super.cast(expr, CharColumnType, builder)
-        else -> super.cast(expr, type, builder)
+        else                -> super.cast(expr, type, builder)
     }
 
     override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"

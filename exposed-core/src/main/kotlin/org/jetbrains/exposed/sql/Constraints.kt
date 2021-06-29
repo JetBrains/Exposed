@@ -1,7 +1,11 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
 
 /**
@@ -34,11 +38,11 @@ enum class ReferenceOption {
     companion object {
         /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
         fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-            DatabaseMetaData.importedKeyCascade -> CASCADE
-            DatabaseMetaData.importedKeySetNull -> SET_NULL
+            DatabaseMetaData.importedKeyCascade  -> CASCADE
+            DatabaseMetaData.importedKeySetNull  -> SET_NULL
             DatabaseMetaData.importedKeyRestrict -> RESTRICT
             DatabaseMetaData.importedKeyNoAction -> NO_ACTION
-            else -> currentDialect.defaultReferenceOption
+            else                                 -> currentDialect.defaultReferenceOption
         }
     }
 }
@@ -55,45 +59,53 @@ data class ForeignKeyConstraint(
 ) : DdlAware {
     private val tx: Transaction
         get() = TransactionManager.current()
+
     /** Name of the child table. */
     val targetTable: String
         get() = tx.identity(target.table)
+
     /** Name of the foreign key column. */
     val targetColumn: String
         get() = tx.identity(target)
+
     /** Name of the parent table. */
     val fromTable: String
         get() = tx.identity(from.table)
+
     /** Name of the key column from the parent table. */
     val fromColumn
         get() = tx.identity(from)
+
     /** Reference option when performing update operations. */
     val updateRule: ReferenceOption?
         get() = onUpdate ?: currentDialectIfAvailable?.defaultReferenceOption
+
     /** Reference option when performing delete operations. */
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
+
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
             name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
         ).inProperCase()
-    internal val foreignKeyPart: String get() = buildString {
-        if (fkName.isNotBlank()) {
-            append("CONSTRAINT $fkName ")
-        }
-        append("FOREIGN KEY ($fromColumn) REFERENCES $targetTable($targetColumn)")
-        if (deleteRule != ReferenceOption.NO_ACTION) {
-            append(" ON DELETE $deleteRule")
-        }
-        if (updateRule != ReferenceOption.NO_ACTION) {
-            if (currentDialect is OracleDialect) {
-                exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTable table.")
-            } else {
-                append(" ON UPDATE $updateRule")
+    internal val foreignKeyPart: String
+        get() = buildString {
+            if (fkName.isNotBlank()) {
+                append("CONSTRAINT $fkName ")
+            }
+            append("FOREIGN KEY ($fromColumn) REFERENCES $targetTable($targetColumn)")
+            if (deleteRule != ReferenceOption.NO_ACTION) {
+                append(" ON DELETE $deleteRule")
+            }
+            if (updateRule != ReferenceOption.NO_ACTION) {
+                if (currentDialect is OracleDialect) {
+                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTable table.")
+                } else {
+                    append(" ON UPDATE $updateRule")
+                }
             }
         }
-    }
 
     override fun createStatement(): List<String> = listOf("ALTER TABLE $fromTable ADD $foreignKeyPart")
 
@@ -102,7 +114,7 @@ data class ForeignKeyConstraint(
     override fun dropStatement(): List<String> {
         val constraintType = when (currentDialect) {
             is MysqlDialect -> "FOREIGN KEY"
-            else -> "CONSTRAINT"
+            else            -> "CONSTRAINT"
         }
         return listOf("ALTER TABLE $fromTable DROP $constraintType $fkName")
     }
@@ -169,6 +181,7 @@ data class Index(
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table
+
     /** Name of the index. */
     val indexName: String
         get() = customName ?: buildString {

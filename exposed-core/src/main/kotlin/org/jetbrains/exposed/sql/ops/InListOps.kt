@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.ops
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ComplexExpression
+import org.jetbrains.exposed.sql.ExpressionWithColumnType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
 
 /**
  * Represents an SQL operator that checks if [expr] is equals to any element from [list].

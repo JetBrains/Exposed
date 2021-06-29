@@ -13,6 +13,7 @@ repositories {
 }
 
 val dialect: String by project
+val otjPgEmbeddedVersion: String by project
 
 dependencies {
     api(project(":exposed-core"))
@@ -21,7 +22,7 @@ dependencies {
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
 
-    testImplementation("com.opentable.components", "otj-pg-embedded", "0.12.0")
+    testImplementation("com.opentable.components", "otj-pg-embedded", otjPgEmbeddedVersion)
     testRuntimeOnly("org.testcontainers", "testcontainers", "1.15.3")
 
     setupTestDriverDependencies(dialect) { group, artifactId, version ->

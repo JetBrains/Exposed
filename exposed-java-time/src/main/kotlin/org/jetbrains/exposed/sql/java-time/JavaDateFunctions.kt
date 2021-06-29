@@ -1,10 +1,20 @@
 package org.jetbrains.exposed.sql.`java-time`
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.CustomFunction
+import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Function
+import org.jetbrains.exposed.sql.IntegerColumnType
+import org.jetbrains.exposed.sql.LiteralOp
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.QueryParameter
+import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.time.*
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.Temporal
 
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
@@ -19,7 +29,7 @@ class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INST
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
+            else                                                                     -> "CURRENT_TIMESTAMP"
         }
     }
 }
@@ -28,7 +38,7 @@ class CurrentTimestamp<T : Temporal> : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
+            else                                                                     -> "CURRENT_TIMESTAMP"
         }
     }
 }

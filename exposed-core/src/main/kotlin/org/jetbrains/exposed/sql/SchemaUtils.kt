@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
-import java.util.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 
 object SchemaUtils {
     private class TableDepthGraph(val tables: List<Table>) {
@@ -182,6 +183,7 @@ object SchemaUtils {
             }
         }
     }
+
     fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
@@ -317,7 +319,7 @@ object SchemaUtils {
                 is MysqlDialect -> {
                     connection.catalog = schema.identifier
                 }
-                is H2Dialect -> {
+                is H2Dialect    -> {
                     connection.schema = schema.identifier
                 }
             }

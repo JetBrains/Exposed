@@ -14,7 +14,8 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter
 import org.springframework.transaction.annotation.Transactional
 import java.util.regex.Pattern
 
-open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) : ApplicationRunner, Ordered {
+open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) : ApplicationRunner,
+    Ordered {
     override fun getOrder(): Int = DATABASE_INITIALIZER_ORDER
 
     companion object {
