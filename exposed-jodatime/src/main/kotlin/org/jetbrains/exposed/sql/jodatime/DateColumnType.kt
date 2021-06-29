@@ -64,7 +64,7 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         }
         else -> {
             if (localDateTimeClass == value.javaClass)
-                value
+                DateTime.parse(value.toString())
             else
                 valueFromDB(value.toString())
         }
@@ -78,7 +78,7 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
          MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
           regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
          */
-        return if (time && localDateTimeClass != null) {
+        return if (time && localDateTimeClass != null && currentDialect is MysqlDialect) {
             rs.getObject(index, localDateTimeClass)
         } else if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
             rs.getObject(index, String::class.java)
