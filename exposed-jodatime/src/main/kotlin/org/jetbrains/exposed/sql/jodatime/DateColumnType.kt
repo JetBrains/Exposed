@@ -62,7 +62,12 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
         }
-        else -> valueFromDB(value.toString())
+        else -> {
+            if (localDateTimeClass == value.javaClass)
+                value
+            else
+                valueFromDB(value.toString())
+        }
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
