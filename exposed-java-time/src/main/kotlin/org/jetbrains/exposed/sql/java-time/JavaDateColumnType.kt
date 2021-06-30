@@ -115,8 +115,10 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override fun notNullValueToDB(value: Any): Any = when {
         value is LocalDateTime && currentDialect is SQLiteDialect ->
             SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
-        value is LocalDateTime ->
-            java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        value is LocalDateTime -> {
+            val instant = value.atZone(ZoneId.systemDefault()).toInstant()
+            java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
+        }
         else -> value
     }
 
