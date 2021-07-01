@@ -210,6 +210,23 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testCamelCaseForeignKeyCreation() {
+        val ordersTable = object : IntIdTable("tmporders") {
+            val traceNumber = char("traceNumber", 10).uniqueIndex()
+        }
+        val receiptsTable = object : IntIdTable("receipts") {
+            val traceNumber = reference("traceNumber", ordersTable.traceNumber)
+        }
+
+        withDb {
+            SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
+            assertTrue(ordersTable.exists())
+            assertTrue(receiptsTable.exists())
+            SchemaUtils.drop(ordersTable, receiptsTable)
+        }
+    }
+
     object MultipleIndexesTable : Table("H2_MULTIPLE_INDEXES") {
         val value1 = varchar("value1", 255)
         val value2 = varchar("value2", 255)
