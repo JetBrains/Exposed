@@ -501,7 +501,17 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(2L, Table2.selectAll().count())
 
             Table2.update {
-                it[table1] = null
+            }
+
+            Table2.update {
+                // = null can't decide between "null as Int?" and "null as EntityID<Int?>"
+                // it[table1] = null
+                it[table1] = null as Int?
+            }
+            Table2.update {
+                // = null can't decide between "null as Int?" and "null as EntityID<Int>?"
+                // it[table1] = null
+                it[table1] = null as EntityID<Int>?
             }
 
             Table1.deleteAll()

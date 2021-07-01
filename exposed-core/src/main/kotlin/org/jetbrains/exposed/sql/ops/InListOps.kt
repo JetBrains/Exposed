@@ -59,12 +59,12 @@ abstract class InListOrNotInListBaseOp<V> (
     private fun QueryBuilder.registerValues(values: List<Any?>) {
         val singleColumn = columnTypes.singleOrNull()
         if (singleColumn != null)
-            registerArgument(singleColumn.columnType, values.single())
+            registerArgument(singleColumn as ExpressionWithColumnType<Any?>, values.single())
         else {
             append("(")
             columnTypes.forEachIndexed { index, columnExpression ->
                 if (index != 0) append(", ")
-                registerArgument(columnExpression.columnType, values[index])
+                registerArgument(columnExpression as ExpressionWithColumnType<Any?>, values[index])
             }
             append(")")
         }

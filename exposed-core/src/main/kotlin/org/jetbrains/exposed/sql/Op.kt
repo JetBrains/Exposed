@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.ops.SingleValueInListOp
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -408,35 +409,10 @@ class InListOrNotInListOp<T>(
     /** Returns `true` if the check is inverted, `false` otherwise. */
     val isInList: Boolean = true
 ) : Op<Boolean>(), ComplexExpression {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        list.iterator().let { i ->
-            if (!i.hasNext()) {
-                if (isInList) {
-                    +FALSE
-                } else {
-                    +TRUE
-                }
-            } else {
-                val first = i.next()
-                if (!i.hasNext()) {
-                    append(expr)
-                    when {
-                        isInList -> append(" = ")
-                        else -> append(" != ")
-                    }
-                    registerArgument(expr.columnType, first)
-                } else {
-                    append(expr)
-                    when {
-                        isInList -> append(" IN (")
-                        else -> append(" NOT IN (")
-                    }
-                    registerArguments(expr.columnType, list)
-                    append(")")
-                }
-            }
-        }
-    }
+    private val impl = SingleValueInListOp(expr, list, isInList)
+
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit =
+        impl.toQueryBuilder(queryBuilder)
 }
 
 // Literals
@@ -449,6 +425,11 @@ class LiteralOp<T>(
     /** Returns the value being used as a literal. */
     val value: T
 ) : ExpressionWithColumnType<T>() {
+    init {
+        require(value != null || columnType.nullable) {
+            "Can't create NULL literal for non-nullable type $columnType"
+        }
+    }
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +columnType.valueToString(value) }
 }
 
@@ -506,7 +487,15 @@ class QueryParameter<T>(
     /** Returns the column type of this expression. */
     val sqlType: IColumnType
 ) : Expression<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { registerArgument(sqlType, value) }
+    init {
+        require(value != null || sqlType.nullable) {
+            "Can't create NULL query parameter for non-nullable type $sqlType"
+        }
+    }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        @Suppress("DEPRECATION")
+        registerArgument(sqlType, value)
+    }
 }
 
 /** Returns the specified [value] as a query parameter with the same type as [column]. */

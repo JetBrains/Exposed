@@ -17,8 +17,22 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.kotlin.primaryConstructor!!
 
+    /**
+     * Get an entity by its [id] or throws [EntityNotFoundException] if entity is not found.
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or [EntityNotFoundException] entity was found.
+     */
     operator fun get(id: EntityID<ID>): T = findById(id) ?: throw EntityNotFoundException(id, this)
 
+    /**
+     * Get an entity by its [id] or throws [EntityNotFoundException] if entity is not found.
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or [EntityNotFoundException] entity was found.
+     */
     operator fun get(id: ID): T = get(DaoEntityID(id, table))
 
     protected open fun warmCache(): EntityCache = TransactionManager.current().entityCache
@@ -70,8 +84,31 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
         }
     }
 
+    /**
+     * Get an entity by its [id] from cache or returns null if cache does not contain it.
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or null if no entity was found in cache.
+     */
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
+    /**
+     * Get an entity by its [id] from cache or returns null if cache does not contain it.
+     *
+     * @param id The id of the entity
+     *
+     * @return The entity that has this id or null if no entity was found in cache.
+     */
+    fun testCache(id: ID): T? = testCache(DaoEntityID(id, table))
+
+    /**
+     * Get a sequence of entities matching given [cacheCheckCondition] from the cache.
+     *
+     * @param cacheCheckCondition The condition for selecting the entries from the cache.
+     *
+     * @return The sequence of entities from the cache matching the given predicate.
+     */
     fun testCache(cacheCheckCondition: T.() -> Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
     fun removeFromCache(entity: Entity<ID>) {

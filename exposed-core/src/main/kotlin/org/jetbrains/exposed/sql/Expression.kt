@@ -51,34 +51,66 @@ class QueryBuilder(
     operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
 
     /** Adds the specified [argument] as a value of the specified [column]. */
-    fun <T> registerArgument(column: Column<*>, argument: T) {
+    fun registerArgument(column: ExpressionWithColumnType<*>, argument: Any?) {
         when (argument) {
-            is Expression<*> -> append(argument)
-            DefaultValueMarker -> append(TransactionManager.current().db.dialect.dataTypeProvider.processForDefaultValue(column.dbDefaultValue!!))
-            else -> registerArgument(column.columnType, argument)
+            is Expression<*> -> {
+                require(column.columnType.nullable || argument !is LiteralOp<*> || argument.value != null) {
+                    "Column ${column.identity} does not support NULLs, so cannot register null literal $argument"
+                }
+                append(argument)
+            }
+            DefaultValueMarker -> {
+                require(column is Column<*>) {
+                    "DefaultValueMarker is supported only for Column<*>, given argument is $column"
+                }
+                append(TransactionManager.current().db.dialect.dataTypeProvider.processForDefaultValue(column.dbDefaultValue!!))
+            }
+            else -> {
+                require(column.columnType.nullable || argument != null) {
+                    "Column ${column.identity} does not support NULLs"
+                }
+                @Suppress("DEPRECATION")
+                registerArgument(column.columnType, argument)
+            }
         }
     }
 
+    private val ExpressionWithColumnType<*>.identity: String
+        get() = if (this is Column<*>) "${table.tableName}.$name" else toString()
+
     /** Adds the specified [argument] as a value of the specified [sqlType]. */
-    fun <T> registerArgument(sqlType: IColumnType, argument: T): Unit = registerArguments(sqlType, listOf(argument))
+    @Deprecated(
+        level = DeprecationLevel.WARNING,
+        message = "Prefer registerArgument(Column, ...) and registerArgument(ExpressionWithColumnType, ...) since they have better error reporting"
+    )
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    fun registerArgument(sqlType: IColumnType, argument: Any?) {
+        if (!prepared) {
+            +sqlType.valueToString(argument)
+            return
+        }
+        require(argument != null || sqlType.nullable) {
+            "Can't register NULL value for non-nullable type $sqlType"
+        }
+        +"?"
+        _args += sqlType to argument
+    }
 
     /** Adds the specified sequence of [arguments] as values of the specified [sqlType]. */
+    @Deprecated(
+        message = "Replace with [SingleValueInListOp]",
+        level = DeprecationLevel.ERROR,
+        replaceWith = ReplaceWith("org.jetbrains.exposed.sql.ops.SingleValueInListOp")
+    )
     fun <T> registerArguments(sqlType: IColumnType, arguments: Iterable<T>) {
-        fun toString(value: T) = when {
-            prepared && value is String -> value
-            else -> sqlType.valueToString(value)
+        if (!prepared) {
+            arguments.appendTo { +sqlType.valueToString(it) }
+            return
         }
-
-        arguments.map { it to toString(it) }
-            .sortedBy { it.second }
-            .appendTo {
-                if (prepared) {
-                    _args.add(sqlType to it.first)
-                    append("?")
-                } else {
-                    append(it.second)
-                }
-            }
+        arguments.appendTo {
+            +"?"
+            _args += sqlType to it
+        }
     }
 
     override fun toString(): String = internalBuilder.toString()

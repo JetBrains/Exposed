@@ -6,14 +6,20 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.*
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class InsertTests : DatabaseTestsBase() {
@@ -197,6 +203,63 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testInsertNullIntoNonNullableColumn() {
+        val cities = object : IntIdTable("cities") {
+        }
+        val users = object : IntIdTable("users") {
+            val cityId = reference("city_id", cities)
+        }
+
+        withTables(users, cities) {
+            // This is needed so valid inserts to users to succeed
+            cities.insert {
+                it[id] = 42
+            }
+            users.insert {
+                // The assertion would try inserting null, and it ensures the insert would fail before the statement is even generated
+                it.assertInsertNullFails(cityId)
+                // This is needed for insert statement to succeed
+                it[cityId] = 42
+            }
+        }
+    }
+
+    private fun <T : Comparable<T>> UpdateBuilder<Int>.assertInsertNullFails(column: Column<EntityID<T>>) {
+        fun assertInsertNullFails(column: Column<out EntityID<*>>, block: () -> Unit) {
+            val e = assertFailsWith<IllegalArgumentException>(
+                """
+                Unfortunately, type system can't protect from inserting null here
+                since the setter is declared as set(column: Column<out EntityID<S>?>, value: S?),
+                and there's no way to tell that nullness of both arguments should match, so expecting it[${column.name}] = null
+                to fail at runtime
+                """.trimIndent()
+            ) {
+                block()
+            }
+            val message = e.toString()
+            assertContains(
+                message,
+                "${column.table.tableName}.${column.name}", ignoreCase = true,
+                "Exception message should contain table and column name"
+            )
+            assertContains(message, column.columnType.toString(), ignoreCase = true, "Exception message should contain column type")
+        }
+
+        require(!column.columnType.nullable) {
+            "Assertion works for non-nullable columns only. Given column ${column.table.tableName}.${column.name} is nullable ${column.columnType}"
+        }
+        assertInsertNullFails(column) {
+            // This is written explicitly to demonstrate that the code compiles, yet it fails in the runtime
+            // This call resolves to set(column: Column<out EntityID<S>?>, value: S?)
+            this[column] = null
+        }
+        val nullableType = EntityIDColumnType(column).apply { nullable = true }
+        assertInsertNullFails(column) {
+            this[column] = LiteralOp(nullableType, null)
+        }
+    }
+
     @Test fun testInsertWithPredefinedId() {
         val stringTable = object : IdTable<String>("stringTable") {
             override val id = varchar("id", 15).entityId()
@@ -230,33 +293,41 @@ class InsertTests : DatabaseTestsBase() {
             val string = varchar("stringCol", 20)
         }
 
-        fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
+        fun <T : Table> T.verifyInsert(expectedIntValue: Int?, insertClause: T.(UpdateBuilder<Int>) -> Unit) {
+            fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
-        fun verify(value: String) {
-            val row = tbl.select { tbl.string eq value }.single()
-            assertEquals(row[tbl.string], value)
+            deleteAll()
+            insert {
+                it[tbl.string] = expression(" _test_ ")
+                insertClause(it)
+            }
+            val rows = selectAll().adjustSlice { slice(tbl.string, tbl.nullableInt) }
+                .map { mapOf("string" to it[tbl.string], "nullableInt" to it[tbl.nullableInt]) }
+            assertEquals(
+                listOf(mapOf("string" to "test", "nullableInt" to expectedIntValue)).toString(),
+                rows.toString()
+            )
         }
 
         withTables(tbl) {
-            tbl.insert {
-                it[string] = expression(" _exp1_ ")
+            tbl.verifyInsert(null) {
             }
 
-            verify("exp1")
-
-            tbl.insert {
-                it[string] = expression(" _exp2_ ")
+            tbl.verifyInsert(5) {
                 it[nullableInt] = 5
             }
 
-            verify("exp2")
-
-            tbl.insert {
-                it[string] = expression(" _exp3_ ")
+            tbl.verifyInsert(null) {
                 it[nullableInt] = null
             }
 
-            verify("exp3")
+            tbl.verifyInsert(null) {
+                it[nullableInt] = LiteralOp(nullableInt.columnType, null)
+            }
+
+            tbl.verifyInsert(null) {
+                it.setNull(nullableInt)
+            }
         }
     }
 

@@ -20,22 +20,18 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
         column1 = amount,
         column2 = currency,
         transformFromValue = { money ->
-            val amountValue = money?.number?.numberValue(BigDecimal::class.java) as? T1
-            val currencyValue = money?.currency as? T2
+            val amountValue = money?.number?.numberValue(BigDecimal::class.java) as T1
+            val currencyValue = money?.currency as T2
             amountValue to currencyValue
         },
         transformToValue = { amountVal, currencyVal ->
             if (amountVal == null || currencyVal == null) {
                 null as R
             } else {
-                val result = Monetary.getDefaultAmountFactory().setNumber(amountVal as Number)
-
-                when (currencyVal) {
-                    is CurrencyUnit -> result.setCurrency(currencyVal)
-                    is String -> result.setCurrency(currencyVal)
-                }
-
-                result.create() as R
+                Monetary.getDefaultAmountFactory().run {
+                    setNumber(amountVal)
+                    setCurrency(currencyVal)
+                }.create() as R
             }
         }
     )

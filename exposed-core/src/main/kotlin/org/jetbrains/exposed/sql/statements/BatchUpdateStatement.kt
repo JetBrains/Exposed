@@ -33,7 +33,7 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
         data.add(id to values)
     }
 
-    override fun <T, S : T?> update(column: Column<T>, value: Expression<S>) = error("Expressions unsupported in batch update")
+    override fun <T> update(column: Column<T>, value: Expression<out T>) = error("Expressions unsupported in batch update")
 
     override fun prepareSQL(transaction: Transaction): String =
         "${super.prepareSQL(transaction)} WHERE ${transaction.identity(table.id)} = ?"
