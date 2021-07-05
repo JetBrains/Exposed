@@ -137,7 +137,12 @@ object SchemaUtils {
                             if (c.name.equals(it.name, true)) {
                                 val incorrectNullability = it.nullable != c.columnType.nullable
                                 val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                                incorrectNullability || incorrectAutoInc
+                                val incorrectDefaults = it.defaultDbValue != c.dbDefaultValue?.let {
+                                    QueryBuilder(false)
+                                        .apply { it.toQueryBuilder(this) }
+                                        .toString()
+                                }
+                                incorrectNullability || incorrectAutoInc || incorrectDefaults
                             } else false
                         }
                     }
