@@ -33,4 +33,6 @@ interface PreparedStatementApi {
     fun closeIfPossible()
 
     fun executeBatch(): List<Int>
+
+    fun cancel()
 }
