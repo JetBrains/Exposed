@@ -20,7 +20,13 @@ object DMLTestsData {
         val id: Column<String> = varchar("id", 10)
         val name: Column<String> = varchar("name", length = 50)
         val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+        val flags: Column<Int> = integer("flags").default(0)
         override val primaryKey = PrimaryKey(id)
+
+        object Flags {
+            const val IS_ADMIN = 0b1
+            const val HAS_DATA = 0b1000
+        }
     }
 
     object UserData : Table() {
@@ -32,6 +38,7 @@ object DMLTestsData {
 
 fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit) {
     val Users = DMLTestsData.Users
+    val UserFlags = DMLTestsData.Users.Flags
     val Cities = DMLTestsData.Cities
     val UserData = DMLTestsData.UserData
 
@@ -52,18 +59,21 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
             it[id] = "andrey"
             it[name] = "Andrey"
             it[cityId] = saintPetersburgId
+            it[flags] = UserFlags.IS_ADMIN
         }
 
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
             it[cityId] = munichId
+            it[flags] = UserFlags.IS_ADMIN or UserFlags.HAS_DATA
         }
 
         Users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
             it[cityId] = munichId
+            it[flags] = UserFlags.HAS_DATA
         }
 
         Users.insert {
@@ -76,6 +86,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(), st
             it[id] = "smth"
             it[name] = "Something"
             it[cityId] = null
+            it[flags] = UserFlags.HAS_DATA
         }
 
         UserData.insert {
