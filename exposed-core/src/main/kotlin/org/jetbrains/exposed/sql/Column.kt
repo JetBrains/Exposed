@@ -4,6 +4,7 @@ import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
@@ -99,6 +100,7 @@ class Column<T>(
         }
 
         if (colType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
+            if (currentDialect !is DB2Dialect) // in db2 columns are null by default - there is no NULL keyword
             append(" NULL")
         } else if (!isPKColumn || (currentDialect is SQLiteDialect && !colType.isAutoInc)) {
             append(" NOT NULL")

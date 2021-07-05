@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+  db2:
+    container_name: DB2
+    image: ibmcom/db2:latest
+    ports:
+      - "50000:50000"
+    # Hide console output of db2 image
+    logging:
+      driver: "none"
+    environment:
+      LICENSE: accept
+      DB2INSTANCE: "inst"
+      DB2INST1_PASSWORD: "yourStrong(!)Password"
+      DBNAME: "testdb"
+    volumes:
+      - db:/database
+    privileged: true
+volumes:
+  db:
+    external: false
