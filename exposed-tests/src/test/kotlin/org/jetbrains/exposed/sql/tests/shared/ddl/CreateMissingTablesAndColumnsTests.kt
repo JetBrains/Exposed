@@ -8,10 +8,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
-import org.jetbrains.exposed.sql.tests.shared.assertFalse
-import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.tests.shared.*
 import org.junit.Test
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -124,6 +121,59 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 it[id] = 3
                 it[foo] = "ABC"
             }
+
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test
+    fun testAddMissingColumnsStatementsChangeCasing() {
+        val t1 = object : Table("foo") {
+            val id = integer("idCol")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb {
+//        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
+
+            val expected = "ALTER TABLE ${t2.nameInDatabaseCase()} ALTER COLUMN ${t2.id.nameInDatabaseCase()} INT"
+            assertEquals(expected, missingStatements.firstOrNull())
+
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test
+    fun testAddMissingColumnsStatementsIdentical() {
+        val t1 = object : Table("foo") {
+            val id = integer("idcol")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb {
+//        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
+
+            assertEqualCollections(missingStatements, emptyList())
 
             SchemaUtils.drop(t1)
         }

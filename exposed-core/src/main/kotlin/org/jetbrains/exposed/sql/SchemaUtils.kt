@@ -137,7 +137,8 @@ object SchemaUtils {
                             if (c.name.equals(it.name, true)) {
                                 val incorrectNullability = it.nullable != c.columnType.nullable
                                 val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                                incorrectNullability || incorrectAutoInc
+                                val incorrectCasing = it.name != c.nameInDatabaseCase()
+                                incorrectNullability || incorrectAutoInc || incorrectCasing
                             } else false
                         }
                     }
