@@ -69,7 +69,7 @@ interface IColumnType {
     }
 
     /**
-     * Function checks that provided value suites the column type and throws [IllegalArgumentException] otherwise.
+     * Function checks that provided value is suites the column type and throws [IllegalArgumentException] otherwise.
      * [value] can be of any type (including [Expression])
      * */
     @Throws(IllegalArgumentException::class)
