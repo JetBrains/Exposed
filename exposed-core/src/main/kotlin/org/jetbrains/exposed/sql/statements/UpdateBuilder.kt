@@ -14,7 +14,6 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open operator fun <S> set(column: Column<S>, value: S) {
         when {
-            values.containsKey(column) -> error("$column is already initialized")
             !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
             else -> {
                 column.columnType.validateValueBeforeUpdate(value)
