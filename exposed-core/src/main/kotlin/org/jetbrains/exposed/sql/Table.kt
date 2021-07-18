@@ -1057,7 +1057,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { it.descriptionDdl(false) }
 
-                if (isCustomPKNameDefined() || columns.none { it.isOneColumnPK() }) {
+                if (columns.any { it.isPrimaryConstraintWillBeDefined }) {
                     primaryKeyConstraint()?.let { append(", $it") }
                 }
 
