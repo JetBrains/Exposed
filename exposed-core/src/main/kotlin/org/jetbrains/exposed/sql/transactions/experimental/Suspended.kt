@@ -24,11 +24,11 @@ internal class TransactionScope(internal val tx: Lazy<Transaction>, parent: Coro
     override val coroutineContext get() = baseScope.coroutineContext + this
     override val key = Companion
 
+    internal fun holdsSameTransaction(transaction: Transaction?) = transaction != null && tx.isInitialized() && tx.value == transaction
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(val newTransaction: Lazy<Transaction>, val manager: TransactionManager) :
-    ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(private val newTransaction: Lazy<Transaction>, val manager: TransactionManager) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
@@ -70,7 +70,7 @@ suspend fun <T> suspendedTransactionAsync(
 ): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(currentTransaction != tx, statement)
+        suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
 
@@ -107,8 +107,7 @@ private suspend fun <T> withTransactionScope(
 
         return TransactionScope(tx, newContext + element).body()
     }
-
-    val sameTransaction = currentTransaction == currentScope?.tx
+    val sameTransaction = currentScope?.holdsSameTransaction(currentTransaction) == true
     val sameContext = context == coroutineContext
     return when {
         currentScope == null           -> newScope(currentTransaction)
