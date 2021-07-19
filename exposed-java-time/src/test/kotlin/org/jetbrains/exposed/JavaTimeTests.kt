@@ -41,6 +41,57 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun javaTimeSchemaFunctions() {
+        val schema = Schema("schema")
+        val CitiesTimeInSchema = CitiesTime.withSchema(schema)
+        withSchemas(schema) {
+            try {
+                SchemaUtils.create(CitiesTimeInSchema)
+                val now = LocalDateTime.now()
+
+                val cityID = CitiesTimeInSchema.insertAndGetId {
+                    it[CitiesTime.name] = "Tunisia"
+                    it[CitiesTime.local_time] = now
+                }
+
+                val insertedYear = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].year())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].year()]
+                val insertedMonth = CitiesTimeInSchema
+                    .slice(CitiesTime.local_time.month())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTime.local_time.month()]
+                val insertedDay = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].day())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].day()]
+                val insertedHour = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].hour())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].hour()]
+                val insertedMinute = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].minute())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].minute()]
+                val insertedSecond = CitiesTimeInSchema
+                    .slice(CitiesTimeInSchema[CitiesTime.local_time].second())
+                    .select { CitiesTime.id.eq(cityID) }
+                    .single()[CitiesTimeInSchema[CitiesTime.local_time].second()]
+
+                assertEquals(now.year, insertedYear)
+                assertEquals(now.month.value, insertedMonth)
+                assertEquals(now.dayOfMonth, insertedDay)
+                assertEquals(now.hour, insertedHour)
+                assertEquals(now.minute, insertedMinute)
+                assertEquals(now.second, insertedSecond)
+            } finally {
+                SchemaUtils.drop(CitiesTimeInSchema)
+            }
+        }
+    }
+
     // Checks that old numeric datetime columns works fine with new text representation
     @Test
     fun testSQLiteDateTimeFieldRegression() {

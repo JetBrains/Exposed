@@ -63,7 +63,7 @@ class CreateIndexTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test possibility to create indexes when table exists in defferent schemas`() {
+    fun `test possibility to create indexes when table exists in different schemas`() {
         val TestTable = object : Table("test_table") {
             val id = integer("id").uniqueIndex()
             val name = varchar("name", length = 42).index("test_index")

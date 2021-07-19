@@ -115,33 +115,65 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCase() }
+    override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
+        val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
-        while (next()) {
-            val (tableName, columnMetadata) = extract(this)
-            mapping[tableName]?.let { t ->
-                result.getOrPut(t) { arrayListOf() } += columnMetadata
+        tables.map { table ->
+            val columns = if (table is SchemaTable<*>) {
+                columnNames.getValue(table.scheme.nameInDatabaseCase())
+            } else {
+                if (useCatalogInsteadOfScheme) {
+                    columnNames.getValue(databaseName)
+                } else {
+                    columnNames.getValue(currentScheme)
+                }
+            }
+
+            val columnMetadata = if (table is SchemaTable<*>) {
+                columns[table.delegate.nameInDatabaseCase()]
+            } else {
+                columns[table.nameInDatabaseCase()]
+            }
+
+            columnMetadata?.let {
+                result.getOrPut(table) { arrayListOf() } += it
             }
         }
+
         return result
     }
 
-    override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
-        val result = rs.extractColumns(tables) {
+    private val columnNamesCache = HashMap<String, Map<String, List<ColumnMetadata>>>()
+
+    private val columnNames: Map<String, Map<String, List<ColumnMetadata>>> = CachableMapWithDefault(
+        map = columnNamesCache,
+        default = { schemeName ->
+            columnNamesFor(schemeName)
+        }
+    )
+
+    private fun columnNamesFor(scheme: String): Map<String, List<ColumnMetadata>> = with(metadata) {
+        val result = HashMap<String, MutableList<ColumnMetadata>>()
+        val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
+        val (catalogName, schemeName) = when {
+            useCatalogInsteadOfScheme -> scheme to currentScheme
+            else -> databaseName to scheme.ifEmpty { "%" }
+        }
+        val resultSet = getColumns(catalogName, schemeName, "%", "%")
+        resultSet.iterate {
             // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(
-                it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
-                it.getInt("DATA_TYPE"),
-                it.getBoolean("NULLABLE"),
-                it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                it.getString("IS_AUTOINCREMENT") == "YES",
+                getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
+                getInt("DATA_TYPE"),
+                getBoolean("NULLABLE"),
+                getInt("COLUMN_SIZE").takeIf { it != 0 },
+                getString("IS_AUTOINCREMENT") == "YES",
             )
-            it.getString("TABLE_NAME") to columnMetadata
+
+            result.getOrPut(getString("TABLE_NAME")) { arrayListOf() } += columnMetadata
         }
-        rs.close()
+        resultSet.close()
         return result
     }
 
@@ -215,6 +247,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Synchronized
     override fun cleanCache() {
         existingIndicesCache.clear()
+        columnNamesCache.clear()
     }
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }

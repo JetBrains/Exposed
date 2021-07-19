@@ -81,6 +81,16 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertSt
     }
 
 /**
+ * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
+ */
+fun <Key : Comparable<Key>, T : IdTable<Key>, V : SchemaTable<T>> V.insertAndGetId(body: V.(InsertStatement<EntityID<Key>>) -> Unit) =
+    InsertStatement<EntityID<Key>>(this, false).run {
+        body(this)
+        execute(TransactionManager.current())
+        get(this@insertAndGetId.delegate.id)
+    }
+
+/**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
 fun <T : Table, E> T.batchInsert(
