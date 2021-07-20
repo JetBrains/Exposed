@@ -85,16 +85,25 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertSt
  */
 fun <T : Table, E> T.batchInsert(
     data: Iterable<E>,
-    ignore: Boolean = false,
+    ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> {
     if (data.count() == 0) return emptyList()
+    return batchInsert(data.asSequence(), ignoreErrors, shouldReturnGeneratedValues, body)
+}
+
+fun <T : Table, E> T.batchInsert(
+    data: kotlin.sequences.Sequence<E>,
+    ignoreErrors: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> {
     fun newBatchStatement(): BatchInsertStatement {
         return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-            SQLServerBatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         } else {
-            BatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            BatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         }
     }
     var statement = newBatchStatement()
@@ -126,7 +135,7 @@ fun <T : Table, E> T.batchInsert(
         }
     }
 
-    for (element in data) {
+    data.forEach { element ->
         statement.handleBatchException { addBatch() }
         statement.handleBatchException(true) { body(element) }
     }
