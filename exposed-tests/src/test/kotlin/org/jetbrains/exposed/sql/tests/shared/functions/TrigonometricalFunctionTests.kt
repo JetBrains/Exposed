@@ -68,8 +68,8 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
             assertExpressionEqual(BigDecimal("0"), DegreesFunction(intLiteral(0)))
             if (testDb != TestDB.SQLSERVER) {
                 assertExpressionEqual(BigDecimal("57.29577951308232"), DegreesFunction(intLiteral(1)))
-                assertExpressionEqual(BigDecimal("14.3239448782705"), DegreesFunction(doubleLiteral(0.25)))
-                assertExpressionEqual(BigDecimal("14.3239448782705"), DegreesFunction(decimalLiteral(BigDecimal("0.25"))))
+                assertExpressionEqual(BigDecimal("14.32394487827058"), DegreesFunction(doubleLiteral(0.25)))
+                assertExpressionEqual(BigDecimal("14.32394487827058"), DegreesFunction(decimalLiteral(BigDecimal("0.25"))))
             } else {
                 assertExpressionEqual(BigDecimal("57"), DegreesFunction(intLiteral(1)))
                 assertExpressionEqual(BigDecimal("14.3239448782706"), DegreesFunction(doubleLiteral(0.25)))
