@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import java.math.BigDecimal
-import java.math.MathContext
+import java.math.RoundingMode
 
 abstract class FunctionsTestBase : DatabaseTestsBase() {
 
@@ -23,7 +23,7 @@ abstract class FunctionsTestBase : DatabaseTestsBase() {
     protected fun <T> Transaction.assertExpressionEqual(expected: T, expression: Function<T>) {
         val result = FakeTestTable.slice(expression).selectAll().first()[expression]
         if (expected is BigDecimal && result is BigDecimal)
-            assertEquals(expected, result.setScale(expected.scale(), MathContext.DECIMAL64.roundingMode))
+            assertEquals(expected, result.setScale(expected.scale(), RoundingMode.CEILING))
         else
             assertEquals(expected, result)
     }

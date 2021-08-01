@@ -42,11 +42,14 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
 
     @Test
     fun testCosFunction() {
-        withTable {
+        withTable { testDb ->
             assertExpressionEqual(BigDecimal("1"), CosFunction(intLiteral(0)))
-            assertExpressionEqual(BigDecimal("0.5403023058681398"), CosFunction(intLiteral(1)))
-            assertExpressionEqual(BigDecimal("0.9689124217106447"), CosFunction(doubleLiteral(0.25)))
-            assertExpressionEqual(BigDecimal("0.9689124217106447"), CosFunction(decimalLiteral(BigDecimal("0.25"))))
+            if (testDb != TestDB.SQLSERVER)
+                assertExpressionEqual(BigDecimal("0.5403023058681398"), CosFunction(intLiteral(1)))
+            else
+                assertExpressionEqual(BigDecimal("0.5403023058681397"), CosFunction(intLiteral(1)))
+            assertExpressionEqual(BigDecimal("0.9663899781345132"), CosFunction(doubleLiteral(0.26)))
+            assertExpressionEqual(BigDecimal("0.9663899781345132"), CosFunction(decimalLiteral(BigDecimal("0.26"))))
         }
     }
 
@@ -61,11 +64,17 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
 
     @Test
     fun testDegreesFunction() {
-        withTable {
+        withTable { testDb ->
             assertExpressionEqual(BigDecimal("0"), DegreesFunction(intLiteral(0)))
-            assertExpressionEqual(BigDecimal("57.29577951308232"), DegreesFunction(intLiteral(1)))
-            assertExpressionEqual(BigDecimal("14.32394487827058"), DegreesFunction(doubleLiteral(0.25)))
-            assertExpressionEqual(BigDecimal("14.32394487827058"), DegreesFunction(decimalLiteral(BigDecimal("0.25"))))
+            if (testDb != TestDB.SQLSERVER) {
+                assertExpressionEqual(BigDecimal("57.29577951308232"), DegreesFunction(intLiteral(1)))
+                assertExpressionEqual(BigDecimal("14.3239448782705"), DegreesFunction(doubleLiteral(0.25)))
+                assertExpressionEqual(BigDecimal("14.3239448782705"), DegreesFunction(decimalLiteral(BigDecimal("0.25"))))
+            } else {
+                assertExpressionEqual(BigDecimal("57"), DegreesFunction(intLiteral(1)))
+                assertExpressionEqual(BigDecimal("14.3239448782706"), DegreesFunction(doubleLiteral(0.25)))
+                assertExpressionEqual(BigDecimal("14.3239448782706"), DegreesFunction(decimalLiteral(BigDecimal("0.25"))))
+            }
         }
     }
 
@@ -81,9 +90,12 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
 
     @Test
     fun testRadiansFunction() {
-        withTable {
+        withTable { testDb ->
             assertExpressionEqual(BigDecimal("0"), RadiansFunction(intLiteral(0)))
-            assertExpressionEqual(BigDecimal("3.141592653589793"), RadiansFunction(intLiteral(180)))
+            if (testDb != TestDB.SQLSERVER)
+                assertExpressionEqual(BigDecimal("3.141592653589793"), RadiansFunction(intLiteral(180)))
+            else
+                assertExpressionEqual(BigDecimal("3"), RadiansFunction(intLiteral(180)))
             assertExpressionEqual(BigDecimal("0.004363323129985824"), RadiansFunction(doubleLiteral(0.25)))
             assertExpressionEqual(BigDecimal("0.004363323129985824"), RadiansFunction(decimalLiteral(BigDecimal("0.25"))))
         }
