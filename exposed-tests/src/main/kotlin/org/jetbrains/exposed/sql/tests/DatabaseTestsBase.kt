@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.testcontainers.containers.MySQLContainer
@@ -179,8 +180,15 @@ abstract class DatabaseTestsBase {
                     statement(testDB)
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    SchemaUtils.drop(*tables)
-                    commit()
+                    try {
+                        SchemaUtils.drop(*tables)
+                        commit()
+                    } catch (e: Exception) {
+                        val database = testDB.db!!
+                        inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+                            SchemaUtils.drop(*tables)
+                        }
+                    }
                 }
             }
         }
