@@ -6,19 +6,11 @@ import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
-import java.util.ServiceLoader
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
@@ -36,8 +28,9 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             } finally {
                 connection.close()
             }
-        } else
+        } else {
             transaction.connection.metadata(body)
+        }
     }
 
     val url: String by lazy { metadata { url } }
@@ -46,7 +39,7 @@ class Database private constructor(private val resolvedVendor: String? = null, v
     }
 
     val dialect by lazy {
-        dialects[vendor.toLowerCase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
+        dialects[vendor.lowercase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
     }
 
     val version by lazy { metadata { version } }
@@ -193,11 +186,11 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
         fun getDefaultIsolationLevel(db: Database): Int =
             when (db.vendor) {
-                SQLiteDialect.dialectName       -> Connection.TRANSACTION_SERIALIZABLE
-                OracleDialect.dialectName       -> Connection.TRANSACTION_READ_COMMITTED
-                PostgreSQLDialect.dialectName   -> Connection.TRANSACTION_READ_COMMITTED
+                SQLiteDialect.dialectName -> Connection.TRANSACTION_SERIALIZABLE
+                OracleDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+                PostgreSQLDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
                 PostgreSQLNGDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
-                else                            -> DEFAULT_ISOLATION_LEVEL
+                else -> DEFAULT_ISOLATION_LEVEL
             }
 
         private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->

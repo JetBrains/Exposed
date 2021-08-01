@@ -1,29 +1,10 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.sql.GroupConcat
-import org.jetbrains.exposed.sql.IColumnType
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.LiteralOp
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.append
-import org.jetbrains.exposed.sql.appendIfNotNull
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -115,10 +96,10 @@ abstract class DataTypeProvider {
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
     open fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*>                  -> "$e"
-        currentDialect is MysqlDialect     -> "$e"
+        e is LiteralOp<*> -> "$e"
+        currentDialect is MysqlDialect -> "$e"
         currentDialect is SQLServerDialect -> "$e"
-        else                               -> "($e)"
+        else -> "($e)"
     }
 }
 
@@ -127,6 +108,7 @@ abstract class DataTypeProvider {
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it
  * is implemented differently, the corresponding function should be overridden.
  */
+@Suppress("UnnecessaryAbstractClass")
 abstract class FunctionProvider {
     // Mathematical functions
 
@@ -383,11 +365,11 @@ abstract class FunctionProvider {
         val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
 
         val (columnsToInsert, valuesExpr) = when {
-            isInsertFromSelect                                -> columns to expr
+            isInsertFromSelect -> columns to expr
             nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
-            nextValExpression != null                         -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
-            columns.isNotEmpty()                              -> columns to expr
-            else                                              -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
+            nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
+            columns.isNotEmpty() -> columns to expr
+            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
         }
         val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
@@ -530,6 +512,7 @@ data class ColumnMetadata(
 /**
  * Common interface for all database dialects.
  */
+@Suppress("TooManyFunctions")
 interface DatabaseDialect {
     /** Name of this dialect. */
     val name: String
@@ -694,8 +677,8 @@ abstract class VendorDialect(
         return allTables.any {
             when {
                 tableScheme != null -> it == table.nameInDatabaseCase()
-                scheme.isEmpty()    -> it == table.nameInDatabaseCase()
-                else                -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
+                scheme.isEmpty() -> it == table.nameInDatabaseCase()
+                else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
             }
         }
     }
@@ -754,13 +737,13 @@ abstract class VendorDialect(
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
         return when {
-            index.unique            -> {
+            index.unique -> {
                 "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
             }
             index.indexType != null -> {
                 createIndexWithType(name = quotedIndexName, table = quotedTableName, columns = columnsList, type = index.indexType)
             }
-            else                    -> {
+            else -> {
                 "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
             }
         }

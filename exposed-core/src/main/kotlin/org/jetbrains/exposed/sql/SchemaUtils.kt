@@ -319,7 +319,7 @@ object SchemaUtils {
                 is MysqlDialect -> {
                     connection.catalog = schema.identifier
                 }
-                is H2Dialect    -> {
+                is H2Dialect -> {
                     connection.schema = schema.identifier
                 }
             }

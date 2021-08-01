@@ -8,16 +8,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.ColumnMetadata
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -30,15 +21,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         when (driverName) {
             "MySQL-AB JDBC Driver",
             "MySQL Connector/J",
-            "MySQL Connector Java"   -> MysqlDialect.dialectName
-            "MariaDB Connector/J"    -> MariaDBDialect.dialectName
-            "SQLite JDBC"            -> SQLiteDialect.dialectName
-            "H2 JDBC Driver"         -> H2Dialect.dialectName
-            "pgjdbc-ng"              -> PostgreSQLNGDialect.dialectName
-            "PostgreSQL JDBC - NG"   -> PostgreSQLNGDialect.dialectName
+            "MySQL Connector Java" -> MysqlDialect.dialectName
+            "MariaDB Connector/J" -> MariaDBDialect.dialectName
+            "SQLite JDBC" -> SQLiteDialect.dialectName
+            "H2 JDBC Driver" -> H2Dialect.dialectName
+            "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
+            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
-            "Oracle JDBC driver"     -> OracleDialect.dialectName
-            else                     -> {
+            "Oracle JDBC driver" -> OracleDialect.dialectName
+            else -> {
                 if (driverName.startsWith("Microsoft JDBC Driver "))
                     SQLServerDialect.dialectName
                 else
@@ -50,7 +41,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val databaseName
         get() = when (databaseDialectName) {
             MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-            else                                                 -> database
+            else -> database
         }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
@@ -69,8 +60,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 field = try {
                     when (databaseDialectName) {
                         MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
-                        OracleDialect.dialectName                            -> databaseName
-                        else                                                 -> metadata.connection.schema.orEmpty()
+                        OracleDialect.dialectName -> databaseName
+                        else -> metadata.connection.schema.orEmpty()
                     }
                 } catch (e: Throwable) {
                     ""
@@ -86,7 +77,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
-        override fun get(key: K): V? = map.getOrPut(key, { default(key) })
+        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
     }
@@ -101,16 +92,16 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
-            useCatalogInsteadOfScheme       -> scheme to "%"
+            useCatalogInsteadOfScheme -> scheme to "%"
             currentDialect is OracleDialect -> databaseName to databaseName
-            else                            -> databaseName to scheme.ifEmpty { "%" }
+            else -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
         return resultSet.iterate {
             val tableName = getString("TABLE_NAME")!!
             val fullTableName = when {
                 useCatalogInsteadOfScheme -> getString("TABLE_CAT")?.let { "$it.$tableName" }
-                else                      -> getString("TABLE_SCHEM")?.let { "$it.$tableName" }
+                else -> getString("TABLE_SCHEM")?.let { "$it.$tableName" }
             } ?: tableName
             identifierManager.inProperCase(fullTableName)
         }
@@ -125,7 +116,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
         val schemas = when {
             useCatalogInsteadOfScheme -> catalogs.iterate { getString("TABLE_CAT") }
-            else                      -> schemas.iterate { getString("TABLE_SCHEM") }
+            else -> schemas.iterate { getString("TABLE_SCHEM") }
         }
 
         return schemas.map { identifierManager.inProperCase(it) }

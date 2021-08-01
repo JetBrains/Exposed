@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
@@ -36,10 +36,11 @@ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "yyyy-MM-d HH:mm:ss"
-    val newFormat = if (fraction in 1..9)
+    val newFormat = if (fraction in 1..9) {
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
-    else
+    } else {
         baseFormat
+    }
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
@@ -54,32 +55,32 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
-            is String             -> return value
-            is LocalDate          -> Instant.from(value.atStartOfDay(ZoneId.systemDefault()))
-            is java.sql.Date      -> Instant.ofEpochMilli(value.time)
+            is String -> return value
+            is LocalDate -> Instant.from(value.atStartOfDay(ZoneId.systemDefault()))
+            is java.sql.Date -> Instant.ofEpochMilli(value.time)
             is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
-            else                  -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return "'${DEFAULT_DATE_STRING_FORMATTER.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is LocalDate          -> value
-        is java.sql.Date      -> longToLocalDate(value.time)
+        is LocalDate -> value
+        is java.sql.Date -> longToLocalDate(value.time)
         is java.sql.Timestamp -> longToLocalDate(value.time)
-        is Int                -> longToLocalDate(value.toLong())
-        is Long               -> longToLocalDate(value)
-        is String             -> when (currentDialect) {
+        is Int -> longToLocalDate(value.toLong())
+        is Long -> longToLocalDate(value)
+        is String -> when (currentDialect) {
             is SQLiteDialect -> LocalDate.parse(value)
-            else             -> value
+            else -> value
         }
-        else                  -> LocalDate.parse(value.toString())
+        else -> LocalDate.parse(value.toString())
     }
 
     override fun notNullValueToDB(value: Any) = when {
         value is LocalDate -> java.sql.Date(value.millis)
-        else               -> value
+        else -> value
     }
 
     private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -95,27 +96,27 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
-            is String             -> return value
-            is LocalDateTime      -> Instant.from(value.atZone(ZoneId.systemDefault()))
-            is java.sql.Date      -> Instant.ofEpochMilli(value.time)
+            is String -> return value
+            is LocalDateTime -> Instant.from(value.atZone(ZoneId.systemDefault()))
+            is java.sql.Date -> Instant.ofEpochMilli(value.time)
             is java.sql.Timestamp -> Instant.ofEpochSecond(value.time / 1000, value.nanos.toLong())
-            else                  -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return when (currentDialect) {
             is SQLiteDialect, is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            else                               -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
 
     override fun valueFromDB(value: Any): Any = when (value) {
-        is LocalDateTime      -> value
-        is java.sql.Date      -> longToLocalDateTime(value.time)
+        is LocalDateTime -> value
+        is java.sql.Date -> longToLocalDateTime(value.time)
         is java.sql.Timestamp -> longToLocalDateTime(value.time / 1000, value.nanos.toLong())
-        is Int                -> longToLocalDateTime(value.toLong())
-        is Long               -> longToLocalDateTime(value)
-        is String             -> LocalDateTime.parse(value, formatterForDateString(value))
-        else                  -> valueFromDB(value.toString())
+        is Int -> longToLocalDateTime(value.toLong())
+        is Long -> longToLocalDateTime(value)
+        is String -> LocalDateTime.parse(value, formatterForDateString(value))
+        else -> valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
@@ -125,7 +126,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             val instant = value.atZone(ZoneId.systemDefault()).toInstant()
             java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
         }
-        else                                                      -> value
+        else -> value
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
@@ -144,29 +145,29 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
-            is String             -> return value
-            is LocalTime          -> value
-            is java.sql.Time      -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
+            is String -> return value
+            is LocalTime -> value
+            is java.sql.Time -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
             is java.sql.Timestamp -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
-            else                  -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {
-        is LocalTime          -> value
-        is java.sql.Time      -> value.toLocalTime()
+        is LocalTime -> value
+        is java.sql.Time -> value.toLocalTime()
         is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
-        is Int                -> longToLocalTime(value.toLong())
-        is Long               -> longToLocalTime(value)
-        is String             -> LocalTime.parse(value, formatterForTimeString(value))
-        else                  -> valueFromDB(value.toString())
+        is Int -> longToLocalTime(value.toLong())
+        is Long -> longToLocalTime(value)
+        is String -> LocalTime.parse(value, formatterForTimeString(value))
+        else -> valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is LocalTime -> java.sql.Time.valueOf(value)
-        else         -> value
+        else -> value
     }
 
     private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
@@ -182,22 +183,22 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
-            is String             -> return value
-            is Instant            -> value
+            is String -> return value
+            is Instant -> value
             is java.sql.Timestamp -> value.toInstant()
-            else                  -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return when (currentDialect) {
             is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            else             -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
 
     override fun valueFromDB(value: Any): Instant = when (value) {
         is java.sql.Timestamp -> value.toInstant()
-        is String             -> Instant.parse(value)
-        else                  -> valueFromDB(value.toString())
+        is String -> Instant.parse(value)
+        else -> valueFromDB(value.toString())
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
@@ -207,9 +208,9 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override fun notNullValueToDB(value: Any): Any = when {
         value is Instant && currentDialect is SQLiteDialect ->
             SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)
-        value is Instant                                    ->
+        value is Instant ->
             java.sql.Timestamp.from(value)
-        else                                                -> value
+        else -> value
     }
 
     companion object {
@@ -222,21 +223,21 @@ class JavaDurationColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String {
         val duration = when (value) {
-            is String   -> return value
+            is String -> return value
             is Duration -> value
-            is Long     -> Duration.ofNanos(value)
-            is Number   -> Duration.ofNanos(value.toLong())
-            else        -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            is Long -> Duration.ofNanos(value)
+            is Number -> Duration.ofNanos(value.toLong())
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
         return "'${duration.toNanos()}'"
     }
 
     override fun valueFromDB(value: Any): Duration = when (value) {
-        is Long   -> Duration.ofNanos(value)
+        is Long -> Duration.ofNanos(value)
         is Number -> Duration.ofNanos(value.toLong())
         is String -> Duration.parse(value)
-        else      -> valueFromDB(value.toString())
+        else -> valueFromDB(value.toString())
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {

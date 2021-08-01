@@ -2,15 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.statements.DeleteStatement
-import org.jetbrains.exposed.sql.statements.InsertSelectStatement
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.ReplaceStatement
-import org.jetbrains.exposed.sql.statements.SQLServerBatchInsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
-import org.jetbrains.exposed.sql.statements.UpdateStatement
+import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -114,8 +106,7 @@ fun <T : Table, E> T.batchInsert(
     fun BatchInsertStatement.handleBatchException(removeLastData: Boolean = false, body: BatchInsertStatement.() -> Unit) {
         try {
             body()
-            if (removeLastData)
-                validateLastBatch()
+            if (removeLastData) validateLastBatch()
         } catch (e: BatchDataInconsistentException) {
             if (this.data.size == 1) {
                 throw e
@@ -213,11 +204,14 @@ fun checkExcessiveIndices(vararg tables: Table) {
 
     val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
-    if (!excessiveConstraints.isEmpty()) {
+    if (excessiveConstraints.isNotEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
         excessiveConstraints.forEach { (pair, fk) ->
             val constraint = fk.first()
-            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t${fk.joinToString(", ") { it.fkName }}")
+            val fkPartToLog = fk.joinToString(", ") { it.fkName }
+            exposedLogger.warn(
+                "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t$fkPartToLog"
+            )
         }
 
         exposedLogger.info("SQL Queries to remove excessive keys:")
@@ -283,8 +277,8 @@ private fun FieldSet.selectBatched(
 
         private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
             is EntityID<*> -> toLong(autoIncVal.value)
-            is Int         -> autoIncVal.toLong()
-            else           -> autoIncVal as Long
+            is Int -> autoIncVal.toLong()
+            else -> autoIncVal as Long
         }
     }
 }
@@ -304,16 +298,18 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     val isSQLite = currentDialect is SQLiteDialect
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
-    fun List<Index>.filterFKeys() = if (isMysql)
+    fun List<Index>.filterFKeys() = if (isMysql) {
         filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
-    else
+    } else {
         this
+    }
 
     // SQLite: indices whose names start with "sqlite_" are meant for internal use
-    fun List<Index>.filterInternalIndices() = if (isSQLite)
+    fun List<Index>.filterInternalIndices() = if (isSQLite) {
         filter { !it.indexName.startsWith("sqlite_") }
-    else
+    } else {
         this
+    }
 
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
@@ -325,7 +321,9 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                exposedLogger.trace("Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}")
+                exposedLogger.info(
+                    "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}"
+                )
                 nameDiffers.add(index)
                 nameDiffers.add(it)
             }

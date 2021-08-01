@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.InsertStatement
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 
+@Suppress("MagicNumber")
 open class MiscTable : Table() {
     val by = byte("by")
     val byn = byte("byn").nullable()
@@ -43,6 +44,7 @@ open class MiscTable : Table() {
     }
 }
 
+@Suppress("LongParameterList")
 fun MiscTable.checkRow(
     row: ResultRow,
     by: Byte,
@@ -84,6 +86,7 @@ fun MiscTable.checkRow(
     assertEquals(row[this.dblcn], dblcn)
 }
 
+@Suppress("LongParameterList")
 fun MiscTable.checkInsert(
     row: InsertStatement<Number>,
     by: Byte,

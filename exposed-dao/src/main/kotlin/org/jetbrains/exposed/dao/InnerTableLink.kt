@@ -1,16 +1,7 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.emptySized
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -50,7 +41,8 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table) ?: false
-        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
+        val entityTables =
+            if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
 
         val columns = (
             target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList()) -

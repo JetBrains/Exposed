@@ -1,13 +1,7 @@
 package org.jetbrains.exposed.sql.jodatime
 
-import org.jetbrains.exposed.sql.CustomFunction
-import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.IntegerColumnType
-import org.jetbrains.exposed.sql.LiteralOp
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.QueryParameter
-import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -20,7 +14,7 @@ class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else                                                                     -> "CURRENT_TIMESTAMP"
+            else -> "CURRENT_TIMESTAMP"
         }
     }
 }

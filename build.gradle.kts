@@ -1,6 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.5.21" apply true
+    kotlin("jvm") apply true
     id("io.github.gradle-nexus.publish-plugin") apply true
+    id("io.gitlab.arturbosch.detekt")
 }
 
 allprojects {

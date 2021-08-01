@@ -25,10 +25,12 @@ internal class TransactionScope(internal val tx: Lazy<Transaction>, parent: Coro
     override val key = Companion
 
     internal fun holdsSameTransaction(transaction: Transaction?) = transaction != null && tx.isInitialized() && tx.value == transaction
+
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(private val newTransaction: Lazy<Transaction>, val manager: TransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(private val newTransaction: Lazy<Transaction>, val manager: TransactionManager) :
+    ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
@@ -107,12 +109,13 @@ private suspend fun <T> withTransactionScope(
 
         return TransactionScope(tx, newContext + element).body()
     }
+
     val sameTransaction = currentScope?.holdsSameTransaction(currentTransaction) == true
     val sameContext = context == coroutineContext
     return when {
-        currentScope == null           -> newScope(currentTransaction)
+        currentScope == null -> newScope(currentTransaction)
         sameTransaction && sameContext -> currentScope.body()
-        else                           -> newScope(currentTransaction)
+        else -> newScope(currentTransaction)
     }
 }
 
@@ -121,6 +124,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
     val transaction = tx.value
+    @Suppress("TooGenericExceptionCaught")
     try {
         transaction.statement().apply {
             if (shouldCommit) transaction.commit()

@@ -2,16 +2,8 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.CompositeColumn
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.update
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -50,9 +42,9 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
-            flush                -> flush()
-            isNewEntity          -> throw EntityNotFoundException(this.id, this.klass)
-            else                 -> writeValues.clear()
+            flush -> flush()
+            isNewEntity -> throw EntityNotFoundException(this.id, this.klass)
+            else -> writeValues.clear()
         }
 
         klass.removeFromCache(this)
@@ -69,13 +61,15 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
             val refValue = reference.getValue(o, desc)
             when {
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-                else                                                                    -> factory.findWithCacheCondition({
-                                                                                                                              reference.referee!!.getValue(
-                                                                                                                                  this,
-                                                                                                                                  desc
-                                                                                                                              ) == refValue
-                                                                                                                          }) { reference.referee<REF>()!! eq refValue }
-                    .singleOrNull()
+                else -> {
+                    // @formatter:off
+                    factory.findWithCacheCondition({
+                       reference.referee!!.getValue(this, desc) == refValue
+                    }) {
+                        reference.referee<REF>()!! eq refValue
+                    }.singleOrNull()
+                    // @formatter:on
+                }
             } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
         }
     }
@@ -98,15 +92,17 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         return executeAsPartOfEntityLifecycle {
             val refValue = reference.getValue(o, desc)
             when {
-                refValue == null                                                        -> null
+                refValue == null -> null
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-                else                                                                    -> factory.findWithCacheCondition({
-                                                                                                                              reference.referee!!.getValue(
-                                                                                                                                  this,
-                                                                                                                                  desc
-                                                                                                                              ) == refValue
-                                                                                                                          }) { reference.referee<REF>()!! eq refValue }
-                    .singleOrNull()
+                else -> {
+                    // @formatter:off
+                   factory.findWithCacheCondition({
+                       reference.referee!!.getValue(this, desc) == refValue
+                   }) {
+                       reference.referee<REF>()!! eq refValue
+                   }.singleOrNull()
+                    // @formatter:on
+                }
             }
         }
     }
@@ -131,17 +127,18 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T, R : Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
-        if (_readValues?.hasValue(this) == true)
+        if (_readValues?.hasValue(this) == true) {
             found(readValues[this])
-        else
+        } else {
             notFound()
+        }
 
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
-        writeValues.containsKey(this as Column<out Any?>)               -> writeValues[this as Column<out Any?>] as T
+        writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
-        columnType.nullable                                             -> readValues[this]
-        else                                                            -> readValues[this]!!
+        columnType.nullable -> readValues[this]
+        else -> readValues[this]!!
     }
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {

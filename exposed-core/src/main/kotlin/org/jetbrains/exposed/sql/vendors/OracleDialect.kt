@@ -1,25 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.GroupConcat
-import org.jetbrains.exposed.sql.IDateColumnType
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.LiteralOp
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.append
-import org.jetbrains.exposed.sql.appendIfNotNull
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
@@ -54,8 +36,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
-        e is LiteralOp<*> && e.columnType is IDateColumnType                          -> "TIMESTAMP ${super.processForDefaultValue(e)}"
-        else                                                                          -> super.processForDefaultValue(e)
+        e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
+        else -> super.processForDefaultValue(e)
     }
 }
 
@@ -151,8 +133,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         val def = super.update(target, columnsAndValues, null, where, transaction)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
-            limit != null                  -> "$def WHERE ROWNUM <= $limit"
-            else                           -> def
+            limit != null -> "$def WHERE ROWNUM <= $limit"
+            else -> def
         }
     }
 

@@ -1,16 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.GroupConcat
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
 import java.sql.Connection
@@ -52,8 +43,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
-            expr.distinct             -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else                      -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
+            expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
+            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 
@@ -151,7 +142,9 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun createIndex(index: Index): String {
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite"
+            )
             return ""
         }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
@@ -174,6 +167,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
             var conn: Connection? = null
             var stmt: Statement? = null
             var rs: ResultSet? = null
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
                 conn = DriverManager.getConnection("jdbc:sqlite::memory:")
                 stmt = conn!!.createStatement()

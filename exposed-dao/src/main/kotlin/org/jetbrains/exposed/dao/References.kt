@@ -119,36 +119,36 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     val directRelations = filterRelationsForEntity(entity, relations)
     directRelations.forEach {
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
-            is Reference<*, *, *>                   -> {
+            is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
                 }
             }
-            is OptionalReference<*, *, *>           -> {
+            is OptionalReference<*, *, *> -> {
                 (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
                 }
             }
-            is Referrers<*, *, *, *, *>             -> {
+            is Referrers<*, *, *, *, *> -> {
                 (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
                     refObject.factory.warmUpReferences(refIds, refColumn)
                 }
             }
-            is OptionalReferrers<*, *, *, *, *>     -> {
+            is OptionalReferrers<*, *, *, *, *> -> {
                 (refObject as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.mapNotNull { it.run { refColumn.referee<Any?>()!!.lookup() } }
                     refObject.factory.warmUpOptReferences(refIds, refColumn)
                 }
             }
-            is InnerTableLink<*, *, *, *>           -> {
+            is InnerTableLink<*, *, *, *> -> {
                 refObject.target.warmUpLinkedReferences(this.map { it.id }, refObject.table)
             }
-            is BackReference<*, *, *, *, *>         -> {
+            is BackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
                     refObject.delegate.factory.warmUpReferences(refIds, refColumn)
@@ -160,7 +160,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                     refObject.delegate.factory.warmUpOptReferences(refIds, refColumn)
                 }
             }
-            else                                    -> error("Relation delegate has an unknown type")
+            else -> error("Relation delegate has an unknown type")
         }
     }
 
@@ -170,14 +170,17 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
             val relationsToLoad = this.flatMap {
                 when (val relation = (relationProperty as KProperty1<Entity<*>, *>).get(it)) {
                     is SizedIterable<*> -> relation.toList()
-                    is Entity<*>        -> listOf(relation)
-                    null                -> listOf()
-                    else                -> error("Unrecognised loaded relation")
+                    is Entity<*> -> listOf(relation)
+                    null -> listOf()
+                    else -> error("Unrecognised loaded relation")
                 } as List<Entity<Int>>
             }.groupBy { it::class }
 
             relationsToLoad.forEach { (_, entities) ->
-                entities.preloadRelations(*remainingRelations.toTypedArray() as Array<out KProperty1<Entity<*>, Any?>>, nodesVisited = nodesVisited)
+                entities.preloadRelations(
+                    relations = remainingRelations.toTypedArray() as Array<out KProperty1<Entity<*>, Any?>>,
+                    nodesVisited = nodesVisited
+                )
             }
         }
     }

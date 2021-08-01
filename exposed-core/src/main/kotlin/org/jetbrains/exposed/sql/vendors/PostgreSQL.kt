@@ -1,22 +1,9 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.GroupConcat
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.append
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.UUID
+import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
@@ -46,9 +33,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         val tr = TransactionManager.current()
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG function.")
-            expr.distinct             -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG function.")
-            expr.separator == null    -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
-            else                      -> queryBuilder { append("STRING_AGG(", expr.expr, ", '", expr.separator, "')") }
+            expr.distinct -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG function.")
+            expr.separator == null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
+            else -> queryBuilder { append("STRING_AGG(", expr.expr, ", '", expr.separator, "')") }
         }
     }
 
@@ -192,11 +179,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
         return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString {
-            "${transaction.identity(it)}=EXCLUDED.${
-                transaction.identity(
-                    it
-                )
-            }"
+            "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"
         }
     }
 

@@ -1,5 +1,6 @@
 import org.jetbrains.exposed.gradle.setupDialectTest
 import org.jetbrains.exposed.gradle.setupTestDriverDependencies
+import org.jetbrains.exposed.gradle.Versions
 
 plugins {
     kotlin("jvm") apply true
@@ -10,7 +11,6 @@ repositories {
 }
 
 val dialect: String by project
-val otjPgEmbeddedVersion: String by project
 
 dependencies {
     api(project(":exposed-core"))
@@ -20,8 +20,8 @@ dependencies {
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
 
-    testImplementation("com.opentable.components", "otj-pg-embedded", otjPgEmbeddedVersion)
-    testRuntimeOnly("org.testcontainers", "testcontainers", "1.15.3")
+    testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
+    testImplementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
 
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)

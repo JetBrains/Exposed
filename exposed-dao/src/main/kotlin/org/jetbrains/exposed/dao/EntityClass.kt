@@ -3,37 +3,17 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Alias
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnSet
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.EntityIDColumnType
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.QueryAlias
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.emptySized
-import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.mapLazy
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.update
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
+import kotlin.sequences.Sequence
+import kotlin.sequences.any
+import kotlin.sequences.filter
 
-@Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass")
+@Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
     private val ctor = klass.kotlin.primaryConstructor!!
@@ -87,7 +67,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
                 get(o.id) // Check that entity is still exists in database
                 warmCache().store(o)
             } else if (currentEntityInCache !== o) {
-                exposedLogger.error("Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. Changes on entity could be missed.")
+                exposedLogger.error(
+                    "Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. " +
+                        "Changes on entity could be missed."
+                )
             }
         }
     }
@@ -133,8 +116,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
     @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
-        if (entity._readValues == null)
+        if (entity._readValues == null) {
             entity._readValues = row
+        }
 
         return entity
     }
@@ -146,9 +130,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             val value = row[exp]
             val originalColumn = column?.let { alias.originalColumn(it) }
             when {
-                originalColumn != null          -> originalColumn to value
+                originalColumn != null -> originalColumn to value
                 column?.table == alias.delegate -> null
-                else                            -> exp to value
+                else -> exp to value
             }
         }.toMap()
         return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
@@ -167,8 +151,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
                     }
                     column to value
                 }
-                exp is Column && exp.table == table    -> null
-                else                                   -> exp to value
+                exp is Column && exp.table == table -> null
+                else -> exp to value
             }
         }.toMap()
         return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
@@ -251,10 +235,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
      * @return The entity that has been created.
      */
     open fun new(id: ID?, init: T.() -> Unit): T {
-        val entityId = if (id == null && table.id.defaultValueFun != null)
+        val entityId = if (id == null && table.id.defaultValueFun != null) {
             table.id.defaultValueFun!!()
-        else
+        } else {
             DaoEntityID(id, table)
+        }
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
         prototype.db = TransactionManager.current().db
@@ -357,9 +342,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
                 val entities = when (forUpdate) {
-                    true  -> findQuery.forUpdate()
+                    true -> findQuery.forUpdate()
                     false -> findQuery.notForUpdate()
-                    else  -> findQuery
+                    else -> findQuery
                 }.toList()
 
                 val result = entities.groupBy { it.readValues[refColumn] }
@@ -372,18 +357,18 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
         } else {
             val baseQuery = searchQuery(Op.build { refColumn inList distinctRefIds })
-            val finalQuery = if (parentTable.id in baseQuery.set.fields)
+            val finalQuery = if (parentTable.id in baseQuery.set.fields) {
                 baseQuery
-            else {
+            } else {
                 baseQuery.adjustSlice { slice(this.fields + parentTable.id) }
                     .adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
             val findQuery = wrapRows(finalQuery)
             val entities = when (forUpdate) {
-                true  -> findQuery.forUpdate()
+                true -> findQuery.forUpdate()
                 false -> findQuery.notForUpdate()
-                else  -> findQuery
+                else -> findQuery
             }.toList().distinct()
 
             entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
@@ -416,9 +401,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
 
             val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
             val entitiesWithRefs = when (forUpdate) {
-                true  -> query.forUpdate()
+                true -> query.forUpdate()
                 false -> query.notForUpdate()
-                else  -> query
+                else -> query
             }.map { it[sourceRefColumn] to wrapRow(it) }
 
             val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
@@ -466,12 +451,12 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
         if (_cachedValues[db] == null) synchronized(this) {
             val cachedValues = _cachedValues[db]
             when {
-                cachedValues != null                      -> {
+                cachedValues != null -> {
                 } // already loaded in another transaction
                 tr.getUserData(cacheLoadingState) != null -> {
                     return transactionCache // prevent recursive call to warmCache() in .all()
                 }
-                else                                      -> {
+                else -> {
                     tr.putUserData(cacheLoadingState, this)
                     super.all().toList() /* force iteration to initialize lazy collection */
                     _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()

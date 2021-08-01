@@ -1,21 +1,10 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.TextColumnType
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 private val Transaction.isMySQLMode: Boolean
     get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
@@ -55,16 +44,10 @@ internal object H2FunctionProvider : FunctionProvider() {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
-            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode                                            -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
                 super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
-            else                                                                                                    -> super.insert(
-                ignore,
-                table,
-                columns,
-                expr,
-                transaction
-            )
+            else -> super.insert(ignore, table, columns, expr, transaction)
         }
     }
 
@@ -87,8 +70,9 @@ internal object H2FunctionProvider : FunctionProvider() {
         tableToUpdate.describe(transaction, this)
         +" USING "
 
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.forEach {
             if (it.joinPart != tableToUpdate) {
@@ -169,7 +153,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             return ""
         }
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2"
+            )
             return ""
         }
         return super.createIndex(index)

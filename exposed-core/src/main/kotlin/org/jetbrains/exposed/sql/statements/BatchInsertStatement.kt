@@ -1,13 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.EntityIDColumnType
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.autoIncColumnType
-import org.jetbrains.exposed.sql.isAutoInc
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
@@ -62,10 +55,13 @@ open class BatchInsertStatement(
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
-            throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException(
+                "Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts"
+            )
         }
-        val requiredInTargets =
-            (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
+        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter {
+            !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*>
+        }
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts")
@@ -88,10 +84,8 @@ open class BatchInsertStatement(
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        return if (!shouldReturnGeneratedValues)
-            transaction.connection.prepareStatement(sql, false)
-        else
-            super.prepared(transaction, sql)
+        return if (!shouldReturnGeneratedValues) transaction.connection.prepareStatement(sql, false)
+        else super.prepared(transaction, sql)
     }
 }
 

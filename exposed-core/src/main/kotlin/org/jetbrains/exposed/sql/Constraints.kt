@@ -38,11 +38,11 @@ enum class ReferenceOption {
     companion object {
         /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
         fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-            DatabaseMetaData.importedKeyCascade  -> CASCADE
-            DatabaseMetaData.importedKeySetNull  -> SET_NULL
+            DatabaseMetaData.importedKeyCascade -> CASCADE
+            DatabaseMetaData.importedKeySetNull -> SET_NULL
             DatabaseMetaData.importedKeyRestrict -> RESTRICT
             DatabaseMetaData.importedKeyNoAction -> NO_ACTION
-            else                                 -> currentDialect.defaultReferenceOption
+            else -> currentDialect.defaultReferenceOption
         }
     }
 }
@@ -114,7 +114,7 @@ data class ForeignKeyConstraint(
     override fun dropStatement(): List<String> {
         val constraintType = when (currentDialect) {
             is MysqlDialect -> "FOREIGN KEY"
-            else            -> "CONSTRAINT"
+            else -> "CONSTRAINT"
         }
         return listOf("ALTER TABLE $fromTable DROP $constraintType $fkName")
     }

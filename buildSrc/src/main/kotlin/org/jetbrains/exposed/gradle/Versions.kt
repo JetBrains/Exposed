@@ -21,4 +21,8 @@ object Versions {
     /** Spring **/
     const val springFramework = "5.3.7"
     const val springBoot = "2.5.0"
+
+    /** Test Dependencies **/
+    const val testContainers = "1.16.0"
+    const val otjPgEmbedded = "0.13.4"
 }

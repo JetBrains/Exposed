@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -194,10 +194,10 @@ class Join(
             onColumn != null || otherColumn != null -> {
                 error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
             }
-            additionalConstraint != null            -> {
+            additionalConstraint != null -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
             }
-            else                                    -> {
+            else -> {
                 implicitJoin(otherTable, joinType)
             }
         }
@@ -257,17 +257,18 @@ class Join(
             joinType != JoinType.CROSS && fkKeys.isEmpty() -> {
                 error("Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing")
             }
-            fkKeys.any { it.second.size > 1 }              -> {
+            fkKeys.any { it.second.size > 1 } -> {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
-            else                                           -> {
+            else -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
                 join(otherTable, joinType, cond, null)
             }
         }
     }
 
+    @Suppress("MemberNameEqualsClassName")
     private fun join(
         otherTable: ColumnSet,
         joinType: JoinType,
@@ -320,9 +321,9 @@ class Join(
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
-        name.isNotEmpty()           -> name
+        name.isNotEmpty() -> name
         javaClass.`package` == null -> javaClass.name.removeSuffix("Table")
-        else                        -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
+        else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
@@ -421,7 +422,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
          *
          * This constructor must be removed when [primaryKey] method is no longer supported.
          */
-        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
+        internal constructor(columns: List<Column<*>>) : this(columns = columns.toTypedArray())
 
         /** Marks the receiver column as an element of primary key. */
         private fun Column<*>.markPrimaryKey() {
@@ -475,7 +476,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     )
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
         require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
-        indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
+        indexInPK = indx ?: (table.columns.count { it.indexInPK != null } + 1)
         exposedLogger.error(
             "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
         )
@@ -1038,10 +1039,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
-        is ColumnType        -> {
+        is ColumnType -> {
             this@cloneWithAutoInc.clone(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq")))
         }
-        else                 -> error("Unsupported column type for auto-increment $columnType")
+        else -> error("Unsupported column type for auto-increment $columnType")
     }
 
     // DDL statements
@@ -1150,9 +1151,9 @@ data class Seq(private val name: String)
 
 /** Returns the list of tables to which the columns in this column set belong. */
 fun ColumnSet.targetTables(): List<Table> = when (this) {
-    is Alias<*>   -> listOf(this.delegate)
+    is Alias<*> -> listOf(this.delegate)
     is QueryAlias -> this.query.set.source.targetTables()
-    is Table      -> listOf(this)
-    is Join       -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
-    else          -> error("No target provided for update")
+    is Table -> listOf(this)
+    is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
+    else -> error("No target provided for update")
 }

@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.util.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
 
@@ -33,6 +32,7 @@ class Column<T>(
 
     /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
     var indexInPK: Int? = null
+
     /** Returns the function that calculates the default value for this column. */
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
@@ -47,18 +47,20 @@ class Column<T>(
 
     private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
 
-    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
-        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
-        table.isCustomPKNameDefined() -> isLastColumnInPK
-        isOneColumnPK() -> false
-        else -> isLastColumnInPK
-    }
+    internal val isPrimaryConstraintWillBeDefined: Boolean
+        get() = when {
+            currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+            table.isCustomPKNameDefined() -> isLastColumnInPK
+            isOneColumnPK() -> false
+            else -> isLastColumnInPK
+        }
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val columnDefinition = when {
-            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint ->
+                descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
             isH2withCustomPKConstraint -> descriptionDdl(true)
             else -> descriptionDdl(false)
         }
@@ -67,7 +69,8 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    override fun modifyStatement(): List<String> =
+        listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()

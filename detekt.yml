@@ -6,6 +6,18 @@ build:
 formatting:
     MaximumLineLength:
         maxLineLength: 150
+    MultiLineIfElse:
+        active: true
+        autoCorrect: true
+    ParameterListWrapping:
+        active: true
+        autoCorrect: true
+        indentSize: 4
+    NoWildcardImports:
+        active: false
+    NoMultipleSpaces:
+        active: true
+        autoCorrect: false
 
 style:
     MaxLineLength:
@@ -13,3 +25,18 @@ style:
         maxLineLength: 150
     ReturnCount:
         active: false
+    WildcardImport:
+        active: false
+    MagicNumber:
+        ignoreRanges: true
+
+complexity:
+    LongParameterList:
+        functionThreshold: 8
+        constructorThreshold: 8
+    ComplexCondition:
+        threshold: 6
+    TooManyFunctions:
+        thresholdInClasses: 40
+        thresholdInFiles: 100
+        thresholdInObjects: 25

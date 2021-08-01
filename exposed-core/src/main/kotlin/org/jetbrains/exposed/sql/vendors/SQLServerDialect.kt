@@ -1,24 +1,9 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.GroupConcat
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.append
-import org.jetbrains.exposed.sql.appendIfNotNull
-import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.UUID
+import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
@@ -53,8 +38,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         val tr = TransactionManager.current()
         return when {
             expr.separator == null -> tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG.")
-            expr.orderBy.size > 1  -> tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG.")
-            else                   -> queryBuilder {
+            expr.orderBy.size > 1 -> tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG.")
+            else -> queryBuilder {
                 append("STRING_AGG(")
                 append(expr.expr)
                 append(", '${expr.separator}')")
@@ -120,10 +105,11 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
-        if (limit != null)
+        if (limit != null) {
             +"UPDATE TOP($limit)"
-        else
+        } else {
             +"UPDATE "
+        }
         tableToUpdate.describe(transaction, this)
         +" SET "
         columnsAndValues.appendTo(this) { (col, value) ->
@@ -131,12 +117,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             registerArgument(col, value)
         }
         +" FROM "
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.appendTo(this, ",") {
-            if (it.joinPart != tableToUpdate)
+            if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
+            }
         }
         +" WHERE "
         targets.joinParts.appendTo(this, " AND ") {
@@ -173,7 +161,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
-        val columnDefault = e.toString().toUpperCase().trim()
+        val columnDefault = e.toString().uppercase().trim()
         return columnDefault !in nonAcceptableDefaults
     }
 
