@@ -493,7 +493,7 @@ fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType(), value)
 
 /** Returns the specified [value] as a decimal literal. */
-fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
+fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
 
 // Query Parameters
 

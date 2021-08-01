@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -186,8 +187,15 @@ abstract class DatabaseTestsBase {
                     statement(testDB)
                     commit() // Need commit to persist data before drop tables
                 } finally {
-                    SchemaUtils.drop(*tables)
-                    commit()
+                    try {
+                        SchemaUtils.drop(*tables)
+                        commit()
+                    } catch (e: Exception) {
+                        val database = testDB.db!!
+                        inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+                            SchemaUtils.drop(*tables)
+                        }
+                    }
                 }
             }
         }
