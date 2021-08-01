@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.functions.math
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import java.math.BigDecimal
 import java.math.MathContext
 
@@ -16,8 +18,8 @@ class AbsFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
 /**
  * Returns the smallest integer value that is >= a number
  */
-class CeilFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Long?>(
-    functionName = "CEIL",
+class CeilingFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Long?>(
+    functionName = if (currentDialectIfAvailable is SQLiteDialect) "CEIL" else "CEILING",
     _columnType = LongColumnType(),
     expr = arrayOf(expression)
 )

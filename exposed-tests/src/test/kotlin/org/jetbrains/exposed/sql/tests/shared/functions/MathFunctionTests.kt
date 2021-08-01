@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
+import java.sql.SQLException
 
 class MathFunctionTests : FunctionsTestBase() {
 
@@ -49,26 +50,37 @@ class MathFunctionTests : FunctionsTestBase() {
     @Test
     fun testCeilFunction() {
         withTable {
-            assertExpressionEqual(100, CeilFunction(intLiteral(100)))
-            assertExpressionEqual(-100, CeilFunction(intLiteral(-100)))
-            assertExpressionEqual(100, CeilFunction(doubleLiteral(100.0)))
-            assertExpressionEqual(101, CeilFunction(doubleLiteral(100.30)))
-            assertExpressionEqual(101, CeilFunction(doubleLiteral(100.70)))
-            assertExpressionEqual(-100, CeilFunction(doubleLiteral(-100.0)))
-            assertExpressionEqual(-100, CeilFunction(doubleLiteral(-100.30)))
-            assertExpressionEqual(-100, CeilFunction(doubleLiteral(-100.70)))
+            assertExpressionEqual(100, CeilingFunction(intLiteral(100)))
+            assertExpressionEqual(-100, CeilingFunction(intLiteral(-100)))
+            assertExpressionEqual(100, CeilingFunction(doubleLiteral(100.0)))
+            assertExpressionEqual(101, CeilingFunction(doubleLiteral(100.30)))
+            assertExpressionEqual(101, CeilingFunction(doubleLiteral(100.70)))
+            assertExpressionEqual(-100, CeilingFunction(doubleLiteral(-100.0)))
+            assertExpressionEqual(-100, CeilingFunction(doubleLiteral(-100.30)))
+            assertExpressionEqual(-100, CeilingFunction(doubleLiteral(-100.70)))
         }
     }
 
     @Test
     fun testPowerFunction() {
-        withTable {
+        withTable { testDb ->
             assertExpressionEqual(BigDecimal(100), PowerFunction(intLiteral(10), intLiteral(2)))
             assertExpressionEqual(BigDecimal(100), PowerFunction(intLiteral(10), doubleLiteral(2.0)))
-            assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), intLiteral(2)))
-            assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.0)))
-            assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2)))
-            assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0)))
+            if (testDb != TestDB.SQLSERVER) {
+                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), intLiteral(2)))
+                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2)))
+                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.0)))
+                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0)))
+                assertExpressionEqual(BigDecimal("324.1928515714"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.5)))
+                assertExpressionEqual(BigDecimal("324.1928515714"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5)))
+            } else {
+                assertExpressionEqual(BigDecimal(102), PowerFunction(doubleLiteral(10.1), intLiteral(2)))
+                assertExpressionEqual(BigDecimal(102), PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2)))
+                assertExpressionEqual(BigDecimal(102), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.0)))
+                assertExpressionEqual(BigDecimal(102), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0)))
+                assertExpressionEqual(BigDecimal("324.2"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.5)))
+                assertExpressionEqual(BigDecimal("324.2"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5)))
+            }
         }
     }
 
@@ -95,6 +107,12 @@ class MathFunctionTests : FunctionsTestBase() {
             when (testDb) {
                 TestDB.MYSQL, TestDB.MARIADB -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
+                }
+                TestDB.SQLSERVER -> {
+                    // SQLServer fails with SQLServerException to execute sqrt with negative value
+                    expectException<SQLException> {
+                        assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
+                    }
                 }
                 TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                     // SQLite, PSQL fails to execute sqrt with negative value
