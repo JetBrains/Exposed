@@ -10,16 +10,27 @@ import java.util.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
 
+class SchemaTableColumn<T>(
+    /** Table where the columns is declared. */
+    table: Table,
+    /** Name of the column. */
+    name: String,
+    /** the column in original table. */
+    val idColumn: Column<*>,
+    /** Data type of the column. */
+    columnType: IColumnType
+) : Column<T>(table, name, columnType)
+
 /**
  * Represents a column.
  */
-class Column<T>(
+open class Column<T>(
     /** Table where the columns is declared. */
     val table: Table,
     /** Name of the column. */
     val name: String,
     /** Data type of the column. */
-    override val columnType: IColumnType
+    final override val columnType: IColumnType
 ) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var foreignKey: ForeignKeyConstraint? = null
 

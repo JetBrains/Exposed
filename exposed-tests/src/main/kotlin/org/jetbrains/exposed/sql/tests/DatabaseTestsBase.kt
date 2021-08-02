@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
 import java.util.*
@@ -197,14 +198,17 @@ abstract class DatabaseTestsBase {
     fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
         (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
             withDb(testDB) {
-                SchemaUtils.createSchema(*schemas)
-                try {
-                    statement()
-                    commit() // Need commit to persist data before drop schemas
-                } finally {
-                    val cascade = it != TestDB.SQLSERVER
-                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
-                    commit()
+                /** Testing only dialects that supports schema. */
+                if (currentDialect.supportsCreateSchema) {
+                    SchemaUtils.createSchema(*schemas)
+                    try {
+                        statement()
+                        commit() // Need commit to persist data before drop schemas
+                    } finally {
+                        val cascade = it != TestDB.SQLSERVER
+                        SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                        commit()
+                    }
                 }
             }
         }

@@ -149,7 +149,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
-            val nullableColumns = table.columns.filter { it.columnType.nullable }
+            val nullableColumns = table.columns.filter { it.columnType.nullable }.map { if (it is SchemaTableColumn<*>) it.idColumn else it }
             val valuesAndDefaults = valuesAndDefaults()
             val result = (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associate { it to null }).toList().sortedBy { it.first }
             listOf(result).apply { field = this }
