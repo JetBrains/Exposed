@@ -151,7 +151,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             it.appendConditions(this)
         }
         where?.let {
-            + " AND "
+            +" AND "
             +it
         }
         toString()
@@ -178,7 +178,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("PostgreSQL replace table must supply at least one primary key.")
         }
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
-        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}" }
+        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString {
+            "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"
+        }
     }
 
     override fun delete(

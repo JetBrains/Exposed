@@ -8,7 +8,12 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
-import java.time.*
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -31,12 +36,14 @@ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "yyyy-MM-d HH:mm:ss"
-    val newFormat = if (fraction in 1..9)
+    val newFormat = if (fraction in 1..9) {
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
-    else
+    } else {
         baseFormat
+    }
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+
 private fun formatterForTimeString(date: String) = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
 
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
@@ -123,7 +130,8 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
-    private fun longToLocalDateTime(seconds: Long, nanos: Long) = LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+    private fun longToLocalDateTime(seconds: Long, nanos: Long) =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
 
     companion object {
         internal val INSTANCE = JavaLocalDateTimeColumnType()

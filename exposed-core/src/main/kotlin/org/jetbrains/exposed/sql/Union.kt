@@ -32,7 +32,7 @@ class Union(
 
     private val unionKeyword: String get() = if (distinct) "UNION" else "UNION ALL"
 
-    override fun copy() = Union(distinct, *statements).also {
+    override fun copy() = Union(distinct, rawStatements = statements).also {
         copyTo(it)
     }
 

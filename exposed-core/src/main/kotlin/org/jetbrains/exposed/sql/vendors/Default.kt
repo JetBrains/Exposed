@@ -108,6 +108,7 @@ abstract class DataTypeProvider {
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it
  * is implemented differently, the corresponding function should be overridden.
  */
+@Suppress("UnnecessaryAbstractClass")
 abstract class FunctionProvider {
     // Mathematical functions
 
@@ -511,30 +512,42 @@ data class ColumnMetadata(
 /**
  * Common interface for all database dialects.
  */
+@Suppress("TooManyFunctions")
 interface DatabaseDialect {
     /** Name of this dialect. */
     val name: String
+
     /** Data type provider of this dialect. */
     val dataTypeProvider: DataTypeProvider
+
     /** Function provider of this dialect. */
     val functionProvider: FunctionProvider
+
     /** Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise. */
     val supportsIfNotExists: Boolean get() = true
+
     /** Returns `true` if the dialect supports the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
+
     /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
     val needsSequenceToAutoInc: Boolean get() = false
+
     /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
+
     /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
+
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
+
     /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
+
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
+
     /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
     val supportsSubqueryUnions: Boolean get() = false
 
@@ -620,6 +633,7 @@ abstract class VendorDialect(
     /* Cached values */
     private var _allTableNames: Map<String, List<String>>? = null
     private var _allSchemaNames: List<String>? = null
+
     /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
@@ -691,7 +705,8 @@ abstract class VendorDialect(
         return constraints
     }
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
+        TransactionManager.current().db.metadata { existingIndices(*tables) }
 
     private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
 
@@ -756,6 +771,7 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
         explicitDialect.set(null)
     }
 }
+
 /** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
 val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
 

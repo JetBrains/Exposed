@@ -33,6 +33,7 @@ class Column<T>(
 
     /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
     var indexInPK: Int? = null
+
     /** Returns the function that calculates the default value for this column. */
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
@@ -67,7 +68,8 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    override fun modifyStatement(): List<String> =
+        listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()

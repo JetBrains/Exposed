@@ -142,7 +142,9 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun createIndex(index: Index): String {
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite"
+            )
             return ""
         }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
@@ -165,10 +167,11 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
             var conn: Connection? = null
             var stmt: Statement? = null
             var rs: ResultSet? = null
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
                 conn = DriverManager.getConnection("jdbc:sqlite::memory:")
                 stmt = conn!!.createStatement()
-                rs = stmt!!.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                rs = stmt!!.executeQuery("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
                 if (rs!!.next()) {
                     rs!!.getBoolean(1)
                 } else {

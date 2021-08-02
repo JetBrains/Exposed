@@ -4,7 +4,11 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.time.*
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.Temporal
 
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
@@ -93,17 +97,22 @@ fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(JavaInstantColumnType.INSTANCE, value)
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(JavaDurationColumnType.INSTANCE, value)
 
+@Suppress("FunctionName")
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDate?> =
     CustomFunction(functionName, JavaLocalDateColumnType.INSTANCE, *params)
 
+@Suppress("FunctionName")
 fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
     CustomFunction(functionName, JavaLocalTimeColumnType.INSTANCE, *params)
 
+@Suppress("FunctionName")
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDateTime?> =
     CustomFunction(functionName, JavaLocalDateTimeColumnType.INSTANCE, *params)
 
+@Suppress("FunctionName")
 fun CustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Instant?> =
     CustomFunction(functionName, JavaInstantColumnType.INSTANCE, *params)
 
+@Suppress("FunctionName")
 fun CustomDurationFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Duration?> =
     CustomFunction(functionName, JavaDurationColumnType.INSTANCE, *params)

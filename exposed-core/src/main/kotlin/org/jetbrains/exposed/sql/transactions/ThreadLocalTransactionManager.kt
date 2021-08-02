@@ -14,7 +14,8 @@ class ThreadLocalTransactionManager(
     @Volatile override var defaultRepetitionAttempts: Int
 ) : TransactionManager {
 
-    @Volatile override var defaultIsolationLevel: Int = -1
+    @Volatile
+    override var defaultIsolationLevel: Int = -1
         get() {
             if (field == -1) {
                 field = Database.getDefaultIsolationLevel(db)
@@ -35,16 +36,17 @@ class ThreadLocalTransactionManager(
                 )
             )
             ).apply {
-            bindTransactionToThread(this)
-        }
+                bindTransactionToThread(this)
+            }
 
     override fun currentOrNull(): Transaction? = threadLocal.get()
 
     override fun bindTransactionToThread(transaction: Transaction?) {
-        if (transaction != null)
+        if (transaction != null) {
             threadLocal.set(transaction)
-        else
+        } else {
             threadLocal.remove()
+        }
     }
 
     private class ThreadLocalTransaction(
@@ -120,37 +122,40 @@ class ThreadLocalTransactionManager(
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T = keepAndRestoreTransactionRefAfterRun(db) {
-    val outer = TransactionManager.currentOrNull()
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T =
+    keepAndRestoreTransactionRefAfterRun(db) {
+        val outer = TransactionManager.currentOrNull()
 
-    if (outer != null && (db == null || outer.db == db)) {
-        val outerManager = outer.db.transactionManager
+        if (outer != null && (db == null || outer.db == db)) {
+            val outerManager = outer.db.transactionManager
 
-        val transaction = outerManager.newTransaction(transactionIsolation, outer)
-        try {
-            transaction.statement().also {
-                if (outer.db.useNestedTransactions)
-                    transaction.commit()
-            }
-        } finally {
-            TransactionManager.resetCurrent(outerManager)
-        }
-    } else {
-        val existingForDb = db?.transactionManager
-        existingForDb?.currentOrNull()?.let { transaction ->
-            val currentManager = outer?.db.transactionManager
+            val transaction = outerManager.newTransaction(transactionIsolation, outer)
             try {
-                TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    if (db.useNestedTransactions)
+                    if (outer.db.useNestedTransactions) {
                         transaction.commit()
+                    }
                 }
             } finally {
-                TransactionManager.resetCurrent(currentManager)
+                TransactionManager.resetCurrent(outerManager)
             }
-        } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, null, statement)
+        } else {
+            val existingForDb = db?.transactionManager
+            existingForDb?.currentOrNull()?.let { transaction ->
+                val currentManager = outer?.db.transactionManager
+                try {
+                    TransactionManager.resetCurrent(existingForDb)
+                    transaction.statement().also {
+                        if (db.useNestedTransactions) {
+                            transaction.commit()
+                        }
+                    }
+                } finally {
+                    TransactionManager.resetCurrent(currentManager)
+                }
+            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, null, statement)
+        }
     }
-}
 
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
@@ -169,6 +174,7 @@ fun <T> inTopLevelTransaction(
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
             val transaction = db.transactionManager.newTransaction(transactionIsolation, outerTransaction)
 
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val answer = transaction.statement()
                 transaction.commit()
@@ -181,7 +187,12 @@ fun <T> inTopLevelTransaction(
                 }
             } catch (e: Throwable) {
                 val currentStatement = transaction.currentStatement
-                transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
                 throw e
             } finally {
                 TransactionManager.resetCurrent(outerManager)
@@ -220,6 +231,7 @@ internal fun handleSQLException(e: SQLException, transaction: Transaction, repet
 
 internal fun closeStatementsAndConnection(transaction: Transaction) {
     val currentStatement = transaction.currentStatement
+    @Suppress("TooGenericExceptionCaught")
     try {
         currentStatement?.let {
             it.closeIfPossible()

@@ -1,9 +1,13 @@
 @file:Suppress("internal")
+
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
-import java.util.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
 
 /**
  * @author max

@@ -2,7 +2,12 @@ package org.jetbrains.exposed.sql.tests
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -131,10 +136,12 @@ private val mySQLProcess by lazy {
 private fun runTestContainersMySQL(): Boolean =
     (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
 
+@Suppress("UnnecessaryAbstractClass")
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
+
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) {
             exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
@@ -162,8 +169,9 @@ abstract class DatabaseTestsBase {
 
     fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         val enabledInTests = TestDB.enabledInTests()
-        val toTest = db?.intersect(enabledInTests) ?: enabledInTests - excludeSettings
+        val toTest = db?.intersect(enabledInTests) ?: (enabledInTests - excludeSettings)
         toTest.forEach { dbSettings ->
+            @Suppress("TooGenericExceptionCaught")
             try {
                 withDb(dbSettings, statement)
             } catch (e: Exception) {
@@ -210,9 +218,11 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) = withTables(excludeSettings = emptyList(), tables = tables, statement = statement)
+    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) =
+        withTables(excludeSettings = emptyList(), tables = tables, statement = statement)
 
-    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) = withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
+    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) =
+        withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
         "IF NOT EXISTS "

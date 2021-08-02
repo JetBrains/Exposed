@@ -66,6 +66,7 @@ class SpringTransactionManager(
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
+        @Suppress("TooGenericExceptionCaught")
         try {
             currentOrNull()?.commit()
         } catch (e: Exception) {
@@ -74,6 +75,7 @@ class SpringTransactionManager(
     }
 
     override fun doRollback(status: DefaultTransactionStatus) {
+        @Suppress("TooGenericExceptionCaught")
         try {
             currentOrNull()?.rollback()
         } catch (e: Exception) {

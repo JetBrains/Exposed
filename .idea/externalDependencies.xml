@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalDependencies">
+    <plugin id="com.intellij.gradle" />
+    <plugin id="detekt" />
+    <plugin id="mobi.hsz.idea.gitignore" />
+    <plugin id="org.jetbrains.kotlin" />
+    <plugin id="org.jetbrains.plugins.github" />
+  </component>
+</project>

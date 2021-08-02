@@ -1,2 +1,46 @@
-[*.{kt,kts}]
-disabled_rules=filename,no-wildcard-imports
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = tab
+indent_style = space
+insert_final_newline = true
+max_line_length = 150
+tab_width = 4
+ij_formatter_off_tag      = @formatter:off
+ij_formatter_on_tag = @formatter:on
+ij_formatter_tags_enabled = true
+ij_smart_tabs = true
+ij_visual_guides = 120
+ij_wrap_on_typing = false
+
+[.editorconfig]
+ij_editorconfig_align_group_field_declarations = false
+ij_editorconfig_spaces_around_assignment_operators = true
+
+[*.{kt, kts}]
+ij_kotlin_insert_whitespaces_in_simple_one_line_method = true
+ij_kotlin_align_in_columns_case_branch = false
+ij_kotlin_align_multiline_parameters = true
+ij_kotlin_align_multiline_parameters_in_calls = true
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_parameter_annotation_wrap = on_every_item
+ij_kotlin_enum_constants_wrap = on_every_item
+ij_kotlin_imports_layout = *, java.**, javax.**, kotlin.**, ^
+ij_kotlin_name_count_to_use_star_import = 7
+ij_kotlin_name_count_to_use_star_import_for_members = 7
+ij_kotlin_wrap_first_method_in_call_chain = false
+ij_kotlin_continuation_indent_in_parameter_lists = true
+ij_kotlin_continuation_indent_size = 0
+trim_trailing_whitespace = true
+ij_any_align_multiline_parameters = true
+ij_kotlin_indent_size = 4
+ij_kotlin_spaces_around_logical_operators = true
+ij_kotlin_spaces_around_equality_operators = true
+ij_any_align_group_field_declarations = false
+ij_java_align_group_field_declarations = false
+
+
+[{.github/**/*.yml, .idea/*.xml}]
+indent_size = 2

@@ -29,7 +29,7 @@ fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
     orderBy: Array<Pair<Expression<*>, SortOrder>> = emptyArray()
-): GroupConcat<T> = GroupConcat(this, separator, distinct, *orderBy)
+): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy = orderBy)
 
 /** Extract a substring from this string expression that begins at the specified [start] and with the specified [length]. */
 fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T> = Substring(this, intLiteral(start), intLiteral(length))
@@ -113,6 +113,7 @@ fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): Custo
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
  */
+@Suppress("FunctionNaming")
 fun CustomStringFunction(
     functionName: String,
     vararg params: Expression<*>
@@ -121,6 +122,7 @@ fun CustomStringFunction(
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a long, and passing [params] as its arguments.
  */
+@Suppress("FunctionNaming")
 fun CustomLongFunction(
     functionName: String,
     vararg params: Expression<*>
@@ -129,7 +131,7 @@ fun CustomLongFunction(
 @Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class")
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
-@Suppress("INAPPLICABLE_JVM_NAME")
+@Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {
 
     // Comparison Operators
@@ -263,7 +265,7 @@ interface ISqlExpressionBuilder {
     fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
     /** Concatenates the text representations of all the [expr] using the specified [separator]. */
-    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, *expr.toTypedArray())
+    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, expr = expr.toTypedArray())
 
     // Pattern Matching
 

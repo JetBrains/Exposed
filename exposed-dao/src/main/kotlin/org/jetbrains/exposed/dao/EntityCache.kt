@@ -2,9 +2,14 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.LazySizedCollection
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.*
 
 val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this) }
 
@@ -24,7 +29,8 @@ class EntityCache(private val transaction: Transaction) {
     fun <ID : Any, R : Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: () -> SizedIterable<R>): SizedIterable<R> =
         referrers.getOrPut(sourceId) { HashMap() }.getOrPut(key) { LazySizedCollection(refs()) } as SizedIterable<R>
 
-    fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+    fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
+        getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
 
     fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
@@ -55,7 +61,9 @@ class EntityCache(private val transaction: Transaction) {
                 val batch = EntityBatchUpdate(map.values.first().klass)
                 for ((_, entity) in map) {
                     if (entity.flush(batch)) {
-                        check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
+                        check(entity.klass !is ImmutableEntityClass<*, *>) {
+                            "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}"
+                        }
                         updatedEntities.add(entity)
                     }
                 }
