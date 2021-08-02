@@ -1,7 +1,7 @@
 # https://github.com/detekt/detekt/blob/main/detekt-core/src/main/resources/default-detekt-config.yml
 
 build:
-    maxIssues: 86
+    maxIssues: 52
 
 formatting:
     MaximumLineLength:
