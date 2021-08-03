@@ -67,7 +67,7 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testCalc04() {
         withCitiesAndUsers { cities, users, userData ->
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
-            val admin = Expression.build { AndBitOp(users.flags, intParam(adminFlag), IntegerColumnType()) eq adminFlag }
+            val admin = Expression.build { (users.flags bitwiseAnd adminFlag) eq adminFlag }
             val r = users.slice(users.id, admin).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             val trueType = when (currentDialectTest) {
@@ -92,7 +92,7 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testCalc05() {
         withCitiesAndUsers { cities, users, userData ->
             val extra = 0b10
-            val flagsWithExtra = Expression.build { OrBitOp(users.flags, intParam(extra), IntegerColumnType()) }
+            val flagsWithExtra = Expression.build { users.flags bitwiseOr extra }
             val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0b0010, r[0][flagsWithExtra])
