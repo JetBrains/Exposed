@@ -11,9 +11,10 @@ configure<DetektExtension> {
         projectDir.resolve("detekt.yml").takeIf { it.isFile }
     )
     reports {
-        xml.enabled = System.getenv("TEAMCITY_VERSION") != null
+        xml.enabled = true
         html.enabled = false
         txt.enabled = false
+        sarif.enabled = false
     }
     parallel = true
 }
