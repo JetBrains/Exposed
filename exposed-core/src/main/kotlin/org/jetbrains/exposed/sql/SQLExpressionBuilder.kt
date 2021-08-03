@@ -262,12 +262,12 @@ interface ISqlExpressionBuilder {
     /**
      * Performs a bitwise `and` on this expression and [t].
      */
-    infix fun <T> ExpressionWithColumnType<T>.and(t: T): AndBitOp<T, T> = AndBitOp(this, wrap(t), columnType)
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: T): AndBitOp<T, T> = AndBitOp(this, wrap(t), columnType)
 
     /**
      * Performs a bitwise `or` on this expression and [t].
      */
-    infix fun <T> ExpressionWithColumnType<T>.or(t: T): OrBitOp<T, T> = OrBitOp(this, wrap(t), columnType)
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: T): OrBitOp<T, T> = OrBitOp(this, wrap(t), columnType)
 
     /**
      * Performs a bitwise `and` on this expression and [t].
