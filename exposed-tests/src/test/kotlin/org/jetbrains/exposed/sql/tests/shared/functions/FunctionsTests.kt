@@ -10,9 +10,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 
@@ -70,21 +68,11 @@ class FunctionsTests : DatabaseTestsBase() {
             val admin = Expression.build { (users.flags bitwiseAnd adminFlag) eq adminFlag }
             val r = users.slice(users.id, admin).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
-            val trueType = when (currentDialectTest) {
-                is MysqlDialect -> 1L
-                is SQLiteDialect -> 1
-                else -> true
-            }
-            val falseType = when (currentDialectTest) {
-                is MysqlDialect -> 0L
-                is SQLiteDialect -> 0
-                else -> false
-            }
-            assertEquals(falseType, r[0][admin])
-            assertEquals(trueType, r[1][admin])
-            assertEquals(falseType, r[2][admin])
-            assertEquals(trueType, r[3][admin])
-            assertEquals(falseType, r[4][admin])
+            assertEquals(false, r[0][admin])
+            assertEquals(true, r[1][admin])
+            assertEquals(false, r[2][admin])
+            assertEquals(true, r[3][admin])
+            assertEquals(false, r[4][admin])
         }
     }
 
