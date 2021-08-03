@@ -11,7 +11,7 @@ configure<DetektExtension> {
         projectDir.resolve("detekt.yml").takeIf { it.isFile }
     )
     reports {
-        xml.enabled = false
+        xml.enabled = System.getenv("TEAMCITY_VERSION") != null
         html.enabled = false
         txt.enabled = false
     }
