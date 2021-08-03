@@ -769,6 +769,10 @@ class BooleanColumnType : ColumnType() {
     }
 
     override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
+
+    companion object {
+        internal val INSTANCE = BooleanColumnType()
+    }
 }
 
 // Enumeration columns

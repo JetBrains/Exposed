@@ -52,6 +52,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
             raw == NotInitializedValue -> error("$c is not initialized yet")
             c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
             c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
+            c is Op.OpBoolean -> BooleanColumnType.INSTANCE.valueFromDB(raw)
             else -> raw
         } as T
     }
