@@ -84,6 +84,10 @@ data class ForeignKeyConstraint(
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
 
+    /** Custom foreign key name if was provided */
+    val customFkName: String?
+        get() = name
+
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(

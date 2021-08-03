@@ -245,6 +245,20 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
+    object ExplicitTable : IntIdTable() {
+        val playerId = integer("player_id").references(PlayerTable.id, fkName = "Explicit_FK_NAME")
+    }
+    object NonExplicitTable : IntIdTable() {
+        val playerId = integer("player_id").references(PlayerTable.id)
+    }
+
+    @Test fun explicitFkNameIsExplicit() {
+        withTables(ExplicitTable, NonExplicitTable) {
+            assertEquals("Explicit_FK_NAME", ExplicitTable.playerId.foreignKey!!.customFkName)
+            assertEquals(null, NonExplicitTable.playerId.foreignKey!!.customFkName)
+        }
+    }
+
     object T1 : Table("ARRAY") {
         val name = integer("name").uniqueIndex()
         val tmp = varchar("temp", 255)
