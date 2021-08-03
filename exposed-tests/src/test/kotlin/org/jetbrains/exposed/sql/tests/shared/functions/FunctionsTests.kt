@@ -92,6 +92,20 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCalc06() {
+        withCitiesAndUsers { cities, users, userData ->
+            val flagsWithXor = Expression.build { users.flags bitwiseXor 0b111 }
+            val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0111, r[0][flagsWithXor])
+            assertEquals(0b0110, r[1][flagsWithXor])
+            assertEquals(0b1111, r[2][flagsWithXor])
+            assertEquals(0b1110, r[3][flagsWithXor])
+            assertEquals(0b1111, r[4][flagsWithXor])
+        }
+    }
+
+    @Test
     fun testFlag01() {
         withCitiesAndUsers { cities, users, userData ->
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN

@@ -1,11 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
 /**
@@ -329,6 +325,28 @@ class OrBitOp<T, S : T>(
         when (currentDialectIfAvailable) {
             is OracleDialect, is H2Dialect -> append("BITOR(", expr1, ", ", expr2, ")")
             else -> append('(', expr1, " | ", expr2, ')')
+        }
+    }
+}
+
+/**
+ * Represents an SQL operator that performs a bitwise `or` on [expr1] and [expr2].
+ */
+class XorBitOp<T, S : T>(
+    /** The left-hand side operand. */
+    val expr1: Expression<T>,
+    /** The right-hand side operand. */
+    val expr2: Expression<S>,
+    /** The column type of this expression. */
+    override val columnType: IColumnType
+) : ExpressionWithColumnType<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is PostgreSQLDialect -> append('(', expr1, " # ", expr2, ')')
+            // SQLite doesn't natively support bitwise XOR, thus emulate it with 'or' and 'and'
+            is SQLiteDialect -> append("((", expr1, " | ", expr2, ") - (", expr1, " & ", expr2, "))")
+            is OracleDialect, is H2Dialect -> append("BITXOR(", expr1, ", ", expr2, ")")
+            else -> append('(', expr1, " ^ ", expr2, ')')
         }
     }
 }
