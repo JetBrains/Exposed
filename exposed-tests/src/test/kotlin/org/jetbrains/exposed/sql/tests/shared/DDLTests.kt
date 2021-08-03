@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -176,7 +177,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(bar, id)
         }
 
-        withTables(Foo) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), Foo) {
             Foo.insert {
                 it[Foo.bar] = 1
             }
@@ -188,6 +189,12 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(2, result.size)
             assertEquals(1, result[0].second)
             assertEquals(2, result[1].second)
+        }
+
+        withDb(TestDB.SQLITE) {
+            expectException<UnsupportedByDialectException> {
+                SchemaUtils.create(Foo)
+            }
         }
     }
 

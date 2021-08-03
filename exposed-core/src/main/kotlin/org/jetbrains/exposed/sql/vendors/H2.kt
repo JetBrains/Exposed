@@ -4,7 +4,7 @@ import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 private val Transaction.isMySQLMode: Boolean
     get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
@@ -70,14 +70,15 @@ internal object H2FunctionProvider : FunctionProvider() {
         tableToUpdate.describe(transaction, this)
         +" USING "
 
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.forEach {
             if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
             }
-            + " ON "
+            +" ON "
             it.appendConditions(this)
         }
         +" WHEN MATCHED THEN UPDATE SET "
@@ -87,7 +88,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
 
         where?.let {
-            + " WHERE "
+            +" WHERE "
             +it
         }
         toString()
@@ -141,7 +142,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }
+        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
+            .filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -151,7 +153,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             return ""
         }
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2"
+            )
             return ""
         }
         return super.createIndex(index)

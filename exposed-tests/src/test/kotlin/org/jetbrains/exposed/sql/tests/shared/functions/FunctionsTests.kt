@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect

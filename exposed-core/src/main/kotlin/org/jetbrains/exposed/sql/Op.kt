@@ -16,8 +16,10 @@ abstract class Op<T> : Expression<T>() {
         inline fun <T> build(op: SqlExpressionBuilder.() -> Op<T>): Op<T> = SqlExpressionBuilder.op()
     }
 
+    internal interface OpBoolean
+
     /** Boolean operator corresponding to the SQL value `TRUE` */
-    object TRUE : Op<Boolean>() {
+    object TRUE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when (currentDialect) {
                 is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
@@ -27,7 +29,7 @@ abstract class Op<T> : Expression<T>() {
     }
 
     /** Boolean operator corresponding to the SQL value `FALSE` */
-    object FALSE : Op<Boolean>() {
+    object FALSE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when (currentDialect) {
                 is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
@@ -45,7 +47,7 @@ abstract class Op<T> : Expression<T>() {
 class NotOp<T>(
     /** Returns the expression being inverted. */
     val expr: Expression<T>
-) : Op<Boolean>() {
+) : Op<Boolean>(), Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("NOT (", expr, ")") }
 }
 
@@ -64,7 +66,7 @@ interface ComplexExpression
 abstract class CompoundBooleanOp<T : CompoundBooleanOp<T>>(
     private val operator: String,
     internal val expressions: List<Expression<Boolean>>
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         expressions.appendTo(this, separator = operator) { appendExpression(it) }
     }
@@ -139,7 +141,7 @@ abstract class ComparisonOp(
     val expr2: Expression<*>,
     /** Returns the symbol of the comparison operation. */
     val opSign: String
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         appendExpression(expr1)
         append(" $opSign ")
@@ -187,7 +189,7 @@ class Between(
     val from: Expression<*>,
     /** Returns the upper limit of the range to check against. */
     val to: Expression<*>
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " BETWEEN ", from, " AND ", to) }
 }
 
@@ -197,7 +199,7 @@ class Between(
 class IsNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NULL") }
 }
 
@@ -207,7 +209,7 @@ class IsNullOp(
 class IsNotNullOp(
     /** The expression being checked. */
     val expr: Expression<*>
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
@@ -314,7 +316,7 @@ class RegexpOp<T : String?>(
     val expr2: Expression<String>,
     /** Returns `true` if the regular expression is case sensitive, `false` otherwise. */
     val caseSensitive: Boolean
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
     }
@@ -334,7 +336,7 @@ class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(exp
 class exists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("EXISTS (")
         query.prepareSQL(this)
@@ -348,7 +350,7 @@ class exists(
 class notExists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
-) : Op<Boolean>() {
+) : Op<Boolean>(), Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("NOT EXISTS (")
         query.prepareSQL(this)
@@ -362,7 +364,7 @@ sealed class SubQueryOp<T>(
     val expr: Expression<T>,
     /** Returns the query to check against. */
     val query: AbstractQuery<*>
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " $operator (")
         query.prepareSQL(this)
@@ -407,7 +409,7 @@ class InListOrNotInListOp<T>(
     val list: Iterable<T>,
     /** Returns `true` if the check is inverted, `false` otherwise. */
     val isInList: Boolean = true
-) : Op<Boolean>(), ComplexExpression {
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         list.iterator().let { i ->
             if (!i.hasNext()) {
@@ -453,7 +455,7 @@ class LiteralOp<T>(
 }
 
 /** Returns the specified [value] as a boolean literal. */
-fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumnType(), value)
+fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumnType.INSTANCE, value)
 
 /** Returns the specified [value] as a byte literal. */
 fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
@@ -493,7 +495,7 @@ fun doubleLiteral(value: Double): LiteralOp<Double> = LiteralOp(DoubleColumnType
 fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType(), value)
 
 /** Returns the specified [value] as a decimal literal. */
-fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value.setScale(1))
+fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
 
 // Query Parameters
 
@@ -513,7 +515,7 @@ class QueryParameter<T>(
 fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
 
 /** Returns the specified [value] as a boolean query parameter. */
-fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType())
+fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType.INSTANCE)
 
 /** Returns the specified [value] as a byte query parameter. */
 fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())

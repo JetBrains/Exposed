@@ -41,7 +41,8 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table))
             }
 
-            is BatchUpdateStatement -> {}
+            is BatchUpdateStatement -> {
+            }
 
             is UpdateStatement -> {
                 transaction.flushCache()

@@ -59,8 +59,8 @@ fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit)
 inline fun <reified T : Exception> expectException(body: () -> Unit) {
     try {
         body()
-        fail("${T::class.simpleName} expected.")
+        fail("Failed on ${currentDialectTest.name}. ${T::class.simpleName} expected.")
     } catch (e: Exception) {
-        if (e !is T) fail("Expected ${T::class.simpleName} but ${e::class.simpleName} thrown.")
+        if (e !is T) fail("Failed on ${currentDialectTest.name}. Expected ${T::class.simpleName} but ${e::class.simpleName} thrown (${e.message}.")
     }
 }

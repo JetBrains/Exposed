@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -61,18 +62,27 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
         }
-        else -> valueFromDB(value.toString())
+        else -> {
+            if (localDateTimeClass == value.javaClass)
+                DateTime.parse(value.toString())
+            else
+                valueFromDB(value.toString())
+        }
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         /*
          Since MySQL ConnectorJ 8.0.23 driver returns LocalDateTime instead of String for DateTime columns.
          As exposed-jodatime module should work with Java 1.7 it's necessary to fetch it as String as it was before.
+
+         MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
+          regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
          */
-        if (time && currentDialect is MysqlDialect) {
-            return rs.getObject(index, String::class.java)
-        }
-        return super.readObject(rs, index)
+        return if (time && localDateTimeClass != null && currentDialect is MysqlDialect) {
+            rs.getObject(index, localDateTimeClass)
+        } else if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
+            rs.getObject(index, String::class.java)
+        } else super.readObject(rs, index)
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
@@ -96,6 +106,15 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         var result = super.hashCode()
         result = 31 * result + time.hashCode()
         return result
+    }
+
+    companion object {
+        // https://www.baeldung.com/java-check-class-exists
+        private val localDateTimeClass = try {
+            Class.forName("java.time.LocalDateTime", false, this::class.java.classLoader)
+        } catch (e: ClassNotFoundException) {
+            null
+        }
     }
 }
 

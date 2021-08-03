@@ -79,19 +79,25 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList()) = exec(stmt, args) { }
+    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
+        exec(stmt, args, explicitStatementType) { }
 
-    fun <T : Any> exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), transform: (ResultSet) -> T): T? {
+    fun <T : Any> exec(
+        stmt: String,
+        args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
+        explicitStatementType: StatementType? = null,
+        transform: (ResultSet) -> T
+    ): T? {
         if (stmt.isEmpty()) return null
 
-        val type = StatementType.values().find {
-            stmt.trim().startsWith(it.name, true)
-        } ?: StatementType.OTHER
+        val type = explicitStatementType
+            ?: StatementType.values().find { stmt.trim().startsWith(it.name, true) }
+            ?: StatementType.OTHER
 
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
-                    StatementType.SELECT -> executeQuery()
+                    StatementType.SELECT, StatementType.EXEC -> executeQuery()
                     else -> {
                         executeUpdate()
                         resultSet

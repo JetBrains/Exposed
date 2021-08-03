@@ -4,6 +4,7 @@ import org.jetbrains.exposed.gradle.signPublicationIfKeyPresent
 plugins {
     `java-platform`
     `maven-publish`
+    signing
 }
 
 group = "org.jetbrains.exposed"
@@ -20,7 +21,7 @@ dependencies {
                         if (!artifactId.endsWith("-metadata") &&
                             !artifactId.endsWith("-kotlinMultiplatform")
                         ) {
-                            api(groupId, artifactId, version)
+                            api(platform(project(":${it.name}")))
                         }
                     }
                 }
@@ -31,7 +32,7 @@ dependencies {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>("bom") {
             from(components.getByName("javaPlatform"))
             pom {
                 configureMavenCentralMetadata(project)

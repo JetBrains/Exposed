@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.*
@@ -144,7 +145,14 @@ class CreateTableTests : DatabaseTestsBase() {
             val id1ProperName = Book.id.name.inProperCase()
             val ddlId1 = Book.id.ddl
 
-            assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)", ddlId1.first())
+            if (currentDialectTest !is SQLiteDialect) {
+                assertEquals(
+                    "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)",
+                    ddlId1.first()
+                )
+            } else {
+                assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}", ddlId1.first())
+            }
         }
     }
 

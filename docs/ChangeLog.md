@@ -1,3 +1,23 @@
+# 0.32.1
+Infrastructure:
+* Kotlin 1.5.10
+* Kotlin Coroutines 1.5.0
+* slf4j 1.7.30
+* Spring 5.3.7
+* Spring Boot 2.5.0
+* [Bill Of Materials](https://github.com/JetBrains/Exposed/tree/master/exposed-bom) (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
+
+Features:
+* Auto-increment columns state change detected (PR from [spand](https://github.com/spand))
+* Explicit statementType for `Transaction.exec` functions (also, `EXEC` `StatementType` was introduced). ([390](https://github.com/JetBrains/Exposed/issues/390), [1249](https://github.com/JetBrains/Exposed/issues/1249))
+
+Bug Fixes:
+* Entities should be removed from the cache on update/delete made with DSL queries
+* Regression: Clientside length validation in ColumnType breaks otherwise harmless where clause ([1204](https://github.com/JetBrains/Exposed/issues/1204), [1222](https://github.com/JetBrains/Exposed/issues/1222))
+* Using Entity.flush does not alert EntityHook subscribers ([1225](https://github.com/JetBrains/Exposed/issues/1225))
+* TransactionScope throws NullPointerException instead of IllegalStateException when used outside the transaction ([1250](https://github.com/JetBrains/Exposed/issues/1250))
+* Spring transaction connection leaks when used with non-exposed transactions ([1167](https://github.com/JetBrains/Exposed/issues/1167))
+
 # 0.31.1
 Infrastructure:
 * Linting and formatting with [kotliner](https://github.com/jeremymailen/kotlinter-gradle) gradle plugin added by [jnfeinstein](https://github.com/jnfeinstein)
