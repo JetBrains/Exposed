@@ -7,8 +7,12 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.sql.SQLException
+import kotlin.properties.Delegates
 
 open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = false) : UpdateBuilder<Int>(StatementType.INSERT, listOf(table)) {
+
+    var insertedCount: Int by Delegates.notNull()
+
     var resultedValues: List<ResultRow>? = null
         private set
 
@@ -116,6 +120,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         val (inserted, rs) = execInsertFunction()
         return inserted.apply {
+            insertedCount = this
             resultedValues = processResults(rs, this)
         }
     }

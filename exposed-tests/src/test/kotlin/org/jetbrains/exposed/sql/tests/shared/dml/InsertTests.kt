@@ -123,12 +123,22 @@ class InsertTests : DatabaseTestsBase() {
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
             listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+
         withTables(insertIgnoreSupportedDB, idTable) {
-            val id = idTable.insertIgnore {
+            val insertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
-            } get idTable.id
-            assertEquals(1, id.value)
+            }
+            assertEquals(1, insertedStatement[idTable.id].value)
+            assertEquals(1, insertedStatement.insertedCount)
+
+            val notInsertedStatement = idTable.insertIgnore {
+                it[idTable.id] = EntityID(1, idTable)
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(1, notInsertedStatement[idTable.id].value)
+            assertEquals(0, notInsertedStatement.insertedCount)
         }
     }
 
