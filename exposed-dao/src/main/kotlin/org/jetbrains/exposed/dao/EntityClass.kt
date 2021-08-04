@@ -82,8 +82,15 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
-        cache.referrers.remove(entity.id)
-        cache.removeTablesReferrers(listOf(table))
+        cache.referrers.forEach { (col, referrers) ->
+            // Remove references from entity to other entities
+            referrers.remove(entity.id)
+
+            // Remove references from other entities to this entity
+            if (col.table == table) {
+                with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
+            }
+        }
     }
 
     open fun forEntityIds(ids: List<EntityID<ID>>): SizedIterable<T> {
@@ -337,7 +344,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
             val toLoad = distinctRefIds.filter {
-                cache.referrers[it]?.containsKey(refColumn)?.not() ?: true
+                cache.referrers[refColumn]?.containsKey(it)?.not() ?: true
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
@@ -350,11 +357,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
                 val result = entities.groupBy { it.readValues[refColumn] }
 
                 distinctRefIds.forEach { id ->
-                    cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized<T>() }
+                    cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }
                 }
             }
 
-            return distinctRefIds.flatMap { cache.referrers[it]?.get(refColumn)?.toList().orEmpty() } as List<T>
+            return distinctRefIds.flatMap { cache.getReferrers<T>(it, refColumn)?.toList().orEmpty() }
         } else {
             val baseQuery = searchQuery(Op.build { refColumn inList distinctRefIds })
             val finalQuery = if (parentTable.id in baseQuery.set.fields) {
@@ -388,8 +395,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
 
         val transaction = TransactionManager.current()
 
-        val inCache = transaction.entityCache.referrers.filter { it.key in distinctRefIds && sourceRefColumn in it.value }
-            .mapValues { it.value[sourceRefColumn]!! }
+        val inCache = transaction.entityCache.referrers[sourceRefColumn] ?: emptyMap()
         val loaded = (distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() }?.let { idsToLoad ->
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)

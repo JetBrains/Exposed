@@ -61,7 +61,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         entityCache.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
-        entityCache.referrers[o.id]?.remove(sourceRefColumn)
+        entityCache.referrers[sourceRefColumn]?.remove(o.id)
 
         val targetIds = value.map { it.id }
         executeAsPartOfEntityLifecycle {
