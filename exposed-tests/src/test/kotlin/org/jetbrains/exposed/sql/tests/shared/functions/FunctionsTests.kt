@@ -62,22 +62,49 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCalc04() {
+    fun testBitwiseAnd1() {
         withCitiesAndUsers { cities, users, userData ->
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
-            val admin = Expression.build { (users.flags bitwiseAnd adminFlag) eq adminFlag }
-            val r = users.slice(users.id, admin).selectAll().orderBy(users.id).toList()
+            val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd adminFlag) }
+            val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
+            val r = users.slice(users.id, adminAndFlagsExpr, adminEq).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
-            assertEquals(false, r[0][admin])
-            assertEquals(true, r[1][admin])
-            assertEquals(false, r[2][admin])
-            assertEquals(true, r[3][admin])
-            assertEquals(false, r[4][admin])
+            assertEquals(0, r[0][adminAndFlagsExpr])
+            assertEquals(1, r[1][adminAndFlagsExpr])
+            assertEquals(0, r[2][adminAndFlagsExpr])
+            assertEquals(1, r[3][adminAndFlagsExpr])
+            assertEquals(0, r[4][adminAndFlagsExpr])
+            assertEquals(false, r[0][adminEq])
+            assertEquals(true, r[1][adminEq])
+            assertEquals(false, r[2][adminEq])
+            assertEquals(true, r[3][adminEq])
+            assertEquals(false, r[4][adminEq])
         }
     }
 
     @Test
-    fun testCalc05() {
+    fun testBitwiseAnd2() {
+        withCitiesAndUsers { cities, users, userData ->
+            val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
+            val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd intLiteral(adminFlag)) }
+            val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
+            val r = users.slice(users.id, adminAndFlagsExpr, adminEq).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0, r[0][adminAndFlagsExpr])
+            assertEquals(1, r[1][adminAndFlagsExpr])
+            assertEquals(0, r[2][adminAndFlagsExpr])
+            assertEquals(1, r[3][adminAndFlagsExpr])
+            assertEquals(0, r[4][adminAndFlagsExpr])
+            assertEquals(false, r[0][adminEq])
+            assertEquals(true, r[1][adminEq])
+            assertEquals(false, r[2][adminEq])
+            assertEquals(true, r[3][adminEq])
+            assertEquals(false, r[4][adminEq])
+        }
+    }
+
+    @Test
+    fun testBitwiseOr1() {
         withCitiesAndUsers { cities, users, userData ->
             val extra = 0b10
             val flagsWithExtra = Expression.build { users.flags bitwiseOr extra }
@@ -92,9 +119,38 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCalc06() {
+    fun testBitwiseOr2() {
+        withCitiesAndUsers { cities, users, userData ->
+            val extra = 0b10
+            val flagsWithExtra = Expression.build { users.flags bitwiseOr intLiteral(extra) }
+            val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0010, r[0][flagsWithExtra])
+            assertEquals(0b0011, r[1][flagsWithExtra])
+            assertEquals(0b1010, r[2][flagsWithExtra])
+            assertEquals(0b1011, r[3][flagsWithExtra])
+            assertEquals(0b1010, r[4][flagsWithExtra])
+        }
+    }
+
+    @Test
+    fun testBitwiseXor01() {
         withCitiesAndUsers { cities, users, userData ->
             val flagsWithXor = Expression.build { users.flags bitwiseXor 0b111 }
+            val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0111, r[0][flagsWithXor])
+            assertEquals(0b0110, r[1][flagsWithXor])
+            assertEquals(0b1111, r[2][flagsWithXor])
+            assertEquals(0b1110, r[3][flagsWithXor])
+            assertEquals(0b1111, r[4][flagsWithXor])
+        }
+    }
+
+    @Test
+    fun testBitwiseXor02() {
+        withCitiesAndUsers { cities, users, userData ->
+            val flagsWithXor = Expression.build { users.flags bitwiseXor intLiteral(0b111) }
             val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0b0111, r[0][flagsWithXor])
