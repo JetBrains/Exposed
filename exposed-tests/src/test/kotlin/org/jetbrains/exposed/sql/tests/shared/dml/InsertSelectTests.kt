@@ -39,7 +39,7 @@ class InsertSelectTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
             val nullableExpression = Random() as Expression<BigDecimal?>
-            users.insert(users.slice(nullableExpression.castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1)).selectAll())
+            users.insert(users.slice(nullableExpression.castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1), intLiteral(0)).selectAll())
             val r = users.select { users.name eq "Foo" }.toList()
             assertEquals(userCount, r.size.toLong())
         }

@@ -259,6 +259,27 @@ interface ISqlExpressionBuilder {
     /** Calculates the remainder of dividing this expression by the [other] expression. */
     infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> = this % other
 
+    /**
+     * Performs a bitwise `and` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: T): AndBitOp<T, T> = AndBitOp(this, wrap(t), columnType)
+
+    /**
+     * Performs a bitwise `or` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: T): OrBitOp<T, T> = OrBitOp(this, wrap(t), columnType)
+
+
+    /**
+     * Performs a bitwise `or` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: T): XorBitOp<T, T> = XorBitOp(this, wrap(t), columnType)
+
+    /**
+     * Performs a bitwise `and` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: T): EqOp = EqOp(AndBitOp(this, wrap(t), columnType), wrap(t))
+
     // String Functions
 
     /** Concatenates the text representations of all the [expr]. */

@@ -62,6 +62,61 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCalc04() {
+        withCitiesAndUsers { cities, users, userData ->
+            val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
+            val admin = Expression.build { (users.flags bitwiseAnd adminFlag) eq adminFlag }
+            val r = users.slice(users.id, admin).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(false, r[0][admin])
+            assertEquals(true, r[1][admin])
+            assertEquals(false, r[2][admin])
+            assertEquals(true, r[3][admin])
+            assertEquals(false, r[4][admin])
+        }
+    }
+
+    @Test
+    fun testCalc05() {
+        withCitiesAndUsers { cities, users, userData ->
+            val extra = 0b10
+            val flagsWithExtra = Expression.build { users.flags bitwiseOr extra }
+            val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0010, r[0][flagsWithExtra])
+            assertEquals(0b0011, r[1][flagsWithExtra])
+            assertEquals(0b1010, r[2][flagsWithExtra])
+            assertEquals(0b1011, r[3][flagsWithExtra])
+            assertEquals(0b1010, r[4][flagsWithExtra])
+        }
+    }
+
+    @Test
+    fun testCalc06() {
+        withCitiesAndUsers { cities, users, userData ->
+            val flagsWithXor = Expression.build { users.flags bitwiseXor 0b111 }
+            val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
+            assertEquals(5, r.size)
+            assertEquals(0b0111, r[0][flagsWithXor])
+            assertEquals(0b0110, r[1][flagsWithXor])
+            assertEquals(0b1111, r[2][flagsWithXor])
+            assertEquals(0b1110, r[3][flagsWithXor])
+            assertEquals(0b1111, r[4][flagsWithXor])
+        }
+    }
+
+    @Test
+    fun testFlag01() {
+        withCitiesAndUsers { cities, users, userData ->
+            val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
+            val r = users.slice(users.id).select { users.flags hasFlag adminFlag }.orderBy(users.id).toList()
+            assertEquals(2, r.size)
+            assertEquals("andrey", r[0][users.id])
+            assertEquals("sergey", r[1][users.id])
+        }
+    }
+
+    @Test
     fun testSubstring01() {
         withCitiesAndUsers { cities, users, userData ->
             val substring = users.name.substring(1, 2)
