@@ -187,7 +187,7 @@ class InsertTests : DatabaseTestsBase() {
             val names = emptySequence<String>()
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
 
-            val batchesSize = Cities.selectAll().toList()
+            val batchesSize = Cities.selectAll().count()
 
             assertEquals(0, batchesSize)
         }
