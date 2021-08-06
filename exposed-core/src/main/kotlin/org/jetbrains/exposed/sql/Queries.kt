@@ -90,13 +90,26 @@ fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+fun <T : Table, E> T.batchInsert(
+    data: kotlin.sequences.Sequence<E>,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+private fun <T : Table, E> T.batchInsert(
+    data: Iterator<E>,
+    ignoreErrors: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    if (data.count() == 0) return emptyList()
     fun newBatchStatement(): BatchInsertStatement {
         return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-            SQLServerBatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         } else {
-            BatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            BatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         }
     }
 
