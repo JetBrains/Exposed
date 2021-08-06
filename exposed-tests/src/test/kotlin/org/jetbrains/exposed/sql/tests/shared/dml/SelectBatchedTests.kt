@@ -66,19 +66,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun `batchInserting using a sequence should work`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
-            val names = List(25) { UUID.randomUUID().toString() }.asSequence()
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
-
-            val batches = Cities.selectAll().toList().toCityNameList()
-
-            assertEquals(25, batches.size)
-        }
-    }
-
     @Test(expected = java.lang.UnsupportedOperationException::class)
     fun `when the table doesn't have an autoinc column, selectAllBatched should throw an exception`() {
         DMLTestsData.UserData.selectAllBatched()

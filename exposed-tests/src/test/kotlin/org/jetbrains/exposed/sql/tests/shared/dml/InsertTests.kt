@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -163,6 +164,32 @@ class InsertTests : DatabaseTestsBase() {
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
             assertEquals(userNamesWithCityIds.size.toLong(), users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
+        }
+    }
+
+    @Test
+    fun `batchInserting using a sequence should work`() {
+        val Cities = DMLTestsData.Cities
+        withTables(Cities) {
+            val names = List(25) { UUID.randomUUID().toString() }.asSequence()
+            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+
+            val batchesSize = Cities.selectAll().count()
+
+            kotlin.test.assertEquals(25, batchesSize)
+        }
+    }
+
+    @Test
+    fun `batchInserting using empty sequence should work`() {
+        val Cities = DMLTestsData.Cities
+        withTables(Cities) {
+            val names = emptySequence<String>()
+            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+
+            val batchesSize = Cities.selectAll().toList()
+
+            assertEquals(0, batchesSize)
         }
     }
 

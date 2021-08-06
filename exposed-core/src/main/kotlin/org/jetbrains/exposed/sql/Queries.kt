@@ -113,6 +113,8 @@ private fun <T : Table, E> T.batchInsert(
         }
     }
 
+    if (!data.hasNext()) return emptyList()
+
     var statement = newBatchStatement()
 
     val result = ArrayList<ResultRow>()
