@@ -1067,8 +1067,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
             Sequence(
                 it,
-                startWith = 0,
-                minValue = 0,
+                startWith = 1,
+                minValue = 1,
                 maxValue = Long.MAX_VALUE
             ).createStatement()
         }.orEmpty()
