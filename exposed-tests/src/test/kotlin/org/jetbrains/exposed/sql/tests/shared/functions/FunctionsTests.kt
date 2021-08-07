@@ -63,52 +63,62 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testBitwiseAnd1() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
+            // SQLServer doesn't support = on bit values
+            val isSQLServer = currentDialectTest is SQLServerDialect
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd adminFlag) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
-            val r = users.slice(users.id, adminAndFlagsExpr, adminEq).selectAll().orderBy(users.id).toList()
+            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !isSQLServer })
+            val r = users.slice(toSlice).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0, r[0][adminAndFlagsExpr])
             assertEquals(1, r[1][adminAndFlagsExpr])
             assertEquals(0, r[2][adminAndFlagsExpr])
             assertEquals(1, r[3][adminAndFlagsExpr])
             assertEquals(0, r[4][adminAndFlagsExpr])
-            assertEquals(false, r[0][adminEq])
-            assertEquals(true, r[1][adminEq])
-            assertEquals(false, r[2][adminEq])
-            assertEquals(true, r[3][adminEq])
-            assertEquals(false, r[4][adminEq])
+            if (!isSQLServer) {
+                assertEquals(false, r[0][adminEq])
+                assertEquals(true, r[1][adminEq])
+                assertEquals(false, r[2][adminEq])
+                assertEquals(true, r[3][adminEq])
+                assertEquals(false, r[4][adminEq])
+            }
         }
     }
 
     @Test
     fun testBitwiseAnd2() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
+            // SQLServer doesn't support = on bit values
+            val isSQLServer = currentDialectTest is SQLServerDialect
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd intLiteral(adminFlag)) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
-            val r = users.slice(users.id, adminAndFlagsExpr, adminEq).selectAll().orderBy(users.id).toList()
+            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !isSQLServer })
+            val r = users.slice(toSlice).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0, r[0][adminAndFlagsExpr])
             assertEquals(1, r[1][adminAndFlagsExpr])
             assertEquals(0, r[2][adminAndFlagsExpr])
             assertEquals(1, r[3][adminAndFlagsExpr])
             assertEquals(0, r[4][adminAndFlagsExpr])
-            assertEquals(false, r[0][adminEq])
-            assertEquals(true, r[1][adminEq])
-            assertEquals(false, r[2][adminEq])
-            assertEquals(true, r[3][adminEq])
-            assertEquals(false, r[4][adminEq])
+            if (!isSQLServer) {
+                assertEquals(false, r[0][adminEq])
+                assertEquals(true, r[1][adminEq])
+                assertEquals(false, r[2][adminEq])
+                assertEquals(true, r[3][adminEq])
+                assertEquals(false, r[4][adminEq])
+            }
         }
     }
 
     @Test
     fun testBitwiseOr1() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val extra = 0b10
             val flagsWithExtra = Expression.build { users.flags bitwiseOr extra }
-            val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
+            val r = users.slice(flagsWithExtra).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0b0010, r[0][flagsWithExtra])
             assertEquals(0b0011, r[1][flagsWithExtra])
@@ -120,7 +130,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testBitwiseOr2() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val extra = 0b10
             val flagsWithExtra = Expression.build { users.flags bitwiseOr intLiteral(extra) }
             val r = users.slice(users.id, flagsWithExtra).selectAll().orderBy(users.id).toList()
@@ -135,7 +145,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testBitwiseXor01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val flagsWithXor = Expression.build { users.flags bitwiseXor 0b111 }
             val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
@@ -149,7 +159,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testBitwiseXor02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val flagsWithXor = Expression.build { users.flags bitwiseXor intLiteral(0b111) }
             val r = users.slice(users.id, flagsWithXor).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
@@ -163,7 +173,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testFlag01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val r = users.slice(users.id).select { users.flags hasFlag adminFlag }.orderBy(users.id).toList()
             assertEquals(2, r.size)
@@ -174,7 +184,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testSubstring01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val substring = users.name.substring(1, 2)
             val r = (users).slice(users.id, substring)
                 .selectAll().orderBy(users.id).toList()
