@@ -184,7 +184,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect) {
-                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 0 MINVALUE 0 MAXVALUE 9223372036854775807", baseExpression)
+                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
             } else {
                 arrayListOf(baseExpression)
             }
