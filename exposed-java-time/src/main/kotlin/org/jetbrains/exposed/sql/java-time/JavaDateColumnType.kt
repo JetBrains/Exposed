@@ -8,12 +8,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -29,6 +24,14 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
+
+private val ORACLE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "1900-01-01 HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneOffset.UTC)
+}
+
 private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
@@ -150,7 +153,12 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
+        val formatter = if (currentDialect is OracleDialect) {
+            ORACLE_TIME_STRING_FORMATTER
+        } else {
+            DEFAULT_TIME_STRING_FORMATTER
+        }
+        return "'${formatter.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {
