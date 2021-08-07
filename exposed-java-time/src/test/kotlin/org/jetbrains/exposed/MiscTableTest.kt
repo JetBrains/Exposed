@@ -38,6 +38,7 @@ object Misc : MiscTable() {
     val drn = duration("drn").nullable()
 }
 
+@Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testInsert01() {
@@ -1252,6 +1253,7 @@ class MiscTableTest : DatabaseTestsBase() {
     }
 }
 
+@Suppress("LongParameterList")
 fun Misc.checkRowFull(
     row: ResultRow,
     by: Byte,
@@ -1287,6 +1289,7 @@ fun Misc.checkRowFull(
     checkRowDates(row, d, dn, t, tn, dt, dtn, ts, tsn, dr, drn)
 }
 
+@Suppress("LongParameterList")
 fun Misc.checkRowDates(
     row: ResultRow,
     d: LocalDate,

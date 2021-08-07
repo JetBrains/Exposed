@@ -44,8 +44,6 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
-private fun formatterForTimeString(date: String) = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
-
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
@@ -161,7 +159,14 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
         is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
         is Int -> longToLocalTime(value.toLong())
         is Long -> longToLocalTime(value)
-        is String -> LocalTime.parse(value, formatterForTimeString(value))
+        is String -> {
+            val formatter = if (currentDialect is OracleDialect) {
+                formatterForDateString(value)
+            } else {
+                DEFAULT_TIME_STRING_FORMATTER
+            }
+            LocalTime.parse(value, formatter)
+        }
         else -> valueFromDB(value.toString())
     }
 
