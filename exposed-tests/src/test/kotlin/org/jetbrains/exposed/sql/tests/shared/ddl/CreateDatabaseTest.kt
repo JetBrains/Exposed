@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
 
-class DatabaseTests : DatabaseTestsBase() {
+class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
     fun `create database test`() {

@@ -8,7 +8,9 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
@@ -66,6 +68,13 @@ interface IColumnType {
         else
             stmt[index] = value
     }
+
+    /**
+     * Function checks that provided value is suites the column type and throws [IllegalArgumentException] otherwise.
+     * [value] can be of any type (including [Expression])
+     * */
+    @Throws(IllegalArgumentException::class)
+    fun validateValueBeforeUpdate(value: Any?) {}
 }
 
 /**
@@ -399,13 +408,28 @@ class DecimalColumnType(
     val scale: Int
 ) : ColumnType() {
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return rs.getBigDecimal(index)
+    }
+
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
-        is Double -> value.toBigDecimal()
-        is Float -> value.toBigDecimal()
+        is Double -> {
+            if (value.isNaN())
+                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+            else
+                value.toBigDecimal()
+        }
+        is Float -> {
+            if (value.isNaN())
+                error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
+            else
+                value.toBigDecimal()
+        }
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
-        else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
+        else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
     }.setScale(scale, RoundingMode.HALF_EVEN)
 
     override fun equals(other: Any?): Boolean {
@@ -426,6 +450,10 @@ class DecimalColumnType(
         result = 31 * result + precision
         result = 31 * result + scale
         return result
+    }
+
+    companion object {
+        internal val INSTANCE = DecimalColumnType(MathContext.DECIMAL64.precision, 20)
     }
 }
 
@@ -512,11 +540,12 @@ open class CharColumnType(
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is String && value.codePointCount(0, value.length) <= colLength) {
-            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is String) {
+            require(value.codePointCount(0, value.length) <= colLength) {
+                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -554,11 +583,12 @@ open class VarCharColumnType(
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is String && value.codePointCount(0, value.length) <= colLength) {
-            "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is String) {
+            require(value.codePointCount(0, value.length) <= colLength) {
+                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -632,11 +662,12 @@ class BinaryColumnType(
 ) : BasicBinaryColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType(length)
 
-    override fun notNullValueToDB(value: Any): Any {
-        require(value is ByteArray && value.size <= length) {
-            "Value '$value' can't be stored to database column because exceeds length ($length)"
+    override fun validateValueBeforeUpdate(value: Any?) {
+        if (value is ByteArray) {
+            require(value.size <= length) {
+                "Value '$value' can't be stored to database column because exceeds length ($length)"
+            }
         }
-        return value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -738,6 +769,10 @@ class BooleanColumnType : ColumnType() {
     }
 
     override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
+
+    companion object {
+        internal val INSTANCE = BooleanColumnType()
+    }
 }
 
 // Enumeration columns

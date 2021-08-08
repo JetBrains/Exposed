@@ -33,6 +33,7 @@ class Column<T>(
 
     /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
     var indexInPK: Int? = null
+
     /** Returns the function that calculates the default value for this column. */
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
@@ -45,21 +46,30 @@ class Column<T>(
 
     fun nameInDatabaseCase(): String = name.inProperCase()
 
+    private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
+
+    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
+        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+        table.isCustomPKNameDefined() -> isLastColumnInPK
+        isOneColumnPK() -> false
+        else -> isLastColumnInPK
+    }
+
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
-        val isLastColumnInPK = table.primaryKey?.columns?.last() == this
+        val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val columnDefinition = when {
-            isOneColumnPK() && table.isCustomPKNameDefined() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
-            isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl().removeSuffix(" PRIMARY KEY")
-            !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl() + ", ADD ${table.primaryKeyConstraint()}"
-            else -> descriptionDdl()
+            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isH2withCustomPKConstraint -> descriptionDdl(true)
+            else -> descriptionDdl(false)
         }
 
-        val addConstr = if (isLastColumnInPK && currentDialect is H2Dialect) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
+        val addConstr = if (isH2withCustomPKConstraint) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    override fun modifyStatement(): List<String> =
+        listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()
@@ -69,18 +79,23 @@ class Column<T>(
     internal fun isOneColumnPK(): Boolean = table.primaryKey?.columns?.singleOrNull() == this
 
     /** Returns the SQL representation of this column. */
-    fun descriptionDdl(): String = buildString {
+    fun descriptionDdl(modify: Boolean = false): String = buildString {
         val tr = TransactionManager.current()
-        append(tr.identity(this@Column))
+        val column = this@Column
+        append(tr.identity(column))
         append(" ")
-        val isPKColumn = table.primaryKey?.columns?.contains(this@Column) == true
-        val colType = columnType
-        val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && colType.isAutoInc
+        val isPKColumn = table.primaryKey?.columns?.contains(column) == true
+        val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && columnType.isAutoInc
 
         when {
             !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
-            isSQLiteAutoIncColumn && (!isOneColumnPK() || table.isCustomPKNameDefined()) && table.primaryKey != null -> append(currentDialect.dataTypeProvider.integerType())
-            else -> append(colType.sqlType())
+            isSQLiteAutoIncColumn && !isOneColumnPK() -> tr.throwUnsupportedException("Auto-increment could be applied only to a single column primary key")
+            isSQLiteAutoIncColumn && table.isCustomPKNameDefined() -> {
+                val rawType = columnType.sqlType().substringBefore("PRIMARY KEY")
+                val constraintPart = table.primaryKeyConstraint()!!.substringBefore("(")
+                append("$rawType $constraintPart AUTOINCREMENT")
+            }
+            else -> append(columnType.sqlType())
         }
 
         val defaultValue = dbDefaultValue
@@ -89,7 +104,7 @@ class Column<T>(
             if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
                 val clientDefault = when {
                     defaultValueFun != null -> " Expression will be evaluated on the client."
-                    !colType.nullable -> " Column will be created with NULL marker."
+                    !columnType.nullable -> " Column will be created with NULL marker."
                     else -> ""
                 }
                 exposedLogger.error("${currentDialect.name} ${tr.db.version} doesn't support expression '$expressionSQL' as default value.$clientDefault")
@@ -98,13 +113,13 @@ class Column<T>(
             }
         }
 
-        if (colType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
+        if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
             append(" NULL")
-        } else if (!isPKColumn || (currentDialect is SQLiteDialect && !colType.isAutoInc)) {
+        } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
             append(" NOT NULL")
         }
 
-        if (!table.isCustomPKNameDefined() && isOneColumnPK() && !isSQLiteAutoIncColumn) {
+        if (!modify && isOneColumnPK() && !isPrimaryConstraintWillBeDefined && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
     }

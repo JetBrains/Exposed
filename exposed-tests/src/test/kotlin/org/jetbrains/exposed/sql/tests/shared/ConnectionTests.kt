@@ -23,8 +23,8 @@ class ConnectionTests : DatabaseTestsBase() {
                 requireNotNull(columns(People)[People])
             }.toSet()
             val expected = setOf(
-                ColumnMetadata("ID", Types.BIGINT, false, 19),
-                ColumnMetadata("NAME", Types.VARCHAR, true, 80)
+                ColumnMetadata("ID", Types.BIGINT, false, 19, true),
+                ColumnMetadata("NAME", Types.VARCHAR, true, 80, false)
             )
             assertEquals(expected, columnMetadata)
         }

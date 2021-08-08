@@ -1,7 +1,6 @@
 import org.jetbrains.exposed.gradle.*
 
 apply(plugin = "java-library")
-apply(plugin = "maven")
 apply(plugin = "maven-publish")
 apply(plugin = "signing")
 

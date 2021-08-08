@@ -18,7 +18,7 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
         val currentOrNullTransaction = TransactionManager.currentOrNull()
         return currentOrNullTransaction?.getUserData(key)
             ?: init?.let {
-                val value = currentOrNullTransaction!!.it()
+                val value = currentOrNullTransaction?.it() ?: error("Can't init value outside the transaction")
                 currentOrNullTransaction.putUserData(key, value)
                 value
             }

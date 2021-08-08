@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.*
+import java.util.Deque
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -14,7 +14,12 @@ enum class EntityChangeType {
     Removed;
 }
 
-data class EntityChange(val entityClass: EntityClass<*, Entity<*>>, val entityId: EntityID<*>, val changeType: EntityChangeType, val transactionId: String)
+data class EntityChange(
+    val entityClass: EntityClass<*, Entity<*>>,
+    val entityId: EntityID<*>,
+    val changeType: EntityChangeType,
+    val transactionId: String
+)
 
 fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
 
@@ -24,6 +29,7 @@ fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(klass: EntityCla
     return toEntity<ID, T>()
 }
 
+private val Transaction.unprocessedEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }
 private val Transaction.entityEvents: Deque<EntityChange> by transactionScope { ConcurrentLinkedDeque() }
 private val entitySubscribers = ConcurrentLinkedQueue<(EntityChange) -> Unit>()
 
@@ -40,7 +46,8 @@ object EntityHook {
 
 fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId: EntityID<*>, changeType: EntityChangeType) {
     EntityChange(entityClass, entityId, changeType, id).let {
-        if (entityEvents.peekLast() != it) {
+        if (unprocessedEvents.peekLast() != it) {
+            unprocessedEvents.addLast(it)
             entityEvents.addLast(it)
         }
     }
@@ -48,7 +55,7 @@ fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId:
 
 fun Transaction.alertSubscribers() {
     while (true) {
-        val event = entityEvents.pollFirst() ?: break
+        val event = unprocessedEvents.pollFirst() ?: break
         entitySubscribers.forEach { it(event) }
     }
 }

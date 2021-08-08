@@ -183,10 +183,11 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect)
-                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
-            else
+            val expected = if (currentDialectTest is OracleDialect) {
+                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+            } else {
                 arrayListOf(baseExpression)
+            }
 
             assertEqualLists(expected, TestTable.ddl)
 
@@ -202,7 +203,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
-            val row2 = TestTable.select { TestTable.id eq id2 }.single()
+            TestTable.select { TestTable.id eq id2 }.single()
         }
     }
 
@@ -301,7 +302,9 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         withDb(TestDB.SQLITE) {
             try {
-                exec("CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);")
+                exec(
+                    "CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);"
+                )
                 TestDate.insert { }
                 val year = TestDate.time.year()
                 val month = TestDate.time.month()

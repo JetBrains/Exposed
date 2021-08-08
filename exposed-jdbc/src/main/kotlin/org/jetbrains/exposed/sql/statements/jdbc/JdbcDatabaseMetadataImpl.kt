@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -8,7 +12,6 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
-import kotlin.collections.HashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
@@ -35,10 +38,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    private val databaseName get() = when (databaseDialectName) {
-        MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-        else -> database
-    }
+    private val databaseName
+        get() = when (databaseDialectName) {
+            MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+            else -> database
+        }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
@@ -59,7 +63,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                         OracleDialect.dialectName -> databaseName
                         else -> metadata.connection.schema.orEmpty()
                     }
-                } catch (e: Throwable) { "" }
+                } catch (e: Throwable) {
+                    ""
+                }
             }
             return field!!
         }
@@ -71,16 +77,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
-        override fun get(key: K): V? = map.getOrPut(key, { default(key) })
+        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
     }
 
-    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(
-        default = { schemeName ->
-            tableNamesFor(schemeName)
-        }
-    )
+    override val tableNames: Map<String, List<String>>
+        get() = CachableMapWithDefault(
+            default = { schemeName ->
+                tableNamesFor(schemeName)
+            }
+        )
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
@@ -115,7 +122,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
+    private fun ResultSet.extractColumns(
+        tables: Array<out Table>,
+        extract: (ResultSet) -> Pair<String, ColumnMetadata>
+    ): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
@@ -132,7 +142,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
-            val columnMetadata = ColumnMetadata(it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/, it.getInt("DATA_TYPE"), it.getBoolean("NULLABLE"), it.getInt("COLUMN_SIZE").takeIf { it != 0 })
+            val columnMetadata = ColumnMetadata(
+                it.getString("COLUMN_NAME"),/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/
+                it.getInt("DATA_TYPE"),
+                it.getBoolean("NULLABLE"),
+                it.getInt("COLUMN_SIZE").takeIf { it != 0 },
+                it.getString("IS_AUTOINCREMENT") == "YES",
+            )
             it.getString("TABLE_NAME") to columnMetadata
         }
         rs.close()
@@ -170,7 +186,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
+                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }
+                            ?.let { c -> Index(c, index.second, index.first) }
                     }
             }
         }

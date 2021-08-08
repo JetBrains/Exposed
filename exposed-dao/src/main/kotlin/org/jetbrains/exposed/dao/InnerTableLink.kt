@@ -34,14 +34,15 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
     private fun getSourceRefColumn(o: Source): Column<EntityID<SID>> {
         return sourceColumn ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>>
-            ?: error("Table does not reference source")
+        ?: error("Table does not reference source")
     }
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table) ?: false
-        val entityTables = if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
+        val entityTables =
+            if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
 
         val columns = (
             target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList()) -
@@ -60,13 +61,15 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         entityCache.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
-        entityCache.referrers[o.id]?.remove(sourceRefColumn)
+        entityCache.referrers[sourceRefColumn]?.remove(o.id)
 
         val targetIds = value.map { it.id }
-        table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
-        table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
-            this[sourceRefColumn] = o.id
-            this[targetColumn] = targetId
+        executeAsPartOfEntityLifecycle {
+            table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
+            table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
+                this[sourceRefColumn] = o.id
+                this[targetColumn] = targetId
+            }
         }
 
         // current entity updated

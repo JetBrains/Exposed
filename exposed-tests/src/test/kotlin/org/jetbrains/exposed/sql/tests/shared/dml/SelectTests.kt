@@ -111,7 +111,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList04() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name inList listOf("andrey" to "Andrey")
             }.toList()
@@ -123,7 +123,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList05() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name inList emptyList()
             }.toList()
@@ -134,7 +134,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList06() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name notInList emptyList()
             }.toList()
@@ -145,7 +145,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList07() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 Triple(users.id, users.name, users.cityId) notInList listOf(Triple("alex", "Alex", null))
             }.toList()
@@ -236,6 +236,23 @@ class SelectTests : DatabaseTestsBase() {
             val secondEntries = secondTable.select { secondTable.firstOpt eq firstId.value }.toList()
 
             assertEquals(1, secondEntries.size)
+        }
+    }
+
+    @Test
+    fun `test that column length check is not affects select queries`() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(stringTable) {
+            stringTable.insert {
+                it[name] = "TestName"
+            }
+            assertEquals(1, stringTable.select { stringTable.name eq "TestName" }.count())
+
+            val veryLongString = "1".repeat(255)
+            assertEquals(0, stringTable.select { stringTable.name eq veryLongString }.count())
         }
     }
 }

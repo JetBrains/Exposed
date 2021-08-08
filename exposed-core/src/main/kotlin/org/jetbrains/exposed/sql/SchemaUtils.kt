@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
-import java.util.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 
 object SchemaUtils {
     private class TableDepthGraph(val tables: List<Table>) {
@@ -131,11 +132,17 @@ object SchemaUtils {
                         }
                     }
 
-                    // sync nullability of existing columns
-                    val incorrectNullabilityColumns = table.columns.filter { c ->
-                        thisTableExistingColumns.any { c.name.equals(it.name, true) && it.nullable != c.columnType.nullable }
+                    // sync existing columns
+                    val redoColumn = table.columns.filter { c ->
+                        thisTableExistingColumns.any {
+                            if (c.name.equals(it.name, true)) {
+                                val incorrectNullability = it.nullable != c.columnType.nullable
+                                val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
+                                incorrectNullability || incorrectAutoInc
+                            } else false
+                        }
                     }
-                    incorrectNullabilityColumns.flatMapTo(statements) { it.modifyStatement() }
+                    redoColumn.flatMapTo(statements) { it.modifyStatement() }
                 }
             }
 
@@ -176,6 +183,7 @@ object SchemaUtils {
             }
         }
     }
+
     fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))

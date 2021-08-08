@@ -36,7 +36,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byNameHash = index("test_table_by_name", /* isUnique = */ false, name, indexType = "HASH")
+            val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "HASH")
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), tables = arrayOf(TestTable)) {
@@ -52,7 +52,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val name = varchar("name", length = 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byNameHash = index("test_table_by_name", /* isUnique = */ false, name, indexType = "NONCLUSTERED")
+            val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "NONCLUSTERED")
         }
 
         withDb(TestDB.SQLSERVER) {

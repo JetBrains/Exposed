@@ -192,6 +192,7 @@ class DefaultsTest : DatabaseTestsBase() {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val tsType = currentDialectTest.dataTypeProvider.dateTimeWithTzType()
             val longType = currentDialectTest.dataTypeProvider.longType()
+            val timeType = currentDialectTest.dataTypeProvider.timeType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
@@ -208,14 +209,15 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t6".inProperCase()} $tsType ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
                 "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}, " +
-                "${"t10".inProperCase()} TIME ${tLiteral.itOrNull()}" +
+                "${"t9".inProperCase()} $timeType ${tLiteral.itOrNull()}, " +
+                "${"t10".inProperCase()} $timeType ${tLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect)
-                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
-            else
+            val expected = if (currentDialectTest is OracleDialect) {
+                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+            } else {
                 arrayListOf(baseExpression)
+            }
 
             assertEqualLists(expected, TestTable.ddl)
 
