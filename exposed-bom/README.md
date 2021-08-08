@@ -3,7 +3,7 @@ Bill of Materials for all Exposed modules
 
 # Maven
 ```xml
-<!-- Versions after 0.32.1 -->
+<!-- Versions after 0.33.1 -->
 <repositories>
     <repository>
         <id>mavenCentral</id>
@@ -17,7 +17,7 @@ Bill of Materials for all Exposed modules
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.32.1</version>
+            <version>0.33.1</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -46,12 +46,12 @@ Bill of Materials for all Exposed modules
 # Gradle
 ```kotlin
 repositories {
-  // Versions after 0.32.1
+  // Versions after 0.33.1
   mavenCentral()
 }
 
 dependencies {
-    implementation(platform("org.jetbrains.exposed:exposed-bom:0.32.1"))
+    implementation(platform("org.jetbrains.exposed:exposed-bom:0.33.1"))
     implementation("org.jetbrains.exposed", "exposed-core")
     implementation("org.jetbrains.exposed", "exposed-dao")
     implementation("org.jetbrains.exposed", "exposed-jdbc")
