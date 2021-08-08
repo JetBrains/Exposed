@@ -10,7 +10,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 
@@ -64,12 +66,12 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testBitwiseAnd1() {
         withCitiesAndUsers { _, users, _ ->
-            // SQLServer doesn't support = on bit values
-            val isSQLServer = currentDialectTest is SQLServerDialect
+            // SQLServer and Oracle don't support = on bit values
+            val doesntSupportBitwiseEQ = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd adminFlag) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
-            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !isSQLServer })
+            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !doesntSupportBitwiseEQ })
             val r = users.slice(toSlice).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0, r[0][adminAndFlagsExpr])
@@ -77,7 +79,7 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals(0, r[2][adminAndFlagsExpr])
             assertEquals(1, r[3][adminAndFlagsExpr])
             assertEquals(0, r[4][adminAndFlagsExpr])
-            if (!isSQLServer) {
+            if (!doesntSupportBitwiseEQ) {
                 assertEquals(false, r[0][adminEq])
                 assertEquals(true, r[1][adminEq])
                 assertEquals(false, r[2][adminEq])
@@ -90,12 +92,12 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testBitwiseAnd2() {
         withCitiesAndUsers { _, users, _ ->
-            // SQLServer doesn't support = on bit values
-            val isSQLServer = currentDialectTest is SQLServerDialect
+            // SQLServer and Oracle don't support = on bit values
+            val doesntSupportBitwiseEQ = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd intLiteral(adminFlag)) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
-            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !isSQLServer })
+            val toSlice = listOfNotNull(adminAndFlagsExpr, adminEq.takeIf { !doesntSupportBitwiseEQ })
             val r = users.slice(toSlice).selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals(0, r[0][adminAndFlagsExpr])
@@ -103,7 +105,7 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals(0, r[2][adminAndFlagsExpr])
             assertEquals(1, r[3][adminAndFlagsExpr])
             assertEquals(0, r[4][adminAndFlagsExpr])
-            if (!isSQLServer) {
+            if (!doesntSupportBitwiseEQ) {
                 assertEquals(false, r[0][adminEq])
                 assertEquals(true, r[1][adminEq])
                 assertEquals(false, r[2][adminEq])
