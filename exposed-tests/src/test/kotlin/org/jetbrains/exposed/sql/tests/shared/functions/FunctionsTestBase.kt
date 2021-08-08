@@ -13,8 +13,8 @@ abstract class FunctionsTestBase : DatabaseTestsBase() {
 
     private object FakeTestTable : IntIdTable("fakeTable")
 
-    protected fun withTable(body: Transaction.(TestDB) -> Unit) {
-        withTables(FakeTestTable) {
+    protected fun withTable(excludeDB: TestDB? = null, body: Transaction.(TestDB) -> Unit) {
+        withTables(excludeSettings = listOfNotNull(excludeDB), FakeTestTable) {
             FakeTestTable.insert { }
             body(it)
         }
@@ -22,9 +22,10 @@ abstract class FunctionsTestBase : DatabaseTestsBase() {
 
     protected fun <T> Transaction.assertExpressionEqual(expected: T, expression: Function<T>) {
         val result = FakeTestTable.slice(expression).selectAll().first()[expression]
-        if (expected is BigDecimal && result is BigDecimal)
-            assertEquals(expected, result.setScale(expected.scale(), RoundingMode.CEILING))
-        else
+        if (expected is BigDecimal && result is BigDecimal) {
+            assertEquals(expected, result.setScale(expected.scale(), RoundingMode.HALF_UP))
+        } else {
             assertEquals(expected, result)
+        }
     }
 }
