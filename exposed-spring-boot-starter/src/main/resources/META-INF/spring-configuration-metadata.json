@@ -7,6 +7,12 @@
       "defaultValue": false
     },
     {
+      "name": "spring.exposed.show-sql",
+      "type": "java.lang.Boolean",
+      "description": "Log SQL when execute query.",
+      "defaultValue": false
+    },
+    {
       "name": "spring.exposed.excluded-packages",
       "type": "java.util.List",
       "description": "Packages to exclude from schema generation."
