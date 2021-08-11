@@ -709,7 +709,9 @@ abstract class VendorDialect(
         fillConstraintCacheForTables(tablesToLoad)
         tables.forEach { table ->
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
-                constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
+                it.from.forEach { fromColumn ->
+                    constraints.getOrPut(table to fromColumn) { arrayListOf() }.add(it)
+                }
             }
         }
         return constraints

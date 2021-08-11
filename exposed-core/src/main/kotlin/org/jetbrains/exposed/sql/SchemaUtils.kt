@@ -210,7 +210,7 @@ object SchemaUtils {
                             val existingConstraint = existingColumnConstraint[table to column]?.firstOrNull()
                             if (existingConstraint == null) {
                                 statements.addAll(createFKey(column))
-                            } else if (existingConstraint.target.table != foreignKey.target.table ||
+                            } else if (existingConstraint.targetTable != foreignKey.targetTable ||
                                 foreignKey.deleteRule != existingConstraint.deleteRule ||
                                 foreignKey.updateRule != existingConstraint.updateRule
                             ) {
@@ -352,7 +352,7 @@ object SchemaUtils {
                 val constraint = fk.first()
                 val fkPartToLog = fk.joinToString(", ") { it.fkName }
                 exposedLogger.warn(
-                    "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t$fkPartToLog"
+                    "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTableName}':\t$fkPartToLog"
                 )
             }
 

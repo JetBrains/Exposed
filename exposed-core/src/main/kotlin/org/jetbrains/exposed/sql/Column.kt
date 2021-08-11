@@ -25,7 +25,7 @@ class Column<T>(
 
     /** Returns the column that this column references. */
     val referee: Column<*>?
-        get() = foreignKey?.target
+        get() = foreignKey?.targetOf(this)
 
     /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")
