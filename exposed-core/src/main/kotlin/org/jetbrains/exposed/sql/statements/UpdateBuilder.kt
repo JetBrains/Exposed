@@ -15,6 +15,8 @@ import org.jetbrains.exposed.sql.Table
 
 abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) : Statement<T>(type, targets) {
     protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
+    
+    open operator fun contains(column: Column<*>): Boolean = values.contains(column)
 
     open operator fun <S> set(column: Column<S>, value: S) {
         when {
