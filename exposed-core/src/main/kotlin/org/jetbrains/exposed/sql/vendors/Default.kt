@@ -164,7 +164,7 @@ abstract class FunctionProvider {
         } else {
             append("CONCAT_WS('", separator, "',")
         }
-        expr.toList().appendTo { +it }
+        expr.appendTo { +it }
         append(")")
     }
 
@@ -181,7 +181,7 @@ abstract class FunctionProvider {
         }
         append(expr.expr)
         if (expr.orderBy.isNotEmpty()) {
-            expr.orderBy.toList().appendTo(prefix = " ORDER BY ") {
+            expr.orderBy.appendTo(prefix = " ORDER BY ") {
                 append(it.first, " ", it.second.name)
             }
         }

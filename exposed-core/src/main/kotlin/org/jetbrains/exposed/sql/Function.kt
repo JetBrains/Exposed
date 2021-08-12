@@ -20,7 +20,7 @@ open class CustomFunction<T>(
 ) : Function<T>(_columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(functionName, '(')
-        expr.toList().appendTo { +it }
+        expr.appendTo { +it }
         append(')')
     }
 }

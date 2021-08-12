@@ -85,7 +85,7 @@ class Union(
 
     private fun prepareStatementSQL(builder: QueryBuilder) {
         builder {
-            statements.toList().appendTo(separator = " $unionKeyword ") {
+            statements.appendTo(separator = " $unionKeyword ") {
                 when (it) {
                     is Query -> {
                         val isSubQuery = it.orderByExpressions.isNotEmpty() || it.limit != null

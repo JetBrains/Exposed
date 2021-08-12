@@ -65,9 +65,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         vararg expr: Expression<*>
     ): Unit = queryBuilder {
         if (separator == "") {
-            expr.toList().appendTo(separator = " || ") { +it }
+            expr.appendTo(separator = " || ") { +it }
         } else {
-            expr.toList().appendTo(separator = " || '$separator' || ") { +it }
+            expr.appendTo(separator = " || '$separator' || ") { +it }
         }
     }
 
