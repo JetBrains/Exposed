@@ -18,6 +18,11 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     
     open operator fun contains(column: Column<*>): Boolean = values.contains(column)
 
+    protected var hasBathedValues: Boolean = false
+    private fun checkThatExpressionWasNotSetInPreviousBatch(column: Column<*>) {
+        require(!(values.containsKey(column) && hasBathedValues)) { "$column is already initialized in a batch" }
+    }
+
     open operator fun <S> set(column: Column<S>, value: S) {
         when {
             !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
@@ -28,16 +33,15 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         }
     }
 
-    @JvmName("setWithEntityIdExpression")
-    operator fun <S, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
+    @JvmName("setWithEntityIdValue")
+    operator fun <S : Comparable<S>, ID : EntityID<S>, E : S?> set(column: Column<ID>, value: E) {
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
-    @JvmName("setWithEntityIdValue")
-    operator fun <S : Comparable<S>, ID : EntityID<S>, E : S?> set(column: Column<ID>, value: E) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
+    @JvmName("setWithEntityIdExpression")
+    operator fun <S, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
+        checkThatExpressionWasNotSetInPreviousBatch(column)
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
@@ -49,13 +53,13 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     open fun <T, S : T?> update(column: Column<T>, value: Expression<S>) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
+        checkThatExpressionWasNotSetInPreviousBatch(column)
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
     open fun <T, S : T?> update(column: Column<T>, value: SqlExpressionBuilder.() -> Expression<S>) {
-        require(!values.containsKey(column)) { "$column is already initialized" }
+        checkThatExpressionWasNotSetInPreviousBatch(column)
         val expression = SqlExpressionBuilder.value()
         column.columnType.validateValueBeforeUpdate(expression)
         values[column] = expression

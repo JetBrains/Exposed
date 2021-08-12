@@ -36,6 +36,7 @@ open class BatchInsertStatement(
             data[data.size - 1] = LinkedHashMap(values)
             allColumnsInDataSet.addAll(values.keys)
             values.clear()
+            hasBathedValues = true
         }
         data.add(values)
         arguments = null
@@ -48,6 +49,7 @@ open class BatchInsertStatement(
         values.clear()
         values.putAll(data.last())
         arguments = null
+        hasBathedValues = data.size > 0
     }
 
     internal open fun validateLastBatch() {
