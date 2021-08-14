@@ -434,7 +434,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCreateTableWithReferenceMutipleTimes() {
+    @Test fun testCreateTableWithReferenceMultipleTimes() {
         withTables(PlayerTable, SessionsTable) {
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
