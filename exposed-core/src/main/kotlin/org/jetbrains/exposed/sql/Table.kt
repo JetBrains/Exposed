@@ -346,6 +346,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns all indices declared on the table. */
     val indices: List<Index> get() = _indices
 
+    private val _foreignKeys = mutableListOf<ForeignKeyConstraint>()
+
+    /** Returns all foreignKeys declared on the table. */
+    val foreignKeys: List<ForeignKeyConstraint> get() = columns.mapNotNull { it.foreignKey } + _foreignKeys
+
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     /**
@@ -939,6 +944,45 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun uniqueIndex(customIndexName: String? = null, vararg columns: Column<*>): Unit = index(customIndexName, true, *columns)
 
+    /**
+     * Creates a composite foreign key.
+     *
+     * @param from Columns that compose the foreign key. Their order should match the order of columns in referenced primary key.
+     * @param target Primary key of the referenced table.
+     * @param onUpdate Reference option when performing update operations.
+     * @param onUpdate Reference option when performing delete operations.
+     * @param name Custom foreign key name
+     */
+    fun foreignKey(
+        vararg from: Column<*>,
+        target: PrimaryKey,
+        onUpdate: ReferenceOption? = null,
+        onDelete: ReferenceOption? = null,
+        name: String? = null
+    ) {
+        _foreignKeys.add(ForeignKeyConstraint(from.zip(target.columns).toMap(), onUpdate, onDelete, name))
+    }
+
+    /**
+     * Creates a composite foreign key.
+     *
+     * @param references Pairs of columns that compose the foreign key.
+     * First value of pair is a column of referencing table, second value - a column of a referenced one.
+     * All referencing columns must belong to this table.
+     * All referenced columns must belong to the same table.
+     * @param onUpdate Reference option when performing update operations.
+     * @param onUpdate Reference option when performing delete operations.
+     * @param name Custom foreign key name
+     */
+    fun foreignKey(
+        vararg references: Pair<Column<*>, Column<*>>,
+        onUpdate: ReferenceOption? = null,
+        onDelete: ReferenceOption? = null,
+        name: String? = null
+    ) {
+        _foreignKeys.add(ForeignKeyConstraint(references.toMap(), onUpdate, onDelete, name))
+    }
+
     // Check constraints
 
     /**
@@ -1019,7 +1063,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
-        val foreignKeyConstraints = columns.mapNotNull { it.foreignKey }
+        val foreignKeyConstraints = foreignKeys
 
         val createTable = buildString {
             append("CREATE TABLE ")
