@@ -143,6 +143,8 @@ data class ForeignKeyConstraint(
     operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
         return copy(references = references + other.references)
     }
+
+    override fun toString() = "ForeignKeyConstraint(fkName='$fkName')"
 }
 
 /**

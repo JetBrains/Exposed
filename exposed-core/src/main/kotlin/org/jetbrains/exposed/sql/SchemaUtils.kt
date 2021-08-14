@@ -117,9 +117,13 @@ object SchemaUtils {
         }
     }
 
-    fun createFKey(reference: Column<*>): List<String> {
-        val foreignKey = reference.foreignKey
-        require(foreignKey != null && (foreignKey.deleteRule != null || foreignKey.updateRule != null)) { "$reference does not reference anything" }
+    fun createFKey(foreignKey: ForeignKeyConstraint): List<String> {
+        val allFromColumnsBelongsToTheSameTable = foreignKey.from.all { it.table == foreignKey.fromTable }
+        require(allFromColumnsBelongsToTheSameTable) { "not all referencing columns of $foreignKey belong to the same table " }
+        val allTargetColumnsBelongToTheSameTable = foreignKey.target.all { it.table == foreignKey.targetTable }
+        require(allTargetColumnsBelongToTheSameTable) { "not all referenced columns of $foreignKey belong to the same table " }
+        require(foreignKey.from.size == foreignKey.target.size) { "$foreignKey referencing columns are not in accordance with referenced" }
+        require(foreignKey.deleteRule != null || foreignKey.updateRule != null) { "$foreignKey has no reference constraint actions" }
         return foreignKey.createStatement()
     }
 
@@ -204,19 +208,16 @@ object SchemaUtils {
                 }
 
                 for (table in tables) {
-                    for (column in table.columns) {
-                        val foreignKey = column.foreignKey
-                        if (foreignKey != null) {
-                            val existingConstraint = existingColumnConstraint[table to column]?.firstOrNull()
-                            if (existingConstraint == null) {
-                                statements.addAll(createFKey(column))
-                            } else if (existingConstraint.targetTable != foreignKey.targetTable ||
-                                foreignKey.deleteRule != existingConstraint.deleteRule ||
-                                foreignKey.updateRule != existingConstraint.updateRule
-                            ) {
-                                statements.addAll(existingConstraint.dropStatement())
-                                statements.addAll(createFKey(column))
-                            }
+                    for (foreignKey in table.foreignKeys) {
+                        val existingConstraint = existingColumnConstraint[table to foreignKey.from]?.firstOrNull()
+                        if (existingConstraint == null) {
+                            statements.addAll(createFKey(foreignKey))
+                        } else if (existingConstraint.targetTable != foreignKey.targetTable ||
+                            foreignKey.deleteRule != existingConstraint.deleteRule ||
+                            foreignKey.updateRule != existingConstraint.updateRule
+                        ) {
+                            statements.addAll(existingConstraint.dropStatement())
+                            statements.addAll(createFKey(foreignKey))
                         }
                     }
                 }
@@ -397,7 +398,7 @@ object SchemaUtils {
         val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
         val existingIndices = currentDialect.existingIndices(*tables)
         fun List<Index>.filterFKeys() = if (isMysql) {
-            filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
+            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
         } else {
             this
         }
