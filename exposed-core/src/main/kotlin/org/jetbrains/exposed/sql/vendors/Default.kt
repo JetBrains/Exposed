@@ -727,7 +727,7 @@ abstract class VendorDialect(
     protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction): String =
         tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
-    protected val columnConstraintsCache: MutableMap<String, List<ForeignKeyConstraint>> = ConcurrentHashMap()
+    protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
 
     protected open fun fillConstraintCacheForTables(tables: List<Table>): Unit =
         columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })
