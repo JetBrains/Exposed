@@ -1,13 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 
 class ConditionsTests : DatabaseTestsBase() {
@@ -72,6 +71,52 @@ class ConditionsTests : DatabaseTestsBase() {
                 listOf(0, 1),
                 table.select { table.c2.greaterEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
             )
+        }
+    }
+
+    @Test
+    fun nullOpUpdateAndSelectTest() {
+        withCitiesAndUsers { _, users, _ ->
+            val allUsers = users.selectAll().count()
+            users.update {
+                it[users.cityId] = Op.nullOp()
+            }
+            val nullUsers1 = users.select { users.cityId.isNull() }.count()
+            assertEquals(allUsers, nullUsers1)
+
+            val nullUsers2 = users.select { users.cityId eq Op.nullOp() }.count()
+            assertEquals(allUsers, nullUsers2)
+        }
+    }
+
+    @Test
+    fun nullOpUpdateFailsTest() {
+        withCitiesAndUsers { _, users, _ ->
+            expectException<ExposedSQLException> {
+                users.update {
+                    it[users.name] = Op.nullOp()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun nullOpInCaseTest() {
+        withCitiesAndUsers { cities, _, _ ->
+            val caseCondition = Case().
+                When(Op.build { cities.id eq 1 }, Op.nullOp<String>()).
+                Else(cities.name)
+            var nullBranchWasExecuted = false
+            cities.slice(cities.id, cities.name, caseCondition).selectAll().forEach {
+                val result = it[caseCondition]
+                if (it[cities.id] == 1) {
+                    nullBranchWasExecuted = true
+                    assertEquals(null, result)
+                } else {
+                    assertEquals(it[cities.name], result)
+                }
+            }
+            assertEquals(true, nullBranchWasExecuted)
         }
     }
 }

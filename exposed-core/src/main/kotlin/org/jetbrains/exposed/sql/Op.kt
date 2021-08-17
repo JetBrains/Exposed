@@ -11,6 +11,8 @@ abstract class Op<T> : Expression<T>() {
     companion object {
         /** Builds a new operator using provided [op]. */
         inline fun <T> build(op: SqlExpressionBuilder.() -> Op<T>): Op<T> = SqlExpressionBuilder.op()
+
+        fun <T> nullOp() : Op<T> = NULL as Op<T>
     }
 
     internal interface OpBoolean
@@ -32,6 +34,12 @@ abstract class Op<T> : Expression<T>() {
                 is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(false))
             }
+        }
+    }
+
+    internal object NULL : Op<Any>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+            append("NULL")
         }
     }
 }

@@ -63,10 +63,11 @@ interface IColumnType {
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        if (value == null)
+        if (value == null || value == Op.NULL) {
             stmt.setNull(index, this)
-        else
+        } else {
             stmt[index] = value
+        }
     }
 
     /**
@@ -718,7 +719,7 @@ class BlobColumnType : ColumnType() {
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
             is InputStream -> stmt.setInputStream(index, toSetValue)
-            null -> stmt.setNull(index, this)
+            null, Op.NULL -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
         }
     }

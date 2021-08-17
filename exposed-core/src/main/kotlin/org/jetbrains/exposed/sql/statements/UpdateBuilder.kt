@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.CompositeColumn
 import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
 
@@ -15,7 +16,7 @@ import org.jetbrains.exposed.sql.Table
 
 abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) : Statement<T>(type, targets) {
     protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
-    
+
     open operator fun contains(column: Column<*>): Boolean = values.contains(column)
 
     protected var hasBathedValues: Boolean = false
@@ -24,23 +25,28 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     open operator fun <S> set(column: Column<S>, value: S) {
-        when {
-            !column.columnType.nullable && value == null -> error("Trying to set null to not nullable column $column")
-            else -> {
-                column.columnType.validateValueBeforeUpdate(value)
-                values[column] = value
-            }
+        require(column.columnType.nullable || (value != null && value != Op.NULL)) {
+            "Trying to set null to not nullable column $column"
         }
+
+        column.columnType.validateValueBeforeUpdate(value)
+        values[column] = value
     }
 
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>, ID : EntityID<S>, E : S?> set(column: Column<ID>, value: E) {
+        require(column.columnType.nullable || (value != null && !value.equals(Op.NULL))) {
+            "Trying to set null to not nullable column $column"
+        }
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
     @JvmName("setWithEntityIdExpression")
     operator fun <S, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
+        require(column.columnType.nullable || value != Op.NULL) {
+            "Trying to set null to not nullable column $column"
+        }
         checkThatExpressionWasNotSetInPreviousBatch(column)
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
@@ -59,9 +65,6 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     open fun <T, S : T?> update(column: Column<T>, value: SqlExpressionBuilder.() -> Expression<S>) {
-        checkThatExpressionWasNotSetInPreviousBatch(column)
-        val expression = SqlExpressionBuilder.value()
-        column.columnType.validateValueBeforeUpdate(expression)
-        values[column] = expression
+        update(column, SqlExpressionBuilder.value())
     }
 }
