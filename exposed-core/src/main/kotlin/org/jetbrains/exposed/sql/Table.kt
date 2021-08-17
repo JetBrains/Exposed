@@ -823,7 +823,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName).nullable()
+    ): Column<T?> = reference(name, refColumn, onDelete, onUpdate, fkName).nullable()
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
@@ -846,10 +846,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<E?> {
-        val entityIdColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIdColumn.references(refColumn, onDelete, onUpdate, fkName).nullable()
-    }
+    ): Column<E?> = reference(name, refColumn, onDelete, onUpdate, fkName).nullable()
 
     /**
      * Creates a column with the specified [name] with an optional reference to the `id` column in [foreign] table with [onDelete], [onUpdate], and [fkName] options.
@@ -870,7 +867,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName).nullable()
+    ): Column<EntityID<T>?> = reference(name, foreign, onDelete, onUpdate, fkName).nullable()
 
     // Miscellaneous
 
