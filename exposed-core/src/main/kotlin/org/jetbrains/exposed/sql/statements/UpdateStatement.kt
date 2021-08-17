@@ -15,6 +15,8 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     }
 
     override fun prepareSQL(transaction: Transaction): String {
+        require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }
+
         return when (targetsSet) {
             is Table -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)
             is Join -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)

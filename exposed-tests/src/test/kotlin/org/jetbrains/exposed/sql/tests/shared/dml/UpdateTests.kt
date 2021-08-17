@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -98,6 +99,18 @@ class UpdateTests : DatabaseTestsBase() {
             stringTable.update({ stringTable.name eq "TestName" }) {
                 it[name] = veryLongString
             }
+        }
+    }
+
+    @Test
+    fun `test update fails with empty body`() {
+        withCitiesAndUsers { cities, _, _ ->
+            expectException<IllegalArgumentException> {
+                cities.update(where = { cities.id.isNull() }) {
+                    // empty
+                }
+            }
+
         }
     }
 }
