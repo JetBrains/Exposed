@@ -129,7 +129,6 @@ class Column<T>(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Column<*>) return false
-        if (!super.equals(other)) return false
 
         if (table != other.table) return false
         if (name != other.name) return false
