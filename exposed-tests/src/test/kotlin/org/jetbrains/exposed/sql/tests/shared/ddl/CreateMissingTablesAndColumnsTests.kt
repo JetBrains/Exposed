@@ -29,7 +29,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = *arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
             SchemaUtils.drop(TestTable)
@@ -96,6 +96,40 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCreateMissingTablesAndColumnsChangeAutoincrement() {
+        val t1 = object : Table("foo") {
+            val id = integer("idcol").autoIncrement()
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+            val foo = varchar("foo", 50)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            t1.insert { it[foo] = "ABC" }
+
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            assertFailAndRollback("Can't insert without primaryKey value") {
+                t2.insert { it[foo] = "ABC" }
+            }
+
+            t2.insert {
+                it[id] = 3
+                it[foo] = "ABC"
+            }
+
+            SchemaUtils.drop(t1)
+        }
+    }
+
+    @Test
     fun testCreateMissingTablesAndColumnsChangeCascadeType() {
         val fooTable = object : IntIdTable("foo") {
             val foo = varchar("foo", 50)
@@ -121,7 +155,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-
         withDb(TestDB.H2) {
             SchemaUtils.createMissingTablesAndColumns(initialTable)
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
@@ -143,7 +176,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = *arrayOf(initialTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
@@ -177,7 +210,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object MultipleIndexesTable: Table("H2_MULTIPLE_INDEXES") {
+    object MultipleIndexesTable : Table("H2_MULTIPLE_INDEXES") {
         val value1 = varchar("value1", 255)
         val value2 = varchar("value2", 255)
 
@@ -194,18 +227,16 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object PlayerTable: IntIdTable() {
+    object PlayerTable : IntIdTable() {
         val username = varchar("username", 10).uniqueIndex().nullable()
     }
 
-    object SessionsTable: IntIdTable() {
+    object SessionsTable : IntIdTable() {
         val playerId = integer("player_id").references(PlayerTable.id)
     }
 
-
     @Test fun createTableWithReservedIdentifierInColumnName() {
         withDb(TestDB.MYSQL) {
-            addLogger(StdOutSqlLogger)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 
@@ -214,11 +245,25 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    object T1: Table("ARRAY") {
+    object ExplicitTable : IntIdTable() {
+        val playerId = integer("player_id").references(PlayerTable.id, fkName = "Explicit_FK_NAME")
+    }
+    object NonExplicitTable : IntIdTable() {
+        val playerId = integer("player_id").references(PlayerTable.id)
+    }
+
+    @Test fun explicitFkNameIsExplicit() {
+        withTables(ExplicitTable, NonExplicitTable) {
+            assertEquals("Explicit_FK_NAME", ExplicitTable.playerId.foreignKey!!.customFkName)
+            assertEquals(null, NonExplicitTable.playerId.foreignKey!!.customFkName)
+        }
+    }
+
+    object T1 : Table("ARRAY") {
         val name = integer("name").uniqueIndex()
         val tmp = varchar("temp", 255)
     }
-    object T2: Table("CHAIN") {
+    object T2 : Table("CHAIN") {
         val ref = integer("ref").references(T1.name)
     }
 

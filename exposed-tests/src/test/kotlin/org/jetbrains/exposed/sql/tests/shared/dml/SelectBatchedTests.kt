@@ -1,12 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.selectAllBatched
-import org.jetbrains.exposed.sql.selectBatched
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.junit.Test
 import java.util.*
+import kotlin.test.*
 
 class SelectBatchedTests : DatabaseTestsBase() {
     @Test
@@ -20,10 +19,13 @@ class SelectBatchedTests : DatabaseTestsBase() {
                 .toList().map { it.toCityNameList() }
 
             val expectedNames = names.take(50)
-            assertEqualLists(listOf(
-                expectedNames.take(25),
-                expectedNames.takeLast(25)
-            ), batches)
+            assertEqualLists(
+                listOf(
+                    expectedNames.take(25),
+                    expectedNames.takeLast(25)
+                ),
+                batches
+            )
         }
     }
 

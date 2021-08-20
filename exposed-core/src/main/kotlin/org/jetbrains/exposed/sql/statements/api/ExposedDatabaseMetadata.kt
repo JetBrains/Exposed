@@ -16,9 +16,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     abstract val defaultIsolationLevel: Int
 
-    abstract val supportsAlterTableWithAddColumn : Boolean
-    abstract val supportsMultipleResultSets : Boolean
-    abstract val supportsSelectForUpdate : Boolean
+    abstract val supportsAlterTableWithAddColumn: Boolean
+    abstract val supportsMultipleResultSets: Boolean
+    abstract val supportsSelectForUpdate: Boolean
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",
@@ -29,7 +29,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val tableNames: Map<String, List<String>>
     abstract val schemaNames: List<String>
 
-    abstract fun columns(vararg tables: Table) : Map<Table, List<ColumnMetadata>>
+    abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>
 
     abstract fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
 

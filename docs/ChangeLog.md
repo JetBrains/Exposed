@@ -1,3 +1,124 @@
+# 0.33.1
+Infrastructure:
+* Kotlin 1.5.21
+* Kotlin Coroutines 1.5.1
+* kotlinter replaced with Detekt. Many thanks to [BorzdeG](https://github.com/BorzdeG) for PR 
+
+Broken Changes:
+* `EntityCache` internal representation was reworked to lower overhead on cache operations and to create more O(1) 
+when working with references. `EntityCache.inserts` and `EntityCache.referrers` fields are not publicly available anymore. 
+
+Features:
+* Different math and trigonometrical functions were added. Check `org.jetbrains.exposed.sql.functions.math` package
+* Bitwise AND, OR and, XOR were added by [Max Rumpf](https://github.com/Maxr1998)
+* `PrepareStatement` can be cancelled, thanks [Alex Shubert](https://github.com/lure) for supporting it
+* `ForeignKeyConstraint.customFkName` was added by [spand](https://github.com/spand)
+* All types of joins now accepts `additionalConstraint` lambda (PR from [spand](https://github.com/spand))
+* `InsertStatement` now stores number of inserted rows in `insertedCount` field ([#851]((https://github.com/JetBrains/Exposed/issues/851) 
+* `batchInsert` function now can be called on `Sequences`. Feature added by [Philip Wedemann](https://github.com/hfhbd) 
+
+Bug Fixes:
+* [MySQL/MariaDB] Restore old 0000-00-00 00:00:00 as null behavior for Mysql and MariaDb (PR from [spand](https://github.com/spand)).
+* `datetime` column looses nanos part ([#1028]((https://github.com/JetBrains/Exposed/issues/1028))
+* Setting value for the same column multiple times in UpdateBuilder fails ([#1177]((https://github.com/JetBrains/Exposed/issues/1177))
+* [SQLite] `primaryKey` override ignored ([#1258]((https://github.com/JetBrains/Exposed/issues/1258))
+* Transaction can be unexpectedly initialized when working with coroutines
+* [PostgreSQL] `REAL` type will be used instead of `FLOAT8` for `float` column. Thanks [Philip Wedemann](https://github.com/hfhbd) for fix
+* [Oracle] `TIME` is not supported on Oracle, mimic it with datetime type
+
+# 0.32.1
+Infrastructure:
+* Kotlin 1.5.10
+* Kotlin Coroutines 1.5.0
+* slf4j 1.7.30
+* Spring 5.3.7
+* Spring Boot 2.5.0
+* [Bill Of Materials](https://github.com/JetBrains/Exposed/tree/master/exposed-bom) (BOM) available, many thanks to [DRSchlaubi](https://github.com/DRSchlaubi)
+
+Features:
+* Auto-increment columns state change detected (PR from [spand](https://github.com/spand))
+* Explicit statementType for `Transaction.exec` functions (also, `EXEC` `StatementType` was introduced). ([390](https://github.com/JetBrains/Exposed/issues/390), [1249](https://github.com/JetBrains/Exposed/issues/1249))
+
+Bug Fixes:
+* Entities should be removed from the cache on update/delete made with DSL queries
+* Regression: Clientside length validation in ColumnType breaks otherwise harmless where clause ([1204](https://github.com/JetBrains/Exposed/issues/1204), [1222](https://github.com/JetBrains/Exposed/issues/1222))
+* Using Entity.flush does not alert EntityHook subscribers ([1225](https://github.com/JetBrains/Exposed/issues/1225))
+* TransactionScope throws NullPointerException instead of IllegalStateException when used outside the transaction ([1250](https://github.com/JetBrains/Exposed/issues/1250))
+* Spring transaction connection leaks when used with non-exposed transactions ([1167](https://github.com/JetBrains/Exposed/issues/1167))
+
+# 0.31.1
+Infrastructure:
+* Linting and formatting with [kotliner](https://github.com/jeremymailen/kotlinter-gradle) gradle plugin added by [jnfeinstein](https://github.com/jnfeinstein)
+
+Features:
+* TIME data type support in `exposed-java-time` module ([224](https://github.com/JetBrains/Exposed/issues/224)). Improvement provided by [vorotynsky](https://github.com/vorotynsky) and [Jhyub](https://github.com/Jhyub)
+* inList with Pairs and Triples support ([643](https://github.com/JetBrains/Exposed/issues/643))
+
+Bug Fixes:
+* Proper support for Sequences as default value or autoincrement ([492](https://github.com/JetBrains/Exposed/issues/492), [1164](https://github.com/JetBrains/Exposed/issues/1164), [1209](https://github.com/JetBrains/Exposed/issues/1209))
+* [SQL Server] Proper support for 'DEFAULT' keyword ([1207](https://github.com/JetBrains/Exposed/issues/1207)). PR by [ahayanm001](https://github.com/ahayanm001)
+
+Performance:
+* Lower footprint on creating ResultRow from ResultSet. Fix was inspired by [maio](https://github.com/maio)
+
+# 0.30.2
+Bug Fixes:                                                                         
+* Null Durations Convert to 0 ([1196](https://github.com/JetBrains/Exposed/issues/1196))
+* Bugs in ISqlExpressionBuilder.coalesce() affecting return value type ([1199](https://github.com/JetBrains/Exposed/issues/1199))
+* SELECT is called twice if the `with` method called on a Query ([1202](https://github.com/JetBrains/Exposed/issues/1202))
+* Early versions of MySQL Connector don't work with Exposed ([1203](https://github.com/JetBrains/Exposed/issues/1203)). PR by [MeowRay](https://github.com/MeowRay)
+* `Query.prepareSQL(QueryBuilder)` is made public to allow preparing raw SQLs ([1206](https://github.com/JetBrains/Exposed/issues/1206) 
+
+# 0.30.1
+Infrastructure:
+* Artifact publishing moved from jcenter/Bintray to Maven Central
+* Kotlin 1.4.32
+* Kotlin Coroutines 1.4.3
+
+Feature:
+* `UNION` and `UNION ALL` set operations support with related `union`, `unionAll` functions ([402](https://github.com/JetBrains/Exposed/issues/402))  
+* `like` and `notLike` methods work with string expression, PR from [hfazai](https://github.com/hfazai)
+* [Eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) now works with any iterable
+
+Performance:
+* Different minor memory improvements in `exposed-dao` module by [jnfeinstein](https://github.com/jnfeinstein)
+* Less entity cache invalidations when works with a single entity
+
+Bug fixes:
+* MySQL text type is now treated as `longtext`, SQLServer is `VARCHAR(MAX)`, thanks to [Dmitry Kolmogortsev](https://github.com/koldn)
+* Fix to support recent PostgreSQL NG driver by [hfazai](https://github.com/hfazai)
+* String functions failed to work with strings longer than 255 characters
+* `Query.count()` and `Query.empty()` functions can lead to ResultSet memory leaks
+* Alias was lost in update with join queries
+* [SQLServer] Problem with blob columns when assigning null value
+* Deleting an entity after it is created does not delete it from cache ([1175](https://github.com/JetBrains/Exposed/issues/1175))
+* EnumerationNameColumnType fails with vague exception when unknown value in DB ([1176](https://github.com/JetBrains/Exposed/issues/1176))
+
+# 0.29.1
+Infrastructure:
+* Kotlin 1.4.21
+* Kotlin Coroutines 1.4.1
+* Spring Framework 5.3.3
+* Spring Boot 2.4.2
+
+Feature:
+* Now it's possible to define default Database (it will not be overridden by next `Database.connect()`) ([1125](https://github.com/JetBrains/Exposed/issues/1125)). Fix provided by [jnfeinstein](https://github.com/jnfeinstein). Check [wiki](https://github.com/JetBrains/Exposed/wiki/Transactions#setting-default-database) for details.
+* New `eqSubQuery` and `notEqSubQuery` functions added by [xJoeWoo](https://github.com/xJoeWoo) to compare value with sub-query result.
+* New functions to build expressions in a chain-like manner (`and`, `or`, `andNot`, `orNot`). Idea and realisation by [SchweinchenFuntik](https://github.com/SchweinchenFuntik).
+
+Bug fixes:
+* DatasourceHealthIndicator consumes all the DB connections from the pool when used with Exposed Spring Boot starter ([1077](https://github.com/JetBrains/Exposed/issues/1077)).
+* Ignore internal SQLite indices on check. PR by [hannesbraun](https://github.com/hannesbraun).
+* Narrow scope of referring cache evictions on inserts and deletes. [jnfeinstein](https://github.com/jnfeinstein) thank you for PR.
+* At least one column should be provided in `Table.slice()`. Fixed by [hfazai](https://github.com/hfazai).
+* Multiple attempts to create indices that already exist ([1031](https://github.com/JetBrains/Exposed/issues/1031)) fixed by [gerritc](https://github.com/gerritc).
+* "id not in record set" exception when read value by a column that has related id column ([1032](https://github.com/JetBrains/Exposed/issues/1032))
+* Read datetime fails with "No transaction in context" when called outside the transaction with already fetched data ([1130](https://github.com/JetBrains/Exposed/issues/1130)).
+* Incorrect state for TransactionManager.manager after calling closeAndUnregister ([1100](https://github.com/JetBrains/Exposed/issues/1100)).
+* Connection not available after exceptions with suspendable transaction ([1138](https://github.com/JetBrains/Exposed/issues/1138))
+* Entities weren't flushed when executing query with only expressions in select part. Reported and fixed by [jnfeinstein](https://github.com/jnfeinstein).
+* Fix for exposed-jodatime module to work with MySQL ConnectorJ 8.0.23
+
 # 0.28.1
 Broken Changes:
 * `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 

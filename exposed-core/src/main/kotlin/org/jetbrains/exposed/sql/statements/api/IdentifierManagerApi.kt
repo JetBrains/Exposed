@@ -6,23 +6,23 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
 
 abstract class IdentifierManagerApi {
-    abstract val quoteString : String
-    protected abstract val isUpperCaseIdentifiers : Boolean
-    protected abstract val isUpperCaseQuotedIdentifiers : Boolean
-    protected abstract val isLowerCaseIdentifiers : Boolean
-    protected abstract val isLowerCaseQuotedIdentifiers : Boolean
-    protected abstract val supportsMixedIdentifiers : Boolean
-    protected abstract val supportsMixedQuotedIdentifiers : Boolean
-    protected abstract fun dbKeywords() : List<String>
+    abstract val quoteString: String
+    protected abstract val isUpperCaseIdentifiers: Boolean
+    protected abstract val isUpperCaseQuotedIdentifiers: Boolean
+    protected abstract val isLowerCaseIdentifiers: Boolean
+    protected abstract val isLowerCaseQuotedIdentifiers: Boolean
+    protected abstract val supportsMixedIdentifiers: Boolean
+    protected abstract val supportsMixedQuotedIdentifiers: Boolean
+    protected abstract fun dbKeywords(): List<String>
     val keywords by lazy { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords() }
-    protected abstract val extraNameCharacters : String
-    protected abstract val oracleVersion : OracleVersion
-    protected abstract val maxColumnNameLength : Int
+    protected abstract val extraNameCharacters: String
+    protected abstract val oracleVersion: OracleVersion
+    protected abstract val maxColumnNameLength: Int
 
     protected enum class OracleVersion { Oracle11g, Oracle12plus, NonOracle }
 
     protected val identifierLengthLimit by lazy {
-        when(oracleVersion) {
+        when (oracleVersion) {
             OracleVersion.Oracle11g -> 30
             OracleVersion.Oracle12plus -> 128
             else -> maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
@@ -36,15 +36,15 @@ abstract class IdentifierManagerApi {
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
-    fun needQuotes (identity: String) : Boolean {
+    fun needQuotes(identity: String): Boolean {
         return checkedIdentities.getOrPut(identity.toLowerCase()) {
             !identity.isAlreadyQuoted() && (keywords.any { identity.equals(it, true) } || !identity.isIdentifier())
         }
     }
 
-    private fun String.isAlreadyQuoted()  = startsWith(quoteString) && endsWith(quoteString)
+    private fun String.isAlreadyQuoted() = startsWith(quoteString) && endsWith(quoteString)
 
-    fun shouldQuoteIdentifier(identity: String) : Boolean {
+    fun shouldQuoteIdentifier(identity: String): Boolean {
         val alreadyQuoted = identity.isAlreadyQuoted()
         val alreadyLower = identity == identity.toLowerCase()
         val alreadyUpper = identity == identity.toUpperCase()
@@ -59,7 +59,7 @@ abstract class IdentifierManagerApi {
         }
     }
 
-    fun inProperCase(identity: String) : String {
+    fun inProperCase(identity: String): String {
         val alreadyQuoted = identity.isAlreadyQuoted()
         return when {
             alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
@@ -73,15 +73,15 @@ abstract class IdentifierManagerApi {
         }
     }
 
-    fun quoteIfNecessary (identity: String) : String {
+    fun quoteIfNecessary(identity: String): String {
         return if (identity.contains('.'))
-            identity.split('.').joinToString(".") {quoteTokenIfNecessary(it)}
+            identity.split('.').joinToString(".") { quoteTokenIfNecessary(it) }
         else {
             quoteTokenIfNecessary(identity)
         }
     }
 
-    fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String) : String {
+    fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String): String {
         val inProperCase = inProperCase(identity)
         return if (shouldQuoteIdentifier(identity) && inProperCase != identity)
             quote(identity)
@@ -91,7 +91,7 @@ abstract class IdentifierManagerApi {
 
     fun cutIfNecessaryAndQuote(identity: String) = quoteIfNecessary(identity.take(identifierLengthLimit))
 
-    fun quoteTokenIfNecessary(token: String) : String = if (needQuotes(token)) quote(token) else token
+    fun quoteTokenIfNecessary(token: String): String = if (needQuotes(token)) quote(token) else token
 
     private fun quote(identity: String) = "$quoteString$identity$quoteString".trim()
 }

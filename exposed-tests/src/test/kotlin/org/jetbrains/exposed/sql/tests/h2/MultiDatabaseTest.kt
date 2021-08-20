@@ -16,12 +16,13 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class MultiDatabaseTest {
 
-    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")}
-    private var currentDB : Database? = null
+    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
+    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
+    private var currentDB: Database? = null
 
     @Before
     fun before() {
@@ -86,7 +87,6 @@ class MultiDatabaseTest {
     @Test
     fun testEmbeddedInsertsInDifferentDatabase() {
         transaction(db1) {
-            addLogger(StdOutSqlLogger)
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
@@ -198,5 +198,31 @@ class MultiDatabaseTest {
             assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
             SchemaUtils.drop(DMLTestsData.Cities)
         }
+    }
+
+    @Test
+    fun `when default database is not explicitly set - should return the latest connection`() {
+        db1
+        db2
+        assertEquals(TransactionManager.defaultDatabase, db2)
+    }
+
+    @Test
+    fun `when default database is explicitly set - should return the set connection`() {
+        db1
+        db2
+        TransactionManager.defaultDatabase = db1
+        assertEquals(TransactionManager.defaultDatabase, db1)
+        TransactionManager.defaultDatabase = null
+    }
+
+    @Test
+    fun `when set default database is removed - should return the latest connection`() {
+        db1
+        db2
+        TransactionManager.defaultDatabase = db1
+        TransactionManager.closeAndUnregister(db1)
+        assertEquals(TransactionManager.defaultDatabase, db2)
+        TransactionManager.defaultDatabase = null
     }
 }

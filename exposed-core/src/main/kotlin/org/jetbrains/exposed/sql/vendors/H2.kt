@@ -4,7 +4,7 @@ import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 private val Transaction.isMySQLMode: Boolean
     get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
@@ -36,7 +36,7 @@ internal object H2FunctionProvider : FunctionProvider() {
     ): String {
         val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
         val primaryKeys = table.primaryKey?.columns?.toList() ?: emptyList()
-        val uniqueCols = (uniqueIdxCols  + primaryKeys).distinct()
+        val uniqueCols = (uniqueIdxCols + primaryKeys).distinct()
         val borderDate = Date(118, 2, 18)
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
@@ -62,9 +62,7 @@ internal object H2FunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-        if (tableToUpdate == null) {
-            transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
-        }
+            ?: transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
@@ -72,24 +70,25 @@ internal object H2FunctionProvider : FunctionProvider() {
         tableToUpdate.describe(transaction, this)
         +" USING "
 
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.forEach {
             if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
             }
-            + " ON "
+            +" ON "
             it.appendConditions(this)
         }
         +" WHEN MATCHED THEN UPDATE SET "
         columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.identity(col)}=")
+            append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
 
         where?.let {
-            + " WHERE "
+            +" WHERE "
             +it
         }
         toString()
@@ -119,9 +118,9 @@ internal object H2FunctionProvider : FunctionProvider() {
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
 
-    private var isMySQLMode : Boolean? = null
+    private var isMySQLMode: Boolean? = null
 
-    internal fun isMySQLMode() : Boolean {
+    internal fun isMySQLMode(): Boolean {
         return isMySQLMode
             ?: TransactionManager.currentOrNull()?.let { tr ->
                 tr.exec("SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'") { rs ->
@@ -143,7 +142,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }
+        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
+            .filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -153,7 +153,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             return ""
         }
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2"
+            )
             return ""
         }
         return super.createIndex(index)

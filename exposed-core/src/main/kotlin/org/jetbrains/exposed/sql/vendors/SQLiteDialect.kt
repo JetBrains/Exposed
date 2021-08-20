@@ -18,7 +18,6 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override val blobAsStream: Boolean = true
     override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }
@@ -45,7 +44,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder)//.replace(" SEPARATOR ", ", ")
+            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 
@@ -143,7 +142,9 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun createIndex(index: Index): String {
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite"
+            )
             return ""
         }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
@@ -166,10 +167,11 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
             var conn: Connection? = null
             var stmt: Statement? = null
             var rs: ResultSet? = null
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
                 conn = DriverManager.getConnection("jdbc:sqlite::memory:")
                 stmt = conn!!.createStatement()
-                rs = stmt!!.executeQuery("""select sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                rs = stmt!!.executeQuery("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
                 if (rs!!.next()) {
                     rs!!.getBoolean(1)
                 } else {

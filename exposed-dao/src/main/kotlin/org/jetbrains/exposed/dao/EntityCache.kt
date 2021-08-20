@@ -5,31 +5,38 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.collections.HashMap
 
-val Transaction.entityCache : EntityCache by transactionScope { EntityCache(this) }
+val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this) }
 
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
-    internal var flushingEntities by transactionScope { false }
+    private var flushingEntities = false
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
-    val inserts = LinkedHashMap<IdTable<*>, MutableList<Entity<*>>>()
-    val referrers = HashMap<EntityID<*>, MutableMap<Column<*>, SizedIterable<*>>>()
+    internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
+    internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
-    private fun getMap(f: EntityClass<*, *>) : MutableMap<Any, Entity<*>> = getMap(f.table)
+    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
 
-    private fun getMap(table: IdTable<*>) : MutableMap<Any, Entity<*>> = data.getOrPut(table) {
+    private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
         LinkedHashMap()
     }
 
-    fun <ID: Any, R: Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: ()-> SizedIterable<R>): SizedIterable<R> =
-            referrers.getOrPut(sourceId){ HashMap() }.getOrPut(key) { LazySizedCollection(refs()) } as SizedIterable<R>
+    fun <R : Entity<*>> getReferrers(sourceId: EntityID<*>, key: Column<*>): SizedIterable<R>? {
+        return referrers[key]?.get(sourceId) as? SizedIterable<R>
+    }
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? = getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+    fun <ID : Any, R : Entity<ID>> getOrPutReferrers(sourceId: EntityID<*>, key: Column<*>, refs: () -> SizedIterable<R>): SizedIterable<R> {
+        return referrers.getOrPut(key) { HashMap() }.getOrPut(sourceId) { LazySizedCollection(refs()) } as SizedIterable<R>
+    }
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
+    fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
+        getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
+    fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
+
+    fun <ID : Comparable<ID>, T : Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
         getMap(f)[o.id.value] = o
     }
 
@@ -37,33 +44,37 @@ class EntityCache(private val transaction: Transaction) {
         getMap(o.klass.table)[o.id.value] = o
     }
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> remove(table: IdTable<ID>, o: T) {
+    fun <ID : Comparable<ID>, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
         getMap(table).remove(o.id.value)
     }
 
-    fun <ID:Comparable<ID>, T: Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
-        inserts.getOrPut(f.table) { arrayListOf() }.add(o as Entity<*>)
+    fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
+        inserts.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
+    }
+
+    fun <ID : Comparable<ID>, T : Entity<ID>> scheduleUpdate(f: EntityClass<ID, T>, o: T) {
+        updates.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
     }
 
     fun flush() {
-        flush(inserts.keys + data.keys)
+        flush(inserts.keys + updates.keys)
     }
 
     private fun updateEntities(idTable: IdTable<*>) {
-        data[idTable]?.let { map ->
-            if (map.isNotEmpty()) {
-                val updatedEntities = HashSet<Entity<*>>()
-                val batch = EntityBatchUpdate(map.values.first().klass)
-                for ((_, entity) in map) {
-                    if (entity.flush(batch)) {
-                        check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
-                        updatedEntities.add(entity)
-                    }
+        updates.remove(idTable)?.takeIf { it.isNotEmpty() }?.let {
+            val updatedEntities = HashSet<Entity<*>>()
+            val batch = EntityBatchUpdate(it.first().klass)
+            for (entity in it) {
+                if (entity.flush(batch)) {
+                    check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
+                    updatedEntities.add(entity)
                 }
+            }
+            executeAsPartOfEntityLifecycle {
                 batch.execute(transaction)
-                updatedEntities.forEach {
-                    transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
-                }
+            }
+            updatedEntities.forEach {
+                transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
             }
         }
     }
@@ -93,14 +104,22 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
-        referrers.filterValues { it.any { it.key.table in insertedTables } }.map { it.key }.forEach {
+
+        val insertedTablesSet = insertedTables.toSet()
+        val tablesToRemove: List<Table> = referrers.values.flatMapTo(HashSet()) { it.keys.map { it.table } }
+            .filter { table -> table.columns.any { c -> c.referee?.table in insertedTablesSet } } + insertedTablesSet
+
+        referrers.mapNotNull { (entityId, entityReferrers) ->
+            entityReferrers.filterKeys { it.table in tablesToRemove }.keys.forEach { entityReferrers.remove(it) }
+            entityId.takeIf { entityReferrers.isEmpty() }
+        }.forEach {
             referrers.remove(it)
         }
     }
 
     internal fun flushInserts(table: IdTable<*>) {
         inserts.remove(table)?.let {
-            var toFlush: List<Entity<*>> = it
+            var toFlush: List<Entity<*>> = it.toList()
             do {
                 val partition = toFlush.partition {
                     it.writeValues.none {
@@ -109,9 +128,11 @@ class EntityCache(private val transaction: Transaction) {
                     }
                 }
                 toFlush = partition.first
-                val ids = table.batchInsert(toFlush) { entry ->
-                    for ((c, v) in entry.writeValues) {
-                        this[c] = v
+                val ids = executeAsPartOfEntityLifecycle {
+                    table.batchInsert(toFlush) { entry ->
+                        for ((c, v) in entry.writeValues) {
+                            this[c] = v
+                        }
                     }
                 }
 
@@ -130,8 +151,17 @@ class EntityCache(private val transaction: Transaction) {
                     transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
                 }
                 toFlush = partition.second
-            } while(toFlush.isNotEmpty())
+            } while (toFlush.isNotEmpty())
         }
+        transaction.alertSubscribers()
+    }
+
+    fun clear(flush: Boolean = true) {
+        if (flush) flush()
+        data.clear()
+        inserts.clear()
+        updates.clear()
+        clearReferrersCache()
     }
 
     fun clearReferrersCache() {

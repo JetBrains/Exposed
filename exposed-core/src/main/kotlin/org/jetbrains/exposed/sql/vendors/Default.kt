@@ -62,9 +62,7 @@ abstract class DataTypeProvider {
     abstract fun binaryType(): String
 
     /** Binary type for storing binary strings of a specific [length]. */
-    open fun binaryType(length: Int): String = "VARBINARY($length)"
-
-    open val blobAsStream: Boolean = false
+    open fun binaryType(length: Int): String = if (length == Int.MAX_VALUE) "VARBINARY(MAX)" else "VARBINARY($length)"
 
     /** Binary type for storing BLOBs. */
     open fun blobType(): String = "BLOB"
@@ -79,6 +77,9 @@ abstract class DataTypeProvider {
 
     /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
+
+    /** Time type for storing time without a time zone. */
+    open fun timeType(): String = "TIME"
 
     // Boolean type
 
@@ -97,6 +98,7 @@ abstract class DataTypeProvider {
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
+        currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
     }
 }
@@ -106,6 +108,7 @@ abstract class DataTypeProvider {
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it
  * is implemented differently, the corresponding function should be overridden.
  */
+@Suppress("UnnecessaryAbstractClass")
 abstract class FunctionProvider {
     // Mathematical functions
 
@@ -161,7 +164,7 @@ abstract class FunctionProvider {
         } else {
             append("CONCAT_WS('", separator, "',")
         }
-        expr.toList().appendTo { +it }
+        expr.appendTo { +it }
         append(")")
     }
 
@@ -178,7 +181,7 @@ abstract class FunctionProvider {
         }
         append(expr.expr)
         if (expr.orderBy.isNotEmpty()) {
-            expr.orderBy.toList().appendTo(prefix = " ORDER BY ") {
+            expr.orderBy.appendTo(prefix = " ORDER BY ") {
                 append(it.first, " ", it.second.name)
             }
         }
@@ -356,9 +359,19 @@ abstract class FunctionProvider {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
         }
 
-        val (columnsExpr, valuesExpr) = if (columns.isNotEmpty()) {
-            columns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } to expr
-        } else "" to DEFAULT_VALUE_EXPRESSION
+        val autoIncColumn = table.autoIncColumn
+
+        val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in columns }
+        val isInsertFromSelect = columns.isNotEmpty() && expr.isNotEmpty() && !expr.startsWith("VALUES")
+
+        val (columnsToInsert, valuesExpr) = when {
+            isInsertFromSelect -> columns to expr
+            nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
+            nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
+            columns.isNotEmpty() -> columns to expr
+            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
+        }
+        val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
@@ -410,7 +423,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
-    ) : String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
+    ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
@@ -491,36 +504,52 @@ data class ColumnMetadata(
     /** Whether the column if nullable or not. */
     val nullable: Boolean,
     /** Optional size of the column. */
-    val size: Int?
+    val size: Int?,
+    /** Is the column auto increment */
+    val autoIncrement: Boolean,
 )
 
 /**
  * Common interface for all database dialects.
  */
+@Suppress("TooManyFunctions")
 interface DatabaseDialect {
     /** Name of this dialect. */
     val name: String
+
     /** Data type provider of this dialect. */
     val dataTypeProvider: DataTypeProvider
+
     /** Function provider of this dialect. */
     val functionProvider: FunctionProvider
+
     /** Returns `true` if the dialect supports the `IF EXISTS`/`IF NOT EXISTS` option when creating, altering or dropping objects, `false` otherwise. */
     val supportsIfNotExists: Boolean get() = true
+
     /** Returns `true` if the dialect supports the creation of sequences, `false` otherwise. */
     val supportsCreateSequence: Boolean get() = true
+
     /** Returns `true` if the dialect requires the use of a sequence to create an auto-increment column, `false` otherwise. */
     val needsSequenceToAutoInc: Boolean get() = false
+
     /** Returns the default reference option for the dialect. */
     val defaultReferenceOption: ReferenceOption get() = ReferenceOption.RESTRICT
+
     /** Returns `true` if the dialect requires the use of quotes when using symbols in object names, `false` otherwise. */
     val needsQuotesWhenSymbolsInNames: Boolean get() = true
+
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
+
     /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
+
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
+
+    /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
+    val supportsSubqueryUnions: Boolean get() = false
 
     /** Returns the name of the current database. */
     fun getDatabase(): String
@@ -586,7 +615,7 @@ interface DatabaseDialect {
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 
-        if(cascade) {
+        if (cascade) {
             append(" CASCADE")
         }
     }
@@ -604,6 +633,7 @@ abstract class VendorDialect(
     /* Cached values */
     private var _allTableNames: Map<String, List<String>>? = null
     private var _allSchemaNames: List<String>? = null
+
     /** Returns a list with the names of all the defined tables within default scheme. */
     val allTablesNames: List<String>
         get() {
@@ -671,12 +701,12 @@ abstract class VendorDialect(
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
                 constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
             }
-
         }
         return constraints
     }
 
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = TransactionManager.current().db.metadata { existingIndices(*tables) }
+    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
+        TransactionManager.current().db.metadata { existingIndices(*tables) }
 
     private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
 
@@ -728,11 +758,22 @@ abstract class VendorDialect(
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl()}"
+    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl(true)}"
+}
+
+private val explicitDialect = ThreadLocal<DatabaseDialect?>()
+
+internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
+    return try {
+        explicitDialect.set(dialect)
+        body()
+    } finally {
+        explicitDialect.set(null)
+    }
 }
 
 /** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
-val currentDialect: DatabaseDialect get() = TransactionManager.current().db.dialect
+val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable: DatabaseDialect?
     get() = if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {

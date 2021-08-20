@@ -4,12 +4,14 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
-import java.util.*
 
-class BatchDataInconsistentException(message : String) : Exception(message)
+class BatchDataInconsistentException(message: String) : Exception(message)
 
-open class BatchInsertStatement(table: Table, ignore: Boolean = false,
-                                protected val shouldReturnGeneratedValues: Boolean = true): InsertStatement<List<ResultRow>>(table, ignore) {
+open class BatchInsertStatement(
+    table: Table,
+    ignore: Boolean = false,
+    protected val shouldReturnGeneratedValues: Boolean = true
+) : InsertStatement<List<ResultRow>>(table, ignore) {
 
     override val isAlwaysBatch = true
 
@@ -19,7 +21,11 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            throw BatchDataInconsistentException("Can't set $value for ${TransactionManager.current().fullIdentity(column)} because previous insertion can't be defaulted for that column.")
+            throw BatchDataInconsistentException(
+                "Can't set $value for ${
+                    TransactionManager.current().fullIdentity(column)
+                } because previous insertion can't be defaulted for that column."
+            )
         }
         super.set(column, value)
     }
@@ -30,6 +36,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
             data[data.size - 1] = LinkedHashMap(values)
             allColumnsInDataSet.addAll(values.keys)
             values.clear()
+            hasBathedValues = true
         }
         data.add(values)
         arguments = null
@@ -42,6 +49,7 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
         values.clear()
         values.putAll(data.last())
         arguments = null
+        hasBathedValues = data.size > 0
     }
 
     internal open fun validateLastBatch() {
@@ -49,9 +57,13 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
-            throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException(
+                "Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts"
+            )
         }
-        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter { !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*> }
+        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter {
+            !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*>
+        }
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts")
@@ -59,7 +71,8 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
-    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
+    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys
+        ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
@@ -73,14 +86,13 @@ open class BatchInsertStatement(table: Table, ignore: Boolean = false,
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        return if (!shouldReturnGeneratedValues)
-            transaction.connection.prepareStatement(sql, false)
-        else
-            super.prepared(transaction, sql)
+        return if (!shouldReturnGeneratedValues) transaction.connection.prepareStatement(sql, false)
+        else super.prepared(transaction, sql)
     }
 }
 
-open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
+open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) :
+    BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
     private val OUTPUT_ROW_LIMIT = 1000
 
@@ -95,7 +107,10 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val output = table.autoIncColumn?.let { " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS" }?.takeIf { shouldReturnGeneratedValues }.orEmpty()
+            val output = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }?.let {
+                " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
+            }.orEmpty()
+
             QueryBuilder(true).apply {
                 values.appendTo(prefix = "$output VALUES") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->

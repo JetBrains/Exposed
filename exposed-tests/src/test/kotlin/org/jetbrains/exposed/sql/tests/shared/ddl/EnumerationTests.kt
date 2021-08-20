@@ -21,17 +21,21 @@ class EnumerationTests : DatabaseTestsBase() {
 
         internal fun initEnumColumn(sql: String) {
             (columns as MutableList<Column<*>>).remove(enumColumn)
-            enumColumn = customEnumeration("enumColumn", sql, { value ->
-                when {
-                    currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.values()[value]
-                    else -> DDLTests.Foo.valueOf(value as String)
+            enumColumn = customEnumeration(
+                "enumColumn", sql,
+                { value ->
+                    when {
+                        currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.values()[value]
+                        else -> DDLTests.Foo.valueOf(value as String)
+                    }
+                },
+                { value ->
+                    when (currentDialectTest) {
+                        is PostgreSQLDialect -> DDLTests.PGEnum(sql, value)
+                        else -> value.name
+                    }
                 }
-            }, { value ->
-                when (currentDialectTest) {
-                    is PostgreSQLDialect -> DDLTests.PGEnum(sql, value)
-                    else -> value.name
-                }
-            })
+            )
         }
     }
 
@@ -60,7 +64,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 EnumTable.insert {
                     it[enumColumn] = DDLTests.Foo.Bar
                 }
-                assertEquals(DDLTests.Foo.Bar,  EnumTable.selectAll().single()[EnumTable.enumColumn])
+                assertEquals(DDLTests.Foo.Bar, EnumTable.selectAll().single()[EnumTable.enumColumn])
 
                 EnumTable.update {
                     it[enumColumn] = DDLTests.Foo.Baz
@@ -103,7 +107,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
                 SchemaUtils.create(EnumTable)
 
-                EnumTable.insert {  }
+                EnumTable.insert { }
                 val default = EnumTable.selectAll().single()[EnumTable.enumColumn]
                 assertEquals(DDLTests.Foo.Bar, default)
             } finally {

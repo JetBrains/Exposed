@@ -1,9 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -12,37 +10,43 @@ enum class SortOrder {
     ASC, DESC
 }
 
-open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, set.source.targetTables()) {
-    private val transaction get() = TransactionManager.current()
+open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
+
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
-    var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
-        private set
+
     var having: Op<Boolean>? = null
         private set
-    var distinct: Boolean = false
-        private set
+
     private var forUpdate: Boolean? = null
-    var set: FieldSet = set
-        private set
+
+    // private set
     var where: Op<Boolean>? = where
         private set
-    var limit: Int? = null
-        private set
-    var offset: Long = 0
-        private set
-    var fetchSize: Int? = null
-        private set
+
+    override val queryToExecute: Statement<ResultSet> get() {
+        val distinctExpressions = set.fields.distinct()
+        return if (distinctExpressions.size < set.fields.size) {
+            copy().adjustSlice { slice(distinctExpressions) }
+        } else
+            this
+    }
 
     override fun copy(): Query = Query(set, where).also { copy ->
+        copyTo(copy)
         copy.groupedByColumns = groupedByColumns.toMutableList()
-        copy.orderByExpressions = orderByExpressions.toMutableList()
         copy.having = having
-        copy.distinct = distinct
         copy.forUpdate = forUpdate
-        copy.limit = limit
-        copy.offset = offset
-        copy.fetchSize = fetchSize
+    }
+
+    override fun forUpdate(): Query {
+        this.forUpdate = true
+        return this
+    }
+
+    override fun notForUpdate(): Query {
+        forUpdate = false
+        return this
     }
 
     /**
@@ -79,21 +83,13 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return executeQuery()
     }
 
-    override fun arguments() = QueryBuilder(true).let {
-        prepareSQL(it)
-        if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
-    }
-
-    override fun prepareSQL(transaction: Transaction): String = prepareSQL(QueryBuilder(true))
-
-    fun prepareSQL(builder: QueryBuilder): String {
+    override fun prepareSQL(builder: QueryBuilder): String {
         builder {
             append("SELECT ")
 
             if (count) {
                 append("COUNT(*)")
-            }
-            else {
+            } else {
                 if (distinct) {
                     append("DISTINCT ")
                 }
@@ -140,21 +136,6 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return builder.toString()
     }
 
-    override fun forUpdate() : Query {
-        this.forUpdate = true
-        return this
-    }
-
-    override fun notForUpdate(): Query {
-        forUpdate = false
-        return this
-    }
-
-    fun withDistinct(value: Boolean = true) : Query {
-        distinct = value
-        return this
-    }
-
     fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             (groupedByColumns as MutableList).add(column)
@@ -162,83 +143,29 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         return this
     }
 
-    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>) : Query {
-        val oop = Op.build { op() }
+    fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): Query {
+        val oop = SqlExpressionBuilder.op()
         if (having != null) {
-            error ("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
+            error("HAVING clause is specified twice. Old value = '$having', new value = '$oop'")
         }
         having = oop
         return this
     }
 
-    fun orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC) = orderBy(column to order)
-
-    override fun orderBy(vararg columns: Pair<Expression<*>, SortOrder>) : Query {
-        (orderByExpressions as MutableList).addAll(columns)
-        return this
-    }
-
-    override fun limit(n: Int, offset: Long): Query {
-        this.limit = n
-        this.offset = offset
-        return this
-    }
-
-    fun fetchSize(n: Int): Query {
-        this.fetchSize = n
-        return this
-    }
-
-    private inner class ResultIterator(val rs: ResultSet): Iterator<ResultRow> {
-        private var hasNext: Boolean? = null
-
-        private val fields = set.realFields
-
-        override operator fun next(): ResultRow {
-            if (hasNext == null) hasNext()
-            if (hasNext == false) throw NoSuchElementException()
-            hasNext = null
-            return ResultRow.create(rs, fields)
-        }
-
-        override fun hasNext(): Boolean {
-            if (hasNext == null) hasNext = rs.next()
-            if (hasNext == false) rs.close()
-            return hasNext!!
-        }
-    }
-
-
-    override operator fun iterator(): Iterator<ResultRow> {
-        val distinctExpressions = this.set.fields.distinct()
-        val queryToExecute = if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSlice { slice(distinctExpressions) }
-        } else
-            this
-        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
-        return if (transaction.db.supportsMultipleResultSets)
-            resultIterator
-        else {
-            arrayListOf<ResultRow>().apply {
-                resultIterator.forEach {
-                    this += it
-                }
-            }.iterator()
-        }
-    }
-
-    private var count: Boolean = false
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
-            fun Column<*>.makeAlias() = alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
+            fun Column<*>.makeAlias() =
+                alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
 
             val originalSet = set
             try {
                 var expInx = 0
                 adjustSlice {
-                    slice(originalSet.fields.map {
-                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
-                    })
+                    slice(
+                        originalSet.fields.map {
+                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                        }
+                    )
                 }
 
                 alias("subquery").selectAll().count()
@@ -248,9 +175,9 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         } else {
             try {
                 count = true
-                transaction.exec(this) {
-                    it.next()
-                    it.getLong(1)
+                transaction.exec(this) { rs ->
+                    rs.next()
+                    rs.getLong(1).also { rs.close() }
                 }!!
             } finally {
                 count = false
@@ -263,7 +190,8 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
         try {
             if (!isForUpdate())
                 limit = 1
-            return !transaction.exec(this)!!.next()
+            val resultSet = transaction.exec(this)!!
+            return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit
         }
@@ -276,7 +204,7 @@ open class Query(set: FieldSet, where: Op<Boolean>?): SizedIterable<ResultRow>, 
  */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if(this == null) expr
+    if (this == null) expr
     else this and expr
 }
 
@@ -286,6 +214,6 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  */
 fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if(this == null) expr
+    if (this == null) expr
     else this or expr
 }

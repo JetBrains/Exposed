@@ -6,12 +6,12 @@ import org.jetbrains.exposed.sql.Table
 import java.util.*
 
 @Deprecated(
-        message = "Package was changed please re-import",
-        replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.EntityID<T>"),
-        level = DeprecationLevel.WARNING
+    message = "Package was changed please re-import",
+    replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.EntityID<T>"),
+    level = DeprecationLevel.WARNING
 )
-open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
-    constructor(id:T, table: IdTable<T>) : this(table, id)
+open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
+    constructor(id: T, table: IdTable<T>) : this(table, id)
     var _value: Any? = id
     val value: T get() {
         if (_value == null) {
@@ -39,37 +39,37 @@ open class EntityID<T:Comparable<T>> protected constructor(val table: IdTable<T>
 }
 
 @Deprecated(
-        message = "Package was changed please re-import",
-        replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.IdTable<T>"),
-        level = DeprecationLevel.HIDDEN
+    message = "Package was changed please re-import",
+    replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.IdTable<T>"),
+    level = DeprecationLevel.HIDDEN
 )
-abstract class IdTable<T:Comparable<T>>(name: String = ""): Table(name) {
-    abstract val id : Column<org.jetbrains.exposed.dao.id.EntityID<T>>
+abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
+    abstract val id: Column<org.jetbrains.exposed.dao.id.EntityID<T>>
 }
 
 @Deprecated(
-        message = "Package was changed please re-import",
-        replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.IntIdTable"),
-        level = DeprecationLevel.HIDDEN
+    message = "Package was changed please re-import",
+    replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.IntIdTable"),
+    level = DeprecationLevel.HIDDEN
 )
-open class IntIdTable(name: String = "", columnName: String = "id")
-    : org.jetbrains.exposed.dao.id.IdTable<Int>(name) {
+open class IntIdTable(name: String = "", columnName: String = "id") :
+    org.jetbrains.exposed.dao.id.IdTable<Int>(name) {
     override val id = integer(columnName).autoIncrement().primaryKey().entityId()
 }
 
 @Deprecated(
-        message = "Package was changed please re-import",
-        replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.LongIdTable"),
-        level = DeprecationLevel.WARNING
+    message = "Package was changed please re-import",
+    replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.LongIdTable"),
+    level = DeprecationLevel.WARNING
 )
 open class LongIdTable(name: String = "", columnName: String = "id") : org.jetbrains.exposed.dao.id.IdTable<Long>(name) {
     override val id = long(columnName).autoIncrement().primaryKey().entityId()
 }
 
 @Deprecated(
-        message = "Package was changed please re-import",
-        replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.UUIDTable"),
-        level = DeprecationLevel.WARNING
+    message = "Package was changed please re-import",
+    replaceWith = ReplaceWith("org.jetbrains.exposed.dao.id.UUIDTable"),
+    level = DeprecationLevel.WARNING
 )
 open class UUIDTable(name: String = "", columnName: String = "id") : org.jetbrains.exposed.dao.id.IdTable<UUID>(name) {
     override val id = uuid(columnName).primaryKey().autoGenerate().entityId()

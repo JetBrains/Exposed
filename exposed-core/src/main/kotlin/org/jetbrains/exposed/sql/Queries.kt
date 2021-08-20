@@ -6,21 +6,20 @@ import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.util.*
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelect01
  */
-inline fun FieldSet.select(where: SqlExpressionBuilder.()->Op<Boolean>) : Query = select(SqlExpressionBuilder.where())
+inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = select(SqlExpressionBuilder.where())
 
-fun FieldSet.select(where: Op<Boolean>) : Query = Query(this, where)
+fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelectDistinct
  */
-fun FieldSet.selectAll() : Query = Query(this, null)
+fun FieldSet.selectAll(): Query = Query(this, null)
 
 /**
  * That function will make multiple queries with limit equals to [batchSize]
@@ -31,8 +30,8 @@ fun FieldSet.selectAll() : Query = Query(this, null)
  * @param where Where condition to be applied
  */
 fun FieldSet.selectBatched(
-        batchSize: Int = 1000,
-        where: SqlExpressionBuilder.() -> Op<Boolean>
+    batchSize: Int = 1000,
+    where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Iterable<Iterable<ResultRow>> {
     return selectBatched(batchSize, SqlExpressionBuilder.where())
 }
@@ -45,7 +44,7 @@ fun FieldSet.selectBatched(
  * @param batchSize Size of a sub-collections to return
  */
 fun FieldSet.selectAllBatched(
-        batchSize: Int = 1000
+    batchSize: Int = 1000
 ): Iterable<Iterable<ResultRow>> {
     return selectBatched(batchSize, Op.TRUE)
 }
@@ -53,10 +52,10 @@ fun FieldSet.selectAllBatched(
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
-fun Table.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+fun Table.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.() -> Op<Boolean>) =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
 
-fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.()->Op<Boolean>) =
+fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.() -> Op<Boolean>) =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
 
 /**
@@ -68,7 +67,7 @@ fun Table.deleteAll() =
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsert01
  */
-fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
+fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -76,7 +75,7 @@ fun <T:Table> T.insert(body: T.(InsertStatement<Number>)->Unit): InsertStatement
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
  */
-fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>)->Unit) =
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit) =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -86,28 +85,43 @@ fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertAndGetId(body: T.(InsertState
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
  */
-fun <T:Table, E> T.batchInsert(
+fun <T : Table, E> T.batchInsert(
     data: Iterable<E>,
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
-    body: BatchInsertStatement.(E)->Unit
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+fun <T : Table, E> T.batchInsert(
+    data: kotlin.sequences.Sequence<E>,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+
+private fun <T : Table, E> T.batchInsert(
+    data: Iterator<E>,
+    ignoreErrors: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    if (data.count() == 0) return emptyList()
-    fun newBatchStatement() : BatchInsertStatement {
+    fun newBatchStatement(): BatchInsertStatement {
         return if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-            SQLServerBatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         } else {
-            BatchInsertStatement(this, ignore, shouldReturnGeneratedValues)
+            BatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
         }
     }
+
+    if (!data.hasNext()) return emptyList()
+
     var statement = newBatchStatement()
 
     val result = ArrayList<ResultRow>()
     fun BatchInsertStatement.handleBatchException(removeLastData: Boolean = false, body: BatchInsertStatement.() -> Unit) {
         try {
             body()
-            if(removeLastData)
-                validateLastBatch()
+            if (removeLastData) validateLastBatch()
         } catch (e: BatchDataInconsistentException) {
             if (this.data.size == 1) {
                 throw e
@@ -140,21 +154,22 @@ fun <T:Table, E> T.batchInsert(
     return result
 }
 
-fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
 
-fun <Key:Comparable<Key>, T: IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>)->Unit) = InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
-    body(this)
-    execute(TransactionManager.current())
-    getOrNull(id)
-}
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) =
+    InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
+        body(this)
+        execute(TransactionManager.current())
+        getOrNull(id)
+    }
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
  */
-fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
+fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -162,24 +177,26 @@ fun <T:Table> T.replace(body: T.(UpdateBuilder<*>)->Unit): ReplaceStatement<Long
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
  */
-fun <T:Table> T.insert(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+fun <T : Table> T.insert(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+) = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
-
-fun <T:Table> T.insertIgnore(selectQuery: Query, columns: List<Column<*>> = this.columns.filterNot { it.columnType.isAutoInc }) =
-    InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
-
+fun <T : Table> T.insertIgnore(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+) = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testUpdate01
  */
-fun <T:Table> T.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement)->Unit): Int {
+fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
 }
 
-fun Join.update(where: (SqlExpressionBuilder.()->Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement)->Unit) : Int {
+fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
@@ -202,11 +219,14 @@ fun checkExcessiveIndices(vararg tables: Table) {
 
     val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
-    if (!excessiveConstraints.isEmpty()) {
+    if (excessiveConstraints.isNotEmpty()) {
         exposedLogger.warn("List of excessive foreign key constraints:")
         excessiveConstraints.forEach { (pair, fk) ->
             val constraint = fk.first()
-            exposedLogger.warn("\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t${fk.joinToString(", ") {it.fkName}}")
+            val fkPartToLog = fk.joinToString(", ") { it.fkName }
+            exposedLogger.warn(
+                "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t$fkPartToLog"
+            )
         }
 
         exposedLogger.info("SQL Queries to remove excessive keys:")
@@ -217,11 +237,13 @@ fun checkExcessiveIndices(vararg tables: Table) {
         }
     }
 
-    val excessiveIndices = currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }.filter { it.value.size > 1}
+    val excessiveIndices =
+        currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
+            .filter { it.value.size > 1 }
     if (excessiveIndices.isNotEmpty()) {
         exposedLogger.warn("List of excessive indices:")
-        excessiveIndices.forEach { (triple, indices)->
-            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") {it.indexName}}")
+        excessiveIndices.forEach { (triple, indices) ->
+            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") { it.indexName }}")
         }
         exposedLogger.info("SQL Queries to remove excessive indices:")
         excessiveIndices.forEach {
@@ -233,8 +255,8 @@ fun checkExcessiveIndices(vararg tables: Table) {
 }
 
 private fun FieldSet.selectBatched(
-        batchSize: Int = 1000,
-        whereOp: Op<Boolean>
+    batchSize: Int = 1000,
+    whereOp: Op<Boolean>
 ): Iterable<Iterable<ResultRow>> {
     require(batchSize > 0) { "Batch size should be greater than 0" }
 
@@ -250,9 +272,9 @@ private fun FieldSet.selectBatched(
                 var lastOffset = 0L
                 while (true) {
                     val query =
-                            select { whereOp and (autoIncColumn greater lastOffset) }
-                                    .limit(batchSize)
-                                    .orderBy(autoIncColumn, SortOrder.ASC)
+                        select { whereOp and (autoIncColumn greater lastOffset) }
+                            .limit(batchSize)
+                            .orderBy(autoIncColumn, SortOrder.ASC)
 
                     // query.iterator() executes the query
                     val results = query.iterator().asSequence().toList()
@@ -269,7 +291,7 @@ private fun FieldSet.selectBatched(
         }
 
         private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
-            is EntityID<*> ->toLong(autoIncVal.value)
+            is EntityID<*> -> toLong(autoIncVal.value)
             is Int -> autoIncVal.toLong()
             else -> autoIncVal as Long
         }
@@ -288,36 +310,49 @@ private fun checkMissingIndices(vararg tables: Table): List<Index> {
     }
 
     val isMysql = currentDialect is MysqlDialect
+    val isSQLite = currentDialect is SQLiteDialect
     val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
     val existingIndices = currentDialect.existingIndices(*tables)
-    fun List<Index>.filterFKeys() = if (isMysql)
+    fun List<Index>.filterFKeys() = if (isMysql) {
         filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
-    else
+    } else {
         this
+    }
+
+    // SQLite: indices whose names start with "sqlite_" are meant for internal use
+    fun List<Index>.filterInternalIndices() = if (isSQLite) {
+        filter { !it.indexName.startsWith("sqlite_") }
+    } else {
+        this
+    }
 
     val missingIndices = HashSet<Index>()
     val notMappedIndices = HashMap<String, MutableSet<Index>>()
     val nameDiffers = HashSet<Index>()
 
     for (table in tables) {
-        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys()
-        val mappedIndices = table.indices.filterFKeys()
+        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
+        val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
 
         existingTableIndices.forEach { index ->
             mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                exposedLogger.trace("Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}")
+                exposedLogger.info(
+                    "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}"
+                )
                 nameDiffers.add(index)
                 nameDiffers.add(it)
             }
         }
 
-        notMappedIndices.getOrPut(table.nameInDatabaseCase()) {hashSetOf()}.addAll(existingTableIndices.subtract(mappedIndices))
+        notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }.addAll(existingTableIndices.subtract(mappedIndices))
 
         missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
     }
 
     val toCreate = missingIndices.subtract(nameDiffers)
     toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { (name, indexes) -> indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':") }
+    notMappedIndices.forEach { (name, indexes) ->
+        indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':")
+    }
     return toCreate.toList()
 }
