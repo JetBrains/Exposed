@@ -115,6 +115,13 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return super.update(target, columnsAndValues, limit, where, transaction)
     }
 
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+        val builder = QueryBuilder(true)
+        val columns = data.joinToString { transaction.identity(it.first) }
+        val values = builder.apply { data.appendTo { registerArgument(it.first.columnType, it.second) } }.toString()
+        return "INSERT OR REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
+    }
+
     override fun delete(
         ignore: Boolean,
         table: Table,
