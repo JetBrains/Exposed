@@ -8,9 +8,9 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
 ```mxml
 <repositories>
   <repository>
-    <id>jcenter</id>
-    <name>jcenter</name>
-    <url>http://jcenter.bintray.com</url>
+    <id>mavenCentral</id>
+    <name>mavenCentral</name>
+    <url>https://repo1.maven.org/maven2/</url>
   </repository>
 </repositories>
 
@@ -18,17 +18,17 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>
     <artifactId>exposed-spring-boot-starter</artifactId>
-    <version>0.21.2</version>
+    <version>0.33.1</version>
   </dependency>
 </dependencies>
 ```
 ### Gradle
 ```groovy
 repositories {
-  jcenter()
+    mavenCentral()
 }
 dependencies {
-  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.21.2'
+  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.33.1'
 }
 ```
 
@@ -38,7 +38,7 @@ This starter utilizes spring-boot-starter-data-jdbc so all properties that you a
 ### application.properties (h2 example)
 ```properties
 spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.driverClasName=org.h2.Driver
+spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=password
 ```

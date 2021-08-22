@@ -26,7 +26,7 @@ class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
     }
 
     fun execute(transaction: Transaction): Int {
-        val updateSets = data.filterNot {it.second.isEmpty()}.groupBy { it.second.keys }
+        val updateSets = data.filterNot { it.second.isEmpty() }.groupBy { it.second.keys }
         return updateSets.values.fold(0) { acc, set ->
             acc + BatchUpdateStatement(klass.table).let {
                 it.data.addAll(set)

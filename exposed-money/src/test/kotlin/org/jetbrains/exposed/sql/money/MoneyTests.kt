@@ -52,9 +52,9 @@ open class MoneyBaseTest : DatabaseTestsBase() {
             }
 
             val predicates = listOf(
-                    Account.composite_money eq money,
-                    (Account.composite_money.currency eq money.currency),
-                    (Account.composite_money.amount eq BigDecimal.TEN)
+                Account.composite_money eq money,
+                (Account.composite_money.currency eq money.currency),
+                (Account.composite_money.amount eq BigDecimal.TEN)
             )
 
             predicates.forEach {
@@ -80,25 +80,21 @@ open class MoneyBaseTest : DatabaseTestsBase() {
 
             assertEquals(toInsert, inserted)
         }
-
     }
-
 }
 
 class AccountDao(id: EntityID<Int>) : IntEntity(id) {
 
-    val money : MonetaryAmount by Account.composite_money
+    val money: MonetaryAmount by Account.composite_money
 
-    val currency : CurrencyUnit? by Account.composite_money.currency
+    val currency: CurrencyUnit? by Account.composite_money.currency
 
-    val amount : BigDecimal? by Account.composite_money.amount
+    val amount: BigDecimal? by Account.composite_money.amount
 
     companion object : EntityClass<Int, AccountDao>(Account)
-
 }
 
-object Account : IntIdTable("Account") {
+object Account : IntIdTable("AccountTable") {
 
     val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money")
-
 }

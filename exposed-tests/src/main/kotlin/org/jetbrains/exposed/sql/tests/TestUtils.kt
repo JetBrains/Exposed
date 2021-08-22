@@ -7,8 +7,7 @@ fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.iden
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
-val currentDialectIfAvailableTest : DatabaseDialect? get() =
+val currentDialectIfAvailableTest: DatabaseDialect? get() =
     if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
         currentDialectTest
     } else null
-

@@ -20,11 +20,13 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     @Value("\${spring.exposed.excluded-packages:}#{T(java.util.Collections).emptyList()}")
     private lateinit var excludedPackages: List<String>
 
-    @Bean
-    open fun springTransactionManager(datasource: DataSource) = SpringTransactionManager(datasource)
+    @Value("\${spring.exposed.show-sql:false}")
+    private var showSql: Boolean = false
 
     @Bean
-    @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue="true", matchIfMissing = false)
+    open fun springTransactionManager(datasource: DataSource) = SpringTransactionManager(datasource, showSql)
+
+    @Bean
+    @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
     open fun databaseInitializer() = DatabaseInitializer(applicationContext, excludedPackages)
-
 }

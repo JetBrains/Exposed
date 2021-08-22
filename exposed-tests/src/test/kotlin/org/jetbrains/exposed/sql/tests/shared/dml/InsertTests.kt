@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -45,14 +46,13 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
-
 
         withTables(insertIgnoreSupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
@@ -76,7 +76,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert and get id when column has different name`() {
+    fun `test insert and get id when column has different name and get value by id column`() {
         val testTableWithId = object : IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -98,22 +98,50 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test id and column have different names and get value by original column`() {
+        val exampleTable = object : IdTable<String>("test_id_and_column_table") {
+            val exampleColumn = varchar("example_column", 200)
+            override val id = exampleColumn.entityId()
+        }
+
+        withTables(exampleTable) {
+            val value = "value"
+            exampleTable.insert {
+                it[exampleColumn] = value
+            }
+
+            val resultValues: List<String> = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+
+            assertEquals(value, resultValues.first())
+        }
+    }
+
+    @Test
     fun testInsertIgnoreAndGetIdWithPredefinedId() {
         val idTable = object : IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-                listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+
         withTables(insertIgnoreSupportedDB, idTable) {
-            val id = idTable.insertIgnore {
+            val insertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
-            } get idTable.id
-            assertEquals(1, id.value)
+            }
+            assertEquals(1, insertedStatement[idTable.id].value)
+            assertEquals(1, insertedStatement.insertedCount)
+
+            val notInsertedStatement = idTable.insertIgnore {
+                it[idTable.id] = EntityID(1, idTable)
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(1, notInsertedStatement[idTable.id].value)
+            assertEquals(0, notInsertedStatement.insertedCount)
         }
     }
-
 
     @Test
     fun testBatchInsert01() {
@@ -140,6 +168,32 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `batchInserting using a sequence should work`() {
+        val Cities = DMLTestsData.Cities
+        withTables(Cities) {
+            val names = List(25) { UUID.randomUUID().toString() }.asSequence()
+            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+
+            val batchesSize = Cities.selectAll().count()
+
+            kotlin.test.assertEquals(25, batchesSize)
+        }
+    }
+
+    @Test
+    fun `batchInserting using empty sequence should work`() {
+        val Cities = DMLTestsData.Cities
+        withTables(Cities) {
+            val names = emptySequence<String>()
+            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+
+            val batchesSize = Cities.selectAll().count()
+
+            assertEquals(0, batchesSize)
+        }
+    }
+
+    @Test
     fun testGeneratedKey01() {
         withTables(DMLTestsData.Cities) {
             val id = DMLTestsData.Cities.insert {
@@ -150,7 +204,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     object LongIdTable : Table() {
-        val id = long("id").autoIncrement("long_id_seq")
+        val id = long("id").autoIncrement()
         val name = text("name")
 
         override val primaryKey = PrimaryKey(id)
@@ -216,12 +270,11 @@ class InsertTests : DatabaseTestsBase() {
         fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
         fun verify(value: String) {
-            val row = tbl.select{ tbl.string eq value }.single()
+            val row = tbl.select { tbl.string eq value }.single()
             assertEquals(row[tbl.string], value)
         }
 
         withTables(tbl) {
-            addLogger(StdOutSqlLogger)
             tbl.insert {
                 it[string] = expression(" _exp1_ ")
             }
@@ -244,14 +297,40 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private object OrderedDataTable : IntIdTable()
-    {
+    @Test fun testInsertWithColumnExpression() {
+
+        val tbl1 = object : IntIdTable("testInsert1") {
+            val string1 = varchar("stringCol", 20)
+        }
+        val tbl2 = object : IntIdTable("testInsert2") {
+            val string2 = varchar("stringCol", 20).nullable()
+        }
+
+        fun verify(value: String) {
+            val row = tbl2.select { tbl2.string2 eq value }.single()
+            assertEquals(row[tbl2.string2], value)
+        }
+
+        withTables(tbl1, tbl2) {
+            val id = tbl1.insertAndGetId {
+                it[string1] = " _exp1_ "
+            }
+
+            val expr1 = tbl1.string1.trim().substring(2, 4)
+            tbl2.insert {
+                it[string2] = wrapAsExpression(tbl1.slice(expr1).select { tbl1.id eq id })
+            }
+
+            verify("exp1")
+        }
+    }
+
+    private object OrderedDataTable : IntIdTable() {
         val name = text("name")
         val order = integer("order")
     }
 
-    class OrderedData(id : EntityID<Int>) : IntEntity(id)
-    {
+    class OrderedData(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<OrderedData>(OrderedDataTable)
 
         var name by OrderedDataTable.name
@@ -281,7 +360,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLSERVER), table) {
+        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), table) {
             val isOldMySQL = currentDialectTest is MysqlDialect && db.isVersionCovers(BigDecimal("5.5"))
             if (isOldMySQL) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
@@ -301,10 +380,24 @@ class InsertTests : DatabaseTestsBase() {
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
         withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
-            expectException<IllegalStateException> {
+            expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
                 }
+            }
+        }
+    }
+
+    @Test(expected = java.lang.IllegalArgumentException::class)
+    fun `test that column length checked on insert`() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(stringTable) {
+            val veryLongString = "1".repeat(255)
+            stringTable.insert {
+                it[name] = veryLongString
             }
         }
     }

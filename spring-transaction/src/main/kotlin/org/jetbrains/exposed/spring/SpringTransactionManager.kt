@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -17,9 +18,10 @@ import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource
 
-
-class SpringTransactionManager(private val _dataSource: DataSource,
-                               @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
+class SpringTransactionManager(
+    _dataSource: DataSource,
+    private val showSql: Boolean = false,
+    @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
     init {
@@ -41,7 +43,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         super.doBegin(transaction, definition)
 
-        if (TransactionSynchronizationManager.hasResource(_dataSource)) {
+        if (TransactionSynchronizationManager.hasResource(obtainDataSource())) {
             currentOrNull() ?: initTransaction()
         }
         if (!TransactionSynchronizationManager.hasResource(springTxKey)) {
@@ -51,8 +53,12 @@ class SpringTransactionManager(private val _dataSource: DataSource,
 
     override fun doCleanupAfterCompletion(transaction: Any) {
         super.doCleanupAfterCompletion(transaction)
-        if (!TransactionSynchronizationManager.hasResource(_dataSource)) {
+        if (!TransactionSynchronizationManager.hasResource(obtainDataSource())) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
+            TransactionSynchronizationManager.unbindResource(springTxKey)
+        }
+        if (TransactionSynchronizationManager.isSynchronizationActive() && TransactionSynchronizationManager.getSynchronizations().isEmpty()) {
+            TransactionSynchronizationManager.clearSynchronization()
         }
         TransactionManager.resetCurrent(null)
     }
@@ -63,6 +69,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
+        @Suppress("TooGenericExceptionCaught")
         try {
             currentOrNull()?.commit()
         } catch (e: Exception) {
@@ -71,6 +78,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     override fun doRollback(status: DefaultTransactionStatus) {
+        @Suppress("TooGenericExceptionCaught")
         try {
             currentOrNull()?.rollback()
         } catch (e: Exception) {
@@ -87,12 +95,15 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     }
 
     private fun initTransaction(): Transaction {
-        val connection = (TransactionSynchronizationManager.getResource(_dataSource) as ConnectionHolder).connection
+        val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
         val transactionImpl = SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
+            if (showSql) {
+                addLogger(StdOutSqlLogger)
+            }
         }
     }
 
@@ -118,11 +129,7 @@ class SpringTransactionManager(private val _dataSource: DataSource,
     ) : TransactionInterface {
 
         override fun commit() {
-            connection.run {
-                if (!autoCommit) {
-                    commit()
-                }
-            }
+            connection.commit()
         }
 
         override fun rollback() {
@@ -133,10 +140,8 @@ class SpringTransactionManager(private val _dataSource: DataSource,
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.getResource(springTxKey)?.let { springTx ->
                     this@SpringTransactionManager.doCleanupAfterCompletion(springTx)
-                    TransactionSynchronizationManager.unbindResource(springTxKey)
                 }
             }
         }
     }
-
 }

@@ -3,6 +3,11 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -13,8 +18,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override val blobAsStream: Boolean = true
-    override fun dateTimeType(): String = "NUMERIC"
+    override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }
 
@@ -40,7 +44,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return when {
             expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder)//.replace(" SEPARATOR ", ", ")
+            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
     }
 
@@ -54,37 +58,37 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%Y',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> month(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%m',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> day(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%d',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> hour(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%H',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%M',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STRFTIME('%S',")
         append(expr)
-        append(" / 1000, 'unixepoch')")
+        append(")")
     }
 
     override fun insert(
@@ -105,7 +109,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction
     ): String {
-        if (limit != null) {
+        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         }
         return super.update(target, columnsAndValues, limit, where, transaction)
@@ -118,7 +122,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         limit: Int?,
         transaction: Transaction
     ): String {
-        if (limit != null) {
+        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
         }
         val def = super.delete(false, table, where, limit, transaction)
@@ -138,7 +142,9 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun createIndex(index: Index): String {
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in SQLite"
+            )
             return ""
         }
         val originalCreateIndex = super.createIndex(index.copy(unique = false))
@@ -156,5 +162,28 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     companion object {
         /** SQLite dialect name */
         const val dialectName: String = "sqlite"
+
+        val ENABLE_UPDATE_DELETE_LIMIT by lazy {
+            var conn: Connection? = null
+            var stmt: Statement? = null
+            var rs: ResultSet? = null
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
+            try {
+                conn = DriverManager.getConnection("jdbc:sqlite::memory:")
+                stmt = conn!!.createStatement()
+                rs = stmt!!.executeQuery("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
+                if (rs!!.next()) {
+                    rs!!.getBoolean(1)
+                } else {
+                    false
+                }
+            } catch (e: Exception) {
+                false
+            } finally {
+                rs?.close()
+                stmt?.close()
+                conn?.close()
+            }
+        }
     }
 }

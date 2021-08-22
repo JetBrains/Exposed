@@ -40,3 +40,21 @@ fun Project.setupDialectTest(dialect: String) {
         }
     }
 }
+
+fun setupTestDriverDependencies(dialect: String, testImplementationSetup: (group: String, artifactId: String, version: String) -> Unit) {
+    testImplementationSetup("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
+    testImplementationSetup("com.h2database", "h2", Versions.h2)
+    when (dialect) {
+        "mariadb" -> testImplementationSetup("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
+        "mysql" -> testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql51)
+        "mysql8" -> testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql80)
+        "oracle" -> testImplementationSetup("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
+        "sqlserver" -> testImplementationSetup("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
+        else -> {
+            testImplementationSetup("com.h2database", "h2", Versions.h2)
+            testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql51)
+            testImplementationSetup("org.postgresql", "postgresql", Versions.postgre)
+            testImplementationSetup("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
+        }
+    }
+}

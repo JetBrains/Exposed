@@ -27,6 +27,17 @@ object UUIDTables {
         var name by People.name
         var city by City referencedOn People.cityId
     }
+    object Addresses : UUIDTable() {
+        val person = reference("person_id", People)
+        val city = reference("city_id", Cities)
+        val address = varchar("address", 255)
+    }
+    class Address(id: EntityID<UUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Address>(Addresses)
+        var person by Person.referencedOn(Addresses.person)
+        var city by City.referencedOn(Addresses.city)
+        var address by Addresses.address
+    }
 }
 class UUIDTableEntityTest : DatabaseTestsBase() {
 
@@ -92,6 +103,36 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
             val allPeople = UUIDTables.Person.all().map { Pair(it.name, it.city.name) }
             assertEquals(true, allPeople.contains(Pair("David D'souza", "Mumbai")))
             assertEquals(false, allPeople.contains(Pair("Tanu Arora", "Pune")))
+        }
+    }
+
+    @Test fun `insert with inner table`() {
+        withTables(UUIDTables.Addresses, UUIDTables.Cities, UUIDTables.People) {
+            val city1 = UUIDTables.City.new {
+                name = "city1"
+            }
+            val person1 = UUIDTables.Person.new {
+                name = "person1"
+                city = city1
+            }
+
+            val address1 = UUIDTables.Address.new {
+                person = person1
+                city = city1
+                address = "address1"
+            }
+
+            val address2 = UUIDTables.Address.new {
+                person = person1
+                city = city1
+                address = "address2"
+            }
+
+            address1.refresh(flush = true)
+            assertEquals("address1", address1.address)
+
+            address2.refresh(flush = true)
+            assertEquals("address2", address2.address)
         }
     }
 }

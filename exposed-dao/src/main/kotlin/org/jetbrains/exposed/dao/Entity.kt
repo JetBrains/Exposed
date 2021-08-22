@@ -4,13 +4,12 @@ import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
 open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal)
 
-open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
+open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
         internal set
 
@@ -20,11 +19,11 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
     var _readValues: ResultRow? = null
     val readValues: ResultRow
-    get() = _readValues ?: run {
-        val table = klass.table
-        _readValues = klass.searchQuery( Op.build {table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
-        _readValues!!
-    }
+        get() = _readValues ?: run {
+            val table = klass.table
+            _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
+            _readValues!!
+        }
 
     internal fun isNewEntity(): Boolean {
         val cache = TransactionManager.current().entityCache
@@ -54,31 +53,65 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         _readValues = reloaded.readValues
     }
 
-    operator fun <REF:Comparable<REF>, RID:Comparable<RID>, T: Entity<RID>> Reference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T {
-        val refValue = reference.getValue(o, desc)
-        return when {
-            refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-            else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }.singleOrNull()
-        } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(
+        o: Entity<ID>,
+        desc: KProperty<*>
+    ): T {
+        return executeAsPartOfEntityLifecycle {
+            val refValue = reference.getValue(o, desc)
+            when {
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                else -> {
+                    // @formatter:off
+                    factory.findWithCacheCondition({
+                       reference.referee!!.getValue(this, desc) == refValue
+                    }) {
+                        reference.referee<REF>()!! eq refValue
+                    }.singleOrNull()
+                    // @formatter:on
+                }
+            } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
+        }
     }
 
-    operator fun <REF:Comparable<REF>, RID:Comparable<RID>, T: Entity<RID>> Reference<REF, RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.setValue(
+        o: Entity<ID>,
+        desc: KProperty<*>,
+        value: T
+    ) {
         if (db != value.db) error("Can't link entities from different databases.")
         value.id.value // flush before creating reference on it
         val refValue = value.run { reference.referee<REF>()!!.getValue(this, desc) }
         reference.setValue(o, desc, refValue)
     }
 
-    operator fun <REF:Comparable<REF>, RID:Comparable<RID>, T: Entity<RID>> OptionalReference<REF, RID, T>.getValue(o: Entity<ID>, desc: KProperty<*>): T? {
-        val refValue = reference.getValue(o, desc)
-        return when {
-            refValue == null -> null
-            refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
-            else -> factory.findWithCacheCondition({ reference.referee!!.getValue(this, desc) == refValue }) { reference.referee<REF>()!! eq refValue }.singleOrNull()
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(
+        o: Entity<ID>,
+        desc: KProperty<*>
+    ): T? {
+        return executeAsPartOfEntityLifecycle {
+            val refValue = reference.getValue(o, desc)
+            when {
+                refValue == null -> null
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                else -> {
+                    // @formatter:off
+                   factory.findWithCacheCondition({
+                       reference.referee!!.getValue(this, desc) == refValue
+                   }) {
+                       reference.referee<REF>()!! eq refValue
+                   }.singleOrNull()
+                    // @formatter:on
+                }
+            }
         }
     }
 
-    operator fun <REF:Comparable<REF>, RID:Comparable<RID>, T: Entity<RID>> OptionalReference<REF, RID, T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T?) {
+    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
+        o: Entity<ID>,
+        desc: KProperty<*>,
+        value: T?
+    ) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
         val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
@@ -93,11 +126,12 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T, R:Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
-        if (_readValues?.hasValue(this) == true)
+    fun <T, R : Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
+        if (_readValues?.hasValue(this) == true) {
             found(readValues[this])
-        else
+        } else {
             notFound()
+        }
 
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
@@ -111,16 +145,20 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
         klass.invalidateEntityInCache(o)
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
+            val entityCache = TransactionManager.current().entityCache
             if (referee != null) {
-                val entityCache = TransactionManager.current().entityCache
                 if (value is EntityID<*> && value.table == referee!!.table) value.value // flush
 
                 listOfNotNull<Any>(value, currentValue).forEach {
-                    entityCache.referrers[it]?.remove(this)
+                    entityCache.referrers[this]?.remove(it)
                 }
                 entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues[this as Column<Any?>] = value
+            // TODO: Can this be simplified?
+            if (o.id._value?.let { entityCache.data[table]?.contains(it) } == true) {
+                entityCache.scheduleUpdate(klass, o)
+            }
         }
     }
 
@@ -133,28 +171,33 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
-            toReal(column.getValue(o, desc))
+        toReal(column.getValue(o, desc))
 
     operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<ID>, desc: KProperty<*>, value: TReal) {
         column.setValue(o, desc, toColumn(value))
     }
 
-    infix fun <TID:Comparable<TID>, Target: Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
-            InnerTableLink(table, this@via)
+    infix fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
+        InnerTableLink(table, this@via)
 
-    fun <TID:Comparable<TID>, Target: Entity<TID>> EntityClass<TID, Target>.via(sourceColumn: Column<EntityID<ID>>, targetColumn: Column<EntityID<TID>>) =
-            InnerTableLink(sourceColumn.table, this@via, sourceColumn, targetColumn)
+    fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
+        sourceColumn: Column<EntityID<ID>>,
+        targetColumn: Column<EntityID<TID>>
+    ) =
+        InnerTableLink(sourceColumn.table, this@via, sourceColumn, targetColumn)
 
     /**
      * Delete this entity.
      *
      * This will remove the entity from the database as well as the cache.
      */
-    open fun delete(){
-        klass.removeFromCache(this)
+    open fun delete() {
         val table = klass.table
-        table.deleteWhere {table.id eq id}
         TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
+        executeAsPartOfEntityLifecycle {
+            table.deleteWhere { table.id eq id }
+        }
+        klass.removeFromCache(this)
     }
 
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
@@ -168,13 +211,16 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 // Store values before update to prevent flush inside UpdateStatement
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
-                table.update({table.id eq id}) {
-                    for ((c, v) in _writeValues) {
-                        it[c] = v
+                // In case of batch all changes will be registered after all entities flushed
+                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+                executeAsPartOfEntityLifecycle {
+                    table.update({ table.id eq id }) {
+                        for ((c, v) in _writeValues) {
+                            it[c] = v
+                        }
                     }
                 }
-            }
-            else {
+            } else {
                 batch.addBatch(id)
                 for ((c, v) in writeValues) {
                     batch[c] = v
@@ -182,7 +228,6 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
                 storeWrittenValues()
             }
 
-            TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
             return true
         }
         return false
@@ -194,7 +239,7 @@ open class Entity<ID:Comparable<ID>>(val id: EntityID<ID>) {
             for ((c, v) in writeValues) {
                 _readValues!![c] = v
             }
-            if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) } ) {
+            if (klass.dependsOnColumns.any { it.table == klass.table && !_readValues!!.hasValue(it) }) {
                 _readValues = null
             }
         }

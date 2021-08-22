@@ -6,10 +6,10 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 @Suppress("UNCHECKED_CAST")
-fun <T:Any> transactionScope(init: Transaction.() -> T) = TransactionStore(init) as ReadWriteProperty<Any?, T>
-fun <T:Any> nullableTransactionScope() = TransactionStore<T>()
+fun <T : Any> transactionScope(init: Transaction.() -> T) = TransactionStore(init) as ReadWriteProperty<Any?, T>
+fun <T : Any> nullableTransactionScope() = TransactionStore<T>()
 
-class TransactionStore<T:Any>(val init: (Transaction.() -> T)? = null) : ReadWriteProperty<Any?, T?> {
+class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadWriteProperty<Any?, T?> {
 
     private val key = Key<T>()
 
@@ -18,14 +18,14 @@ class TransactionStore<T:Any>(val init: (Transaction.() -> T)? = null) : ReadWri
         val currentOrNullTransaction = TransactionManager.currentOrNull()
         return currentOrNullTransaction?.getUserData(key)
             ?: init?.let {
-                val value = currentOrNullTransaction!!.it()
+                val value = currentOrNullTransaction?.it() ?: error("Can't init value outside the transaction")
                 currentOrNullTransaction.putUserData(key, value)
                 value
             }
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-        TransactionManager.currentOrNull()?.let{
+        TransactionManager.currentOrNull()?.let {
             if (value == null)
                 it.removeUserData(key)
             else

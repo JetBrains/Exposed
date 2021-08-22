@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.*
@@ -48,11 +49,12 @@ class CreateTableTests : DatabaseTestsBase() {
             val tableName = account.tableName
 
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
-                            "${account.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
-                            ")",
-                    account.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                    "${account.columns.joinToString { it.descriptionDdl(false) }}, " +
+                    "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    ")",
+                account.ddl
+            )
         }
     }
 
@@ -67,14 +69,15 @@ class CreateTableTests : DatabaseTestsBase() {
             val tableName = Person.tableName
 
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
-                            "${Person.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
-                            ")",
-                    Person.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
+                    "${Person.columns.joinToString { it.descriptionDdl(false) }}, " +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    ")",
+                Person.ddl
+            )
         }
 
-        //Table with single column in primary key.
+        // Table with single column in primary key.
         val user = object : Table("User") {
             val user_name = varchar("user_name", 25)
 
@@ -86,11 +89,12 @@ class CreateTableTests : DatabaseTestsBase() {
 
             // Must generate primary key constraint, because the constraint name was defined.
             assertEquals(
-                    "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName (" +
-                            "${user.columns.joinToString { it.descriptionDdl() }}, " +
-                            "CONSTRAINT $pkConstraintName PRIMARY KEY ($userNameProperName)" +
-                            ")",
-                    user.ddl)
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName (" +
+                    "${user.columns.joinToString { it.descriptionDdl(false) }}, " +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY ($userNameProperName)" +
+                    ")",
+                user.ddl
+            )
         }
     }
 
@@ -106,7 +110,7 @@ class CreateTableTests : DatabaseTestsBase() {
             val pkConstraintName = Person.primaryKey.name
 
             assertEquals(1, ddlId1.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl()}", ddlId1.first())
+            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
 
             assertEquals(2, ddlId2.size)
             assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${Person.id2.columnType.sqlType()}", ddlId2.first())
@@ -116,7 +120,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addCompositePrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(Person)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = arrayOf(Person)) {
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -126,22 +130,29 @@ class CreateTableTests : DatabaseTestsBase() {
             val pkConstraintName = Person.primaryKey.name
 
             assertEquals(1, ddlId1.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl()}", ddlId1.first())
+            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
 
             assertEquals(1, ddlId2.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl()}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
+            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
         }
     }
 
     @Test
     fun addOneColumnPrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = *arrayOf(Book)) {
+        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL), tables = arrayOf(Book)) {
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
             val id1ProperName = Book.id.name.inProperCase()
             val ddlId1 = Book.id.ddl
 
-            assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl()}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)", ddlId1.first())
+            if (currentDialectTest !is SQLiteDialect) {
+                assertEquals(
+                    "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)",
+                    ddlId1.first()
+                )
+            } else {
+                assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}", ddlId1.first())
+            }
         }
     }
 
@@ -179,19 +190,19 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : LongIdTable("parent1") {}
         val child = object : LongIdTable("child1") {
             val parentId = reference(
-                    name = "parent_id",
-                    foreign = parent,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
-                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
@@ -209,19 +220,19 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         val child = object : LongIdTable("child2") {
             val parentId = reference(
-                    name = "parent_id",
-                    refColumn = parent.uniqueId,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                refColumn = parent.uniqueId,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
-                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
@@ -237,19 +248,19 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : LongIdTable("parent3") {}
         val child = object : LongIdTable("child3") {
             val parentId = optReference(
-                    name = "parent_id",
-                    foreign = parent,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
-                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
@@ -267,19 +278,19 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         val child = object : LongIdTable("child4") {
             val parentId = optReference(
-                    name = "parent_id",
-                    refColumn = parent.uniqueId,
-                    onUpdate = ReferenceOption.NO_ACTION,
-                    onDelete = ReferenceOption.NO_ACTION,
-                    fkName = fkName
+                name = "parent_id",
+                refColumn = parent.uniqueId,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+                fkName = fkName
             )
         }
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncSeqName?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
-                    "${child.columns.joinToString { it.descriptionDdl() }}," +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
@@ -289,14 +300,13 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
-    object OneTable : IntIdTable("one") {}
-    object OneOneTable : IntIdTable("one.one") {}
+    object OneTable : IntIdTable("one")
+    object OneOneTable : IntIdTable("one.one")
 
     @Test
     fun `test create table with same name in different schemas`() {
         val one = Schema("one")
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
-            addLogger(StdOutSqlLogger)
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
             try {

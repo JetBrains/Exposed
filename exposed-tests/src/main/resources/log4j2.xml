@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ABSOLUTE} %5p %t %c{1}:%M:%L - %m%n"/>
+        </Console>
+        <Async name="ASYNC" includeLocation="true">
+            <AppenderRef ref="CONSOLE"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="ASYNC"/>
+        </Root>
+        <Logger name="Exposed" level="info" additivity="false">
+            <AppenderRef ref="ASYNC"/>
+        </Logger>
+    </Loggers>
+</Configuration>

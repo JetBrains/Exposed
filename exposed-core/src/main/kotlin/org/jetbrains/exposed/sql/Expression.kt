@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 /**
  * An object to which SQL expressions and values can be appended.
@@ -31,6 +32,20 @@ class QueryBuilder(
         internalBuilder.append(postfix)
     }
 
+    /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
+    fun <T> Array<T>.appendTo(
+        separator: CharSequence = ", ",
+        prefix: CharSequence = "",
+        postfix: CharSequence = "",
+        transform: QueryBuilder.(T) -> Unit
+    ) {
+        internalBuilder.append(prefix)
+        forEachIndexed { index, element ->
+            if (index > 0) internalBuilder.append(separator)
+            transform(element)
+        }
+        internalBuilder.append(postfix)
+    }
 
     /** Appends the specified [value] to this [QueryBuilder]. */
     fun append(value: Char): QueryBuilder = apply { internalBuilder.append(value) }
@@ -41,7 +56,6 @@ class QueryBuilder(
     /** Appends the specified [value] to this [QueryBuilder]. */
     fun append(value: Expression<*>): QueryBuilder = apply(value::toQueryBuilder)
 
-
     /** Appends the receiver [Char] to this [QueryBuilder]. */
     operator fun Char.unaryPlus(): QueryBuilder = append(this)
 
@@ -51,12 +65,11 @@ class QueryBuilder(
     /** Appends the receiver [Expression] to this [QueryBuilder]. */
     operator fun Expression<*>.unaryPlus(): QueryBuilder = append(this)
 
-
     /** Adds the specified [argument] as a value of the specified [column]. */
     fun <T> registerArgument(column: Column<*>, argument: T) {
         when (argument) {
             is Expression<*> -> append(argument)
-            DefaultValueMarker -> append(column.dbDefaultValue!!)
+            DefaultValueMarker -> append(TransactionManager.current().db.dialect.dataTypeProvider.processForDefaultValue(column.dbDefaultValue!!))
             else -> registerArgument(column.columnType, argument)
         }
     }
@@ -106,7 +119,6 @@ fun <T> Iterable<T>.appendTo(
     postfix: CharSequence = "",
     transform: QueryBuilder.(T) -> Unit
 ): QueryBuilder = builder.apply { this@appendTo.appendTo(separator, prefix, postfix, transform) }
-
 
 /**
  * Represents an SQL expression of type [T].
