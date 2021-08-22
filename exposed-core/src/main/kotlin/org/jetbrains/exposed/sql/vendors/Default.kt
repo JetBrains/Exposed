@@ -551,6 +551,8 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
     val supportsSubqueryUnions: Boolean get() = false
 
+    val supportsDualTableConcept: Boolean get() = false
+
     /** Returns the name of the current database. */
     fun getDatabase(): String
 

@@ -207,6 +207,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsMultipleGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsDualTableConcept: Boolean = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

@@ -1145,6 +1145,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    object Dual : Table("dual")
 }
 
 @Deprecated(

@@ -95,8 +95,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 }
                 set.realFields.appendTo { +it }
             }
-            append(" FROM ")
-            set.source.describe(transaction, this)
+            if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
+                append(" FROM ")
+                set.source.describe(transaction, this)
+            }
 
             where?.let {
                 append(" WHERE ")
