@@ -154,7 +154,60 @@ private fun <T : Table, E> T.batchInsert(
     return result
 }
 
-fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+/**
+ * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
+ */
+fun <T : Table, E : Any> T.batchReplace(
+    data: Iterable<E>,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchReplaceStatement.(E) -> Unit
+): List<ResultRow> {
+    if (data.count() == 0) return emptyList()
+    fun newBatchStatement(): BatchReplaceStatement {
+        return BatchReplaceStatement(this, shouldReturnGeneratedValues)
+    }
+
+    var statement = newBatchStatement()
+
+    val result = ArrayList<ResultRow>()
+    fun BatchReplaceStatement.handleBatchException(removeLastData: Boolean = false, body: BatchReplaceStatement.() -> Unit) {
+        try {
+            body()
+            if (removeLastData)
+                validateLastBatch()
+        } catch (e: BatchDataInconsistentException) {
+            if (this.data.size == 1) {
+                throw e
+            }
+            val notTheFirstBatch = this.data.size > 1
+            if (notTheFirstBatch) {
+                if (removeLastData) {
+                    removeLastBatch()
+                }
+                execute(TransactionManager.current())
+                result += resultedValues.orEmpty()
+            }
+            statement = newBatchStatement()
+            if (removeLastData && notTheFirstBatch) {
+                statement.addBatch()
+                statement.body()
+                statement.validateLastBatch()
+            }
+        }
+    }
+
+    for (element in data) {
+        statement.handleBatchException { addBatch() }
+        statement.handleBatchException(true) { body(element) }
+    }
+    if (statement.arguments().isNotEmpty()) {
+        statement.execute(TransactionManager.current())
+        result += statement.resultedValues.orEmpty()
+    }
+    return result
+}
+
+fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
