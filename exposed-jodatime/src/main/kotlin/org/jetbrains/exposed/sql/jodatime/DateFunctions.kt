@@ -2,7 +2,8 @@ package org.jetbrains.exposed.sql.jodatime
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 
 class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColumnType(false)) {
@@ -69,4 +70,5 @@ fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value,
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
-fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
+fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)

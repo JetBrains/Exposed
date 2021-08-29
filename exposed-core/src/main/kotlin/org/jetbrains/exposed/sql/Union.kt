@@ -32,7 +32,7 @@ class Union(
 
     private val unionKeyword: String get() = if (distinct) "UNION" else "UNION ALL"
 
-    override fun copy() = Union(distinct, *statements).also {
+    override fun copy() = Union(distinct, rawStatements = statements).also {
         copyTo(it)
     }
 
@@ -85,7 +85,7 @@ class Union(
 
     private fun prepareStatementSQL(builder: QueryBuilder) {
         builder {
-            statements.toList().appendTo(separator = " $unionKeyword ") {
+            statements.appendTo(separator = " $unionKeyword ") {
                 when (it) {
                     is Query -> {
                         val isSubQuery = it.orderByExpressions.isNotEmpty() || it.limit != null

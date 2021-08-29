@@ -4,9 +4,11 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
 
-class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
+class ResultRow(
+    val fieldIndex: Map<Expression<*>, Int>,
+    private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
+) {
     private val database: Database? = TransactionManager.currentOrNull()?.db
-    private val data = arrayOfNulls<Any?>(fieldIndex.size)
 
     /**
      * Retrieves value of a given expression on this row.
@@ -52,6 +54,7 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
             raw == NotInitializedValue -> error("$c is not initialized yet")
             c is ExpressionAlias<T> && c.delegate is ExpressionWithColumnType<T> -> c.delegate.columnType.valueFromDB(raw)
             c is ExpressionWithColumnType<T> -> c.columnType.valueFromDB(raw)
+            c is Op.OpBoolean -> BooleanColumnType.INSTANCE.valueFromDB(raw)
             else -> raw
         } as T
     }
@@ -94,13 +97,19 @@ class ResultRow(val fieldIndex: Map<Expression<*>, Int>) {
             }
         }
 
-        fun createAndFillValues(data: Map<Expression<*>, Any?>): ResultRow =
-            ResultRow(data.keys.mapIndexed { i, c -> c to i }.toMap()).also { row ->
-                data.forEach { (c, v) -> row[c] = v }
+        fun createAndFillValues(data: Map<Expression<*>, Any?>): ResultRow {
+            val fieldIndex = HashMap<Expression<*>, Int>(data.size)
+            val values = arrayOfNulls<Any?>(data.size)
+            data.entries.forEachIndexed { i, columnAndValue ->
+                val (column, value) = columnAndValue
+                fieldIndex[column] = i
+                values[i] = value
             }
+            return ResultRow(fieldIndex, values)
+        }
 
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
-            ResultRow(columns.mapIndexed { i, c -> c to i }.toMap()).apply {
+            ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {
                     this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
                 }

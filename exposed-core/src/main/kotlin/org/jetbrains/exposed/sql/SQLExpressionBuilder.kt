@@ -29,7 +29,7 @@ fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
     orderBy: Array<Pair<Expression<*>, SortOrder>> = emptyArray()
-): GroupConcat<T> = GroupConcat(this, separator, distinct, *orderBy)
+): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy = orderBy)
 
 /** Extract a substring from this string expression that begins at the specified [start] and with the specified [length]. */
 fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T> = Substring(this, intLiteral(start), intLiteral(length))
@@ -113,6 +113,7 @@ fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): Custo
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
  */
+@Suppress("FunctionNaming")
 fun CustomStringFunction(
     functionName: String,
     vararg params: Expression<*>
@@ -121,6 +122,7 @@ fun CustomStringFunction(
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a long, and passing [params] as its arguments.
  */
+@Suppress("FunctionNaming")
 fun CustomLongFunction(
     functionName: String,
     vararg params: Expression<*>
@@ -129,7 +131,7 @@ fun CustomLongFunction(
 @Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class")
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
-@Suppress("INAPPLICABLE_JVM_NAME")
+@Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {
 
     // Comparison Operators
@@ -146,7 +148,10 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equals to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): EqOp = EqOp(this, other)
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when {
+        other.equals(Op.NULL) -> isNull()
+        else -> EqOp(this, other)
+    }
 
     /** Checks if this expression is equals to some [t] value. */
     infix fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.eq(t: T?): Op<Boolean> {
@@ -163,7 +168,10 @@ interface ISqlExpressionBuilder {
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
 
     /** Checks if this expression is not equals to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): NeqOp = NeqOp(this, other)
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when {
+        other.equals(Op.NULL) -> isNotNull()
+        else -> NeqOp(this, other)
+    }
 
     /** Checks if this expression is not equals to some [t] value. */
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.neq(t: T?): Op<Boolean> = if (t == null) isNotNull() else NeqOp(this, wrap(t))
@@ -257,13 +265,53 @@ interface ISqlExpressionBuilder {
     /** Calculates the remainder of dividing this expression by the [other] expression. */
     infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> = this % other
 
+    /**
+     * Performs a bitwise `and` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: T): AndBitOp<T, T> = AndBitOp(this, wrap(t), columnType)
+
+    /**
+     * Performs a bitwise `and` on this expression and expression [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseAnd(t: Expression<T>): AndBitOp<T, T> = AndBitOp(this, t, columnType)
+
+    /**
+     * Performs a bitwise `or` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: T): OrBitOp<T, T> = OrBitOp(this, wrap(t), columnType)
+
+    /**
+     * Performs a bitwise `or` on this expression and expression [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseOr(t: Expression<T>): OrBitOp<T, T> = OrBitOp(this, t, columnType)
+
+    /**
+     * Performs a bitwise `or` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: T): XorBitOp<T, T> = XorBitOp(this, wrap(t), columnType)
+
+    /**
+     * Performs a bitwise `or` on this expression and expression [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.bitwiseXor(t: Expression<T>): XorBitOp<T, T> = XorBitOp(this, t, columnType)
+
+    /**
+     * Performs a bitwise `and` on this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: T): EqOp = EqOp(AndBitOp(this, wrap(t), columnType), wrap(t))
+
+    /**
+     * Performs a bitwise `and` on this expression and expression [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.hasFlag(t: Expression<T>): EqOp = EqOp(AndBitOp(this, t, columnType), wrap(t))
+
     // String Functions
 
     /** Concatenates the text representations of all the [expr]. */
     fun concat(vararg expr: Expression<*>): Concat = Concat("", *expr)
 
     /** Concatenates the text representations of all the [expr] using the specified [separator]. */
-    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, *expr.toTypedArray())
+    fun concat(separator: String = "", expr: List<Expression<*>>): Concat = Concat(separator, expr = expr.toTypedArray())
 
     // Pattern Matching
 

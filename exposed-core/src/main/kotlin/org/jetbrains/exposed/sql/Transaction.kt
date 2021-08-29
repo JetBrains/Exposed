@@ -44,7 +44,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = null
     var debug = false
-    val id = UUID.randomUUID().toString()
+    val id by lazy { UUID.randomUUID().toString() }
 
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
@@ -148,7 +148,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
             }
         }
 
-        if (delta > warnLongQueriesDuration ?: Long.MAX_VALUE) {
+        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
             exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", RuntimeException())
         }
 

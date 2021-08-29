@@ -1,9 +1,19 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
-open class DeleteStatement(val table: Table, val where: Op<Boolean>? = null, val isIgnore: Boolean = false, val limit: Int? = null, val offset: Long? = null) : Statement<Int>(StatementType.DELETE, listOf(table)) {
+open class DeleteStatement(
+    val table: Table,
+    val where: Op<Boolean>? = null,
+    val isIgnore: Boolean = false,
+    val limit: Int? = null,
+    val offset: Long? = null
+) : Statement<Int>(StatementType.DELETE, listOf(table)) {
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         return executeUpdate()

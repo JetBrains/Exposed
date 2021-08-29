@@ -11,6 +11,7 @@ import java.sql.SQLException
 
 class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: Transaction) : SQLException(cause) {
     fun causedByQueries(): List<String> = contexts.map {
+        @Suppress("TooGenericExceptionCaught")
         try {
             if (transaction.debug) {
                 it.expandArgs(transaction)

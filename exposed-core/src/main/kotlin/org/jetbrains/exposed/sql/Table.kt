@@ -6,7 +6,12 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
@@ -26,6 +31,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 interface FieldSet {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
+
     /** Returns the field of this field set. */
     val fields: List<Expression<*>>
 
@@ -51,6 +57,7 @@ interface FieldSet {
  */
 abstract class ColumnSet : FieldSet {
     override val source: ColumnSet get() = this
+
     /** Returns the columns of this column set. */
     abstract val columns: List<Column<*>>
     override val fields: List<Expression<*>> get() = columns
@@ -104,36 +111,41 @@ abstract class ColumnSet : FieldSet {
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>
-): Join = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable))
+    otherColumn: C2.() -> Expression<*>,
+    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+): Join = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable), additionalConstraint)
 
 /** Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>
-): Join = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn())
+    otherColumn: C2.() -> Expression<*>,
+    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+): Join = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn(), additionalConstraint)
 
 /** Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>
-): Join = join(otherTable, JoinType.RIGHT, onColumn(), otherTable.otherColumn())
+    otherColumn: C2.() -> Expression<*>,
+    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+): Join = join(otherTable, JoinType.RIGHT, onColumn(), otherTable.otherColumn(), additionalConstraint)
 
 /** Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>
-): Join = join(otherTable, JoinType.FULL, onColumn(), otherTable.otherColumn())
+    otherColumn: C2.() -> Expression<*>,
+    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+): Join = join(otherTable, JoinType.FULL, onColumn(), otherTable.otherColumn(), additionalConstraint)
 
 /** Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
     onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>
-): Join = join(otherTable, JoinType.CROSS, onColumn(), otherTable.otherColumn())
+    otherColumn: C2.() -> Expression<*>,
+    additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+): Join = join(otherTable, JoinType.CROSS, onColumn(), otherTable.otherColumn(), additionalConstraint)
 
 /**
  * Represents a subset of [fields] from a given [source].
@@ -146,12 +158,16 @@ class Slice(override val source: ColumnSet, override val fields: List<Expression
 enum class JoinType {
     /** Inner join. */
     INNER,
+
     /** Left outer join. */
     LEFT,
+
     /** Right outer join. */
     RIGHT,
+
     /** Full outer join. */
     FULL,
+
     /** Cross join. */
     CROSS
 }
@@ -257,6 +273,7 @@ class Join(
         }
     }
 
+    @Suppress("MemberNameEqualsClassName")
     private fun join(
         otherTable: ColumnSet,
         joinType: JoinType,
@@ -317,6 +334,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
     private val _columns = mutableListOf<Column<*>>()
+
     /** Returns all the columns defined on the table. */
     override val columns: List<Column<*>> get() = _columns
 
@@ -324,6 +342,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     val autoIncColumn: Column<*>? get() = columns.firstOrNull { it.columnType.isAutoInc }
 
     private val _indices = mutableListOf<Index>()
+
     /** Returns all indices declared on the table. */
     val indices: List<Index> get() = _indices
 
@@ -408,7 +427,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
          *
          * This constructor must be removed when [primaryKey] method is no longer supported.
          */
-        internal constructor(columns: List<Column<*>>) : this(*columns.toTypedArray())
+        internal constructor(columns: List<Column<*>>) : this(columns = columns.toTypedArray())
 
         /** Marks the receiver column as an element of primary key. */
         private fun Column<*>.markPrimaryKey() {
@@ -462,7 +481,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     )
     fun <T> Column<T>.primaryKey(indx: Int? = null): Column<T> = apply {
         require(indx == null || table.columns.none { it.indexInPK == indx }) { "Table $tableName already contains PK at $indx" }
-        indexInPK = indx ?: table.columns.count { it.indexInPK != null } + 1
+        indexInPK = indx ?: (table.columns.count { it.indexInPK != null } + 1)
         exposedLogger.error(
             "primaryKey(indx) method is deprecated. Use override val primaryKey=PrimaryKey() declaration instead."
         )
@@ -568,7 +587,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * what means that you can obtain column value only within the open transaction.
      * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
-    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> = registerColumn(name, TextColumnType(collate, eagerLoading))
+    fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, TextColumnType(collate, eagerLoading))
 
     // Binary columns
 
@@ -612,7 +632,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their name.
      * With the specified maximum [length] for each name value.
      */
-    fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationNameColumnType(klass, length))
+    fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> =
+        registerColumn(name, EnumerationNameColumnType(klass, length))
 
     /**
      * Creates an enumeration column with custom SQL type.
@@ -949,7 +970,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param customIndexName Name of the index.
      * @param isUnique Whether the index is unique or not.
      */
-    fun <T> Column<T>.index(customIndexName: String? = null, isUnique: Boolean = false): Column<T> = apply { table.index(customIndexName, isUnique, this) }
+    fun <T> Column<T>.index(customIndexName: String? = null, isUnique: Boolean = false): Column<T> =
+        apply { table.index(customIndexName, isUnique, this) }
 
     /**
      * Creates a unique index composed by this column only.
@@ -1042,7 +1064,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it, startWith = 0, minValue = 0, maxValue = Long.MAX_VALUE).createStatement() }.orEmpty()
+        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+            Sequence(
+                it,
+                startWith = 1,
+                minValue = 1,
+                maxValue = Long.MAX_VALUE
+            ).createStatement()
+        }.orEmpty()
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
@@ -1057,7 +1086,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { it.descriptionDdl(false) }
 
-                if (isCustomPKNameDefined() || columns.none { it.isOneColumnPK() }) {
+                if (columns.any { it.isPrimaryConstraintWillBeDefined }) {
                     primaryKeyConstraint()?.let { append(", $it") }
                 }
 
@@ -1116,6 +1145,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun hashCode(): Int = tableName.hashCode()
+
+    object Dual : Table("dual")
 }
 
 @Deprecated(

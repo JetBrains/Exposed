@@ -24,6 +24,14 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
+
+private val ORACLE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "1900-01-01 HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneOffset.UTC)
+}
+
 private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
@@ -31,13 +39,13 @@ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "yyyy-MM-d HH:mm:ss"
-    val newFormat = if (fraction in 1..9)
+    val newFormat = if (fraction in 1..9) {
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
-    else
+    } else {
         baseFormat
+    }
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
-private fun formatterForTimeString(date: String) = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
 
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
@@ -115,13 +123,16 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override fun notNullValueToDB(value: Any): Any = when {
         value is LocalDateTime && currentDialect is SQLiteDialect ->
             SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
-        value is LocalDateTime ->
-            java.sql.Timestamp(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        value is LocalDateTime -> {
+            val instant = value.atZone(ZoneId.systemDefault()).toInstant()
+            java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
+        }
         else -> value
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
-    private fun longToLocalDateTime(seconds: Long, nanos: Long) = LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
+    private fun longToLocalDateTime(seconds: Long, nanos: Long) =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
 
     companion object {
         internal val INSTANCE = JavaLocalDateTimeColumnType()
@@ -142,7 +153,12 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
+        val formatter = if (currentDialect is OracleDialect) {
+            ORACLE_TIME_STRING_FORMATTER
+        } else {
+            DEFAULT_TIME_STRING_FORMATTER
+        }
+        return "'${formatter.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {
@@ -151,7 +167,14 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
         is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
         is Int -> longToLocalTime(value.toLong())
         is Long -> longToLocalTime(value)
-        is String -> LocalTime.parse(value, formatterForTimeString(value))
+        is String -> {
+            val formatter = if (currentDialect is OracleDialect) {
+                formatterForDateString(value)
+            } else {
+                DEFAULT_TIME_STRING_FORMATTER
+            }
+            LocalTime.parse(value, formatter)
+        }
         else -> valueFromDB(value.toString())
     }
 

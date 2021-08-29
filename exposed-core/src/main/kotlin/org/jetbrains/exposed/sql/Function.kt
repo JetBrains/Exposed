@@ -20,7 +20,7 @@ open class CustomFunction<T>(
 ) : Function<T>(_columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(functionName, '(')
-        expr.toList().appendTo { +it }
+        expr.appendTo { +it }
         append(')')
     }
 }
@@ -87,7 +87,7 @@ class Concat(
     /** Returns the expressions being concatenated. */
     vararg val expr: Expression<*>
 ) : Function<String>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, expr = expr)
 }
 
 /**

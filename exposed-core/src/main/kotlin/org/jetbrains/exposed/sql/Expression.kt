@@ -32,6 +32,21 @@ class QueryBuilder(
         internalBuilder.append(postfix)
     }
 
+    /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
+    fun <T> Array<T>.appendTo(
+        separator: CharSequence = ", ",
+        prefix: CharSequence = "",
+        postfix: CharSequence = "",
+        transform: QueryBuilder.(T) -> Unit
+    ) {
+        internalBuilder.append(prefix)
+        forEachIndexed { index, element ->
+            if (index > 0) internalBuilder.append(separator)
+            transform(element)
+        }
+        internalBuilder.append(postfix)
+    }
+
     /** Appends the specified [value] to this [QueryBuilder]. */
     fun append(value: Char): QueryBuilder = apply { internalBuilder.append(value) }
 

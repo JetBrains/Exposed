@@ -7,6 +7,7 @@ import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
+    override fun floatType(): String = "REAL"
     override fun integerAutoincType(): String = "SERIAL"
     override fun longAutoincType(): String = "BIGSERIAL"
     override fun uuidType(): String = "uuid"
@@ -30,11 +31,19 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
-        return when {
-            expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("PostgreSQL doesn't support ORDER BY in STRING_AGG function.")
-            expr.distinct -> tr.throwUnsupportedException("PostgreSQL doesn't support DISTINCT in STRING_AGG function.")
-            expr.separator == null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
-            else -> queryBuilder { append("STRING_AGG(", expr.expr, ", '", expr.separator, "')") }
+        return when (expr.separator) {
+            null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
+            else -> queryBuilder {
+                append("STRING_AGG(")
+                if (expr.distinct) append(" DISTINCT ")
+                append(expr.expr, ", '", expr.separator, "'")
+                if (expr.orderBy.isNotEmpty()) {
+                    expr.orderBy.appendTo(prefix = " ORDER BY ") {
+                        append(it.first, " ", it.second.name)
+                    }
+                }
+                append(")")
+            }
         }
     }
 
@@ -150,7 +159,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             it.appendConditions(this)
         }
         where?.let {
-            + " AND "
+            +" AND "
             +it
         }
         toString()
@@ -177,7 +186,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("PostgreSQL replace table must supply at least one primary key.")
         }
         val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
-        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString { "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}" }
+        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString {
+            "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"
+        }
     }
 
     override fun delete(
