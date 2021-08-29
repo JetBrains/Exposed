@@ -185,6 +185,56 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testAddMissingColumnsStatementsChangeDefault() {
+        val t1 = object : Table("foo") {
+            val id = integer("idcol")
+            val col = integer("col")
+            val strcol = varchar("strcol", 255)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("idcol")
+            val col = integer("col").default(1)
+            val strcol = varchar("strcol", 255).default("def")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb {
+//        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t1)
+
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
+
+            val expected = setOf(
+                "ALTER TABLE ${t2.nameInDatabaseCase()} ALTER COLUMN ${t2.col.nameInDatabaseCase()} INT DEFAULT 1 NOT NULL",
+                "ALTER TABLE ${t2.nameInDatabaseCase()} ALTER COLUMN ${t2.strcol.nameInDatabaseCase()} VARCHAR(255) DEFAULT 'def' NOT NULL",
+            )
+
+            assertEquals(expected, missingStatements.toSet())
+
+            SchemaUtils.drop(t1)
+        }
+        withDb {
+//        withDb(db = listOf(TestDB.H2)) {
+            SchemaUtils.createMissingTablesAndColumns(t2)
+
+            val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
+
+            val expected = setOf(
+                "ALTER TABLE ${t1.nameInDatabaseCase()} ALTER COLUMN ${t1.col.nameInDatabaseCase()} INT NOT NULL",
+                "ALTER TABLE ${t1.nameInDatabaseCase()} ALTER COLUMN ${t1.strcol.nameInDatabaseCase()} VARCHAR(255) NOT NULL",
+            )
+
+            assertEquals(expected, missingStatements.toSet())
+
+            SchemaUtils.drop(t2)
+        }
+    }
+
+    @Test
     fun createTableWithMultipleIndexes() {
         withDb {
             try {

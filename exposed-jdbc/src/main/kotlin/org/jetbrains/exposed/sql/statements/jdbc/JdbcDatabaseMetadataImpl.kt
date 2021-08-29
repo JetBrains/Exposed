@@ -148,12 +148,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
+            val autoIncrement = it.getString("IS_AUTOINCREMENT") == "YES"
+            val type = it.getInt("DATA_TYPE")
             val columnMetadata = ColumnMetadata(
                 it.getString("COLUMN_NAME"),
-                it.getInt("DATA_TYPE"),
+                type,
                 it.getBoolean("NULLABLE"),
                 it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                it.getString("IS_AUTOINCREMENT") == "YES",
+                autoIncrement,
+                it.getString("COLUMN_DEF")
+                    // Not sure this filters enough but I dont think we ever want to have sequences here
+                    ?.takeIf { !autoIncrement },
             )
             it.getString("TABLE_NAME") to columnMetadata
         }

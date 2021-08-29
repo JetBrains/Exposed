@@ -507,6 +507,8 @@ data class ColumnMetadata(
     val size: Int?,
     /** Is the column auto increment */
     val autoIncrement: Boolean,
+    /** Default value */
+    val defaultDbValue: String?,
 )
 
 /**
