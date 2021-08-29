@@ -81,8 +81,7 @@ object SchemaUtils {
     fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
 
     fun createStatements(vararg tables: Table): List<String> {
-        if (tables.isEmpty())
-            return emptyList()
+        if (tables.isEmpty()) return emptyList()
 
         val toCreate = sortTablesByReferences(tables.toList()).filterNot { it.exists() }
         val alters = arrayListOf<String>()
@@ -119,8 +118,7 @@ object SchemaUtils {
     fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
             val statements = ArrayList<String>()
-            if (tables.isEmpty())
-                return statements
+            if (tables.isEmpty()) return statements
 
             val existingTableColumns = logTimeSpent("Extracting table columns") {
                 currentDialect.tableColumns(*tables)
@@ -188,9 +186,9 @@ object SchemaUtils {
     }
 
     private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
-        if (inBatch)
+        if (inBatch) {
             execInBatch(statements)
-        else {
+        } else {
             for (statement in statements) {
                 exec(statement)
             }

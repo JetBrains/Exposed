@@ -215,10 +215,11 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         val colName = TransactionManager.current().identity(column)
         append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()},")
         append("ALTER COLUMN $colName ")
-        if (column.columnType.nullable)
+        if (column.columnType.nullable) {
             append("DROP ")
-        else
+        } else {
             append("SET ")
+        }
         append("NOT NULL")
         column.dbDefaultValue?.let {
             append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
