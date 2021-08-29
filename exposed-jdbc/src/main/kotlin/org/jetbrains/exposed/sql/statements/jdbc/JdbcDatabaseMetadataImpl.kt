@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
+import java.util.concurrent.ConcurrentHashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
@@ -30,10 +31,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
             else -> {
-                if (driverName.startsWith("Microsoft JDBC Driver "))
+                if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
-                else
+                } else {
                     error("Unsupported driver $driverName detected")
+                }
             }
         }
     }
@@ -52,7 +54,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
 
-    override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
+    override val identifierManager: IdentifierManagerApi by lazyMetadata {
+        identityManagerCache.computeIfAbsent(url) {
+            JdbcIdentifierManager(this)
+        }
+    }
 
     private var _currentScheme: String? = null
         get() {
@@ -143,7 +149,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
             val columnMetadata = ColumnMetadata(
-                it.getString("COLUMN_NAME"),/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/
+                it.getString("COLUMN_NAME"),
                 it.getInt("DATA_TYPE"),
                 it.getBoolean("NULLABLE"),
                 it.getInt("COLUMN_SIZE").takeIf { it != 0 },
@@ -229,9 +235,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
+
+    companion object {
+        private val identityManagerCache = ConcurrentHashMap<String, JdbcIdentifierManager>()
+    }
 }
 
-fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
+private fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
     val result = arrayListOf<T>()
     while (next()) {
         result.add(body())

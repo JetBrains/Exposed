@@ -90,10 +90,15 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     }
 
     protected open fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
-        val columnsWithNotNullDefault = targets.flatMap { it.columns }.filter {
-            (it.dbDefaultValue != null || it.defaultValueFun != null) && it !in values.keys
+        val result = values.toMutableMap()
+        targets.forEach { table ->
+            table.columns.forEach { column ->
+                if ((column.dbDefaultValue != null || column.defaultValueFun != null) && column !in values.keys) {
+                    result[column] = (column.defaultValueFun?.invoke() ?: DefaultValueMarker)
+                }
+            }
         }
-        return values + columnsWithNotNullDefault.map { it to (it.defaultValueFun?.invoke() ?: DefaultValueMarker) }
+        return result
     }
 
     override fun prepareSQL(transaction: Transaction): String {
@@ -155,8 +160,9 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
             val nullableColumns = table.columns.filter { it.columnType.nullable }
-            val valuesAndDefaults = valuesAndDefaults()
-            val result = (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associate { it to null }).toList().sortedBy { it.first }
+            val valuesAndDefaults = valuesAndDefaults() as MutableMap
+            valuesAndDefaults.putAll((nullableColumns - valuesAndDefaults.keys).associateWith { null })
+            val result = valuesAndDefaults.toList().sortedBy { it.first }
             listOf(result).apply { field = this }
         }
 

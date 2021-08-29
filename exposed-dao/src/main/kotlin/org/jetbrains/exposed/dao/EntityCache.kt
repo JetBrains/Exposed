@@ -57,7 +57,13 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     fun flush() {
-        flush(inserts.keys + updates.keys)
+        val toFlush = when {
+            inserts.isEmpty() && updates.isEmpty() -> emptyList()
+            inserts.isNotEmpty() && updates.isNotEmpty() -> inserts.keys + updates.keys
+            inserts.isNotEmpty() -> inserts.keys
+            else -> updates.keys
+        }
+        flush(toFlush)
     }
 
     private fun updateEntities(idTable: IdTable<*>) {

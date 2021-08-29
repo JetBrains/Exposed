@@ -6,11 +6,16 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 object SchemaUtils {
-    private class TableDepthGraph(val tables: List<Table>) {
-        val graph = fetchAllTables().associate { t ->
-            t to t.columns.mapNotNull { c ->
-                c.referee?.let { it.table to c.columnType.nullable }
-            }.toMap()
+    private class TableDepthGraph(val tables: Iterable<Table>) {
+        val graph = fetchAllTables().let { tables ->
+            if (tables.isEmpty()) emptyMap()
+            else {
+                tables.associateWith { t ->
+                    t.columns.mapNotNull { c ->
+                        c.referee?.let { it.table to c.columnType.nullable }
+                    }.toMap()
+                }
+            }
         }
 
         private fun fetchAllTables(): HashSet<Table> {
@@ -28,6 +33,8 @@ object SchemaUtils {
         }
 
         fun sorted(): List<Table> {
+            if (!tables.iterator().hasNext()) return emptyList()
+
             val visited = mutableSetOf<Table>()
             val result = arrayListOf<Table>()
 
@@ -48,6 +55,7 @@ object SchemaUtils {
         }
 
         fun hasCycle(): Boolean {
+            if (!tables.iterator().hasNext()) return false
             val visited = mutableSetOf<Table>()
             val recursion = mutableSetOf<Table>()
 
@@ -69,7 +77,7 @@ object SchemaUtils {
         }
     }
 
-    fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables.toList()).sorted()
+    fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables).sorted()
     fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
 
     fun createStatements(vararg tables: Table): List<String> {

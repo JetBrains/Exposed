@@ -21,11 +21,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
 internal object H2FunctionProvider : FunctionProvider() {
 
-    private fun dbReleaseDate(transaction: Transaction): Date {
-        val releaseDate = transaction.db.metadata { databaseProductVersion.substringAfterLast('(').substringBeforeLast(')') }
-        val formatter = SimpleDateFormat("yyyy-MM-dd")
-        return formatter.parse(releaseDate)
-    }
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
     override fun insert(
         ignore: Boolean,
@@ -34,13 +30,14 @@ internal object H2FunctionProvider : FunctionProvider() {
         expr: String,
         transaction: Transaction
     ): String {
-        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
-        val primaryKeys = table.primaryKey?.columns?.toList() ?: emptyList()
-        val uniqueCols = (uniqueIdxCols + primaryKeys).distinct()
-        val borderDate = Date(118, 2, 18)
+        val uniqueCols = mutableSetOf<Column<*>>()
+        table.indices.filter { it.unique }.flatMapTo(uniqueCols) { it.columns }
+        table.primaryKey?.columns?.let { primaryKeys ->
+            uniqueCols += primaryKeys
+        }
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
-            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && dbReleaseDate(transaction) < borderDate -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && exactH2Version(transaction) < "1.4.197" -> {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }

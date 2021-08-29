@@ -79,8 +79,10 @@ abstract class BaseBatchInsertStatement(
         get() = field ?: run {
             val nullableColumns by lazy { allColumnsInDataSet().filter { it.columnType.nullable } }
             data.map { single ->
-                val valuesAndDefaults = super.valuesAndDefaults(single)
-                (valuesAndDefaults + (nullableColumns - valuesAndDefaults.keys).associateWith { null }).toList().sortedBy { it.first }
+                val valuesAndDefaults = super.valuesAndDefaults(single) as MutableMap
+                val nullableMap = (nullableColumns - valuesAndDefaults.keys).associateWith { null }
+                valuesAndDefaults.putAll(nullableMap)
+                valuesAndDefaults.toList().sortedBy { it.first }
             }.apply { field = this }
         }
 
