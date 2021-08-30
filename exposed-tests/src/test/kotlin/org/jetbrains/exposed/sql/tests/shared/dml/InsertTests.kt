@@ -402,7 +402,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    fun `test subquery in an insert or update statement`() {
+    @Test fun `test subquery in an insert or update statement`() {
         val tab1 = object : Table("tab1") {
             val id = varchar("id", 10)
         }
@@ -415,15 +415,15 @@ class InsertTests : DatabaseTestsBase() {
             tab2.insert { it[id] = "foo" }
             tab2.insert { it[id] = "bar" }
 
-            // User sub query in an insert
-            tab1.insert { it[id] = tab2.slice(tab2.id).select { tab1.id eq "foo" } }
+            // Use sub query in an insert
+            tab1.insert { it[id] = tab2.slice(tab2.id).select { tab2.id eq "foo" } }
 
             // Check inserted data
             val insertedId = tab1.slice(tab1.id).selectAll().single()[tab1.id]
             assertEquals("foo", insertedId)
 
-            // User sub query in an update
-            tab1.update({ tab1.id eq "foo" }) { it[id] = tab2.slice(tab2.id).select { tab1.id eq "bar" } }
+            // Use sub query in an update
+            tab1.update({ tab1.id eq "foo" }) { it[id] = tab2.slice(tab2.id).select { tab2.id eq "bar" } }
 
             // Check updated data
             val updatedId = tab1.slice(tab1.id).selectAll().single()[tab1.id]
