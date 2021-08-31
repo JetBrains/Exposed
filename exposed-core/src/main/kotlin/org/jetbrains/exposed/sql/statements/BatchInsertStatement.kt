@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 
 class BatchDataInconsistentException(message: String) : Exception(message)
@@ -25,11 +24,13 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         }
     }
 
+    private val columnToReturnValue = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }
+
     override fun prepareSQL(transaction: Transaction): String {
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
-            val output = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }?.let {
+            val output = columnToReturnValue?.let {
                 " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
             }.orEmpty()
 
@@ -47,6 +48,12 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
     override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
 
     override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
-        return arguments!!.size to executeQuery()
+        val rs = if (columnToReturnValue != null) {
+            executeQuery()
+        } else {
+            executeUpdate()
+            null
+        }
+        return arguments!!.size to rs
     }
 }
