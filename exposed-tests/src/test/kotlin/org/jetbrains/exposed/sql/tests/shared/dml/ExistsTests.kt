@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
@@ -24,7 +25,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExistsInASlice() {
-        withCitiesAndUsers { _, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, userData ->
             val exists = exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
             val r1 = users.slice(exists).selectAll().first()
             assertEquals(false, r1[exists])
