@@ -4,7 +4,7 @@ Infrastructure:
 * Kotlin Coroutines 1.5.1
 * kotlinter replaced with Detekt. Many thanks to [BorzdeG](https://github.com/BorzdeG) for PR 
 
-Broken Changes:
+Breaking Changes:
 * `EntityCache` internal representation was reworked to lower overhead on cache operations and to create more O(1) 
 when working with references. `EntityCache.inserts` and `EntityCache.referrers` fields are not publicly available anymore. 
 
@@ -120,7 +120,7 @@ Bug fixes:
 * Fix for exposed-jodatime module to work with MySQL ConnectorJ 8.0.23
 
 # 0.28.1
-Broken Changes:
+Breaking Changes:
 * `referrersOn`/`optionalReferrersOn` is now have `cache=true` by default [1046](https://github.com/JetBrains/Exposed/issues/1046). 
   It should help to prevent excessive queries when reading referenced values withing the same transaction but may require more memory to store the cached values.
 * Default isolation level for PostgreSQL now set to `READ_COMMITTED`. PR by [uryyyyyyy](https://github.com/uryyyyyyy)  
@@ -269,7 +269,7 @@ Bug fixes:
 # 0.22.1
 Documentation on SQL functions was added by [Juan José González Abril](https://github.com/SackCastellon)
 
-Broken Changes:
+Breaking Changes:
 * Return type of `SizedIterable.count()` (and `Query.count()` as an inheritor) was changed from Int to Long to support very large tables. 
 
 Also, `offset` parameter of `SizedIterable.limit()` and `DeleteStatement` functions were changed accordingly. `limit` parameter stays untouched to be in sync with Kotlin `Collection.size`
@@ -348,7 +348,7 @@ Bug fixes:
 
 
 # 0.19.1
-Broken changes:
+Breaking Changes:
 * `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable` classes from `exposed-core` 
 were moved from `org.jetbrains.exposed.dao` to `org.jetbrains.exposed.dao.id` package along with `exposed-jodatime` module classes to support Java 9 module system.
 To help with migration, old classes were deprecated with proper `replaceWith` option. Read [migration guide](https://github.com/JetBrains/Exposed/wiki/Migration-Guide#migrating-to-019) for more details.
