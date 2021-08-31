@@ -78,7 +78,7 @@ class Union(
                 append(currentDialect.functionProvider.queryLimit(it, offset, true))
             }
 
-            if (count) append(") as subquery")
+            if (count) append(") subquery")
         }
         return builder.toString()
     }
