@@ -139,21 +139,22 @@ object SchemaUtils {
                     }
 
                     // sync existing columns
-                    val redoColumn = table.columns.filter { c ->
-                        thisTableExistingColumns.any {
-                            if (c.name.equals(it.name, true)) {
-                                val incorrectNullability = it.nullable != c.columnType.nullable
-                                val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                                val incorrectDefaults = it.defaultDbValue != c.dbDefaultValue?.let {
-                                    QueryBuilder(false)
-                                        .apply { it.toQueryBuilder(this) }
-                                        .toString()
-                                }
-                                incorrectNullability || incorrectAutoInc || incorrectDefaults
-                            } else false
+                    val dataTypeProvider = db.dialect.dataTypeProvider
+                    val redoColumn = table.columns.mapNotNull { c ->
+                        val changedState = thisTableExistingColumns.find { c.name.equals(it.name, true) }?.let {
+                            val incorrectNullability = it.nullable != c.columnType.nullable
+                            val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
+                            val incorrectDefaults = it.defaultDbValue != c.dbDefaultValue?.let {
+                                dataTypeProvider.processForDefaultValue(it)
+                            }
+                            Triple(incorrectNullability, incorrectAutoInc, incorrectDefaults)
                         }
+
+                        changedState?.takeIf { it.first || it.second || it.third }?.let { c to changedState }
                     }
-                    redoColumn.flatMapTo(statements) { it.modifyStatement() }
+                    redoColumn.flatMapTo(statements) { (col, changedState) ->
+                        col.modifyStatements(changedState.first, changedState.second, changedState.third)
+                    }
                 }
             }
 

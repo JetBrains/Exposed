@@ -602,7 +602,7 @@ interface DatabaseDialect {
     fun dropIndex(tableName: String, indexName: String): String
 
     /** Returns the SQL command that modifies the specified [column]. */
-    fun modifyColumn(column: Column<*>): String
+    fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String>
 
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
@@ -762,7 +762,12 @@ abstract class VendorDialect(
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
-    override fun modifyColumn(column: Column<*>): String = "MODIFY COLUMN ${column.descriptionDdl(true)}"
+    override fun modifyColumn(
+        column: Column<*>,
+        nullabilityChanged: Boolean,
+        autoIncrementChanged: Boolean,
+        defaultChanged: Boolean
+    ): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()

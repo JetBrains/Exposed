@@ -59,7 +59,8 @@ class Column<T>(
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val columnDefinition = when {
-            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint ->
+                descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
             isH2withCustomPKConstraint -> descriptionDdl(true)
             else -> descriptionDdl(false)
         }
@@ -68,8 +69,10 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> =
-        listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    fun modifyStatements(nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> =
+        currentDialect.modifyColumn(this, nullabilityChanged, autoIncrementChanged, defaultChanged)
+
+    override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, true, true, true)
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()

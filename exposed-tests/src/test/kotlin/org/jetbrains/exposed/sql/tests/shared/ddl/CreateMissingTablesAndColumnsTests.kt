@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -189,8 +190,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     fun testAddMissingColumnsStatementsChangeDefault() {
         val t1 = object : Table("foo") {
             val id = integer("idcol")
-            val col = integer("col")
-            val strcol = varchar("strcol", 255)
+            val col = integer("col").nullable()
+            val strcol = varchar("strcol", 255).nullable()
 
             override val primaryKey = PrimaryKey(id)
         }
@@ -203,51 +204,64 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE)) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+        val excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
+        withDb(excludeSettings = excludeSettings) { testDb ->
+            try {
+                SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val alterColumnWord = when(currentDialectTest) {
-                is MysqlDialect -> "MODIFY"
-                else -> "ALTER"
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
+
+                if (testDb !in complexAlterTable) {
+                    val alterColumnWord = when (currentDialectTest) {
+                        is MysqlDialect -> "MODIFY COLUMN"
+                        is OracleDialect -> "MODIFY"
+                        else -> "ALTER COLUMN"
+                    }
+                    val expected = setOf(
+                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.col.nameInDatabaseCase()} ${t2.col.columnType.sqlType()} DEFAULT 1 NOT NULL",
+                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.strcol.nameInDatabaseCase()} ${t2.strcol.columnType.sqlType()} DEFAULT 'def' NOT NULL",
+                    )
+                    assertEquals(expected, missingStatements.toSet())
+                } else {
+                    assertEquals(true, missingStatements.isNotEmpty())
+                }
+
+                missingStatements.forEach {
+                    exec(it)
+                }
+            } finally {
+                SchemaUtils.drop(t1)
             }
-
-            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
-
-            val expected = setOf(
-                "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord COLUMN ${t2.col.nameInDatabaseCase()} INT DEFAULT 1 NOT NULL",
-                "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord COLUMN ${t2.strcol.nameInDatabaseCase()} VARCHAR(255) DEFAULT 'def' NOT NULL",
-            )
-
-            assertEquals(expected, missingStatements.toSet())
-
-            missingStatements.forEach {
-                exec(it)
-            }
-
-            SchemaUtils.drop(t1)
         }
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE)) {
-            SchemaUtils.createMissingTablesAndColumns(t2)
 
-            val alterColumnWord = when(currentDialectTest) {
-                is MysqlDialect -> "MODIFY"
-                else -> "ALTER"
+        withDb(excludeSettings = excludeSettings) { testDb ->
+            try {
+                SchemaUtils.createMissingTablesAndColumns(t2)
+
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
+
+                if (testDb !in complexAlterTable) {
+                    val alterColumnWord = when (currentDialectTest) {
+                        is MysqlDialect -> "MODIFY COLUMN"
+                        is OracleDialect -> "MODIFY"
+                        else -> "ALTER COLUMN"
+                    }
+                    val expected = setOf(
+                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.col.nameInDatabaseCase()} ${t1.col.columnType.sqlType()} NULL",
+                        "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.strcol.nameInDatabaseCase()} ${t1.strcol.columnType.sqlType()} NULL",
+                    )
+                    assertEquals(expected, missingStatements.toSet())
+                } else {
+                    assertEquals(true, missingStatements.isNotEmpty())
+                }
+
+                missingStatements.forEach {
+                    exec(it)
+                }
+            } finally {
+                SchemaUtils.drop(t2)
             }
-
-            val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
-
-            val expected = setOf(
-                "ALTER TABLE ${t1.nameInDatabaseCase()} $alterColumnWord COLUMN ${t1.col.nameInDatabaseCase()} INT NOT NULL",
-                "ALTER TABLE ${t1.nameInDatabaseCase()} $alterColumnWord COLUMN ${t1.strcol.nameInDatabaseCase()} VARCHAR(255) NOT NULL",
-            )
-
-            assertEquals(expected, missingStatements.toSet())
-
-            missingStatements.forEach {
-                exec(it)
-            }
-
-            SchemaUtils.drop(t2)
         }
     }
 

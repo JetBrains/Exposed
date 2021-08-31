@@ -211,7 +211,19 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>): String = super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
+    override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> {
+        val result = super.modifyColumn(column, nullabilityChanged, autoIncrementChanged, defaultChanged).map {
+            it.replace("MODIFY COLUMN", "MODIFY")
+        }
+        return if (!nullabilityChanged) {
+            val nullableState = if (column.columnType.nullable) "NULL " else "NOT NULL"
+            result.map {
+                it.replace(nullableState, "")
+            }
+        } else {
+            result
+        }
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 

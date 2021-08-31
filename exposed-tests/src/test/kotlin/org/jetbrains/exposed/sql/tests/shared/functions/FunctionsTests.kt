@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 

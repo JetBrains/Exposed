@@ -3,8 +3,6 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.text.SimpleDateFormat
-import java.util.*
 
 private val Transaction.isMySQLMode: Boolean
     get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
@@ -160,8 +158,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
 
-    override fun modifyColumn(column: Column<*>): String =
-        super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
+    override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> =
+        super.modifyColumn(column, nullabilityChanged, autoIncrementChanged, defaultChanged).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
