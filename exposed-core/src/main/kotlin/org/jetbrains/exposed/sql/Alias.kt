@@ -4,7 +4,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
-    val tableNameWithAlias: String = "${delegate.tableName} AS $alias"
+    val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
