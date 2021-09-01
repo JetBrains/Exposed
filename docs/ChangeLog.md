@@ -3,19 +3,19 @@ Infrastructure:
 * Kotlin 1.5.30
 
 Features:
-* `Op.nullOp()` function added to allow set or compare with `NULL` ([#1315]((https://github.com/JetBrains/Exposed/issues/1315))
+* `Op.nullOp()` function added to allow set or compare with `NULL` ([#1315](https://github.com/JetBrains/Exposed/issues/1315))
 * [Spring Boot] Enable sql query logging to stdout with `spring.exposed.show-sql` configuration parameter
 * `Table.Dual` introduced to allow queries without the real tables
 * `Table.batchReplace` function similar to `Table.batchInsert` added by [pilotclass](https://github.com/pilotclass)
 * Column default change detected in `SchemaUtils.addMissingColumnsStatements` with help of [spand](https://github.com/spand) 
 
 Bug Fixes:
-* [PostgreSQL] `GroupConcat` with distinct fails ([#1313]((https://github.com/JetBrains/Exposed/issues/1313)) 
+* [PostgreSQL] `GroupConcat` with distinct fails ([#1313](https://github.com/JetBrains/Exposed/issues/1313)) 
 * `UpdateBuilder` inconsistently handles value set check 
-* Empty update statement causes SQL Syntax error ([#1241]((https://github.com/JetBrains/Exposed/issues/1241))
+* Empty update statement causes SQL Syntax error ([#1241](https://github.com/JetBrains/Exposed/issues/1241))
 * Don't call `super.equals` on `Column.equals` to prevent "toString" comparing.  
 * [Oracle] `count()` fails on `Union` fixed by [dakriy](https://github.com/dakriy), also `AS` keyword was removed from Aliases  
-* [SQLServer]Many to many relationship update breaks when updating from exposed 0.26.2 to 0.27.1 ([#1319]((https://github.com/JetBrains/Exposed/issues/1319))
+* [SQLServer]Many to many relationship update breaks when updating from exposed 0.26.2 to 0.27.1 ([#1319](https://github.com/JetBrains/Exposed/issues/1319))
 
 Performance:
 * A lot of low-level improvements in different places
@@ -36,13 +36,13 @@ Features:
 * `PrepareStatement` can be cancelled, thanks [Alex Shubert](https://github.com/lure) for supporting it
 * `ForeignKeyConstraint.customFkName` was added by [spand](https://github.com/spand)
 * All types of joins now accepts `additionalConstraint` lambda (PR from [spand](https://github.com/spand))
-* `InsertStatement` now stores number of inserted rows in `insertedCount` field ([#851]((https://github.com/JetBrains/Exposed/issues/851) 
+* `InsertStatement` now stores number of inserted rows in `insertedCount` field ([#851](https://github.com/JetBrains/Exposed/issues/851))
 * `batchInsert` function now can be called on `Sequences`. Feature added by [Philip Wedemann](https://github.com/hfhbd) 
 
 Bug Fixes:
 * [MySQL/MariaDB] Restore old 0000-00-00 00:00:00 as null behavior for Mysql and MariaDb (PR from [spand](https://github.com/spand)).
-* `datetime` column looses nanos part ([#1028]((https://github.com/JetBrains/Exposed/issues/1028))
-* Setting value for the same column multiple times in UpdateBuilder fails ([#1177]((https://github.com/JetBrains/Exposed/issues/1177))
+* `datetime` column looses nanos part ([#1028](https://github.com/JetBrains/Exposed/issues/1028))
+* Setting value for the same column multiple times in UpdateBuilder fails ([#1177](https://github.com/JetBrains/Exposed/issues/1177))
 * [SQLite] `primaryKey` override ignored ([#1258]((https://github.com/JetBrains/Exposed/issues/1258))
 * Transaction can be unexpectedly initialized when working with coroutines
 * [PostgreSQL] `REAL` type will be used instead of `FLOAT8` for `float` column. Thanks [Philip Wedemann](https://github.com/hfhbd) for fix
