@@ -1,3 +1,25 @@
+# 0.34.1
+Infrastructure:
+* Kotlin 1.5.30
+
+Features:
+* `Op.nullOp()` function added to allow set or compare with `NULL` ([#1315]((https://github.com/JetBrains/Exposed/issues/1315))
+* [Spring Boot] Enable sql query logging to stdout with `spring.exposed.show-sql` configuration parameter
+* `Table.Dual` introduced to allow queries without the real tables
+* `Table.batchReplace` function similar to `Table.batchInsert` added by [pilotclass](https://github.com/pilotclass)
+* Column default change detected in `SchemaUtils.addMissingColumnsStatements` with help of [spand](https://github.com/spand) 
+
+Bug Fixes:
+* [PostgreSQL] `GroupConcat` with distinct fails ([#1313]((https://github.com/JetBrains/Exposed/issues/1313)) 
+* `UpdateBuilder` inconsistently handles value set check 
+* Empty update statement causes SQL Syntax error ([#1241]((https://github.com/JetBrains/Exposed/issues/1241))
+* Don't call `super.equals` on `Column.equals` to prevent "toString" comparing.  
+* [Oracle] `count()` fails on `Union` fixed by [dakriy](https://github.com/dakriy), also `AS` keyword was removed from Aliases  
+* [SQLServer]Many to many relationship update breaks when updating from exposed 0.26.2 to 0.27.1 ([#1319]((https://github.com/JetBrains/Exposed/issues/1319))
+
+Performance:
+* A lot of low-level improvements in different places
+
 # 0.33.1
 Infrastructure:
 * Kotlin 1.5.21
