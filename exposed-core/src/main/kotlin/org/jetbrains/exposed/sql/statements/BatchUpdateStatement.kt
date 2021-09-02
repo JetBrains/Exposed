@@ -28,7 +28,7 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
         if (data.isNotEmpty()) {
             data[data.size - 1] = lastBatch!!.copy(second = values.toMap())
             values.clear()
-            hasBathedValues = true
+            hasBatchedValues = true
         }
         data.add(id to values)
     }
