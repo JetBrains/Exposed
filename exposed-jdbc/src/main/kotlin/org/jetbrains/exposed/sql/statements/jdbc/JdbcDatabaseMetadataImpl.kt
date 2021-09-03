@@ -149,7 +149,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
             // That read should go first as Oracle driver closes connection after that
-            val defaultDbValue = it.getString("COLUMN_DEF")?.trim('\'')?.trim()
+            val defaultDbValue = it.getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
             val autoIncrement = it.getString("IS_AUTOINCREMENT") == "YES"
             val type = it.getInt("DATA_TYPE")
             val columnMetadata = ColumnMetadata(
@@ -165,6 +165,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
         rs.close()
         return result
+    }
+
+    private fun sanitizedDefault(defaultValue: String) = when (currentDialect) {
+        is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
+        else -> defaultValue.trim('\'').trim()
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
