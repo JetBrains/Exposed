@@ -200,14 +200,6 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 }
 
-class QueryExpression<T>(val query: AbstractQuery<*>) : Expression<T>(), ComplexExpression {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append("(")
-        query.prepareSQL(this)
-        +")"
-    }
-}
-
 /**
  * Mutate Query instance and add `andPart` to where condition with `and` operator.
  * @return same Query instance which was provided as a receiver.
@@ -227,5 +219,3 @@ fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere
     if (this == null) expr
     else this or expr
 }
-
-fun <T> Query.expression(): QueryExpression<T> = QueryExpression(this)
