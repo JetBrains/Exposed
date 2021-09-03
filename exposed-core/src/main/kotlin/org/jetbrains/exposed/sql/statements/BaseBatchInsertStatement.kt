@@ -37,7 +37,7 @@ abstract class BaseBatchInsertStatement(
             data[data.size - 1] = LinkedHashMap(values)
             allColumnsInDataSet.addAll(values.keys)
             values.clear()
-            hasBathedValues = true
+            hasBatchedValues = true
         }
         data.add(values)
         arguments = null
@@ -50,7 +50,7 @@ abstract class BaseBatchInsertStatement(
         values.clear()
         values.putAll(data.last())
         arguments = null
-        hasBathedValues = data.size > 0
+        hasBatchedValues = data.size > 0
     }
 
     internal open fun validateLastBatch() {

@@ -19,9 +19,9 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open operator fun contains(column: Column<*>): Boolean = values.contains(column)
 
-    protected var hasBathedValues: Boolean = false
+    protected var hasBatchedValues: Boolean = false
     private fun checkThatExpressionWasNotSetInPreviousBatch(column: Column<*>) {
-        require(!(values.containsKey(column) && hasBathedValues)) { "$column is already initialized in a batch" }
+        require(!(values.containsKey(column) && hasBatchedValues)) { "$column is already initialized in a batch" }
     }
 
     open operator fun <S> set(column: Column<S>, value: S) {
