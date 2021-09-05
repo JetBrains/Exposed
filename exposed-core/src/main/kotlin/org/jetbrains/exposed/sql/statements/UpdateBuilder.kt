@@ -7,8 +7,10 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.CompositeColumn
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.wrapAsExpression
 
 /**
  * @author max
@@ -53,6 +55,8 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     open operator fun <T, S : T, E : Expression<S>> set(column: Column<T>, value: E) = update(column, value)
+
+    open operator fun <S> set(column: Column<S>, value: Query) = update(column, wrapAsExpression(value))
 
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {
         column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
