@@ -29,14 +29,13 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = where
         private set
 
-    override val queryToExecute: Statement<ResultSet>
-        get() {
-            val distinctExpressions = set.fields.distinct()
-            return if (distinctExpressions.size < set.fields.size) {
-                copy().adjustSlice { slice(distinctExpressions) }
-            } else
-                this
-        }
+    override val queryToExecute: Statement<ResultSet> get() {
+        val distinctExpressions = set.fields.distinct()
+        return if (distinctExpressions.size < set.fields.size) {
+            copy().adjustSlice { slice(distinctExpressions) }
+        } else
+            this
+    }
 
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
