@@ -41,7 +41,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
                 }
             }
 
-            val firstAutoIncColumn = autoIncColumns.firstOrNull()
+            val firstAutoIncColumn = autoIncColumns.firstOrNull { it.autoIncColumnType != null } ?: autoIncColumns.firstOrNull()
             if (firstAutoIncColumn != null || returnedColumns.isNotEmpty()) {
                 while (rs?.next() == true) {
                     val returnedValues = returnedColumns.associateTo(mutableMapOf()) { it.first to rs.getObject(it.second) }
@@ -147,7 +147,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
-        autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
+         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() ->
