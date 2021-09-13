@@ -6,8 +6,13 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
 
-enum class SortOrder {
-    ASC, DESC
+enum class SortOrder(val code: String, val requiresNullsFirstLastSupport: Boolean = false) {
+    ASC(code = "ASC"),
+    DESC(code = "DESC"),
+    ASC_NULLS_FIRST(code = "ASC NULLS FIRST", requiresNullsFirstLastSupport = true),
+    DESC_NULLS_FIRST(code = "DESC NULLS FIRST", requiresNullsFirstLastSupport = true),
+    ASC_NULLS_LAST(code = "ASC NULLS LAST", requiresNullsFirstLastSupport = true),
+    DESC_NULLS_LAST(code = "DESC NULLS LAST", requiresNullsFirstLastSupport = true)
 }
 
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
@@ -120,8 +125,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
                 if (orderByExpressions.isNotEmpty()) {
                     append(" ORDER BY ")
-                    orderByExpressions.appendTo {
-                        append((it.first as? ExpressionAlias<*>)?.alias ?: it.first, " ", it.second.name)
+                    orderByExpressions.appendTo { (expression, sortOrder) ->
+                        if (sortOrder.requiresNullsFirstLastSupport && !currentDialect.supportsOrderByNullsFirstLast) {
+                            error(
+                                """Sort order '${sortOrder.name}' requires extended ORDER BY support,
+                                | but the current dialect '${currentDialect.name}' does not support this"""
+                                    .trimMargin()
+                            )
+                        }
+                        append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
                     }
                 }
 
