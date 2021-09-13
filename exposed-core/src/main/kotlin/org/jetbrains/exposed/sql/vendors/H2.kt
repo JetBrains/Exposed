@@ -135,6 +135,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override val supportsMultipleGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
+    override val supportsOrderByNullsFirstLast: Boolean = true
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
         super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }

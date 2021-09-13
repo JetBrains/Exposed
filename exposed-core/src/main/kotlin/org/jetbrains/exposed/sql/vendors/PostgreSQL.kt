@@ -209,6 +209,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
  * PostgreSQL dialect implementation.
  */
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+    override val supportsOrderByNullsFirstLast: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> = listOf(buildString {
