@@ -1,3 +1,15 @@
+# 0.34.2
+Features:
+* Supporting subqueries in insert and update statements. Added by [hfazai](https://github.com/hfazai)
+* SQL highlighting in `Transaction.exec` with raw SQL ([#1337](https://github.com/JetBrains/Exposed/issues/1337)) 
+
+Bug Fixes:
+* [SQLServer] Properly sanitize column default read from database metadata ([#1341](https://github.com/JetBrains/Exposed/issues/1341))
+* Table.id is not in record set ([#1341](https://github.com/JetBrains/Exposed/issues/1341))
+* newSuspendedTransaction often doesn't honor TransactionManager.defaultDatabase changes ([#1342](https://github.com/JetBrains/Exposed/issues/1342))
+* `Database.name` failed on parsing connection string with '/' in parameter list. Founded and fixed by [RaySmith-ttc](https://github.com/RaySmith-ttc)
+* Import of Exposed BOM failed when imported as a platform dependency. Fixed by [clarkperkins](https://github.com/clarkperkins) 
+
 # 0.34.1
 Infrastructure:
 * Kotlin 1.5.30
