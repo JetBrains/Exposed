@@ -32,11 +32,15 @@ fun Project.setupDialectTest(dialect: String) {
         _dockerCompose.isRequiredBy(dialectTest)
 
         _dockerCompose {
-            useComposeFiles = listOf(File(project.rootProject.projectDir, "buildScripts/docker/docker-compose-$dialect.yml").absolutePath)
-            captureContainersOutput = true
-            removeVolumes = true
-            environment["COMPOSE_CONVERT_WINDOWS_PATHS"] = true
-            waitForHealthyStateTimeout = Duration.ofMinutes(60)
+            val env = environment.get().toMutableMap().apply {
+                set("COMPOSE_CONVERT_WINDOWS_PATHS", true)
+            }
+            useComposeFiles.add(File(project.rootProject.projectDir, "buildScripts/docker/docker-compose-$dialect.yml").absolutePath)
+            captureContainersOutput.set(true)
+            removeVolumes.set(true)
+            environment.set(env)
+            waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
+            captureContainersOutput.set(true)
         }
     }
 }
