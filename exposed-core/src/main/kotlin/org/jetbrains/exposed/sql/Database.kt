@@ -205,4 +205,4 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
-val Database.name: String get() = url.substringAfterLast('/').substringBefore('?')
+val Database.name: String get() = url.substringBefore('?').substringAfterLast('/')
