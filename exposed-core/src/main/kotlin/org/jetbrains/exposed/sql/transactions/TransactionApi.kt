@@ -56,7 +56,7 @@ interface TransactionManager {
     fun bindTransactionToThread(transaction: Transaction?)
 
     companion object {
-        private val currentDefaultDatabase = AtomicReference<Database>()
+        internal val currentDefaultDatabase = AtomicReference<Database>()
 
         var defaultDatabase: Database?
             get() = currentDefaultDatabase.get() ?: databases.firstOrNull()

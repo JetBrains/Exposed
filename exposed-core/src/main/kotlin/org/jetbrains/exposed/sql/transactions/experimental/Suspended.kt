@@ -97,7 +97,7 @@ private suspend fun <T> withTransactionScope(
 ): T {
     val currentScope = coroutineContext[TransactionScope]
     suspend fun newScope(_tx: Transaction?): T {
-        val manager = (_tx?.db ?: db)?.transactionManager ?: TransactionManager.manager
+        val manager = (_tx?.db ?: db ?: TransactionManager.currentDefaultDatabase.get())?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) { _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel) }
 
