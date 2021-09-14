@@ -21,7 +21,7 @@ dependencies {
                         if (!artifactId.endsWith("-metadata") &&
                             !artifactId.endsWith("-kotlinMultiplatform")
                         ) {
-                            api(platform(project(":${it.name}")))
+                            api(project(":${it.name}"))
                         }
                     }
                 }
