@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
@@ -79,11 +80,11 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
+    fun exec(@Language("sql") stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
         exec(stmt, args, explicitStatementType) { }
 
     fun <T : Any> exec(
-        stmt: String,
+        @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null,
         transform: (ResultSet) -> T
@@ -164,10 +165,11 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     }.toString()
 
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
-        if (column.table is Alias<*>)
+        if (column.table is Alias<*>) {
             append(db.identifierManager.quoteIfNecessary(column.table.alias))
-        else
+        } else {
             append(db.identifierManager.quoteIfNecessary(column.table.tableName.inProperCase()))
+        }
         append('.')
         append(identity(column))
     }
