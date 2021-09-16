@@ -25,6 +25,28 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
      * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
      */
     override fun textType(): String = "VARCHAR(MAX)"
+
+    override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
+        when (sortOrder) {
+            SortOrder.ASC, SortOrder.DESC -> super.precessOrderByClause(queryBuilder, expression, sortOrder)
+            SortOrder.ASC_NULLS_FIRST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.ASC)
+            SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
+            else -> {
+                val sortOrderClause = if (sortOrder == SortOrder.ASC_NULLS_LAST) {
+                    Expression.build {
+                        Case().When(expression.isNull(), intLiteral(1)).Else(intLiteral(0))
+                    } to SortOrder.ASC
+                } else {
+                    Expression.build {
+                        Case().When(expression.isNull(), intLiteral(0)).Else(intLiteral(1))
+                    } to SortOrder.DESC
+                }
+                queryBuilder.append(sortOrderClause.first, ", ")
+                super.precessOrderByClause(queryBuilder, expression, sortOrderClause.second)
+            }
+        }
+    }
+
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
@@ -156,8 +178,6 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsSequenceAsGeneratedKeys: Boolean = false
-    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
-    override val supportsOrderByNullsFirstLast: Boolean = false
 
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 

@@ -101,6 +101,10 @@ abstract class DataTypeProvider {
         currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
     }
+
+    open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
+        queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
+    }
 }
 
 /**

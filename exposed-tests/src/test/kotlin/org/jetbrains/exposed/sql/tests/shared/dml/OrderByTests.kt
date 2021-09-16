@@ -137,9 +137,7 @@ class OrderByTests : DatabaseTestsBase() {
             SortOrder.DESC_NULLS_FIRST to usersWithoutCities + otherUsers,
             SortOrder.DESC_NULLS_LAST to otherUsers + usersWithoutCities,
         )
-        withCitiesAndUsers(
-            exclude = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.SQLSERVER)
-        ) { _, users, _ ->
+        withCitiesAndUsers { _, users, _ ->
             cases.forEach { (sortOrder, expected) ->
                 val r = users.selectAll().orderBy(
                     users.cityId to sortOrder,

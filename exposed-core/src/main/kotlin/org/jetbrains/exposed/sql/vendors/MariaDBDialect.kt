@@ -26,7 +26,6 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
 class MariaDBDialect : MysqlDialect() {
     override val name: String = dialectName
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
-    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
     companion object {
         /** MariaDB dialect name */
