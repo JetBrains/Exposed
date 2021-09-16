@@ -555,6 +555,8 @@ interface DatabaseDialect {
 
     val supportsDualTableConcept: Boolean get() = false
 
+    val supportsOrderByNullsFirstLast: Boolean get() = false
+
     /** Returns the name of the current database. */
     fun getDatabase(): String
 

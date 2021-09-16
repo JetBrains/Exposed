@@ -124,6 +124,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsSubqueryUnions: Boolean = true
 
+    override val supportsOrderByNullsFirstLast: Boolean = false
+
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
