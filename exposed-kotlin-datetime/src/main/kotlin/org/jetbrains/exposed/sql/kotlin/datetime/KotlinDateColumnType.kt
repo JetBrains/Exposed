@@ -126,6 +126,7 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is java.sql.Timestamp -> longToLocalDateTime(value.time / MILLIS_IN_SECOND, value.nanos.toLong())
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
+        is java.time.LocalDateTime -> value.toKotlinLocalDateTime()
         is String -> java.time.LocalDateTime.parse(value, formatterForDateString(value)).toKotlinLocalDateTime()
         else -> valueFromDB(value.toString())
     }
