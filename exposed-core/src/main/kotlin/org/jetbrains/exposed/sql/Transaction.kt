@@ -31,19 +31,9 @@ open class UserDataHolder {
 
 open class Transaction(private val transactionImpl: TransactionInterface) : UserDataHolder(), TransactionInterface by transactionImpl {
 
-    init {
-        Companion.globalInterceptors // init interceptors
-    }
-
-    internal val interceptors = arrayListOf<StatementInterceptor>()
-
-    fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
-
-    fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
-
     var statementCount: Int = 0
     var duration: Long = 0
-    var warnLongQueriesDuration: Long? = null
+    var warnLongQueriesDuration: Long? = db.config.warnLongQueriesDuration
     var debug = false
     val id by lazy { UUID.randomUUID().toString() }
 
@@ -51,14 +41,21 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     var currentStatement: PreparedStatementApi? = null
     internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
 
+    internal val interceptors = arrayListOf<StatementInterceptor>()
+
     val statements = StringBuilder()
 
     // prepare statement as key and count to execution time as value
-    val statementStats = hashMapOf<String, Pair<Int, Long>>()
+    val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
 
     init {
-        addLogger(Slf4jSqlDebugLogger)
+        addLogger(db.config.sqlLogger)
+        globalInterceptors // init interceptors
     }
+
+    fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
+
+    fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
 
     override fun commit() {
         globalInterceptors.forEach { it.beforeCommit(this) }

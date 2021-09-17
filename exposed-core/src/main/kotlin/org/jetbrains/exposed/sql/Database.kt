@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
-import org.jetbrains.exposed.sql.transactions.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -15,9 +15,16 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
-class Database private constructor(private val resolvedVendor: String? = null, val connector: () -> ExposedConnection<*>) {
+class Database private constructor(
+    private val resolvedVendor: String? = null,
+    val config: DatabaseConfig,
+    val connector: () -> ExposedConnection<*>
+) {
 
-    var useNestedTransactions: Boolean = false
+    var useNestedTransactions: Boolean = config.useNestedTransactions
+        @Deprecated("Use DatabaseConfig to define the useNestedTransactions")
+        @TestOnly
+        set
 
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
@@ -51,9 +58,11 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
     val identifierManager by lazy { metadata { identifierManager } }
 
-    var defaultFetchSize: Int? = null
+    var defaultFetchSize: Int? = config.defaultFetchSize
         private set
 
+    @Deprecated("Use DatabaseConfig to define the defaultFetchSize")
+    @TestOnly
     fun defaultFetchSize(size: Int): Database {
         defaultFetchSize = size
         return this
@@ -109,11 +118,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
         private fun doConnect(
             explicitVendor: String?,
+            config: DatabaseConfig?,
             getNewConnection: () -> Connection,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
-            return Database(explicitVendor) {
+            return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
                 connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
@@ -123,10 +133,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         fun connect(
             datasource: DataSource,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            databaseConfig: DatabaseConfig? = null,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
+                config = databaseConfig,
                 getNewConnection = { datasource.connection!! },
                 setupConnection = setupConnection,
                 manager = manager
@@ -141,10 +153,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         fun connect(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            databaseConfig: DatabaseConfig? = null,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
+                config = databaseConfig,
                 getNewConnection = { datasource.pooledConnection.connection!! },
                 setupConnection = setupConnection,
                 manager = manager
@@ -154,10 +168,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
         fun connectPool(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            databaseConfig: DatabaseConfig? = null,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
+                config = databaseConfig,
                 getNewConnection = { datasource.pooledConnection.connection!! },
                 setupConnection = setupConnection,
                 manager = manager
@@ -166,9 +182,14 @@ class Database private constructor(private val resolvedVendor: String? = null, v
 
         fun connect(
             getNewConnection: () -> Connection,
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            databaseConfig: DatabaseConfig? = null,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
-            return doConnect(explicitVendor = null, getNewConnection = getNewConnection, manager = manager)
+            return doConnect(
+                explicitVendor = null,
+                config = databaseConfig,
+                getNewConnection = getNewConnection,
+                manager = manager)
         }
 
         fun connect(
@@ -177,11 +198,12 @@ class Database private constructor(private val resolvedVendor: String? = null, v
             user: String = "",
             password: String = "",
             setupConnection: (Connection) -> Unit = {},
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it, DEFAULT_REPETITION_ATTEMPTS) }
+            databaseConfig: DatabaseConfig? = null,
+            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             Class.forName(driver).newInstance()
 
-            return doConnect(getDialectName(url), { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
+            return doConnect(getDialectName(url), databaseConfig, { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
         }
 
         fun getDefaultIsolationLevel(db: Database): Int =

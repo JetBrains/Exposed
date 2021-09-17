@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.transactions
 
+import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlLogger
@@ -10,18 +11,25 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(
-    private val db: Database,
-    @Volatile override var defaultRepetitionAttempts: Int
+    private val db: Database
 ) : TransactionManager {
+    @Volatile
+    override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
+        @Deprecated("Use DatabaseConfig to define the defaultRepetitionAttempts")
+        @TestOnly
+        set
 
     @Volatile
-    override var defaultIsolationLevel: Int = -1
+    override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
             if (field == -1) {
                 field = Database.getDefaultIsolationLevel(db)
             }
             return field
         }
+        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
+        @TestOnly
+        set
 
     val threadLocal = ThreadLocal<Transaction>()
 
