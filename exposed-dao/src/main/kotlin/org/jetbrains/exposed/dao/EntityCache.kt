@@ -17,10 +17,33 @@ class EntityCache(private val transaction: Transaction) {
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
 
+    /**
+     * Amount of entities to keep in a cache per an Entity class.
+     * On setting a new value all data stored in cache will be adjusted to a new size
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
+        set(value) {
+            val diff = value - field
+            field = value
+            if (diff < 0) {
+                data.values.forEach { map ->
+                    val sizeExceed = map.size - value
+                    if (sizeExceed > 0) {
+                        val iterator = map.iterator()
+                        repeat(sizeExceed) {
+                            iterator.next()
+                            iterator.remove()
+                        }
+                    }
+                }
+            }
+        }
+
     private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
 
     private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
-        LinkedHashMap()
+        LimitedHashMap()
     }
 
     fun <R : Entity<*>> getReferrers(sourceId: EntityID<*>, key: Column<*>): SizedIterable<R>? {
@@ -172,6 +195,12 @@ class EntityCache(private val transaction: Transaction) {
 
     fun clearReferrersCache() {
         referrers.clear()
+    }
+
+    private inner class LimitedHashMap<K, V> : LinkedHashMap<K, V>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean {
+            return size > maxEntitiesToStore
+        }
     }
 
     companion object {

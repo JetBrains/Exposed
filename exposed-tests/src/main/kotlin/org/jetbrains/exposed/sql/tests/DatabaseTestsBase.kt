@@ -92,7 +92,10 @@ enum class TestDB(
         "org.mariadb.jdbc.Driver"
     );
 
-    fun connect() = Database.connect(connection(), user = user, password = pass, driver = driver)
+    fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): Database {
+        val config = DatabaseConfig(configure)
+        return Database.connect(connection(), databaseConfig = config, user = user, password = pass, driver = driver)
+    }
 
     companion object {
         fun enabledInTests(): List<TestDB> {
