@@ -2,8 +2,10 @@ package org.jetbrains.exposed.sql.transactions
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
@@ -23,6 +25,8 @@ class ThreadLocalTransactionManager(
             return field
         }
 
+    override var defaultLogger: SqlLogger = Slf4jSqlDebugLogger
+
     val threadLocal = ThreadLocal<Transaction>()
 
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction =
@@ -37,6 +41,7 @@ class ThreadLocalTransactionManager(
             )
             ).apply {
                 bindTransactionToThread(this)
+                addLogger(defaultLogger)
             }
 
     override fun currentOrNull(): Transaction? = threadLocal.get()

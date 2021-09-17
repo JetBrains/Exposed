@@ -56,10 +56,6 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     // prepare statement as key and count to execution time as value
     val statementStats = hashMapOf<String, Pair<Int, Long>>()
 
-    init {
-        addLogger(Slf4jSqlDebugLogger)
-    }
-
     override fun commit() {
         globalInterceptors.forEach { it.beforeCommit(this) }
         interceptors.forEach { it.beforeCommit(this) }

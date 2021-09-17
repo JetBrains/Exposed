@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.transactions
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
+import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import java.sql.Connection
@@ -34,6 +36,8 @@ private object NotInitializedManager : TransactionManager {
 
     override var defaultRepetitionAttempts: Int = -1
 
+    override var defaultLogger: SqlLogger = Slf4jSqlDebugLogger
+
     override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction = error("Please call Database.connect() before using this code")
 
     override fun currentOrNull(): Transaction? = error("Please call Database.connect() before using this code")
@@ -48,6 +52,8 @@ interface TransactionManager {
     var defaultIsolationLevel: Int
 
     var defaultRepetitionAttempts: Int
+
+    var defaultLogger: SqlLogger
 
     fun newTransaction(isolation: Int = defaultIsolationLevel, outerTransaction: Transaction? = null): Transaction
 
