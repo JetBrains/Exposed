@@ -206,6 +206,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val defaultReferenceOption: ReferenceOption = ReferenceOption.NO_ACTION
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsMultipleGeneratedKeys: Boolean = false
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsDualTableConcept: Boolean = true
     override val supportsOrderByNullsFirstLast: Boolean = true
 

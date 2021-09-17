@@ -182,7 +182,7 @@ private fun <E, S: BaseBatchInsertStatement> executeBatch(
     return result
 }
 
-fun <T:Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+fun <T: Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }

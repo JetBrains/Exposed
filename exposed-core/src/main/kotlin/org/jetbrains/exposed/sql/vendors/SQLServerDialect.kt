@@ -178,6 +178,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val defaultReferenceOption: ReferenceOption get() = ReferenceOption.NO_ACTION
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsSequenceAsGeneratedKeys: Boolean = false
+    override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 
