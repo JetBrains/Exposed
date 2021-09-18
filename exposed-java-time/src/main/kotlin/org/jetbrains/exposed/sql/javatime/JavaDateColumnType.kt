@@ -1,20 +1,54 @@
-package org.jetbrains.exposed.sql.`java-time`
+package org.jetbrains.exposed.sql.javatime
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.*
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.time.*
+import java.time.format.DateTimeFormatter
+import java.util.*
 
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("JavaLocalDateColumnType", "org.jetbrains.exposed.sql.javatime"),
-)
+internal val DEFAULT_DATE_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+internal val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+internal val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSS",
+        Locale.ROOT
+    ).withZone(ZoneId.systemDefault())
+}
+
+internal val ORACLE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "1900-01-01 HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneOffset.UTC)
+}
+
+internal val DEFAULT_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+
+internal fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
+internal fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
+    val baseFormat = "yyyy-MM-d HH:mm:ss"
+    val newFormat = if (fraction in 1..9) {
+        (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
+    } else {
+        baseFormat
+    }
+    return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+
+internal val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
+
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
@@ -57,10 +91,6 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("JavaLocalDateTimeColumnType", "org.jetbrains.exposed.sql.javatime")
-)
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -109,10 +139,6 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("JavaLocalTimeColumnType", "org.jetbrains.exposed.sql.javatime")
-)
 class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -164,10 +190,6 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("JavaInstantColumnType", "org.jetbrains.exposed.sql.javatime")
-)
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -209,10 +231,6 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("JavaDurationColumnType", "org.jetbrains.exposed.sql.javatime")
-)
 class JavaDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
@@ -257,10 +275,6 @@ class JavaDurationColumnType : ColumnType() {
  *
  * @param name The column name
  */
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("date", "org.jetbrains.exposed.sql.javatime")
-)
 fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocalDateColumnType())
 
 /**
@@ -268,10 +282,6 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, JavaLocal
  *
  * @param name The column name
  */
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("datetime(name)", "org.jetbrains.exposed.sql.javatime")
-)
 fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, JavaLocalDateTimeColumnType())
 
 /**
@@ -282,10 +292,6 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, J
  * @param name The column name
  * @author Maxim Vorotynsky
  */
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("time", "org.jetbrains.exposed.sql.javatime")
-)
 fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
 
 /**
@@ -293,10 +299,6 @@ fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocal
  *
  * @param name The column name
  */
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("timestamp", "org.jetbrains.exposed.sql.javatime")
-)
 fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaInstantColumnType())
 
 /**
@@ -304,8 +306,4 @@ fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, JavaIn
  *
  * @param name The column name
  */
-@Deprecated(
-    message = "Use same class from javatime package",
-    replaceWith = ReplaceWith("duration", "org.jetbrains.exposed.sql.javatime")
-)
 fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
