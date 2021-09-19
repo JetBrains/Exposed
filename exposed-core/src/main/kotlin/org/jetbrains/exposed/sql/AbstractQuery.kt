@@ -10,8 +10,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
         private set
-    var distinct: Boolean = false
-        protected set
+
     var limit: Int? = null
         protected set
     var offset: Long = 0
@@ -23,7 +22,6 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     protected fun copyTo(other: AbstractQuery<T>) {
         other.orderByExpressions = orderByExpressions.toMutableList()
-        other.distinct = distinct
         other.limit = limit
         other.offset = offset
         other.fetchSize = fetchSize
@@ -38,9 +36,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
         if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
     }
 
-    fun withDistinct(value: Boolean = true): T = apply {
-        distinct = value
-    } as T
+    abstract fun withDistinct(value: Boolean = true): T
 
     override fun limit(n: Int, offset: Long): T = apply {
         limit = n

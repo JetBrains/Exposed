@@ -16,6 +16,8 @@ enum class SortOrder(val code: String) {
 }
 
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
+    var distinct: Boolean = false
+        protected set
 
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
@@ -39,6 +41,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
+        copy.distinct = distinct
         copy.groupedByColumns = groupedByColumns.toMutableList()
         copy.having = having
         copy.forUpdate = forUpdate
@@ -47,6 +50,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun forUpdate(): Query {
         this.forUpdate = true
         return this
+    }
+
+    override fun withDistinct(value: Boolean): Query = apply {
+        distinct = value
     }
 
     override fun notForUpdate(): Query {
