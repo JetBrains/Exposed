@@ -4,9 +4,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -75,7 +75,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test intersection of three queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) { _, users, _ ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.select { users.id eq "sergey" }
             usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {
