@@ -275,6 +275,25 @@ object SchemaUtils {
     }
 
     /**
+     * The function provides a list of statements those need to be executed to make
+     * existing table definition compatible with Exposed tables mapping.
+     */
+    fun statementsRequiredToActualizeScheme(vararg tables: Table): List<String> {
+        val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
+        val createStatements = logTimeSpent("Preparing create tables statements") {
+            createStatements(*tablesToCreate.toTypedArray())
+        }
+        val alterStatements = logTimeSpent("Preparing alter table statements") {
+            addMissingColumnsStatements(*tablesToAlter.toTypedArray())
+        }
+        val executedStatements = createStatements + alterStatements
+        val modifyTablesStatements = logTimeSpent("Checking mapping consistence") {
+            checkMappingConsistence(*tablesToAlter.toTypedArray()).filter { it !in executedStatements }
+        }
+        return executedStatements + modifyTablesStatements
+    }
+
+    /**
      * Creates table with name "busy" (if not present) and single column to be used as "synchronization" point. Table wont be dropped after execution.
      *
      * All code provided in _body_ closure will be executed only if there is no another code which running under "withDataBaseLock" at same time.
