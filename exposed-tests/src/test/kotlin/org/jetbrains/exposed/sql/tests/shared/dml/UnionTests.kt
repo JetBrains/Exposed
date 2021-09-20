@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
@@ -52,11 +53,11 @@ class UnionTests : DatabaseTestsBase() {
             val union = andreyQuery.union(andreyQuery).orderBy(idAlias, SortOrder.DESC)
 
             union.map { it[idAlias] }.apply {
-                assertEquals(listOf("sergey", "andrey"), this)
+                assertEqualLists(listOf("sergey", "andrey"), this)
             }
 
             union.withDistinct(false).map { it[idAlias] }.apply {
-                assertEquals(listOf("sergey", "sergey", "andrey", "andrey"), this)
+                assertEqualLists(listOf("sergey", "sergey", "andrey", "andrey"), this)
             }
         }
     }
@@ -68,7 +69,7 @@ class UnionTests : DatabaseTestsBase() {
             val sergeyQuery = users.select { users.id eq "sergey" }
             andreyQuery.union(sergeyQuery).map { it[users.id] }.apply {
                 assertEquals(2, size)
-                assertTrue(containsAll(listOf("andrey", "sergey")))
+                assertEqualLists(listOf("andrey", "sergey"), this)
             }
         }
     }
@@ -80,7 +81,7 @@ class UnionTests : DatabaseTestsBase() {
             val sergeyQuery = users.select { users.id eq "sergey" }
             usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {
                 assertEquals(1, size)
-                assertTrue(containsAll(listOf("sergey")))
+                assertEquals("sergey", this.single())
             }
         }
     }
@@ -133,7 +134,7 @@ class UnionTests : DatabaseTestsBase() {
             val eugeneQuery = users.select { users.id eq "eugene" }
             andreyQuery.union(sergeyQuery).union(eugeneQuery).map { it[users.id] }.apply {
                 assertEquals(3, size)
-                assertTrue(containsAll(setOf("andrey", "sergey", "eugene")))
+                assertEqualCollections(listOf("andrey", "sergey", "eugene"), this)
             }
         }
     }
@@ -199,7 +200,7 @@ class UnionTests : DatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.union(andreyQuery).map { it[users.id] }.apply {
-                assertEquals(listOf("andrey"), this)
+                assertEqualLists(listOf("andrey"), this)
             }
         }
     }
@@ -209,7 +210,7 @@ class UnionTests : DatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).map { it[users.id] }.apply {
-                assertEquals(List(2) { "andrey" }, this)
+                assertEqualLists(List(2) { "andrey" }, this)
             }
         }
     }
@@ -219,7 +220,7 @@ class UnionTests : DatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).unionAll(andreyQuery).map { it[users.id] }.apply {
-                assertEquals(List(3) { "andrey" }, this)
+                assertEqualLists(List(3) { "andrey" }, this)
             }
         }
     }
