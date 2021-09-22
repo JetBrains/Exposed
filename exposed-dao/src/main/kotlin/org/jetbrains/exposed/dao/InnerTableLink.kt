@@ -11,35 +11,38 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     val table: Table,
     val target: EntityClass<ID, Target>,
     val sourceColumn: Column<EntityID<SID>>? = null,
-    _targetColumn: Column<EntityID<ID>>? = null
+    targetColumn: Column<EntityID<ID>>? = null
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
     init {
-        _targetColumn?.let {
+        targetColumn?.let {
             requireNotNull(sourceColumn) { "Both source and target columns should be specified" }
-            require(_targetColumn.referee?.table == target.table) {
-                "Column $_targetColumn point to wrong table, expected ${target.table.tableName}"
+            require(targetColumn.referee?.table == target.table) {
+                "Column $targetColumn point to wrong table, expected ${target.table.tableName}"
             }
-            require(_targetColumn.table == sourceColumn.table) {
+            require(targetColumn.table == sourceColumn.table) {
                 "Both source and target columns should be from the same table"
             }
         }
         sourceColumn?.let {
-            requireNotNull(_targetColumn) { "Both source and target columns should be specified" }
+            requireNotNull(targetColumn) { "Both source and target columns should be specified" }
         }
     }
 
-    private val targetColumn = _targetColumn
+    private val targetColumn = targetColumn
         ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
         ?: error("Table does not reference target")
 
     private fun getSourceRefColumn(o: Source): Column<EntityID<SID>> {
-        return sourceColumn ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>>
-        ?: error("Table does not reference source")
+        return sourceColumn
+            ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>>
+            ?: error("Table does not reference source")
     }
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
+        val transaction = TransactionManager.currentOrNull()
+            ?: return o.getReferenceFromCache(sourceRefColumn)
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table) ?: false
         val entityTables =
             if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
@@ -50,7 +53,9 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             ).distinct() + sourceRefColumn
 
         val query = { target.wrapRows(entityTables.slice(columns).select { sourceRefColumn eq o.id }) }
-        return TransactionManager.current().entityCache.getOrPutReferrers(o.id, sourceRefColumn, query)
+        return transaction.entityCache.getOrPutReferrers(o.id, sourceRefColumn, query).also {
+            o.storeReferenceInCache(sourceRefColumn, it)
+        }
     }
 
     override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {

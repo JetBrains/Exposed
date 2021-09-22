@@ -339,7 +339,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
         requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
-        val cache = TransactionManager.current().entityCache
+        val transaction = TransactionManager.current()
+        val cache = transaction.entityCache
+        val keepLoadedReferenceOutOfTransaction = transaction.db.config.keepLoadedReferenceOutOfTransaction
         if (refColumn.columnType is EntityIDColumnType<*>) {
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
@@ -357,7 +359,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
                 val result = entities.groupBy { it.readValues[refColumn] }
 
                 distinctRefIds.forEach { id ->
-                    cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }
+                    cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }.also {
+                        if (keepLoadedReferenceOutOfTransaction) {
+                            findById(id)?.storeReferenceInCache(refColumn, it)
+                        }
+                    }
                 }
             }
 
@@ -379,7 +385,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             }.toList().distinct()
 
             entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
-                cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }
+                cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }.also {
+                    if (keepLoadedReferenceOutOfTransaction) {
+                        findById(id as EntityID<ID>)?.storeReferenceInCache(refColumn, it)
+                    }
+                }
             }
             return entities
         }

@@ -25,6 +25,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
             _readValues!!
         }
 
+    private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
+
     internal fun isNewEntity(): Boolean {
         val cache = TransactionManager.current().entityCache
         return cache.inserts[klass.table]?.contains(this) ?: false
@@ -38,7 +40,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      * @throws EntityNotFoundException if entity no longer exists in database
      */
     open fun refresh(flush: Boolean = false) {
-        val cache = TransactionManager.current().entityCache
+        val transaction = TransactionManager.current()
+        val cache = transaction.entityCache
         val isNewEntity = isNewEntity()
         when {
             isNewEntity && flush -> cache.flushInserts(klass.table)
@@ -51,23 +54,42 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val reloaded = klass[id]
         cache.store(this)
         _readValues = reloaded.readValues
+        db = transaction.db
+    }
+
+    internal fun <T> getReferenceFromCache(ref: Column<*>): T {
+        return referenceCache[ref] as T
+    }
+
+    internal fun storeReferenceInCache(ref: Column<*>, value: Any?) {
+        if (db.config.keepLoadedReferenceOutOfTransaction) {
+            referenceCache[ref] = value
+        }
     }
 
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(
         o: Entity<ID>,
         desc: KProperty<*>
     ): T {
+        val outOfTransaction = TransactionManager.currentOrNull() == null
+        if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
             val refValue = reference.getValue(o, desc)
             when {
-                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
+                    factory.findById(refValue.value as RID).also {
+                        storeReferenceInCache(reference, it)
+                    }
+                }
                 else -> {
                     // @formatter:off
                     factory.findWithCacheCondition({
                        reference.referee!!.getValue(this, desc) == refValue
                     }) {
                         reference.referee<REF>()!! eq refValue
-                    }.singleOrNull()
+                    }.singleOrNull()?.also {
+                        storeReferenceInCache(reference, it)
+                    }
                     // @formatter:on
                 }
             } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
@@ -82,6 +104,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         if (db != value.db) error("Can't link entities from different databases.")
         value.id.value // flush before creating reference on it
         val refValue = value.run { reference.referee<REF>()!!.getValue(this, desc) }
+        storeReferenceInCache(reference, value)
         reference.setValue(o, desc, refValue)
     }
 
@@ -89,18 +112,26 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         o: Entity<ID>,
         desc: KProperty<*>
     ): T? {
+        val outOfTransaction = TransactionManager.currentOrNull() == null
+        if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
             val refValue = reference.getValue(o, desc)
             when {
                 refValue == null -> null
-                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> factory.findById(refValue.value as RID)
+                refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
+                    factory.findById(refValue.value as RID).also {
+                        storeReferenceInCache(reference, it)
+                    }
+                }
                 else -> {
                     // @formatter:off
                    factory.findWithCacheCondition({
                        reference.referee!!.getValue(this, desc) == refValue
                    }) {
                        reference.referee<REF>()!! eq refValue
-                   }.singleOrNull()
+                   }.singleOrNull().also {
+                       storeReferenceInCache(reference, it)
+                   }
                     // @formatter:on
                 }
             }
@@ -115,6 +146,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
         val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
+        storeReferenceInCache(reference, value)
         reference.setValue(o, desc, refValue)
     }
 

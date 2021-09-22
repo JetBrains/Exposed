@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 const val DEFAULT_REPETITION_ATTEMPTS = 3
 
+@Suppress("LongParameterList")
 class DatabaseConfig private constructor(
     val sqlLogger: SqlLogger,
     val useNestedTransactions: Boolean,
@@ -9,7 +10,8 @@ class DatabaseConfig private constructor(
     val defaultIsolationLevel: Int,
     val defaultRepetitionAttempts: Int,
     val warnLongQueriesDuration: Long?,
-    val maxEntitiesToStoreInCachePerEntity: Int
+    val maxEntitiesToStoreInCachePerEntity: Int,
+    val keepLoadedReferenceOutOfTransaction: Boolean,
 ) {
 
     class Builder(
@@ -49,7 +51,9 @@ class DatabaseConfig private constructor(
          * Can be overridden on per-transaction basis via [EntityCache.maxEntitiesToStore]
          * All entities will be kept by default
          */
-        var maxEntitiesToStoreInCachePerEntity: Int = Int.MAX_VALUE
+        var maxEntitiesToStoreInCachePerEntity: Int = Int.MAX_VALUE,
+
+        var keepLoadedReferenceOutOfTransaction: Boolean = false
     )
 
     companion object {
@@ -62,7 +66,8 @@ class DatabaseConfig private constructor(
                 defaultIsolationLevel = builder.defaultIsolationLevel,
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
-                maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity
+                maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
+                keepLoadedReferenceOutOfTransaction = builder.keepLoadedReferenceOutOfTransaction
             )
         }
     }

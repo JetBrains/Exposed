@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 private fun <T> assertEqualCollectionsImpl(collection: Collection<T>, expected: Collection<T>) {
-    assertEquals(expected.size, collection.size, "Count mismatch on ${currentDialectTest.name}")
+    assertEquals(expected.size, collection.size, "Count mismatch on ${currentDialectIfAvailableTest?.name ?: "N/A"}")
     assertEquals(expected.toSet(), collection.toSet())
 }
 

@@ -68,7 +68,16 @@ class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, C
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = { factory.find { reference eq value } }
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
+        val transaction = TransactionManager.currentOrNull()
+        return when {
+            transaction == null -> thisRef.getReferenceFromCache(reference)
+            cache -> {
+                transaction.entityCache.getOrPutReferrers(thisRef.id, reference, query).also {
+                    thisRef.storeReferenceInCache(reference, it)
+                }
+            }
+            else -> query()
+        }
     }
 }
 
@@ -87,7 +96,16 @@ class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<Pare
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = { factory.find { reference eq value } }
-        return if (cache) TransactionManager.current().entityCache.getOrPutReferrers(thisRef.id, reference, query) else query()
+        val transaction = TransactionManager.currentOrNull()
+        return when {
+            transaction == null -> thisRef.getReferenceFromCache(reference)
+            cache -> {
+                transaction.entityCache.getOrPutReferrers(thisRef.id, reference, query).also {
+                    thisRef.storeReferenceInCache(reference, it)
+                }
+            }
+            else -> query()
+        }
     }
 }
 
@@ -116,14 +134,25 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
         nodesVisited.add(entity.klass)
     }
 
+    val isReferenceCacheEnabled = TransactionManager.currentOrNull()?.db?.config?.keepLoadedReferenceOutOfTransaction ?: false
+
+    fun storeReferenceCache(reference: Column<*>, prop: KProperty1<Entity<ID>, Any?>) {
+        if (isReferenceCacheEnabled) {
+            this.forEach { entity ->
+                entity.storeReferenceInCache(reference, prop.get(entity))
+            }
+        }
+    }
+
     val directRelations = filterRelationsForEntity(entity, relations)
-    directRelations.forEach {
-        when (val refObject = getReferenceObjectFromDelegatedProperty(entity, it)) {
+    directRelations.forEach { prop ->
+        when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             is OptionalReference<*, *, *> -> {
@@ -131,6 +160,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                     this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
                     }.orEmpty()
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             is Referrers<*, *, *, *, *> -> {
@@ -143,21 +173,26 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 (refObject as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.mapNotNull { it.run { refColumn.referee<Any?>()!!.lookup() } }
                     refObject.factory.warmUpOptReferences(refIds, refColumn)
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
                 refObject.target.warmUpLinkedReferences(this.map { it.id }, refObject.table)
+                val refColumn = refObject.table.columns.single { it.referee == this.first().id.table.id }
+                storeReferenceCache(refColumn, prop)
             }
             is BackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
                     refObject.delegate.factory.warmUpReferences(refIds, refColumn)
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             is OptionalBackReference<*, *, *, *, *> -> {
                 (refObject.delegate as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
                     refObject.delegate.factory.warmUpOptReferences(refIds, refColumn)
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             else -> error("Relation delegate has an unknown type")
