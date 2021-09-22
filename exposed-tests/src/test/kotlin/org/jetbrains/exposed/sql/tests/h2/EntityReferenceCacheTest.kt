@@ -29,7 +29,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
 
     private val dbWithCache by lazy {
         TestDB.H2.connect{
-            keepLoadedReferenceOutOfTransaction = true
+            keepLoadedReferencesOutOfTransaction = true
         }
     }
 

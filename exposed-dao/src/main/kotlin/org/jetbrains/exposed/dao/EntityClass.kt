@@ -341,7 +341,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
         val distinctRefIds = references.distinct()
         val transaction = TransactionManager.current()
         val cache = transaction.entityCache
-        val keepLoadedReferenceOutOfTransaction = transaction.db.config.keepLoadedReferenceOutOfTransaction
+        val keepLoadedReferenceOutOfTransaction = transaction.db.config.keepLoadedReferencesOutOfTransaction
         if (refColumn.columnType is EntityIDColumnType<*>) {
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>

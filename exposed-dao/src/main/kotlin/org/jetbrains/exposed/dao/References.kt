@@ -134,7 +134,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
         nodesVisited.add(entity.klass)
     }
 
-    val isReferenceCacheEnabled = TransactionManager.currentOrNull()?.db?.config?.keepLoadedReferenceOutOfTransaction ?: false
+    val isReferenceCacheEnabled = TransactionManager.currentOrNull()?.db?.config?.keepLoadedReferencesOutOfTransaction ?: false
 
     fun storeReferenceCache(reference: Column<*>, prop: KProperty1<Entity<ID>, Any?>) {
         if (isReferenceCacheEnabled) {

@@ -62,7 +62,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     internal fun storeReferenceInCache(ref: Column<*>, value: Any?) {
-        if (db.config.keepLoadedReferenceOutOfTransaction) {
+        if (db.config.keepLoadedReferencesOutOfTransaction) {
             referenceCache[ref] = value
         }
     }

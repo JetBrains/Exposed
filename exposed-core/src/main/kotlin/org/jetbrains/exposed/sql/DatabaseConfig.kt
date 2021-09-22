@@ -11,7 +11,7 @@ class DatabaseConfig private constructor(
     val defaultRepetitionAttempts: Int,
     val warnLongQueriesDuration: Long?,
     val maxEntitiesToStoreInCachePerEntity: Int,
-    val keepLoadedReferenceOutOfTransaction: Boolean,
+    val keepLoadedReferencesOutOfTransaction: Boolean,
 ) {
 
     class Builder(
@@ -52,8 +52,12 @@ class DatabaseConfig private constructor(
          * All entities will be kept by default
          */
         var maxEntitiesToStoreInCachePerEntity: Int = Int.MAX_VALUE,
-
-        var keepLoadedReferenceOutOfTransaction: Boolean = false
+        /**
+         * Turns on "mode" for Exposed DAO to store relations (after they were loaded)
+         * within the entity that will allow to access them outside the transaction.
+         * Useful when [eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) is used
+         */
+        var keepLoadedReferencesOutOfTransaction: Boolean = false
     )
 
     companion object {
@@ -67,7 +71,7 @@ class DatabaseConfig private constructor(
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
-                keepLoadedReferenceOutOfTransaction = builder.keepLoadedReferenceOutOfTransaction
+                keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction
             )
         }
     }
