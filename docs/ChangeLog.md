@@ -1,3 +1,28 @@
+# 0.35.1
+Features:
+* `kotlin-datetime` can be used for datetime mappings with new 'exposed-kotlin-datetime' module
+* NULL FIRST/LAST sorting in queries with new SortOrder options ([#478](https://github.com/JetBrains/Exposed/issues/478), [#1343](https://github.com/JetBrains/Exposed/issues/1343)). Many thanks to [erwinw](https://github.com/erwinw) for a PR
+* A new way to configure common settings for a database via `DatabaseConfig` ():
+```kotlin
+// An example with current available settings and their defaults
+val dbConfig = DatabaseConfig {
+    sqlLogger = Slf4jSqlDebugLogger
+    useNestedTransactions = false
+    defaultFetchSize = -1 // unlimited
+    defaultIsolationLevel = -1 // DB specific
+    defaultRepetitionAttempts = 3
+    warnLongQueriesDuration = null // no long query tracing
+    maxEntitiesToStoreInCachePerEntity = Int.MAX_VALUE // unlimited 
+    keepLoadedReferencesOutOfTransaction = false
+}
+// databaseConfig available on each connect/connectPool functions
+val database = Database.connect(datasource, databaseConfig = databaseConfig)
+```
+* It's possible to limit the number of entities stored in EntityCache via `maxEntitiesToStoreInCachePerEntity` config parameter [#1302](https://github.com/JetBrains/Exposed/issues/1302)
+* References can be stored within an Entity with enabled `keepLoadedReferencesOutOfTransaction` config parameter. It will allow getting referenced values outside the transaction block.  
+* `INSTERSECT` and `EXCEPT` set operators supported ([#402](https://github.com/JetBrains/Exposed/issues/402))
+* `SchemaUtils.statementsRequiredToActualizeScheme` function to get the list of statements required to actualize scheme by tables mappings
+
 # 0.34.2
 Features:
 * Supporting subqueries in insert and update statements. Added by [hfazai](https://github.com/hfazai)
