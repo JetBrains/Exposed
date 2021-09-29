@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -34,7 +35,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
                 } else {
-                    error("Unsupported driver $driverName detected")
+                    Database.getDialectName(url) ?: error("Unsupported driver $driverName detected")
                 }
             }
         }

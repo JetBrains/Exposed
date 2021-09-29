@@ -202,8 +202,8 @@ class Database private constructor(
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             Class.forName(driver).newInstance()
-
-            return doConnect(getDialectName(url), databaseConfig, { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
+            val dialectName = getDialectName(url) ?: error("Can't resolve dialect for connection: $url")
+            return doConnect(dialectName, databaseConfig, { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
         }
 
         fun getDefaultIsolationLevel(db: Database): Int =
@@ -219,9 +219,9 @@ class Database private constructor(
             url.startsWith(prefix)
         }?.value ?: error("Database driver not found for $url")
 
-        private fun getDialectName(url: String) = dialectMapping.entries.firstOrNull { (prefix, _) ->
+        fun getDialectName(url: String) = dialectMapping.entries.firstOrNull { (prefix, _) ->
             url.startsWith(prefix)
-        }?.value ?: error("Can't resolve dialect for connection: $url")
+        }?.value
     }
 }
 
