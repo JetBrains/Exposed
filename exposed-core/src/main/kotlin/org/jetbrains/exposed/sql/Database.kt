@@ -46,7 +46,7 @@ class Database private constructor(
     }
 
     val dialect by lazy {
-        dialects[vendor.lowercase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
+        config.explicitDialect ?: dialects[vendor.lowercase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
     }
 
     val version by lazy { metadata { version } }
@@ -207,11 +207,10 @@ class Database private constructor(
         }
 
         fun getDefaultIsolationLevel(db: Database): Int =
-            when (db.vendor) {
-                SQLiteDialect.dialectName -> Connection.TRANSACTION_SERIALIZABLE
-                OracleDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
-                PostgreSQLDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
-                PostgreSQLNGDialect.dialectName -> Connection.TRANSACTION_READ_COMMITTED
+            when (db.dialect) {
+                is SQLiteDialect -> Connection.TRANSACTION_SERIALIZABLE
+                is OracleDialect -> Connection.TRANSACTION_READ_COMMITTED
+                is PostgreSQLDialect -> Connection.TRANSACTION_READ_COMMITTED
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
