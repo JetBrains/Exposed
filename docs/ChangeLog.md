@@ -8,7 +8,7 @@ Features:
 val dbConfig = DatabaseConfig {
     sqlLogger = Slf4jSqlDebugLogger
     useNestedTransactions = false
-    defaultFetchSize = -1 // unlimited
+    defaultFetchSize = null // unlimited
     defaultIsolationLevel = -1 // DB specific
     defaultRepetitionAttempts = 3
     warnLongQueriesDuration = null // no long query tracing
