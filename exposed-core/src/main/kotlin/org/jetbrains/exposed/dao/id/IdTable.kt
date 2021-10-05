@@ -10,6 +10,7 @@ interface EntityIDFactory {
 
 object EntityIDFunctionProvider {
     private val factory: EntityIDFactory
+
     init {
         factory = ServiceLoader.load(EntityIDFactory::class.java, EntityIDFactory::class.java.classLoader).firstOrNull()
             ?: object : EntityIDFactory {
@@ -30,6 +31,7 @@ object EntityIDFunctionProvider {
  */
 abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     abstract val id: Column<EntityID<T>>
+    final override val primaryKey by lazy { PrimaryKey(id) }
 }
 
 /**
@@ -40,7 +42,6 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
  */
 open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
     override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -51,7 +52,6 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  */
 open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
     override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
 
 /**
@@ -68,5 +68,4 @@ open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUI
     override val id: Column<EntityID<UUID>> = uuid(columnName)
         .autoGenerate()
         .entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
 }
