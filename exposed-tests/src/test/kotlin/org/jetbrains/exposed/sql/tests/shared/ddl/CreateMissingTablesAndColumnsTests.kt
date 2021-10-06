@@ -46,8 +46,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val name = varchar("name", 255)
             val email = varchar("email", 255).uniqueIndex()
             val camelCased = varchar("camelCased", 255).index()
-
-            override val primaryKey = PrimaryKey(id)
         }
 
         withDb { dbSetting ->
@@ -353,7 +351,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val usersTable = object : IdTable<String>("users") {
             override var id: Column<EntityID<String>> = varchar("id", 190).entityId()
 
-            override val primaryKey = PrimaryKey(id)
         }
         withDb {
             try {

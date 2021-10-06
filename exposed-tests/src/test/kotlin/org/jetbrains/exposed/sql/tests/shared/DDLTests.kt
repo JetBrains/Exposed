@@ -438,8 +438,6 @@ class DDLTests : DatabaseTestsBase() {
 
     private abstract class EntityTable(name: String = "") : IdTable<String>(name) {
         override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.entityId()
-
-        override val primaryKey = PrimaryKey(id)
     }
 
     @Test fun complexTest01() {

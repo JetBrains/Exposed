@@ -31,7 +31,8 @@ object EntityIDFunctionProvider {
  */
 abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     abstract val id: Column<EntityID<T>>
-    final override val primaryKey by lazy { PrimaryKey(id) }
+    /** this method shoulb be made final */
+    override val primaryKey by lazy { PrimaryKey(id) }
 }
 
 /**

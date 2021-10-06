@@ -19,14 +19,11 @@ class `Table id not in Record Test issue 1341` : DatabaseTestsBase() {
         val second = varchar("second", 50)
 
         override val id = integer("id").autoIncrement().entityId()
-
-        override val primaryKey = PrimaryKey(id)
     }
 
     object AccountsTable : IdTable<Int>("accounts_table") {
         val name = reference("name", NamesTable)
         override val id: Column<EntityID<Int>> = integer("id").autoIncrement().entityId()
-        override val primaryKey = PrimaryKey(id)
     }
 
     class Names(id: EntityID<Int>) : IntEntity(id) {

@@ -30,8 +30,6 @@ object EntityTestsData {
 
         val x = bool("x").default(true)
         val blob = blob("content").nullable()
-
-        override val primaryKey = PrimaryKey(id)
     }
 
     object XTable : IntIdTable("XTable") {

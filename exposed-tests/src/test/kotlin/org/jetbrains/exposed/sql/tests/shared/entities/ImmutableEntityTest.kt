@@ -19,8 +19,6 @@ class ImmutableEntityTest : DatabaseTestsBase() {
             override val id = long("id").autoIncrement().entityId()
             val name = varchar("name", 256)
             val etag = long("etag").default(0)
-
-            override val primaryKey = PrimaryKey(id)
         }
     }
 
