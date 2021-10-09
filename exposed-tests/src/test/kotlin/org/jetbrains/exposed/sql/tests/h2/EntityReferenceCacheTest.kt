@@ -28,14 +28,14 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     private val dbWithCache by lazy {
-        TestDB.H2.connect{
+        TestDB.H2.connect {
             keepLoadedReferencesOutOfTransaction = true
         }
     }
 
-    private fun executeOnH2(vararg tables: Table, body: ()->Unit) {
+    private fun executeOnH2(vararg tables: Table, body: () -> Unit) {
         var testWasStarted = false
-        transaction (db) {
+        transaction(db) {
             SchemaUtils.create(*tables)
             testWasStarted = true
         }
@@ -97,20 +97,20 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
                     board = b1
                 }
             }
-        assertFails { b1.posts.toList() }
-        assertFails { p1.board?.id }
-        assertFails { p2.board?.id }
+            assertFails { b1.posts.toList() }
+            assertFails { p1.board?.id }
+            assertFails { p2.board?.id }
 
-        transaction(dbWithCache) {
-            b1.refresh()
-            p1.refresh()
-            p2.refresh()
-            listOf(p1, p2).with(EntityTests.Post::board)
+            transaction(dbWithCache) {
+                b1.refresh()
+                p1.refresh()
+                p2.refresh()
+                listOf(p1, p2).with(EntityTests.Post::board)
+            }
+
+            assertEquals(b1.id, p1.board?.id)
+            assertEquals(b1.id, p2.board?.id)
         }
-
-        assertEquals(b1.id, p1.board?.id)
-        assertEquals(b1.id, p2.board?.id)
-    }
     }
 
     @Test
@@ -230,6 +230,13 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
                 assertEqualCollections(n.connectedStrings.map { it.id }, s1.id, s2.id)
             }
             assertEqualCollections(n.connectedStrings.map { it.id }, s1.id, s2.id)
+
+            transaction(dbWithCache) {
+                n.connectedStrings = SizedCollection(s1)
+                assertEqualCollections(n.connectedStrings.map { it.id }, s1.id)
+                n.load(VNumber::connectedStrings)
+                assertEqualCollections(n.connectedStrings.map { it.id }, s1.id)
+            }
         }
     }
 }
