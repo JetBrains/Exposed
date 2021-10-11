@@ -55,7 +55,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             }
         }
         removeFromCache(entity)
-        return findById(entity.id)
+        return if (entity.id._value != null) findById(entity.id) else null
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
