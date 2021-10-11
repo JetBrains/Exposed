@@ -100,13 +100,13 @@ interface TransactionManager {
             manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
         }
 
-        fun currentOrNew(isolation: Int) = currentOrNull() ?: manager.newTransaction(isolation)
+        fun currentOrNew(isolation: Int): Transaction = currentOrNull() ?: manager.newTransaction(isolation)
 
-        fun currentOrNull() = manager.currentOrNull()
+        fun currentOrNull(): Transaction? = manager.currentOrNull()
 
-        fun current() = currentOrNull() ?: error("No transaction in context.")
+        fun current(): Transaction = currentOrNull() ?: error("No transaction in context.")
 
-        fun isInitialized() = defaultDatabase != null
+        fun isInitialized(): Boolean = defaultDatabase != null
     }
 }
 

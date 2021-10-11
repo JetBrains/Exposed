@@ -60,6 +60,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     override fun commit() {
         globalInterceptors.forEach { it.beforeCommit(this) }
         interceptors.forEach { it.beforeCommit(this) }
+        AbstractQuery.closeOpenedStatements(this)
         transactionImpl.commit()
         globalInterceptors.forEach { it.afterCommit() }
         interceptors.forEach { it.afterCommit() }
@@ -69,6 +70,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     override fun rollback() {
         globalInterceptors.forEach { it.beforeRollback(this) }
         interceptors.forEach { it.beforeRollback(this) }
+        AbstractQuery.closeOpenedStatements(this)
         transactionImpl.rollback()
         globalInterceptors.forEach { it.afterRollback() }
         interceptors.forEach { it.afterRollback() }

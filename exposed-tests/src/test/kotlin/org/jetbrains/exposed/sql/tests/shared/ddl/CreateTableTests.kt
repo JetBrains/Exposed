@@ -22,7 +22,7 @@ class CreateTableTests : DatabaseTestsBase() {
     fun createTableWithDuplicateColumn() {
         val assertionFailureMessage = "Can't create a table with multiple columns having the same name"
 
-        withDb() {
+        withDb {
             assertFails(assertionFailureMessage) {
                 SchemaUtils.create(TableWithDuplicatedColumn)
             }
@@ -43,7 +43,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
             override val primaryKey = PrimaryKey(id1, id2)
         }
-        withDb() {
+        withDb {
             val id1ProperName = account.id1.name.inProperCase()
             val id2ProperName = account.id2.name.inProperCase()
             val tableName = account.tableName
@@ -63,7 +63,7 @@ class CreateTableTests : DatabaseTestsBase() {
         val pkConstraintName = "PKConstraintName"
 
         // Table with composite primary key
-        withDb() {
+        withDb {
             val id1ProperName = Person.id1.name.inProperCase()
             val id2ProperName = Person.id2.name.inProperCase()
             val tableName = Person.tableName
@@ -83,7 +83,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
             override val primaryKey = PrimaryKey(user_name, name = pkConstraintName)
         }
-        withDb() {
+        withDb {
             val userNameProperName = user.user_name.name.inProperCase()
             val tableName = TransactionManager.current().identity(user)
 
