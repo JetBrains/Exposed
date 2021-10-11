@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this) }
 
@@ -135,8 +136,11 @@ class EntityCache(private val transaction: Transaction) {
     internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
 
         val insertedTablesSet = insertedTables.toSet()
+        val insertedTablesWithReferenceSet = insertedTablesSet.flatMapTo(HashSet()) { t ->
+            t.columns.mapNotNull { it.referee?.table }
+        }
         val tablesToRemove: List<Table> = referrers.values.flatMapTo(HashSet()) { it.keys.map { it.table } }
-            .filter { table -> table.columns.any { c -> c.referee?.table in insertedTablesSet } } + insertedTablesSet
+            .filter { table -> table.columns.any { c -> c.referee?.table in insertedTablesWithReferenceSet } } + insertedTablesWithReferenceSet
 
         referrers.mapNotNull { (entityId, entityReferrers) ->
             entityReferrers.filterKeys { it.table in tablesToRemove }.keys.forEach { entityReferrers.remove(it) }
