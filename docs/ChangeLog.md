@@ -1,3 +1,14 @@
+# 0.35.2
+Feature:
+* `DatabaseConfig.explicitDialect` param added to predefine dialect for a Database
+
+Bug fixes:
+* Don't fail when getting dialectName for user's defined drivers
+* [Spring] Possible connection leak within SpringTransactionManager [#1355](https://github.com/JetBrains/Exposed/issues/1355)
+* Referrers cache wasn't invalidated when statement was executed on reference table (`via` use-case)
+* New entity was flushed on `Entity.reload(flush = false)` what can lead to unexpected results
+* ResultSet stayed unclosed if Query's result was not iterated till the end  
+
 # 0.35.1
 Features:
 * `kotlin-datetime` can be used for datetime mappings with new 'exposed-kotlin-datetime' module
