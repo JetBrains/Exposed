@@ -31,9 +31,6 @@ class Column<T>(
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
 
-    /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
-    var indexInPK: Int? = null
-
     /** Returns the function that calculates the default value for this column. */
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
