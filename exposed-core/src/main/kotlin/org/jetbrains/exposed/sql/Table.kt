@@ -1149,13 +1149,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     object Dual : Table("dual")
 }
 
-@Deprecated(
-    "Use Sequence class instead of Seq class.",
-    ReplaceWith("Sequence(name)", "org.jetbrains.exposed.sql.Sequence"),
-    DeprecationLevel.ERROR
-)
-data class Seq(private val name: String)
-
 /** Returns the list of tables to which the columns in this column set belong. */
 fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Alias<*> -> listOf(this.delegate)

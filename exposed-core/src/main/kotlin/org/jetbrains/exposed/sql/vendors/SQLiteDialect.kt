@@ -162,7 +162,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         }
     }
 
-    override fun createDatabase(name: String) = "ATTACH DATABASE '${name.toLowerCase()}.db' AS ${name.inProperCase()}"
+    override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
 
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
 

@@ -21,7 +21,7 @@ sealed class SetOperation(
             "Each $operationName query must have the same number of columns"
         }
         if (!currentDialect.supportsSubqueryUnions) {
-            require(rawStatements.none { (it as AbstractQuery<*>).let { q -> q.orderByExpressions.isNotEmpty() || q.limit != null } }) {
+            require(rawStatements.none { q -> q.orderByExpressions.isNotEmpty() || q.limit != null }) {
                 "$operationName may not contain subqueries"
             }
         }

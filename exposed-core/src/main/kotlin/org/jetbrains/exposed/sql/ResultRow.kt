@@ -44,9 +44,6 @@ class ResultRow(
 
     fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) rawToColumnValue(getRaw(c), c) else null
 
-    @Deprecated("Replaced with getOrNull to be more kotlinish", replaceWith = ReplaceWith("getOrNull(c)"))
-    fun <T> tryGet(c: Expression<T>): T? = getOrNull(c)
-
     @Suppress("UNCHECKED_CAST")
     private fun <T> rawToColumnValue(raw: T?, c: Expression<T>): T {
         return when {
@@ -82,11 +79,6 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-
-        @Deprecated(level = DeprecationLevel.ERROR, message = "Consider to use [create] with map param instead")
-        fun create(rs: ResultSet, fields: List<Expression<*>>): ResultRow {
-            return create(rs, fields.distinct().mapIndexed { index, field -> field to index }.toMap())
-        }
 
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {

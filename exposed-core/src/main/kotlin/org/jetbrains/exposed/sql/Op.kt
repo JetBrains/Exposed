@@ -391,11 +391,6 @@ class RegexpOp<T : String?>(
     }
 }
 
-/**
- * Represents an SQL operator that checks if [expr1] doesn't match the regular expression [expr2].
- */
-@Deprecated("Use NotOp(RegexpOp()) instead", ReplaceWith("NotOp(RegexpOp(expr1, expr2, true))"), DeprecationLevel.ERROR)
-class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
 
 // Subquery Expressions
 
@@ -460,55 +455,6 @@ class EqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp
  * Represents an SQL operator that checks if [expr] is not equals to single value returned from [query].
  */
 class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("!=", expr, query)
-
-// Array Comparisons
-
-/**
- * Represents an SQL operator that checks if [expr] is equals to any element from [list].
- */
-@Deprecated(
-    message = "Replace with [SingleValueInListOp]",
-    level = DeprecationLevel.ERROR,
-    replaceWith = ReplaceWith("org.jetbrains.exposed.sql.ops.SingleValueInListOp")
-)
-class InListOrNotInListOp<T>(
-    /** Returns the expression compared to each element of the list. */
-    val expr: ExpressionWithColumnType<T>,
-    /** Returns the query to check against. */
-    val list: Iterable<T>,
-    /** Returns `true` if the check is inverted, `false` otherwise. */
-    val isInList: Boolean = true
-) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        list.iterator().let { i ->
-            if (!i.hasNext()) {
-                if (isInList) {
-                    +FALSE
-                } else {
-                    +TRUE
-                }
-            } else {
-                val first = i.next()
-                if (!i.hasNext()) {
-                    append(expr)
-                    when {
-                        isInList -> append(" = ")
-                        else -> append(" != ")
-                    }
-                    registerArgument(expr.columnType, first)
-                } else {
-                    append(expr)
-                    when {
-                        isInList -> append(" IN (")
-                        else -> append(" NOT IN (")
-                    }
-                    registerArguments(expr.columnType, list)
-                    append(")")
-                }
-            }
-        }
-    }
-}
 
 // Literals
 

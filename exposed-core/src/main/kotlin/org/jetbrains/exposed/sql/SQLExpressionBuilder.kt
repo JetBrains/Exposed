@@ -361,10 +361,6 @@ interface ISqlExpressionBuilder {
         caseSensitive: Boolean = true
     ): RegexpOp<T> = RegexpOp(this, pattern, caseSensitive)
 
-    /** Checks if this expression doesn't match the [pattern]. Supports regular expressions. */
-    @Deprecated("Use not(RegexpOp()) instead", ReplaceWith("regexp(pattern).not()"), DeprecationLevel.ERROR)
-    infix fun <T : String?> ExpressionWithColumnType<T>.notRegexp(pattern: String): Op<Boolean> = TODO()
-
     // Conditional Expressions
 
     /** Returns the first of its arguments that is not null. */

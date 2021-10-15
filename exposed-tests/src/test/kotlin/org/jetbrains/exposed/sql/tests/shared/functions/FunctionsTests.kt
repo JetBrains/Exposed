@@ -208,7 +208,7 @@ class FunctionsTests : DatabaseTestsBase() {
         }
         withCitiesAndUsers { cities, _, _ ->
             val sumOfLength = LengthFunction(cities.name).sum()
-            val expectedValue = cities.selectAll().sumBy { it[cities.name].length }
+            val expectedValue = cities.selectAll().sumOf { it[cities.name].length }
 
             val results = cities.slice(sumOfLength).selectAll().toList()
             assertEquals(1, results.size)

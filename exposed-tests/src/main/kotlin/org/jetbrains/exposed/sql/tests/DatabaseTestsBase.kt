@@ -102,7 +102,7 @@ enum class TestDB(
             val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
             val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
                 if (it == "") emptyList()
-                else it.split(',').map { it.trim().toUpperCase() }
+                else it.split(',').map { it.trim().uppercase() }
             }
             return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
         }
