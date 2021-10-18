@@ -1,9 +1,12 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.DataTypeProvider
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import java.math.BigDecimal
 
 object SchemaUtils {
     private class TableDepthGraph(val tables: Iterable<Table>) {
@@ -115,6 +118,36 @@ object SchemaUtils {
 
     fun createIndex(index: Index) = index.createStatement()
 
+    @Suppress("NestedBlockDepth", "ComplexMethod")
+    private fun DataTypeProvider.dbDefaultToString(exp: Expression<*>): String {
+        return when (exp) {
+            is LiteralOp<*> -> when (exp.value) {
+                is Boolean -> when (currentDialect) {
+                    is MysqlDialect -> if (exp.value) "1" else "0"
+                    is PostgreSQLDialect -> exp.value.toString()
+                    else -> booleanToStatementString(exp.value)
+                }
+                is String -> when (currentDialect) {
+                    is PostgreSQLDialect -> "${exp.value}'::character varying"
+                    else -> exp.value
+                }
+                is Enum<*> -> when (exp.columnType) {
+                    is EnumerationNameColumnType<*> -> when (currentDialect) {
+                        is PostgreSQLDialect -> "${exp.value.name}'::character varying"
+                        else -> exp.value.name
+                    }
+                    else -> processForDefaultValue(exp)
+                }
+                is BigDecimal -> when (currentDialect) {
+                    is MysqlDialect -> exp.value.setScale((exp.columnType as DecimalColumnType).scale).toString()
+                    else -> processForDefaultValue(exp)
+                }
+                else -> processForDefaultValue(exp)
+            }
+            else -> processForDefaultValue(exp)
+        }
+    }
+
     fun addMissingColumnsStatements(vararg tables: Table): List<String> {
         with(TransactionManager.current()) {
             val statements = ArrayList<String>()
@@ -144,12 +177,8 @@ object SchemaUtils {
                         val changedState = thisTableExistingColumns.find { c.name.equals(it.name, true) }?.let {
                             val incorrectNullability = it.nullable != c.columnType.nullable
                             val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                            val incorrectDefaults = when {
-                                it.defaultDbValue != null && (c.dbDefaultValue as? LiteralOp<*>)?.value is Boolean -> {
-                                    dataTypeProvider.booleanFromStringToBoolean(it.defaultDbValue) != (c.dbDefaultValue as LiteralOp<Boolean>).value
-                                }
-                                else -> it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.processForDefaultValue(it) }
-                            }
+                            val incorrectDefaults =
+                                it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
                             Triple(incorrectNullability, incorrectAutoInc, incorrectDefaults)
                         }
 

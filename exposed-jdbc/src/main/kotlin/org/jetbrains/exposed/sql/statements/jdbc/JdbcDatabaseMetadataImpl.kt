@@ -170,6 +170,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     private fun sanitizedDefault(defaultValue: String) = when (currentDialect) {
         is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
+        is OracleDialect -> defaultValue.trim().trim('\'')
+        is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'').trim()
         else -> defaultValue.trim('\'').trim()
     }
 

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
@@ -201,7 +202,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val id = integer("idcol")
             val col = integer("col").default(1)
             val strcol = varchar("strcol", 255).default("def")
-            val bool = bool("bool").default(false).nullable()
 
             override val primaryKey = PrimaryKey(id)
         }
@@ -263,6 +263,31 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 }
             } finally {
                 SchemaUtils.drop(t2)
+            }
+        }
+    }
+
+    private enum class TestEnum { A, B, C }
+
+    @Test
+    fun `check that running addMissingTablesAndColumns multiple time doesnt affect schema`() {
+        val table = object : Table("defaults2") {
+            val bool1 = bool("boolCol1").default(false)
+            val bool2 = bool("boolCol2").default(true)
+            val int = integer("intCol").default(12345)
+            val float = float("floatCol").default(123.45f)
+            val decimal = decimal("decimalCol", 10, 1).default(BigDecimal.TEN)
+            val string = varchar("varcharCol", 50).default("12345")
+            val enum1 = enumeration("enumCol1", TestEnum::class).default(TestEnum.B)
+            val enum2 = enumerationByName("enumCol2", 25, TestEnum::class).default(TestEnum.B)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(table)
+                assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(table))
+            } finally {
+                SchemaUtils.drop(table)
             }
         }
     }

@@ -87,7 +87,7 @@ abstract class DataTypeProvider {
     open fun booleanType(): String = "BOOLEAN"
 
     /** Returns the SQL representation of the specified [bool] value. */
-    open fun booleanToStatementString(bool: Boolean): String = bool.toString()
+    open fun booleanToStatementString(bool: Boolean): String = bool.toString().uppercase()
 
     /** Returns the boolean value of the specified SQL [value]. */
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
