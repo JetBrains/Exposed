@@ -192,6 +192,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val id = integer("idcol")
             val col = integer("col").nullable()
             val strcol = varchar("strcol", 255).nullable()
+            val bool = bool("bool").default(false).nullable() // check no changes for boolean
 
             override val primaryKey = PrimaryKey(id)
         }
@@ -200,6 +201,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val id = integer("idcol")
             val col = integer("col").default(1)
             val strcol = varchar("strcol", 255).default("def")
+            val bool = bool("bool").default(false).nullable()
 
             override val primaryKey = PrimaryKey(id)
         }

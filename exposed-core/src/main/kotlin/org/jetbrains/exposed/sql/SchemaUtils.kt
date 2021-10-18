@@ -144,8 +144,11 @@ object SchemaUtils {
                         val changedState = thisTableExistingColumns.find { c.name.equals(it.name, true) }?.let {
                             val incorrectNullability = it.nullable != c.columnType.nullable
                             val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                            val incorrectDefaults = it.defaultDbValue != c.dbDefaultValue?.let {
-                                dataTypeProvider.processForDefaultValue(it)
+                            val incorrectDefaults = when {
+                                it.defaultDbValue != null && (c.dbDefaultValue as? LiteralOp<*>)?.value is Boolean -> {
+                                    dataTypeProvider.booleanFromStringToBoolean(it.defaultDbValue) != (c.dbDefaultValue as LiteralOp<Boolean>).value
+                                }
+                                else -> it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.processForDefaultValue(it) }
                             }
                             Triple(incorrectNullability, incorrectAutoInc, incorrectDefaults)
                         }

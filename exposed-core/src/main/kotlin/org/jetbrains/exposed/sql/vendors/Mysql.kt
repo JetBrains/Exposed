@@ -24,6 +24,12 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun textType(): String = "longtext"
 
+    override fun booleanFromStringToBoolean(value: String): Boolean = when(value) {
+        "0" -> false
+        "1" -> true
+        else -> value.toBoolean()
+    }
+
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
 
         when (sortOrder) {
