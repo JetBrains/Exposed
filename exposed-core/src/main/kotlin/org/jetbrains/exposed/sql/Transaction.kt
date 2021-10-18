@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
 
 class Key<T>
 
@@ -58,13 +59,21 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
 
     override fun commit() {
-        globalInterceptors.forEach { it.beforeCommit(this) }
-        interceptors.forEach { it.beforeCommit(this) }
+        val dataToStore = HashMap<Key<*>, Any?>()
+        globalInterceptors.forEach {
+            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+            it.beforeCommit(this)
+        }
+        interceptors.forEach {
+            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+            it.beforeCommit(this)
+        }
         AbstractQuery.closeOpenedStatements(this)
         transactionImpl.commit()
+        userdata.clear()
         globalInterceptors.forEach { it.afterCommit() }
         interceptors.forEach { it.afterCommit() }
-        userdata.clear()
+        userdata.putAll(dataToStore)
     }
 
     override fun rollback() {

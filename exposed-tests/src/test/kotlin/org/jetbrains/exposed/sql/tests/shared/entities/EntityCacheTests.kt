@@ -155,4 +155,16 @@ class EntityCacheTests : DatabaseTestsBase() {
             assertEquals(0, entityCache.findAll(TestEntity).size)
         }
     }
+
+    @Test
+    fun `EntityCache should not be cleaned on explicit commit` () {
+        withTables(TestTable) {
+            val entity = TestEntity.new {
+                value = Random.nextInt()
+            }
+            assertEquals(entity, TestEntity.testCache(entity.id))
+            commit()
+            assertEquals(entity, TestEntity.testCache(entity.id))
+        }
+    }
 }
