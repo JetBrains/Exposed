@@ -1,3 +1,7 @@
+# 0.35.3
+Bug fixes:
+* Invalid column's default value check in `SchemaUtils.addMissingColumnsStatements` could lead unneeded column modification  
+
 # 0.35.2
 Feature:
 * `DatabaseConfig.explicitDialect` param added to predefine dialect for a Database
