@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
@@ -130,8 +131,12 @@ class ThreadLocalTransactionManager(
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T =
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, transactionStatement: Transaction.() -> T): T =
     keepAndRestoreTransactionRefAfterRun(db) {
+        val statement: Transaction.() -> T = {
+            this.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+            transactionStatement()
+        }
         val outer = TransactionManager.currentOrNull()
 
         if (outer != null && (db == null || outer.db == db)) {
