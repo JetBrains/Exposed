@@ -131,12 +131,8 @@ class ThreadLocalTransactionManager(
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, transactionStatement: Transaction.() -> T): T =
+fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T =
     keepAndRestoreTransactionRefAfterRun(db) {
-        val statement: Transaction.() -> T = {
-            this.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
-            transactionStatement()
-        }
         val outer = TransactionManager.currentOrNull()
 
         if (outer != null && (db == null || outer.db == db)) {
@@ -189,6 +185,7 @@ fun <T> inTopLevelTransaction(
 
             @Suppress("TooGenericExceptionCaught")
             try {
+                transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
                 val answer = transaction.statement()
                 transaction.commit()
                 return answer

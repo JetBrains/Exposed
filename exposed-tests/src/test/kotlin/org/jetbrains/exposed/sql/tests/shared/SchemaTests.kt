@@ -144,6 +144,13 @@ class SchemaTests : DatabaseTestsBase() {
                 val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
                 assertEquals(schema.identifier, currentScheme)
             }
+            // Nested transaction
+            transaction(db) {
+                connection.metadata {
+                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                    assertEquals(schema.identifier, currentScheme)
+                }
+            }
         }
     }
 }
