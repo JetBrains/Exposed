@@ -10,6 +10,7 @@ include("exposed-tests")
 include("exposed-money")
 include("exposed-bom")
 include("exposed-kotlin-datetime")
+include("exposed-crypt")
 
 pluginManagement {
     plugins {

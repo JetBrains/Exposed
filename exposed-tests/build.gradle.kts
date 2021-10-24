@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
+    implementation(project(":exposed-crypt"))
     implementation(kotlin("test-junit"))
     implementation("org.slf4j", "slf4j-api", Versions.slf4j)
     implementation("org.apache.logging.log4j", "log4j-slf4j-impl", Versions.log4j2)

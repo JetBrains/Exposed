@@ -657,7 +657,7 @@ open class BasicBinaryColumnType : ColumnType() {
 /**
  * Binary column for storing binary strings of a specific [length].
  */
-class BinaryColumnType(
+open class BinaryColumnType(
     /** Returns the length of the column- */
     val length: Int
 ) : BasicBinaryColumnType() {
