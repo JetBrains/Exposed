@@ -1,3 +1,23 @@
+# 0.36.1
+Deprecations:
+* `NotRegexpOp/notRegexp` was removed
+* `ResultRow.tryGet` was removed
+* `ResiltSet.create(rs: ResultSet, fields: List<Expression<*>>)` was removed
+* `Seq` data class was removed
+* `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable`  from `org.jetbrains.exposed.dao` package were removed
+* All classes and functions from `org.jetbrains.exposed.sql.java-time` were removed in favour to `org.jetbrains.exposed.sql.javatime`
+* `Column.primaryKey` function was removed in favor to explicit `Table.primaryKey` declaration  
+
+Breaking Changes:
+* All inheritors of `IdTable` (`IntIdTable`, `LongIdTable`, `UUIDTable`) have their `id` and `primaryKey` fields are final 
+
+Features:
+* `DatabaseConfig.defaultSchema` was introduced to set schema before first call in transaction
+* `Coalesce` now accepts any number for arguments
+
+Bug fixes:
+* EntityCache was reinitialized on explicit `Transaction.commit` 
+
 # 0.35.3
 Bug fixes:
 * Invalid column's default value check in `SchemaUtils.addMissingColumnsStatements` could lead unneeded column modification  
