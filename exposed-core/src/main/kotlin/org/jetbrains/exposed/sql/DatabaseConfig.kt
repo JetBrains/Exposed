@@ -14,7 +14,8 @@ class DatabaseConfig private constructor(
     val warnLongQueriesDuration: Long?,
     val maxEntitiesToStoreInCachePerEntity: Int,
     val keepLoadedReferencesOutOfTransaction: Boolean,
-    val explicitDialect: DatabaseDialect?
+    val explicitDialect: DatabaseDialect?,
+    val defaultSchema: Schema?
 ) {
 
     class Builder(
@@ -66,6 +67,11 @@ class DatabaseConfig private constructor(
          * Set the explicit dialect for a database. Can be useful when working with not supported dialects which have the same behavior as the one that Exposed supports
          */
         var explicitDialect: DatabaseDialect? = null,
+
+        /**
+         * Set the default schema for a database.
+         */
+        var defaultSchema: Schema? = null,
     )
 
     companion object {
@@ -80,7 +86,8 @@ class DatabaseConfig private constructor(
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
                 keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction,
-                explicitDialect = builder.explicitDialect
+                explicitDialect = builder.explicitDialect,
+                defaultSchema = builder.defaultSchema
             )
         }
     }

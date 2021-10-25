@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
@@ -184,6 +185,7 @@ fun <T> inTopLevelTransaction(
 
             @Suppress("TooGenericExceptionCaught")
             try {
+                transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
                 val answer = transaction.statement()
                 transaction.commit()
                 return answer
