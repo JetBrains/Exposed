@@ -300,11 +300,13 @@ class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expressi
 /**
  * Represents an SQL function that returns the first of its arguments that is not null.
  */
-class Coalesce<out T>(
-    private vararg val expressions: ExpressionWithColumnType<T?>,
-) : Function<R>(expressions.first().columnType) {
+class Coalesce<out T, S : T?, R : T>(
+    private val expr: ExpressionWithColumnType<S>,
+    private val alternate: Expression<out T>,
+    private vararg val others: Expression<out T>
+) : Function<R>(expr.columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        expressions.toList().appendTo(
+        (listOf(expr, alternate) + others).appendTo(
             prefix = "COALESCE(",
             postfix = ")",
             separator = ", "
