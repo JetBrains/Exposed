@@ -33,7 +33,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
             is DeleteStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                transaction.entityCache.removeTablesReferrers(listOf(statement.table), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
@@ -43,7 +43,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
             is InsertStatement<*> -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
             }
 
             is BatchUpdateStatement -> {
@@ -51,7 +51,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
             is UpdateStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables())
+                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
@@ -60,8 +60,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             else -> {
-                if (statement.type.group == StatementGroup.DDL)
-                    transaction.flushCache()
+                if (statement.type.group == StatementGroup.DDL) transaction.flushCache()
             }
         }
     }

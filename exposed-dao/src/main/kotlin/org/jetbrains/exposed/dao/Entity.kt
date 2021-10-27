@@ -184,7 +184,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 listOfNotNull<Any>(value, currentValue).forEach {
                     entityCache.referrers[this]?.remove(it)
                 }
-                entityCache.removeTablesReferrers(listOf(referee!!.table))
             }
             writeValues[this as Column<Any?>] = value
             // TODO: Can this be simplified?

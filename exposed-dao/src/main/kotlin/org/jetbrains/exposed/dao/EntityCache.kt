@@ -126,25 +126,28 @@ class EntityCache(private val transaction: Transaction) {
             }
 
             if (insertedTables.isNotEmpty()) {
-                removeTablesReferrers(insertedTables)
+                removeTablesReferrers(insertedTables, true)
             }
         } finally {
             flushingEntities = false
         }
     }
 
-    internal fun removeTablesReferrers(insertedTables: Collection<Table>) {
+    internal fun removeTablesReferrers(tables: Collection<Table>, isInsert: Boolean) {
+        val insertedTablesSet = tables.toSet()
+        val columnsToInvalidate = tables.flatMapTo(hashSetOf()) { it.columns.mapNotNull { it.takeIf { it.referee != null } } }
 
-        val insertedTablesSet = insertedTables.toSet()
-        val insertedTablesWithReferenceSet = insertedTablesSet.flatMapTo(HashSet()) { t ->
-            t.columns.mapNotNull { it.referee?.table }
+        columnsToInvalidate.forEach {
+            referrers.remove(it)
         }
-        val tablesToRemove: List<Table> = referrers.values.flatMapTo(HashSet()) { it.keys.map { it.table } }
-            .filter { table -> table.columns.any { c -> c.referee?.table in insertedTablesWithReferenceSet } } + insertedTablesWithReferenceSet
 
-        referrers.mapNotNull { (entityId, entityReferrers) ->
-            entityReferrers.filterKeys { it.table in tablesToRemove }.keys.forEach { entityReferrers.remove(it) }
-            entityId.takeIf { entityReferrers.isEmpty() }
+        referrers.keys.filter { refColumn ->
+            when {
+                isInsert -> false
+                refColumn.referee?.table in insertedTablesSet -> true
+                refColumn.table.columns.any { it.referee?.table in tables } -> true
+                else -> false
+            }
         }.forEach {
             referrers.remove(it)
         }
