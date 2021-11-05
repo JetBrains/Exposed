@@ -48,7 +48,7 @@ fun Transaction.assertFalse(actual: Boolean) = kotlin.test.assertFalse(actual, "
 fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
 fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 
-fun Transaction.assertFailAndRollback(message: kotlin.String, block: () -> Unit) {
+fun Transaction.assertFailAndRollback(message: String, block: () -> Unit) {
     commit()
     assertFails("Failed on ${currentDialectTest.name}. $message") {
         block()
