@@ -235,53 +235,6 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
-/**
- * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them
- */
-fun checkMappingConsistence(vararg tables: Table): List<String> {
-    checkExcessiveIndices(*tables)
-    return checkMissingIndices(*tables).flatMap { it.createStatement() }
-}
-
-fun checkExcessiveIndices(vararg tables: Table) {
-
-    val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
-
-    if (excessiveConstraints.isNotEmpty()) {
-        exposedLogger.warn("List of excessive foreign key constraints:")
-        excessiveConstraints.forEach { (pair, fk) ->
-            val constraint = fk.first()
-            val fkPartToLog = fk.joinToString(", ") { it.fkName }
-            exposedLogger.warn(
-                "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTable}'.'${constraint.fromColumn}':\t$fkPartToLog"
-            )
-        }
-
-        exposedLogger.info("SQL Queries to remove excessive keys:")
-        excessiveConstraints.forEach {
-            it.value.take(it.value.size - 1).forEach {
-                exposedLogger.info("\t\t\t${it.dropStatement()};")
-            }
-        }
-    }
-
-    val excessiveIndices =
-        currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
-            .filter { it.value.size > 1 }
-    if (excessiveIndices.isNotEmpty()) {
-        exposedLogger.warn("List of excessive indices:")
-        excessiveIndices.forEach { (triple, indices) ->
-            exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") { it.indexName }}")
-        }
-        exposedLogger.info("SQL Queries to remove excessive indices:")
-        excessiveIndices.forEach {
-            it.value.take(it.value.size - 1).forEach {
-                exposedLogger.info("\t\t\t${it.dropStatement()};")
-            }
-        }
-    }
-}
-
 private fun FieldSet.selectBatched(
     batchSize: Int = 1000,
     whereOp: Op<Boolean>
@@ -324,63 +277,4 @@ private fun FieldSet.selectBatched(
             else -> autoIncVal as Long
         }
     }
-}
-
-/** Returns list of indices missed in database **/
-private fun checkMissingIndices(vararg tables: Table): List<Index> {
-    fun Collection<Index>.log(mainMessage: String) {
-        if (isNotEmpty()) {
-            exposedLogger.warn(mainMessage)
-            forEach {
-                exposedLogger.warn("\t\t$it")
-            }
-        }
-    }
-
-    val isMysql = currentDialect is MysqlDialect
-    val isSQLite = currentDialect is SQLiteDialect
-    val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
-    val existingIndices = currentDialect.existingIndices(*tables)
-    fun List<Index>.filterFKeys() = if (isMysql) {
-        filterNot { it.table to it.columns.singleOrNull() in fKeyConstraints }
-    } else {
-        this
-    }
-
-    // SQLite: indices whose names start with "sqlite_" are meant for internal use
-    fun List<Index>.filterInternalIndices() = if (isSQLite) {
-        filter { !it.indexName.startsWith("sqlite_") }
-    } else {
-        this
-    }
-
-    val missingIndices = HashSet<Index>()
-    val notMappedIndices = HashMap<String, MutableSet<Index>>()
-    val nameDiffers = HashSet<Index>()
-
-    for (table in tables) {
-        val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
-        val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
-
-        existingTableIndices.forEach { index ->
-            mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                exposedLogger.info(
-                    "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}"
-                )
-                nameDiffers.add(index)
-                nameDiffers.add(it)
-            }
-        }
-
-        notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }.addAll(existingTableIndices.subtract(mappedIndices))
-
-        missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
-    }
-
-    val toCreate = missingIndices.subtract(nameDiffers)
-    toCreate.log("Indices missed from database (will be created):")
-    notMappedIndices.forEach { (name, indexes) ->
-        indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':")
-    }
-    return toCreate.toList()
 }
