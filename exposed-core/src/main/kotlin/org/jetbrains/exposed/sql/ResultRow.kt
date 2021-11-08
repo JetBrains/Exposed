@@ -65,8 +65,13 @@ class ResultRow(
 
         val index = fieldIndex[c]
             ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
-            ?: fieldIndex.keys.firstOrNull {
-                ((it as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.idColumn == c
+            ?: fieldIndex.keys.firstOrNull { exp ->
+                when {
+//                    exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
+                    exp is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == c
+                    exp is ExpressionAlias<*> -> exp.delegate == c
+                    else -> false
+                }
             }?.let { fieldIndex[it] }
             ?: error("$c is not in record set")
 

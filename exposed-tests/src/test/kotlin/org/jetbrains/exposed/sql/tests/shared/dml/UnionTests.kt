@@ -237,4 +237,36 @@ class UnionTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun `test union with expressions`() {
+        withCitiesAndUsers { _, users, _ ->
+            val exp1a = intLiteral(10)
+            val exp1b = intLiteral(100)
+            val exp2a = stringLiteral("aaa")
+            val exp2b = stringLiteral("bbb")
+            val andreyQuery1 = users.slice(users.id, exp1a, exp2a).select { users.id eq "andrey" }
+            val andreyQuery2 = users.slice(users.id, exp1b, exp2b).select { users.id eq "andrey" }
+            val unionAlias = andreyQuery1.unionAll(andreyQuery2)
+            unionAlias.map { Triple(it[users.id], it[exp1a], it[exp2a]) }.apply {
+                assertEqualLists(this, listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
+            }
+        }
+    }
+
+    @Test
+    fun `test union with expression and alias`() {
+        withCitiesAndUsers { _, users, _ ->
+            val exp1a = intLiteral(10)
+            val exp1b = intLiteral(100)
+            val exp2a = stringLiteral("aaa")
+            val exp2b = stringLiteral("bbb")
+            val andreyQuery1 = users.slice(users.id, exp1a, exp2a).select { users.id eq "andrey" }
+            val andreyQuery2 = users.slice(users.id, exp1b, exp2b).select { users.id eq "andrey" }
+            val unionAlias = andreyQuery1.unionAll(andreyQuery2).alias("unionAlias")
+            unionAlias.selectAll().map { Triple(it[unionAlias[users.id]], it[unionAlias[exp1a]], it[unionAlias[exp2a]]) }.apply {
+                assertEqualLists(this, listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
+            }
+        }
+    }
 }

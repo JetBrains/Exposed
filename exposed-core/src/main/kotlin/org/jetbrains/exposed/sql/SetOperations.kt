@@ -10,10 +10,23 @@ import java.sql.ResultSet
 
 sealed class SetOperation(
     val operationName: String,
-    val firstStatement: AbstractQuery<*>,
+    _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
-) : AbstractQuery<SetOperation>((firstStatement.targets + secondStatement.targets).distinct()) {
-    val rawStatements: List<AbstractQuery<*>> = listOf(firstStatement, secondStatement)
+) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()) {
+    val firstStatement: AbstractQuery<*> = when (_firstStatement) {
+        is Query -> {
+            val newSlice = _firstStatement.set.fields.mapIndexed { index, expression ->
+                when (expression) {
+                    is Column<*>, is ExpressionAlias<*> -> expression
+                    else -> expression.alias("exp$index")
+                }
+            }
+            _firstStatement.copy().adjustSlice { slice(newSlice) }
+        }
+        is SetOperation -> _firstStatement
+        else -> error("Unsupported statement type ${_firstStatement::class.simpleName} in $operationName")
+    }
+    private val rawStatements: List<AbstractQuery<*>> = listOf(firstStatement, secondStatement)
     init {
         require(rawStatements.isNotEmpty()) { "$operationName is empty" }
         require(rawStatements.none { it is Query && it.isForUpdate() }) { "FOR UPDATE is not allowed within $operationName" }
@@ -29,7 +42,7 @@ sealed class SetOperation(
 
     override val set: FieldSet = firstStatement.set
 
-    override val queryToExecute: Statement<ResultSet> = this
+    override val queryToExecute: Statement<ResultSet> get() = this
 
     override fun count(): Long {
         try {
