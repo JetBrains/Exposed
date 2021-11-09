@@ -66,10 +66,9 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    fun modifyStatements(nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> =
-        currentDialect.modifyColumn(this, nullabilityChanged, autoIncrementChanged, defaultChanged)
+    fun modifyStatements(columnDiff: ColumnDiff): List<String> = currentDialect.modifyColumn(this, columnDiff)
 
-    override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, true, true, true)
+    override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()

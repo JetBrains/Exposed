@@ -191,13 +191,13 @@ object SchemaUtils {
                             val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
                             val incorrectDefaults =
                                 it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
-                            Triple(incorrectNullability, incorrectAutoInc, incorrectDefaults)
+                            ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults)
                         }
 
-                        changedState?.takeIf { it.first || it.second || it.third }?.let { c to changedState }
+                        changedState?.takeIf { it.hasDifferences() }?.let { c to changedState }
                     }
                     redoColumn.flatMapTo(statements) { (col, changedState) ->
-                        col.modifyStatements(changedState.first, changedState.second, changedState.third)
+                        col.modifyStatements(changedState)
                     }
                 }
             }

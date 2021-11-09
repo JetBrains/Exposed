@@ -187,8 +187,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> =
-        super.modifyColumn(column, nullabilityChanged, autoIncrementChanged, defaultChanged).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
+        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
