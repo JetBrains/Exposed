@@ -22,9 +22,8 @@ fun Project.setupDialectTest(dialect: String) {
                     systemProperty("exposed.test.$dialect.host", containerInfo.host)
                     systemProperty("exposed.test.oracle.port", containerInfo.ports[1521] ?: -1)
                     systemProperty("exposed.test.sqlserver.port", containerInfo.ports[1433] ?: -1)
-                    systemProperty("exposed.test.mariadb.port", containerInfo.ports[3306] ?: -1)
-                    systemProperty("exposed.test.mysql.port", containerInfo.ports[3306] ?: -1)
-                    systemProperty("exposed.test.mysql8.port", containerInfo.ports[3306] ?: -1)
+                    if (dialect in listOf("mysql", "mysql8", "mariadb"))
+                        systemProperty("exposed.test.$dialect.port", containerInfo.ports[3306] ?: -1)
                 }
             }
         }
