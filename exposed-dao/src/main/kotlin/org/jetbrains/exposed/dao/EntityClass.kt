@@ -247,15 +247,20 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
         } else {
             DaoEntityID(id, table)
         }
+        val entityCache = warmCache()
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
         prototype.db = TransactionManager.current().db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeValues[table.id as Column<Any?>] = entityId
-            warmCache().scheduleInsert(this, prototype)
         }
-        prototype.init()
+        try {
+            entityCache.addNotInitializedEntityToQueue(prototype)
+            prototype.init()
+        } finally {
+            entityCache.finishEntityInitialization(prototype)
+        }
         if (entityId._value == null) {
             val readValues = prototype._readValues!!
             val writeValues = prototype.writeValues
@@ -264,9 +269,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             }.forEach { col ->
                 writeValues[col as Column<Any?>] = readValues[col]
             }
-            warmCache().scheduleInsert(this, prototype)
-            check(prototype in warmCache().inserts[this.table]!!)
         }
+        entityCache.scheduleInsert(this, prototype)
         return prototype
     }
 

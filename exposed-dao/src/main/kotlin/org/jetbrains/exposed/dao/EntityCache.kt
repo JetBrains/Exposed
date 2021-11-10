@@ -13,6 +13,7 @@ val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this)
 @Suppress("UNCHECKED_CAST")
 class EntityCache(private val transaction: Transaction) {
     private var flushingEntities = false
+    private var initializingEntities: LinkedIdentityHashSet<Entity<*>> = LinkedIdentityHashSet()
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
@@ -56,7 +57,9 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
-        getMap(f)[id.value] as T? ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+        getMap(f)[id.value] as T?
+            ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
+            ?: initializingEntities.firstOrNull { it.klass == f && it.id == id } as? T
 
     fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
@@ -70,6 +73,17 @@ class EntityCache(private val transaction: Transaction) {
 
     fun <ID : Comparable<ID>, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
         getMap(table).remove(o.id.value)
+    }
+
+    internal fun addNotInitializedEntityToQueue(entity: Entity<*>) {
+        require(initializingEntities.add(entity)) { "Entity ${entity::class.simpleName} already in initialization process" }
+    }
+
+    internal fun finishEntityInitialization(entity: Entity<*>) {
+        require(initializingEntities.lastOrNull() == entity) {
+            "Can't finish initialization for entity ${entity::class.simpleName} - the initialization order is broken"
+        }
+        initializingEntities.remove(entity)
     }
 
     fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {

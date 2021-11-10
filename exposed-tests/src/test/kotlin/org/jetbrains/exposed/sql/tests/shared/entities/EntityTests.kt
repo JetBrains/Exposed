@@ -1272,4 +1272,29 @@ class EntityTests : DatabaseTestsBase() {
             kotlin.test.assertEquals(bio1.student, student1)
         }
     }
+
+    @Test fun `test nested entity initialization`() {
+        withTables(Posts, Categories, Boards) {
+            val post = Post.new {
+                parent = Post.new {
+                    board = Board.new {
+                        name = "Parent Board"
+                    }
+                    category = Category.new {
+                        title = "Parent Category"
+                    }
+                }
+                category = Category.new {
+                    title = "Child Category"
+                }
+
+                optCategory = parent!!.category
+            }
+
+            assertEquals("Parent Board", post.parent?.board?.name)
+            assertEquals("Parent Category", post.parent?.category?.title)
+            assertEquals("Parent Category", post.optCategory?.title)
+            assertEquals("Child Category", post.category?.title)
+        }
+    }
 }
