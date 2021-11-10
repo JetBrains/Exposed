@@ -1,11 +1,12 @@
 # 0.36.2
 Feature:
 * Allow skipping SchemaUtils logging with help of new `withLogs` param on functions ([#1378](https://github.com/JetBrains/Exposed/issues/1378))
-* Union of queries with differently derived columns loses the derived columns ([#1373](https://github.com/JetBrains/Exposed/issues/1373))
+
 
 Bug fixes:
 * Prevent too aggressive entity cache invalidation
 * Foreign Key with camel-case name throws `java.util.NoSuchElementException`. Fixed by [sultanofcardio](https://github.com/sultanofcardio) 
+* Union of queries with differently derived columns loses the derived columns ([#1373](https://github.com/JetBrains/Exposed/issues/1373))
 
 # 0.36.1
 Deprecations:
