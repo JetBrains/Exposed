@@ -42,6 +42,7 @@ internal object H2FunctionProvider : FunctionProvider() {
             ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
                 super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
+            ignore -> transaction.throwUnsupportedException("INSERT IGNORE supported only on H2 v1.4.197+ with MODE=MYSQL.")
             else -> super.insert(ignore, table, columns, expr, transaction)
         }
     }
