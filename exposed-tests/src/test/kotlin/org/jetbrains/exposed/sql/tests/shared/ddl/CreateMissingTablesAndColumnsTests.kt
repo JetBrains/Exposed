@@ -148,15 +148,25 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-//        withDb(db = listOf(TestDB.H2)) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            if (db.supportsAlterTableWithAddColumn) {
+                SchemaUtils.createMissingTablesAndColumns(t1)
 
-            val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
+                val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
-            val expected = "ALTER TABLE ${t2.nameInDatabaseCase()} ALTER COLUMN ${t2.id.nameInDatabaseCase()} INT"
-            assertEquals(expected, missingStatements.firstOrNull())
+                val alterColumnWord = when (currentDialectTest) {
+                    is MysqlDialect -> "MODIFY COLUMN"
+                    is OracleDialect -> "MODIFY"
+                    else -> "ALTER COLUMN"
+                }
 
-            SchemaUtils.drop(t1)
+                val expected = if (t1.id.nameInDatabaseCase() != t2.id.nameInDatabaseCase()) {
+                    "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.id.nameInDatabaseCase()} INT"
+                } else null
+
+                assertEquals(expected, missingStatements.firstOrNull())
+
+                SchemaUtils.drop(t1)
+            }
         }
     }
 
