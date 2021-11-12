@@ -1,12 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.DataTypeProvider
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
 object SchemaUtils {
@@ -191,13 +186,14 @@ object SchemaUtils {
                             val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
                             val incorrectDefaults =
                                 it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
-                            Triple(incorrectNullability, incorrectAutoInc, incorrectDefaults)
+                            val incorrectCaseSensitiveName = it.name.inProperCase() != c.nameInDatabaseCase()
+                            ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                         }
 
-                        changedState?.takeIf { it.first || it.second || it.third }?.let { c to changedState }
+                        changedState?.takeIf { it.hasDifferences() }?.let { c to changedState }
                     }
                     redoColumn.flatMapTo(statements) { (col, changedState) ->
-                        col.modifyStatements(changedState.first, changedState.second, changedState.third)
+                        col.modifyStatements(changedState)
                     }
                 }
             }

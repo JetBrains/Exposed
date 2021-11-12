@@ -212,11 +212,11 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> {
-        val result = super.modifyColumn(column, nullabilityChanged, autoIncrementChanged, defaultChanged).map {
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val result = super.modifyColumn(column, columnDiff).map {
             it.replace("MODIFY COLUMN", "MODIFY")
         }
-        return if (!nullabilityChanged) {
+        return if (!columnDiff.nullability) {
             val nullableState = if (column.columnType.nullable) "NULL " else "NOT NULL"
             result.map {
                 it.replace(nullableState, "")

@@ -213,13 +213,13 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>, nullabilityChanged: Boolean, autoIncrementChanged: Boolean, defaultChanged: Boolean): List<String> = listOf(buildString {
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(buildString {
         val tr = TransactionManager.current()
         append("ALTER TABLE ${tr.identity(column.table)} ")
         val colName = tr.identity(column)
         append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
 
-        if (nullabilityChanged) {
+        if (columnDiff.nullability) {
             append(", ALTER COLUMN $colName ")
             if (column.columnType.nullable) {
                 append("DROP ")
@@ -228,7 +228,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
             }
             append("NOT NULL")
         }
-        if (defaultChanged) {
+        if (columnDiff.defaults) {
             column.dbDefaultValue?.let {
                 append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
             } ?: run {
