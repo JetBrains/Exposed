@@ -9,12 +9,15 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class `Table id not in Record Test issue 1341` : DatabaseTestsBase() {
 
@@ -105,6 +108,29 @@ class `Text id loosed on insert issue 1379` : DatabaseTestsBase() {
                 a = "bye world!"
                 ref = obj1
             }
+        }
+    }
+}
+
+class `Entity Cache not Updated on Commit issue 1380` : DatabaseTestsBase() {
+    object TestTable : IntIdTable() {
+        val value = integer("value")
+    }
+
+    class TestEntity(id: EntityID<Int>) : IntEntity(id) {
+        var value by TestTable.value
+
+        companion object : IntEntityClass<TestEntity>(TestTable)
+    }
+
+    @Test fun testRegression() {
+        withTables(TestTable) {
+            val entity1 = TestEntity.new { value = 1 }
+
+            assertNotNull(TestEntity.findById(entity1.id))
+            TestEntity.findById(entity1.id)?.delete()
+            commit()
+            assertNull(TestEntity.findById(entity1.id))
         }
     }
 }
