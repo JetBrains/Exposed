@@ -158,7 +158,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         }
 
         if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", RuntimeException())
+            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value).trim()}")
         }
 
         return answer.first?.let { stmt.body(it) }
