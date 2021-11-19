@@ -323,7 +323,7 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "") : ColumnSet(), DdlAware {
+open class Table(name: String = "", var defaultScope: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
         name.isNotEmpty() -> name
@@ -1090,7 +1090,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     override fun hashCode(): Int = tableName.hashCode()
 
-    object Dual : Table("dual")
+    object Dual : Table("dual", null)
 }
 
 /** Returns the list of tables to which the columns in this column set belong. */
