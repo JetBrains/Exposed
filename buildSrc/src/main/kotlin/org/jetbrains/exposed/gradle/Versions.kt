@@ -23,6 +23,6 @@ object Versions {
     const val springBoot = "2.5.0"
 
     /** Test Dependencies **/
-    const val testContainers = "1.15.3"
+    const val testContainers = "1.16.2"
     const val otjPgEmbedded = "0.13.4"
 }

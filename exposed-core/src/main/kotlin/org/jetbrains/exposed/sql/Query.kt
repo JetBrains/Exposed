@@ -28,8 +28,19 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     private var forUpdate: Boolean? = null
 
     // private set
-    var where: Op<Boolean>? = where
+    var where: Op<Boolean>? = initializeWhere(where)
         private set
+
+    private fun initializeWhere(where: Op<Boolean>?) = when (set) {
+        is Table -> (set as Table).defaultScope?.let { safeDefaultScope ->
+            where?.let { safeWhere ->
+                Op.build(safeDefaultScope) and safeWhere
+            } ?: Op.build(safeDefaultScope)
+        } ?: where
+
+        else -> { where }
+    }
+
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()

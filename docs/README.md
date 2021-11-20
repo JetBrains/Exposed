@@ -291,6 +291,13 @@ Generated SQL:
     Adults: b, c
 ```
 
+## Development
+
+To initialize test containers and other fixtures:
+```shell
+.scripts/setup.sh
+```
+
 ## License
 
 Apache License, Version 2.0, ([LICENSE](LICENSE.txt) or https://www.apache.org/licenses/LICENSE-2.0)

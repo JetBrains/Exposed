@@ -25,6 +25,23 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testSelectWithDefaultScope() {
+        withCitiesAndUsers { _, users, _ ->
+            users.defaultScope = { users.id eq "andrey"  }
+            users.select { users.name.isNotNull() }
+                .forEach {
+                    val userId = it[users.id]
+                    val userName = it[users.name]
+                    when (userId) {
+                        "andrey" -> assertEquals("Andrey", userName)
+                        else -> error("Unexpected user $userId")
+                    }
+            }
+            users.defaultScope = null
+        }
+    }
+
+    @Test
     fun testSelectAnd() {
         withCitiesAndUsers { cities, users, userData ->
             users.select { users.id.eq("andrey") and users.name.eq("Andrey") }.forEach {
