@@ -34,8 +34,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     private fun initializeWhere(where: Op<Boolean>?) = when (set) {
         is Table -> (set as Table).defaultScope?.let { safeDefaultScope ->
             where?.let { safeWhere ->
-                Op.build(safeDefaultScope) and safeWhere
-            } ?: Op.build(safeDefaultScope)
+               safeDefaultScope() and safeWhere
+            } ?: safeDefaultScope()
         } ?: where
 
         else -> { where }

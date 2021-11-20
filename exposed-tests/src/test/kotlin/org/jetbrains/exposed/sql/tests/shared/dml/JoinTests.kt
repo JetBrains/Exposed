@@ -12,7 +12,7 @@ class JoinTests : DatabaseTestsBase() {
     // manual join
     @Test
     fun testJoin01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }.forEach {
                 val userName = it[users.name]
                 val cityName = it[cities.name]
@@ -28,7 +28,7 @@ class JoinTests : DatabaseTestsBase() {
     // join with foreign key
     @Test
     fun testJoin02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
@@ -38,7 +38,7 @@ class JoinTests : DatabaseTestsBase() {
     // triple join
     @Test
     fun testJoin03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Eugene", r[0][users.name])
@@ -90,7 +90,7 @@ class JoinTests : DatabaseTestsBase() {
     // cross join
     @Test
     fun testJoin05() {
-        withCitiesAndUsers { cities, users, _ ->
+        withCitiesAndUsers { cities, users, _, _ ->
             val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") }.map {
                 it[users.name] to it[cities.name]
             }
@@ -160,7 +160,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithAlias01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val usersAlias = users.alias("u2")
             val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
                 .select { users.id eq "alex" }.single()
@@ -172,7 +172,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithJoin01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val rows = (cities innerJoin (users innerJoin userData)).selectAll()
             assertEquals(2L, rows.count())
         }
@@ -180,7 +180,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithAdditionalConstraint() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val usersAlias = users.alias("name")
             val join = cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
                 cities.id greater 1 and (cities.name.neq(usersAlias[users.name]))

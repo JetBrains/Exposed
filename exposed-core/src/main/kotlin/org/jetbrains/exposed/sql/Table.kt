@@ -323,7 +323,7 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "", var defaultScope: (SqlExpressionBuilder.() -> Op<Boolean>)? = null) : ColumnSet(), DdlAware {
+open class Table(name: String = "", open val defaultScope: (() -> Op<Boolean>)? = null) : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
         name.isNotEmpty() -> name

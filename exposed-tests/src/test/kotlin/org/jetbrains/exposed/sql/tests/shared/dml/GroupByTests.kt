@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class GroupByTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val cAlias = users.id.count().alias("c")
             ((cities innerJoin users).slice(cities.name, users.id.count(), cAlias).selectAll().groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
@@ -35,7 +35,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having { users.id.count() eq 1 }.toList()
             assertEquals(1, r.size)
             assertEquals("St. Petersburg", r[0][cities.name])
@@ -46,7 +46,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val maxExpr = cities.id.max()
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), maxExpr).selectAll()
                 .groupBy(cities.name)
@@ -74,7 +74,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy04() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
                 .groupBy(cities.name)
                 .having { users.id.count() lessEq 42L }
@@ -97,7 +97,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy05() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val maxNullableCityId = users.cityId.max()
 
             users.slice(maxNullableCityId).selectAll()
@@ -116,7 +116,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy06() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val maxNullableId = cities.id.max()
 
             cities.slice(maxNullableId).selectAll()
@@ -135,7 +135,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy07() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val avgIdExpr = cities.id.avg()
             val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id] }.average())
 
@@ -155,7 +155,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupConcat() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE)) { cities, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE)) { cities, users, _, _ ->
             fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) -> Unit) {
                 try {
                     val result = cities.leftJoin(users)

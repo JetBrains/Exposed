@@ -4,14 +4,18 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.Users.default
+import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.Users.nullable
+import org.jetbrains.exposed.sql.tests.shared.entities.SortByReferenceTest
 import java.util.*
+
+fun munichId() = DMLTestsData.Cities
+    .select { DMLTestsData.Cities.name eq "Munich" }
+    .first()[DMLTestsData.Cities.id]
 
 object DMLTestsData {
     object Cities : Table() {
@@ -33,6 +37,20 @@ object DMLTestsData {
         }
     }
 
+    object ScopedUsers : Table() {
+        val id: Column<String> = varchar("id", 10)
+        val name: Column<String> = varchar("name", length = 50)
+        val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+        val flags: Column<Int> = integer("flags").default(0)
+        override val primaryKey = PrimaryKey(id)
+        override val defaultScope = { cityId eq munichId() }
+
+        object Flags {
+            const val IS_ADMIN = 0b1
+            const val HAS_DATA = 0b1000
+        }
+    }
+
     object UserData : Table() {
         val user_id: Column<String> = reference("user_id", Users.id)
         val comment: Column<String> = varchar("comment", 30)
@@ -43,14 +61,19 @@ object DMLTestsData {
 @Suppress("LongMethod")
 fun DatabaseTestsBase.withCitiesAndUsers(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit
+    statement: Transaction.(cities: DMLTestsData.Cities,
+                            users: DMLTestsData.Users,
+                            userData: DMLTestsData.UserData,
+                            scopedUsers: DMLTestsData.ScopedUsers) -> Unit
 ) {
     val Users = DMLTestsData.Users
     val UserFlags = DMLTestsData.Users.Flags
     val Cities = DMLTestsData.Cities
     val UserData = DMLTestsData.UserData
+    val ScopedUsers = DMLTestsData.ScopedUsers
+    val ScopedUserFlags = DMLTestsData.ScopedUsers.Flags
 
-    withTables(exclude, Cities, Users, UserData) {
+    withTables(exclude, Cities, Users, UserData, ScopedUsers) {
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
         } get Cities.id
@@ -70,11 +93,25 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[flags] = UserFlags.IS_ADMIN
         }
 
+        ScopedUsers.insert {
+            it[id] = "andrey"
+            it[name] = "Andrey"
+            it[cityId] = saintPetersburgId
+            it[flags] = ScopedUserFlags.IS_ADMIN
+        }
+
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
             it[cityId] = munichId
             it[flags] = UserFlags.IS_ADMIN or UserFlags.HAS_DATA
+        }
+
+        ScopedUsers.insert {
+            it[id] = "sergey"
+            it[name] = "Sergey"
+            it[cityId] = munichId
+            it[flags] = ScopedUserFlags.IS_ADMIN or ScopedUserFlags.HAS_DATA
         }
 
         Users.insert {
@@ -84,7 +121,20 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[flags] = UserFlags.HAS_DATA
         }
 
+        ScopedUsers.insert {
+            it[id] = "eugene"
+            it[name] = "Eugene"
+            it[cityId] = munichId
+            it[flags] = ScopedUserFlags.HAS_DATA
+        }
+
         Users.insert {
+            it[id] = "alex"
+            it[name] = "Alex"
+            it[cityId] = null
+        }
+
+        ScopedUsers.insert {
             it[id] = "alex"
             it[name] = "Alex"
             it[cityId] = null
@@ -95,6 +145,13 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[name] = "Something"
             it[cityId] = null
             it[flags] = UserFlags.HAS_DATA
+        }
+
+        ScopedUsers.insert {
+            it[id] = "smth"
+            it[name] = "Something"
+            it[cityId] = null
+            it[flags] = ScopedUserFlags.HAS_DATA
         }
 
         UserData.insert {
@@ -121,7 +178,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[value] = 30
         }
 
-        statement(Cities, Users, UserData)
+        statement(Cities, Users, UserData, ScopedUsers)
     }
 }
 

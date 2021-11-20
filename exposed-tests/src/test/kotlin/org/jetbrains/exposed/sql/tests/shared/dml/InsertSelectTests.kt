@@ -10,7 +10,7 @@ import java.math.BigDecimal
 class InsertSelectTests : DatabaseTestsBase() {
     @Test
     fun testInsertSelect01() {
-        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData, _ ->
             val nextVal = cities.id.autoIncColumnType?.nextValExpression
             val substring = users.name.substring(1, 2)
             val slice = listOfNotNull(nextVal, substring)
@@ -25,7 +25,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelect02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val allUserData = userData.selectAll().count()
             userData.insert(userData.slice(userData.user_id, userData.comment, intParam(42)).selectAll())
 
@@ -36,7 +36,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelect03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val userCount = users.selectAll().count()
             val nullableExpression = Random() as Expression<BigDecimal?>
             users.insert(users.slice(nullableExpression.castTo<String>(VarCharColumnType()).substring(1, 10), stringParam("Foo"), intParam(1), intLiteral(0)).selectAll())
@@ -47,7 +47,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelect04() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _->
             val userCount = users.selectAll().count()
             users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
             val r = users.select { users.name eq "Foo" }.toList()
@@ -57,7 +57,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun `insert-select with same columns in a query`() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val fooParam = stringParam("Foo")
             users.insert(users.slice(fooParam, fooParam).selectAll().limit(1), columns = listOf(users.name, users.id))
             assertEquals(1, users.select { users.name eq "Foo" }.count())

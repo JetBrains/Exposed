@@ -15,7 +15,7 @@ import org.junit.Test
 class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = users.select { exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
@@ -24,7 +24,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExistsInASlice() {
-        withCitiesAndUsers { _, users, userData ->
+        withCitiesAndUsers { _, users, userData, _ ->
             var exists: Expression<Boolean> = exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
                 exists = case().When(exists, booleanLiteral(true)).Else(booleanLiteral(false))
@@ -43,7 +43,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = users.select { exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
                 .orderBy(users.id).toList()
             assertEquals(2, r.size)
@@ -54,7 +54,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData, _ ->
             val r = users.select {
                 exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
                     exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))

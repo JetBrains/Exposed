@@ -149,7 +149,7 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchInsert01() {
-        withCitiesAndUsers { cities, users, _ ->
+        withCitiesAndUsers { cities, users, _, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
             val allCitiesID = cities.batchInsert(cityNames) { name ->
                 this[cities.name] = name
