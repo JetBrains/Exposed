@@ -35,7 +35,7 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchReplace01() {
-        withCitiesAndUsers(notSupportsReplace) { cities, users, userData, _ ->
+        withCitiesAndUsers(notSupportsReplace) { cities, users, userData, _, _ ->
             val (munichId, pragueId, saintPetersburgId) = cities.slice(cities.id).select {
                 cities.name inList listOf("Munich", "Prague", "St. Petersburg")
             }.orderBy(cities.name).map { it[cities.id] }

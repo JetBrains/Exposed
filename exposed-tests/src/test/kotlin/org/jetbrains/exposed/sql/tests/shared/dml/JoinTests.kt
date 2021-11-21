@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -12,7 +13,7 @@ class JoinTests : DatabaseTestsBase() {
     // manual join
     @Test
     fun testJoin01() {
-        withCitiesAndUsers { cities, users, _, scopedUsers ->
+        withCitiesAndUsers { cities, users, _, scopedUsers, scopedUserData ->
             (users innerJoin cities)
                 .slice(users.name, cities.name)
                 .select {
@@ -29,6 +30,7 @@ class JoinTests : DatabaseTestsBase() {
                     }
                 }
 
+            // Joining to a table that doesn't have a default scope
             (scopedUsers innerJoin cities)
                 .slice(scopedUsers.name, cities.name)
                 .select {
@@ -37,30 +39,105 @@ class JoinTests : DatabaseTestsBase() {
                         scopedUsers.cityId.eq(cities.id)
                 }.let {
                     it.forEach { r ->
-                    val userName = r[scopedUsers.name]
-                    val cityName = r[cities.name]
-                    when (userName) {
-                        "Sergey" -> assertEquals("Munich", cityName)
-                        else -> error("Unexpected user $userName")
+                        val userName = r[scopedUsers.name]
+                        val cityName = r[cities.name]
+                        when (userName) {
+                            "Sergey" -> assertEquals("Munich", cityName)
+                            else -> error("Unexpected user $userName")
+                        }
                     }
-                }}
+                }
+
+            // Joining to a table that has a default scope. Some
+            // records are filtered out by the left table's scope
+            (scopedUsers innerJoin scopedUserData)
+                .slice(scopedUsers.name, scopedUserData.comment)
+                .select {
+                    (scopedUsers.id.eq("andrey") or
+                        scopedUsers.name.eq("Sergey")) and
+                        scopedUsers.cityId.eq(cities.id)
+                }.let {
+                    it.forEach { r ->
+                        val userName = r[scopedUsers.name]
+                        val comment = r[scopedUserData.comment]
+                        when (userName) {
+                            "Sergey" -> assertEquals("Comment for Sergey", comment)
+                            else -> error("Unexpected user $userName")
+                        }
+                    }
+                }
+
+            // Joining to a table that has a default scope. Some
+            // records are filtered out by the right table's scope
+            (scopedUsers innerJoin scopedUserData)
+                .slice(scopedUsers.name, scopedUserData.comment)
+                .select {
+                    (scopedUsers.id.eq("eugene") or
+                        scopedUsers.name.eq("Sergey")) and
+                        scopedUsers.cityId.eq(cities.id)
+                }.let {
+                    it.forEach { r ->
+                        val userName = r[scopedUsers.name]
+                        val comment = r[scopedUserData.comment]
+                        when (userName) {
+                            "Sergey" -> assertEquals("Comment for Sergey", comment)
+                            else -> error("Unexpected user $userName")
+                        }
+                    }
+                }
         }
     }
 
     // join with foreign key
     @Test
     fun testJoin02() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, scopedUserData ->
             val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
+
+            // Joining to a table that has a default scope. Some
+            // records are filtered out by the left table's scope
+            (scopedUsers innerJoin scopedUserData)
+                .slice(scopedUsers.name, scopedUserData.comment)
+                .select {
+                    (scopedUsers.id.eq("andrey") or
+                        scopedUsers.name.eq("Sergey"))
+                }.let {
+                    it.forEach { r ->
+                        val userName = r[scopedUsers.name]
+                        val comment = r[scopedUserData.comment]
+                        when (userName) {
+                            "Sergey" -> assertEquals("Comment for Sergey", comment)
+                            else -> error("Unexpected user $userName")
+                        }
+                    }
+                }
+
+            // Joining to a table that has a default scope. Some
+            // records are filtered out by the right table's scope
+            (scopedUsers innerJoin scopedUserData)
+                .slice(scopedUsers.name, scopedUserData.comment)
+                .select {
+                    (scopedUsers.id.eq("eugene") or
+                        scopedUsers.name.eq("Sergey"))
+                }.let {
+                    it.forEach { r ->
+                        val userName = r[scopedUsers.name]
+                        val comment = r[scopedUserData.comment]
+                        when (userName) {
+                            "Sergey" -> assertEquals("Comment for Sergey", comment)
+                            else -> error("Unexpected user $userName")
+                        }
+                    }
+                }
         }
     }
 
     // triple join
     @Test
     fun testJoin03() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Eugene", r[0][users.name])
@@ -112,7 +189,7 @@ class JoinTests : DatabaseTestsBase() {
     // cross join
     @Test
     fun testJoin05() {
-        withCitiesAndUsers { cities, users, _, _ ->
+        withCitiesAndUsers { cities, users, _, _, _ ->
             val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") }.map {
                 it[users.name] to it[cities.name]
             }
@@ -182,7 +259,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithAlias01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val usersAlias = users.alias("u2")
             val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
                 .select { users.id eq "alex" }.single()
@@ -194,7 +271,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithJoin01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val rows = (cities innerJoin (users innerJoin userData)).selectAll()
             assertEquals(2L, rows.count())
         }
@@ -202,7 +279,7 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithAdditionalConstraint() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val usersAlias = users.alias("name")
             val join = cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
                 cities.id greater 1 and (cities.name.neq(usersAlias[users.name]))

@@ -23,7 +23,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdate01() {
-        withCitiesAndUsers { _, users, _, _ ->
+        withCitiesAndUsers { _, users, _, _, _ ->
             val alexId = "alex"
             val alexName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
             assertEquals("Alex", alexName)
@@ -40,7 +40,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, users, _, _ ->
+        withCitiesAndUsers(exclude = notSupportLimit) { _, users, _, _, _ ->
             val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
             assertEquals(2, aNames.size)
 
@@ -58,7 +58,7 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithLimit02() {
         val dialects = TestDB.values().toList() - notSupportLimit
-        withCitiesAndUsers(dialects) { _, users, _, _ ->
+        withCitiesAndUsers(dialects) { _, users, _, _, _ ->
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
                     it[users.id] = "NewName"
@@ -70,7 +70,7 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithJoin() {
         val dialects = listOf(TestDB.SQLITE)
-        withCitiesAndUsers(dialects) { cities, users, userData, _ ->
+        withCitiesAndUsers(dialects) { cities, users, userData, _, _ ->
             val join = users.innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -104,7 +104,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun `test update fails with empty body`() {
-        withCitiesAndUsers { cities, _, _, _ ->
+        withCitiesAndUsers { cities, _, _, _, _ ->
             expectException<IllegalArgumentException> {
                 cities.update(where = { cities.id.isNull() }) {
                     // empty

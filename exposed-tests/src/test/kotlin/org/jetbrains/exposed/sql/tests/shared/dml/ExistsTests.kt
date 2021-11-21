@@ -19,7 +19,7 @@ import org.testcontainers.shaded.org.bouncycastle.asn1.x500.style.RFC4519Style.c
 class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists01() {
-        withCitiesAndUsers { cities, users, userData, scopedUsers ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             users.select {
                     exists(userData.select((userData.user_id eq users.id)
                                                and (userData.comment like "%here%")))
@@ -42,7 +42,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExistsInASlice() {
-        withCitiesAndUsers { _, users, userData, scopedUsers ->
+        withCitiesAndUsers { _, users, userData, scopedUsers, _ ->
             // Exists and no default scope set.
             var exists: Expression<Boolean> = exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
@@ -107,7 +107,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists02() {
-        withCitiesAndUsers { cities, users, userData, scopedUsers ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             users.select {
                     exists(userData.select(
                         (userData.user_id eq users.id)
@@ -137,7 +137,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists03() {
-        withCitiesAndUsers { cities, users, userData, scopedUsers ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             users.select {
                     exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
                     exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))

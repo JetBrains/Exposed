@@ -15,7 +15,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQuerySlice() {
-        withCitiesAndUsers { cities, users, _, _ ->
+        withCitiesAndUsers { cities, users, _, _, _ ->
             val queryAdjusted = (users innerJoin cities)
                 .slice(users.name)
                 .select(predicate)
@@ -35,7 +35,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQueryColumnSet() {
-        withCitiesAndUsers { cities, users, _, _ ->
+        withCitiesAndUsers { cities, users, _, _, _ ->
             val queryAdjusted = users
                 .slice(users.name, cities.name)
                 .select(predicate)
@@ -53,7 +53,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQueryWhere() {
-        withCitiesAndUsers { cities, users, _, _ ->
+        withCitiesAndUsers { cities, users, _, _, _ ->
             val queryAdjusted = (users innerJoin cities)
                 .slice(users.name, cities.name)
                 .selectAll()
@@ -75,7 +75,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testQueryAndWhere() {
-        withCitiesAndUsers { cities, users, _, _ ->
+        withCitiesAndUsers { cities, users, _, _, _ ->
             val queryAdjusted = (users innerJoin cities)
                 .slice(users.name, cities.name)
                 .select { predicate }

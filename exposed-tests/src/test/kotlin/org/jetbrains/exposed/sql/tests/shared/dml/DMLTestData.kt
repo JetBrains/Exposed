@@ -56,6 +56,13 @@ object DMLTestsData {
         val comment: Column<String> = varchar("comment", 30)
         val value: Column<Int> = integer("value")
     }
+
+    object ScopedUserData : Table() {
+        val user_id: Column<String> = reference("user_id", ScopedUsers.id)
+        val comment: Column<String> = varchar("comment", 30)
+        val value: Column<Int> = integer("value")
+        override val defaultScope = { user_id eq "sergey" }
+    }
 }
 
 @Suppress("LongMethod")
@@ -64,7 +71,8 @@ fun DatabaseTestsBase.withCitiesAndUsers(
     statement: Transaction.(cities: DMLTestsData.Cities,
                             users: DMLTestsData.Users,
                             userData: DMLTestsData.UserData,
-                            scopedUsers: DMLTestsData.ScopedUsers) -> Unit
+                            scopedUsers: DMLTestsData.ScopedUsers,
+                            scopedUserData: DMLTestsData.ScopedUserData) -> Unit
 ) {
     val Users = DMLTestsData.Users
     val UserFlags = DMLTestsData.Users.Flags
@@ -72,8 +80,9 @@ fun DatabaseTestsBase.withCitiesAndUsers(
     val UserData = DMLTestsData.UserData
     val ScopedUsers = DMLTestsData.ScopedUsers
     val ScopedUserFlags = DMLTestsData.ScopedUsers.Flags
+    val ScopedUserData = DMLTestsData.ScopedUserData
 
-    withTables(exclude, Cities, Users, UserData, ScopedUsers) {
+    withTables(exclude, Cities, Users, UserData, ScopedUsers, ScopedUserData) {
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
         } get Cities.id
@@ -160,9 +169,21 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[value] = 10
         }
 
+        ScopedUserData.insert {
+            it[user_id] = "smth"
+            it[comment] = "Something is here"
+            it[value] = 10
+        }
+
         UserData.insert {
             it[user_id] = "smth"
             it[comment] = "Comment #2"
+            it[value] = 20
+        }
+
+        ScopedUserData.insert {
+            it[user_id] = "smth"
+            it[comment] =  "Comment #2"
             it[value] = 20
         }
 
@@ -172,13 +193,25 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[value] = 20
         }
 
+        ScopedUserData.insert {
+            it[user_id] = "eugene"
+            it[comment] =  "Comment for Eugene"
+            it[value] = 20
+        }
+
         UserData.insert {
             it[user_id] = "sergey"
             it[comment] = "Comment for Sergey"
             it[value] = 30
         }
 
-        statement(Cities, Users, UserData, ScopedUsers)
+        ScopedUserData.insert {
+            it[user_id] = "sergey"
+            it[comment] =  "Comment for Sergey"
+            it[value] = 30
+        }
+
+        statement(Cities, Users, UserData, ScopedUsers, ScopedUserData)
     }
 }
 

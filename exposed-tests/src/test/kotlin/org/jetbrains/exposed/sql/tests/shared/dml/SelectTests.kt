@@ -13,7 +13,7 @@ class SelectTests : DatabaseTestsBase() {
     // select expressions
     @Test
     fun testSelect() {
-        withCitiesAndUsers { _, users, _, scopedUsers ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             users.select { users.id.eq("andrey") }
                 .forEach {
                     val userId = it[users.id]
@@ -38,7 +38,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectAnd() {
-        withCitiesAndUsers { cities, users, userData, scopedUsers ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             users.select { users.id.eq("andrey") and users.name.eq("Andrey") }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
@@ -63,7 +63,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectOr() {
-        withCitiesAndUsers { cities, users, userData, scopedUsers ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             users.select { users.id.eq("andrey") or users.name.eq("Andrey") }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
@@ -87,7 +87,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectNot() {
-        withCitiesAndUsers { _, users, _, scopedUsers ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             users.select { not(users.id.eq("andrey")) }
                 .forEach {
                     val userId = it[users.id]
@@ -110,7 +110,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testSizedIterable() {
-        withCitiesAndUsers { cities, _, _, scopedUsers ->
+        withCitiesAndUsers { cities, _, _, scopedUsers, _ ->
             assertEquals(false, cities.selectAll().empty())
             assertEquals(true, cities.select { cities.name eq "Qwertt" }.empty())
             assertEquals(0L, cities.select { cities.name eq "Qwertt" }.count())
@@ -125,7 +125,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList01() {
-        withCitiesAndUsers { _, users, _, scopedUsers ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             users.select { users.id inList listOf("andrey", "alex") }
                 .orderBy(users.name)
                 .toList()
@@ -148,7 +148,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList02() {
-        withCitiesAndUsers { cities, _, _, scopedUsers ->
+        withCitiesAndUsers { cities, _, _, scopedUsers, _ ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
             val r = cities.select { cities.id inList cityIds }
 
@@ -168,7 +168,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList03() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _, scopedUsers ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _, scopedUsers, _ ->
             val r = users.select {
                 users.id to users.name inList listOf("andrey" to "Andrey", "alex" to "Alex")
             }.orderBy(users.name).toList()
@@ -192,7 +192,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList04() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers, _ ->
             val r = users.select {
                 users.id to users.name inList listOf("andrey" to "Andrey")
             }.toList()
@@ -221,7 +221,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList05() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers, _ ->
             val r = users.select {
                 users.id to users.name inList emptyList()
             }.toList()
@@ -236,7 +236,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList06() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers, _ ->
             users.select { users.id to users.name notInList emptyList() }
                 .toList()
                 .let { r -> assertEquals(users.selectAll().count().toInt(), r.size) }
@@ -250,7 +250,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList07() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _, scopedUsers, _ ->
             users.select {
                     Triple(users.id, users.name, users.cityId) notInList
                         listOf(Triple("alex", "Alex", null))
@@ -268,7 +268,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInSubQuery01() {
-        withCitiesAndUsers { cities, _, _, scopedUsers ->
+        withCitiesAndUsers { cities, _, _, scopedUsers, _ ->
             cities.select {
                 cities.id inSubQuery (cities
                     .slice(cities.id)
@@ -285,7 +285,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test  // no data since all ids are selected
     fun testNotInSubQueryNoData() {
-        withCitiesAndUsers { cities, _, _, scopedUsers ->
+        withCitiesAndUsers { cities, _, _, scopedUsers, _ ->
             cities.select {
                 cities.id notInSubQuery
                     (cities.slice(cities.id).selectAll())
@@ -300,7 +300,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testNotInSubQuery() {
-        withCitiesAndUsers { cities, _, _, scopedUsers ->
+        withCitiesAndUsers { cities, _, _, scopedUsers, _ ->
             val cityId = 2
 
             cities.select {
@@ -349,7 +349,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testCompoundOp() {
-        withCitiesAndUsers { _, users, _, scopedUsers ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             val allUsers = setOf(
                 "Andrey",
                 "Sergey",

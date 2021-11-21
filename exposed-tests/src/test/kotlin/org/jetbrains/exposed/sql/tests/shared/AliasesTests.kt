@@ -51,7 +51,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinSubQuery01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val expAlias = users.name.max().alias("m")
             val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
@@ -61,7 +61,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinSubQuery02() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val expAlias = users.name.max().alias("m")
 
             val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {

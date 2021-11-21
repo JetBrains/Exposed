@@ -12,7 +12,7 @@ import org.junit.Test
 class OrderByTests : DatabaseTestsBase() {
     @Test
     fun orderBy01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val r = users.selectAll().orderBy(users.id).toList()
             assertEquals(5, r.size)
             assertEquals("alex", r[0][users.id])
@@ -30,7 +30,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy02() {
-        withCitiesAndUsers { _, users, _, _ ->
+        withCitiesAndUsers { _, users, _, _, _ ->
             val r = users.selectAll().orderBy(users.cityId, SortOrder.DESC).orderBy(users.id).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
@@ -45,7 +45,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy03() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
@@ -60,7 +60,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun testOrderBy04() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _->
             val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
@@ -72,7 +72,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy05() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val r = users.selectAll().orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC).toList()
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
@@ -87,7 +87,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy06() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val orderByExpression = users.id.substring(2, 1)
             val r = users.selectAll().orderBy(orderByExpression to SortOrder.ASC).toList()
             assertEquals(5, r.size)
@@ -101,7 +101,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun testOrderByExpressions() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             val expression = wrapAsExpression<Int>(
                 users
                     .slice(users.id.count())
@@ -137,7 +137,7 @@ class OrderByTests : DatabaseTestsBase() {
             SortOrder.DESC_NULLS_FIRST to usersWithoutCities + otherUsers,
             SortOrder.DESC_NULLS_LAST to otherUsers + usersWithoutCities,
         )
-        withCitiesAndUsers { _, users, _, _ ->
+        withCitiesAndUsers { _, users, _, _, _ ->
             cases.forEach { (sortOrder, expected) ->
                 val r = users.selectAll().orderBy(
                     users.cityId to sortOrder,

@@ -24,7 +24,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDelete01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
+        withCitiesAndUsers { cities, users, userData, _, _ ->
             userData.deleteAll()
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
@@ -40,7 +40,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithLimitAndOffset01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData, _ ->
+        withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData, _, _ ->
             userData.deleteWhere(limit = 1) { userData.value eq 20 }
             userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
                 assertEquals(1L, it.count())
@@ -53,7 +53,7 @@ class DeleteTests : DatabaseTestsBase() {
     @Test
     fun testDeleteWithLimit02() {
         val dialects = TestDB.values().toList() - notSupportLimit
-        withCitiesAndUsers(dialects) { _, _, userData, _ ->
+        withCitiesAndUsers(dialects) { _, _, userData, _, _ ->
             expectException<UnsupportedByDialectException> {
                 userData.deleteWhere(limit = 1) {
                     userData.value eq 20

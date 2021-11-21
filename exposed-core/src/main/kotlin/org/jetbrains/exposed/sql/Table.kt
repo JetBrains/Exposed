@@ -200,7 +200,7 @@ class Join(
                 join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
             }
             onColumn != null || otherColumn != null -> {
-                error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
+                error("Can't prepare join on $table and $otherTable when only column from one side provided.")
             }
             additionalConstraint != null -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
@@ -256,9 +256,17 @@ class Join(
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
 
-    override fun materializeDefaultScope(): Op<Boolean>? {
-        TODO("Not yet implemented")
-    }
+    override fun materializeDefaultScope() = table.materializeDefaultScope()
+        .let { sourceDefaultScope ->
+            joinParts
+                .mapNotNull { it.joinPart.materializeDefaultScope() }
+                .reduceOrNull { result, op -> result and op }
+                .let {
+                    it?.let {
+                            targetsDefaultScope -> sourceDefaultScope?.and(targetsDefaultScope)
+                    } ?: it
+                } ?: sourceDefaultScope
+        }
 
     private fun implicitJoin(
         otherTable: ColumnSet,
