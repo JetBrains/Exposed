@@ -12,16 +12,38 @@ class JoinTests : DatabaseTestsBase() {
     // manual join
     @Test
     fun testJoin01() {
-        withCitiesAndUsers { cities, users, userData, _ ->
-            (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }.forEach {
-                val userName = it[users.name]
-                val cityName = it[cities.name]
-                when (userName) {
-                    "Andrey" -> assertEquals("St. Petersburg", cityName)
-                    "Sergey" -> assertEquals("Munich", cityName)
-                    else -> error("Unexpected user $userName")
+        withCitiesAndUsers { cities, users, _, scopedUsers ->
+            (users innerJoin cities)
+                .slice(users.name, cities.name)
+                .select {
+                    (users.id.eq("andrey") or
+                        users.name.eq("Sergey")) and
+                        users.cityId.eq(cities.id)
+                }.forEach {
+                    val userName = it[users.name]
+                    val cityName = it[cities.name]
+                    when (userName) {
+                        "Andrey" -> assertEquals("St. Petersburg", cityName)
+                        "Sergey" -> assertEquals("Munich", cityName)
+                        else -> error("Unexpected user $userName")
+                    }
                 }
-            }
+
+            (scopedUsers innerJoin cities)
+                .slice(scopedUsers.name, cities.name)
+                .select {
+                    (scopedUsers.id.eq("andrey") or
+                        scopedUsers.name.eq("Sergey")) and
+                        scopedUsers.cityId.eq(cities.id)
+                }.let {
+                    it.forEach { r ->
+                    val userName = r[scopedUsers.name]
+                    val cityName = r[cities.name]
+                    when (userName) {
+                        "Sergey" -> assertEquals("Munich", cityName)
+                        else -> error("Unexpected user $userName")
+                    }
+                }}
         }
     }
 

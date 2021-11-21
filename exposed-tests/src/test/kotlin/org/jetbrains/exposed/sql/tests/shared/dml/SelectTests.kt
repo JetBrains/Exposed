@@ -33,16 +33,6 @@ class SelectTests : DatabaseTestsBase() {
                         else -> error("Unexpected user $userId")
                     }
                 }
-
-            scopedUsers.select { scopedUsers.name eq "Sergey" }
-                .forEach {
-                    val userId = it[scopedUsers.id]
-                    val userName = it[scopedUsers.name]
-                    when (userId) {
-                        "sergey" -> assertEquals("Sergey", userName)
-                        else -> error("Unexpected user $userId")
-                    }
-                }
         }
     }
 
@@ -414,8 +404,8 @@ class SelectTests : DatabaseTestsBase() {
         val firstTable = object : IntIdTable("first") {}
         val secondTable = object : IntIdTable("second") {
             val tenantId = varchar("TENANT_ID", 50).nullable()
-            override val defaultScope = { Op.build { tenantId eq actualTenantId } }
             val firstOpt = optReference("first", firstTable)
+            override val defaultScope = { Op.build { tenantId eq actualTenantId } }
         }
 
         withTables(firstTable, secondTable) {

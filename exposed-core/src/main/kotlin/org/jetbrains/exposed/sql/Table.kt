@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
+import java.text.DateFormat.FULL
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
@@ -55,7 +56,7 @@ interface FieldSet {
 /**
  * Represents a set of columns.
  */
-abstract class ColumnSet : FieldSet {
+abstract class ColumnSet : FieldSet, DefaultScopeAware {
     override val source: ColumnSet get() = this
 
     /** Returns the columns of this column set. */
@@ -99,6 +100,11 @@ abstract class ColumnSet : FieldSet {
 
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
+
+    override fun materializeDefaultScope() = when {
+        source != this -> (source as DefaultScopeAware).materializeDefaultScope()
+        else -> null
+    }
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
     fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
@@ -150,7 +156,12 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
 /**
  * Represents a subset of [fields] from a given [source].
  */
-class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet
+class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet, DefaultScopeAware {
+    override fun materializeDefaultScope() = when(source) {
+        is DefaultScopeAware -> source.materializeDefaultScope()
+        else -> null
+    }
+}
 
 /**
  * Represents column set join types.
@@ -323,13 +334,15 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "", open val defaultScope: (() -> Op<Boolean>)? = null) : ColumnSet(), DdlAware {
+open class Table(name: String = "") : ColumnSet(), DdlAware,  DefaultScopeAware {
     /** Returns the table name. */
     open val tableName: String = when {
         name.isNotEmpty() -> name
         javaClass.`package` == null -> javaClass.name.removeSuffix("Table")
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
+
+    open val defaultScope: (() -> Op<Boolean>)? = null
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
@@ -353,6 +366,8 @@ open class Table(name: String = "", open val defaultScope: (() -> Op<Boolean>)? 
      * Should be called within transaction or default [tableName] will be returned.
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
+
+    override fun materializeDefaultScope() = defaultScope?.invoke()
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
 
@@ -414,9 +429,11 @@ open class Table(name: String = "", open val defaultScope: (() -> Op<Boolean>)? 
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
         /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
+        val name: String = "pk_$tableName",
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableName") :
+        constructor(firstColumn: Column<*>,
+                    vararg columns: Column<*>,
+                    name: String = "pk_$tableName") :
             this(arrayOf(firstColumn, *columns), name)
 
         init {
@@ -1090,7 +1107,7 @@ open class Table(name: String = "", open val defaultScope: (() -> Op<Boolean>)? 
 
     override fun hashCode(): Int = tableName.hashCode()
 
-    object Dual : Table("dual", null)
+    object Dual : Table("dual")
 }
 
 /** Returns the list of tables to which the columns in this column set belong. */

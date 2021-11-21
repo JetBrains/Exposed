@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.dao.id
 
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Table
 import java.util.*
 
@@ -38,7 +39,10 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
  * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  * @param columnName name for a primary key, "id" by default
  */
-open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
+open class IntIdTable(
+    name: String = "",
+    columnName: String = "id"
+) : IdTable<Int>(name) {
     final override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
     final override val primaryKey = PrimaryKey(id)
 }
@@ -49,7 +53,10 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  * @param columnName name for a primary key, "id" by default
  */
-open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
+open class LongIdTable(
+    name: String = "",
+    columnName: String = "id"
+) : IdTable<Long>(name) {
     final override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
     final override val primaryKey = PrimaryKey(id)
 }
@@ -64,7 +71,10 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  * @param columnName name for a primary key, "id" by default
  */
-open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
+open class UUIDTable(
+    name: String = "",
+    columnName: String = "id",
+) : IdTable<UUID>(name) {
     final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)
 }

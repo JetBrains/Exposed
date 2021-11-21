@@ -31,16 +31,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = initializeWhere(where)
         private set
 
-    private fun initializeWhere(where: Op<Boolean>?) = when (set) {
-        is Table -> (set as Table).defaultScope?.let { safeDefaultScope ->
-            where?.let { safeWhere ->
-               safeDefaultScope() and safeWhere
-            } ?: safeDefaultScope()
-        } ?: where
-
-        else -> { where }
+    private fun initializeWhere(where: Op<Boolean>?) = when(set) {
+        is DefaultScopeAware -> (set as DefaultScopeAware)
+            .materializeDefaultScope()
+            ?.let { safeDefaultScope ->
+                where?.let { it and safeDefaultScope }
+                    ?: safeDefaultScope
+            } ?: where
+        else -> where
     }
-
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
