@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -55,7 +54,7 @@ class JoinTests : DatabaseTestsBase() {
                 .select {
                     (scopedUsers.id.eq("andrey") or
                         scopedUsers.name.eq("Sergey")) and
-                        scopedUsers.cityId.eq(cities.id)
+                        scopedUsers.id.eq(scopedUserData.userId)
                 }.let {
                     it.forEach { r ->
                         val userName = r[scopedUsers.name]
@@ -74,7 +73,7 @@ class JoinTests : DatabaseTestsBase() {
                 .select {
                     (scopedUsers.id.eq("eugene") or
                         scopedUsers.name.eq("Sergey")) and
-                        scopedUsers.cityId.eq(cities.id)
+                        scopedUsers.id.eq(scopedUserData.userId)
                 }.let {
                     it.forEach { r ->
                         val userName = r[scopedUsers.name]
@@ -137,15 +136,27 @@ class JoinTests : DatabaseTestsBase() {
     // triple join
     @Test
     fun testJoin03() {
-        withCitiesAndUsers { cities, users, userData, _, _ ->
-            val r = (cities innerJoin users innerJoin userData).selectAll().orderBy(users.id).toList()
-            assertEquals(2, r.size)
-            assertEquals("Eugene", r[0][users.name])
-            assertEquals("Comment for Eugene", r[0][userData.comment])
-            assertEquals("Munich", r[0][cities.name])
-            assertEquals("Sergey", r[1][users.name])
-            assertEquals("Comment for Sergey", r[1][userData.comment])
-            assertEquals("Munich", r[1][cities.name])
+        withCitiesAndUsers { cities, users, userData, scopedUsers, scopedUserData ->
+            (cities innerJoin users innerJoin userData)
+                .selectAll().orderBy(users.id)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    assertEquals("Eugene", r[0][users.name])
+                    assertEquals("Comment for Eugene", r[0][userData.comment])
+                    assertEquals("Munich", r[0][cities.name])
+                    assertEquals("Sergey", r[1][users.name])
+                    assertEquals("Comment for Sergey", r[1][userData.comment])
+                    assertEquals("Munich", r[1][cities.name])
+                }
+
+            (cities innerJoin scopedUsers innerJoin scopedUserData)
+                .selectAll().orderBy(scopedUsers.id)
+                .toList().let { r ->
+                    assertEquals(1, r.size)
+                    assertEquals("Sergey", r[0][scopedUsers.name])
+                    assertEquals("Comment for Sergey", r[0][scopedUserData.comment])
+                    assertEquals("Munich", r[0][cities.name])
+                }
         }
     }
 
@@ -189,19 +200,26 @@ class JoinTests : DatabaseTestsBase() {
     // cross join
     @Test
     fun testJoin05() {
-        withCitiesAndUsers { cities, users, _, _, _ ->
-            val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") }.map {
-                it[users.name] to it[cities.name]
-            }
-            val allUsers = setOf(
-                "Andrey",
-                "Sergey",
-                "Eugene",
-                "Alex",
-                "Something"
-            )
-            assertTrue(allUsersToStPetersburg.all { it.second == "St. Petersburg" })
-            assertEquals(allUsers, allUsersToStPetersburg.map { it.first }.toSet())
+        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
+            (users crossJoin cities)
+                .slice(users.name, users.cityId, cities.name)
+                .select { cities.name.eq("St. Petersburg") }
+                .map { it[users.name] to it[cities.name] }
+                .let { allUsersToStPetersburg ->
+                    assertTrue(allUsersToStPetersburg.all { it.second == "St. Petersburg" })
+                    assertEquals(setOf("Andrey", "Sergey", "Eugene", "Alex", "Something"),
+                                 allUsersToStPetersburg.map { it.first }.toSet())
+                }
+
+            (scopedUsers crossJoin cities)
+                .slice(scopedUsers.name, scopedUsers.cityId, cities.name)
+                .select { cities.name.eq("Munich") }
+                .map { it[scopedUsers.name] to it[cities.name] }
+                .let { allUsersToMunich ->
+                    assertTrue(allUsersToMunich.all { it.second == "Munich" })
+                    assertEquals(setOf("Sergey", "Eugene"),
+                                 allUsersToMunich.map { it.first }.toSet())
+                }
         }
     }
 
@@ -259,33 +277,59 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinWithAlias01() {
-        withCitiesAndUsers { cities, users, userData, _, _ ->
+        withCitiesAndUsers { cities, users, userData, scopedUsers, _ ->
             val usersAlias = users.alias("u2")
-            val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
-                .select { users.id eq "alex" }.single()
+            Join(users)
+                .join(usersAlias,
+                      JoinType.LEFT,
+                      usersAlias[users.id],
+                      stringLiteral("smth"))
+                .select { users.id eq "alex" }
+                .single().let { resultRow ->
+                    assert(resultRow[users.name] == "Alex")
+                    assert(resultRow[usersAlias[users.name]] == "Something")
+                }
 
-            assert(resultRow[users.name] == "Alex")
-            assert(resultRow[usersAlias[users.name]] == "Something")
+            val scopedUsersAlias = scopedUsers.alias("u3")
+            Join(scopedUsers)
+                .join(scopedUsersAlias,
+                      JoinType.LEFT,
+                      scopedUsersAlias[scopedUsers.id],
+                      stringLiteral("sergey"))
+                .select { scopedUsers.id eq "eugene" }
+                .single().let { resultRow ->
+                    assert(resultRow[scopedUsers.name] == "Eugene")
+                    assert(resultRow[scopedUsersAlias[scopedUsers.name]] == "Sergey")
+                }
         }
     }
 
     @Test
     fun testJoinWithJoin01() {
-        withCitiesAndUsers { cities, users, userData, _, _ ->
-            val rows = (cities innerJoin (users innerJoin userData)).selectAll()
-            assertEquals(2L, rows.count())
+        withCitiesAndUsers { cities, users, userData, scopedUsers, scopedUserData ->
+             (cities innerJoin (users innerJoin userData))
+                 .selectAll()
+                 .let { rows -> assertEquals(2L, rows.count()) }
+
+            (cities innerJoin (scopedUsers innerJoin scopedUserData))
+                .selectAll()
+                .let { rows -> assertEquals(1L, rows.count()) }
         }
     }
 
     @Test
     fun testJoinWithAdditionalConstraint() {
-        withCitiesAndUsers { cities, users, userData, _, _ ->
+        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
             val usersAlias = users.alias("name")
-            val join = cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
+            cities.join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
                 cities.id greater 1 and (cities.name.neq(usersAlias[users.name]))
-            }
+            }.let { join -> assertEquals(2L, join.selectAll().count()) }
 
-            assertEquals(2L, join.selectAll().count())
+            val scopedUserAlias = scopedUsers.alias("su2")
+
+            cities.join(scopedUserAlias, JoinType.INNER, cities.id, scopedUserAlias[scopedUsers.cityId]) {
+                cities.id greater 1 and (cities.name.neq(scopedUserAlias[scopedUsers.name]))
+            }.let { join -> assertEquals(2L, join.selectAll().count()) }
         }
     }
 

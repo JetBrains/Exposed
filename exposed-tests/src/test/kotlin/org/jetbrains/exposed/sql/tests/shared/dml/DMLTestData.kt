@@ -8,9 +8,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.Users.default
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.Users.nullable
-import org.jetbrains.exposed.sql.tests.shared.entities.SortByReferenceTest
 import java.util.*
 
 fun munichId() = DMLTestsData.Cities
@@ -58,10 +55,10 @@ object DMLTestsData {
     }
 
     object ScopedUserData : Table() {
-        val user_id: Column<String> = reference("user_id", ScopedUsers.id)
+        val userId: Column<String> = reference("user_id", ScopedUsers.id)
         val comment: Column<String> = varchar("comment", 30)
         val value: Column<Int> = integer("value")
-        override val defaultScope = { user_id eq "sergey" }
+        override val defaultScope = { userId eq "sergey" }
     }
 }
 
@@ -170,7 +167,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         }
 
         ScopedUserData.insert {
-            it[user_id] = "smth"
+            it[userId] = "smth"
             it[comment] = "Something is here"
             it[value] = 10
         }
@@ -182,7 +179,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         }
 
         ScopedUserData.insert {
-            it[user_id] = "smth"
+            it[userId] = "smth"
             it[comment] =  "Comment #2"
             it[value] = 20
         }
@@ -194,7 +191,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         }
 
         ScopedUserData.insert {
-            it[user_id] = "eugene"
+            it[userId] = "eugene"
             it[comment] =  "Comment for Eugene"
             it[value] = 20
         }
@@ -206,7 +203,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         }
 
         ScopedUserData.insert {
-            it[user_id] = "sergey"
+            it[userId] = "sergey"
             it[comment] =  "Comment for Sergey"
             it[value] = 30
         }
