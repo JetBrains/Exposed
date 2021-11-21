@@ -29,7 +29,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 /**
  * Represents a set of expressions, contained in the given column set.
  */
-interface FieldSet {
+interface FieldSet : DefaultScopeAware {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
 
@@ -56,7 +56,7 @@ interface FieldSet {
 /**
  * Represents a set of columns.
  */
-abstract class ColumnSet : FieldSet, DefaultScopeAware {
+abstract class ColumnSet : FieldSet {
     override val source: ColumnSet get() = this
 
     /** Returns the columns of this column set. */
@@ -100,11 +100,6 @@ abstract class ColumnSet : FieldSet, DefaultScopeAware {
 
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
-
-    override fun materializeDefaultScope() = when {
-        source != this -> (source as DefaultScopeAware).materializeDefaultScope()
-        else -> null
-    }
 
     /** Specifies a subset of [columns] of this [ColumnSet]. */
     fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
@@ -156,11 +151,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
 /**
  * Represents a subset of [fields] from a given [source].
  */
-class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet, DefaultScopeAware {
-    override fun materializeDefaultScope() = when(source) {
-        is DefaultScopeAware -> source.materializeDefaultScope()
-        else -> null
-    }
+class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet {
+    override fun materializeDefaultScope() = source.materializeDefaultScope()
 }
 
 /**
@@ -263,6 +255,10 @@ class Join(
     override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
+
+    override fun materializeDefaultScope(): Op<Boolean>? {
+        TODO("Not yet implemented")
+    }
 
     private fun implicitJoin(
         otherTable: ColumnSet,
