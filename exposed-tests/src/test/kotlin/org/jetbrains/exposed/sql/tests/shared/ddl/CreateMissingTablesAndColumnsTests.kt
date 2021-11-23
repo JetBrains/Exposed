@@ -497,4 +497,27 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    object CompositePrimaryKeyTable : Table("H2_COMPOSITE_PRIMARY_KEY") {
+        val idA = varchar("id_a", 255)
+        val idB = varchar("id_b", 255)
+        override val primaryKey = PrimaryKey(idA, idB)
+    }
+
+    object CompositeForeignKeyTable : Table("H2_COMPOSITE_FOREIGN_KEY") {
+        val idA = varchar("id_a", 255)
+        val idB = varchar("id_b", 255)
+
+        init {
+            foreignKey(idA, idB, target = CompositePrimaryKeyTable.primaryKey)
+        }
+    }
+
+    @Test
+    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyTableMultipleTimes() {
+        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+        }
+    }
 }
