@@ -34,7 +34,7 @@ object DMLTestsData {
         }
     }
 
-    object ScopedUsers : Table() {
+    object ScopedUsers : Table("scoped_users") {
         val id: Column<String> = varchar("id", 10)
         val name: Column<String> = varchar("name", length = 50)
         val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
@@ -54,7 +54,7 @@ object DMLTestsData {
         val value: Column<Int> = integer("value")
     }
 
-    object ScopedUserData : Table() {
+    object ScopedUserData : Table(name = "scoped_user_data") {
         val userId: Column<String> = reference("user_id", ScopedUsers.id)
         val comment: Column<String> = varchar("comment", 30)
         val value: Column<Int> = integer("value")

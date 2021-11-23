@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import kotlinx.coroutines.selects.select
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -17,40 +19,83 @@ import kotlin.test.assertTrue
 class UnionTests : DatabaseTestsBase() {
     @Test
     fun `test limit`() {
-        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, _, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, scopedUsers, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
-            andreyQuery.union(sergeyQuery).limit(1).map { it[users.id] }.apply {
-                assertEquals(1, size)
-                assertEquals("andrey", single())
+            andreyQuery.union(sergeyQuery)
+                .limit(1)
+                .map { it[users.id] }
+                .apply {
+                    assertEquals(1, size)
+                    assertEquals("andrey", single())
+                }
+
+            val scopedAndreyQuery = scopedUsers.select { scopedUsers.id eq "andrey" }
+            val scopedSergeyQuery = scopedUsers.select { scopedUsers.id eq "sergey" }
+            scopedAndreyQuery.union(scopedSergeyQuery)
+                .map { it[scopedUsers.id] }
+                .apply {
+                    assertEquals(1, size)
+                    assertEquals("sergey", single())
+                }
+
+            scopedAndreyQuery.union(scopedSergeyQuery)
+                .limit(1)
+                .map { it[scopedUsers.id] }
+                .apply {
+                    assertEquals(1, size)
+                    assertEquals("sergey", single())
+                }
+
+            if (currentDialect is PostgreSQLDialect) {
+                scopedAndreyQuery.intersect(scopedSergeyQuery)
+                    .map { it[scopedUsers.id] }
+                    .apply { assertEquals(0, size) }
             }
         }
     }
 
     @Test
     fun `test limit with offset`() {
-        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, _, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, scopedUsers, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
-            andreyQuery.union(sergeyQuery).limit(1, 1).map { it[users.id] }.apply {
-                assertEquals(1, size)
-                assertEquals("sergey", single())
-            }
+            andreyQuery.union(sergeyQuery)
+                .limit(1, 1)
+                .map { it[users.id] }
+                .apply {
+                    assertEquals(1, size)
+                    assertEquals("sergey", single())
+                }
+
+            val scopedAndreyQuery = scopedUsers.select { scopedUsers.id eq "andrey" }
+            val scopedSergeyQuery = scopedUsers.select { scopedUsers.id eq "sergey" }
+            scopedAndreyQuery.union(scopedSergeyQuery)
+                .limit(2, 0)
+                .map { it[scopedUsers.id] }
+                .apply {
+                    assertEquals(1, size)
+                    assertEquals("sergey", single())
+                }
         }
     }
 
     @Test
     fun `test count`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id eq "sergey" }
             assertEquals(2, andreyQuery.union(sergeyQuery).count())
+
+            val scopedAndreyQuery = scopedUsers.select { scopedUsers.id eq "andrey" }
+            val scopedSergeyQuery = scopedUsers.select { scopedUsers.id eq "sergey" }
+            assertEquals(1, scopedAndreyQuery.union(scopedSergeyQuery).count())
         }
     }
 
     @Test
     fun `test orderBy`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
             val idAlias = users.id.alias("id_alias")
             val andreyQuery = users.slice(idAlias).select { users.id inList setOf("andrey", "sergey") }
             val union = andreyQuery.union(andreyQuery).orderBy(idAlias, SortOrder.DESC)
@@ -62,6 +107,24 @@ class UnionTests : DatabaseTestsBase() {
             union.withDistinct(false).map { it[idAlias] }.apply {
                 assertEqualLists(this, listOf("sergey", "sergey", "andrey", "andrey"))
             }
+
+            val scopedIdAlias = scopedUsers.id.alias("scoped_id_alias")
+            scopedUsers.slice(scopedIdAlias)
+                .select { scopedUsers.id inList setOf("andrey", "sergey") }
+                .let { scopedAndreyQuery ->
+                    scopedAndreyQuery
+                        .union(scopedAndreyQuery)
+                        .orderBy(scopedIdAlias, SortOrder.DESC)
+                }.let { scopedUnion ->
+                    scopedUnion
+                        .map { it[scopedIdAlias] }
+                        .apply {  assertEqualLists(this, "sergey") }
+
+                    scopedUnion
+                        .withDistinct(false)
+                        .map { it[scopedIdAlias] }
+                        .apply { assertEqualLists(this, listOf("sergey", "sergey")) }
+                }
         }
     }
 

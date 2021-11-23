@@ -13,7 +13,6 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
-import java.text.DateFormat.FULL
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
@@ -338,7 +337,7 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-open class Table(name: String = "") : ColumnSet(), DdlAware,  DefaultScopeAware {
+open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
         name.isNotEmpty() -> name

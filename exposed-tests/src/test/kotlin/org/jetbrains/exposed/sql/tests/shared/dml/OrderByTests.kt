@@ -12,14 +12,25 @@ import org.junit.Test
 class OrderByTests : DatabaseTestsBase() {
     @Test
     fun orderBy01() {
-        withCitiesAndUsers { cities, users, userData, _, _ ->
-            val r = users.selectAll().orderBy(users.id).toList()
-            assertEquals(5, r.size)
-            assertEquals("alex", r[0][users.id])
-            assertEquals("andrey", r[1][users.id])
-            assertEquals("eugene", r[2][users.id])
-            assertEquals("sergey", r[3][users.id])
-            assertEquals("smth", r[4][users.id])
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
+            users.selectAll()
+                .orderBy(users.id)
+                .toList().let { r ->
+                    assertEquals("alex", r[0][users.id])
+                    assertEquals("andrey", r[1][users.id])
+                    assertEquals("eugene", r[2][users.id])
+                    assertEquals("sergey", r[3][users.id])
+                    assertEquals("smth", r[4][users.id])
+                    assertEquals(5, r.size)
+                }
+
+            scopedUsers.selectAll()
+                .orderBy(scopedUsers.id)
+                .toList().let { r ->
+                    assertEquals("eugene", r[0][scopedUsers.id])
+                    assertEquals("sergey", r[1][scopedUsers.id])
+                    assertEquals(2, r.size)
+                }
         }
     }
 
@@ -30,16 +41,29 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun orderBy02() {
-        withCitiesAndUsers { _, users, _, _, _ ->
-            val r = users.selectAll().orderBy(users.cityId, SortOrder.DESC).orderBy(users.id).toList()
-            assertEquals(5, r.size)
-            val usersWithoutCities = listOf("alex", "smth")
-            val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
-            else otherUsers + usersWithoutCities
-            expected.forEachIndexed { index, e ->
-                assertEquals(e, r[index][users.id])
-            }
+        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
+            users.selectAll()
+                .orderBy(users.cityId, SortOrder.DESC)
+                .orderBy(users.id)
+                .toList().let { r ->
+                    assertEquals(5, r.size)
+                    val usersWithoutCities = listOf("alex", "smth")
+                    val otherUsers = listOf("eugene", "sergey", "andrey")
+                    val expected = if (isNullFirst()) usersWithoutCities + otherUsers
+                    else otherUsers + usersWithoutCities
+                    expected.forEachIndexed { index, e ->
+                        assertEquals(e, r[index][users.id])
+                    }
+                }
+
+            scopedUsers.selectAll()
+                .orderBy(scopedUsers.name, SortOrder.ASC)
+                .orderBy(scopedUsers.cityId, SortOrder.DESC)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    assertEquals("eugene", r[0][scopedUsers.id])
+                    assertEquals("sergey", r[1][scopedUsers.id])
+                }
         }
     }
 
@@ -60,13 +84,30 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun testOrderBy04() {
-        withCitiesAndUsers { cities, users, userData, _, _->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
-            assertEquals(2, r.size)
-            assertEquals("Munich", r[0][cities.name])
-            assertEquals(2, r[0][users.id.count()])
-            assertEquals("St. Petersburg", r[1][cities.name])
-            assertEquals(1, r[1][users.id.count()])
+        withCitiesAndUsers { cities, users, _, scopedUsers, _->
+            (cities innerJoin users)
+                .slice(cities.name, users.id.count())
+                .selectAll()
+                .groupBy(cities.name)
+                .orderBy(cities.name)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    assertEquals("Munich", r[0][cities.name])
+                    assertEquals(2, r[0][users.id.count()])
+                    assertEquals("St. Petersburg", r[1][cities.name])
+                    assertEquals(1, r[1][users.id.count()])
+                }
+
+            (cities innerJoin scopedUsers)
+                .slice(cities.name, scopedUsers.id.count())
+                .selectAll()
+                .groupBy(cities.name)
+                .orderBy(cities.name)
+                .toList().let { r ->
+                    assertEquals(1, r.size)
+                    assertEquals("Munich", r[0][cities.name])
+                    assertEquals(2, r[0][scopedUsers.id.count()])
+                }
         }
     }
 
