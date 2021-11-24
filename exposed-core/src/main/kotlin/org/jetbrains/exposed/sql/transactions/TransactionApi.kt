@@ -89,7 +89,7 @@ interface TransactionManager {
 
         internal val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager {
-                return defaultDatabase?.let { registeredDatabases.getValue(it) } ?: NotInitializedManager
+                return defaultDatabase?.let { registeredDatabases.getOrDefault(it, null) } ?: NotInitializedManager
             }
         }
 
