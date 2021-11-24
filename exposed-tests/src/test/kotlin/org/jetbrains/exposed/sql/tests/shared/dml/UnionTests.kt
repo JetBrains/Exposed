@@ -1,25 +1,22 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import kotlinx.coroutines.selects.select
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
     @Test
     fun `test limit`() {
-        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) {
+
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
             andreyQuery.union(sergeyQuery)
@@ -57,7 +54,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test limit with offset`() {
-        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) {
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id.eq("sergey") }
             andreyQuery.union(sergeyQuery)
@@ -82,7 +79,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test count`() {
-        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id eq "sergey" }
             assertEquals(2, andreyQuery.union(sergeyQuery).count())
@@ -95,7 +92,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test orderBy`() {
-        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             val idAlias = users.id.alias("id_alias")
             val andreyQuery = users.slice(idAlias).select { users.id inList setOf("andrey", "sergey") }
             val union = andreyQuery.union(andreyQuery).orderBy(idAlias, SortOrder.DESC)
@@ -130,7 +127,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union of two queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id eq "sergey" }
             andreyQuery.union(sergeyQuery).map { it[users.id] }.apply {
@@ -142,7 +139,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test intersection of three queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _, _, _ ->
+        withCitiesAndUsers(listOf(TestDB.MYSQL)) {
             val usersQuery = users.selectAll()
             val sergeyQuery = users.select { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
@@ -164,7 +161,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test except of two queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _, _, _ ->
+        withCitiesAndUsers(listOf(TestDB.MYSQL)) {
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.select { users.id eq "sergey" }
@@ -177,7 +174,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test except of three queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _, _, _ ->
+        withCitiesAndUsers(listOf(TestDB.MYSQL)) {
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.select { users.id eq "sergey" }
@@ -190,7 +187,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test except of two excepts queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _, _, _ ->
+        withCitiesAndUsers(listOf(TestDB.MYSQL)) {
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey" - "andrey"
             val sergeyQuery = users.select { users.id eq "sergey" }
@@ -204,7 +201,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union of more than two queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             val sergeyQuery = users.select { users.id eq "sergey" }
             val eugeneQuery = users.select { users.id eq "eugene" }
@@ -217,7 +214,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union of sorted queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyOrSergeyQuery: Query =
                 users.select { users.id inList setOf("andrey", "sergey") }.orderBy(users.id to SortOrder.DESC)
 
@@ -236,7 +233,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union of limited queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyOrSergeyQuery = users.select { users.id inList setOf("andrey", "sergey") }.limit(1)
 
             if (currentDialect.supportsSubqueryUnions) {
@@ -254,7 +251,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union of sorted and limited queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyOrSergeyQuery =
                 users.select { users.id inList setOf("andrey", "sergey") }.orderBy(users.id to SortOrder.DESC).limit(1)
 
@@ -273,7 +270,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union with distinct results`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.union(andreyQuery).map { it[users.id] }.apply {
                 assertEqualLists(this, "andrey")
@@ -283,7 +280,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union with all results`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).map { it[users.id] }.apply {
                 assertEqualLists(this, "andrey", "andrey")
@@ -293,7 +290,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union with all results of three queries`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val andreyQuery = users.select { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).unionAll(andreyQuery).map { it[users.id] }.apply {
                 assertEqualLists(this, List(3) { "andrey" })
@@ -303,7 +300,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union with expressions`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val exp1a = intLiteral(10)
             val exp1b = intLiteral(100)
             val exp2a = stringLiteral("aaa")
@@ -319,7 +316,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test union with expression and alias`() {
-        withCitiesAndUsers { _, users, _, _, _ ->
+        withCitiesAndUsers {
             val exp1a = intLiteral(10)
             val exp1b = intLiteral(100)
             val exp2a = stringLiteral("aaa")

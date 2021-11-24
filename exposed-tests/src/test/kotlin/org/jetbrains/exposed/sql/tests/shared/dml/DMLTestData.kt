@@ -8,77 +8,90 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import java.util.*
 
-fun munichId() = DMLTestsData.Cities
-    .select { DMLTestsData.Cities.name eq "Munich" }
-    .first()[DMLTestsData.Cities.id]
 
-object DMLTestsData {
-    object Cities : Table() {
-        val id: Column<Int> = integer("cityId").autoIncrement()
-        val name: Column<String> = varchar("name", 50)
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    object Users : Table() {
-        val id: Column<String> = varchar("id", 10)
-        val name: Column<String> = varchar("name", length = 50)
-        val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
-        val flags: Column<Int> = integer("flags").default(0)
-        override val primaryKey = PrimaryKey(id)
-
-        object Flags {
-            const val IS_ADMIN = 0b1
-            const val HAS_DATA = 0b1000
-        }
-    }
-
-    object ScopedUsers : Table("scoped_users") {
-        val id: Column<String> = varchar("id", 10)
-        val name: Column<String> = varchar("name", length = 50)
-        val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
-        val flags: Column<Int> = integer("flags").default(0)
-        override val primaryKey = PrimaryKey(id)
-        override val defaultScope = { cityId eq munichId() }
-
-        object Flags {
-            const val IS_ADMIN = 0b1
-            const val HAS_DATA = 0b1000
-        }
-    }
-
-    object UserData : Table() {
-        val user_id: Column<String> = reference("user_id", Users.id)
-        val comment: Column<String> = varchar("comment", 30)
-        val value: Column<Int> = integer("value")
-    }
-
-    object ScopedUserData : Table(name = "scoped_user_data") {
-        val userId: Column<String> = reference("user_id", ScopedUsers.id)
-        val comment: Column<String> = varchar("comment", 30)
-        val value: Column<Int> = integer("value")
-        override val defaultScope = { userId eq "sergey" }
-    }
+object Cities : Table() {
+    val id: Column<Int> = integer("cityId").autoIncrement()
+    val name: Column<String> = varchar("name", 50)
+    override val primaryKey = PrimaryKey(id)
 }
 
-@Suppress("LongMethod")
-fun DatabaseTestsBase.withCitiesAndUsers(
-    exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(cities: DMLTestsData.Cities,
-                            users: DMLTestsData.Users,
-                            userData: DMLTestsData.UserData,
-                            scopedUsers: DMLTestsData.ScopedUsers,
-                            scopedUserData: DMLTestsData.ScopedUserData) -> Unit
-) {
-    val Users = DMLTestsData.Users
-    val UserFlags = DMLTestsData.Users.Flags
-    val Cities = DMLTestsData.Cities
-    val UserData = DMLTestsData.UserData
-    val ScopedUsers = DMLTestsData.ScopedUsers
-    val ScopedUserFlags = DMLTestsData.ScopedUsers.Flags
-    val ScopedUserData = DMLTestsData.ScopedUserData
+object Users : Table() {
+    val id: Column<String> = varchar("id", 10)
+    val name: Column<String> = varchar("name", length = 50)
+    val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+    val flags: Column<Int> = integer("flags").default(0)
+    override val primaryKey = PrimaryKey(id)
+}
 
+object UserFlags {
+    const val IS_ADMIN = 0b1
+    const val HAS_DATA = 0b1000
+}
+
+fun munichId() = Cities
+    .select { Cities.name eq "Munich" }
+    .first()[Cities.id]
+
+object ScopedUsers : Table("scoped_users") {
+    val id: Column<String> = varchar("id", 10)
+    val name: Column<String> = varchar("name", length = 50)
+    val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+    val flags: Column<Int> = integer("flags").default(0)
+    override val primaryKey = PrimaryKey(id)
+    override val defaultScope = { cityId eq munichId() }
+}
+
+object UserData : Table() {
+    val user_id: Column<String> = reference("user_id", Users.id)
+    val comment: Column<String> = varchar("comment", 30)
+    val value: Column<Int> = integer("value")
+}
+
+object ScopedUserData : Table(name = "scoped_user_data") {
+    val userId: Column<String> = reference("user_id", ScopedUsers.id)
+    val comment: Column<String> = varchar("comment", 30)
+    val value: Column<Int> = integer("value")
+    override val defaultScope = { userId eq "sergey" }
+}
+
+object UnscopedScopedUsers : Table(ScopedUsers.tableName) {
+    val id: Column<String> = varchar("id", 10)
+    val name: Column<String> = varchar("name", length = 50)
+    val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
+    val flags: Column<Int> = integer("flags").default(0)
+    override val primaryKey = PrimaryKey(id)
+}
+
+object UnscopedScopedUserData : Table(ScopedUserData.tableName) {
+    val userId: Column<String> = reference("user_id", ScopedUsers.id)
+    val comment: Column<String> = varchar("comment", 30)
+    val value: Column<Int> = integer("value")
+}
+
+class DmlTestRuntime(val transaction: Transaction,
+                     val cities: Cities,
+                     val users: Users,
+                     val userData: UserData,
+                     val scopedUsers: ScopedUsers,
+                     val scopedUserData: ScopedUserData,
+                     val unscopedScopedUsers: UnscopedScopedUsers,
+                     val unscopedScopedUserData: UnscopedScopedUserData){
+    fun assertTrue(actual: Boolean) = transaction.assertTrue(actual)
+    fun assertFalse(actual: Boolean) = transaction.assertFalse(actual)
+    fun <T> assertEquals(exp: T, act: T) = transaction.assertEquals(exp, act)
+    fun <T> assertEquals(exp: T, act: List<T>) = transaction.assertEquals(exp, act)
+}
+
+
+@Suppress("LongMethod")
+fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(),
+                                         statement: DmlTestRuntime.() -> Unit) {
     withTables(exclude, Cities, Users, UserData, ScopedUsers, ScopedUserData) {
         val saintPetersburgId = Cities.insert {
             it[name] = "St. Petersburg"
@@ -103,7 +116,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[id] = "andrey"
             it[name] = "Andrey"
             it[cityId] = saintPetersburgId
-            it[flags] = ScopedUserFlags.IS_ADMIN
+            it[flags] = UserFlags.IS_ADMIN
         }
 
         Users.insert {
@@ -117,7 +130,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[id] = "sergey"
             it[name] = "Sergey"
             it[cityId] = munichId
-            it[flags] = ScopedUserFlags.IS_ADMIN or ScopedUserFlags.HAS_DATA
+            it[flags] = UserFlags.IS_ADMIN or UserFlags.HAS_DATA
         }
 
         Users.insert {
@@ -131,7 +144,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[id] = "eugene"
             it[name] = "Eugene"
             it[cityId] = munichId
-            it[flags] = ScopedUserFlags.HAS_DATA
+            it[flags] = UserFlags.HAS_DATA
         }
 
         Users.insert {
@@ -157,7 +170,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[id] = "smth"
             it[name] = "Something"
             it[cityId] = null
-            it[flags] = ScopedUserFlags.HAS_DATA
+            it[flags] = UserFlags.HAS_DATA
         }
 
         UserData.insert {
@@ -208,7 +221,16 @@ fun DatabaseTestsBase.withCitiesAndUsers(
             it[value] = 30
         }
 
-        statement(Cities, Users, UserData, ScopedUsers, ScopedUserData)
+       DmlTestRuntime(
+           this,
+           Cities,
+           Users,
+           UserData,
+           ScopedUsers,
+           ScopedUserData,
+           UnscopedScopedUsers,
+           UnscopedScopedUserData
+       ).apply(statement)
     }
 }
 
@@ -235,4 +257,4 @@ class Org(id: EntityID<Int>) : IntEntity(id) {
     var name by Orgs.name
 }
 
-internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }
+internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[Cities.name] }

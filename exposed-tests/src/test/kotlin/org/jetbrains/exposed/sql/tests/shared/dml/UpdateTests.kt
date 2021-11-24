@@ -3,12 +3,10 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
@@ -25,25 +23,10 @@ class UpdateTests : DatabaseTestsBase() {
         exclude
     }
 
-    private val unscopedScopedUsers = object : Table(DMLTestsData.ScopedUsers.tableName) {
-        val id: Column<String> = varchar("id", 10)
-        val name: Column<String> = varchar("name", length = 50)
-        val cityId: Column<Int?> = reference("city_id", DMLTestsData.Cities.id).nullable()
-        val flags: Column<Int> = integer("flags").default(0)
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    private val unscopedScopedUserData = object : Table(DMLTestsData.ScopedUserData.tableName) {
-        val userId: Column<String> = reference("user_id", DMLTestsData.ScopedUsers.id)
-        val comment: Column<String> = varchar("comment", 30)
-        val value: Column<Int> = integer("value")
-    }
-
-
 
     @Test
     fun testUpdate01() {
-        withCitiesAndUsers { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             val alexId = "alex"
             users.slice(users.name)
                 .select { users.id.eq(alexId) }
@@ -91,7 +74,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, users, _, scopedUsers, _ ->
+        withCitiesAndUsers(exclude = notSupportLimit) {
             val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
             assertEquals(2, aNames.size)
 
@@ -133,7 +116,7 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithLimit02() {
         val dialects = TestDB.values().toList() - notSupportLimit
-        withCitiesAndUsers(dialects) { _, users, _, _, _ ->
+        withCitiesAndUsers(dialects) {
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
                     it[users.id] = "NewName"
@@ -145,7 +128,8 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithJoin() {
         val dialects = listOf(TestDB.SQLITE)
-        withCitiesAndUsers(dialects) { _, users, userData, scopedUsers, scopedUserData ->
+
+        withCitiesAndUsers(dialects) {
             users.innerJoin(userData)
                 .let { join ->
                     join.update {
@@ -212,13 +196,12 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun `test update fails with empty body`() {
-        withCitiesAndUsers { cities, _, _, _, _ ->
+        withCitiesAndUsers {
             expectException<IllegalArgumentException> {
                 cities.update(where = { cities.id.isNull() }) {
                     // empty
                 }
             }
-
         }
     }
 }

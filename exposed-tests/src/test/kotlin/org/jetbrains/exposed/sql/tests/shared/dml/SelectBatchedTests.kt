@@ -9,7 +9,7 @@ import java.util.*
 import kotlin.text.Typography.less
 
 class SelectBatchedTests : DatabaseTestsBase() {
-    private val scopedCities = object : Table(DMLTestsData.Cities.tableName) {
+    private val scopedCities = object : Table(Cities.tableName) {
         val id: Column<Int> = integer("cityId").autoIncrement()
         val name: Column<String> = varchar("name", 50)
         override val primaryKey = PrimaryKey(id)
@@ -18,8 +18,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `selectBatched should respect 'where' expression and the provided batch size`() {
-        val Cities = DMLTestsData.Cities
-
         withTables(Cities, scopedCities) {
             val names = List(100) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -53,7 +51,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when batch size is greater than the amount of available items, selectAllBatched should return 1 batch`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = List(25) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -66,7 +63,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items, selectAllBatched should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val batches = Cities.selectAllBatched().toList()
 
@@ -76,7 +72,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items of the given condition, should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = List(25) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -90,11 +85,11 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test(expected = java.lang.UnsupportedOperationException::class)
     fun `when the table doesn't have an autoinc column, selectAllBatched should throw an exception`() {
-        DMLTestsData.UserData.selectAllBatched()
+        UserData.selectAllBatched()
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `when batch size is 0 or less, should throw an exception`() {
-        DMLTestsData.Cities.selectAllBatched(batchSize = -1)
+        Cities.selectAllBatched(batchSize = -1)
     }
 }

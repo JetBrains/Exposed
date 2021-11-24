@@ -4,7 +4,9 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.Cities
+import org.jetbrains.exposed.sql.tests.shared.dml.UserData
+import org.jetbrains.exposed.sql.tests.shared.dml.Users
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -14,13 +16,13 @@ class SortByReferenceTest {
 
     @Test
     fun simpleTest() {
-        assertEqualLists(listOf(DMLTestsData.Cities), SchemaUtils.sortTablesByReferences(listOf(DMLTestsData.Cities)))
-        assertEqualLists(listOf(DMLTestsData.Cities, DMLTestsData.Users), SchemaUtils.sortTablesByReferences(listOf(DMLTestsData.Users)))
+        assertEqualLists(listOf(Cities), SchemaUtils.sortTablesByReferences(listOf(Cities)))
+        assertEqualLists(listOf(Cities, Users), SchemaUtils.sortTablesByReferences(listOf(Users)))
 
-        val rightOrder = listOf(DMLTestsData.Cities, DMLTestsData.Users, DMLTestsData.UserData)
-        val r1 = SchemaUtils.sortTablesByReferences(listOf(DMLTestsData.Cities, DMLTestsData.UserData, DMLTestsData.Users))
-        val r2 = SchemaUtils.sortTablesByReferences(listOf(DMLTestsData.UserData, DMLTestsData.Cities, DMLTestsData.Users))
-        val r3 = SchemaUtils.sortTablesByReferences(listOf(DMLTestsData.Users, DMLTestsData.Cities, DMLTestsData.UserData))
+        val rightOrder = listOf(Cities, Users, UserData)
+        val r1 = SchemaUtils.sortTablesByReferences(listOf(Cities, UserData, Users))
+        val r2 = SchemaUtils.sortTablesByReferences(listOf(UserData, Cities, Users))
+        val r3 = SchemaUtils.sortTablesByReferences(listOf(Users, Cities, UserData))
         assertEqualLists(rightOrder, r1)
         assertEqualLists(rightOrder, r2)
         assertEqualLists(rightOrder, r3)

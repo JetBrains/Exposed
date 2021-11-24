@@ -15,13 +15,13 @@ import java.math.BigDecimal
 class ArithmeticTests : DatabaseTestsBase() {
     @Test
     fun `test operator precedence of minus() plus() div() times()`() {
-        withCitiesAndUsers { _, _, userData, _, _ ->
-            val calculatedColumn = ((DMLTestsData.UserData.value - 5) * 2) / 2
+        withCitiesAndUsers {
+            val calculatedColumn = ((userData.value - 5) * 2) / 2
             userData
-                .slice(DMLTestsData.UserData.value, calculatedColumn)
+                .slice(userData.value, calculatedColumn)
                 .selectAll()
                 .forEach {
-                    val value = it[DMLTestsData.UserData.value]
+                    val value = it[userData.value]
                     val actualResult = it[calculatedColumn]
                     val expectedResult = ((value - 5) * 2) / 2
                     assertEquals(expectedResult, actualResult)
@@ -31,7 +31,7 @@ class ArithmeticTests : DatabaseTestsBase() {
 
     @Test
     fun `test big decimal division with scale and without`() {
-        withCitiesAndUsers { cities, _, _, _, _ ->
+        withCitiesAndUsers {
             val ten = decimalLiteral(BigDecimal(10))
             val three = decimalLiteral(BigDecimal(3))
 

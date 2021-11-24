@@ -16,7 +16,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQuerySlice() {
-        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             fun containsInAnyOrder(list: List<*>) = Matchers.containsInAnyOrder(*list.toTypedArray())
 
             (users innerJoin cities)
@@ -56,7 +56,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQueryColumnSet() {
-        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             fun ColumnSet.repr() : String = QueryBuilder(false)
                 .also { this.describe(TransactionManager.current(), it) }
                 .toString()
@@ -92,7 +92,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
 
     @Test
     fun testAdjustQueryWhere() {
-        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             fun Op<Boolean>.repr(): String {
                 val builder = QueryBuilder(false)
                 builder.append(this)
@@ -138,7 +138,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             return builder.toString()
         }
 
-        withCitiesAndUsers { cities, users, _, scopedUsers, _ ->
+        withCitiesAndUsers {
             (users innerJoin cities)
                 .slice(users.name, cities.name)
                 .select { predicate }
@@ -169,20 +169,20 @@ class AdjustQueryTests : DatabaseTestsBase() {
     }
 
     private val predicate = Op.build {
-        val nameCheck = (DMLTestsData.Users.id eq "andrey") or (DMLTestsData.Users.name eq "Sergey")
-        val cityCheck = DMLTestsData.Users.cityId eq DMLTestsData.Cities.id
+        val nameCheck = (Users.id eq "andrey") or (Users.name eq "Sergey")
+        val cityCheck = Users.cityId eq Cities.id
         nameCheck and cityCheck
     }
 
     private val scopedPredicate = Op.build {
-        ((DMLTestsData.ScopedUsers.id eq "andrey") or
-        (DMLTestsData.ScopedUsers.name eq "Sergey")) and
-        (DMLTestsData.ScopedUsers.cityId eq DMLTestsData.Cities.id)
+        ((ScopedUsers.id eq "andrey") or
+        (ScopedUsers.name eq "Sergey")) and
+        (ScopedUsers.cityId eq Cities.id)
     }
 
     private fun assertQueryResultValid(query: Query) {
-        val users = DMLTestsData.Users
-        val cities = DMLTestsData.Cities
+        val users = Users
+        val cities = Cities
         query.forEach { row ->
             val userName = row[users.name]
             val cityName = row[cities.name]
@@ -195,8 +195,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
     }
 
     private fun assertScopedQueryResultValid(query: Query) {
-        val users = DMLTestsData.ScopedUsers
-        val cities = DMLTestsData.Cities
+        val users = ScopedUsers
+        val cities = Cities
         query.forEach { row ->
             val userName = row[users.name]
             val cityName = row[cities.name]

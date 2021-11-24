@@ -7,9 +7,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.ScopedUsers.default
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData.ScopedUsers.nullable
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -24,23 +21,10 @@ class DeleteTests : DatabaseTestsBase() {
         exclude
     }
 
-    object unscopedScopedUsers : Table(DMLTestsData.ScopedUsers.tableName) {
-        val id: Column<String> = varchar("id", 10)
-        val name: Column<String> = varchar("name", length = 50)
-        val cityId: Column<Int?> = reference("city_id", DMLTestsData.Cities.id).nullable()
-        val flags: Column<Int> = integer("flags").default(0)
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    val unscopedScopedUserData = object : Table(DMLTestsData.ScopedUserData.tableName) {
-        val userId: Column<String> = reference("user_id", DMLTestsData.ScopedUsers.id)
-        val comment: Column<String> = varchar("comment", 30)
-        val value: Column<Int> = integer("value")
-    }
-
     @Test
     fun testDelete01() {
-        withCitiesAndUsers { _, users, userData, scopedUsers, scopedUserData ->
+        withCitiesAndUsers {
+
             //deletes all data
             userData.deleteAll()
             val userDataExists = userData.selectAll().any()
@@ -79,7 +63,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithLimitAndOffset01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData, scopedUsers, scopedUserData ->
+        withCitiesAndUsers(exclude = notSupportLimit) {
             userData.deleteWhere(limit = 1) { userData.value eq 20 }
             userData.slice(userData.user_id, userData.value)
                 .select { userData.value eq 20 }.let {
@@ -103,7 +87,7 @@ class DeleteTests : DatabaseTestsBase() {
     @Test
     fun testDeleteWithLimit02() {
         val dialects = TestDB.values().toList() - notSupportLimit
-        withCitiesAndUsers(dialects) { _, _, userData, _, _ ->
+        withCitiesAndUsers(dialects) {
             expectException<UnsupportedByDialectException> {
                 userData.deleteWhere(limit = 1) {
                     userData.value eq 20
