@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
@@ -21,6 +21,55 @@ class UpdateTests : DatabaseTestsBase() {
             exclude.add(TestDB.SQLITE)
         }
         exclude
+    }
+
+    @Test
+    fun testBatchUpdate() {
+        val tbl = object  : LongIdTable("batch_updates") {
+            val name = varchar("name", 50)
+        }
+        val scopedTbl = object  : LongIdTable("scoped_batch_updates") {
+            val name = varchar("name", 50)
+            override val defaultScope = { Op.build { name like "%ergey" } }
+        }
+        val unscopedScopedTbl = object  : LongIdTable("scoped_batch_updates") {
+            val name = varchar("name", 50)
+        }
+        val initialNames = listOf("Alex", "Andrey", "Eugene", "Sergey", "Something")
+        withTables(tbl, unscopedScopedTbl) {
+            initialNames.forEach { name ->
+                tbl.insert { it[tbl.name] = name }
+                unscopedScopedTbl.insert { it[unscopedScopedTbl.name] = name }
+            }
+            val records = {
+                tbl.selectAll()
+                    .map { it[tbl.id] to it[tbl.name] }
+            }
+
+            assertEqualLists(initialNames.sorted(),
+                             records().map { it.second }.sorted())
+
+            val txn = this
+            tbl.batchUpdate(records(),
+                            id = { it.first },
+                            body =  { this[tbl.name] = it.second.lowercase() })
+
+            assertEqualLists(initialNames.map { it.lowercase() },
+                             records().map { it.second })
+
+            val unscopedScopedRecords = {
+                unscopedScopedTbl
+                    .selectAll()
+                    .map { it[unscopedScopedTbl.id] to it[unscopedScopedTbl.name] }
+            }
+            assertEqualLists(initialNames, unscopedScopedRecords().map { it.second })
+
+            scopedTbl.batchUpdate(unscopedScopedRecords(),
+                                  id = { it.first },
+                                  body = { this[scopedTbl.name] = it.second.lowercase() })
+            assertEqualLists(initialNames.map { if (it == "Sergey") it.lowercase() else it }.sorted(),
+                             unscopedScopedRecords().map { it.second }.sorted())
+        }
     }
 
 
@@ -44,31 +93,25 @@ class UpdateTests : DatabaseTestsBase() {
                 .let { actualNewAlexName -> assertEquals(newAlexName, actualNewAlexName) }
 
             val sergeyId = "sergey"
-            unscopedScopedUsers.slice(unscopedScopedUsers.name)
-                .select { unscopedScopedUsers.id inList listOf(alexId, sergeyId) }
-                .orderBy(unscopedScopedUsers.name, SortOrder.ASC)
-                .map { it[unscopedScopedUsers.name] }
-                .let { names -> assertEqualLists(names, "Alex", "Sergey") }
+            val loadNames = {
+                unscopedScopedUsers.slice(unscopedScopedUsers.name)
+                    .select { unscopedScopedUsers.id inList listOf(alexId, sergeyId) }
+                    .orderBy(unscopedScopedUsers.name, SortOrder.ASC)
+                    .map { it[unscopedScopedUsers.name] }
+            }
+
+            assertEqualLists(loadNames(), "Alex", "Sergey")
 
             scopedUsers.update({ scopedUsers.id.eq(alexId) }) {
                 it[scopedUsers.name] = newAlexName
             }
-            unscopedScopedUsers.slice(unscopedScopedUsers.name)
-                .select { unscopedScopedUsers.id inList listOf(alexId, sergeyId) }
-                .orderBy(unscopedScopedUsers.name, SortOrder.ASC)
-                .map { it[unscopedScopedUsers.name] }
-                .let { names -> assertEqualLists(names, "Alex", "Sergey") }
+            assertEqualLists(loadNames(), "Alex", "Sergey")
 
             val newSergeyName = "Aye! I'm Sergey!"
             scopedUsers.update({ scopedUsers.id.eq(sergeyId) }) {
                 it[scopedUsers.name] = newSergeyName
             }
-            unscopedScopedUsers.slice(unscopedScopedUsers.name)
-                .select { unscopedScopedUsers.id inList listOf(alexId, sergeyId) }
-                .orderBy(unscopedScopedUsers.name, SortOrder.ASC)
-                .map { it[unscopedScopedUsers.name] }
-                .let { names -> assertEqualLists(names, "Alex", newSergeyName) }
-
+            assertEqualLists(loadNames(), "Alex", newSergeyName)
         }
     }
 

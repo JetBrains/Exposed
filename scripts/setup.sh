@@ -4,6 +4,7 @@ BOOTSTRAP_SQL="
 CREATE DATABASE exposed_template1;
 CREATE USER exposed_template1 WITH ENCRYPTED PASSWORD 'exposed_template1';
 GRANT ALL PRIVILEGES ON DATABASE exposed_template1 TO exposed_template1;
+ALTER USER exposed_template1 CREATEDB;
 "
 
 # Start postgres

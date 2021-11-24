@@ -229,6 +229,17 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
             .execute(TransactionManager.current())!!
     }
 
+fun <R, ID : Comparable<ID>,  T : IdTable<ID>> T.batchUpdate(entities: Iterable<R>,
+                                            id: (R) -> EntityID<ID>,
+                                            body: BatchUpdateStatement.(R) -> Unit) = BatchUpdateStatement(this)
+    .apply {
+        entities.forEach {
+            addBatch(id(it))
+            body(it)
+        }
+        execute(TransactionManager.current())
+    }
+
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
                 limit: Int? = null,
                 body: (UpdateStatement) -> Unit) : Int = (
