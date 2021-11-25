@@ -1,0 +1,16 @@
+name: "Build"
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-java@v1
+          with:
+            java-version: 17
+        - run: ls -lart ${{ github.workspace }}
+        - run: ./scripts/setup.sh
+        - uses: gradle/gradle-build-action@v2
+          with:
+            gradle-version: 7.3
+            arguments: clean test build

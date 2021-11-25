@@ -28,7 +28,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 /**
  * Represents a set of expressions, contained in the given column set.
  */
-interface FieldSet {
+interface FieldSet : DefaultScopeAware {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
 
@@ -150,7 +150,9 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
 /**
  * Represents a subset of [fields] from a given [source].
  */
-class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet
+class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet {
+    override fun materializeDefaultScope() = source.materializeDefaultScope()
+}
 
 /**
  * Represents column set join types.
@@ -197,7 +199,7 @@ class Join(
                 join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
             }
             onColumn != null || otherColumn != null -> {
-                error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
+                error("Can't prepare join on $table and $otherTable when only column from one side provided.")
             }
             additionalConstraint != null -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
@@ -252,6 +254,18 @@ class Join(
     override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
+
+    override fun materializeDefaultScope() = table.materializeDefaultScope()
+        .let { sourceDefaultScope ->
+            joinParts
+                .mapNotNull { it.joinPart.materializeDefaultScope() }
+                .reduceOrNull { result, op -> result and op }
+                .let {
+                    it?.let {
+                            targetsDefaultScope -> sourceDefaultScope?.and(targetsDefaultScope)
+                    } ?: it
+                } ?: sourceDefaultScope
+        }
 
     private fun implicitJoin(
         otherTable: ColumnSet,
@@ -331,6 +345,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
+    open val defaultScope: (() -> Op<Boolean>)? = null
+
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
     private val _columns = mutableListOf<Column<*>>()
@@ -353,6 +369,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Should be called within transaction or default [tableName] will be returned.
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
+
+    override fun materializeDefaultScope() = defaultScope?.invoke()
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
 
@@ -414,9 +432,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
         /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
+        val name: String = "pk_$tableName",
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableName") :
+        constructor(firstColumn: Column<*>,
+                    vararg columns: Column<*>,
+                    name: String = "pk_$tableName") :
             this(arrayOf(firstColumn, *columns), name)
 
         init {

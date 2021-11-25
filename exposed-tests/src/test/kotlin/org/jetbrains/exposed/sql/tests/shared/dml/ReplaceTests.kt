@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
@@ -34,8 +36,20 @@ class ReplaceTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testReplaceOnTableWithDefaultScope() {
+        withCitiesAndUsers {
+            expectException<UnsupportedByDialectException>{
+                scopedUsers.replace {
+                    it[id] = "sergey"
+                    it[name] = name.upperCase()
+                }
+            }
+        }
+    }
+
+    @Test
     fun testBatchReplace01() {
-        withCitiesAndUsers(notSupportsReplace) { cities, users, userData ->
+        withCitiesAndUsers(notSupportsReplace) {
             val (munichId, pragueId, saintPetersburgId) = cities.slice(cities.id).select {
                 cities.name inList listOf("Munich", "Prague", "St. Petersburg")
             }.orderBy(cities.name).map { it[cities.id] }
@@ -43,15 +57,16 @@ class ReplaceTests : DatabaseTestsBase() {
             // MySQL replace is implemented as deleted-then-insert, which breaks foreign key constraints,
             // so this test will only work if those related rows are deleted.
             if (currentDialect is MysqlDialect) {
-                userData.deleteAll()
-                users.deleteAll()
+                listOf(unscopedScopedUserData,
+                       unscopedScopedUsers,
+                       userData,
+                       users)
+                    .forEach(Table::deleteAll)
             }
 
-            val cityUpdates = listOf(
-                munichId to "München",
-                pragueId to "Prague",
-                saintPetersburgId to "Saint Petersburg"
-            )
+            val cityUpdates = listOf(munichId to "München",
+                                     pragueId to "Prague",
+                                     saintPetersburgId to "Saint Petersburg")
 
             cities.batchReplace(cityUpdates) {
                 this[cities.id] = it.first
@@ -68,7 +83,6 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun `batchReplace using a sequence should work`() {
-        val Cities = DMLTestsData.Cities
         withTables(notSupportsReplace, Cities) {
             val names = List(25) { index -> index + 1 to UUID.randomUUID().toString() }.asSequence()
 
@@ -97,7 +111,6 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using empty sequence should work`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = emptySequence<String>()
             Cities.batchInsert(names) { name -> this[Cities.name] = name }

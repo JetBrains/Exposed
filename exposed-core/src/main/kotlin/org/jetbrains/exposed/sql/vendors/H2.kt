@@ -95,6 +95,11 @@ internal object H2FunctionProvider : FunctionProvider() {
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
+        table.materializeDefaultScope()?.let {
+            TransactionManager.current()
+                .throwUnsupportedException("REPLACE on tables with a default scope isn't supported.")
+        }
+
         if (data.isEmpty()) {
             return ""
         }

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
 open class DeleteStatement(
@@ -28,9 +29,29 @@ open class DeleteStatement(
     }
 
     companion object {
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
-            DeleteStatement(table, op, isIgnore, limit, offset).execute(transaction) ?: 0
+        fun where(transaction: Transaction,
+                  table: Table,
+                  op: Op<Boolean>,
+                  isIgnore: Boolean = false,
+                  limit: Int? = null,
+                  offset: Long? = null) : Int = (table.materializeDefaultScope()?.and(op) ?: op)
+            .let { defaultedOp ->
+                DeleteStatement(
+                    table,
+                    defaultedOp,
+                    isIgnore,
+                    limit,
+                    offset
+                ).execute(transaction) ?: 0
+            }
 
-        fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction) ?: 0
+        fun all(transaction: Transaction, table: Table) : Int =
+            table.materializeDefaultScope()
+                .let { defaultScope ->
+                when(defaultScope) {
+                    null -> DeleteStatement(table).execute(transaction) ?: 0
+                    else -> DeleteStatement(table, defaultScope).execute(transaction) ?: 0
+                }
+            }
     }
 }

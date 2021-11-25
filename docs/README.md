@@ -6,16 +6,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Welcome to **Exposed**, an ORM framework for 
-[Kotlin](https://github.com/JetBrains/kotlin).
-Exposed offers two levels of database access: typesafe SQL
-wrapping DSL and lightweight data access objects.
-Our official mascot is Cuttlefish, which is best known for its
-outstanding mimicry abilities letting it blend seamlessly in
-any environment. Just like our mascot, Exposed can mimic a variety
-of database engines and help you build database applications
-without hard dependencies on any specific database engine, and
-switch between them with very little or no changes in your code.
+Welcome to **Exposed**; a fork of the [Kotlin ORM framework](https://github.com/JetBrains/Exposed)
+augmented with default scopes. Default scopes can be useful for implementing multi-tenancy & soft deletes.
 
 ## Supported Databases
 
@@ -33,7 +25,7 @@ switch between them with very little or no changes in your code.
 Exposed is currently available for **maven/gradle builds** at [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)).
 
 * [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs. 
-* [Roadmap](ROADMAP.md) to see what's coming next.
+* [Roadmap](https://github.com/JetBrains/Exposed/blob/master/docs/ROADMAP.md) to see what's coming next.
 * [Change log](ChangeLog.md) of improvements and bug fixes.
 
 If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
@@ -53,6 +45,11 @@ object Users : Table() {
     val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
 
     override val primaryKey = PrimaryKey(id, name = "PK_User_ID") // name is optional here
+
+    // To set a default scope that will be applied to all select and update statements:
+    // override val defaultScope = {
+    //  Op.build { cityId eq munichId }
+    //}
 }
 
 object Cities : Table() {
@@ -289,6 +286,13 @@ Generated SQL:
     Users in St. Petersburg: a, b
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
+```
+
+## Development
+
+To initialize test containers and other fixtures:
+```shell
+.scripts/setup.sh
 ```
 
 ## License

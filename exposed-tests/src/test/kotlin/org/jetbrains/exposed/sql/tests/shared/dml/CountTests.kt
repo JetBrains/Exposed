@@ -10,24 +10,41 @@ import org.junit.Test
 class CountTests : DatabaseTestsBase() {
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables`() {
-        withCitiesAndUsers { cities, users, _ ->
+        withCitiesAndUsers {
             assertEquals(3L, cities.innerJoin(users).selectAll().withDistinct().count())
+
+            assertEquals(2L, cities.innerJoin(scopedUsers).selectAll().withDistinct().count())
         }
     }
 
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
-        withCitiesAndUsers { cities, users, _ ->
-            assertEquals(3L, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
+        withCitiesAndUsers {
+            cities.innerJoin(users)
+                .slice(users.id.alias("usersId"), cities.id)
+                .selectAll()
+                .withDistinct()
+                .count().let { assertEquals(3L, it) }
+
+            cities.innerJoin(scopedUsers)
+                .slice(scopedUsers.id.alias("user_ids"), cities.id)
+                .selectAll()
+                .withDistinct()
+                .count().let { assertEquals(2L, it) }
+
         }
     }
 
     @Test
     fun `test that count() returns right value for Query with group by`() {
-        withCitiesAndUsers { _, user, userData ->
+        withCitiesAndUsers {
             val uniqueUsersInData = userData.slice(userData.user_id).selectAll().withDistinct().count()
             val sameQueryWithGrouping = userData.slice(userData.value.max()).selectAll().groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)
+
+            val scopedUniqueUsersInData = scopedUserData.slice(scopedUserData.userId).selectAll().withDistinct().count()
+            val scopedSameQueryWithGrouping = scopedUserData.slice(scopedUserData.value.max()).selectAll().groupBy(scopedUserData.userId).count()
+            assertEquals(scopedUniqueUsersInData, scopedSameQueryWithGrouping)
         }
 
         withTables(OrgMemberships, Orgs) {

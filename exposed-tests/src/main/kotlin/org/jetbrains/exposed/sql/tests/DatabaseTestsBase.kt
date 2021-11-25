@@ -7,9 +7,11 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.testcontainers.containers.MySQLContainer
+import java.lang.String.format
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
+
 
 enum class TestDB(
     val connection: () -> String,
@@ -47,12 +49,12 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
-        beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "jdbc:postgresql://localhost:5432/exposed_template1?user=exposed_template1&password=exposed_template1&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        user = "exposed_template1", pass = "exposed_template1"
     ),
     POSTGRESQLNG(
-        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
-        user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "jdbc:pgsql://localhost:5432/exposed_template1?user=exposed_template1&password=exposed_template1" }, "com.impossibl.postgres.jdbc.PGDriver",
+        user = "exposed_template1", pass = "exposed_template1"
     ),
     ORACLE(
         driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
@@ -111,14 +113,6 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-private val postgresSQLProcess by lazy {
-    EmbeddedPostgres.builder()
-        .setPgBinaryResolver { system, _ ->
-            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-        }
-        .setPort(12346).start()
-}
-
 // MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
 internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<SpecifiedMySQLContainer>(image)
 
@@ -126,9 +120,8 @@ private val mySQLProcess by lazy {
     SpecifiedMySQLContainer(image = "mysql:5")
         .withDatabaseName("testdb")
         .withEnv("MYSQL_ROOT_PASSWORD", "test")
-        .withExposedPorts().apply {
-            start()
-        }
+        .withExposedPorts(3306)
+        .apply { start() }
 }
 
 private fun runTestContainersMySQL(): Boolean =

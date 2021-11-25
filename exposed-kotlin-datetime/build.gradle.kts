@@ -40,7 +40,6 @@ tasks.withType<KotlinJvmCompile> {
 }
 
 tasks.withType(Test::class.java) {
-    jvmArgs = listOf("-XX:MaxPermSize=256m")
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
         showStandardStreams = true

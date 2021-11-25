@@ -7,7 +7,7 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.Cities
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -239,17 +239,17 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
 
         transaction {
             val firstThreadTm = db1.transactionManager
-            SchemaUtils.create(DMLTestsData.Cities)
+            SchemaUtils.create(Cities)
             thread {
                 db2 = TestDB.MYSQL.connect()
                 transaction {
-                    DMLTestsData.Cities.selectAll().toList()
+                    Cities.selectAll().toList()
                     secondThreadTm = db2.transactionManager
                     assertNotEquals(firstThreadTm, secondThreadTm)
                 }
             }.join()
             assertEquals(firstThreadTm, db1.transactionManager)
-            SchemaUtils.drop(DMLTestsData.Cities)
+            SchemaUtils.drop(Cities)
         }
         assertEquals(secondThreadTm, db2.transactionManager)
     }

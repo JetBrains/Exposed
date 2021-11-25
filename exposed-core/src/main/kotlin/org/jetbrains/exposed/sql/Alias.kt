@@ -99,6 +99,10 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+    override fun materializeDefaultScope() = when {
+        this != source -> source.materializeDefaultScope()
+        else -> null
+    }
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }

@@ -2,10 +2,12 @@
 
 package org.jetbrains.exposed.sql.kotlin.datetime
 
+import junit.framework.Assert.assertTrue
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -14,6 +16,7 @@ import org.jetbrains.exposed.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.sql.tests.shared.checkRow
 import org.junit.Test
 import java.math.BigDecimal
+import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration
@@ -1251,14 +1254,24 @@ fun Misc.checkRowDates(
     dr: Duration,
     drn: Duration? = null
 ) {
+
     assertEquals(d, row[this.d])
     assertEquals(dn, row[this.dn])
 //    assertEquals(t, row[this.t])
 //    assertEquals(tn, row[this.tn])
-    assertEquals(dt, row[this.dt])
-    assertEquals(dtn, row[this.dtn])
-    assertEquals(ts, row[this.ts])
-    assertEquals(tsn, row[this.tsn])
-    assertEquals(dr, row[this.dr])
-    assertEquals(drn, row[this.drn])
+    assertTrue(ChronoUnit.MILLIS.between(dt.toJavaLocalDateTime(), row[this.dt].toJavaLocalDateTime()) < 2)
+
+    dtn?.let { safeDtn ->
+        assertTrue(ChronoUnit.MILLIS.between(safeDtn.toJavaLocalDateTime(), row[this.dtn]!!.toJavaLocalDateTime()) < 2)
+    } ?: assertTrue(row[this.dtn] == null)
+
+    assertTrue((ts - row[this.ts]).inWholeMilliseconds < 2)
+
+    tsn?.let { safeTsn -> assertTrue((safeTsn - row[this.tsn]!!).inWholeMilliseconds < 2) }
+        ?: assertTrue(row[this.tsn] == null)
+
+    assertTrue((dr - row[this.dr]).inWholeMilliseconds < 2)
+
+    drn?.let { safeDrn -> assertTrue((safeDrn - row[this.drn]!!).inWholeMilliseconds < 2) }
+        ?: assertTrue(row[this.drn] == null)
 }

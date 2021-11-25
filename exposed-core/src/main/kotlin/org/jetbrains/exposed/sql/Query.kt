@@ -28,8 +28,14 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     private var forUpdate: Boolean? = null
 
     // private set
-    var where: Op<Boolean>? = where
+    var where: Op<Boolean>? = initializeWhere(where)
         private set
+
+    private fun initializeWhere(where: Op<Boolean>?) = set.materializeDefaultScope()
+        ?.let { safeDefaultScope ->
+            where?.let { it and safeDefaultScope }
+                ?: safeDefaultScope
+        } ?: where
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
@@ -82,7 +88,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @param body new WHERE condition builder, previous value used as a receiver
      * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryWhere
      */
-    fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
+    fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply {
+        initializeWhere(where.body()).also { this.where = it }
+    }
 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()

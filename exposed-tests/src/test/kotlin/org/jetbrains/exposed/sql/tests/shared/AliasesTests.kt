@@ -51,27 +51,60 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinSubQuery01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers {
             val expAlias = users.name.max().alias("m")
             val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
             assertEquals(3, resultRows.size)
+
+            val maxScopedNameAlias = scopedUsers.name.max().alias("m1")
+            scopedUsers.slice(scopedUsers.cityId, maxScopedNameAlias)
+                .selectAll().groupBy(scopedUsers.cityId)
+                .alias("u2")
+                .let { scopedUsersAlias ->
+                    Join(scopedUsers)
+                        .join(scopedUsersAlias,
+                              JoinType.INNER,
+                              scopedUsersAlias[maxScopedNameAlias],
+                              scopedUsers.name)
+                        .selectAll().toList()
+                        .let { scopedResultRows -> assertEquals(1, scopedResultRows.size) }
+                }
+
         }
     }
 
     @Test
     fun testJoinSubQuery02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers {
             val expAlias = users.name.max().alias("m")
 
-            val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
-                users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId)
-            }
-            val innerExp = query.lastQueryAlias!![expAlias]
+            Join(users)
+                .joinQuery(on = { it[expAlias].eq(users.name) }) {
+                    users.slice(users.cityId, expAlias)
+                    .selectAll()
+                    .groupBy(users.cityId)
+                }.let { query ->
+                    val innerExp = query.lastQueryAlias!![expAlias]
 
-            assertEquals("q0", query.lastQueryAlias?.alias)
-            assertEquals(3L, query.selectAll().count())
-            assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
+                    assertEquals("q0", query.lastQueryAlias?.alias)
+                    assertEquals(3L, query.selectAll().count())
+                    assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
+                }
+
+            val scopedExpAlias = scopedUsers.name.max().alias("m2")
+            Join(scopedUsers)
+                .joinQuery(on = { it[scopedExpAlias].eq(scopedUsers.name) }) {
+                    scopedUsers.slice(scopedUsers.cityId, scopedExpAlias)
+                        .selectAll()
+                        .groupBy(scopedUsers.cityId)
+                }.let { query ->
+                    val innerExp = query.lastQueryAlias!![scopedExpAlias]
+
+                    assertEquals("q0", query.lastQueryAlias?.alias)
+                    assertEquals(1L, query.selectAll().count())
+                    assertNotNull(query.slice(scopedUsers.columns + innerExp).selectAll().first()[innerExp])
+                }
         }
     }
 
