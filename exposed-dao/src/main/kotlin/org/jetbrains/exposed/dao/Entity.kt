@@ -168,7 +168,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
-        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
+        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke()
+            .also { writeValues[this as Column<Any?>] = it } as T
         columnType.nullable -> readValues[this]
         else -> readValues[this]!!
     }
