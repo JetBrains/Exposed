@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.5.30"
-    const val kotlinCoroutines = "1.5.1"
+    const val kotlin = "1.6.0"
+    const val kotlinCoroutines = "1.6.0-RC"
 
-    const val slf4j = "1.7.30"
+    const val slf4j = "1.7.32"
     const val log4j2 = "2.14.1"
 
     /** JDBC drivers **/
@@ -24,5 +24,4 @@ object Versions {
 
     /** Test Dependencies **/
     const val testContainers = "1.16.2"
-    const val otjPgEmbedded = "0.13.4"
 }

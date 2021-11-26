@@ -4,7 +4,8 @@ import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 
 plugins {
     kotlin("jvm") apply true
-    id("io.github.gradle-nexus.publish-plugin") apply true
+    id("com.jfrog.artifactory") version "4.24.21"
+    id("org.jetbrains.dokka") version "1.5.31"
     id("io.gitlab.arturbosch.detekt")
 }
 
@@ -31,15 +32,6 @@ subprojects {
     }
 }
 
-nexusPublishing {
-    repositories {
-        sonatype {
-            username.set(System.getenv("exposed.sonatype.user"))
-            password.set(System.getenv("exposed.sonatype.password"))
-            useStaging.set(true)
-        }
-    }
-}
 
 repositories {
     mavenCentral()

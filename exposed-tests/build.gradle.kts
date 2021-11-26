@@ -31,7 +31,6 @@ dependencies {
 
     testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
     implementation("org.testcontainers", "mysql", Versions.testContainers)
-    implementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
 
     implementation("com.h2database", "h2", Versions.h2)
 

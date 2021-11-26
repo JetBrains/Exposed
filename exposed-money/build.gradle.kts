@@ -25,7 +25,6 @@ dependencies {
     testImplementation("com.h2database", "h2", "1.4.199")
     testImplementation("org.javamoney", "moneta", "1.3")
     testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
-    testImplementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)
     }

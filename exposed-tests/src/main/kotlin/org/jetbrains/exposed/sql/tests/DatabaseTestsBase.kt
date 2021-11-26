@@ -1,13 +1,11 @@
 package org.jetbrains.exposed.sql.tests
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.testcontainers.containers.MySQLContainer
-import java.lang.String.format
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
