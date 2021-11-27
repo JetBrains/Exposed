@@ -76,12 +76,12 @@ interface TransactionManager {
         fun closeAndUnregister(database: Database) {
             val manager = registeredDatabases[database]
             manager?.let {
-                registeredDatabases.remove(database)
                 databases.remove(database)
                 currentDefaultDatabase.compareAndSet(database, null)
                 if (currentThreadManager.get() == it) {
                     currentThreadManager.remove()
                 }
+                registeredDatabases.remove(database)
             }
         }
 
@@ -89,7 +89,7 @@ interface TransactionManager {
 
         internal val currentThreadManager = object : ThreadLocal<TransactionManager>() {
             override fun initialValue(): TransactionManager {
-                return defaultDatabase?.let { registeredDatabases.getOrDefault(it, null) } ?: NotInitializedManager
+                return defaultDatabase?.let { registeredDatabases.getValue(it) } ?: NotInitializedManager
             }
         }
 

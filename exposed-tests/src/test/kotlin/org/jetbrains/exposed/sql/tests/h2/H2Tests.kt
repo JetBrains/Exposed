@@ -1,9 +1,18 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import org.jetbrains.exposed.sql.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.replace
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Test
 
 class H2Tests : DatabaseTestsBase() {
@@ -68,6 +77,25 @@ class H2Tests : DatabaseTestsBase() {
             Testing.replace {}
         }
     }
+
+    @Test
+    fun closeAndUnregister() {
+        withDb(TestDB.H2) { testDB ->
+            runBlocking {
+                val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
+                TransactionManager.registerManager(
+                    db,
+                    WrappedTransactionManager(db.transactionManager)
+                )
+                withContext(Dispatchers.IO) {
+                    TransactionManager.closeAndUnregister(db)
+                }
+            }
+        }
+    }
+
+    class WrappedTransactionManager(val transactionManager: TransactionManager) :
+        TransactionManager by transactionManager
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>
