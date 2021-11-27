@@ -1,5 +1,8 @@
-name: "Build"
-on: [pull_request]
+name: "Release"
+on:
+  push:
+    tags:
+      - '*'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
@@ -12,12 +15,12 @@ jobs:
           java-version: 17
       - name: Start Databases
         run: ./scripts/setup.sh
-      - name: Build & Deploy
+      - name: Release
         uses: gradle/gradle-build-action@v2
         env:
           ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-          IS_RELEASE_BUILD: false
+          IS_RELEASE_BUILD: true
         with:
           gradle-version: 7.3
           arguments: clean test build artifactoryPublish

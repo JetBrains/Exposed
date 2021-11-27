@@ -23,7 +23,6 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
-    testImplementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
 
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)
@@ -32,7 +31,7 @@ dependencies {
 
 tasks.withType<KotlinJvmCompile> {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "16"
         apiVersion = "1.5"
         languageVersion = "1.5"
     }
@@ -52,3 +51,4 @@ tasks.withType(Test::class.java) {
 }
 
 setupDialectTest(dialect)
+

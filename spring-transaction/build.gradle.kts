@@ -38,3 +38,4 @@ tasks.withType(Test::class.java) {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
+
