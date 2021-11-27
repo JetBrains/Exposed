@@ -298,7 +298,7 @@ object SchemaUtils {
             }
 
             val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
-                addMissingColumnsStatements(*tables)
+                addMissingColumnsStatements(tables = tables, withLogs)
             }
             logTimeSpent("Executing alter table statements", withLogs) {
                 execStatements(inBatch, alterStatements)
@@ -324,11 +324,11 @@ object SchemaUtils {
             createStatements(tables = tablesToCreate.toTypedArray())
         }
         val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
-            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray())
+            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
         }
         val executedStatements = createStatements + alterStatements
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
-            checkMappingConsistence(tables = tablesToAlter.toTypedArray()).filter { it !in executedStatements }
+            checkMappingConsistence(tables = tablesToAlter.toTypedArray(), withLogs).filter { it !in executedStatements }
         }
         return executedStatements + modifyTablesStatements
     }
