@@ -1,8 +1,5 @@
 package org.jetbrains.exposed.sql.tests.h2
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
@@ -14,6 +11,8 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Test
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class H2Tests : DatabaseTestsBase() {
 
@@ -81,16 +80,15 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2) { testDB ->
-            runBlocking {
-                val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
-                TransactionManager.registerManager(
-                    db,
-                    WrappedTransactionManager(db.transactionManager)
-                )
-                withContext(Dispatchers.IO) {
-                    TransactionManager.closeAndUnregister(db)
-                }
-            }
+            val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
+            TransactionManager.registerManager(
+                db,
+                WrappedTransactionManager(db.transactionManager)
+            )
+            Executors.newSingleThreadExecutor().apply {
+                submit { TransactionManager.closeAndUnregister(db) }
+                    .get(1, TimeUnit.SECONDS)
+            }.shutdown()
         }
     }
 
