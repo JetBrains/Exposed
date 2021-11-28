@@ -69,8 +69,11 @@ interface TransactionManager {
             if (defaultDatabase == null) {
                 currentThreadManager.remove()
             }
+            if (!registeredDatabases.containsKey(database)) {
+                databases.push(database)
+            }
+
             registeredDatabases[database] = manager
-            databases.push(database)
         }
 
         @Synchronized fun closeAndUnregister(database: Database) {
