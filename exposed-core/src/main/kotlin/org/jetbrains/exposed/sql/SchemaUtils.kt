@@ -117,6 +117,17 @@ object SchemaUtils {
         }
     }
 
+    @Deprecated(
+        "Will be removed in upcoming releases. Please use overloaded version instead",
+        ReplaceWith("createFKey(checkNotNull(reference.foreignKey) { \"${"$"}reference does not reference anything\" })"),
+        DeprecationLevel.WARNING
+    )
+    fun createFKey(reference: Column<*>): List<String> {
+        val foreignKey = reference.foreignKey
+        require(foreignKey != null && (foreignKey.deleteRule != null || foreignKey.updateRule != null)) { "$reference does not reference anything" }
+        return createFKey(foreignKey)
+    }
+
     fun createFKey(foreignKey: ForeignKeyConstraint): List<String> {
         val allFromColumnsBelongsToTheSameTable = foreignKey.from.all { it.table == foreignKey.fromTable }
         require(allFromColumnsBelongsToTheSameTable) { "not all referencing columns of $foreignKey belong to the same table " }
