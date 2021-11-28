@@ -1154,5 +1154,5 @@ class TableWithDefaultScopeStriped(var actualTable: Table) : Table(name = actual
 
     override fun crossJoin(otherTable: ColumnSet) = actualTable.crossJoin(otherTable)
 
-    override fun materializeDefaultScope() = null
+    override fun materializeDefaultScope() : Op<Boolean>? = null
 }
