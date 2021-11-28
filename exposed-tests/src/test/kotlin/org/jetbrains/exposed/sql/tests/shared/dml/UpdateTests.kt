@@ -94,10 +94,11 @@ class UpdateTests : DatabaseTestsBase() {
 
             val sergeyId = "sergey"
             val loadNames = {
-                unscopedScopedUsers.slice(unscopedScopedUsers.name)
-                    .select { unscopedScopedUsers.id inList listOf(alexId, sergeyId) }
-                    .orderBy(unscopedScopedUsers.name, SortOrder.ASC)
-                    .map { it[unscopedScopedUsers.name] }
+                scopedUsers.stripDefaultScope()
+                    .slice(scopedUsers.name)
+                    .select { scopedUsers.id inList listOf(alexId, sergeyId) }
+                    .orderBy(scopedUsers.name, SortOrder.ASC)
+                    .map { it[scopedUsers.name] }
             }
 
             assertEqualLists(loadNames(), "Alex", "Sergey")
@@ -208,8 +209,9 @@ class UpdateTests : DatabaseTestsBase() {
                             }
                         }
 
-                        unscopedScopedUsers.innerJoin(unscopedScopedUserData)
-                            .select { unscopedScopedUsers.id neq "sergey" }
+                        scopedUsers.stripDefaultScope()
+                            .innerJoin(scopedUserData.stripDefaultScope())
+                            .select { scopedUsers.id neq "sergey" }
                             .forEach { row ->
                                 assertNotEquals(row[scopedUsers.name], row[scopedUserData.comment])
                                 assertNotEquals(123, row[scopedUserData.value])

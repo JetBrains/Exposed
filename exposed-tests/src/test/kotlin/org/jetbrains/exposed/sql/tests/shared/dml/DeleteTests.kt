@@ -32,7 +32,10 @@ class DeleteTests : DatabaseTestsBase() {
 
             // Only deletes data within scope
             scopedUserData.deleteAll()
-            val remainingScopedUserData = unscopedScopedUserData.selectAll().toList().size
+            val remainingScopedUserData = scopedUserData.stripDefaultScope()
+                .selectAll()
+                .toList()
+                .size
             assertEquals(3, remainingScopedUserData)
 
             // Deleting using a where clause
@@ -56,7 +59,7 @@ class DeleteTests : DatabaseTestsBase() {
                         .select { scopedUsers.name.like("%Sergey") }
                         .any().let { sergeyExists -> assertEquals(false, sergeyExists) }
 
-                    assertEquals(4, unscopedScopedUsers.selectAll().count())
+                    assertEquals(4, scopedUsers.stripDefaultScope().selectAll().count())
                 }
         }
     }
@@ -76,11 +79,11 @@ class DeleteTests : DatabaseTestsBase() {
                 it[scopedUserData.comment] =  "This is Sergey"
                 it[scopedUserData.value] = 60
             }
-            assertEquals(5, unscopedScopedUserData.selectAll().count())
+            assertEquals(5, scopedUserData.stripDefaultScope().selectAll().count())
             scopedUserData.deleteWhere(limit = 1) { scopedUserData.value neq 60 }
 
             assertEquals(1, scopedUserData.selectAll().count())
-            assertEquals(4, unscopedScopedUserData.selectAll().count())
+            assertEquals(4, scopedUserData.stripDefaultScope().selectAll().count())
         }
     }
 

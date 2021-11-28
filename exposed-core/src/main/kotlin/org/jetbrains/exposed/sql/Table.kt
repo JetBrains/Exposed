@@ -347,6 +347,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     open val defaultScope: (() -> Op<Boolean>)? = null
 
+    /**
+     * For temporarily removing this table's default scope in a thread-safe manner.
+     *
+     * Returns a new instance of a table that will ignore the default scope when generating/running queries.
+     */
+    fun stripDefaultScope() = TableWithDefaultScopeStriped(this)
+
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
     private val _columns = mutableListOf<Column<*>>()
@@ -1120,4 +1127,32 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Table -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
+}
+
+/** A table with a default scope whose default scope has been temporarily striped */
+class TableWithDefaultScopeStriped(var actualTable: Table) : Table(name = actualTable.tableName), FieldSet by actualTable {
+
+    override val columns: List<Column<*>> = actualTable.columns
+
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = actualTable.describe(s, queryBuilder)
+
+    override fun join(
+        otherTable: ColumnSet,
+        joinType: JoinType,
+        onColumn: Expression<*>?,
+        otherColumn: Expression<*>?,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+    ) = actualTable.join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+
+    override fun innerJoin(otherTable: ColumnSet) = actualTable.innerJoin(otherTable)
+
+    override fun leftJoin(otherTable: ColumnSet) = actualTable.leftJoin(otherTable)
+
+    override fun rightJoin(otherTable: ColumnSet) = actualTable.rightJoin(otherTable)
+
+    override fun fullJoin(otherTable: ColumnSet) = actualTable.fullJoin(otherTable)
+
+    override fun crossJoin(otherTable: ColumnSet) = actualTable.crossJoin(otherTable)
+
+    override fun materializeDefaultScope() = null
 }
