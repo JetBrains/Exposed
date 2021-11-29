@@ -8,7 +8,7 @@ object Versions {
     const val log4j2 = "2.14.1"
 
     /** JDBC drivers **/
-    const val h2 = "1.4.199"
+    const val h2 = "1.4.200"
     const val mariaDB = "2.7.0"
     const val mysql51 = "5.1.49"
     const val mysql80 = "8.0.23"

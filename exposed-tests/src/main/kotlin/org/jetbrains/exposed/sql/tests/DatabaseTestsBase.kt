@@ -21,12 +21,7 @@ enum class TestDB(
     var db: Database? = null
 ) {
     H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
-    H2_MYSQL(
-        { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
-        beforeConnection = {
-            Mode.getInstance("MySQL").convertInsertNullToZero = false
-        }
-    ),
+    H2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
