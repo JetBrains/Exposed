@@ -128,14 +128,16 @@ object SchemaUtils {
         return createFKey(foreignKey)
     }
 
-    fun createFKey(foreignKey: ForeignKeyConstraint): List<String> {
-        val allFromColumnsBelongsToTheSameTable = foreignKey.from.all { it.table == foreignKey.fromTable }
-        require(allFromColumnsBelongsToTheSameTable) { "not all referencing columns of $foreignKey belong to the same table " }
-        val allTargetColumnsBelongToTheSameTable = foreignKey.target.all { it.table == foreignKey.targetTable }
-        require(allTargetColumnsBelongToTheSameTable) { "not all referenced columns of $foreignKey belong to the same table " }
-        require(foreignKey.from.size == foreignKey.target.size) { "$foreignKey referencing columns are not in accordance with referenced" }
-        require(foreignKey.deleteRule != null || foreignKey.updateRule != null) { "$foreignKey has no reference constraint actions" }
-        return foreignKey.createStatement()
+    fun createFKey(foreignKey: ForeignKeyConstraint): List<String> = with(foreignKey) {
+        val allFromColumnsBelongsToTheSameTable = from.all { it.table == fromTable }
+        require(allFromColumnsBelongsToTheSameTable) { "not all referencing columns of $foreignKey belong to the same table" }
+        val allTargetColumnsBelongToTheSameTable = target.all { it.table == targetTable }
+        require(allTargetColumnsBelongToTheSameTable) { "not all referenced columns of $foreignKey belong to the same table" }
+        require(from.size == target.size) { "$foreignKey referencing columns are not in accordance with referenced" }
+        require(deleteRule != null || updateRule != null) { "$foreignKey has no reference constraint actions" }
+        require(target.toHashSet().size == target.size) { "not all referenced columns of $foreignKey are unique" }
+
+        return createStatement()
     }
 
     fun createIndex(index: Index) = index.createStatement()

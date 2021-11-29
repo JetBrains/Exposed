@@ -957,6 +957,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         name: String? = null
     ) {
+        require(from.size == target.columns.size) {
+            val fkName = if (name != null) " ($name)" else ""
+            "Foreign key$fkName has ${from.size} columns, while referenced primary key (${target.name}) has ${target.columns.size}"
+        }
         _foreignKeys.add(ForeignKeyConstraint(from.zip(target.columns).toMap(), onUpdate, onDelete, name))
     }
 
