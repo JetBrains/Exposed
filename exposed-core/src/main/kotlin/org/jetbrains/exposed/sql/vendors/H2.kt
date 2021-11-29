@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 private val Transaction.isMySQLMode: Boolean
-    get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
+    get() = (db.dialect as? H2Dialect)?.isMySQLMode ?: false
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -18,6 +19,23 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 internal object H2FunctionProvider : FunctionProvider() {
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) = when (majorVersion) {
+        H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
+        H2Dialect.H2MajorVersion.Two -> builder {
+            append("NEXT VALUE FOR ${seq.identifier}")
+        }
+    }
+
+    internal val majorVersion: H2Dialect.H2MajorVersion by lazy {
+        with(TransactionManager.current()) {
+            val version = exactH2Version(this)
+            when {
+                version.startsWith("1.") -> H2Dialect.H2MajorVersion.One
+                version.startsWith("2.") -> H2Dialect.H2MajorVersion.Two
+                else -> error("Unsupported H2 version: $version")
+            }
+        }
+    }
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
@@ -113,19 +131,34 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+    enum class H2MajorVersion {
+        One, Two
+    }
 
-    private var isMySQLMode: Boolean? = null
+    val majorVersion get() = H2FunctionProvider.majorVersion
 
-    internal fun isMySQLMode(): Boolean {
-        return isMySQLMode
-            ?: TransactionManager.currentOrNull()?.let { tr ->
-                tr.exec("SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'") { rs ->
-                    rs.next()
-                    rs.getString("VALUE")?.equals("MySQL", ignoreCase = true)?.also {
-                        isMySQLMode = it
-                    } ?: false
+    internal val isMySQLMode: Boolean by lazy {
+        TransactionManager.current().let { tr ->
+            val mySQLMode = when (majorVersion) {
+                H2MajorVersion.One -> {
+                    @Language("H2")
+                    val isMySQLModeV1 = "SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'"
+                    tr.exec(isMySQLModeV1) { rs ->
+                        rs.next()
+                        rs.getString("VALUE")
+                    }
                 }
-            } ?: false
+                H2MajorVersion.Two -> {
+                    @Language("H2")
+                    val isMySQLModeV2 = "SELECT SETTING_VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE SETTING_NAME = 'MODE'"
+                    tr.exec(isMySQLModeV2) { rs ->
+                        rs.next()
+                        rs.getString("SETTING_VALUE")
+                    }
+                }
+            }
+            mySQLMode.equals("MySQL", ignoreCase = true)
+        }
     }
 
     override val name: String

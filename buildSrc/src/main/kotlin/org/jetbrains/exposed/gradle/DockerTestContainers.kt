@@ -7,7 +7,7 @@ import java.io.File
 import java.time.Duration
 
 fun Project.setupDialectTest(dialect: String) {
-    if (dialect != "none") {
+    if (dialect != "none" && dialect != "h2_v2") {
         applyPluginSafely("com.avast.gradle.docker-compose")
         val dialectTest = tasks.create("exposedDialectTestWithDocker", Test::class) {
             group = "verification"
@@ -53,6 +53,7 @@ fun setupTestDriverDependencies(dialect: String, testImplementationSetup: (group
         "mysql8" -> testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql80)
         "oracle" -> testImplementationSetup("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
         "sqlserver" -> testImplementationSetup("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
+        "h2_v2" -> testImplementationSetup("com.h2database", "h2", Versions.h2_v2)
         else -> {
             testImplementationSetup("com.h2database", "h2", Versions.h2)
             testImplementationSetup("mysql", "mysql-connector-java", Versions.mysql51)
