@@ -346,6 +346,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns all indices declared on the table. */
     val indices: List<Index> get() = _indices
 
+    private val _foreignKeys = mutableListOf<ForeignKeyConstraint>()
+
+    /** Returns all foreignKeys declared on the table. */
+    val foreignKeys: List<ForeignKeyConstraint> get() = columns.mapNotNull { it.foreignKey } + _foreignKeys
+
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     /**
@@ -818,7 +823,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<T?> = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName).nullable()
+    ): Column<T?> = reference(name, refColumn, onDelete, onUpdate, fkName).nullable()
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
@@ -841,10 +846,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<E?> {
-        val entityIdColumn = entityId(name, (refColumn.columnType as EntityIDColumnType<T>).idColumn) as Column<E>
-        return entityIdColumn.references(refColumn, onDelete, onUpdate, fkName).nullable()
-    }
+    ): Column<E?> = reference(name, refColumn, onDelete, onUpdate, fkName).nullable()
 
     /**
      * Creates a column with the specified [name] with an optional reference to the `id` column in [foreign] table with [onDelete], [onUpdate], and [fkName] options.
@@ -865,7 +867,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<EntityID<T>?> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName).nullable()
+    ): Column<EntityID<T>?> = reference(name, foreign, onDelete, onUpdate, fkName).nullable()
 
     // Miscellaneous
 
@@ -938,6 +940,49 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param columns Columns that compose the index.
      */
     fun uniqueIndex(customIndexName: String? = null, vararg columns: Column<*>): Unit = index(customIndexName, true, *columns)
+
+    /**
+     * Creates a composite foreign key.
+     *
+     * @param from Columns that compose the foreign key. Their order should match the order of columns in referenced primary key.
+     * @param target Primary key of the referenced table.
+     * @param onUpdate Reference option when performing update operations.
+     * @param onUpdate Reference option when performing delete operations.
+     * @param name Custom foreign key name
+     */
+    fun foreignKey(
+        vararg from: Column<*>,
+        target: PrimaryKey,
+        onUpdate: ReferenceOption? = null,
+        onDelete: ReferenceOption? = null,
+        name: String? = null
+    ) {
+        require(from.size == target.columns.size) {
+            val fkName = if (name != null) " ($name)" else ""
+            "Foreign key$fkName has ${from.size} columns, while referenced primary key (${target.name}) has ${target.columns.size}"
+        }
+        _foreignKeys.add(ForeignKeyConstraint(from.zip(target.columns).toMap(), onUpdate, onDelete, name))
+    }
+
+    /**
+     * Creates a composite foreign key.
+     *
+     * @param references Pairs of columns that compose the foreign key.
+     * First value of pair is a column of referencing table, second value - a column of a referenced one.
+     * All referencing columns must belong to this table.
+     * All referenced columns must belong to the same table.
+     * @param onUpdate Reference option when performing update operations.
+     * @param onUpdate Reference option when performing delete operations.
+     * @param name Custom foreign key name
+     */
+    fun foreignKey(
+        vararg references: Pair<Column<*>, Column<*>>,
+        onUpdate: ReferenceOption? = null,
+        onDelete: ReferenceOption? = null,
+        name: String? = null
+    ) {
+        _foreignKeys.add(ForeignKeyConstraint(references.toMap(), onUpdate, onDelete, name))
+    }
 
     // Check constraints
 
@@ -1019,7 +1064,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
-        val foreignKeyConstraints = columns.mapNotNull { it.foreignKey }
+        val foreignKeyConstraints = foreignKeys
 
         val createTable = buildString {
             append("CREATE TABLE ")

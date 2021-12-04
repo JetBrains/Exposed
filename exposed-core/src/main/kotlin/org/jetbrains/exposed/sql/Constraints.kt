@@ -51,30 +51,45 @@ enum class ReferenceOption {
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
-    val target: Column<*>,
-    val from: Column<*>,
+    val references: Map<Column<*>, Column<*>>,
     private val onUpdate: ReferenceOption?,
     private val onDelete: ReferenceOption?,
     private val name: String?
 ) : DdlAware {
+    constructor(
+        target: Column<*>,
+        from: Column<*>,
+        onUpdate: ReferenceOption?,
+        onDelete: ReferenceOption?,
+        name: String?
+    ) : this(mapOf(from to target), onUpdate, onDelete, name)
+
     private val tx: Transaction
         get() = TransactionManager.current()
 
-    /** Name of the child table. */
-    val targetTable: String
-        get() = tx.identity(target.table)
+    val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
 
-    /** Name of the foreign key column. */
-    val targetColumn: String
-        get() = tx.identity(target)
+    val targetTable: Table = target.first().table
+
+    /** Name of the child table. */
+    val targetTableName: String
+        get() = tx.identity(targetTable)
+
+    /** Names of the foreign key columns. */
+    private val targetColumns: String
+        get() = target.joinToString { tx.identity(it) }
+
+    val from: LinkedHashSet<Column<*>> = LinkedHashSet(references.keys)
+
+    val fromTable: Table = from.first().table
 
     /** Name of the parent table. */
-    val fromTable: String
-        get() = tx.identity(from.table)
+    val fromTableName: String
+        get() = tx.identity(fromTable)
 
-    /** Name of the key column from the parent table. */
-    val fromColumn
-        get() = tx.identity(from)
+    /** Names of the key columns from the parent table. */
+    private val fromColumns: String
+        get() = from.joinToString { tx.identity(it) }
 
     /** Reference option when performing update operations. */
     val updateRule: ReferenceOption?
@@ -91,27 +106,27 @@ data class ForeignKeyConstraint(
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
-            name ?: "fk_${from.table.tableNameWithoutScheme}_${from.name}_${target.name}"
+            name ?: "fk_${fromTable.tableNameWithoutScheme}_${from.joinToString("_") { it.name }}__${target.joinToString("_") { it.name }}"
         ).inProperCase()
     internal val foreignKeyPart: String
         get() = buildString {
             if (fkName.isNotBlank()) {
                 append("CONSTRAINT $fkName ")
             }
-            append("FOREIGN KEY ($fromColumn) REFERENCES $targetTable($targetColumn)")
+            append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
             if (deleteRule != ReferenceOption.NO_ACTION) {
                 append(" ON DELETE $deleteRule")
             }
             if (updateRule != ReferenceOption.NO_ACTION) {
                 if (currentDialect is OracleDialect) {
-                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTable table.")
+                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
                 } else {
                     append(" ON UPDATE $updateRule")
                 }
             }
         }
 
-    override fun createStatement(): List<String> = listOf("ALTER TABLE $fromTable ADD $foreignKeyPart")
+    override fun createStatement(): List<String> = listOf("ALTER TABLE $fromTableName ADD $foreignKeyPart")
 
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
@@ -120,8 +135,16 @@ data class ForeignKeyConstraint(
             is MysqlDialect -> "FOREIGN KEY"
             else -> "CONSTRAINT"
         }
-        return listOf("ALTER TABLE $fromTable DROP $constraintType $fkName")
+        return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
+
+    fun targetOf(from: Column<*>): Column<*>? = references[from]
+
+    operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
+        return copy(references = references + other.references)
+    }
+
+    override fun toString() = "ForeignKeyConstraint(fkName='$fkName')"
 }
 
 /**
