@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-interface DefaultScopeAware {
+interface DefaultScopeMaterializer {
 
     fun materializeDefaultScope() : Op<Boolean>?
 }

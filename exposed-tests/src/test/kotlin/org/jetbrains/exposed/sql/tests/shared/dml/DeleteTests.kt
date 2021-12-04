@@ -2,11 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -32,7 +31,10 @@ class DeleteTests : DatabaseTestsBase() {
 
             // Only deletes data within scope
             scopedUserData.deleteAll()
-            val remainingScopedUserData = unscopedScopedUserData.selectAll().toList().size
+            val remainingScopedUserData = scopedUserData.stripDefaultScope()
+                .selectAll()
+                .toList()
+                .size
             assertEquals(3, remainingScopedUserData)
 
             // Deleting using a where clause
@@ -51,12 +53,22 @@ class DeleteTests : DatabaseTestsBase() {
                 .let { sergeyId ->
                     assertEquals("sergey", sergeyId)
 
+                    scopedUsers.deleteWhere { scopedUsers.name eq "Alex" }
+                    val alexExists = exists(scopedUsers.stripDefaultScope().select { scopedUsers.name eq "Alex" })
+                    assertEqualLists(scopedUsers.slice(alexExists).selectAll().take(1).map { it[alexExists] },
+                                 listOf(true))
+
                     scopedUsers.deleteWhere { scopedUsers.name like "%er%" }
                     scopedUsers.slice(scopedUsers.id)
                         .select { scopedUsers.name.like("%Sergey") }
                         .any().let { sergeyExists -> assertEquals(false, sergeyExists) }
 
-                    assertEquals(4, unscopedScopedUsers.selectAll().count())
+                    assertEquals(4, scopedUsers.stripDefaultScope().selectAll().count())
+
+                    scopedUsers.stripDefaultScope().deleteWhere { scopedUsers.name eq "Alex" }
+                    assertEqualLists(scopedUsers.slice(alexExists).selectAll().take(1).map { it[alexExists] },
+                                 listOf(false))
+                    assertEquals(3, scopedUsers.stripDefaultScope().selectAll().count())
                 }
         }
     }
@@ -76,11 +88,11 @@ class DeleteTests : DatabaseTestsBase() {
                 it[scopedUserData.comment] =  "This is Sergey"
                 it[scopedUserData.value] = 60
             }
-            assertEquals(5, unscopedScopedUserData.selectAll().count())
+            assertEquals(5, scopedUserData.stripDefaultScope().selectAll().count())
             scopedUserData.deleteWhere(limit = 1) { scopedUserData.value neq 60 }
 
             assertEquals(1, scopedUserData.selectAll().count())
-            assertEquals(4, unscopedScopedUserData.selectAll().count())
+            assertEquals(4, scopedUserData.stripDefaultScope().selectAll().count())
         }
     }
 

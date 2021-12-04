@@ -56,6 +56,31 @@ class GroupByTests : DatabaseTestsBase() {
                         else -> error("Unknow city $cityName")
                     }
                 }
+
+            ((cities innerJoin scopedUsers.stripDefaultScope())
+                .slice(cities.name, scopedUsers.id.count(), dAlias)
+                .selectAll()
+                .groupBy(cities.name))
+                .forEach {
+                    val cityName = it[cities.name]
+                    val userCount = it[scopedUsers.id.count()]
+                    val userCountAlias = it[dAlias]
+                    when (cityName) {
+                        "Munich" -> {
+                            assertEquals(2, userCount)
+                            assertEquals(2, userCountAlias)
+                        }
+                        "Prague" -> {
+                            assertEquals(0, userCount)
+                            assertEquals(0, userCountAlias)
+                        }
+                        "St. Petersburg" -> {
+                            assertEquals(1, userCount)
+                            assertEquals(1, userCountAlias)
+                        }
+                        else -> error("Unknow city $cityName")
+                    }
+                }
         }
     }
 
@@ -84,6 +109,24 @@ class GroupByTests : DatabaseTestsBase() {
                     assertEquals("Munich", r[0][cities.name])
                     val count = r[0][scopedUsers.id.count()]
                     assertEquals(2, count)
+                }
+
+            (cities innerJoin scopedUsers)
+                .slice(cities.name, scopedUsers.id.count())
+                .selectAll()
+                .groupBy(cities.name)
+                .having { scopedUsers.id.count() eq 1 }
+                .toList().let { r -> assertEquals(0, r.size) }
+
+            (cities innerJoin scopedUsers.stripDefaultScope())
+                .slice(cities.name, scopedUsers.id.count())
+                .selectAll()
+                .groupBy(cities.name)
+                .having { scopedUsers.id.count() eq 1 }
+                .toList().let { r ->
+                    assertEquals(1, r.size)
+                    assertEquals("St. Petersburg", r[0][cities.name])
+                    assertEquals(1, r[0][scopedUsers.id.count()])
                 }
         }
     }
@@ -132,6 +175,30 @@ class GroupByTests : DatabaseTestsBase() {
                         assertEquals(2, max)
                     }
                 }
+
+            (cities innerJoin scopedUsers.stripDefaultScope())
+                .slice(cities.name, scopedUsers.id.count(), maxExpr)
+                .selectAll()
+                .groupBy(cities.name)
+                .having { scopedUsers.id.count().eq(maxExpr) }
+                .orderBy(cities.name)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    0.let {
+                        assertEquals("Munich", r[it][cities.name])
+                        val count = r[it][scopedUsers.id.count()]
+                        assertEquals(2, count)
+                        val max = r[it][maxExpr]
+                        assertEquals(2, max)
+                    }
+                    1.let {
+                        assertEquals("St. Petersburg", r[it][cities.name])
+                        val count = r[it][scopedUsers.id.count()]
+                        assertEquals(1, count)
+                        val max = r[it][maxExpr]
+                        assertEquals(1, max)
+                    }
+                }
         }
     }
 
@@ -172,6 +239,26 @@ class GroupByTests : DatabaseTestsBase() {
                         assertEquals(2, count)
                     }
                 }
+
+            (cities innerJoin scopedUsers.stripDefaultScope())
+                .slice(cities.name, scopedUsers.id.count(), cities.id.max())
+                .selectAll()
+                .groupBy(cities.name)
+                .having { scopedUsers.id.count() lessEq 42L }
+                .orderBy(cities.name)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    r[0].let {
+                        assertEquals("Munich", it[cities.name])
+                        val count = it[scopedUsers.id.count()]
+                        assertEquals(2, count)
+                    }
+                    r[1].let {
+                        assertEquals("St. Petersburg", it[cities.name])
+                        val count = it[scopedUsers.id.count()]
+                        assertEquals(1, count)
+                    }
+                }
         }
     }
 
@@ -196,8 +283,7 @@ class GroupByTests : DatabaseTestsBase() {
             }
 
             scopedUsers.cityId.max().let { scopedMaxNullableCityId ->
-                scopedUsers
-                    .slice(scopedMaxNullableCityId)
+                scopedUsers.slice(scopedMaxNullableCityId)
                     .selectAll()
                     .map { it[scopedMaxNullableCityId] }
                     .let { result ->
@@ -205,8 +291,7 @@ class GroupByTests : DatabaseTestsBase() {
                         assertNotNull(result.single())
                     }
 
-                scopedUsers
-                    .slice(scopedMaxNullableCityId)
+                scopedUsers.slice(scopedMaxNullableCityId)
                     .select { scopedUsers.cityId.isNull() }
                     .map { it[scopedMaxNullableCityId] }
                     .let { result ->

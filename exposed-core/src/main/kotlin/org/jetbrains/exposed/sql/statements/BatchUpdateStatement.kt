@@ -5,11 +5,13 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.IdAware
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.util.*
 
-open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, null) {
+open class BatchUpdateStatement<T>(val table: T) : UpdateStatement(table, null) where T : Table, T : IdAware<*> {
     val data = ArrayList<Pair<EntityID<*>, Map<Column<*>, Any?>>>()
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 

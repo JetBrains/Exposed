@@ -28,7 +28,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 /**
  * Represents a set of expressions, contained in the given column set.
  */
-interface FieldSet : DefaultScopeAware {
+interface FieldSet : DefaultScopeMaterializer {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
 
@@ -346,6 +346,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     open val defaultScope: (() -> Op<Boolean>)? = null
+
+    /**
+     * Returns a new instance of a table that will ignore the default scope when generating/running queries.
+     */
+    open fun stripDefaultScope() = TableWithDefaultScopeStriped(this)
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
 
@@ -1120,4 +1125,14 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Table -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
+}
+
+/** A table with a default scope whose default scope has been temporarily striped */
+open class TableWithDefaultScopeStriped(val actualTable: Table) : Table(name = actualTable.tableName), FieldSet by actualTable {
+
+    override val columns: List<Column<*>> = actualTable.columns
+
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = actualTable.describe(s, queryBuilder)
+
+    override fun materializeDefaultScope() : Op<Boolean>? = null
 }

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -31,6 +32,12 @@ class OrderByTests : DatabaseTestsBase() {
                     assertEquals("sergey", r[1][scopedUsers.id])
                     assertEquals(2, r.size)
                 }
+
+            scopedUsers.stripDefaultScope()
+                .selectAll()
+                .orderBy(scopedUsers.id)
+                .map { it[scopedUsers.id] }
+                .let { assertEqualLists(listOf("alex", "andrey", "eugene", "sergey", "smth"), it) }
         }
     }
 
@@ -56,14 +63,20 @@ class OrderByTests : DatabaseTestsBase() {
                     }
                 }
 
-            scopedUsers.selectAll()
+            scopedUsers.slice(scopedUsers.id)
+                .selectAll()
                 .orderBy(scopedUsers.name, SortOrder.ASC)
                 .orderBy(scopedUsers.cityId, SortOrder.DESC)
-                .toList().let { r ->
-                    assertEquals(2, r.size)
-                    assertEquals("eugene", r[0][scopedUsers.id])
-                    assertEquals("sergey", r[1][scopedUsers.id])
-                }
+                .map { it[scopedUsers.id] }
+                .let { assertEqualLists(listOf("eugene", "sergey"), it) }
+
+            scopedUsers.stripDefaultScope()
+                .slice(scopedUsers.id)
+                .selectAll()
+                .orderBy(scopedUsers.name, SortOrder.ASC)
+                .orderBy(scopedUsers.cityId, SortOrder.DESC)
+                .map { it[scopedUsers.id] }
+                .let { assertEqualLists(listOf("alex", "andrey", "eugene", "sergey", "smth"), it) }
         }
     }
 
@@ -107,6 +120,19 @@ class OrderByTests : DatabaseTestsBase() {
                     assertEquals(1, r.size)
                     assertEquals("Munich", r[0][cities.name])
                     assertEquals(2, r[0][scopedUsers.id.count()])
+                }
+
+            (cities innerJoin scopedUsers.stripDefaultScope())
+                .slice(cities.name, scopedUsers.id.count())
+                .selectAll()
+                .groupBy(cities.name)
+                .orderBy(cities.name)
+                .toList().let { r ->
+                    assertEquals(2, r.size)
+                    assertEquals("Munich", r[0][cities.name])
+                    assertEquals(2, r[0][scopedUsers.id.count()])
+                    assertEquals("St. Petersburg", r[1][cities.name])
+                    assertEquals(1, r[1][scopedUsers.id.count()])
                 }
         }
     }

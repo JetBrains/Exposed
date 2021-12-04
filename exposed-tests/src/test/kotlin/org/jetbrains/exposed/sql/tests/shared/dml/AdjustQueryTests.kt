@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -30,8 +31,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     queryAdjusted.adjustSlice { slice(users.name, cities.name) }
                     val actualSlice = queryAdjusted.set.fields
 
-                    Assert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
-                    Assert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+                    assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
+                    assertThat(actualSlice, containsInAnyOrder(expectedSlice))
                     assertQueryResultValid(queryAdjusted)
                 }
 
@@ -47,9 +48,26 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     queryAdjusted.adjustSlice { slice(scopedUsers.name, cities.name) }
                     val actualSlice = queryAdjusted.set.fields
 
-                    Assert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
-                    Assert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+                    assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
+                    assertThat(actualSlice, containsInAnyOrder(expectedSlice))
                     assertScopedQueryResultValid(queryAdjusted)
+                }
+
+            (scopedUsers.stripDefaultScope() innerJoin cities)
+                .slice(scopedUsers.name)
+                .select(scopedPredicate)
+                .let { queryAdjusted ->
+                    fun Query.sliceIt() : FieldSet = this.set.source.slice(scopedUsers.name, cities.name)
+
+                    val oldSlice = queryAdjusted.set.fields
+                    val expectedSlice = queryAdjusted.sliceIt().fields
+
+                    queryAdjusted.adjustSlice { slice(scopedUsers.name, cities.name) }
+                    val actualSlice = queryAdjusted.set.fields
+
+                    assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
+                    assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+                    assertStripedScopedQueryResultValid(queryAdjusted)
                 }
         }
     }
@@ -85,6 +103,20 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
                     assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())
                     assertScopedQueryResultValid(queryAdjusted)
+                }
+
+            scopedUsers.stripDefaultScope()
+                .slice(scopedUsers.name, cities.name)
+                .select(scopedPredicate)
+                .let { queryAdjusted ->
+                    val oldColumnSet = queryAdjusted.set.source
+                    val expectedColumnSet = scopedUsers innerJoin cities
+                    queryAdjusted.adjustColumnSet { innerJoin(cities) }
+                    val actualColumnSet = queryAdjusted.set.source
+
+                    assertNotEquals(oldColumnSet.repr(), actualColumnSet.repr())
+                    assertEquals(expectedColumnSet.repr(), actualColumnSet.repr())
+                    assertStripedScopedQueryResultValid(queryAdjusted)
                 }
 
         }
@@ -127,6 +159,21 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     assertEquals(fullScopedPredicate.repr(), actualWhere!!.repr())
                     assertScopedQueryResultValid(queryAdjusted)
                 }
+
+            (scopedUsers.stripDefaultScope() innerJoin cities)
+                .slice(scopedUsers.name, cities.name)
+                .selectAll()
+                .let { queryAdjusted ->
+                    queryAdjusted.adjustWhere {
+                        assertNull(this)
+                        scopedPredicate
+                    }
+                    val actualWhere = queryAdjusted.where
+                    val fullScopedPredicate = scopedPredicate
+
+                    assertEquals(fullScopedPredicate.repr(), actualWhere!!.repr())
+                    assertStripedScopedQueryResultValid(queryAdjusted)
+                }
         }
     }
 
@@ -165,6 +212,20 @@ class AdjustQueryTests : DatabaseTestsBase() {
                             assertScopedQueryResultValid(queryAdjusted)
                         }
                 }
+
+            (scopedUsers.stripDefaultScope() innerJoin cities)
+                .slice(scopedUsers.name, cities.name)
+                .select { scopedPredicate }
+                .let { queryAdjusted ->
+                    queryAdjusted.andWhere { scopedPredicate }
+
+                    val actualWhere = queryAdjusted.where!!
+                    (scopedPredicate.and(scopedPredicate))
+                        .repr().let { expected ->
+                            assertEquals(expected, actualWhere.repr())
+                            assertStripedScopedQueryResultValid(queryAdjusted)
+                        }
+                }
         }
     }
 
@@ -201,6 +262,20 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val userName = row[users.name]
             val cityName = row[cities.name]
             when (userName) {
+                "Sergey" -> assertEquals("Munich", cityName)
+                else -> error("Unexpected user $userName")
+            }
+        }
+    }
+
+    private fun assertStripedScopedQueryResultValid(query: Query) {
+        val users = ScopedUsers
+        val cities = Cities
+        query.forEach { row ->
+            val userName = row[users.name]
+            val cityName = row[cities.name]
+            when (userName) {
+                "Andrey" -> assertEquals("St. Petersburg", cityName)
                 "Sergey" -> assertEquals("Munich", cityName)
                 else -> error("Unexpected user $userName")
             }

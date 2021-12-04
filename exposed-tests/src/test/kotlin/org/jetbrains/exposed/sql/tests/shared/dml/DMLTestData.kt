@@ -60,28 +60,13 @@ object ScopedUserData : Table(name = "scoped_user_data") {
     override val defaultScope = { userId eq "sergey" }
 }
 
-object UnscopedScopedUsers : Table(ScopedUsers.tableName) {
-    val id: Column<String> = varchar("id", 10)
-    val name: Column<String> = varchar("name", length = 50)
-    val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
-    val flags: Column<Int> = integer("flags").default(0)
-    override val primaryKey = PrimaryKey(id)
-}
-
-object UnscopedScopedUserData : Table(ScopedUserData.tableName) {
-    val userId: Column<String> = reference("user_id", ScopedUsers.id)
-    val comment: Column<String> = varchar("comment", 30)
-    val value: Column<Int> = integer("value")
-}
 
 class DmlTestRuntime(val transaction: Transaction,
                      val cities: Cities,
                      val users: Users,
                      val userData: UserData,
                      val scopedUsers: ScopedUsers,
-                     val scopedUserData: ScopedUserData,
-                     val unscopedScopedUsers: UnscopedScopedUsers,
-                     val unscopedScopedUserData: UnscopedScopedUserData){
+                     val scopedUserData: ScopedUserData){
     fun assertTrue(actual: Boolean) = transaction.assertTrue(actual)
     fun assertFalse(actual: Boolean) = transaction.assertFalse(actual)
     fun <T> assertEquals(exp: T, act: T) = transaction.assertEquals(exp, act)
@@ -221,16 +206,13 @@ fun DatabaseTestsBase.withCitiesAndUsers(exclude: List<TestDB> = emptyList(),
             it[value] = 30
         }
 
-       DmlTestRuntime(
-           this,
-           Cities,
-           Users,
-           UserData,
-           ScopedUsers,
-           ScopedUserData,
-           UnscopedScopedUsers,
-           UnscopedScopedUserData
-       ).apply(statement)
+       DmlTestRuntime(this,
+                      Cities,
+                      Users,
+                      UserData,
+                      ScopedUsers,
+                      ScopedUserData)
+           .apply(statement)
     }
 }
 

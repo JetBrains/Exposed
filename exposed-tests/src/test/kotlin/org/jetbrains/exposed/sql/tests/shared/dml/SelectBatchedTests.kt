@@ -34,7 +34,19 @@ class SelectBatchedTests : DatabaseTestsBase() {
                 }
 
             scopedCities.selectBatched(batchSize = 25) { scopedCities.id less 51 }
-                .toList().map { it.map { batch -> batch[scopedCities.name] } }
+                .map { it.map { batch -> batch[scopedCities.name] } }
+                .let { batches ->
+                    val expectedNames = names.take(50)
+                    assertEqualLists(
+                        listOf(expectedNames.take(25),
+                               expectedNames.takeLast(25)),
+                        batches
+                    )
+                }
+
+            scopedCities.stripDefaultScope()
+                .selectBatched(batchSize = 25) { scopedCities.id less 51 }
+                .map { it.map { batch -> batch[scopedCities.name] } }
                 .let { batches ->
                     val expectedNames = names.take(50)
                     assertEqualLists(
@@ -46,6 +58,10 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
             scopedCities.selectBatched(batchSize = 25) { scopedCities.id greater  51 }
                 .toList().let { batches -> assertTrue(batches.isEmpty()) }
+
+            scopedCities.stripDefaultScope()
+                .selectBatched(batchSize = 25) { scopedCities.id greater  51 }
+                .toList().let { batches -> assertTrue(batches.isNotEmpty()) }
         }
     }
 
