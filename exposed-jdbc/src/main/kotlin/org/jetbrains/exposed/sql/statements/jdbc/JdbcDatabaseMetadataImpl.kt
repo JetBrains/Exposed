@@ -56,7 +56,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
 
     override val identifierManager: IdentifierManagerApi by lazyMetadata {
-        identityManagerCache.computeIfAbsent(url) {
+        identityManagerCache.getOrPut(url) {
             JdbcIdentifierManager(this)
         }
     }

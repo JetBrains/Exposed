@@ -4,7 +4,11 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Test
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class H2Tests : DatabaseTestsBase() {
 
@@ -68,6 +72,29 @@ class H2Tests : DatabaseTestsBase() {
             Testing.replace {}
         }
     }
+
+    @Test
+    fun closeAndUnregister() {
+        withDb(TestDB.H2) { testDB ->
+            val orignalManager = TransactionManager.manager
+            val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
+            try {
+                TransactionManager.registerManager(
+                    db,
+                    WrappedTransactionManager(db.transactionManager)
+                )
+                Executors.newSingleThreadExecutor().apply {
+                    submit { TransactionManager.closeAndUnregister(db) }
+                        .get(1, TimeUnit.SECONDS)
+                }.shutdown()
+            } finally {
+                TransactionManager.registerManager(db, orignalManager)
+            }
+        }
+    }
+
+    class WrappedTransactionManager(val transactionManager: TransactionManager) :
+        TransactionManager by transactionManager
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

@@ -36,16 +36,13 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     @JvmName("setWithEntityIdValue")
-    operator fun <S : Comparable<S>, ID : EntityID<S>, E : S?> set(column: Column<ID>, value: E) {
-        require(column.columnType.nullable || (value != null && !value.equals(Op.NULL))) {
-            "Trying to set null to not nullable column $column"
-        }
+    operator fun <S : Comparable<S>, E : S, ID : EntityID<E>?> set(column: Column<ID>, value: S) {
         column.columnType.validateValueBeforeUpdate(value)
         values[column] = value
     }
 
     @JvmName("setWithEntityIdExpression")
-    operator fun <S, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
+    operator fun <S : Any?, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
         require(column.columnType.nullable || value != Op.NULL) {
             "Trying to set null to not nullable column $column"
         }
@@ -58,7 +55,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open operator fun <S> set(column: Column<S>, value: Query) = update(column, wrapAsExpression(value))
 
-    open operator fun <S> set(column: CompositeColumn<S>, value: S) {
+    open operator fun <S : Any> set(column: CompositeColumn<S>, value: S) {
         column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
     }
 
