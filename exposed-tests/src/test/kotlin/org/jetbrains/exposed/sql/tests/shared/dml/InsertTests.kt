@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
+import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Test
@@ -19,6 +20,7 @@ import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.fail
 
 class InsertTests : DatabaseTestsBase() {
@@ -517,6 +519,29 @@ class InsertTests : DatabaseTestsBase() {
                 withDb(db) {
                     SchemaUtils.drop()
                 }
+            }
+        }
+    }
+
+    @Test fun `test optReference allows null values`() {
+        withTables(EntityTests.Posts) {
+            val id1 = EntityTests.Posts.insertAndGetId {
+                it[board] = null
+                it[category] = null
+            }
+
+            val inserted1 = EntityTests.Posts.select { EntityTests.Posts.id eq id1 }.single()
+            assertNull(inserted1[EntityTests.Posts.board])
+            assertNull(inserted1[EntityTests.Posts.category])
+
+            val boardId = EntityTests.Boards.insertAndGetId {
+                it[name] = UUID.randomUUID().toString()
+            }
+
+            val id2 = EntityTests.Posts.insertAndGetId {
+                it[board] = Op.nullOp()
+                it[category] = null
+                it[board] = boardId.value
             }
         }
     }
