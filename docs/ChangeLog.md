@@ -1,3 +1,5 @@
+# 0.2.2
+- Updated `idTable.batchUpdate` to return the number of updated rows.
 
 # 0.2.1
 - Opened up `IdTableWithDefaultScopeStriped` for extension

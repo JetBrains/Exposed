@@ -233,7 +233,18 @@ fun <T : Table> T.update(
 fun <R, ID : Comparable<ID>, T> T.batchUpdate(entities: Iterable<R>,
                                               id: (R) -> EntityID<ID>,
                                               body: BatchUpdateStatement<T>.(R) -> Unit) where
-    T : Table, T : IdAware<ID> = BatchUpdateStatement(this).apply {
+        T : Table, T : IdAware<ID> = BatchUpdateStatement(this).run {
+    entities.forEach {
+        addBatch(id(it))
+        body(it)
+    }
+    execute(TransactionManager.current())
+}
+
+fun <R, ID : Comparable<ID>, T> T.batchUpdate(entities: Array<R>,
+                                              id: (R) -> EntityID<ID>,
+                                              body: BatchUpdateStatement<T>.(R) -> Unit) where
+        T : Table, T : IdAware<ID> = BatchUpdateStatement(this).run {
     entities.forEach {
         addBatch(id(it))
         body(it)
