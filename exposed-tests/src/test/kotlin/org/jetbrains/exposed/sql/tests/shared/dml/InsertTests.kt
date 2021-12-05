@@ -537,10 +537,13 @@ class InsertTests : DatabaseTestsBase() {
             val boardId = EntityTests.Boards.insertAndGetId {
                 it[name] = UUID.randomUUID().toString()
             }
+            val categoryId = EntityTests.Categories.insert {
+                it[title] = "Category"
+            }[EntityTests.Categories.uniqueId]
 
             val id2 = EntityTests.Posts.insertAndGetId {
                 it[board] = Op.nullOp()
-                it[category] = null
+                it[category] = categoryId
                 it[board] = boardId.value
             }
         }
