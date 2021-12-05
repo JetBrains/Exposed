@@ -73,7 +73,7 @@ open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUI
 }
 
 /** An Id table that ignores the actualTable's default scope */
-class IdTableWithDefaultScopeStriped<ID : Comparable<ID>>(actualTable: IdTable<ID>)
+open class IdTableWithDefaultScopeStriped<ID : Comparable<ID>>(actualTable: IdTable<ID>)
     : TableWithDefaultScopeStriped(actualTable), IdAware<ID> {
     override val id: Column<EntityID<ID>> = actualTable.id
 }

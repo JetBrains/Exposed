@@ -1,3 +1,8 @@
+
+# 0.2.1
+- Opened up `IdTableWithDefaultScopeStriped` for extension
+- Updated `README.md`
+
 # 0.2.0
 Feature:
 * Added the ability to temporarily strip a tables default scope via the `table.stripDefaultScope()` method.
