@@ -22,7 +22,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     testImplementation("org.xerial", "sqlite-jdbc", "3.23.1")
-    testImplementation("com.h2database", "h2", "1.4.199")
+    testImplementation("com.h2database", "h2", Versions.h2)
     testImplementation("org.javamoney", "moneta", "1.3")
     testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
     testImplementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
