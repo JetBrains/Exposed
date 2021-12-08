@@ -163,6 +163,9 @@ val Column<*>.autoIncColumnType: AutoIncColumnType?
 @Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
 val Column<*>.autoIncSeqName: String?
     get() = autoIncColumnType?.autoincSeq
+internal fun IColumnType.rawSqlType(): IColumnType =
+    if (this is AutoIncColumnType) this.delegate else if (this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType) this.idColumn.columnType.delegate else this
+
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 

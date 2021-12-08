@@ -2,6 +2,8 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
 /**
  * An object to which SQL expressions and values can be appended.
@@ -89,7 +91,11 @@ class QueryBuilder(
             .appendTo {
                 if (prepared) {
                     _args.add(sqlType to it.first)
-                    append("?")
+                    if (currentDialectIfAvailable is H2Dialect) {
+                        append("CAST(? AS ", sqlType.rawSqlType().sqlType(), ")")
+                    } else {
+                        append("?")
+                    }
                 } else {
                     append(it.second)
                 }
