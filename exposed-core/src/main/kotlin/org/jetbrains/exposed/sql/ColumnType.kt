@@ -786,10 +786,11 @@ class EnumerationColumnType<T : Enum<T>>(
     val klass: KClass<T>
 ) : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.integerType()
+    private val enumConstants = klass.java.enumConstants!!
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is Number -> klass.java.enumConstants!![value.toInt()]
+        is Number -> enumConstants[value.toInt()]
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.simpleName}")
     }
@@ -827,9 +828,11 @@ class EnumerationNameColumnType<T : Enum<T>>(
     val klass: KClass<T>,
     colLength: Int
 ) : VarCharColumnType(colLength) {
+    private val enumConstants = klass.java.enumConstants!!.associateBy { it.name }
+
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> klass.java.enumConstants!!.firstOrNull { it.name == value } ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
+        is String -> enumConstants[value] ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
