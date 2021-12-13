@@ -17,13 +17,22 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
 
 class MultiDatabaseTest {
 
-    private val db1 by lazy { Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
-    private val db2 by lazy { Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "") }
+    private val db1 by lazy {
+        Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
+            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+        })
+    }
+    private val db2 by lazy {
+        Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
+            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+        })
+    }
     private var currentDB: Database? = null
 
     @Before

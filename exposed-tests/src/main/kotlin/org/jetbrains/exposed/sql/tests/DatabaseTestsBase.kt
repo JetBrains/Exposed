@@ -19,15 +19,20 @@ enum class TestDB(
     val pass: String = "",
     val beforeConnection: () -> Unit = {},
     val afterTestFinished: () -> Unit = {},
-    var db: Database? = null
+    var db: Database? = null,
+    val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
-    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
+    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+        defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+    }),
     H2_MYSQL(
         { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
         beforeConnection = {
             if (Constants::VERSION_MAJOR.call() == 1 && Constants::VERSION_MINOR.call() <= 4 && Constants::BUILD_ID.call() <= 199) {
                 Mode.getInstance("MySQL").convertInsertNullToZero = false
             }
+        }, dbConfig = {
+            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
         }),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
@@ -95,7 +100,10 @@ enum class TestDB(
     );
 
     fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): Database {
-        val config = DatabaseConfig(configure)
+        val config = DatabaseConfig {
+            dbConfig()
+            configure()
+        }
         return Database.connect(connection(), databaseConfig = config, user = user, password = pass, driver = driver)
     }
 
