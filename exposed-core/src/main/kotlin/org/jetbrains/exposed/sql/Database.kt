@@ -211,6 +211,7 @@ class Database private constructor(
                 is SQLiteDialect -> Connection.TRANSACTION_SERIALIZABLE
                 is OracleDialect -> Connection.TRANSACTION_READ_COMMITTED
                 is PostgreSQLDialect -> Connection.TRANSACTION_READ_COMMITTED
+                is SQLServerDialect -> Connection.TRANSACTION_READ_COMMITTED
                 else -> DEFAULT_ISOLATION_LEVEL
             }
 
