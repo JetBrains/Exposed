@@ -31,6 +31,7 @@ open class UserDataHolder {
 }
 
 open class Transaction(private val transactionImpl: TransactionInterface) : UserDataHolder(), TransactionInterface by transactionImpl {
+    final override val db: Database = transactionImpl.db
 
     var statementCount: Int = 0
     var duration: Long = 0
@@ -41,6 +42,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     // currently executing statement. Used to log error properly
     var currentStatement: PreparedStatementApi? = null
     internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
+    internal var openResultSetsCount: Int = 0
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
@@ -68,7 +70,6 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
             dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
             it.beforeCommit(this)
         }
-        AbstractQuery.closeOpenedStatements(this)
         transactionImpl.commit()
         userdata.clear()
         globalInterceptors.forEach { it.afterCommit() }
@@ -79,7 +80,6 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     override fun rollback() {
         globalInterceptors.forEach { it.beforeRollback(this) }
         interceptors.forEach { it.beforeRollback(this) }
-        AbstractQuery.closeOpenedStatements(this)
         transactionImpl.rollback()
         globalInterceptors.forEach { it.afterRollback() }
         interceptors.forEach { it.afterRollback() }
@@ -188,6 +188,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         executedStatements.forEach {
             it.closeIfPossible()
         }
+        openResultSetsCount = 0
         executedStatements.clear()
     }
 
