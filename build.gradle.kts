@@ -1,4 +1,3 @@
-import io.gitlab.arturbosch.detekt.DetektPlugin
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 
@@ -21,12 +20,10 @@ val reportMerge by tasks.registering(ReportMergeTask::class) {
 }
 
 subprojects {
-    plugins.withType(DetektPlugin::class) {
-        tasks.withType(Detekt::class) detekt@{
-            finalizedBy(reportMerge)
-            reportMerge.configure {
-                input.from(this@detekt.xmlReportFile)
-            }
+    tasks.withType<Detekt>().configureEach detekt@{
+        finalizedBy(reportMerge)
+        reportMerge.configure {
+            input.from(this@detekt.xmlReportFile)
         }
     }
 }

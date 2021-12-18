@@ -31,7 +31,7 @@ dependencies {
     testImplementation("com.h2database", "h2", Versions.h2)
 }
 
-tasks.withType(Test::class.java) {
+tasks.withType<Test>().configureEach {
     jvmArgs = listOf("-XX:MaxPermSize=256m")
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))

@@ -30,7 +30,7 @@ dependencies {
     }
 }
 
-tasks.withType<KotlinJvmCompile> {
+tasks.withType<KotlinJvmCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
         apiVersion = "1.5"
@@ -43,7 +43,7 @@ tasks.withType<KotlinJvmCompile> {
 //    jvmTarget = "1.8"
 //}
 
-tasks.withType(Test::class.java) {
+tasks.withType<Test>().configureEach {
     jvmArgs = listOf("-XX:MaxPermSize=256m")
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
