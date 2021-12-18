@@ -1,20 +1,15 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.exposed.gradle.DockerTestContainers.h2_v2_dialect
 import org.jetbrains.exposed.gradle.Versions
-import org.jetbrains.exposed.gradle.setupDialectTest
-import org.jetbrains.exposed.gradle.setupTestDriverDependencies
-
 
 plugins {
     kotlin("jvm") apply true
+    id("testWithDBs")
 }
 
 repositories {
     mavenCentral()
 }
-
-val dialect: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
@@ -30,18 +25,12 @@ dependencies {
     implementation("org.hamcrest", "hamcrest-library", "1.3")
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
-    testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
     implementation("org.testcontainers", "mysql", Versions.testContainers)
     implementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
-    if (dialect == h2_v2_dialect) {
-        implementation("com.h2database", "h2", Versions.h2_v2)
-    } else {
-        implementation("com.h2database", "h2", Versions.h2)
-    }
-
-    setupTestDriverDependencies(dialect) { group, artifactId, version ->
-        testImplementation(group, artifactId, version)
-    }
+    testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
+    testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
+    compileOnly("com.h2database", "h2", Versions.h2)
+    testCompileOnly("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
 }
 
 tasks.withType<Test>().configureEach {
@@ -52,5 +41,3 @@ tasks.withType<Test>().configureEach {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
-
-setupDialectTest(dialect)

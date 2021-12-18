@@ -113,13 +113,11 @@ enum class TestDB(
     }
 
     companion object {
-        fun enabledInTests(): List<TestDB> {
-            val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
-            val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
-                if (it == "") emptyList()
-                else it.split(',').map { it.trim().uppercase() }
-            }
-            return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
+        fun enabledInTests(): Set<TestDB> {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "")
+                .split(",")
+                .mapTo(HashSet()) { it.trim().uppercase() }
+            return values().filterTo(enumSetOf()) { it.name in concreteDialects }
         }
     }
 }

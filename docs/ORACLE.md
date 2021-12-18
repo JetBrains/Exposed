@@ -7,8 +7,7 @@
 * `insert` with `select` with `limit` not supported (`DMLTests.testInsertSelect01`)
 
 ### Running tests locally with Gradle
-* Set `dialect` in gradle.properties to 'oracle'
-* Run `exposedDialectTestWithDocker` gradle task  
+* Run `oracleTest` gradle task  
 
 ### Running tests locally with Docker
 * Run Oracle locally, e.g. with `quillbuilduser/oracle-18-xe` Docker image or use `docker-compose -f docker-compose-oracle.yml up` 
