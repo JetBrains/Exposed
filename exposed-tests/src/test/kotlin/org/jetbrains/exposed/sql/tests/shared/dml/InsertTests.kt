@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.junit.Assume
 import org.junit.Test
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -464,7 +465,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-
+        Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -496,7 +497,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-
+        Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
