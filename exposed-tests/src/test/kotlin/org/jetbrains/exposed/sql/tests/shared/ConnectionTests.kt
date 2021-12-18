@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.junit.Test
 import java.sql.Types
 
@@ -24,12 +25,20 @@ class ConnectionTests : DatabaseTestsBase() {
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
-            val expected = setOf(
-                ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
-                ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
-                ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
-                ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
-            )
+            val expected = when (H2Dialect().majorVersion) {
+                H2Dialect.H2MajorVersion.One -> setOf(
+                    ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
+                    ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
+                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
+                    ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
+                )
+                H2Dialect.H2MajorVersion.Two -> setOf(
+                    ColumnMetadata("ID", Types.BIGINT, false, 64, true, null),
+                    ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
+                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
+                    ColumnMetadata("AGE", Types.INTEGER, false, 32, false, "18"),
+                )
+            }
             assertEquals(expected, columnMetadata)
         }
     }

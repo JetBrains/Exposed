@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -59,10 +60,5 @@ fun Transaction.assertFailAndRollback(message: String, block: () -> Unit) {
 }
 
 inline fun <reified T : Exception> expectException(body: () -> Unit) {
-    try {
-        body()
-        fail("Failed on ${currentDialectTest.name}. ${T::class.simpleName} expected.")
-    } catch (e: Exception) {
-        if (e !is T) fail("Failed on ${currentDialectTest.name}. Expected ${T::class.simpleName} but ${e::class.simpleName} thrown (${e.message}.")
-    }
+    assertFailsWith<T>(block = body, message = "Failed on ${currentDialectTest.name}.")
 }
