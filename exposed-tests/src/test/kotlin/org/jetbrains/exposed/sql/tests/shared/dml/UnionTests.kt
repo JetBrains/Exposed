@@ -6,12 +6,12 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
@@ -164,7 +164,7 @@ class UnionTests : DatabaseTestsBase() {
                     assertTrue(all { it in setOf("andrey", "sergey") })
                 }
             } else {
-                assertFailsWith<IllegalArgumentException> {
+                expectException<IllegalArgumentException> {
                     andreyOrSergeyQuery.union(andreyOrSergeyQuery)
                 }
             }
@@ -182,7 +182,7 @@ class UnionTests : DatabaseTestsBase() {
                     assertTrue(all { it == "andrey" })
                 }
             } else {
-                assertFailsWith<IllegalArgumentException> {
+                expectException<IllegalArgumentException> {
                     andreyOrSergeyQuery.union(andreyOrSergeyQuery)
                 }
             }
@@ -201,7 +201,7 @@ class UnionTests : DatabaseTestsBase() {
                     assertTrue(all { it == "sergey" })
                 }
             } else {
-                assertFailsWith<IllegalArgumentException> {
+                expectException<IllegalArgumentException> {
                     andreyOrSergeyQuery.union(andreyOrSergeyQuery)
                 }
             }

@@ -60,6 +60,6 @@ fun Transaction.assertFailAndRollback(message: String, block: () -> Unit) {
     rollback()
 }
 
-inline fun <reified T : Exception> expectException(body: () -> Unit) {
+inline fun <reified T : Throwable> expectException(body: () -> Unit) {
     assertFailsWith<T>(block = body, message = "Failed on ${currentDialectTest.name}.")
 }
