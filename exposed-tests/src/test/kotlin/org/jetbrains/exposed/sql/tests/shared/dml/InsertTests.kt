@@ -394,7 +394,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = java.lang.IllegalArgumentException::class)
+    @Test
     fun `test that column length checked on insert`() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = varchar("name", 10)
@@ -402,8 +402,10 @@ class InsertTests : DatabaseTestsBase() {
 
         withTables(stringTable) {
             val veryLongString = "1".repeat(255)
-            stringTable.insert {
-                it[name] = veryLongString
+            expectException<IllegalArgumentException> {
+                stringTable.insert {
+                    it[name] = veryLongString
+                }
             }
         }
     }

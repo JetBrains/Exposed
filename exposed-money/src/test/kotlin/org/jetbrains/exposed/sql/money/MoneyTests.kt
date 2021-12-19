@@ -10,7 +10,9 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
@@ -37,9 +39,16 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         testInsertedAndSelect(null)
     }
 
-    @Test(expected = ExposedSQLException::class)
+    @Test
     fun testInsertSelectOutOfLength() {
-        testInsertedAndSelect(Money.of(BigDecimal.valueOf(12345678901), "CZK"))
+        val toInsert = Money.of(BigDecimal.valueOf(12345678901), "CZK")
+        withTables(excludeSettings = listOf(TestDB.SQLITE), Account) {
+            expectException<ExposedSQLException> {
+                val accountID = Account.insertAndGetId {
+                    it[composite_money] = toInsert
+                }
+            }
+        }
     }
 
     @Test
