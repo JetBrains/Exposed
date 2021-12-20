@@ -49,7 +49,7 @@ fun Project.setupDialectTest(dialect: String) {
             }
         } else {
             with(tasks.getByPath("test") as Test) {
-                systemProperties["exposed.test.dialects"] = dialect
+                systemProperties["exposed.test.dialects"] = "h2"
             }
         }
     }
