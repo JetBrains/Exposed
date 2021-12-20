@@ -316,8 +316,8 @@ class CreateTableTests : DatabaseTestsBase() {
                 foreignKey(
                     idA, idB,
                     target = parent.primaryKey,
-                    onUpdate = ReferenceOption.RESTRICT,
-                    onDelete = ReferenceOption.RESTRICT,
+                    onUpdate = ReferenceOption.CASCADE,
+                    onDelete = ReferenceOption.CASCADE,
                     name = fkName
                 )
             }
@@ -331,7 +331,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.idA)}, ${t.identity(child.idB)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
-                    " ON DELETE RESTRICT ON UPDATE RESTRICT)"
+                    " ON DELETE CASCADE ON UPDATE CASCADE)"
             )
             assertEqualCollections(expected, child.ddl)
         }
