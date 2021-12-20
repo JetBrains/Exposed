@@ -24,10 +24,7 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
     init {
         dockerCompose.apply {
             isRequiredWithTaskConfigurationAvoidanceBy(this@DBTestWithDockerCompose)
-            val env = environment.get().toMutableMap().apply {
-                set("COMPOSE_CONVERT_WINDOWS_PATHS", true)
-            }
-            environment.set(env)
+            environment.put("COMPOSE_CONVERT_WINDOWS_PATHS", true)
             useComposeFiles.add(
                 File(project.rootProject.projectDir, "buildScripts/docker/docker-compose-$dockerComposeServiceName.yml").absolutePath
             )
