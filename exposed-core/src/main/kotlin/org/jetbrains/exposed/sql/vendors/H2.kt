@@ -19,25 +19,13 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 internal object H2FunctionProvider : FunctionProvider() {
-    override fun nextVal(seq: Sequence, builder: QueryBuilder) = when (majorVersion) {
-        H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
-        H2Dialect.H2MajorVersion.Two -> builder {
-            append("NEXT VALUE FOR ${seq.identifier}")
-        }
-    }
-
-    internal val majorVersion: H2Dialect.H2MajorVersion by lazy {
-        with(TransactionManager.current()) {
-            val version = exactH2Version(this)
-            when {
-                version.startsWith("1.") -> H2Dialect.H2MajorVersion.One
-                version.startsWith("2.") -> H2Dialect.H2MajorVersion.Two
-                else -> error("Unsupported H2 version: $version")
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) =
+        when ((TransactionManager.current().db.dialect as H2Dialect).majorVersion) {
+            H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
+            H2Dialect.H2MajorVersion.Two -> builder {
+                append("NEXT VALUE FOR ${seq.identifier}")
             }
         }
-    }
-
-    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
     override fun insert(
         ignore: Boolean,
@@ -51,9 +39,10 @@ internal object H2FunctionProvider : FunctionProvider() {
         table.primaryKey?.columns?.let { primaryKeys ->
             uniqueCols += primaryKeys
         }
+        val version = (transaction.db.dialect as H2Dialect).version
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
-            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && exactH2Version(transaction) < "1.4.197" -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && version < "1.4.197" -> {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
@@ -131,34 +120,38 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
-    enum class H2MajorVersion {
+    internal enum class H2MajorVersion {
         One, Two
     }
 
-    val majorVersion get() = H2FunctionProvider.majorVersion
+    internal val version by lazy {
+        exactH2Version(TransactionManager.current())
+    }
+
+    internal val majorVersion: H2MajorVersion by lazy {
+        when {
+            version.startsWith("1.") -> H2MajorVersion.One
+            version.startsWith("2.") -> H2MajorVersion.Two
+            else -> error("Unsupported H2 version: $version")
+        }
+    }
+
+    val isSecondVersion get() = majorVersion == H2MajorVersion.Two
+
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
     internal val isMySQLMode: Boolean by lazy {
-        TransactionManager.current().let { tr ->
-            val mySQLMode = when (majorVersion) {
-                H2MajorVersion.One -> {
-                    @Language("H2")
-                    val isMySQLModeV1 = "SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'"
-                    tr.exec(isMySQLModeV1) { rs ->
-                        rs.next()
-                        rs.getString("VALUE")
-                    }
-                }
-                H2MajorVersion.Two -> {
-                    @Language("H2")
-                    val isMySQLModeV2 = "SELECT SETTING_VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE SETTING_NAME = 'MODE'"
-                    tr.exec(isMySQLModeV2) { rs ->
-                        rs.next()
-                        rs.getString("SETTING_VALUE")
-                    }
-                }
-            }
-            mySQLMode.equals("MySQL", ignoreCase = true)
+        val (settingNameField, settingValueField) = when (majorVersion) {
+            H2MajorVersion.One -> "NAME" to "VALUE"
+            H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
         }
+        @Language("H2")
+        val mySQLModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+        val mySQLMode = TransactionManager.current().exec(mySQLModeQuery) { rs ->
+            rs.next()
+            rs.getString(settingValueField)
+        }
+        mySQLMode.equals("MySQL", ignoreCase = true)
     }
 
     override val name: String

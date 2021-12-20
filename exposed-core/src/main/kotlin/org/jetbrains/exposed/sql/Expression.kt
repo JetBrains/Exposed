@@ -91,11 +91,7 @@ class QueryBuilder(
             .appendTo {
                 if (prepared) {
                     _args.add(sqlType to it.first)
-                    if (currentDialectIfAvailable is H2Dialect) {
-                        append("CAST(? AS ", sqlType.rawSqlType().sqlType(), ")")
-                    } else {
-                        append("?")
-                    }
+                    append("?")
                 } else {
                     append(it.second)
                 }

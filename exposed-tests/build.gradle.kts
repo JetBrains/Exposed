@@ -1,7 +1,8 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.exposed.gradle.setupDialectTest
+import org.jetbrains.exposed.gradle.DockerTestContainers.h2_v2_dialect
 import org.jetbrains.exposed.gradle.Versions
+import org.jetbrains.exposed.gradle.setupDialectTest
 import org.jetbrains.exposed.gradle.setupTestDriverDependencies
 
 
@@ -32,8 +33,11 @@ dependencies {
     testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
     implementation("org.testcontainers", "mysql", Versions.testContainers)
     implementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
-
-    implementation("com.h2database", "h2", Versions.h2)
+    if (dialect == h2_v2_dialect) {
+        implementation("com.h2database", "h2", Versions.h2_v2)
+    } else {
+        implementation("com.h2database", "h2", Versions.h2)
+    }
 
     setupTestDriverDependencies(dialect) { group, artifactId, version ->
         testImplementation(group, artifactId, version)

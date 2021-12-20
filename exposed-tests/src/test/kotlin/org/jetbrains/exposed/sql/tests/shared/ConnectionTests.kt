@@ -25,14 +25,14 @@ class ConnectionTests : DatabaseTestsBase() {
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
-            val expected = when (H2Dialect().majorVersion) {
-                H2Dialect.H2MajorVersion.One -> setOf(
+            val expected = when ((db.dialect as H2Dialect).isSecondVersion) {
+                false -> setOf(
                     ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
                     ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
                     ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
                     ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
                 )
-                H2Dialect.H2MajorVersion.Two -> setOf(
+                true -> setOf(
                     ColumnMetadata("ID", Types.BIGINT, false, 64, true, null),
                     ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
                     ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),

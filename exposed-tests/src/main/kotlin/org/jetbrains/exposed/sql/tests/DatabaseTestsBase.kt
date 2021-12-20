@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.tests
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import org.h2.engine.Constants
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
@@ -11,6 +10,8 @@ import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.full.declaredMemberProperties
 
 enum class TestDB(
     val connection: () -> String,
@@ -28,10 +29,12 @@ enum class TestDB(
     H2_MYSQL(
         { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
         beforeConnection = {
-            if (Constants::VERSION_MAJOR.call() == 1 && Constants::VERSION_MINOR.call() <= 4 && Constants::BUILD_ID.call() <= 199) {
-                Mode.getInstance("MySQL").convertInsertNullToZero = false
+            Mode::class.declaredMemberProperties.firstOrNull { it.name == "convertInsertNullToZero" }?.let { field ->
+                val mode = Mode.getInstance("MySQL")
+                (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
             }
-        }, dbConfig = {
+        },
+        dbConfig = {
             defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
         }),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
