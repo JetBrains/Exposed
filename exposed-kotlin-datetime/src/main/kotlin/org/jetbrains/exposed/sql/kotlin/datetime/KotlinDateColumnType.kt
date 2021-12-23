@@ -67,7 +67,7 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
             is String -> return value
-            is LocalDate -> Instant.fromEpochMilliseconds(value.atStartOfDayIn(DEFAULT_TIME_ZONE).epochSeconds)
+            is LocalDate -> Instant.fromEpochMilliseconds(value.atStartOfDayIn(DEFAULT_TIME_ZONE).toEpochMilliseconds())
             is java.sql.Date -> Instant.fromEpochMilliseconds(value.time)
             is java.sql.Timestamp -> Instant.fromEpochSeconds(value.time / MILLIS_IN_SECOND, value.nanos.toLong())
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
