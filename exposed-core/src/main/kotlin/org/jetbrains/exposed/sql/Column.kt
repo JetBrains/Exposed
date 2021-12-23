@@ -14,7 +14,7 @@ private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }
  * Represents a column.
  */
 class Column<T>(
-    /** Table where the columns is declared. */
+    /** Table where the columns are declared. */
     val table: Table,
     /** Name of the column. */
     val name: String,
@@ -25,7 +25,7 @@ class Column<T>(
 
     /** Returns the column that this column references. */
     val referee: Column<*>?
-        get() = foreignKey?.target
+        get() = foreignKey?.targetOf(this)
 
     /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")

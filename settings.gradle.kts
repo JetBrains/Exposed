@@ -13,6 +13,6 @@ include("exposed-kotlin-datetime")
 
 pluginManagement {
     plugins {
-        id("org.jetbrains.kotlin.jvm") version "1.5.30"
+        id("org.jetbrains.kotlin.jvm") version "1.6.0"
     }
 }
