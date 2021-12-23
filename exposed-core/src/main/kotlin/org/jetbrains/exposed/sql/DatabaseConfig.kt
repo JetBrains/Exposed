@@ -15,7 +15,8 @@ class DatabaseConfig private constructor(
     val maxEntitiesToStoreInCachePerEntity: Int,
     val keepLoadedReferencesOutOfTransaction: Boolean,
     val explicitDialect: DatabaseDialect?,
-    val defaultSchema: Schema?
+    val defaultSchema: Schema?,
+    val logTooMuchResultSetsThreshold: Int
 ) {
 
     class Builder(
@@ -72,6 +73,13 @@ class DatabaseConfig private constructor(
          * Set the default schema for a database.
          */
         var defaultSchema: Schema? = null,
+
+        /**
+         * Log too much result sets opened in parallel.
+         * The error log will contain the stacktrace of the place in the code where new result set occurs, and it exceeds the threshold.
+         * 0 value means no log needed
+         */
+        var logTooMuchResultSetsThreshold: Int = 1,
     )
 
     companion object {
@@ -87,7 +95,8 @@ class DatabaseConfig private constructor(
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
                 keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction,
                 explicitDialect = builder.explicitDialect,
-                defaultSchema = builder.defaultSchema
+                defaultSchema = builder.defaultSchema,
+                logTooMuchResultSetsThreshold = builder.logTooMuchResultSetsThreshold
             )
         }
     }

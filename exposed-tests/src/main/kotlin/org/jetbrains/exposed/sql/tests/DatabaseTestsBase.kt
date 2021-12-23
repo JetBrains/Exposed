@@ -9,6 +9,8 @@ import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.full.declaredMemberProperties
 
 
 enum class TestDB(
@@ -18,15 +20,23 @@ enum class TestDB(
     val pass: String = "",
     val beforeConnection: () -> Unit = {},
     val afterTestFinished: () -> Unit = {},
-    var db: Database? = null
+    var db: Database? = null,
+    val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
-    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver"),
+    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+        defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+    }),
     H2_MYSQL(
         { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
         beforeConnection = {
-            Mode.getInstance("MySQL").convertInsertNullToZero = false
-        }
-    ),
+            Mode::class.declaredMemberProperties.firstOrNull { it.name == "convertInsertNullToZero" }?.let { field ->
+                val mode = Mode.getInstance("MySQL")
+                (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
+            }
+        },
+        dbConfig = {
+            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+        }),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
@@ -93,7 +103,10 @@ enum class TestDB(
     );
 
     fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): Database {
-        val config = DatabaseConfig(configure)
+        val config = DatabaseConfig {
+            dbConfig()
+            configure()
+        }
         return Database.connect(connection(), databaseConfig = config, user = user, password = pass, driver = driver)
     }
 

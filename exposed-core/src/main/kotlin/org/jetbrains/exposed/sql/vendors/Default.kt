@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashSet
 
 /**
  * Provides definitions for all the supported SQL data types.
@@ -578,8 +580,8 @@ interface DatabaseDialect {
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
-    /** Returns a map with the foreign key constraints of all the defined columns in each of the specified [tables]. */
-    fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> = emptyMap()
+    /** Returns a map with the foreign key constraints of all the defined columns sets in each of the specified [tables]. */
+    fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
@@ -701,15 +703,15 @@ abstract class VendorDialect(
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, Column<*>>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<Table, Column<*>>, MutableList<ForeignKeyConstraint>>()
+    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
+        val constraints = HashMap<Pair<Table, LinkedHashSet<Column<*>>>, MutableList<ForeignKeyConstraint>>()
 
         val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
 
         fillConstraintCacheForTables(tablesToLoad)
         tables.forEach { table ->
             columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
-                constraints.getOrPut(it.from.table to it.from) { arrayListOf() }.add(it)
+                constraints.getOrPut(table to it.from) { arrayListOf() }.add(it)
             }
         }
         return constraints
@@ -725,7 +727,7 @@ abstract class VendorDialect(
     protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction): String =
         tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
 
-    protected val columnConstraintsCache: MutableMap<String, List<ForeignKeyConstraint>> = ConcurrentHashMap()
+    protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
 
     protected open fun fillConstraintCacheForTables(tables: List<Table>): Unit =
         columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })

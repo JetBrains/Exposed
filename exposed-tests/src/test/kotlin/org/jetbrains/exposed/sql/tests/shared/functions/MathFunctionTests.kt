@@ -134,7 +134,7 @@ class MathFunctionTests : FunctionsTestBase() {
     @Test
     fun testExpFunction() {
         withTable {
-            assertExpressionEqual(BigDecimal("2.71828182845905"), ExpFunction(intLiteral(1)))
+            assertExpressionEqual(BigDecimal("2.7182818284590"), ExpFunction(intLiteral(1)))
             assertExpressionEqual(BigDecimal("12.182493960703473"), ExpFunction(doubleLiteral(2.5)))
             assertExpressionEqual(BigDecimal("12.182493960703473"), ExpFunction(decimalLiteral(BigDecimal("2.5"))))
         }

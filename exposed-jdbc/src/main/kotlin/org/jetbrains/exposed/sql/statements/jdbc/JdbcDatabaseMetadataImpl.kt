@@ -241,7 +241,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     onDelete = constraintDeleteRule,
                     name = constraintName
                 )
-            }.filterNotNull()
+            }
+                .filterNotNull()
+                .groupBy { it.fkName }
+                .values
+                .map { it.reduce(ForeignKeyConstraint::plus) }
         }
     }
 

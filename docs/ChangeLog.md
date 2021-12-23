@@ -1,3 +1,8 @@
+# 0.3.0
+- `com.jfrog.artifactory` version `4.25.3`.
+- `org.jetbrains.kotlin.jvm` version `1.6.10`.
+- Fetched Upstream.
+
 # 0.2.2
 - Updated `idTable.batchUpdate` to return the number of updated rows.
 

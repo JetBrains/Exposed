@@ -753,4 +753,146 @@ class DDLTests : DatabaseTestsBase() {
     object TableFromSchemeTwo : IntIdTable("two.test") {
         val reference = reference("testOne", TableFromSchemeOne)
     }
+
+    @Test
+    fun testCompositeFKReferencingUniqueIndex() {
+        val TableA = object : Table("TableA") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+
+            init {
+                uniqueIndex(idA, idB)
+            }
+        }
+
+        val TableB = object : Table("TableB") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            val idC = integer("id_c")
+            override val primaryKey = PrimaryKey(idA, idB, idC)
+
+            init {
+                foreignKey(idA to TableA.idA, idB to TableA.idB)
+            }
+        }
+
+        withTables(excludeSettings = listOf(TestDB.SQLITE), TableA, TableB) {
+            TableA.insert {
+                it[idA] = 1
+                it[idB] = 2
+            }
+
+            TableB.insert {
+                it[idA] = 1
+                it[idB] = 2
+                it[idC] = 3
+            }
+
+            assertFailAndRollback("check violation composite foreign key constraint (insert key into child table not present in parent table)") {
+                TableB.insert {
+                    it[idA] = 1
+                    it[idB] = 1
+                    it[idC] = 3
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testCompositeFKReferencingPrimaryKey() {
+        val TableA = object : Table("TableA") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            override val primaryKey = PrimaryKey(idA, idB)
+        }
+
+        val TableB = object : Table("TableB") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            val idC = integer("id_c")
+            override val primaryKey = PrimaryKey(idA, idB, idC)
+
+            init {
+                foreignKey(idA, idB, target = TableA.primaryKey)
+            }
+        }
+
+        withTables(excludeSettings = listOf(TestDB.SQLITE), TableA, TableB) {
+            TableA.insert {
+                it[idA] = 1
+                it[idB] = 2
+            }
+
+            TableB.insert {
+                it[idA] = 1
+                it[idB] = 2
+                it[idC] = 3
+            }
+
+            assertFailAndRollback("check violation composite foreign key constraint (insert key into child table not present in parent table)") {
+                TableB.insert {
+                    it[idA] = 1
+                    it[idB] = 1
+                    it[idC] = 3
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testMultipleFK() {
+        val TableA = object : Table("TableA") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            override val primaryKey = PrimaryKey(idA, idB)
+        }
+
+        val TableC = object : Table("TableC") {
+            val idC = integer("id_c").uniqueIndex()
+        }
+
+        val TableB = object : Table("TableB") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            val idC = integer("id_c") references TableC.idC
+            override val primaryKey = PrimaryKey(idA, idB, idC)
+
+            init {
+                foreignKey(idA, idB, target = TableA.primaryKey)
+            }
+        }
+
+        withTables(excludeSettings = listOf(TestDB.SQLITE), TableA, TableB, TableC) {
+            TableA.insert {
+                it[idA] = 1
+                it[idB] = 2
+            }
+
+            TableC.insert {
+                it[idC] = 3
+            }
+
+            TableB.insert {
+                it[idA] = 1
+                it[idB] = 2
+                it[idC] = 3
+            }
+
+            assertFailAndRollback("check violation composite foreign key constraint (insert key into child table not present in parent table)") {
+                TableB.insert {
+                    it[idA] = 1
+                    it[idB] = 1
+                    it[idC] = 3
+                }
+            }
+
+            assertFailAndRollback("check violation foreign key constraint (insert key into child table not present in parent table)") {
+                TableB.insert {
+                    it[idA] = 1
+                    it[idB] = 2
+                    it[idC] = 1
+                }
+            }
+        }
+    }
 }
