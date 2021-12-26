@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.junit.Assume
 import org.junit.Test
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -394,7 +395,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = java.lang.IllegalArgumentException::class)
+    @Test
     fun `test that column length checked on insert`() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = varchar("name", 10)
@@ -402,8 +403,10 @@ class InsertTests : DatabaseTestsBase() {
 
         withTables(stringTable) {
             val veryLongString = "1".repeat(255)
-            stringTable.insert {
-                it[name] = veryLongString
+            expectException<IllegalArgumentException> {
+                stringTable.insert {
+                    it[name] = veryLongString
+                }
             }
         }
     }
@@ -462,7 +465,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-
+        Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {
@@ -494,7 +497,7 @@ class InsertTests : DatabaseTestsBase() {
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
-
+        Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
                 try {

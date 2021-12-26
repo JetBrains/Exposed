@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
+import org.junit.Assume
 import org.junit.Test
 import java.io.PrintWriter
 import java.sql.Connection
@@ -112,6 +113,7 @@ class ConnectionExceptions {
         `_transaction repetition works even if rollback throws exception`(::ExceptionOnRollbackConnection)
     }
     private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
@@ -145,6 +147,7 @@ class ConnectionExceptions {
         `_transaction repetition works when commit throws exception`(::ExceptionOnCommitConnection)
     }
     private fun `_transaction repetition works when commit throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
@@ -168,6 +171,7 @@ class ConnectionExceptions {
         `_transaction throws exception if all commits throws exception`(::ExceptionOnCommitConnection)
     }
     private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         Class.forName(TestDB.H2.driver).newInstance()
 
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
@@ -231,7 +235,7 @@ class ConnectionExceptions {
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
-        if (TestDB.MYSQL !in TestDB.enabledInTests()) return
+        Assume.assumeTrue(TestDB.MYSQL in TestDB.enabledInTests())
 
         var secondThreadTm: TransactionManager? = null
         val db1 = TestDB.MYSQL.connect()
@@ -324,6 +328,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 class TransactionManagerResetTest {
     @Test
     fun `test closeAndUnregister with next Database-connect works fine`() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         val initialManager = TransactionManager.manager
         val db1 = TestDB.H2.connect()
         val db1TransactionManager = TransactionManager.managerFor(db1)

@@ -1,19 +1,16 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.exposed.gradle.setupDialectTest
-import org.jetbrains.exposed.gradle.setupTestDriverDependencies
 import org.jetbrains.exposed.gradle.Versions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 
 plugins {
     kotlin("jvm") apply true
+    id("testWithDBs")
 }
 
 repositories {
     mavenCentral()
 }
-
-val dialect: String by project
 
 dependencies {
     api(project(":exposed-core"))
@@ -22,16 +19,9 @@ dependencies {
     testImplementation(project(":exposed-tests"))
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
-
-    testRuntimeOnly("org.testcontainers", "testcontainers", Versions.testContainers)
-    testImplementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
-
-    setupTestDriverDependencies(dialect) { group, artifactId, version ->
-        testImplementation(group, artifactId, version)
-    }
 }
 
-tasks.withType<KotlinJvmCompile> {
+tasks.withType<KotlinJvmCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
         apiVersion = "1.5"
@@ -39,7 +29,7 @@ tasks.withType<KotlinJvmCompile> {
     }
 }
 
-tasks.withType(Test::class.java) {
+tasks.withType<Test>().configureEach {
     jvmArgs = listOf("-XX:MaxPermSize=256m")
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
@@ -47,5 +37,3 @@ tasks.withType(Test::class.java) {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
-
-setupDialectTest(dialect)

@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -45,7 +46,7 @@ fun <T> assertEqualLists(actual: List<T>, vararg expected: T) {
 }
 
 fun Transaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on ${currentDialectTest.name}")
-fun Transaction.assertFalse(actual: Boolean) = kotlin.test.assertFalse(actual, "Failed on ${currentDialectTest.name}")
+fun Transaction.assertFalse(actual: Boolean) = assertFalse(actual, "Failed on ${currentDialectTest.name}")
 fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on ${currentDialectTest.name}")
 fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on ${currentDialectTest.name}")
 
@@ -59,6 +60,6 @@ fun Transaction.assertFailAndRollback(message: String, block: () -> Unit) {
     rollback()
 }
 
-inline fun <reified T : Exception> expectException(body: () -> Unit) {
+inline fun <reified T : Throwable> expectException(body: () -> Unit) {
     assertFailsWith<T>(block = body, message = "Failed on ${currentDialectTest.name}.")
 }

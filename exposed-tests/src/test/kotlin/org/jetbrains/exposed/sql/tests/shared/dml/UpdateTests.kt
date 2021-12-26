@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -84,7 +83,7 @@ class UpdateTests : DatabaseTestsBase() {
         }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `test that column length checked in update `() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = varchar("name", 10)
@@ -96,8 +95,10 @@ class UpdateTests : DatabaseTestsBase() {
             }
 
             val veryLongString = "1".repeat(255)
-            stringTable.update({ stringTable.name eq "TestName" }) {
-                it[name] = veryLongString
+            expectException<IllegalArgumentException> {
+                stringTable.update({ stringTable.name eq "TestName" }) {
+                    it[name] = veryLongString
+                }
             }
         }
     }

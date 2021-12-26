@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.sql.tests.sqlite
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +36,7 @@ class MultipleDatabaseBugTest {
 
     @Before
     fun before() {
+        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledInTests())
         val filename = folder.newFile("foo.db").absolutePath
         val ds = SQLiteDataSource()
         ds.url = "jdbc:sqlite:" + filename

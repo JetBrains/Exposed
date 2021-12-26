@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql.tests.demo.sql
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -21,6 +23,7 @@ object Cities : Table() {
 }
 
 fun main() {
+    Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
