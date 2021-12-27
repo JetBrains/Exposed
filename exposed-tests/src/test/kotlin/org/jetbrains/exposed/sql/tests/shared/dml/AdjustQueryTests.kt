@@ -92,6 +92,23 @@ class AdjustQueryTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testQueryOrWhere() {
+        withCitiesAndUsers { cities, users, _ ->
+            val queryAdjusted = (users innerJoin cities)
+                .slice(users.name, cities.name)
+                .select { predicate }
+
+            queryAdjusted.orWhere {
+                predicate
+            }
+            val actualWhere = queryAdjusted.where
+
+            assertEquals((predicate.or(predicate)).repr(), actualWhere!!.repr())
+            assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
     fun testAdjustQueryHaving() {
         withCitiesAndUsers { cities, users, _ ->
             val predicateHaving = Op.build {
