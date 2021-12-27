@@ -63,15 +63,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
-     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an , you are expected to slice it
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQuerySlice
+     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an argument, you are expected to slice it
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
      * Changes [set.source] field of a Query, [set.fields] will be preserved
      * @param body builder for new column set, previous value used as a receiver
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryColumnSet
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSlice { oldSlice -> body().slice(oldSlice.fields) }
@@ -80,7 +80,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     /**
      * Changes [where] field of a Query.
      * @param body new WHERE condition builder, previous value used as a receiver
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryWhere
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
@@ -230,11 +230,11 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
 }
 
 /**
- * Mutate Query instance and add `andPart` to where condition with `or` operator.
+ * Mutate Query instance and add `orPart` to where condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.build { andPart() }
+fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
+    val expr = Op.build { orPart() }
     if (this == null) expr
     else this or expr
 }
