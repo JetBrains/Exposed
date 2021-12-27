@@ -1,3 +1,10 @@
+# 0.37.2
+Features:
+* `adjustHaving`, `andHaving`, `orHaving` extension methods for `Query` added by [naftalmm](https://github.com/naftalmm)
+
+Bug Fixes:
+* Change default for `logTooMuchResultSetsThreshold` to 0 (no log)
+
 # 0.37.1
 Infrastructure:
 * Major test infrastructure rework by [naftalmm](https://github.com/naftalmm). Now it's possible to run tests on any dialect directly from IDE.
