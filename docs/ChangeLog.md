@@ -1,7 +1,84 @@
+# 0.37.1
+Infrastructure:
+* Major test infrastructure rework by [naftalmm](https://github.com/naftalmm). Now it's possible to run tests on any dialect directly from IDE.
+* Kotlin 1.6.10
+* Kotlin Coroutines 1.6.0
+* kotlinx-datetime-jvm 0.3.1
+* Spring framework 5.3.13
+* Spring boot 2.6.1
+* Detekt 1.19.0
+
+Performance:
+* Cache `enumConstants` values in `EnumerationColumnType` and `EnumerationNameColumnType` as it makes copy on access
+* Better handling for opened result sets
+
+Features:
+* H2 2.x supported
+* Composite foreign key supported by [naftalmm](https://github.com/naftalmm). Check the sample below.
+```kotlin
+object ParentTable : Table("parent1") {
+    val idA = integer("id_a")
+    val idB = integer("id_b")
+    override val primaryKey = PrimaryKey(idA, idB)
+}
+
+object ChildTable : Table("child1") {
+    val idA = integer("id_a")
+    val idB = integer("id_b")
+
+    init {
+        foreignKey(
+            idA, idB,
+            target = ParentTable.primaryKey,
+            onUpdate = ReferenceOption.RESTRICT,
+            onDelete = ReferenceOption.RESTRICT,
+            name = "MyForeignKey1"
+        )
+        
+        // or
+        foreignKey(
+            idA to ParentTable.idA, idB to ParentTable.idB,
+            onUpdate = ReferenceOption.RESTRICT,
+            onDelete = ReferenceOption.RESTRICT,
+            name = "MyForeignKey1"
+        ) 
+    }
+}
+
+```
+* Now it's possible to use embedded entity initialization like:
+```kotlin
+val post = Post.new {
+    parent = Post.new {
+        board = Board.new {
+            name = "Parent Board"
+        }
+        category = Category.new {
+            title = "Parent Category"
+        }
+    }
+    category = Category.new {
+        title = "Child Category"
+    }
+
+    optCategory = parent!!.category
+}
+```
+* New `DatabaseConfig.logTooMuchResultSetsThreshold` param added to log when too much result sets opened in parallel in the single transaction 
+
+Bug fixes:
+* Providing a String ID to `DaoEntity.new(EntityId)` makes Exposed "forget" about the last field passed to the new call ([#1379](https://github.com/JetBrains/Exposed/issues/1379))
+* Proper column name casing change for `SchemaUtils.addMissingColumnsStatement`. PR by [spand](https://github.com/spand)
+* Incorrect behavior of `TransactionManager.closeAndUnregister` when calling from different threads ([#1387](https://github.com/JetBrains/Exposed/issues/1387))
+* `withLogs` parameter on SchemaUtils#createMissingTablesAndColumns isn't passed to `SchemaUtils.addMissingColumnsStatement` ([#1383](https://github.com/JetBrains/Exposed/issues/1383))
+* `optReference` column should allow update { it[column] = nullableValue } ([#1275](https://github.com/JetBrains/Exposed/issues/1275))
+* `SchemaUtils.create` make app crashes on Android ([#1398](https://github.com/JetBrains/Exposed/issues/1398))
+* `LocalDate` from `kotlinx-datetime` stored in seconds instead of milliseconds. Found and revolved by [Abhishek Singh](https://github.com/abhisheksingh0x558).  
+
+
 # 0.36.2
 Feature:
 * Allow skipping SchemaUtils logging with help of new `withLogs` param on functions ([#1378](https://github.com/JetBrains/Exposed/issues/1378))
-
 
 Bug fixes:
 * Prevent too aggressive entity cache invalidation
