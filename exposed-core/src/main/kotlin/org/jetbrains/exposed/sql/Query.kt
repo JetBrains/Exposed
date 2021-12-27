@@ -84,6 +84,13 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
+    /**
+     * Changes [having] field of a Query.
+     * @param body new HAVING condition builder, previous value used as a receiver
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
+     */
+    fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
+
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
 
@@ -228,6 +235,26 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  */
 fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
+    if (this == null) expr
+    else this or expr
+}
+
+/**
+ * Mutate Query instance and add `andPart` to having condition with `and` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
+fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
+    val expr = Op.build { andPart() }
+    if (this == null) expr
+    else this and expr
+}
+
+/**
+ * Mutate Query instance and add `orPart` to having condition with `or` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
+fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
+    val expr = Op.build { orPart() }
     if (this == null) expr
     else this or expr
 }
