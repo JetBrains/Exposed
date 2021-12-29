@@ -186,9 +186,12 @@ object SchemaUtils {
         for (table in tables) {
             // create columns
             val thisTableExistingColumns = existingTablesColumns[table].orEmpty()
-            val (missingTableColumns, existingTableColumns) = table.columns.partition { c ->
-                thisTableExistingColumns.none { it.name.equals(c.name, true) }
-            }
+            val existingTableColumns = table.columns.mapNotNull { column ->
+                val existingColumn = thisTableExistingColumns.find { column.name.equals(it.name, true) }
+                if (existingColumn != null) column to existingColumn else null
+            }.toMap()
+            val missingTableColumns = table.columns.filter { it !in existingTableColumns }
+
             missingTableColumns.flatMapTo(statements) { it.ddl }
 
             if (dbSupportsAlterTableWithAddColumn) {
@@ -200,13 +203,13 @@ object SchemaUtils {
                 // sync existing columns
                 val dataTypeProvider = currentDialect.dataTypeProvider
                 val redoColumns = existingTableColumns
-                    .associateWith { c ->
-                        val it = thisTableExistingColumns.first { c.name.equals(it.name, true) }
-                        val incorrectNullability = it.nullable != c.columnType.nullable
-                        val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
+                    .mapValues { (col, existingCol) ->
+                        val columnType = col.columnType
+                        val incorrectNullability = existingCol.nullable != columnType.nullable
+                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc
                         val incorrectDefaults =
-                            it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
-                        val incorrectCaseSensitiveName = it.name.inProperCase() != c.nameInDatabaseCase()
+                            existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
+                        val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()
                         ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                     }
                     .filterValues { it.hasDifferences() }
