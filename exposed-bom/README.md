@@ -17,7 +17,7 @@ Bill of Materials for all Exposed modules
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.37.2</version>
+            <version>0.37.3</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
