@@ -789,7 +789,7 @@ class EnumerationColumnType<T : Enum<T>>(
     val klass: KClass<T>
 ) : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.integerType()
-    private val enumConstants = klass.java.enumConstants!!
+    private val enumConstants by lazy { klass.java.enumConstants!! }
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
@@ -831,7 +831,7 @@ class EnumerationNameColumnType<T : Enum<T>>(
     val klass: KClass<T>,
     colLength: Int
 ) : VarCharColumnType(colLength) {
-    private val enumConstants = klass.java.enumConstants!!.associateBy { it.name }
+    private val enumConstants by lazy { klass.java.enumConstants!!.associateBy { it.name } }
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
