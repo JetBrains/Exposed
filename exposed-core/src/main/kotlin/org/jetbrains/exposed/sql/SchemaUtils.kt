@@ -434,16 +434,15 @@ object SchemaUtils {
             val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
             val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
 
-            existingTableIndices.forEach { index ->
-                mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                    if (withLogs) {
-                        exposedLogger.info(
-                            "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}"
-                        )
-                    }
-                    nameDiffers.add(index)
-                    nameDiffers.add(it)
+            for (index in existingTableIndices) {
+                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
+                if (withLogs) {
+                    exposedLogger.info(
+                        "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${mappedIndex.indexName}"
+                    )
                 }
+                nameDiffers.add(index)
+                nameDiffers.add(mappedIndex)
             }
 
             notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }.addAll(existingTableIndices.subtract(mappedIndices))
