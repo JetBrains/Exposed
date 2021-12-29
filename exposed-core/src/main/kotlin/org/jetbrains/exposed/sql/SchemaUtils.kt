@@ -402,10 +402,7 @@ object SchemaUtils {
     private fun checkMissingIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
         fun Collection<Index>.log(mainMessage: String) {
             if (withLogs && isNotEmpty()) {
-                exposedLogger.warn(mainMessage)
-                forEach {
-                    exposedLogger.warn("\t\t$it")
-                }
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\t\t", separator = "\t\t"))
             }
         }
 
