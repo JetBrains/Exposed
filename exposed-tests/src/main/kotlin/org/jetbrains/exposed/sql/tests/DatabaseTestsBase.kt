@@ -208,7 +208,7 @@ abstract class DatabaseTestsBase {
                     try {
                         SchemaUtils.drop(*tables)
                         commit()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         val database = testDB.db!!
                         inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
                             SchemaUtils.drop(*tables)

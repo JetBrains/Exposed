@@ -157,7 +157,7 @@ class ConnectionExceptions {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
-        } catch (e: CommitException) {
+        } catch (_: CommitException) {
             assertEquals(5, wrappingDataSource.connections.size)
             wrappingDataSource.connections.forEach {
                 assertTrue(it.commitCalled)
@@ -181,7 +181,7 @@ class ConnectionExceptions {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
-        } catch (e: CommitException) {
+        } catch (_: CommitException) {
             // Yay
         }
     }

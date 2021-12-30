@@ -121,7 +121,7 @@ private fun DatabaseDialect.extractNanos(dt: LocalDateTime) = when (this) {
 fun equalDateTime(d1: Temporal?, d2: Temporal?) = try {
     assertEqualDateTime(d1, d2)
     true
-} catch (e: Exception) {
+} catch (_: Exception) {
     false
 }
 
