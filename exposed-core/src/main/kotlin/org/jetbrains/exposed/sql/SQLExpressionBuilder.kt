@@ -148,8 +148,8 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equals to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when {
-        other.equals(Op.NULL) -> isNull()
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
+        is Op.NULL -> isNull()
         else -> EqOp(this, other)
     }
 
