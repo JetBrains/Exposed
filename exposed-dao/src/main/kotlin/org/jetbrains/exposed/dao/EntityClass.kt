@@ -354,11 +354,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             }
             if (toLoad.isNotEmpty()) {
                 val findQuery = find { refColumn inList toLoad }
-                val entities = when (forUpdate) {
-                    true -> findQuery.forUpdate()
-                    false -> findQuery.notForUpdate()
-                    else -> findQuery
-                }.toList()
+                val entities = getEntities(forUpdate, findQuery)
 
                 val result = entities.groupBy { it.readValues[refColumn] }
 
@@ -382,11 +378,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             }
 
             val findQuery = wrapRows(finalQuery)
-            val entities = when (forUpdate) {
-                true -> findQuery.forUpdate()
-                false -> findQuery.notForUpdate()
-                else -> findQuery
-            }.toList().distinct()
+            val entities = getEntities(forUpdate, findQuery).distinct()
 
             entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
                 cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }.also {
@@ -398,6 +390,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
             return entities
         }
     }
+
+    private fun getEntities(forUpdate: Boolean?, findQuery: SizedIterable<T>): List<T> = when (forUpdate) {
+        true -> findQuery.forUpdate()
+        false -> findQuery.notForUpdate()
+        else -> findQuery
+    }.toList()
 
     fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null): List<T> {
         if (references.isEmpty()) return emptyList()
