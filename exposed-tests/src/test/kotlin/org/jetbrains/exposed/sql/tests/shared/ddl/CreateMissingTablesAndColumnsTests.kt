@@ -258,17 +258,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             SchemaUtils.drop(t)
         }
 
-        withDb(TestDB.SQLITE) {
-            try {
-                SchemaUtils.createMissingTablesAndColumns(t)
-                assertFalse(db.supportsAlterTableWithAddColumn)
-            } catch (e: SQLException) {
-                // SQLite doesn't support
-            } finally {
-                SchemaUtils.drop(t)
-            }
-        }
-
         withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
