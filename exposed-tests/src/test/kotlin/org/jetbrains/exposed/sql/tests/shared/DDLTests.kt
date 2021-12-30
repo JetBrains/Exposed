@@ -705,7 +705,7 @@ class DDLTests : DatabaseTestsBase() {
 
             SchemaUtils.create(KeyWordTable)
 
-            val newKeyword = KeywordEntityClass.new { bool = true }
+            KeywordEntityClass.new { bool = true }
 
             SchemaUtils.drop(KeyWordTable)
         }

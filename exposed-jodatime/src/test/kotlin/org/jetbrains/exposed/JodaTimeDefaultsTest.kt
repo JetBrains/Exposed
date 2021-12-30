@@ -274,12 +274,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val before = currentDateTime()
             Thread.sleep(duration)
-            for (i in 0..1) {
+            repeat(2) {
                 TestDate.insertAndWait(duration)
             }
             val middle = currentDateTime()
             Thread.sleep(duration)
-            for (i in 0..1) {
+            repeat(2) {
                 TestDate.insertAndWait(duration)
             }
             val after = currentDateTime()
