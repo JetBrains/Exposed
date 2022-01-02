@@ -1,22 +1,20 @@
-<<<<<<< HEAD
-# 0.3.0
-- `com.jfrog.artifactory` version `4.25.3`.
-- `org.jetbrains.kotlin.jvm` version `1.6.10`.
-- Fetched Upstream.
-=======
-# 0.37.3
+
+# 0.4.0
+Fetched the following versions & changes from upstream:
+
+### Upstream Version 0.37.3
 Bug Fixes:
 * Many-to-many reference broken in version 0.37.1 ([#1413](https://github.com/JetBrains/Exposed/issues/1413))
 * NPE on Enum columns initialization
 
-# 0.37.2
+### Upstream Version 0.37.2
 Features:
 * `adjustHaving`, `andHaving`, `orHaving` extension methods for `Query` added by [naftalmm](https://github.com/naftalmm)
 
 Bug Fixes:
 * Change default for `logTooMuchResultSetsThreshold` to 0 (no log)
 
-# 0.37.1
+### Upstream Version 0.37.1
 Infrastructure:
 * Major test infrastructure rework by [naftalmm](https://github.com/naftalmm). Now it's possible to run tests on any dialect directly from IDE.
 * Kotlin 1.6.10
@@ -94,7 +92,7 @@ Bug fixes:
 * `LocalDate` from `kotlinx-datetime` stored in seconds instead of milliseconds. Found and revolved by [Abhishek Singh](https://github.com/abhisheksingh0x558).  
 
 
-# 0.36.2
+### Upstream Version 0.36.2
 Feature:
 * Allow skipping SchemaUtils logging with help of new `withLogs` param on functions ([#1378](https://github.com/JetBrains/Exposed/issues/1378))
 
@@ -103,7 +101,7 @@ Bug fixes:
 * Foreign Key with camel-case name throws `java.util.NoSuchElementException`. Fixed by [sultanofcardio](https://github.com/sultanofcardio) 
 * Union of queries with differently derived columns loses the derived columns ([#1373](https://github.com/JetBrains/Exposed/issues/1373))
 
-# 0.36.1
+### Upstream Version 0.36.1
 Deprecations:
 * `NotRegexpOp/notRegexp` was removed
 * `ResultRow.tryGet` was removed
@@ -123,11 +121,11 @@ Features:
 Bug fixes:
 * EntityCache was reinitialized on explicit `Transaction.commit` 
 
-# 0.35.3
+### Upstream Version 0.35.3
 Bug fixes:
 * Invalid column's default value check in `SchemaUtils.addMissingColumnsStatements` could lead unneeded column modification  
 
-# 0.35.2
+### Upstream Version 0.35.2
 Feature:
 * `DatabaseConfig.explicitDialect` param added to predefine dialect for a Database
 
@@ -138,7 +136,7 @@ Bug fixes:
 * New entity was flushed on `Entity.reload(flush = false)` what can lead to unexpected results
 * ResultSet stayed unclosed if Query's result was not iterated till the end  
 
-# 0.35.1
+### Upstream Version 0.35.1
 Features:
 * `kotlin-datetime` can be used for datetime mappings with new 'exposed-kotlin-datetime' module
 * NULL FIRST/LAST sorting in queries with new SortOrder options ([#478](https://github.com/JetBrains/Exposed/issues/478), [#1343](https://github.com/JetBrains/Exposed/issues/1343)). Many thanks to [erwinw](https://github.com/erwinw) for a PR
@@ -163,7 +161,7 @@ val database = Database.connect(datasource, databaseConfig = databaseConfig)
 * `INSTERSECT` and `EXCEPT` set operators supported ([#402](https://github.com/JetBrains/Exposed/issues/402))
 * `SchemaUtils.statementsRequiredToActualizeScheme` function to get the list of statements required to actualize scheme by tables mappings
 
-# 0.34.2
+### Upstream Version 0.34.2
 Features:
 * Supporting subqueries in insert and update statements. Added by [hfazai](https://github.com/hfazai)
 * SQL highlighting in `Transaction.exec` with raw SQL ([#1337](https://github.com/JetBrains/Exposed/issues/1337)) 
@@ -175,9 +173,7 @@ Bug Fixes:
 * `Database.name` failed on parsing connection string with '/' in parameter list. Founded and fixed by [RaySmith-ttc](https://github.com/RaySmith-ttc)
 * Import of Exposed BOM failed when imported as a platform dependency. Fixed by [clarkperkins](https://github.com/clarkperkins) 
 
-# 0.34.1
-Infrastructure:
-* Kotlin 1.5.30
+### Upstream Version 0.34.1
 
 Features:
 * `Op.nullOp()` function added to allow set or compare with `NULL` ([#1315](https://github.com/JetBrains/Exposed/issues/1315))
@@ -196,7 +192,11 @@ Bug Fixes:
 
 Performance:
 * A lot of low-level improvements in different places
->>>>>>> fcaaca2918cdb3050d03665d75448046a896d9f0
+
+
+# 0.3.0
+- `com.jfrog.artifactory` version `4.25.3`.
+- `org.jetbrains.kotlin.jvm` version `1.6.10`.
 
 # 0.2.2
 - Updated `idTable.batchUpdate` to return the number of updated rows.

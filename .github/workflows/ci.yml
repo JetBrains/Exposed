@@ -1,4 +1,4 @@
-name: "Build"
+name: "CI"
 on: [pull_request]
 jobs:
   Explore-GitHub-Actions:
@@ -22,4 +22,11 @@ jobs:
           gradle-version: 7.3
           arguments: clean test build artifactoryPublish
       - name: List Build Outputs
-        run: cd build && ls -lart
+        run: cd exposed-tests/build/test-results/test && ls -lart
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v2  # upload test results
+        if: success() || failure()        # run this step even if previous step failed
+        with:
+          name: Test Artifacts
+          path: exposed-tests/build/test-results/*/*.xml
+
