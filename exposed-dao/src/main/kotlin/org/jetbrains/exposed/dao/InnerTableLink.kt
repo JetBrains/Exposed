@@ -39,7 +39,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     }
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
-        if (o.id._value == null) return emptySized()
+        if (o.id._value == null && !o.isNewEntity()) return emptySized()
         val sourceRefColumn = getSourceRefColumn(o)
         val transaction = TransactionManager.currentOrNull()
             ?: return o.getReferenceFromCache(sourceRefColumn)
@@ -59,6 +59,17 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     }
 
     override fun setValue(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
+        val entityCache = TransactionManager.current().entityCache
+        if (entityCache.isEntityInInitializationState(o)) {
+            entityCache.pendingInitializationLambdas.getOrPut(o) { arrayListOf() }.add {
+                setReference(it as Source, unused, value)
+            }
+        } else {
+            setReference(o, unused, value)
+        }
+    }
+
+    private fun setReference(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
         val sourceRefColumn = getSourceRefColumn(o)
 
         val tx = TransactionManager.current()

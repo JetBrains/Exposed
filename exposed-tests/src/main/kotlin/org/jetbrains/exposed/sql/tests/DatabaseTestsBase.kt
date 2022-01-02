@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.junit.Assume
+import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import java.sql.Connection
 import java.util.*
@@ -111,13 +113,11 @@ enum class TestDB(
     }
 
     companion object {
-        fun enabledInTests(): List<TestDB> {
-            val embeddedTests = (TestDB.values().toList() - ORACLE - SQLSERVER - MARIADB).joinToString()
-            val concreteDialects = System.getProperty("exposed.test.dialects", embeddedTests).let {
-                if (it == "") emptyList()
-                else it.split(',').map { it.trim().uppercase() }
-            }
-            return values().filter { concreteDialects.isEmpty() || it.name in concreteDialects }
+        fun enabledInTests(): Set<TestDB> {
+            val concreteDialects = System.getProperty("exposed.test.dialects", "")
+                .split(",")
+                .mapTo(HashSet()) { it.trim().uppercase() }
+            return values().filterTo(enumSetOf()) { it.name in concreteDialects }
         }
     }
 }
@@ -145,9 +145,11 @@ abstract class DatabaseTestsBase {
     }
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if (dbSettings !in TestDB.enabledInTests()) {
-            exposedLogger.warn("$dbSettings is not enabled for being used in tests", RuntimeException())
-            return
+        try {
+            Assume.assumeTrue(dbSettings in TestDB.enabledInTests())
+        } catch (e: AssumptionViolatedException) {
+            exposedLogger.warn("$dbSettings is not enabled for being used in tests", e)
+            throw e
         }
 
         if (dbSettings !in registeredOnShutdown) {
@@ -172,6 +174,7 @@ abstract class DatabaseTestsBase {
     fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         val enabledInTests = TestDB.enabledInTests()
         val toTest = db?.intersect(enabledInTests) ?: (enabledInTests - excludeSettings)
+        Assume.assumeTrue(toTest.isNotEmpty())
         toTest.forEach { dbSettings ->
             @Suppress("TooGenericExceptionCaught")
             try {
@@ -183,7 +186,9 @@ abstract class DatabaseTestsBase {
     }
 
     fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+        val toTest = TestDB.enabledInTests() - excludeSettings
+        Assume.assumeTrue(toTest.isNotEmpty())
+        toTest.forEach { testDB ->
             withDb(testDB) {
                 SchemaUtils.create(*tables)
                 try {
@@ -205,7 +210,9 @@ abstract class DatabaseTestsBase {
     }
 
     fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
-        (TestDB.enabledInTests() - excludeSettings).forEach { testDB ->
+        val toTest = TestDB.enabledInTests() - excludeSettings
+        Assume.assumeTrue(toTest.isNotEmpty())
+        toTest.forEach { testDB ->
             withDb(testDB) {
                 SchemaUtils.createSchema(*schemas)
                 try {

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import java.sql.Connection
@@ -35,6 +37,7 @@ class MultiDatabaseEntityTest {
 
     @Before
     fun before() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         if (TransactionManager.isInitialized()) {
             currentDB = TransactionManager.currentOrNull()?.db
         }
@@ -48,12 +51,14 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
-        transaction(db1) {
-            SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
-        }
-        transaction(db2) {
-            SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
+        if (TestDB.H2 in TestDB.enabledInTests()) {
+            TransactionManager.resetCurrent(currentDB?.transactionManager)
+            transaction(db1) {
+                SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
+            }
+            transaction(db2) {
+                SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
+            }
         }
     }
 

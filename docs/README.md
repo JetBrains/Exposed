@@ -1,5 +1,7 @@
 <img src="./logo.png" alt="Exposed" width="315" />
 
+![Build](https://github.com/tpasipanodya/exposed/actions/workflows/.github/workflows/release.yml/badge.svg)
+
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
 Welcome to **Exposed**; a fork of the [Kotlin ORM framework](https://github.com/JetBrains/Exposed).

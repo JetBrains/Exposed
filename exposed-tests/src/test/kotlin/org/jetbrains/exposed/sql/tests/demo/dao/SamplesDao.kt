@@ -4,7 +4,9 @@ import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.Assume
 import kotlin.test.Test
 
 object Users : IntIdTable() {
@@ -33,6 +35,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun main() {
+    Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {

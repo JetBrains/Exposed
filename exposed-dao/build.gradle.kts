@@ -1,4 +1,3 @@
-
 plugins {
     kotlin("jvm") apply true
 }
@@ -10,4 +9,3 @@ repositories {
 dependencies {
     api(project(":exposed-core"))
 }
-

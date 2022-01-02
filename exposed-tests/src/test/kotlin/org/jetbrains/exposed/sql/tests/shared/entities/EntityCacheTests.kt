@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.Assume
 import org.junit.Test
 import kotlin.random.Random
 
@@ -29,6 +30,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimit() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         val entitiesCount = 25
         val cacheSize = 10
         val db = TestDB.H2.connect {
@@ -58,6 +60,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimitZero() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         val entitiesCount = 25
         val db = TestDB.H2.connect()
         val dbNoCache = TestDB.H2.connect {
