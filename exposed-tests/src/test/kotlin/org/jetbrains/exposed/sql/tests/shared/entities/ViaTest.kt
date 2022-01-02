@@ -170,11 +170,12 @@ class ViaTests : DatabaseTestsBase() {
     @Test
     fun testHierarchicalReferences() {
         withTables(NodeToNodes) {
+            addLogger(StdOutSqlLogger)
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
+                parents = SizedCollection(root)
             }
-            child1.parents = SizedCollection(root)
 
             assertEquals(0L, root.parents.count())
             assertEquals(1L, root.children.count())

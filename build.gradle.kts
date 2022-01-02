@@ -1,4 +1,3 @@
-import io.gitlab.arturbosch.detekt.DetektPlugin
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig
@@ -84,12 +83,10 @@ artifactory {
 }
 
 subprojects {
-    plugins.withType(DetektPlugin::class) {
-        tasks.withType(Detekt::class) detekt@{
-            finalizedBy(reportMerge)
-            reportMerge.configure {
-                input.from(this@detekt.xmlReportFile)
-            }
+    tasks.withType<Detekt>().configureEach detekt@{
+        finalizedBy(reportMerge)
+        reportMerge.configure {
+            input.from(this@detekt.xmlReportFile)
         }
     }
 }

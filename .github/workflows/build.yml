@@ -21,3 +21,5 @@ jobs:
         with:
           gradle-version: 7.3
           arguments: clean test build artifactoryPublish
+      - name: List Build Outputs
+        run: cd build && ls -lart

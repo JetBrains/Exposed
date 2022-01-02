@@ -79,7 +79,7 @@ class DatabaseConfig private constructor(
          * The error log will contain the stacktrace of the place in the code where new result set occurs, and it exceeds the threshold.
          * 0 value means no log needed
          */
-        var logTooMuchResultSetsThreshold: Int = 1,
+        var logTooMuchResultSetsThreshold: Int = 0,
     )
 
     companion object {

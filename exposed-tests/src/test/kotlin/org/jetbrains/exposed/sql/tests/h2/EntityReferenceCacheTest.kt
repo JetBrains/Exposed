@@ -43,6 +43,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     private fun executeOnH2(vararg tables: Table, body: () -> Unit) {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         var testWasStarted = false
         transaction(db) {
             SchemaUtils.create(*tables)

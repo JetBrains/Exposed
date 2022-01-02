@@ -184,39 +184,37 @@ class CoroutineTests : DatabaseTestsBase() {
 
     @Test @RepeatableTest(10)
     fun suspendedAndNormalTransactions() {
-        var db: Database? = null
-        withDb {
-            db = this.db
-            SchemaUtils.create(Testing)
-        }
+        withTables(Testing) {
+            val db = this.db
+            var suspendedOk = true
+            var normalOk = true
+            val mainJob = GlobalScope.launch {
+                newSuspendedTransaction(singleThreadDispatcher, db = db) {
+                    try {
+                        Testing.selectAll().toList()
+                    } catch (e: Exception) {
+                        suspendedOk = false
+                    }
+                }
 
-        var suspendedOk = true
-        var normalOk = true
-        val mainJob = GlobalScope.launch {
-            newSuspendedTransaction(singleThreadDispatcher, db = db) {
-                try {
-                    Testing.selectAll().toList()
-                } catch (e: Exception) {
-                    suspendedOk = false
+                transaction(db) {
+                    try {
+                        Testing.selectAll().toList()
+                    } catch (e: Exception) {
+                        normalOk = false
+                    }
                 }
             }
 
-            transaction(db) {
-                try {
-                    Testing.selectAll().toList()
-                } catch (e: Exception) {
-                    normalOk = false
-                }
+            runBlocking {
+                mainJob.join()
+                kotlin.test.assertTrue(suspendedOk)
+                kotlin.test.assertTrue(normalOk)
             }
-        }
 
-        runBlocking {
-            mainJob.join()
-            kotlin.test.assertTrue(suspendedOk)
-            kotlin.test.assertTrue(normalOk)
-        }
 //            while (!mainJob.isCompleted) Thread.sleep(100)
 //            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+        }
     }
 
     class TestingEntity(id: EntityID<Int>) : IntEntity(id) {
