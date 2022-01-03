@@ -15,9 +15,9 @@ Bill of Materials for all Exposed modules
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>org.jetbrains.exposed</groupId>
+            <groupId>io.taff.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.37.3</version>
+            <version>0.4.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -26,17 +26,17 @@ Bill of Materials for all Exposed modules
 
 <dependencies>
     <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
+        <groupId>io.taff.exposed</groupId>
         <artifactId>exposed-core</artifactId>
         <scope>provided</scope>
     </dependency>
     <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
+        <groupId>io.taff.exposed</groupId>
         <artifactId>exposed-dao</artifactId>
         <scope>provided</scope>
     </dependency>
     <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
+        <groupId>io.taff.exposed</groupId>
         <artifactId>exposed-jdbc</artifactId>
         <scope>provided</scope>
     </dependency>
@@ -51,9 +51,9 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("org.jetbrains.exposed:exposed-bom:0.37.2"))
-    implementation("org.jetbrains.exposed", "exposed-core")
-    implementation("org.jetbrains.exposed", "exposed-dao")
-    implementation("org.jetbrains.exposed", "exposed-jdbc")
+    implementation(platform("io.taff.exposed:exposed-bom:0.4.0"))
+    implementation("io.taff.exposed", "exposed-core")
+    implementation("io.taff.exposed", "exposed-dao")
+    implementation("io.taff.exposed", "exposed-jdbc")
 }
 ```

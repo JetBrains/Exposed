@@ -21,11 +21,9 @@ jobs:
         with:
           gradle-version: 7.3
           arguments: clean test build artifactoryPublish
-      - name: List Build Outputs
-        run: cd exposed-tests/build/test-results/test && ls -lart
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v2  # upload test results
-        if: success() || failure()        # run this step even if previous step failed
+        uses: actions/upload-artifact@v2
+        if: success() || failure()
         with:
           name: Test Artifacts
           path: exposed-tests/build/test-results/*/*.xml

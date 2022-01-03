@@ -1,7 +1,9 @@
-name: 'Test Reports'
+name: 'CI Reports'
 on:
   workflow_run:
-    workflows: ['CI']
+    workflows:
+      - 'CI'
+      - 'CI & CD'
     types:
       - completed
 jobs:
@@ -13,47 +15,47 @@ jobs:
         with:
           artifact: Test Artifacts
           name: Postgres Test Results
-          path: exposed-tests/build/test-results/postgresTest/*.xml
+          path: postgresTest/*.xml
           reporter: java-junit
       - name: Upload Postgres Test Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: Postgres Test Results
-          path: exposed-tests/build/test-results/postgresTest/*.xml
+          path: postgresTest/*.xml
           reporter: java-junit
       - name: Upload Mysql Test Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: Postgres Test Results
-          path: exposed-tests/build/test-results/mysql51Test/*.xml
+          path: mysql51Test/*.xml
           reporter: java-junit
       - name: Upload SQL lite Test Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: SQL lite Test Results
-          path: exposed-tests/build/test-results/sqliteTest/*.xml
+          path: sqliteTest/*.xml
           reporter: java-junit
       - name: Upload Postgres NG Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: Postgres NG Results
-          path: exposed-tests/build/test-results/postgresNGTest/*.xml
+          path: postgresNGTest/*.xml
           reporter: java-junit
       - name: Upload H2 V2 Test Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: H2 V2 Test Results
-          path: exposed-tests/build/test-results/h2_v2Test/*.xml
+          path: h2_v2Test/*.xml
           reporter: java-junit
       - name: Upload H2 V1 Test Results
         uses: dorny/test-reporter@v1.5.0
         with:
           artifact: Test Artifacts
           name: H2 V1 Test Results
-          path: exposed-tests/build/test-results/h2_v1Test/*.xml
+          path: h2_v1Test/*.xml
           reporter: java-junit

@@ -17,10 +17,15 @@ Visit [the official Exposed page](https://github.com/JetBrains/Exposed) for an u
 
 ```kotlin
 val exposedVersion: String by project
+repositories {
+    maven("https://tmpasipanodya.jfrog.io/artifactory/releases")
+}
+
 dependencies {
-    implementation("io.taff.exposed:exposed-core:$exposedVersion")
-    implementation("io.taff.exposed:exposed-dao:$exposedVersion")
-    implementation("io.taff.exposed:exposed-jdbc:$exposedVersion")
+    implementation(platform("io.taff.exposed:exposed-bom:0.4.0"))
+    implementation("io.taff.exposed", "exposed-core")
+    implementation("io.taff.exposed", "exposed-dao")
+    implementation("io.taff.exposed", "exposed-jdbc")
 }
 ```
 
