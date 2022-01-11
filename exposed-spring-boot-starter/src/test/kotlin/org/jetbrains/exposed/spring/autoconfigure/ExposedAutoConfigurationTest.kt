@@ -3,19 +3,22 @@ package org.jetbrains.exposed.spring.autoconfigure
 import org.jetbrains.exposed.spring.DatabaseInitializer
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.spring.tables.TestTable
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CompletableFuture
 
 @SpringBootTest(
-    classes = [org.jetbrains.exposed.spring.Application::class],
+    classes = [org.jetbrains.exposed.spring.Application::class, ExposedAutoConfigurationTest.CustomDatabaseConfigConfiguration::class],
     properties = ["spring.datasource.url=jdbc:h2:mem:test", "spring.datasource.driver-class-name=org.h2.Driver"]
 )
 open class ExposedAutoConfigurationTest {
@@ -26,6 +29,9 @@ open class ExposedAutoConfigurationTest {
     @Autowired(required = false)
     private var databaseInitializer: DatabaseInitializer? = null
 
+    @Autowired
+    private var databaseConfig: DatabaseConfig? = null
+
     @Test
     fun `should initialize the database connection`() {
         assertNotNull(springTransactionManager)
@@ -34,6 +40,28 @@ open class ExposedAutoConfigurationTest {
     @Test
     fun `should not create schema`() {
         assertNull(databaseInitializer)
+    }
+
+    @Test
+    fun `database config can be overrode by custom one`() {
+        val expectedConfig = CustomDatabaseConfigConfiguration.expectedConfig
+        assertSame(databaseConfig, expectedConfig)
+        assertEquals(expectedConfig.maxEntitiesToStoreInCachePerEntity, databaseConfig!!.maxEntitiesToStoreInCachePerEntity)
+    }
+
+    @TestConfiguration
+    open class CustomDatabaseConfigConfiguration {
+
+        @Bean
+        open fun customDatabaseConfig(): DatabaseConfig {
+            return expectedConfig
+        }
+
+        companion object {
+            val expectedConfig = DatabaseConfig {
+                maxEntitiesToStoreInCachePerEntity = 777
+            }
+        }
     }
 }
 
