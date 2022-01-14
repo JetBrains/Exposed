@@ -2,6 +2,7 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.addLogger
@@ -21,6 +22,7 @@ import javax.sql.DataSource
 
 class SpringTransactionManager(
     _dataSource: DataSource,
+    databaseConfig: DatabaseConfig,
     private val showSql: Boolean = false,
     @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
@@ -29,7 +31,10 @@ class SpringTransactionManager(
         this.isRollbackOnCommitFailure = true
     }
 
-    private val db = Database.connect(_dataSource) { this }
+    private val db = Database.connect(
+        datasource = _dataSource,
+        databaseConfig = databaseConfig
+    ) { this }
 
     @Volatile override var defaultIsolationLevel: Int = -1
         get() {
