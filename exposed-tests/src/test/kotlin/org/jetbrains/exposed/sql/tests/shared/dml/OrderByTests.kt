@@ -2,10 +2,8 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
@@ -33,7 +31,7 @@ class OrderByTests : DatabaseTestsBase() {
                     assertEquals(2, r.size)
                 }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .selectAll()
                 .orderBy(scopedUsers.id)
                 .map { it[scopedUsers.id] }
@@ -70,7 +68,7 @@ class OrderByTests : DatabaseTestsBase() {
                 .map { it[scopedUsers.id] }
                 .let { assertEqualLists(listOf("eugene", "sergey"), it) }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .slice(scopedUsers.id)
                 .selectAll()
                 .orderBy(scopedUsers.name, SortOrder.ASC)
@@ -122,7 +120,7 @@ class OrderByTests : DatabaseTestsBase() {
                     assertEquals(2, r[0][scopedUsers.id.count()])
                 }
 
-            (cities innerJoin scopedUsers.stripDefaultScope())
+            (cities innerJoin scopedUsers.stripDefaultFilter())
                 .slice(cities.name, scopedUsers.id.count())
                 .selectAll()
                 .groupBy(cities.name)

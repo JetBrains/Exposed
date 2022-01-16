@@ -34,7 +34,7 @@ open class DeleteStatement(
                   op: Op<Boolean>,
                   isIgnore: Boolean = false,
                   limit: Int? = null,
-                  offset: Long? = null) : Int = (table.materializeDefaultScope()?.and(op) ?: op)
+                  offset: Long? = null) : Int = (table.materializeDefaultFilter()?.and(op) ?: op)
             .let { defaultedOp ->
                 DeleteStatement(
                     table,
@@ -46,11 +46,11 @@ open class DeleteStatement(
             }
 
         fun all(transaction: Transaction, table: Table) : Int =
-            table.materializeDefaultScope()
-                .let { defaultScope ->
-                when(defaultScope) {
+            table.materializeDefaultFilter()
+                .let { defaultFilter ->
+                when(defaultFilter) {
                     null -> DeleteStatement(table).execute(transaction) ?: 0
-                    else -> DeleteStatement(table, defaultScope).execute(transaction) ?: 0
+                    else -> DeleteStatement(table, defaultFilter).execute(transaction) ?: 0
                 }
             }
     }

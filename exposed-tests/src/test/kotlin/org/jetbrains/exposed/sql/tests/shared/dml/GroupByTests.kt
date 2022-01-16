@@ -2,13 +2,9 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.UsersToCities.user
-import org.jetbrains.exposed.sql.tests.shared.entities.SortByReferenceTest
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
 import java.math.BigDecimal
@@ -57,7 +53,7 @@ class GroupByTests : DatabaseTestsBase() {
                     }
                 }
 
-            ((cities innerJoin scopedUsers.stripDefaultScope())
+            ((cities innerJoin scopedUsers.stripDefaultFilter())
                 .slice(cities.name, scopedUsers.id.count(), dAlias)
                 .selectAll()
                 .groupBy(cities.name))
@@ -118,7 +114,7 @@ class GroupByTests : DatabaseTestsBase() {
                 .having { scopedUsers.id.count() eq 1 }
                 .toList().let { r -> assertEquals(0, r.size) }
 
-            (cities innerJoin scopedUsers.stripDefaultScope())
+            (cities innerJoin scopedUsers.stripDefaultFilter())
                 .slice(cities.name, scopedUsers.id.count())
                 .selectAll()
                 .groupBy(cities.name)
@@ -176,7 +172,7 @@ class GroupByTests : DatabaseTestsBase() {
                     }
                 }
 
-            (cities innerJoin scopedUsers.stripDefaultScope())
+            (cities innerJoin scopedUsers.stripDefaultFilter())
                 .slice(cities.name, scopedUsers.id.count(), maxExpr)
                 .selectAll()
                 .groupBy(cities.name)
@@ -240,7 +236,7 @@ class GroupByTests : DatabaseTestsBase() {
                     }
                 }
 
-            (cities innerJoin scopedUsers.stripDefaultScope())
+            (cities innerJoin scopedUsers.stripDefaultFilter())
                 .slice(cities.name, scopedUsers.id.count(), cities.id.max())
                 .selectAll()
                 .groupBy(cities.name)
@@ -403,7 +399,7 @@ class GroupByTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testGroupConcatWithADefaultScope() {
+    fun testGroupConcatWithADefaultFilter() {
         withCitiesAndUsers(listOf(TestDB.SQLITE)) {
             fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: KClass<out DatabaseDialect>, assert: (Map<String, String?>) -> Unit) {
                 try {

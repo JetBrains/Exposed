@@ -1,3 +1,12 @@
+# 0.5.0
+
+Fetched the following versions and changes from upstream:
+
+- prevent call to Expression.toString() when constructing Expression with `eq` ([#1417](https://github.com/JetBrains/Exposed/pull/1417)).
+- Fix addAutoPrimaryKey test ([#1418](https://github.com/JetBrains/Exposed/pull/1418)).
+- Allow to pass DatabaseConfig in SpringTransactionManager ([#1429](https://github.com/JetBrains/Exposed/pull/1429)).
+- Bumped `com.jfrog.artifactory` to `4.26.1`.
+- Renamed `defaultScope` to `defaultFilter`.
 
 # 0.4.0
 Fetched the following versions & changes from upstream:
@@ -202,19 +211,19 @@ Performance:
 - Updated `idTable.batchUpdate` to return the number of updated rows.
 
 # 0.2.1
-- Opened up `IdTableWithDefaultScopeStriped` for extension
+- Opened up `IdTableWithDefaultFilterStriped` for extension
 - Updated `README.md`
 
 # 0.2.0
 Feature:
-* Added the ability to temporarily strip a tables default scope via the `table.stripDefaultScope()` method.
+* Added the ability to temporarily strip a tables default scope via the `table.stripDefaultFilter()` method.
 
 # 0.1.0
 Feature:
-* Added the ability to set a defaultScope on a table as follows:
+* Added the ability to set a defaultFilter on a table as follows:
     ```kotlin
     object table : Table() {
         val tenantId = uuid("tenant_id")
-        override val defaultScope = Op.build { tenantId eq currentTenantId() }
+        override val defaultFilter = Op.build { tenantId eq currentTenantId() }
     }
     ```

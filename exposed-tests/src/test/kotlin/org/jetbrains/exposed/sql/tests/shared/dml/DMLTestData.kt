@@ -44,7 +44,7 @@ object ScopedUsers : Table("scoped_users") {
     val cityId: Column<Int?> = reference("city_id", Cities.id).nullable()
     val flags: Column<Int> = integer("flags").default(0)
     override val primaryKey = PrimaryKey(id)
-    override val defaultScope = { cityId eq munichId() }
+    override val defaultFilter = { cityId eq munichId() }
 }
 
 object UserData : Table() {
@@ -57,7 +57,7 @@ object ScopedUserData : Table(name = "scoped_user_data") {
     val userId: Column<String> = reference("user_id", ScopedUsers.id)
     val comment: Column<String> = varchar("comment", 30)
     val value: Column<Int> = integer("value")
-    override val defaultScope = { userId eq "sergey" }
+    override val defaultFilter = { userId eq "sergey" }
 }
 
 

@@ -44,7 +44,7 @@ class SelectTests : DatabaseTestsBase() {
             scopedUsers.select { scopedUsers.name eq "andrey" }
                 .toList().let { assertTrue(it.isEmpty()) }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select { scopedUsers.id.eq("andrey") }
                 .forEach { assertAndrey(it[scopedUsers.id], it[scopedUsers.name]) }
         }
@@ -73,7 +73,7 @@ class SelectTests : DatabaseTestsBase() {
             }.toList().apply { assertTrue(isEmpty()) }
 
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     scopedUsers.id.eq("andrey") and
                     scopedUsers.name.eq("Andrey")
@@ -107,7 +107,7 @@ class SelectTests : DatabaseTestsBase() {
             }.toList().apply { assertTrue(isEmpty()) }
 
 
-            scopedUsers.stripDefaultScope().select {
+            scopedUsers.stripDefaultFilter().select {
                 scopedUsers.id.eq("andrey") or
                     scopedUsers.name.eq("Andrey")
             }.forEach { assertAndrey(it[scopedUsers.id], it[scopedUsers.name]) }
@@ -130,7 +130,7 @@ class SelectTests : DatabaseTestsBase() {
                     assertNotAndrey(userId, userName)
                 }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select { not(scopedUsers.id.eq("eugene")) }
                 .map { it[scopedUsers.id] }.toSet()
                 .let { assertEquals(it, setOf("andrey", "sergey", "alex", "smth")) }
@@ -146,17 +146,17 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(3L, cities.selectAll().count())
 
             assertEquals(false, scopedUsers.selectAll().empty())
-            assertEquals(false, scopedUsers.stripDefaultScope().selectAll().empty())
+            assertEquals(false, scopedUsers.stripDefaultFilter().selectAll().empty())
 
             assertEquals(2L, scopedUsers.selectAll().count())
-            assertEquals(5L, scopedUsers.stripDefaultScope().selectAll().count())
+            assertEquals(5L, scopedUsers.stripDefaultFilter().selectAll().count())
 
             assertEquals(true,
                          scopedUsers
                              .select { scopedUsers.cityId neq munichId() }
                              .empty())
             assertEquals(false,
-                         scopedUsers.stripDefaultScope()
+                         scopedUsers.stripDefaultFilter()
                              .select { scopedUsers.cityId neq munichId() }
                              .empty())
 
@@ -166,7 +166,7 @@ class SelectTests : DatabaseTestsBase() {
                              .count())
             assertEquals(3L,
                          scopedUsers
-                             .stripDefaultScope()
+                             .stripDefaultFilter()
                              .select {
                                  scopedUsers.cityId neq munichId() or
                                      scopedUsers.cityId.isNull()
@@ -196,7 +196,7 @@ class SelectTests : DatabaseTestsBase() {
                 }
 
             scopedUsers
-                .stripDefaultScope()
+                .stripDefaultFilter()
                 .select { scopedUsers.id inList listOf("sergey", "andrey") }
                 .orderBy(scopedUsers.name)
                 .toList()
@@ -255,7 +255,7 @@ class SelectTests : DatabaseTestsBase() {
                     assertEquals("Sergey", r[0][scopedUsers.name])
                 }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     scopedUsers.id to scopedUsers.name inList listOf(
                         "andrey" to "Andrey",
@@ -298,7 +298,7 @@ class SelectTests : DatabaseTestsBase() {
             }.toList().let { r -> assertEquals(0, r.size) }
 
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select { scopedUsers.id to scopedUsers.name inList listOf("andrey" to "Andrey") }
                 .toList().let { r ->
                     assertEquals(1, r.size)
@@ -316,7 +316,7 @@ class SelectTests : DatabaseTestsBase() {
             scopedUsers.select { scopedUsers.id to scopedUsers.name inList emptyList() }
                 .toList().let { r -> assertEquals(0, r.size) }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select { scopedUsers.id to scopedUsers.name inList emptyList() }
                 .toList().let { r -> assertEquals(0, r.size) }
         }
@@ -331,7 +331,7 @@ class SelectTests : DatabaseTestsBase() {
             scopedUsers.select { scopedUsers.id to scopedUsers.name notInList emptyList() }
                 .toList().let { r -> assertEquals(2, r.size)  }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select { scopedUsers.id to scopedUsers.name notInList emptyList() }
                 .toList().let { r -> assertEquals(5, r.size)  }
         }
@@ -352,7 +352,7 @@ class SelectTests : DatabaseTestsBase() {
             }.toList()
             .let { r -> assertEquals(1, r.size) }
 
-            scopedUsers.stripDefaultScope().select {
+            scopedUsers.stripDefaultFilter().select {
                 Triple(scopedUsers.id, scopedUsers.name, scopedUsers.cityId) notInList
                     listOf(Triple("sergey", "Sergey", munichId()))
             }.toList()
@@ -375,7 +375,7 @@ class SelectTests : DatabaseTestsBase() {
                     .select { scopedUsers.id eq "sergey" })
             }.let { r -> assertEquals(1L, r.count()) }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     scopedUsers.id inSubQuery
                         (scopedUsers.slice(scopedUsers.id)
@@ -397,7 +397,7 @@ class SelectTests : DatabaseTestsBase() {
                     (scopedUsers.slice(scopedUsers.id).selectAll())
             }.let { r -> assertEquals(0L, r.count()) }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     scopedUsers.id notInSubQuery
                         (scopedUsers.slice(scopedUsers.id)
@@ -436,7 +436,7 @@ class SelectTests : DatabaseTestsBase() {
 
             }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     scopedUsers.id notInSubQuery
                         (scopedUsers.slice(scopedUsers.id)
@@ -486,7 +486,7 @@ class SelectTests : DatabaseTestsBase() {
             allUsers.map { Op.build { scopedUsers.name eq it } }
                 .compoundOr()
                 .let { op ->
-                    scopedUsers.stripDefaultScope()
+                    scopedUsers.stripDefaultFilter()
                         .select(op)
                         .map { it[scopedUsers.name] }
                         .toSet()
@@ -526,7 +526,7 @@ class SelectTests : DatabaseTestsBase() {
         val secondTable = object : IntIdTable("second") {
             val tenantId = varchar("TENANT_ID", 50).nullable()
             val firstOpt = optReference("first", firstTable)
-            override val defaultScope = { Op.build { tenantId eq actualTenantId } }
+            override val defaultFilter = { Op.build { tenantId eq actualTenantId } }
         }
 
         withTables(firstTable, secondTable) {
@@ -543,7 +543,7 @@ class SelectTests : DatabaseTestsBase() {
             secondTable.select { secondTable.firstOpt eq firstId.value }
                 .toList().let { secondEntries -> assertEquals(1, secondEntries.size) }
 
-            secondTable.stripDefaultScope()
+            secondTable.stripDefaultFilter()
                 .select { secondTable.firstOpt eq firstId.value }
                 .toList().let { secondEntries -> assertEquals(1, secondEntries.size) }
         }

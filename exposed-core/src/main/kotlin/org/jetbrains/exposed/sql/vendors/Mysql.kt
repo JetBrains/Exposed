@@ -81,7 +81,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        table.materializeDefaultScope()?.let {
+        table.materializeDefaultFilter()?.let {
             TransactionManager
                 .current()
                 .throwUnsupportedException("REPLACE on tables with a default scope isn't supported.")

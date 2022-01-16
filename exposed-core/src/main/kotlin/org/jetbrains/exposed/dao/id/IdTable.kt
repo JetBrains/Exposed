@@ -32,7 +32,7 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name), IdAw
     /**
      * Returns a new instance of a table that will ignore the default scope when generating/running queries.
      */
-    override fun stripDefaultScope() : IdTableWithDefaultScopeStriped<T> = IdTableWithDefaultScopeStriped(this)
+    override fun stripDefaultFilter() : IdTableWithDefaultFilterStriped<T> = IdTableWithDefaultFilterStriped(this)
 }
 
 /**
@@ -73,7 +73,7 @@ open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUI
 }
 
 /** An Id table that ignores the actualTable's default scope */
-open class IdTableWithDefaultScopeStriped<ID : Comparable<ID>>(actualTable: IdTable<ID>)
-    : TableWithDefaultScopeStriped(actualTable), IdAware<ID> {
+open class IdTableWithDefaultFilterStriped<ID : Comparable<ID>>(actualTable: IdTable<ID>)
+    : TableWithDefaultFilterStriped(actualTable), IdAware<ID> {
     override val id: Column<EntityID<ID>> = actualTable.id
 }

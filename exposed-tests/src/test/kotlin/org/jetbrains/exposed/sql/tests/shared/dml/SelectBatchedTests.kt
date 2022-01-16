@@ -6,14 +6,13 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.util.*
-import kotlin.text.Typography.less
 
 class SelectBatchedTests : DatabaseTestsBase() {
     private val scopedCities = object : Table(Cities.tableName) {
         val id: Column<Int> = integer("cityId").autoIncrement()
         val name: Column<String> = varchar("name", 50)
         override val primaryKey = PrimaryKey(id)
-        override val defaultScope = { Op.build { id less 51} }
+        override val defaultFilter = { Op.build { id less 51} }
     }
 
     @Test
@@ -44,7 +43,7 @@ class SelectBatchedTests : DatabaseTestsBase() {
                     )
                 }
 
-            scopedCities.stripDefaultScope()
+            scopedCities.stripDefaultFilter()
                 .selectBatched(batchSize = 25) { scopedCities.id less 51 }
                 .map { it.map { batch -> batch[scopedCities.name] } }
                 .let { batches ->
@@ -59,7 +58,7 @@ class SelectBatchedTests : DatabaseTestsBase() {
             scopedCities.selectBatched(batchSize = 25) { scopedCities.id greater  51 }
                 .toList().let { batches -> assertTrue(batches.isEmpty()) }
 
-            scopedCities.stripDefaultScope()
+            scopedCities.stripDefaultFilter()
                 .selectBatched(batchSize = 25) { scopedCities.id greater  51 }
                 .toList().let { batches -> assertTrue(batches.isNotEmpty()) }
         }

@@ -6,8 +6,8 @@
 
 Welcome to **Exposed**; a fork of the [Kotlin ORM framework](https://github.com/JetBrains/Exposed).
 In terms of behavior, this fork is identical to the main [Exposed](https://github.com/JetBrains/Exposed)
-library with the exception that it allows configuring default scopes on tables. Default scopes can be useful
-for implementing multi-tenancy & soft deletes.
+library with the exception that it allows configuring default filters (query operators) on tables. Default filters can
+be useful for implementing multi-tenancy & soft deletes.
 
 ## Supported Databases
 Visit [the official Exposed page](https://github.com/JetBrains/Exposed) for an updated list.
@@ -44,7 +44,7 @@ object posts : LongIdTable() {
     val text = text("text")
     val userId = integer("user_id") references Users.id
 
-    override val defaultScope = { Op.build { userId eq CurrentUserId.get() } }
+    override val defaultFilter = { Op.build { userId eq CurrentUserId.get() } }
 }
 
 fun main() {
@@ -76,14 +76,14 @@ fun main() {
         // true
         retrievedText == "lorem ipsum"
 
-        // Both posts have Ids but because of the default scope,
+        // Both posts have Ids but because of the default filter,
         // only user 2's post is updated
         val newText =  "Let's get it started in here"
         posts.update({ id.isNotNull() }) {
             it[text] = newText
         }
 
-        var allTexts = posts.stripDefaultScope()
+        var allTexts = posts.stripDefaultFilter()
             .orderBy(posts.userId, SortOrder.Asc)
             .selectAll().map { it[posts.userId] to it[posts.text] }
         
@@ -96,7 +96,7 @@ fun main() {
     }
 }
 ```
-Default scopes are applied to all DB operations including deletes, joins, unions, etc.
+Default filters are applied to all DB operations including deletes, joins, unions, etc.
 For additional examples, take a look at 
 [the official Exposed wiki](https://github.com/JetBrains/Exposed/wiki).
 

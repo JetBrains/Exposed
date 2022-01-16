@@ -99,8 +99,8 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
-    override fun materializeDefaultScope() = when {
-        this != source -> source.materializeDefaultScope()
+    override fun materializeDefaultFilter() = when {
+        this != source -> source.materializeDefaultFilter()
         else -> null
     }
 

@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -49,7 +48,7 @@ class JoinTests : DatabaseTestsBase() {
 
             // Joining to a table that doesn't have a default scope after
             // striping the left table's default scope
-            (scopedUsers.stripDefaultScope() innerJoin cities)
+            (scopedUsers.stripDefaultFilter() innerJoin cities)
                 .slice(scopedUsers.name, cities.name)
                 .select {
                     (scopedUsers.id.eq("andrey") or
@@ -88,7 +87,7 @@ class JoinTests : DatabaseTestsBase() {
 
             // Joining to a table that has a default scope. Some
             // records are filtered out by the right table's scope
-            (scopedUsers innerJoin scopedUserData.stripDefaultScope())
+            (scopedUsers innerJoin scopedUserData.stripDefaultFilter())
                 .slice(scopedUsers.name, scopedUserData.comment)
                 .select {
                     (scopedUsers.id.eq("eugene") or
@@ -107,7 +106,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Joining 2 tables that have default scopes but the scopes are stripped.
-            (scopedUsers.stripDefaultScope() innerJoin scopedUserData.stripDefaultScope())
+            (scopedUsers.stripDefaultFilter() innerJoin scopedUserData.stripDefaultFilter())
                 .slice(scopedUsers.name, scopedUserData.comment)
                 .select { scopedUsers.id.isNotNull() }
                 .let { assertEquals(it.count(), 4) }
@@ -143,7 +142,7 @@ class JoinTests : DatabaseTestsBase() {
             // Striping the right default scope for the left table alone
             // won't lead to more records being returned because of the
             // right's filter.
-            (scopedUsers.stripDefaultScope() innerJoin scopedUserData)
+            (scopedUsers.stripDefaultFilter() innerJoin scopedUserData)
                 .slice(scopedUsers.name, scopedUserData.comment)
                 .select {
                     (scopedUsers.id.eq("andrey") or
@@ -160,7 +159,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Stripping the right table's scope too then changes the result set
-            (scopedUsers.stripDefaultScope() innerJoin scopedUserData.stripDefaultScope())
+            (scopedUsers.stripDefaultFilter() innerJoin scopedUserData.stripDefaultFilter())
                 .slice(scopedUsers.name, scopedUserData.comment)
                 .select {
                     (scopedUsers.id.eq("andrey") or
@@ -224,7 +223,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Sergey and Eugene are in scope
-            (cities innerJoin scopedUsers innerJoin scopedUserData.stripDefaultScope())
+            (cities innerJoin scopedUsers innerJoin scopedUserData.stripDefaultFilter())
                 .selectAll().orderBy(scopedUsers.id, SortOrder.DESC)
                 .toList().let { r ->
                     assertEquals(2, r.size)
@@ -237,7 +236,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Only Sergey is in scope
-            (cities innerJoin scopedUsers.stripDefaultScope() innerJoin scopedUserData)
+            (cities innerJoin scopedUsers.stripDefaultFilter() innerJoin scopedUserData)
                 .selectAll().orderBy(scopedUsers.id, SortOrder.DESC)
                 .toList().let { r ->
                     assertEquals(1, r.size)
@@ -247,7 +246,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Only 2 users have city ids and comments
-            (cities innerJoin scopedUsers.stripDefaultScope() innerJoin scopedUserData.stripDefaultScope())
+            (cities innerJoin scopedUsers.stripDefaultFilter() innerJoin scopedUserData.stripDefaultFilter())
                 .selectAll().orderBy(scopedUsers.id, SortOrder.ASC)
                 .toList().let { r ->
                     assertEquals(2, r.size)
@@ -324,7 +323,7 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // All users are now in scope
-            (scopedUsers.stripDefaultScope() crossJoin cities)
+            (scopedUsers.stripDefaultFilter() crossJoin cities)
                 .slice(scopedUsers.name, scopedUsers.cityId, cities.name)
                 .select { cities.name.eq("Munich") }
                 .map { it[scopedUsers.name] to it[cities.name] }
@@ -417,8 +416,8 @@ class JoinTests : DatabaseTestsBase() {
                 }
 
             // Stripping the default scope leads to alex falling into scope too
-            scopedUsersAlias = scopedUsers.stripDefaultScope().alias("u3")
-            Join(scopedUsers.stripDefaultScope())
+            scopedUsersAlias = scopedUsers.stripDefaultFilter().alias("u3")
+            Join(scopedUsers.stripDefaultFilter())
                 .join(scopedUsersAlias,
                       JoinType.LEFT,
                       scopedUsersAlias[scopedUsers.id],

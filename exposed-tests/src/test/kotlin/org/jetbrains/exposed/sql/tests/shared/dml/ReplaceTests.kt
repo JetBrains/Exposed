@@ -36,7 +36,7 @@ class ReplaceTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testReplaceOnTableWithDefaultScope() {
+    fun testReplaceOnTableWithDefaultFilter() {
         withCitiesAndUsers {
             expectException<UnsupportedByDialectException>{
                 scopedUsers.replace {
@@ -57,8 +57,8 @@ class ReplaceTests : DatabaseTestsBase() {
             // MySQL replace is implemented as deleted-then-insert, which breaks foreign key constraints,
             // so this test will only work if those related rows are deleted.
             if (currentDialect is MysqlDialect) {
-                listOf(scopedUserData.stripDefaultScope(),
-                       scopedUsers.stripDefaultScope(),
+                listOf(scopedUserData.stripDefaultFilter(),
+                       scopedUsers.stripDefaultFilter(),
                        userData,
                        users)
                     .forEach(Table::deleteAll)
