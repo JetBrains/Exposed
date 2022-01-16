@@ -23,7 +23,7 @@ repositories {
         name = "JFrog"
         url = uri("https://tmpasipanodya.jfrog.io/artifactory/releases")
         credentials {
-            username = System.getenv("ARTIFACTORY_USER")
+            username = System.getenv("ARTIFACTORY_USERNAME")
             password = System.getenv("ARTIFACTORY_PASSWORD")
         }
     }
@@ -67,7 +67,7 @@ artifactory {
     publish(delegateClosureOf<PublisherConfig> {
         repository(delegateClosureOf<GroovyObject> {
             setProperty("repoKey", if (isReleaseBuild()) "releases" else "snapshots")
-            setProperty("username", System.getenv("ARTIFACTORY_USER"))
+            setProperty("username", System.getenv("ARTIFACTORY_USERNAME"))
             setProperty("password", System.getenv("ARTIFACTORY_PASSWORD"))
             setProperty("maven", true)
         })

@@ -15,7 +15,7 @@ jobs:
       - name: Build & Deploy
         uses: gradle/gradle-build-action@v2
         env:
-          ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           IS_RELEASE_BUILD: false
         with:
