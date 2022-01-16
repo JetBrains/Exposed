@@ -31,7 +31,7 @@ class DeleteTests : DatabaseTestsBase() {
 
             // Only deletes data within scope
             scopedUserData.deleteAll()
-            val remainingScopedUserData = scopedUserData.stripDefaultScope()
+            val remainingScopedUserData = scopedUserData.stripDefaultFilter()
                 .selectAll()
                 .toList()
                 .size
@@ -54,7 +54,7 @@ class DeleteTests : DatabaseTestsBase() {
                     assertEquals("sergey", sergeyId)
 
                     scopedUsers.deleteWhere { scopedUsers.name eq "Alex" }
-                    val alexExists = exists(scopedUsers.stripDefaultScope().select { scopedUsers.name eq "Alex" })
+                    val alexExists = exists(scopedUsers.stripDefaultFilter().select { scopedUsers.name eq "Alex" })
                     assertEqualLists(scopedUsers.slice(alexExists).selectAll().take(1).map { it[alexExists] },
                                  listOf(true))
 
@@ -63,12 +63,12 @@ class DeleteTests : DatabaseTestsBase() {
                         .select { scopedUsers.name.like("%Sergey") }
                         .any().let { sergeyExists -> assertEquals(false, sergeyExists) }
 
-                    assertEquals(4, scopedUsers.stripDefaultScope().selectAll().count())
+                    assertEquals(4, scopedUsers.stripDefaultFilter().selectAll().count())
 
-                    scopedUsers.stripDefaultScope().deleteWhere { scopedUsers.name eq "Alex" }
+                    scopedUsers.stripDefaultFilter().deleteWhere { scopedUsers.name eq "Alex" }
                     assertEqualLists(scopedUsers.slice(alexExists).selectAll().take(1).map { it[alexExists] },
                                  listOf(false))
-                    assertEquals(3, scopedUsers.stripDefaultScope().selectAll().count())
+                    assertEquals(3, scopedUsers.stripDefaultFilter().selectAll().count())
                 }
         }
     }
@@ -88,11 +88,11 @@ class DeleteTests : DatabaseTestsBase() {
                 it[scopedUserData.comment] =  "This is Sergey"
                 it[scopedUserData.value] = 60
             }
-            assertEquals(5, scopedUserData.stripDefaultScope().selectAll().count())
+            assertEquals(5, scopedUserData.stripDefaultFilter().selectAll().count())
             scopedUserData.deleteWhere(limit = 1) { scopedUserData.value neq 60 }
 
             assertEquals(1, scopedUserData.selectAll().count())
-            assertEquals(4, scopedUserData.stripDefaultScope().selectAll().count())
+            assertEquals(4, scopedUserData.stripDefaultFilter().selectAll().count())
         }
     }
 

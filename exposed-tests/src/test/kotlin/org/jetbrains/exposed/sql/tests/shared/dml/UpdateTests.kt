@@ -30,7 +30,7 @@ class UpdateTests : DatabaseTestsBase() {
         }
         val scopedTbl = object  : LongIdTable("scoped_batch_updates") {
             val name = varchar("name", 50)
-            override val defaultScope = { Op.build { name like "%ergey" } }
+            override val defaultFilter = { Op.build { name like "%ergey" } }
         }
         val initialNames = listOf("Alex", "Andrey", "Eugene", "Sergey", "Something")
         withTables(tbl, scopedTbl) {
@@ -55,7 +55,7 @@ class UpdateTests : DatabaseTestsBase() {
                              records().map { it.second })
 
             val unscopedScopedRecords = {
-                scopedTbl.stripDefaultScope()
+                scopedTbl.stripDefaultFilter()
                     .selectAll()
                     .map { it[scopedTbl.id] to it[scopedTbl.name] }
             }
@@ -69,7 +69,7 @@ class UpdateTests : DatabaseTestsBase() {
                              unscopedScopedRecords().map { it.second }.sorted())
 
             // Removing the default scope leads to all records being updated
-            scopedTbl.stripDefaultScope()
+            scopedTbl.stripDefaultFilter()
                 .batchUpdate(unscopedScopedRecords(),
                              id = { it.first },
                              body = { this[scopedTbl.name] = it.second.lowercase() })
@@ -100,7 +100,7 @@ class UpdateTests : DatabaseTestsBase() {
 
             val sergeyId = "sergey"
             val loadNames = {
-                scopedUsers.stripDefaultScope()
+                scopedUsers.stripDefaultFilter()
                     .slice(scopedUsers.name)
                     .select { scopedUsers.id inList listOf(alexId, sergeyId) }
                     .orderBy(scopedUsers.name, SortOrder.ASC)
@@ -122,7 +122,7 @@ class UpdateTests : DatabaseTestsBase() {
             assertEqualLists(loadNames(), "Alex", newSergeyName)
 
             // it updates records that don't match the default scope when the default scope is striped
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .update({ scopedUsers.id.eq(alexId) }) {
                     it[scopedUsers.name] = newAlexName
                 }
@@ -165,23 +165,23 @@ class UpdateTests : DatabaseTestsBase() {
                         slice.select { scopedUsers.name eq "NewName" }
                             .count()
                     }
-                    val x = unchanged(scopedUsers.stripDefaultScope().slice(scopedUsers.name))
+                    val x = unchanged(scopedUsers.stripDefaultFilter().slice(scopedUsers.name))
                     assertEquals(1, unchanged(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(4, unchanged(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(4, unchanged(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
                     assertEquals(1, changed(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(1, changed(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(1, changed(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
 
                     // Even when we increase the limit
                     scopedUsers.update({ scopedUsers.cityId.isNotNull() }, 10) {
                         it[users.name] = "NewName"
                     }
                     assertEquals(0, unchanged(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(3, unchanged(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(3, unchanged(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
                     assertEquals(2, changed(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(2, changed(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(2, changed(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
 
                     // When the default scope is striped, all records can be updated
-                    scopedUsers.stripDefaultScope()
+                    scopedUsers.stripDefaultFilter()
                         .update({
                                     (scopedUsers.cityId eq munichId())
                                         .or(scopedUsers.cityId neq munichId())
@@ -189,9 +189,9 @@ class UpdateTests : DatabaseTestsBase() {
                                 10) { it[users.name] = "NewName"
                         }
                     assertEquals(0, unchanged(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(0, unchanged(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(0, unchanged(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
                     assertEquals(2, changed(scopedUsers.slice(scopedUsers.name)))
-                    assertEquals(5, changed(scopedUsers.stripDefaultScope().slice(scopedUsers.name)))
+                    assertEquals(5, changed(scopedUsers.stripDefaultFilter().slice(scopedUsers.name)))
                 }
         }
     }
@@ -247,8 +247,8 @@ class UpdateTests : DatabaseTestsBase() {
                             }
                         }
 
-                        scopedUsers.stripDefaultScope()
-                            .innerJoin(scopedUserData.stripDefaultScope())
+                        scopedUsers.stripDefaultFilter()
+                            .innerJoin(scopedUserData.stripDefaultFilter())
                             .select { scopedUsers.id neq "sergey" }
                             .forEach { row ->
                                 assertNotEquals(row[scopedUsers.name], row[scopedUserData.comment])
@@ -257,7 +257,7 @@ class UpdateTests : DatabaseTestsBase() {
                     }
 
                 // only stripping the right table's scope
-                scopedUsers.innerJoin(scopedUserData.stripDefaultScope()).let { join ->
+                scopedUsers.innerJoin(scopedUserData.stripDefaultFilter()).let { join ->
                     // Sergey and Eugene should both be affected by stripping
                     // the right table's scope
                     join.update {
@@ -275,8 +275,8 @@ class UpdateTests : DatabaseTestsBase() {
                         }
                     }
 
-                    scopedUsers.stripDefaultScope()
-                        .innerJoin(scopedUserData.stripDefaultScope())
+                    scopedUsers.stripDefaultFilter()
+                        .innerJoin(scopedUserData.stripDefaultFilter())
                         .select { scopedUsers.id notInList listOf("sergey", "eugene") }
                         .forEach { row ->
                             assertNotEquals(row[scopedUsers.name], row[scopedUserData.comment])
@@ -285,8 +285,8 @@ class UpdateTests : DatabaseTestsBase() {
                 }
 
                 // String both table scopes
-                scopedUsers.stripDefaultScope()
-                    .innerJoin(scopedUserData.stripDefaultScope())
+                scopedUsers.stripDefaultFilter()
+                    .innerJoin(scopedUserData.stripDefaultFilter())
                     .let { join ->
                     // Sergey and Eugene should both be affected by stripping
                     // the right table's scope
@@ -305,8 +305,8 @@ class UpdateTests : DatabaseTestsBase() {
                         }
                     }
 
-                    scopedUsers.stripDefaultScope()
-                        .innerJoin(scopedUserData.stripDefaultScope())
+                    scopedUsers.stripDefaultFilter()
+                        .innerJoin(scopedUserData.stripDefaultFilter())
                         .select { scopedUsers.id eq "andrey" }
                         .forEach { row ->
                             assertNotEquals(row[scopedUsers.name], row[scopedUserData.comment])

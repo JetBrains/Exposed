@@ -42,7 +42,7 @@ class UnionTests : DatabaseTestsBase() {
                 .map { it[scopedUsers.id] }
                 .let { assertEqualLists(listOf("sergey"), it ) }
 
-            scopedAndreyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "andrey" }
+            scopedAndreyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "andrey" }
             scopedAndreyQuery.union(scopedSergeyQuery)
                 .limit(1)
                 .map { it[scopedUsers.id] }
@@ -53,7 +53,7 @@ class UnionTests : DatabaseTestsBase() {
                 .map { it[scopedUsers.id] }
                 .let { assertTrue("sergey" in it && "andrey" in it) }
 
-            scopedSergeyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "sergey" }
+            scopedSergeyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "sergey" }
             scopedAndreyQuery.union(scopedSergeyQuery)
                 .limit(2)
                 .map { it[scopedUsers.id] }
@@ -66,8 +66,8 @@ class UnionTests : DatabaseTestsBase() {
                     .map { it[scopedUsers.id] }
                     .apply { assertEquals(0, size) }
 
-                scopedAndreyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "andrey" }
-                scopedSergeyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "sergey" }
+                scopedAndreyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "andrey" }
+                scopedSergeyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "sergey" }
                 scopedAndreyQuery.intersect(scopedSergeyQuery)
                     .map { it[scopedUsers.id] }
                     .apply { assertEquals(0, size) }
@@ -98,8 +98,8 @@ class UnionTests : DatabaseTestsBase() {
                     assertEquals("sergey", single())
                 }
 
-            val stripedScopedAndreyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "andrey" }
-            val stripedScopedSergeyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "sergey" }
+            val stripedScopedAndreyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "andrey" }
+            val stripedScopedSergeyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "sergey" }
             stripedScopedAndreyQuery.union(stripedScopedSergeyQuery)
                 .limit(2, 0)
                 .map { it[scopedUsers.id] }
@@ -118,7 +118,7 @@ class UnionTests : DatabaseTestsBase() {
             val scopedSergeyQuery = scopedUsers.select { scopedUsers.id eq "sergey" }
             assertEquals(1, scopedAndreyQuery.union(scopedSergeyQuery).count())
 
-            val stripedScopedAndreyQuery = scopedUsers.stripDefaultScope().select { scopedUsers.id eq "andrey" }
+            val stripedScopedAndreyQuery = scopedUsers.stripDefaultFilter().select { scopedUsers.id eq "andrey" }
             val stripedScopedSergeyQuery = scopedUsers.select { scopedUsers.id eq "sergey" }
             assertEquals(2, stripedScopedAndreyQuery.union(stripedScopedSergeyQuery).count())
         }
@@ -157,7 +157,7 @@ class UnionTests : DatabaseTestsBase() {
                         .apply { assertEqualLists(this, listOf("sergey", "sergey")) }
                 }
 
-            scopedUsers.stripDefaultScope().slice(scopedIdAlias)
+            scopedUsers.stripDefaultFilter().slice(scopedIdAlias)
                 .select { scopedUsers.id inList setOf("andrey", "sergey") }
                 .let { scopedAndreyQuery ->
                     scopedAndreyQuery

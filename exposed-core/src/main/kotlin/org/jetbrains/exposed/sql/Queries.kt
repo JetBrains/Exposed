@@ -4,9 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import kotlin.sequences.Sequence
 
@@ -222,8 +220,8 @@ fun <T : Table> T.update(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     limit: Int? = null,
     body: T.(UpdateStatement) -> Unit
-) : Int = (materializeDefaultScope()?.let { defaultScope ->
-    where?.let { defaultScope and SqlExpressionBuilder.it() } ?: defaultScope
+) : Int = (materializeDefaultFilter()?.let { defaultFilter ->
+    where?.let { defaultFilter and SqlExpressionBuilder.it() } ?: defaultFilter
 } ?: where?.let { SqlExpressionBuilder.it() }).let { reducedOp ->
     UpdateStatement(this, limit, reducedOp)
         .also { body(it) }
@@ -256,8 +254,8 @@ fun Join.update(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
-) : Int = (materializeDefaultScope()?.let { defaultScope ->
-    where?.let { defaultScope and SqlExpressionBuilder.it() } ?: defaultScope
+) : Int = (materializeDefaultFilter()?.let { defaultFilter ->
+    where?.let { defaultFilter and SqlExpressionBuilder.it() } ?: defaultFilter
 } ?: where?.let { SqlExpressionBuilder.it() })
     .let { reducedWhere ->
         UpdateStatement(this, limit, reducedWhere)

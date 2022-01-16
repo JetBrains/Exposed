@@ -31,10 +31,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = initializeWhere(where)
         private set
 
-    private fun initializeWhere(where: Op<Boolean>?) = set.materializeDefaultScope()
-        ?.let { safeDefaultScope ->
-            where?.let { it and safeDefaultScope }
-                ?: safeDefaultScope
+    private fun initializeWhere(where: Op<Boolean>?) = set.materializeDefaultFilter()
+        ?.let { safeFilterScope ->
+            where?.let { it and safeFilterScope }
+                ?: safeFilterScope
         } ?: where
 
     override val queryToExecute: Statement<ResultSet> get() {

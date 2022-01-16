@@ -4,9 +4,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -53,7 +51,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     assertScopedQueryResultValid(queryAdjusted)
                 }
 
-            (scopedUsers.stripDefaultScope() innerJoin cities)
+            (scopedUsers.stripDefaultFilter() innerJoin cities)
                 .slice(scopedUsers.name)
                 .select(scopedPredicate)
                 .let { queryAdjusted ->
@@ -105,7 +103,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     assertScopedQueryResultValid(queryAdjusted)
                 }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .slice(scopedUsers.name, cities.name)
                 .select(scopedPredicate)
                 .let { queryAdjusted ->
@@ -166,7 +164,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     assertScopedQueryResultValid(queryAdjusted)
                 }
 
-            (scopedUsers.stripDefaultScope() innerJoin cities)
+            (scopedUsers.stripDefaultFilter() innerJoin cities)
                 .slice(scopedUsers.name, cities.name)
                 .selectAll()
                 .let { queryAdjusted ->
@@ -210,15 +208,15 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     queryAdjusted.andWhere { scopedPredicate }
 
                     val actualWhere = queryAdjusted.where!!
-                    val defaultScope = Op.build { scopedUsers.cityId eq munichId() }
-                    ((scopedPredicate.and(defaultScope)).and(scopedPredicate.and(defaultScope)))
+                    val defaultFilter = Op.build { scopedUsers.cityId eq munichId() }
+                    ((scopedPredicate.and(defaultFilter)).and(scopedPredicate.and(defaultFilter)))
                         .repr().let { expected ->
                             assertEquals(expected, actualWhere.repr())
                             assertScopedQueryResultValid(queryAdjusted)
                         }
                 }
 
-            (scopedUsers.stripDefaultScope() innerJoin cities)
+            (scopedUsers.stripDefaultFilter() innerJoin cities)
                 .slice(scopedUsers.name, cities.name)
                 .select { scopedPredicate }
                 .let { queryAdjusted ->
@@ -255,9 +253,9 @@ class AdjustQueryTests : DatabaseTestsBase() {
                     queryAdjusted.orWhere { scopedPredicate }
                     val actualWhere = queryAdjusted.where
 
-                    assertEquals(((scopedPredicate.and(scopedUsers.defaultScope()))
+                    assertEquals(((scopedPredicate.and(scopedUsers.defaultFilter()))
                         .or(scopedPredicate)
-                        .and(scopedUsers.defaultScope()))
+                        .and(scopedUsers.defaultFilter()))
                         .repr(), actualWhere!!.repr())
                     assertScopedQueryResultValid(queryAdjusted)
                 }

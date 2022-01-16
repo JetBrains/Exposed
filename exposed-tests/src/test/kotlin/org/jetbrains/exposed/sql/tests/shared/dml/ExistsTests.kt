@@ -6,15 +6,10 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.assertFalse
-import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.entities.`Table id not in Record Test issue 1341`.NamesTable.first
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-import org.testcontainers.shaded.org.bouncycastle.asn1.x500.style.RFC4519Style.c
 
 class ExistsTests : DatabaseTestsBase() {
     @Test
@@ -38,7 +33,7 @@ class ExistsTests : DatabaseTestsBase() {
 
             scopedUsers.select {
                 exists(scopedUserData
-                           .stripDefaultScope()
+                           .stripDefaultFilter()
                            .select{ scopedUserData.userId eq scopedUsers.id })
             }.map { it[scopedUsers.name] }
             .let {
@@ -47,10 +42,10 @@ class ExistsTests : DatabaseTestsBase() {
                 assertTrue("Eugene" in it)
             }
 
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     exists(scopedUserData
-                           .stripDefaultScope()
+                           .stripDefaultFilter()
                            .select{ scopedUserData.userId eq scopedUsers.id })
                 }.map { it[scopedUsers.name] }
                 .let {
@@ -98,7 +93,7 @@ class ExistsTests : DatabaseTestsBase() {
 
             // Exists with a default scope and some data in scope of the exists query
             // Right table's default scope is striped
-            scopedExists = exists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id)))
+            scopedExists = exists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id)))
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
                 scopedExists = case()
                     .When(scopedExists, booleanLiteral(true))
@@ -108,7 +103,7 @@ class ExistsTests : DatabaseTestsBase() {
                 .selectAll().also { rows ->
                     assertEquals(2, rows.filter { it[scopedExists] }.size)
                 }
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .slice(scopedExists)
                 .selectAll().also { rows ->
                     assertEquals(3, rows.filter { it[scopedExists] }.size)
@@ -138,7 +133,7 @@ class ExistsTests : DatabaseTestsBase() {
 
 
             // Not Exists with the default scope on the right table striped
-            scopedExists3 = notExists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id)))
+            scopedExists3 = notExists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id)))
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
                 scopedExists3 = case()
                     .When(scopedExists3, booleanLiteral(true))
@@ -146,7 +141,7 @@ class ExistsTests : DatabaseTestsBase() {
             }
             scopedUsers.slice(scopedExists3).selectAll()
                 .also { rows -> assertEquals(0, rows.filter { it[scopedExists3] }.size) }
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .slice(scopedExists3).selectAll()
                 .also { rows -> assertEquals(2, rows.filter { it[scopedExists3] }.size) }
 
@@ -193,7 +188,7 @@ class ExistsTests : DatabaseTestsBase() {
 
             // Stripping the right table's default scope
             scopedUsers.select {
-                exists(scopedUserData.stripDefaultScope()
+                exists(scopedUserData.stripDefaultFilter()
                            .select((scopedUserData.userId eq scopedUsers.id)
                                        and ((scopedUserData.comment like "%here%")
                                or (scopedUserData.comment like "%Sergey"))))
@@ -205,7 +200,7 @@ class ExistsTests : DatabaseTestsBase() {
                 }
 
             // Stripping the right table's default scope only
-            scopedUsers.stripDefaultScope().select {
+            scopedUsers.stripDefaultFilter().select {
                 exists(scopedUserData.select(
                     (scopedUserData.userId eq scopedUsers.id)
                         and ((scopedUserData.comment like "%here%")
@@ -218,8 +213,8 @@ class ExistsTests : DatabaseTestsBase() {
                 }
 
             // Stripping both scopes
-            scopedUsers.stripDefaultScope().select {
-                exists(scopedUserData.stripDefaultScope()
+            scopedUsers.stripDefaultFilter().select {
+                exists(scopedUserData.stripDefaultFilter()
                            .select(
                                (scopedUserData.userId eq scopedUsers.id)
                                    and ((scopedUserData.comment like "%here%")
@@ -258,7 +253,7 @@ class ExistsTests : DatabaseTestsBase() {
 
             // Stripping on of the right table's default scopes
             scopedUsers.select {
-                exists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
+                exists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
                     exists(scopedUserData.select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
             }.orderBy(scopedUsers.id).toList()
                 .map { it[scopedUsers.name] }
@@ -268,7 +263,7 @@ class ExistsTests : DatabaseTestsBase() {
                 }
 
             // Stripping the left table's default scope only
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
                     exists(scopedUserData.select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
                     exists(scopedUserData.select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
@@ -282,7 +277,7 @@ class ExistsTests : DatabaseTestsBase() {
             // Stripping the other right table's default scope
             scopedUsers.select {
                 exists(scopedUserData.select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
-                    exists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
+                    exists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
             }.orderBy(scopedUsers.id)
             .map { it[scopedUsers.name] }
             .let {
@@ -291,10 +286,10 @@ class ExistsTests : DatabaseTestsBase() {
             }
 
             // Stripping the right default scopes
-            scopedUsers.stripDefaultScope()
+            scopedUsers.stripDefaultFilter()
                 .select {
-                    exists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
-                    exists(scopedUserData.stripDefaultScope().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
+                    exists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%here%"))) or
+                    exists(scopedUserData.stripDefaultFilter().select((scopedUserData.userId eq scopedUsers.id) and (scopedUserData.comment like "%Sergey")))
                 }.orderBy(scopedUsers.id)
                 .map { it[scopedUsers.name] }
                 .let {

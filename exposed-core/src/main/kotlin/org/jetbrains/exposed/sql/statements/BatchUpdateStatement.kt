@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
@@ -39,7 +38,7 @@ open class BatchUpdateStatement<T>(val table: T) : UpdateStatement(table, null) 
 
     override fun prepareSQL(transaction: Transaction): String =
         "${super.prepareSQL(transaction)} WHERE ${transaction.identity(table.id)} = ?${
-            table.materializeDefaultScope()?.let { " AND ($it)" } ?: ""
+            table.materializeDefaultFilter()?.let { " AND ($it)" } ?: ""
         }"
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
