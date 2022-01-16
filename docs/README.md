@@ -29,7 +29,7 @@ dependencies {
 }
 ```
 
-The latest release version is `0.3.0` and is available on JFrog at `https://tmpasipanodya.jfrog.io/artifactory/releases`.
+The latest release version is `0.5.0` and is available on JFrog at `https://tmpasipanodya.jfrog.io/artifactory/releases`.
 
 ## Examples
 
