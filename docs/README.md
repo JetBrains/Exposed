@@ -29,7 +29,8 @@ dependencies {
 }
 ```
 
-The latest release version is `0.5.0` and is available on JFrog at `https://tmpasipanodya.jfrog.io/artifactory/releases`.
+The latest release version is `0.5.0` (pegged against `org.jetbrains.exposed:exposed:0.37.2`)
+and is available on JFrog at `https://tmpasipanodya.jfrog.io/artifactory/releases`.
 
 ## Examples
 
@@ -42,7 +43,7 @@ object users : LongIdTable() {
 
 object posts : LongIdTable() {
     val text = text("text")
-    val userId = integer("user_id") references Users.id
+    val userId = integer("user_id") references users.id
 
     override val defaultFilter = { Op.build { userId eq CurrentUserId.get() } }
 }
@@ -60,43 +61,45 @@ fun main() {
             it[text] = "foo bar"
         }
         posts.insert {
-            it[user2Id] = user1Id
+            it[userId] = user2Id
             it[text] = "lorem ipsum"
         }
 
         CurrentUserId.set(user1Id)
         var retrievedText = posts.selectAll().single()[posts.text]
 
-        // true
-        retrievedText == "foo bar"
+       
+        println(retrievedText == "foo bar")
+        //> true
 
         CurrentUserId.set(user2Id)
         retrievedText = posts.selectAll().single()[posts.text]
 
-        // true
-        retrievedText == "lorem ipsum"
+        
+        println(retrievedText == "lorem ipsum")
+        //> true
 
-        // Both posts have Ids but because of the default filter,
-        // only user 2's post is updated
+        // Any persisted record must have an id but the following update statment 
+        // applies the table's default filter, hence only the current user's post 
+        // will be updated.
         val newText =  "Let's get it started in here"
-        posts.update({ id.isNotNull() }) {
-            it[text] = newText
-        }
+        posts.update({ id.isNotNull() }) { it[text] = newText }
 
-        var allTexts = posts.stripDefaultFilter()
+        posts.stripDefaultFilter()
             .orderBy(posts.userId, SortOrder.Asc)
-            .selectAll().map { it[posts.userId] to it[posts.text] }
-        
-        // true
-        listOf(
-            user1Id to "foo bar", 
-            user2Id to newText
-        ) == allTexts
-        
+            .selectAll()
+            .map { it[posts.userId] to it[posts.text] }
+            .let { allTexts -> 
+                // true
+                listOf(
+                    user1Id to "foo bar", 
+                    user2Id to newText
+                ) == allTexts
+            }
     }
 }
 ```
-Default filters are applied to all DB operations including deletes, joins, unions, etc.
+Default filters are applied to all operations including deletes, joins, unions, etc.
 For additional examples, take a look at 
 [the official Exposed wiki](https://github.com/JetBrains/Exposed/wiki).
 
