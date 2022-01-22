@@ -12,7 +12,7 @@ abstract class Op<T> : Expression<T>() {
         /** Builds a new operator using provided [op]. */
         inline fun <T> build(op: SqlExpressionBuilder.() -> Op<T>): Op<T> = SqlExpressionBuilder.op()
 
-        fun <T> nullOp() : Op<T> = NULL as Op<T>
+        fun <T> nullOp(): Op<T> = NULL as Op<T>
     }
 
     internal interface OpBoolean

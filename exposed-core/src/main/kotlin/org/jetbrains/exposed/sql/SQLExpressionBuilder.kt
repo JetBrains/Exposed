@@ -168,8 +168,8 @@ interface ISqlExpressionBuilder {
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
 
     /** Checks if this expression is not equals to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when {
-        other.equals(Op.NULL) -> isNotNull()
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
+        is Op.NULL -> isNotNull()
         else -> NeqOp(this, other)
     }
 

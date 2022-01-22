@@ -27,7 +27,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     open operator fun <S> set(column: Column<S>, value: S) {
-        require(column.columnType.nullable || (value != null && value != Op.NULL)) {
+        require(column.columnType.nullable || (value != null && value !is Op.NULL)) {
             "Trying to set null to not nullable column $column"
         }
 
@@ -43,7 +43,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     @JvmName("setWithEntityIdExpression")
     operator fun <S : Any?, ID : EntityID<S>, E : Expression<S>> set(column: Column<ID>, value: E) {
-        require(column.columnType.nullable || value != Op.NULL) {
+        require(column.columnType.nullable || value !is Op.NULL) {
             "Trying to set null to not nullable column $column"
         }
         checkThatExpressionWasNotSetInPreviousBatch(column)
