@@ -187,8 +187,9 @@ abstract class FunctionProvider {
         }
         append(expr.expr)
         if (expr.orderBy.isNotEmpty()) {
-            expr.orderBy.appendTo(prefix = " ORDER BY ") {
-                append(it.first, " ", it.second.name)
+            append(" ORDER BY ")
+            expr.orderBy.appendTo { (expression, sortOrder) ->
+                currentDialect.dataTypeProvider.precessOrderByClause(this, expression, sortOrder)
             }
         }
         expr.separator?.let {
