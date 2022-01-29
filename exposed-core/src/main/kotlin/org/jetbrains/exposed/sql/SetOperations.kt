@@ -79,8 +79,8 @@ sealed class SetOperation(
 
             if (orderByExpressions.isNotEmpty()) {
                 append(" ORDER BY ")
-                orderByExpressions.appendTo {
-                    append((it.first as? ExpressionAlias<*>)?.alias ?: it.first, " ", it.second.name)
+                orderByExpressions.appendTo { (expression, sortOrder) ->
+                    currentDialect.dataTypeProvider.precessOrderByClause(this, expression, sortOrder)
                 }
             }
 
