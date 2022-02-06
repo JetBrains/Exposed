@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.postgresql.sql
 
-import org.jetbrains.exposed.sql.ColumnSet
+import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.statements.InsertPrepareSQLCustomizer
+import org.jetbrains.exposed.sql.statements.InsertPrepareSQLRenderer
 
-internal class PostgresqlReturningPrepareSQLCustomizer(
-    private val returningColumnSet: ColumnSet
-) : InsertPrepareSQLCustomizer {
+internal class PostgresqlReturningSQLRenderer(
+    private val returningColumnSet: FieldSet
+) : InsertPrepareSQLRenderer {
 
     override fun afterValuesSet(builder: QueryBuilder) {
         returningColumnSet.realFields.appendTo(prefix = " RETURNING ", builder = builder) {

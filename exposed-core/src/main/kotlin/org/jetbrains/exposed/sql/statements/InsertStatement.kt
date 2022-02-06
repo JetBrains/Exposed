@@ -27,7 +27,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     var resultedValues: List<ResultRow>? = null
         private set
 
-    protected val prepareSqlCallbacks = mutableListOf<InsertPrepareSQLCustomizer>()
+    protected val prepareSqlCallbacks = mutableListOf<InsertPrepareSQLRenderer>()
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
@@ -114,7 +114,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         return result
     }
 
-    fun registerPrepareSQLCallback(callback: InsertPrepareSQLCustomizer) = prepareSqlCallbacks.add(callback)
+    fun registerPrepareSQLCallback(callback: InsertPrepareSQLRenderer) = prepareSqlCallbacks.add(callback)
 
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
@@ -197,8 +197,8 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     }
 }
 
-interface InsertPrepareSQLCustomizer {
+interface InsertPrepareSQLRenderer {
     fun afterValuesSet(builder: QueryBuilder) {}
 }
 
-object NoopPrepareSQLCustomizer : InsertPrepareSQLCustomizer
+object NoopPrepareSQLCustomizer : InsertPrepareSQLRenderer
