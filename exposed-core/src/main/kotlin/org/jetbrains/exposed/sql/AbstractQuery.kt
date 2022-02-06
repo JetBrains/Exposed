@@ -58,40 +58,44 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
     protected abstract val queryToExecute: Statement<ResultSet>
 
     override fun iterator(): Iterator<ResultRow> {
-        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
+        val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!, transaction, set)
         return if (transaction.db.supportsMultipleResultSets) {
             resultIterator
         } else {
             Iterable { resultIterator }.toList().iterator()
         }
     }
+}
 
-    private inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
-        private var hasNext = false
-            set(value) {
-                field = value
-                if (!field) {
-                    rs.statement?.close()
-                    transaction.openResultSetsCount--
-                }
+class ResultIterator(
+    private val rs: ResultSet,
+    private val transaction: Transaction,
+    set: FieldSet
+) : Iterator<ResultRow> {
+    private var hasNext = false
+        set(value) {
+            field = value
+            if (!field) {
+                rs.statement?.close()
+                transaction.openResultSetsCount--
             }
-
-        private val fieldsIndex = set.realFields.toSet().mapIndexed { index, expression -> expression to index }.toMap()
-
-        init {
-            hasNext = rs.next()
-            if (hasNext) trackResultSet(transaction)
         }
 
-        override operator fun next(): ResultRow {
-            if (!hasNext) throw NoSuchElementException()
-            val result = ResultRow.create(rs, fieldsIndex)
-            hasNext = rs.next()
-            return result
-        }
+    private val fieldsIndex = set.realFields.toSet().mapIndexed { index, expression -> expression to index }.toMap()
 
-        override fun hasNext(): Boolean = hasNext
+    init {
+        hasNext = rs.next()
+        if (hasNext) trackResultSet(transaction)
     }
+
+    override operator fun next(): ResultRow {
+        if (!hasNext) throw NoSuchElementException()
+        val result = ResultRow.create(rs, fieldsIndex)
+        hasNext = rs.next()
+        return result
+    }
+
+    override fun hasNext(): Boolean = hasNext
 
     companion object {
         private fun trackResultSet(transaction: Transaction) {

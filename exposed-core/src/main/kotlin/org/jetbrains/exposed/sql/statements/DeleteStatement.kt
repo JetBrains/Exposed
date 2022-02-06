@@ -19,8 +19,11 @@ open class DeleteStatement(
         return executeUpdate()
     }
 
-    override fun prepareSQL(transaction: Transaction): String =
-        transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.let { QueryBuilder(true).append(it).toString() }, limit, transaction)
+    override fun prepareSQL(transaction: Transaction): String {
+        val where =  where?.let { QueryBuilder(true).append(it).toString() }
+        return transaction.db.dialect.functionProvider.delete(isIgnore, table, where, limit, transaction)
+    }
+
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         where?.toQueryBuilder(this)

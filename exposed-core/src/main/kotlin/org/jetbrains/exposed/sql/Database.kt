@@ -6,16 +6,24 @@ import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLNGDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
-import java.util.*
+import java.util.ServiceLoader
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
-class Database private constructor(
+open class Database protected constructor(
     private val resolvedVendor: String? = null,
     val config: DatabaseConfig,
     val connector: () -> ExposedConnection<*>
