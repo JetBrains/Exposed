@@ -1,13 +1,33 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnDiff
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ExpressionAlias
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.LiteralOp
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendIfNotNull
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashSet
 
 /**
  * Provides definitions for all the supported SQL data types.
@@ -354,13 +374,15 @@ abstract class FunctionProvider {
      * @param columns Columns to insert the values into.
      * @param expr Expresion with the values to insert.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks callbacks allowing to customize SQL render process
      */
     open fun insert(
         ignore: Boolean,
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: List<RenderInsertSQLCallback>
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
@@ -391,13 +413,15 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSqlCallbacks callbacks to customize sql render process
      */
     open fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         target.describe(transaction, this)
@@ -423,13 +447,15 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSqlCallbacks callbacks to customize sql render process
      */
     open fun update(
         targets: Join,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
@@ -798,3 +824,31 @@ internal val currentDialectIfAvailable: DatabaseDialect?
 
 internal fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+
+/**
+ * Render callbacks for insert statement - order of invoked callbacks may differ per SQL dialect.
+ * Some may not be invoked at all in dialect.
+ */
+interface RenderInsertSQLCallback {
+    /**
+     * Render `RETURNING ...` statement - like in Postgresql
+     */
+    fun returning(builder: QueryBuilder) {}
+
+    /**
+     * Render `ON CONFLICT ...` statement - Postgresql
+     */
+    fun onConflict(builder: QueryBuilder) {}
+}
+
+interface UpdateRenderSQLCallbacks {
+    /**
+     * Render `RETURNING ...` statement - like in Postgresql
+     */
+    fun returning(builder: QueryBuilder)
+
+    /**
+     * Render `ON CONFLICT ...` statement - Postgresql
+     */
+    fun onConflict(builder: QueryBuilder) {}
+}

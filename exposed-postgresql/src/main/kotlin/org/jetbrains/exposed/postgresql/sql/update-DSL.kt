@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.postgresql.sql
 
-import org.jetbrains.exposed.sql.ColumnSet
+import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.ResultIterator
@@ -11,6 +11,9 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.AbstractUpdateStatement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
+/**
+ * Base update DSL for Postgres. Declare only set { } and on conflicts block.
+ */
 open class PostgresqlUpdateDSL<T: Table, S : AbstractUpdateStatement<*>>(
     protected val columnSet: T,
     internal val updateStatement: S
@@ -21,6 +24,9 @@ open class PostgresqlUpdateDSL<T: Table, S : AbstractUpdateStatement<*>>(
     }
 }
 
+/**
+ * Add where to update - not all update need where clause. updateAll - does not have one.
+ */
 open class PostgresqlUpdateWhereDSL<T: Table, S : AbstractUpdateStatement<*>>(
     columnSet: T,
     updateStatement: S
@@ -31,21 +37,24 @@ open class PostgresqlUpdateWhereDSL<T: Table, S : AbstractUpdateStatement<*>>(
     }
 }
 
-class PostgresqlUpdateReturningDSL<T : Table>(
+/**
+ * Update with set { } and returning { }
+ */
+open class PostgresqlUpdateAllReturningDSL<T : Table>(
     columnSet: T,
 ) : PostgresqlUpdateDSL<T, UpdateReturningStatement>(columnSet, UpdateReturningStatement(columnSet)) {
 
-    fun returning(columnSet: ColumnSet = this.columnSet) {
+    fun returning(columnSet: FieldSet = this.columnSet) {
         updateStatement.returning(columnSet)
     }
 }
 
-class PostgresqlUpdateAllReturningDSL<T : Table>(
+class PostgresqlUpdateReturningDSL<T : Table>(
     columnSet: T,
-) : PostgresqlUpdateWhereDSL<T, UpdateReturningStatement>(columnSet, UpdateReturningStatement(columnSet)) {
+) : PostgresqlUpdateAllReturningDSL<T>(columnSet) {
 
-    fun returning(columnSet: ColumnSet = this.columnSet) {
-        updateStatement.returning(columnSet)
+    fun where(where: SqlExpressionBuilder.() -> Op<Boolean>) {
+        updateStatement.where = SqlExpressionBuilder.where()
     }
 }
 
@@ -54,12 +63,14 @@ class UpdateReturningStatement(
     where: Op<Boolean>? = null,
 ) : AbstractUpdateStatement<Iterator<ResultRow>>(table, null, where) {
 
-    private var returning: ColumnSet = table
+    private var returning: FieldSet = table
+
+//    override fun iterator(): Iterator<ResultRow>
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Iterator<ResultRow> {
         if (values.isEmpty()) return emptyList<ResultRow>().iterator()
 
-        return ResultIterator(executeQuery(), transaction, targetsSet).iterator()
+        return ResultIterator(executeQuery(), transaction, targetsSet)
     }
 
     override fun prepareSQL(transaction: Transaction): String {
@@ -72,7 +83,7 @@ class UpdateReturningStatement(
         }.toString()
     }
 
-    fun returning(columnSet: ColumnSet) {
+    fun returning(columnSet: FieldSet) {
         returning = columnSet
     }
 }

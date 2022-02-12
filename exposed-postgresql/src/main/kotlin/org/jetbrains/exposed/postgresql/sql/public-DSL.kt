@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.render.NoopSQLRenderer
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.DeleteStatement
@@ -13,13 +14,21 @@ import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
+/**
+ * Insert for Postgresql dialect with `ON CONFLICT` and `RETURNING` statements.
+ */
 fun <T : Table> T.insert(body: PostgresqlInsertDSL<T>.(T) -> Unit): Int {
     val insertStatement = InsertStatement<Number>(this)
 
-    val dsl = PostgresqlInsertDSL(this, insertStatement)
+    val onConflictDSL = PostgresSQLOnConflictDSLImpl()
+    val dsl = PostgresqlInsertDSL(this, insertStatement, onConflictDSL)
     body(dsl, this)
 
-    insertStatement.registerPrepareSQLCallback(dsl.createOnConflictPrepareSQL())
+    val renderSQLCallbacks = PostgresSqlPrepareInsertSQLCallbacks(
+        onConflictRenderer = onConflictDSL.sqlRenderer,
+        returningRender = NoopSQLRenderer
+    )
+    insertStatement.registerRenderSQLCallback(renderSQLCallbacks)
 
     return insertStatement.execute(TransactionManager.current())!!
 }
@@ -27,11 +36,17 @@ fun <T : Table> T.insert(body: PostgresqlInsertDSL<T>.(T) -> Unit): Int {
 fun <T : Table> T.insertReturning(body: PostgresqlInsertReturningDSL<T>.(T) -> Unit): ResultRow {
     val insertStatement = InsertStatement<List<ResultRow>>(this)
 
-    val dsl = PostgresqlInsertReturningDSL(this, insertStatement)
+    val onConflictDSL = PostgresSQLOnConflictDSLImpl()
+    val returningDSL = PostgresSqlReturningDSLImpl(this)
+    val dsl = PostgresqlInsertReturningDSL(this, insertStatement, returningDSL, onConflictDSL)
     body(dsl, this)
 
-    insertStatement.registerPrepareSQLCallback(dsl.createOnConflictPrepareSQL())
-    insertStatement.registerPrepareSQLCallback(dsl.createReturningPrepareSQLCustomizer())
+    val sqlRendererCallbacks = PostgresSqlPrepareInsertSQLCallbacks(
+        onConflictRenderer = onConflictDSL.sqlRenderer,
+        returningRender = returningDSL.sqlRenderer
+    )
+
+    insertStatement.registerRenderSQLCallback(sqlRendererCallbacks)
 
     insertStatement.execute(TransactionManager.current())!!
 
@@ -63,7 +78,7 @@ fun <T : Table> T.updateAll(body: PostgresqlUpdateDSL<T, UpdateStatement>.() -> 
     return updateDsl.updateStatement.execute(TransactionManager.current())!!
 }
 
-fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Unit): Iterator<ResultRow> {
+fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Unit): Iterable<ResultRow> {
     val updateDsl = PostgresqlUpdateReturningDSL(this)
     body(updateDsl)
 
@@ -74,7 +89,8 @@ fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Uni
         )
     }
 
-    return updateDsl.updateStatement.execute(TransactionManager.current())!!
+    val resultIterator = updateDsl.updateStatement.execute(TransactionManager.current())!!
+    return Iterable { resultIterator }
 }
 
 fun <T: Table> T.updateAllReturning(body: PostgresqlUpdateAllReturningDSL<T>.() -> Unit): Iterator<ResultRow> {

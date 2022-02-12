@@ -1,9 +1,23 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnDiff
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.*
+import java.util.UUID
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
@@ -105,9 +119,19 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: List<RenderInsertSQLCallback>
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction)
+        val commonSQL = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
+        val postgresSpecificSQL = with(QueryBuilder(true)) {
+            renderSQLCallbacks.forEach { it.returning(this) }
+            renderSQLCallbacks.forEach { it.onConflict(this) }
+
+            toString()
+        }
+
+        val def = commonSQL + postgresSpecificSQL
+
         return if (ignore) "$def $onConflictIgnore" else def
     }
 
@@ -116,12 +140,21 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction)
+        val def = super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallbacks)
+        val postgresSpecificSQL = QueryBuilder(true).let { queryBuilder ->
+            renderSqlCallbacks.forEach { renderer -> renderer.returning(queryBuilder) }
+            renderSqlCallbacks.forEach { renderer -> renderer.onConflict(queryBuilder) }
+
+            toString()
+        }
+
+        return "$def $postgresSpecificSQL"
     }
 
     override fun update(
@@ -129,7 +162,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
@@ -179,7 +213,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
         val columns = data.map { it.first }
 
-        val def = super.insert(false, table, columns, sql, transaction)
+        val def = super.insert(false, table, columns, sql, transaction, emptyList())
 
         val uniqueCols = table.primaryKey?.columns
         if (uniqueCols.isNullOrEmpty()) {

@@ -24,8 +24,8 @@ abstract class AbstractUpdateStatement<R>(
         require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }
 
         return when (targetsSet) {
-            is Table -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)
-            is Join -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)
+            is Table -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction, emptyList())
+            is Join -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction, emptyList())
             else -> transaction.throwUnsupportedException("UPDATE with ${targetsSet::class.simpleName} unsupported")
         }
     }

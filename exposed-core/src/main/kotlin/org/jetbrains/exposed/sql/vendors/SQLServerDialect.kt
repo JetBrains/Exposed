@@ -1,9 +1,28 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnDiff
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendIfNotNull
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.*
+import java.util.UUID
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
@@ -108,9 +127,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallbacks)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
 
@@ -119,7 +139,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")

@@ -1,7 +1,16 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
 import java.sql.Connection
@@ -96,9 +105,10 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: List<RenderInsertSQLCallback>
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction)
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
     }
 
@@ -107,12 +117,13 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction)
+        return super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallbacks)
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {

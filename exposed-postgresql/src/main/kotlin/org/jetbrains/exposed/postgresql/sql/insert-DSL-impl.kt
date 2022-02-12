@@ -1,101 +1,46 @@
 package org.jetbrains.exposed.postgresql.sql
 
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnSet
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.InsertPrepareSQLCustomizer
+import org.jetbrains.exposed.sql.render.SQLRenderer
 import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.NoopPrepareSQLCustomizer
+import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 
-
-internal class PostgresReturningDSL(
-    internal var returningColumnSet: ColumnSet
-) {
-
-    fun returning(returning: ColumnSet = this.returningColumnSet) {
-        this.returningColumnSet = returning
-    }
-
-}
-
+/**
+ * Postgres insert DSL - introduce only [values] lambda for inserts
+ */
 open class PostgresqlInsertDSL<T : Table>(
     private val table: T,
-    private val insertStatement: InsertStatement<*>
-) {
-
-    private var onConflictAlreadyCalled = false
+    private val insertStatement: InsertStatement<*>,
+    private val onConflictDSL: PostgresqlOnConflictDSL
+) : PostgresqlOnConflictDSL by onConflictDSL {
 
     fun values(body: T.(InsertStatement<*>) -> Unit) {
         body(table, insertStatement)
     }
-
-    /**
-     * Specifies which conflicts ON CONFLICT takes the alternative action on by choosing arbiter indexes.
-     * Either performs unique index inference, or names a constraint explicitly.
-     * For ON CONFLICT DO NOTHING, it is optional to specify a conflict_target; when omitted, conflicts with all usable constraints (and unique indexes) are handled.
-     *
-     *  https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
-     */
-    fun onConflictDoNothing(conflictTarget: String? = null) {
-        checkOnConflictNotCalled()
-    }
-
-    /**
-     * Specifies which conflicts ON CONFLICT takes the alternative action on by choosing arbiter indexes.
-     * For ON CONFLICT DO UPDATE, a conflict_target must be provided.
-     *
-     * https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
-     */
-    fun <T : Comparable<T>> onConflictDoUpdate(idColumn: Column<EntityID<T>>) {
-        checkOnConflictNotCalled()
-    }
-
-    /**
-     * Specifies which conflicts ON CONFLICT takes the alternative action on by choosing arbiter indexes.
-     * For ON CONFLICT DO UPDATE, a conflict_target must be provided.
-     *
-     * https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
-     */
-    fun <T : Comparable<T>> onConflictDoUpdate(constraintName: String) {
-        checkOnConflictNotCalled()
-    }
-
-    private fun checkOnConflictNotCalled() {
-        if (onConflictAlreadyCalled) {
-            throw IllegalStateException()
-        }
-        onConflictAlreadyCalled = true
-    }
-
-    internal fun createOnConflictPrepareSQL(): InsertPrepareSQLCustomizer {
-        if (onConflictAlreadyCalled) {
-            return OnConflictPrepareSQLCallback()
-        }
-
-        return NoopPrepareSQLCustomizer
-    }
 }
 
-
+/**
+ * Postgres insert DSL with [returning] allowing to return inserted values
+ */
 class PostgresqlInsertReturningDSL<T : Table>(
     table: T,
-    insertStatement: InsertStatement<*>
-) : PostgresqlInsertDSL<T>(table, insertStatement) {
-    private var returning: ColumnSet = table
+    insertStatement: InsertStatement<*>,
+    private val returningImpl: PostgresSqlReturningDSL,
+    onConflictDSL: PostgresqlOnConflictDSL
+) : PostgresSqlReturningDSL by returningImpl, PostgresqlInsertDSL<T>(table, insertStatement, onConflictDSL)
 
-    fun returning(returning: ColumnSet = this.returning) {
-        this.returning = returning
+
+internal class PostgresSqlPrepareInsertSQLCallbacks(
+    private val onConflictRenderer: SQLRenderer,
+    private val returningRender: SQLRenderer
+) : RenderInsertSQLCallback {
+
+    override fun onConflict(builder: QueryBuilder) {
+        onConflictRenderer.render(builder)
     }
 
-    internal fun createReturningPrepareSQLCustomizer(): InsertPrepareSQLCustomizer {
-        return PostgresqlReturningPrepareSQLCustomizer(returning)
-    }
-}
-
-class OnConflictPrepareSQLCallback() : InsertPrepareSQLCustomizer {
-    override fun afterValuesSet(builder: QueryBuilder) {
-
+    override fun returning(builder: QueryBuilder) {
+        returningRender.render(builder)
     }
 }

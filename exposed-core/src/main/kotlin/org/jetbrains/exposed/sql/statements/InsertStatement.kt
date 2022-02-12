@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.isAutoInc
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
@@ -27,7 +28,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     var resultedValues: List<ResultRow>? = null
         private set
 
-    protected val prepareSqlCallbacks = mutableListOf<InsertPrepareSQLCustomizer>()
+    private val renderSqlCallbacks = ArrayList<RenderInsertSQLCallback>(2)
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
@@ -114,7 +115,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         return result
     }
 
-    fun registerPrepareSQLCallback(callback: InsertPrepareSQLCustomizer) = prepareSqlCallbacks.add(callback)
+    fun registerRenderSQLCallback(callback: RenderInsertSQLCallback) = renderSqlCallbacks.add(callback)
 
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
@@ -125,11 +126,9 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
                 registerArgument(col, value)
             }
 
-            prepareSqlCallbacks.forEach { callBack -> callBack.afterValuesSet(builder) }
-
             toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
+        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction, renderSqlCallbacks)
     }
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
@@ -196,9 +195,3 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         }
     }
 }
-
-interface InsertPrepareSQLCustomizer {
-    fun afterValuesSet(builder: QueryBuilder) {}
-}
-
-object NoopPrepareSQLCustomizer : InsertPrepareSQLCustomizer

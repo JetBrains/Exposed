@@ -1,39 +1,27 @@
 package org.jetbrains.exposed.postgresql.sql
 
+import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.statements.jdbc.JdbcPreparedStatementImpl
+import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.postgresql.ds.PGSimpleDataSource
 import java.util.concurrent.CopyOnWriteArrayList
 
 open class BasePostgresTest {
 
-    val database = createDatabaseConnection()
-
-    private fun createDatabaseConnection(): Database {
-        val datasource = PGSimpleDataSource()
-        datasource.user = PostgresSingletonContainer.username
-        datasource.password = PostgresSingletonContainer.password
-        datasource.setURL(PostgresSingletonContainer.jdbcUrl)
-//        datasource.currentSchema = schema
-
-        return Database.connect(
-            datasource =  datasource,
-            databaseConfig = DatabaseConfig {
-                defaultRepetitionAttempts = 0
-            }
-        )
-    }
-
     fun <T> withTransaction(block: Transaction.() -> T): ExecutionResult<T> {
         val interceptor = PostgresTestStatementInterceptor()
         val res = transaction {
-            registerInterceptor(interceptor)
+            addLogger(interceptor)
             block()
         }
 
@@ -43,8 +31,43 @@ open class BasePostgresTest {
         )
     }
 
+    fun selectByFullName(fullName: String): ExposedPostgresTableData? {
+        return transaction {
+            table.select { table.fullName.eq(fullName) }.singleOrNull()?.toExposedPostgresTableData()
+        }
+    }
+
+    fun countByFullName(fullName: String): Long {
+        return transaction { table.select { table.fullName.eq(fullName) }.count() }
+    }
+
+    fun insert(fullName: String): ExposedPostgresTableData {
+        return withTransaction {
+            table.insertReturning {
+                values { insertStatement ->
+                    insertStatement[this.fullName] = fullName
+                }
+            }.toExposedPostgresTableData()
+        }.result
+    }
+
     companion object {
-        const val schema = "exposed"
+        val table = PostgresTestTable
+
+        val datasource = PGSimpleDataSource().apply {
+            user = PostgresSingletonContainer.username
+            password = PostgresSingletonContainer.password
+            setURL(PostgresSingletonContainer.jdbcUrl)
+            currentSchema = "exposed"
+        }
+
+        val database = Database.connect(
+            datasource = datasource,
+            databaseConfig = DatabaseConfig {
+                defaultRepetitionAttempts = 0
+                defaultSchema = Schema(name = datasource.currentSchema!!)
+            }
+        )
     }
 }
 
@@ -53,19 +76,23 @@ data class ExecutionResult<T>(
     val interception: PostgresTestStatementInterceptor
 )
 
-class PostgresTestStatementInterceptor : StatementInterceptor {
+class PostgresTestStatementInterceptor : StatementInterceptor, SqlLogger {
 
-    val executedPreparedStatements = CopyOnWriteArrayList<JdbcPreparedStatementImpl>()
+    val executedStatements = CopyOnWriteArrayList<String>()
 
-    override fun afterExecution(
-        transaction: Transaction,
-        contexts: List<StatementContext>,
-        executedStatement: PreparedStatementApi
-    ) {
-        //interested in statement which is in JdbcPreparedStatementImpl
-        executedPreparedStatements.add(executedStatement as JdbcPreparedStatementImpl)
+    override fun log(context: StatementContext, transaction: Transaction) {
+        val executedStatement = normalizeSQL(context.expandArgs(transaction))
+        executedStatements.add(executedStatement)
     }
 
-    val executedStatements: List<String>
-        get() = executedPreparedStatements.map { it.statement }
+    fun exactlyOneStatement(): String  {
+        assertThat(executedStatements).hasSize(1)
+
+        return executedStatements.first()
+    }
+}
+
+//strip multiple spaces, newlines etc
+fun normalizeSQL(@Language("SQL") sql: String): String {
+    return sql.trimIndent().trim().replace("\n", "").replace(" +".toRegex(), " ")
 }

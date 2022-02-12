@@ -1,7 +1,26 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnDiff
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.IDateColumnType
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.LiteralOp
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendIfNotNull
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
@@ -129,9 +148,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallbacks)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
             limit != null -> "$def WHERE ROWNUM <= $limit"
@@ -144,7 +164,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
     ): String = with(QueryBuilder(true)) {
         columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
