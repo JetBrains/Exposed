@@ -17,9 +17,9 @@ import org.junit.Test
 import java.sql.Connection
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 object EntityTestsData {
 
@@ -1295,6 +1295,27 @@ class EntityTests : DatabaseTestsBase() {
             assertEquals("Parent Category", post.parent?.category?.title)
             assertEquals("Parent Category", post.optCategory?.title)
             assertEquals("Child Category", post.category?.title)
+        }
+    }
+
+    @Test fun `test explicit entity constructor`() {
+        var createBoardCalled = false
+        fun createBoard(id: EntityID<Int>): Board {
+            createBoardCalled = true
+            return Board(id)
+        }
+        val boardEntityClass = object : IntEntityClass<Board>(Boards, entityCtor = ::createBoard) { }
+
+        withTables(Boards) {
+            val board = boardEntityClass.new {
+                name = "Test Board"
+            }
+
+            assertEquals("Test Board", board.name)
+            assertTrue(
+                createBoardCalled,
+                "Expected createBoardCalled to be called"
+            )
         }
     }
 }

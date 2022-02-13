@@ -8,15 +8,28 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
 import kotlin.sequences.any
 import kotlin.sequences.filter
 
 @Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
-abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: IdTable<ID>, entityType: Class<T>? = null) {
+abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+    val table: IdTable<ID>,
+    entityType: Class<T>? = null,
+
+    /**
+     * A function that creates an entity instance; typically, you can pass a reference to the entity constructor.
+     * If not given, reflection will be used to create instances, which is somewhat slower, especially the first time.
+     */
+    entityCtor: ((EntityID<ID>) -> T)? = null,
+) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
-    private val ctor = klass.kotlin.primaryConstructor!!
+
+    private val entityPrimaryCtor: KFunction<T> by lazy { klass.kotlin.primaryConstructor as KFunction<T> }
+
+    private val entityCtor: (EntityID<ID>) -> T = entityCtor ?: { entityID -> entityPrimaryCtor.call(entityID) }
 
     operator fun get(id: EntityID<ID>): T = findById(id) ?: throw EntityNotFoundException(id, this)
 
@@ -213,7 +226,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
         return query.first()[countExpression]
     }
 
-    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = ctor.call(entityId) as T
+    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = entityCtor(entityId)
 
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()
@@ -439,8 +452,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(val table: I
     fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
-abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) :
-    EntityClass<ID, T>(table, entityType) {
+abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+    table: IdTable<ID>,
+    entityType: Class<T>? = null,
+    ctor: ((EntityID<ID>) -> T)? = null
+) :
+    EntityClass<ID, T>(table, entityType, ctor) {
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
@@ -454,8 +471,12 @@ abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(tab
     }
 }
 
-abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(table: IdTable<ID>, entityType: Class<T>? = null) :
-    ImmutableEntityClass<ID, T>(table, entityType) {
+abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+    table: IdTable<ID>,
+    entityType: Class<T>? = null,
+    ctor: ((EntityID<ID>) -> T)? = null
+) :
+    ImmutableEntityClass<ID, T>(table, entityType, ctor) {
 
     private val cacheLoadingState = Key<Any>()
     private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
