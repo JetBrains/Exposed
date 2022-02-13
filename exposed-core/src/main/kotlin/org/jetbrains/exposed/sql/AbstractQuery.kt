@@ -108,5 +108,11 @@ class ResultIterator(
             }
             transaction.openResultSetsCount++
         }
+
+        val empty = object : Iterator<ResultRow> {
+            override fun hasNext(): Boolean = false
+
+            override fun next(): ResultRow = TODO("Can't return next when hasNext return false")
+        }
     }
 }

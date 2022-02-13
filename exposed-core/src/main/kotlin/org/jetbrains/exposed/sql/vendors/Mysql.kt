@@ -120,9 +120,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallbacks: List<RenderInsertSQLCallback>
+        renderSQLCallback: RenderInsertSQLCallback
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
@@ -143,7 +143,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         targets.describe(transaction, this)

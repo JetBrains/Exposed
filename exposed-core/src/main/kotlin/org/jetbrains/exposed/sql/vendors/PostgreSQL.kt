@@ -120,12 +120,12 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallbacks: List<RenderInsertSQLCallback>
+        renderSQLCallback: RenderInsertSQLCallback
     ): String {
-        val commonSQL = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
+        val commonSQL = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
         val postgresSpecificSQL = with(QueryBuilder(true)) {
-            renderSQLCallbacks.forEach { it.returning(this) }
-            renderSQLCallbacks.forEach { it.onConflict(this) }
+            renderSQLCallback.returning(this)
+            renderSQLCallback.onConflict(this)
 
             toString()
         }
@@ -141,16 +141,14 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
-        val def = super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallbacks)
-        val postgresSpecificSQL = QueryBuilder(true).let { queryBuilder ->
-            renderSqlCallbacks.forEach { renderer -> renderer.returning(queryBuilder) }
-            renderSqlCallbacks.forEach { renderer -> renderer.onConflict(queryBuilder) }
-
+        val def = super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallback)
+        val postgresSpecificSQL = with(QueryBuilder(true)) {
+            renderSqlCallback.returning(this)
             toString()
         }
 
@@ -163,7 +161,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
@@ -196,6 +194,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             +" AND "
             +it
         }
+
+        renderSqlCallback.returning(this)
+
         toString()
     }
 
@@ -213,7 +214,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 
         val columns = data.map { it.first }
 
-        val def = super.insert(false, table, columns, sql, transaction, emptyList())
+        val def = super.insert(false, table, columns, sql, transaction, RenderInsertSQLCallback.Noop)
 
         val uniqueCols = table.primaryKey?.columns
         if (uniqueCols.isNullOrEmpty()) {

@@ -52,8 +52,8 @@ class PostgresqlUpdateTest : BasePostgresTest() {
 
         val expectedSQL = normalizeSQL("""
                 UPDATE exposed_test 
-                SET full_name='hello' 
-                WHERE exposed_test.full_name = '${insertedData.fullName}'
+                SET full_name='$updatedFullName' 
+                WHERE exposed_test.full_name = '${insertedData.fullName}' 
                 RETURNING exposed_test.full_name
             """.trimIndent())
         assertThat(intercepted.exactlyOneStatement()).isEqualTo(expectedSQL)

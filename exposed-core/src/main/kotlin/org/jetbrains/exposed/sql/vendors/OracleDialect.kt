@@ -149,9 +149,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallbacks)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallback)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
             limit != null -> "$def WHERE ROWNUM <= $limit"
@@ -165,7 +165,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String = with(QueryBuilder(true)) {
         columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")

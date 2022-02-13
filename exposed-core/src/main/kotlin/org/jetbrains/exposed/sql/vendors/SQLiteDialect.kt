@@ -106,9 +106,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallbacks: List<RenderInsertSQLCallback>
+        renderSQLCallback: RenderInsertSQLCallback
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
     }
 
@@ -118,12 +118,12 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallbacks)
+        return super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallback)
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {

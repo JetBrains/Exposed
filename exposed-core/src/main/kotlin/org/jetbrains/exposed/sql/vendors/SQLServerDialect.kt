@@ -128,9 +128,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallbacks)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallback)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
 
@@ -140,7 +140,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")

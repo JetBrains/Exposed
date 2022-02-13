@@ -20,33 +20,31 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 fun <T : Table> T.insert(body: PostgresqlInsertDSL<T>.(T) -> Unit): Int {
     val insertStatement = InsertStatement<Number>(this)
 
-    val onConflictDSL = PostgresSQLOnConflictDSLImpl()
+    val transaction = TransactionManager.current()
+    val onConflictDSL = PostgresSQLOnConflictDSLImpl<T>(this, transaction)
     val dsl = PostgresqlInsertDSL(this, insertStatement, onConflictDSL)
     body(dsl, this)
 
-    val renderSQLCallbacks = PostgresSqlPrepareInsertSQLCallbacks(
+    insertStatement.renderSqlCallback = PostgresSqlPrepareInsertSQLCallbacks(
         onConflictRenderer = onConflictDSL.sqlRenderer,
         returningRender = NoopSQLRenderer
     )
-    insertStatement.registerRenderSQLCallback(renderSQLCallbacks)
 
-    return insertStatement.execute(TransactionManager.current())!!
+    return insertStatement.execute(transaction)!!
 }
 
 fun <T : Table> T.insertReturning(body: PostgresqlInsertReturningDSL<T>.(T) -> Unit): ResultRow {
     val insertStatement = InsertStatement<List<ResultRow>>(this)
-
-    val onConflictDSL = PostgresSQLOnConflictDSLImpl()
+    val transaction = TransactionManager.current()
+    val onConflictDSL = PostgresSQLOnConflictDSLImpl(this, transaction)
     val returningDSL = PostgresSqlReturningDSLImpl(this)
     val dsl = PostgresqlInsertReturningDSL(this, insertStatement, returningDSL, onConflictDSL)
     body(dsl, this)
 
-    val sqlRendererCallbacks = PostgresSqlPrepareInsertSQLCallbacks(
+    insertStatement.renderSqlCallback = PostgresSqlPrepareInsertSQLCallbacks(
         onConflictRenderer = onConflictDSL.sqlRenderer,
         returningRender = returningDSL.sqlRenderer
     )
-
-    insertStatement.registerRenderSQLCallback(sqlRendererCallbacks)
 
     insertStatement.execute(TransactionManager.current())!!
 
@@ -57,47 +55,52 @@ fun <T : Table> T.insertReturning(body: PostgresqlInsertReturningDSL<T>.(T) -> U
 fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = select(where)
 fun FieldSet.selectAll(): Query = selectAll()
 
-fun <T : Table> T.update(body: PostgresqlUpdateWhereDSL<T, UpdateStatement>.() -> Unit): Int {
-    val updateDsl = PostgresqlUpdateWhereDSL(this, UpdateStatement(this, where = null))
+fun <T : Table> T.update(body: PostgresqlUpdateWhereDSL<T>.() -> Unit): Int {
+    val updateStatement = UpdateStatement(this, where = null)
+    val updateDsl = PostgresqlUpdateWhereDSL(this, updateStatement)
     body(updateDsl)
 
-    if (updateDsl.updateStatement.where == null) {
+    if (updateStatement.where == null) {
         throw IllegalStateException("""
             Calling update without where clause. This exception try to avoid unwanted update of whole table.
             "In case of update all call updateAll.""".trimIndent()
         )
     }
 
-    return updateDsl.updateStatement.execute(TransactionManager.current())!!
+    return updateStatement.execute(TransactionManager.current())!!
 }
 
-fun <T : Table> T.updateAll(body: PostgresqlUpdateDSL<T, UpdateStatement>.() -> Unit): Int {
-    val updateDsl = PostgresqlUpdateDSL(this, UpdateStatement(this, where = null))
+fun <T : Table> T.updateAll(body: PostgresqlUpdateDSL<T>.() -> Unit): Int {
+    val updateStatement = UpdateStatement(this, where = null)
+    val updateDsl = PostgresqlUpdateDSL(this, updateStatement)
     body(updateDsl)
 
-    return updateDsl.updateStatement.execute(TransactionManager.current())!!
+    return updateStatement.execute(TransactionManager.current())!!
 }
 
 fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Unit): Iterable<ResultRow> {
-    val updateDsl = PostgresqlUpdateReturningDSL(this)
+    val updateStatement = UpdateReturningStatement(this)
+    val returningDSL = PostgresSqlReturningDSLImpl(this, updateStatement::updateReturningSet)
+    val updateDsl = PostgresqlUpdateReturningDSL(this, updateStatement, returningDSL)
     body(updateDsl)
 
-    if (updateDsl.updateStatement.where == null) {
-        throw IllegalStateException("""
-            Calling updateReturning without where clause. This exception try to avoid unwanted update of whole table.
-            "In case of update all call updateAllReturning.""".trimIndent()
-        )
-    }
 
-    val resultIterator = updateDsl.updateStatement.execute(TransactionManager.current())!!
-    return Iterable { resultIterator }
+    checkWhereCalled("updateReturning", "updateAllReturning", updateStatement.where)
+
+    updateStatement.sqlRendererCallback = PostgresUpdateRenderSQLCallback(returningDSL.sqlRenderer)
+
+    return Iterable { updateStatement.execute(TransactionManager.current())!! }
 }
 
-fun <T: Table> T.updateAllReturning(body: PostgresqlUpdateAllReturningDSL<T>.() -> Unit): Iterator<ResultRow> {
-    val updateDsl = PostgresqlUpdateAllReturningDSL(this)
+fun <T: Table> T.updateAllReturning(body: PostgresqlUpdateAllReturningDSL<T>.() -> Unit): Iterable<ResultRow> {
+    val updateStatement = UpdateReturningStatement(this)
+    val returningDSL = PostgresSqlReturningDSLImpl(this, updateStatement::updateReturningSet)
+    val updateDsl = PostgresqlUpdateAllReturningDSL(this, updateStatement, returningDSL)
     body(updateDsl)
 
-    return updateDsl.updateStatement.execute(TransactionManager.current())!!
+    updateStatement.sqlRendererCallback = PostgresUpdateRenderSQLCallback(returningDSL.sqlRenderer)
+
+    return Iterable { updateStatement.execute(TransactionManager.current())!! }
 }
 
 fun Table.delete(ignoreErrors: Boolean = false, body: SqlExpressionBuilder.() -> Op<Boolean>): Int {

@@ -11,22 +11,24 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
+import org.jetbrains.exposed.sql.vendors.RenderUpdateSQLCallback
 
 abstract class AbstractUpdateStatement<R>(
-    val targetsSet: ColumnSet,
+    var targetsSet: ColumnSet,
     val limit: Int?,
     var where: Op<Boolean>?
 ) : UpdateBuilder<R>(StatementType.UPDATE, targetsSet.targetTables()) {
 
     open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
+    var sqlRendererCallback: RenderUpdateSQLCallback = RenderUpdateSQLCallback.Noop
 
     override fun prepareSQL(transaction: Transaction): String {
         require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }
 
-        return when (targetsSet) {
-            is Table -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction, emptyList())
-            is Join -> transaction.db.dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction, emptyList())
-            else -> transaction.throwUnsupportedException("UPDATE with ${targetsSet::class.simpleName} unsupported")
+        return when (val selectedTargetSet = targetsSet) {
+            is Table -> transaction.db.dialect.functionProvider.update(selectedTargetSet, firstDataSet, limit, where, transaction, sqlRendererCallback)
+            is Join -> transaction.db.dialect.functionProvider.update(selectedTargetSet, firstDataSet, limit, where, transaction, sqlRendererCallback)
+            else -> transaction.throwUnsupportedException("UPDATE with ${selectedTargetSet::class.simpleName} unsupported")
         }
     }
 

@@ -12,8 +12,8 @@ import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 open class PostgresqlInsertDSL<T : Table>(
     private val table: T,
     private val insertStatement: InsertStatement<*>,
-    private val onConflictDSL: PostgresqlOnConflictDSL
-) : PostgresqlOnConflictDSL by onConflictDSL {
+    private val onConflictDSL: PostgresqlOnConflictDSL<T>
+) : PostgresqlOnConflictDSL<T> by onConflictDSL {
 
     fun values(body: T.(InsertStatement<*>) -> Unit) {
         body(table, insertStatement)
@@ -27,7 +27,7 @@ class PostgresqlInsertReturningDSL<T : Table>(
     table: T,
     insertStatement: InsertStatement<*>,
     private val returningImpl: PostgresSqlReturningDSL,
-    onConflictDSL: PostgresqlOnConflictDSL
+    onConflictDSL: PostgresqlOnConflictDSL<T>
 ) : PostgresSqlReturningDSL by returningImpl, PostgresqlInsertDSL<T>(table, insertStatement, onConflictDSL)
 
 

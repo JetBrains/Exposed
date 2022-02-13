@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 import java.sql.ResultSet
 
 class BatchDataInconsistentException(message: String) : Exception(message)
@@ -45,7 +46,7 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
                 }
             }.toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction, emptyList())
+        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction, RenderInsertSQLCallback.Noop)
     }
 
     override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })

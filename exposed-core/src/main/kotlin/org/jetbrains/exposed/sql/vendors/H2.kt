@@ -46,7 +46,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallbacks: List<RenderInsertSQLCallback>
+        renderSQLCallback: RenderInsertSQLCallback
     ): String {
         val uniqueCols = mutableSetOf<Column<*>>()
         table.indices.filter { it.unique }.flatMapTo(uniqueCols) { it.columns }
@@ -57,14 +57,14 @@ internal object H2FunctionProvider : FunctionProvider() {
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
             ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && version < "1.4.197" -> {
-                val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
+                val def = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
             ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
-                super.insert(false, table, columns, expr, transaction, renderSQLCallbacks).replace("INSERT", "INSERT IGNORE")
+                super.insert(false, table, columns, expr, transaction, renderSQLCallback).replace("INSERT", "INSERT IGNORE")
             }
             ignore -> transaction.throwUnsupportedException("INSERT IGNORE supported only on H2 v1.4.197+ with MODE=MYSQL.")
-            else -> super.insert(ignore, table, columns, expr, transaction, renderSQLCallbacks)
+            else -> super.insert(ignore, table, columns, expr, transaction, renderSQLCallback)
         }
     }
 
@@ -74,7 +74,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallbacks: List<UpdateRenderSQLCallbacks>
+        renderSqlCallback: RenderUpdateSQLCallback
     ): String = with(QueryBuilder(true)) {
         if (limit != null) {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
@@ -127,7 +127,7 @@ internal object H2FunctionProvider : FunctionProvider() {
 
         val sql = data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
 
-        return super.insert(false, table, columns, sql, transaction, emptyList()).replaceFirst("INSERT", "MERGE")
+        return super.insert(false, table, columns, sql, transaction, RenderInsertSQLCallback.Noop).replaceFirst("INSERT", "MERGE")
     }
 }
 

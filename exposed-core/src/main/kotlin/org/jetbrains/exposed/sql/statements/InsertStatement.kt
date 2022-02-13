@@ -28,7 +28,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     var resultedValues: List<ResultRow>? = null
         private set
 
-    private val renderSqlCallbacks = ArrayList<RenderInsertSQLCallback>(2)
+    var renderSqlCallback: RenderInsertSQLCallback = RenderInsertSQLCallback.Noop
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
@@ -115,8 +115,6 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         return result
     }
 
-    fun registerRenderSQLCallback(callback: RenderInsertSQLCallback) = renderSqlCallbacks.add(callback)
-
     override fun prepareSQL(transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val values = arguments!!.first()
@@ -128,7 +126,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
 
             toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction, renderSqlCallbacks)
+        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction, renderSqlCallback)
     }
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {

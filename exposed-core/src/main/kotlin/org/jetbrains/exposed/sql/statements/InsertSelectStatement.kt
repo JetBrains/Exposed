@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 
 open class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: AbstractQuery<*>, val isIgnore: Boolean = false) :
     Statement<Int>(StatementType.INSERT, listOf(columns.first().table)) {
@@ -21,5 +22,5 @@ open class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = selectQuery.arguments()
 
     override fun prepareSQL(transaction: Transaction): String =
-        transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction), transaction, emptyList())
+        transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction), transaction, RenderInsertSQLCallback.Noop)
 }

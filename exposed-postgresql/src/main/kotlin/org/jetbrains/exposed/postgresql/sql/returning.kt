@@ -11,7 +11,8 @@ interface PostgresSqlReturningDSL : FieldSet {
 }
 
 internal class PostgresSqlReturningDSLImpl(
-    defaultReturning: FieldSet
+    defaultReturning: FieldSet,
+    private val returningSetter: ((returningSet: FieldSet) -> Unit)? = null
 ) : PostgresSqlReturningDSL, FieldSet by defaultReturning {
 
     private var _sqlRenderer: SQLRenderer = NoopSQLRenderer
@@ -19,6 +20,7 @@ internal class PostgresSqlReturningDSLImpl(
         get() = _sqlRenderer
 
     override fun returning(returning: FieldSet) {
+        returningSetter?.invoke(returning)
         _sqlRenderer = PostgresqlReturningSQLRenderer(returning)
     }
 }
