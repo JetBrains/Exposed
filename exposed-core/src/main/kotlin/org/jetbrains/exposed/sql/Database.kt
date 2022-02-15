@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
-open class Database protected constructor(
+class Database private constructor(
     private val resolvedVendor: String? = null,
     val config: DatabaseConfig,
     val connector: () -> ExposedConnection<*>

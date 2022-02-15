@@ -8,12 +8,16 @@ import org.jetbrains.exposed.sql.QueryBuilder
  */
 interface RenderInsertSQLCallbacks {
     /**
-     * Render `RETURNING ...` statement - for Postgresql
+     * Render `RETURNING ...` statement
+     *
+     * Used in: Postgresql
      */
     fun returning(builder: QueryBuilder) {}
 
     /**
-     * Render `ON CONFLICT ...` statement - for Postgresql
+     * Render `ON CONFLICT ...`
+     *
+     * Used in: Postgresql
      */
     fun onConflict(builder: QueryBuilder) {}
 
@@ -22,7 +26,9 @@ interface RenderInsertSQLCallbacks {
 
 interface RenderUpdateSQLCallbacks {
     /**
-     * Render `RETURNING ...` statement - for Postgresql
+     * Render `RETURNING ...`
+     *
+     * Used in: Postgresql
      */
     fun returning(builder: QueryBuilder) {}
 
@@ -31,7 +37,9 @@ interface RenderUpdateSQLCallbacks {
 
 interface RenderDeleteSQLCallbacks {
     /**
-     * Render `RETURNING ...` statement - for Postgresql
+     * Render `RETURNING ...` statement
+     *
+     * Used in: Postgresql
      */
     fun returning(builder: QueryBuilder) {}
 
