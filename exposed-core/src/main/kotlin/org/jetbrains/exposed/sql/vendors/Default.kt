@@ -1,13 +1,36 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnDiff
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ExpressionAlias
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.GroupConcat
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.LiteralOp
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendIfNotNull
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashSet
 
 /**
  * Provides definitions for all the supported SQL data types.
@@ -354,13 +377,15 @@ abstract class FunctionProvider {
      * @param columns Columns to insert the values into.
      * @param expr Expresion with the values to insert.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks allowing to customize SQL render process
      */
     open fun insert(
         ignore: Boolean,
         table: Table,
         columns: List<Column<*>>,
         expr: String,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderInsertSQLCallbacks
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
@@ -391,13 +416,15 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks to customize sql render process
      */
     open fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         target.describe(transaction, this)
@@ -423,13 +450,15 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks customize sql render process
      */
     open fun update(
         targets: Join,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
@@ -456,13 +485,15 @@ abstract class FunctionProvider {
      * @param where Condition that decides the rows to update.
      * @param limit Maximum number of rows to delete.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks customize sql render process
      */
     open fun delete(
         ignore: Boolean,
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation.")

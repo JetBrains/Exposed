@@ -1,6 +1,18 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CompositeColumn
+import org.jetbrains.exposed.sql.EntityIDColumnType
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.NextVal
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.isAutoInc
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -15,6 +27,8 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
 
     var resultedValues: List<ResultRow>? = null
         private set
+
+    var renderSqlCallback: RenderInsertSQLCallbacks = RenderInsertSQLCallbacks.Noop
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")
@@ -109,9 +123,10 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
             values.appendTo(prefix = "VALUES (", postfix = ")") { (col, value) ->
                 registerArgument(col, value)
             }
+
             toString()
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
+        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction, renderSqlCallback)
     }
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {

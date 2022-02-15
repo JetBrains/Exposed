@@ -1,7 +1,27 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ExpressionAlias
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Join
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.StringColumnType
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.appendTo
+import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
@@ -97,13 +117,27 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override val DEFAULT_VALUE_EXPRESSION: String = "() VALUES ()"
 
-    override fun insert(ignore: Boolean, table: Table, columns: List<Column<*>>, expr: String, transaction: Transaction): String {
-        val def = super.insert(false, table, columns, expr, transaction)
+    override fun insert(
+        ignore: Boolean,
+        table: Table,
+        columns: List<Column<*>>,
+        expr: String,
+        transaction: Transaction,
+        renderSQLCallbacks: RenderInsertSQLCallbacks
+    ): String {
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
-        val def = super.delete(false, table, where, limit, transaction)
+    override fun delete(
+        ignore: Boolean,
+        table: Table,
+        where: String?,
+        limit: Int?,
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
+    ): String {
+        val def = super.delete(false, table, where, limit, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
@@ -112,7 +146,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         targets.describe(transaction, this)

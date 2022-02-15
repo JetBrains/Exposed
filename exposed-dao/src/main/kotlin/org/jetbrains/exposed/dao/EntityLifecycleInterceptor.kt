@@ -4,7 +4,13 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.*
+import org.jetbrains.exposed.sql.statements.AbstractDeleteStatement
+import org.jetbrains.exposed.sql.statements.BatchUpdateStatement
+import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.statements.StatementGroup
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
 import org.jetbrains.exposed.sql.transactions.transactionScope
@@ -31,7 +37,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
         when (val statement = context.statement) {
             is Query -> transaction.flushEntities(statement)
 
-            is DeleteStatement -> {
+            is AbstractDeleteStatement -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table), false)
                 if (!isExecutedWithinEntityLifecycle) {

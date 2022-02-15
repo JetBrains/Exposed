@@ -5,26 +5,39 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
-open class DeleteStatement(
+abstract class AbstractDeleteStatement<STATEMENT_RETURN>(
     val table: Table,
-    val where: Op<Boolean>? = null,
+    var where: Op<Boolean>? = null,
     val isIgnore: Boolean = false,
     val limit: Int? = null,
-    val offset: Long? = null
-) : Statement<Int>(StatementType.DELETE, listOf(table)) {
+    val offset: Long? = null,
+    var renderSqlCallback: RenderDeleteSQLCallbacks = RenderDeleteSQLCallbacks.Noop
+) : Statement<STATEMENT_RETURN>(StatementType.DELETE, listOf(table)) {
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        return executeUpdate()
+    override fun prepareSQL(transaction: Transaction): String {
+        val where =  where?.let { QueryBuilder(true).append(it).toString() }
+        return transaction.db.dialect.functionProvider.delete(isIgnore, table, where, limit, transaction, renderSqlCallback)
     }
-
-    override fun prepareSQL(transaction: Transaction): String =
-        transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.let { QueryBuilder(true).append(it).toString() }, limit, transaction)
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
         where?.toQueryBuilder(this)
         listOf(args)
+    }
+}
+
+open class DeleteStatement(
+    table: Table,
+    where: Op<Boolean>? = null,
+    isIgnore: Boolean = false,
+    limit: Int? = null,
+    offset: Long? = null
+) : AbstractDeleteStatement<Int>(table, where, isIgnore, limit, offset) {
+
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
+        return executeUpdate()
     }
 
     companion object {
