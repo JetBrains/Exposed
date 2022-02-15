@@ -3,8 +3,6 @@ package org.jetbrains.exposed.postgresql.sql
 import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.appendTo
-import org.jetbrains.exposed.sql.render.NoopSQLRenderer
-import org.jetbrains.exposed.sql.render.SQLRenderer
 
 interface PostgresSqlReturningDSL : FieldSet {
     fun returning(returning: FieldSet = this)
@@ -12,16 +10,15 @@ interface PostgresSqlReturningDSL : FieldSet {
 
 internal class PostgresSqlReturningDSLImpl(
     defaultReturning: FieldSet,
-    private val returningSetter: ((returningSet: FieldSet) -> Unit)? = null
+    private val returningSetter: (returningSet: FieldSet) -> Unit
 ) : PostgresSqlReturningDSL, FieldSet by defaultReturning {
 
-    private var _sqlRenderer: SQLRenderer = NoopSQLRenderer
-    internal val sqlRenderer
-        get() = _sqlRenderer
+    internal var sqlRenderer: SQLRenderer = NoopSQLRenderer
+        private set
 
     override fun returning(returning: FieldSet) {
-        returningSetter?.invoke(returning)
-        _sqlRenderer = PostgresqlReturningSQLRenderer(returning)
+        returningSetter(returning)
+        sqlRenderer = PostgresqlReturningSQLRenderer(returning)
     }
 }
 

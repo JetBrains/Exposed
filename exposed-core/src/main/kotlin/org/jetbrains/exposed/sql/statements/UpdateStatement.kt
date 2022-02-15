@@ -9,9 +9,9 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.targetTables
-import org.jetbrains.exposed.sql.vendors.RenderUpdateSQLCallback
 
 abstract class AbstractUpdateStatement<R>(
     var targetsSet: ColumnSet,
@@ -20,7 +20,7 @@ abstract class AbstractUpdateStatement<R>(
 ) : UpdateBuilder<R>(StatementType.UPDATE, targetsSet.targetTables()) {
 
     open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
-    var sqlRendererCallback: RenderUpdateSQLCallback = RenderUpdateSQLCallback.Noop
+    var sqlRendererCallback: RenderUpdateSQLCallbacks = RenderUpdateSQLCallbacks.Noop
 
     override fun prepareSQL(transaction: Transaction): String {
         require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }

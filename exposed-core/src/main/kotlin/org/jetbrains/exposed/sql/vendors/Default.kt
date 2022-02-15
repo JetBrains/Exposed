@@ -24,6 +24,9 @@ import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.appendIfNotNull
 import org.jetbrains.exposed.sql.appendTo
 import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -374,7 +377,7 @@ abstract class FunctionProvider {
      * @param columns Columns to insert the values into.
      * @param expr Expresion with the values to insert.
      * @param transaction Transaction where the operation is executed.
-     * @param renderSQLCallback allowing to customize SQL render process
+     * @param renderSQLCallbacks allowing to customize SQL render process
      */
     open fun insert(
         ignore: Boolean,
@@ -382,7 +385,7 @@ abstract class FunctionProvider {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallback: RenderInsertSQLCallback
+        renderSQLCallbacks: RenderInsertSQLCallbacks
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for INSERT IGNORE. There must be vendor specific implementation.")
@@ -413,7 +416,7 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
-     * @param renderSqlCallback to customize sql render process
+     * @param renderSQLCallbacks to customize sql render process
      */
     open fun update(
         target: Table,
@@ -421,7 +424,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         target.describe(transaction, this)
@@ -447,7 +450,7 @@ abstract class FunctionProvider {
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
      * @param transaction Transaction where the operation is executed.
-     * @param renderSqlCallback customize sql render process
+     * @param renderSQLCallbacks customize sql render process
      */
     open fun update(
         targets: Join,
@@ -455,7 +458,7 @@ abstract class FunctionProvider {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
     /**
@@ -482,13 +485,15 @@ abstract class FunctionProvider {
      * @param where Condition that decides the rows to update.
      * @param limit Maximum number of rows to delete.
      * @param transaction Transaction where the operation is executed.
+     * @param renderSQLCallbacks customize sql render process
      */
     open fun delete(
         ignore: Boolean,
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
     ): String {
         if (ignore) {
             transaction.throwUnsupportedException("There's no generic SQL for DELETE IGNORE. There must be vendor specific implementation.")
@@ -824,30 +829,3 @@ internal val currentDialectIfAvailable: DatabaseDialect?
 
 internal fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
-
-/**
- * Render callbacks for insert statement - order of invoked callbacks may differ per SQL dialect.
- * Some may not be invoked at all in dialect.
- */
-interface RenderInsertSQLCallback {
-    /**
-     * Render `RETURNING ...` statement - like in Postgresql
-     */
-    fun returning(builder: QueryBuilder) {}
-
-    /**
-     * Render `ON CONFLICT ...` statement - Postgresql
-     */
-    fun onConflict(builder: QueryBuilder) {}
-
-    object Noop : RenderInsertSQLCallback
-}
-
-interface RenderUpdateSQLCallback {
-    /**
-     * Render `RETURNING ...` statement - like in Postgresql
-     */
-    fun returning(builder: QueryBuilder) {}
-
-    object Noop : RenderUpdateSQLCallback
-}

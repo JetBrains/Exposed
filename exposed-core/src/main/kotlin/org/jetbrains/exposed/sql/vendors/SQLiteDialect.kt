@@ -11,6 +11,9 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.appendTo
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
 import java.sql.Connection
@@ -106,9 +109,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallback: RenderInsertSQLCallback
+        renderSQLCallbacks: RenderInsertSQLCallbacks
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
     }
 
@@ -118,12 +121,12 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction, renderSqlCallback)
+        return super.update(target, columnsAndValues, limit, where, transaction, renderSQLCallbacks)
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
@@ -138,12 +141,13 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
     ): String {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
         }
-        val def = super.delete(false, table, where, limit, transaction)
+        val def = super.delete(false, table, where, limit, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
     }
 }

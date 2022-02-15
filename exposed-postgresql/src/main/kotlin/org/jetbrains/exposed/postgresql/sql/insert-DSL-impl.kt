@@ -2,9 +2,8 @@ package org.jetbrains.exposed.postgresql.sql
 
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.render.SQLRenderer
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
 import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 
 /**
  * Postgres insert DSL - introduce only [values] lambda for inserts
@@ -34,7 +33,7 @@ class PostgresqlInsertReturningDSL<T : Table>(
 internal class PostgresSqlPrepareInsertSQLCallbacks(
     private val onConflictRenderer: SQLRenderer,
     private val returningRender: SQLRenderer
-) : RenderInsertSQLCallback {
+) : RenderInsertSQLCallbacks {
 
     override fun onConflict(builder: QueryBuilder) {
         onConflictRenderer.render(builder)

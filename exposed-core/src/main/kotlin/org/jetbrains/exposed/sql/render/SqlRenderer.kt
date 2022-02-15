@@ -3,14 +3,37 @@ package org.jetbrains.exposed.sql.render
 import org.jetbrains.exposed.sql.QueryBuilder
 
 /**
- * SQL renderer allowing to register code for custom SQL render - DB specific dialects or so
+ * Render callbacks for insert statement - order of invoked callbacks may differ per SQL dialect.
+ * Some may not be invoked at all in dialect.
  */
-interface SQLRenderer {
-    fun render(builder: QueryBuilder)
+interface RenderInsertSQLCallbacks {
+    /**
+     * Render `RETURNING ...` statement - for Postgresql
+     */
+    fun returning(builder: QueryBuilder) {}
+
+    /**
+     * Render `ON CONFLICT ...` statement - for Postgresql
+     */
+    fun onConflict(builder: QueryBuilder) {}
+
+    object Noop : RenderInsertSQLCallbacks
 }
 
-object NoopSQLRenderer : SQLRenderer {
-    override fun render(builder: QueryBuilder) {
-        //do nothing
-    }
+interface RenderUpdateSQLCallbacks {
+    /**
+     * Render `RETURNING ...` statement - for Postgresql
+     */
+    fun returning(builder: QueryBuilder) {}
+
+    object Noop : RenderUpdateSQLCallbacks
+}
+
+interface RenderDeleteSQLCallbacks {
+    /**
+     * Render `RETURNING ...` statement - for Postgresql
+     */
+    fun returning(builder: QueryBuilder) {}
+
+    object Noop : RenderDeleteSQLCallbacks
 }

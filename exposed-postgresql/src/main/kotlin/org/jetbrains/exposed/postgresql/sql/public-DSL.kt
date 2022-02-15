@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.render.NoopSQLRenderer
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.DeleteStatement
@@ -37,7 +36,9 @@ fun <T : Table> T.insertReturning(body: PostgresqlInsertReturningDSL<T>.(T) -> U
     val insertStatement = InsertStatement<List<ResultRow>>(this)
     val transaction = TransactionManager.current()
     val onConflictDSL = PostgresSQLOnConflictDSLImpl(this, transaction)
-    val returningDSL = PostgresSqlReturningDSLImpl(this)
+    val returningDSL = PostgresSqlReturningDSLImpl(this) {
+        //insert work fine without propagating returning
+    }
     val dsl = PostgresqlInsertReturningDSL(this, insertStatement, returningDSL, onConflictDSL)
     body(dsl, this)
 
@@ -60,12 +61,7 @@ fun <T : Table> T.update(body: PostgresqlUpdateWhereDSL<T>.() -> Unit): Int {
     val updateDsl = PostgresqlUpdateWhereDSL(this, updateStatement)
     body(updateDsl)
 
-    if (updateStatement.where == null) {
-        throw IllegalStateException("""
-            Calling update without where clause. This exception try to avoid unwanted update of whole table.
-            "In case of update all call updateAll.""".trimIndent()
-        )
-    }
+    checkWhereCalled("update", "updateAll", updateStatement.where)
 
     return updateStatement.execute(TransactionManager.current())!!
 }
@@ -80,10 +76,11 @@ fun <T : Table> T.updateAll(body: PostgresqlUpdateDSL<T>.() -> Unit): Int {
 
 fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Unit): Iterable<ResultRow> {
     val updateStatement = UpdateReturningStatement(this)
-    val returningDSL = PostgresSqlReturningDSLImpl(this, updateStatement::updateReturningSet)
+    val returningDSL = PostgresSqlReturningDSLImpl(this) { newReturningValue ->
+        updateStatement.returning = newReturningValue
+    }
     val updateDsl = PostgresqlUpdateReturningDSL(this, updateStatement, returningDSL)
     body(updateDsl)
-
 
     checkWhereCalled("updateReturning", "updateAllReturning", updateStatement.where)
 
@@ -94,7 +91,7 @@ fun <T: Table> T.updateReturning(body: PostgresqlUpdateReturningDSL<T>.() -> Uni
 
 fun <T: Table> T.updateAllReturning(body: PostgresqlUpdateAllReturningDSL<T>.() -> Unit): Iterable<ResultRow> {
     val updateStatement = UpdateReturningStatement(this)
-    val returningDSL = PostgresSqlReturningDSLImpl(this, updateStatement::updateReturningSet)
+    val returningDSL = PostgresSqlReturningDSLImpl(this) { updateStatement.returning = it }
     val updateDsl = PostgresqlUpdateAllReturningDSL(this, updateStatement, returningDSL)
     body(updateDsl)
 
@@ -103,21 +100,32 @@ fun <T: Table> T.updateAllReturning(body: PostgresqlUpdateAllReturningDSL<T>.() 
     return Iterable { updateStatement.execute(TransactionManager.current())!! }
 }
 
-fun Table.delete(ignoreErrors: Boolean = false, body: SqlExpressionBuilder.() -> Op<Boolean>): Int {
-    return DeleteStatement.where(TransactionManager.current(), this, SqlExpressionBuilder.body(), ignoreErrors)
+fun Table.delete(body: PostgresqlDeleteWhereDSL.() -> Unit): Int {
+    val deleteStatement = DeleteStatement(this)
+    val deleteDSL = PostgresqlDeleteWhereDSL(deleteStatement)
+    deleteDSL.body()
+
+    checkWhereCalled("delete", "deleteAll", deleteStatement.where)
+
+    return deleteStatement.execute(TransactionManager.current())!!
 }
 
-//fun Table.deleteReturning(ignoreErrors: Boolean = false, body: PostgresqlDeleteReturningDSL.() -> Unit): Iterator<ResultRow> {
-//    val dsl = PostgresqlDeleteReturningDSL(this)
-//    dsl.body()
-//
-//    val where = dsl.where ?: throw IllegalStateException("Where function has to be called or use deleteAll()")
-//    val deleteStatement = DeleteStatement(this, where, ignoreErrors)
-//
-//    val exec = deleteStatement.execute(TransactionManager.current())
-//
-//    return deleteStatement
-//}
+fun Table.deleteAll(): Int = DeleteStatement.all(TransactionManager.current(), this)
 
-fun Table.deleteAll() = DeleteStatement.all(TransactionManager.current(), this)
-//fun Table.deleteAllReturning(): Iterator<ResultRow> = DeleteStatement.all(TransactionManager.current(), this)
+fun Table.deleteReturning(body: PostgresqlDeleteWhereReturningDSL.() -> Unit): Iterable<ResultRow> {
+    val deleteStatement = DeleteReturningStatement(this, this)
+    val returningDSL = PostgresSqlReturningDSLImpl(this) { deleteStatement.returning = it }
+
+    val dsl = PostgresqlDeleteWhereReturningDSL(deleteStatement, returningDSL)
+    dsl.body()
+
+    checkWhereCalled("deleteReturning", "deleteAllReturning", deleteStatement.where)
+
+    return Iterable { deleteStatement.execute(TransactionManager.current())!! }
+}
+
+fun Table.deleteAllReturning(): Iterable<ResultRow> {
+    val deleteStatement = DeleteReturningStatement(this, this)
+
+    return Iterable { deleteStatement.execute(TransactionManager.current())!! }
+}

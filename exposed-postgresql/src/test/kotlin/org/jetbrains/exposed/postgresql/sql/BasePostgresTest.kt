@@ -31,9 +31,9 @@ open class BasePostgresTest {
         )
     }
 
-    fun selectByFullName(fullName: String): ExposedPostgresTableData? {
+    fun selectByFullName(fullName: String): AnimeCharacterEntity? {
         return transaction {
-            table.select { table.fullName.eq(fullName) }.singleOrNull()?.toExposedPostgresTableData()
+            table.select { table.fullName.eq(fullName) }.singleOrNull()?.toEntity()
         }
     }
 
@@ -41,24 +41,37 @@ open class BasePostgresTest {
         return transaction { table.select { table.fullName.eq(fullName) }.count() }
     }
 
-    fun insert(fullName: String): ExposedPostgresTableData {
+    fun countByAnime(anime: String?): Long {
+        return transaction { table.select { table.anime.eq(anime) }.count() }
+    }
+
+    fun insert(fullName: String, anime: String? = null): AnimeCharacterEntity {
         return withTransaction {
             table.insertReturning {
                 values { insertStatement ->
-                    insertStatement[this.fullName] = fullName
+                    insertStatement[table.fullName] = fullName
+                    insertStatement[table.anime] = anime
                 }
-            }.toExposedPostgresTableData()
+            }.toEntity()
         }.result
     }
 
+    fun insert(startFullName: String, anime: String?, times: Int): List<AnimeCharacterEntity> {
+        return (0 until times).mapIndexed { index, _ ->
+            insert("$startFullName $index", anime)
+        }
+    }
+
     companion object {
-        val table = PostgresTestTable
+        val table = AnimeCharacterPostgresTable
+        val tableName = table.tableName
+        val schema = "exposed"
 
         val datasource = PGSimpleDataSource().apply {
             user = PostgresSingletonContainer.username
             password = PostgresSingletonContainer.password
             setURL(PostgresSingletonContainer.jdbcUrl)
-            currentSchema = "exposed"
+            currentSchema = schema
         }
 
         val database = Database.connect(

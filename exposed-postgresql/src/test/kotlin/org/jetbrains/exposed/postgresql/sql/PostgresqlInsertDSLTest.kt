@@ -20,7 +20,7 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         assertThat(result).isOne()
         val expectedSql = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName')
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName')
             """)
         assertThat(expectedSql).isEqualTo(intercepted.exactlyOneStatement())
 
@@ -47,12 +47,12 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         val executedStatement = intercepted.exactlyOneStatement()
         val expectedStatement = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName') 
-                RETURNING exposed_test.id, exposed_test.full_name
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName') 
+                RETURNING $tableName.id, $tableName.full_name, $tableName.anime
             """)
         assertThat(executedStatement).isEqualTo(expectedStatement)
 
-        val returnedData = result.toExposedPostgresTableData()
+        val returnedData = result.toEntity()
         val expectedData = selectByFullName(fullName)
         assertThat(expectedData).isNotNull
         assertThat(returnedData.id).isEqualTo(expectedData!!.id)
@@ -76,8 +76,8 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         val executedStatement = intercepted.exactlyOneStatement()
         val expectedStatement = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName') 
-                RETURNING exposed_test.full_name
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName') 
+                RETURNING $tableName.full_name
             """)
         assertThat(executedStatement).isEqualTo(expectedStatement)
 
@@ -116,7 +116,7 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         val executedStatement = intercepted.exactlyOneStatement()
         val expectedStatement = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName') 
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName') 
                 ON CONFLICT (full_name) DO NOTHING
             """)
         assertThat(executedStatement).isEqualTo(expectedStatement)
@@ -153,7 +153,7 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         val executedStatement = intercepted.exactlyOneStatement()
         val expectedStatement = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName') 
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName') 
                 ON CONFLICT DO NOTHING
             """)
         assertThat(executedStatement).isEqualTo(expectedStatement)
@@ -190,7 +190,7 @@ class PostgresqlInsertDSLTest : BasePostgresTest() {
 
         val executedStatement = intercepted.exactlyOneStatement()
         val expectedStatement = normalizeSQL("""
-                INSERT INTO exposed_test (full_name) VALUES ('$fullName') 
+                INSERT INTO $tableName (anime, full_name) VALUES (NULL, '$fullName') 
                 ON CONFLICT ON CONSTRAINT unique_full_name DO NOTHING
             """)
         assertThat(executedStatement).isEqualTo(expectedStatement)

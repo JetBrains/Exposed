@@ -23,9 +23,9 @@ class PostgresqlUpdateTest : BasePostgresTest() {
 
         assertThat(updatedCount).isOne()
         val expectedSQL = normalizeSQL("""
-                UPDATE exposed_test 
+                UPDATE $tableName 
                 SET full_name='$updatedName' 
-                WHERE exposed_test.full_name = '${fullName}'
+                WHERE $tableName.full_name = '${fullName}'
             """.trimIndent())
         assertThat(intercepted.exactlyOneStatement()).isEqualTo(expectedSQL)
     }
@@ -51,10 +51,10 @@ class PostgresqlUpdateTest : BasePostgresTest() {
         assertThat(updatedReturning.first()).isEqualTo(updatedFullName)
 
         val expectedSQL = normalizeSQL("""
-                UPDATE exposed_test 
+                UPDATE $tableName 
                 SET full_name='$updatedFullName' 
-                WHERE exposed_test.full_name = '${insertedData.fullName}' 
-                RETURNING exposed_test.full_name
+                WHERE $tableName.full_name = '${insertedData.fullName}' 
+                RETURNING $tableName.full_name
             """.trimIndent())
         assertThat(intercepted.exactlyOneStatement()).isEqualTo(expectedSQL)
     }

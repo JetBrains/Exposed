@@ -21,6 +21,8 @@ import org.jetbrains.exposed.sql.appendIfNotNull
 import org.jetbrains.exposed.sql.appendTo
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.intLiteral
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.UUID
 
@@ -128,9 +130,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallback)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSQLCallbacks)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
 
@@ -140,7 +142,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")
@@ -181,8 +183,15 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         toString()
     }
 
-    override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
-        val def = super.delete(ignore, table, where, null, transaction)
+    override fun delete(
+        ignore: Boolean,
+        table: Table,
+        where: String?,
+        limit: Int?,
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
+    ): String {
+        val def = super.delete(ignore, table, where, null, transaction, renderSQLCallbacks)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 

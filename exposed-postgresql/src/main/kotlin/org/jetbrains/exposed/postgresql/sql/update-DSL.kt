@@ -8,10 +8,9 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.render.SQLRenderer
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.statements.AbstractUpdateStatement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.vendors.RenderUpdateSQLCallback
 
 /**
  * Base update DSL for Postgres. Declare only set { } and on conflicts block.
@@ -60,10 +59,9 @@ class PostgresqlUpdateReturningDSL<T : Table>(
 }
 
 class UpdateReturningStatement(
-    table: Table
+    table: Table,
+    var returning: FieldSet? = null
 ) : AbstractUpdateStatement<Iterator<ResultRow>>(table, null, null) {
-
-    private var returning: FieldSet? = null
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Iterator<ResultRow> {
         if (values.isEmpty()) return ResultIterator.empty
@@ -72,25 +70,12 @@ class UpdateReturningStatement(
 
         return ResultIterator(resultSet, transaction, returningSet)
     }
-
-    fun updateReturningSet(returning: FieldSet) {
-        this.returning = returning
-    }
 }
 
 internal class PostgresUpdateRenderSQLCallback(
     private val returningRenderer: SQLRenderer
-) : RenderUpdateSQLCallback {
+) : RenderUpdateSQLCallbacks {
     override fun returning(builder: QueryBuilder) {
         returningRenderer.render(builder)
-    }
-}
-
-internal fun checkWhereCalled(funName: String, useInstead: String, where: Op<Boolean>?) {
-    if (where == null) {
-        throw IllegalStateException("""
-            Calling $funName without where clause. This exception try to avoid unwanted update of whole table.
-            "In case of update all call $useInstead.""".trimIndent()
-        )
     }
 }

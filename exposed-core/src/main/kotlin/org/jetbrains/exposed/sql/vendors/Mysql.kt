@@ -19,6 +19,9 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.appendTo
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
@@ -120,9 +123,9 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         columns: List<Column<*>>,
         expr: String,
         transaction: Transaction,
-        renderSQLCallback: RenderInsertSQLCallback
+        renderSQLCallbacks: RenderInsertSQLCallbacks
     ): String {
-        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallback)
+        val def = super.insert(false, table, columns, expr, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("INSERT", "INSERT IGNORE") else def
     }
 
@@ -131,9 +134,10 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
     ): String {
-        val def = super.delete(false, table, where, limit, transaction)
+        val def = super.delete(false, table, where, limit, transaction, renderSQLCallbacks)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
     }
 
@@ -143,7 +147,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
         targets.describe(transaction, this)

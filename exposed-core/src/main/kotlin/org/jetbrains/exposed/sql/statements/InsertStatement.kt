@@ -12,9 +12,9 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.isAutoInc
+import org.jetbrains.exposed.sql.render.RenderInsertSQLCallbacks
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.RenderInsertSQLCallback
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
@@ -28,7 +28,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     var resultedValues: List<ResultRow>? = null
         private set
 
-    var renderSqlCallback: RenderInsertSQLCallback = RenderInsertSQLCallback.Noop
+    var renderSqlCallback: RenderInsertSQLCallbacks = RenderInsertSQLCallbacks.Noop
 
     infix operator fun <T> get(column: Column<T>): T {
         val row = resultedValues?.firstOrNull() ?: error("No key generated")

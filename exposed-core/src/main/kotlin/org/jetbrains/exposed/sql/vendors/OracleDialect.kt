@@ -20,6 +20,8 @@ import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.appendIfNotNull
 import org.jetbrains.exposed.sql.appendTo
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.render.RenderDeleteSQLCallbacks
+import org.jetbrains.exposed.sql.render.RenderUpdateSQLCallbacks
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
@@ -149,9 +151,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction, renderSqlCallback)
+        val def = super.update(target, columnsAndValues, null, where, transaction, renderSQLCallbacks)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
             limit != null -> "$def WHERE ROWNUM <= $limit"
@@ -165,7 +167,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction,
-        renderSqlCallback: RenderUpdateSQLCallback
+        renderSQLCallbacks: RenderUpdateSQLCallbacks
     ): String = with(QueryBuilder(true)) {
         columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
@@ -205,12 +207,13 @@ internal object OracleFunctionProvider : FunctionProvider() {
         table: Table,
         where: String?,
         limit: Int?,
-        transaction: Transaction
+        transaction: Transaction,
+        renderSQLCallbacks: RenderDeleteSQLCallbacks
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("Oracle doesn't support LIMIT in DELETE clause.")
         }
-        return super.delete(ignore, table, where, limit, transaction)
+        return super.delete(ignore, table, where, limit, transaction, renderSQLCallbacks)
     }
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
