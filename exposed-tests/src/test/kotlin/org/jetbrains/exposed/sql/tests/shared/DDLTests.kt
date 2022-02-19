@@ -699,6 +699,19 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testCheckConstraint04() {
+        object : Table("test") {
+            val testColumn: Column<Int?> = integer("test_column").nullable()
+
+            init {
+                check("test_constraint") {
+                    testColumn.isNotNull() neq Op.TRUE
+                }
+            }
+        }
+    }
+
     internal enum class Foo { Bar, Baz }
 
     class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
