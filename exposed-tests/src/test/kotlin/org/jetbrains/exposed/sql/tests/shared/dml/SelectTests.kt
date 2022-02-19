@@ -236,9 +236,10 @@ class SelectTests : DatabaseTestsBase() {
             secondTable.insert { }
 
             assertEquals(2L, secondTable.selectAll().count())
-            val secondEntries = secondTable.select { secondTable.firstOpt eq firstId.value }.toList()
-
-            assertEquals(1, secondEntries.size)
+            assertEquals(1, secondTable.select { secondTable.firstOpt eq firstId.value }.toList().size)
+            assertEquals(0, secondTable.select { secondTable.firstOpt neq firstId.value }.toList().size)
+            assertEquals(1, secondTable.select { secondTable.firstOpt eq null }.count())
+            assertEquals(1, secondTable.select { secondTable.firstOpt neq null }.count())
         }
     }
 

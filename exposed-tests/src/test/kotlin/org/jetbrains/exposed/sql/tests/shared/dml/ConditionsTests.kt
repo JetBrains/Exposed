@@ -81,11 +81,17 @@ class ConditionsTests : DatabaseTestsBase() {
             users.update {
                 it[users.cityId] = Op.nullOp()
             }
+            users.update {
+                it[users.cityId] = null
+            }
             val nullUsers1 = users.select { users.cityId.isNull() }.count()
             assertEquals(allUsers, nullUsers1)
 
             val nullUsers2 = users.select { users.cityId eq Op.nullOp() }.count()
             assertEquals(allUsers, nullUsers2)
+
+            val nullUsers3 = users.select { users.cityId eq null }.count()
+            assertEquals(allUsers, nullUsers3)
         }
     }
 
