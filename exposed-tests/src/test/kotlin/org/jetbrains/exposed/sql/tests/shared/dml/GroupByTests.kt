@@ -29,6 +29,7 @@ class GroupByTests : DatabaseTestsBase() {
                     "St. Petersburg" -> assertEquals(1, userCount)
                     else -> error("Unknow city $cityName")
                 }
+                assertEquals(userCount, userCountAlias)
             }
         }
     }

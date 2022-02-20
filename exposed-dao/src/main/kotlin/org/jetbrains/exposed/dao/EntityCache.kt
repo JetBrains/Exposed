@@ -171,42 +171,40 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     internal fun flushInserts(table: IdTable<*>) {
-        inserts.remove(table)?.let {
-            var toFlush: List<Entity<*>> = it.toList()
-            do {
-                val partition = toFlush.partition {
-                    it.writeValues.none {
-                        val (key, value) = it
-                        key.referee == table.id && value is EntityID<*> && value._value == null
+        var toFlush: List<Entity<*>> = inserts.remove(table)?.toList().orEmpty()
+        while (toFlush.isNotEmpty()) {
+            val partition = toFlush.partition {
+                it.writeValues.none {
+                    val (key, value) = it
+                    key.referee == table.id && value is EntityID<*> && value._value == null
+                }
+            }
+            toFlush = partition.first
+            val ids = executeAsPartOfEntityLifecycle {
+                table.batchInsert(toFlush) { entry ->
+                    for ((c, v) in entry.writeValues) {
+                        this[c] = v
                     }
                 }
-                toFlush = partition.first
-                val ids = executeAsPartOfEntityLifecycle {
-                    table.batchInsert(toFlush) { entry ->
-                        for ((c, v) in entry.writeValues) {
-                            this[c] = v
-                        }
-                    }
+            }
+
+            for ((entry, genValues) in toFlush.zip(ids)) {
+                if (entry.id._value == null) {
+                    val id = genValues[table.id]
+                    entry.id._value = id._value
+                    entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                }
+                genValues.fieldIndex.keys.forEach { key ->
+                    entry.writeValues[key as Column<Any?>] = genValues[key]
                 }
 
-                for ((entry, genValues) in toFlush.zip(ids)) {
-                    if (entry.id._value == null) {
-                        val id = genValues[table.id]
-                        entry.id._value = id._value
-                        entry.writeValues[entry.klass.table.id as Column<Any?>] = id
-                    }
-                    genValues.fieldIndex.keys.forEach { key ->
-                        entry.writeValues[key as Column<Any?>] = genValues[key]
-                    }
+                entry.storeWrittenValues()
+                store(entry)
+                transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
+                pendingInitializationLambdas[entry]?.forEach { it(entry) }
+            }
 
-                    entry.storeWrittenValues()
-                    store(entry)
-                    transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
-                    pendingInitializationLambdas[entry]?.forEach { it(entry) }
-                }
-
-                toFlush = partition.second
-            } while (toFlush.isNotEmpty())
+            toFlush = partition.second
         }
         transaction.alertSubscribers()
     }

@@ -192,7 +192,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 newSuspendedTransaction(singleThreadDispatcher, db = db) {
                     try {
                         Testing.selectAll().toList()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         suspendedOk = false
                     }
                 }
@@ -200,7 +200,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 transaction(db) {
                     try {
                         Testing.selectAll().toList()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         normalOk = false
                     }
                 }

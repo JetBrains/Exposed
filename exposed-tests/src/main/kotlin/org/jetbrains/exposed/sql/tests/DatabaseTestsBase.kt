@@ -22,7 +22,6 @@ enum class TestDB(
     val pass: String = "",
     val beforeConnection: () -> Unit = {},
     val afterTestFinished: () -> Unit = {},
-    var db: Database? = null,
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
     H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
@@ -103,6 +102,8 @@ enum class TestDB(
         },
         "org.mariadb.jdbc.Driver"
     );
+
+    var db: Database? = null
 
     fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): Database {
         val config = DatabaseConfig {
@@ -207,7 +208,7 @@ abstract class DatabaseTestsBase {
                     try {
                         SchemaUtils.drop(*tables)
                         commit()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         val database = testDB.db!!
                         inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
                             SchemaUtils.drop(*tables)

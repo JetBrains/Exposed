@@ -99,10 +99,7 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
                     val (col, value) = iterator.next()
                     append(col.valueToString(value))
                 }
-                continue
-            }
-
-            if (char == '\'' || char == '\"') {
+            } else if (char == '\'' || char == '\"') {
                 if (quoteStack.isEmpty()) {
                     quoteStack.push(char)
                 } else {

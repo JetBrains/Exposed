@@ -186,8 +186,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 }
             }
             writeValues[this as Column<Any?>] = value
-            // TODO: Can this be simplified?
-            if (o.id._value?.let { entityCache.data[table]?.contains(it) } == true) {
+            if (entityCache.data[table].orEmpty().contains(o.id._value)) {
                 entityCache.scheduleUpdate(klass, o)
             }
         }

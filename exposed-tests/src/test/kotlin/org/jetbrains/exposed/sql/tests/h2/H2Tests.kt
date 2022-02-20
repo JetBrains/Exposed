@@ -79,7 +79,7 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2) { testDB ->
-            val orignalManager = TransactionManager.manager
+            val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
                 TransactionManager.registerManager(
@@ -91,7 +91,7 @@ class H2Tests : DatabaseTestsBase() {
                         .get(1, TimeUnit.SECONDS)
                 }.shutdown()
             } finally {
-                TransactionManager.registerManager(db, orignalManager)
+                TransactionManager.registerManager(db, originalManager)
             }
         }
     }
