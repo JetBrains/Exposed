@@ -9,7 +9,7 @@ object Versions {
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
-    const val h2_v2 = "2.0.202"
+    const val h2_v2 = "2.0.206"
     const val mariaDB = "2.7.4"
     const val mysql51 = "5.1.49"
     const val mysql80 = "8.0.27"
