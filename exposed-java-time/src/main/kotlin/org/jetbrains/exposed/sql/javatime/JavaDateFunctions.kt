@@ -27,6 +27,14 @@ class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INST
         }
     }
 }
+class CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when (currentDialect) {
+            is MysqlDialect -> "CURRENT_DATE()"
+            else -> "CURRENT_DATE"
+        }
+    }
+}
 
 class CurrentTimestamp<T : Temporal> : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {

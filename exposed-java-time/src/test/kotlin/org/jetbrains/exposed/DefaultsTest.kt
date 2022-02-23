@@ -250,6 +250,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDate = date("defaultDate").defaultExpression(CurrentDate())
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
@@ -260,6 +261,7 @@ class DefaultsTest : DatabaseTestsBase() {
             val result = foo.select { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].toLocalDate())
+            assertEquals(today, result[foo.defaultDate])
             assertEquals(100, result[foo.defaultInt])
         }
     }
