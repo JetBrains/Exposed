@@ -343,7 +343,16 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(
         toColumn: (TReal) -> TColumn,
         toReal: (TColumn) -> TReal
-    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
+    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal, false)
+
+    /**
+     * Function will return [ColumnWithTransform] delegate that will cache value on read for the same [TColumn] value.
+     * @param toReal should be pure function
+     */
+    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.memoizedTransform(
+        toColumn: (TReal) -> TColumn,
+        toReal: (TColumn) -> TReal
+    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal, true)
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
