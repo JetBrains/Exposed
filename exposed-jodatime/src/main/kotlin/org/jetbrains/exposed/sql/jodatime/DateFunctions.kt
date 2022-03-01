@@ -10,7 +10,7 @@ class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColu
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
 }
 
-class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
+class CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -27,7 +27,6 @@ object CurrentDate : Function<DateTime>(DateColumnType(false)) {
         }
     }
 }
-
 
 class Year<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
