@@ -19,6 +19,16 @@ class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     }
 }
 
+object CurrentDate : Function<DateTime>(DateColumnType(false)) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when (currentDialect) {
+            is MysqlDialect -> "CURRENT_DATE()"
+            else -> "CURRENT_DATE"
+        }
+    }
+}
+
+
 class Year<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         currentDialect.functionProvider.year(expr, queryBuilder)

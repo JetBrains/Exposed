@@ -27,6 +27,7 @@ class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INST
         }
     }
 }
+
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
