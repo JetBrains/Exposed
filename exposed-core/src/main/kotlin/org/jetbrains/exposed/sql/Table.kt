@@ -591,7 +591,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Creates an enumeration column, with the specified [name], for storing enums of type [T] by their name.
      * With the specified maximum [length] for each name value.
      */
-    inline fun <reified T : Enum<T>> Table.enumerationByName(name: String, length: Int) =
+    inline fun <reified T : Enum<T>> enumerationByName(name: String, length: Int) =
         enumerationByName(name, length, T::class)
 
     /**
