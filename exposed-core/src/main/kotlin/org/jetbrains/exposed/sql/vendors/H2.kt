@@ -1,13 +1,12 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.text.SimpleDateFormat
-import java.util.Date
 
 private val Transaction.isMySQLMode: Boolean
-    get() = (db.dialect as? H2Dialect)?.isMySQLMode() ?: false
+    get() = (db.dialect as? H2Dialect)?.isMySQLMode ?: false
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -20,12 +19,13 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 internal object H2FunctionProvider : FunctionProvider() {
-
-    private fun dbReleaseDate(transaction: Transaction): Date {
-        val releaseDate = transaction.db.metadata { databaseProductVersion.substringAfterLast('(').substringBeforeLast(')') }
-        val formatter = SimpleDateFormat("yyyy-MM-dd")
-        return formatter.parse(releaseDate)
-    }
+    override fun nextVal(seq: Sequence, builder: QueryBuilder) =
+        when ((TransactionManager.current().db.dialect as H2Dialect).majorVersion) {
+            H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
+            H2Dialect.H2MajorVersion.Two -> builder {
+                append("NEXT VALUE FOR ${seq.identifier}")
+            }
+        }
 
     override fun insert(
         ignore: Boolean,
@@ -34,19 +34,22 @@ internal object H2FunctionProvider : FunctionProvider() {
         expr: String,
         transaction: Transaction
     ): String {
-        val uniqueIdxCols = table.indices.filter { it.unique }.flatMap { it.columns.toList() }
-        val primaryKeys = table.primaryKey?.columns?.toList() ?: emptyList()
-        val uniqueCols = (uniqueIdxCols + primaryKeys).distinct()
-        val borderDate = Date(118, 2, 18)
+        val uniqueCols = mutableSetOf<Column<*>>()
+        table.indices.filter { it.unique }.flatMapTo(uniqueCols) { it.columns }
+        table.primaryKey?.columns?.let { primaryKeys ->
+            uniqueCols += primaryKeys
+        }
+        val version = (transaction.db.dialect as H2Dialect).version
         return when {
             // INSERT IGNORE support added in H2 version 1.4.197 (2018-03-18)
-            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && dbReleaseDate(transaction) < borderDate -> {
+            ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode && version < "1.4.197" -> {
                 val def = super.insert(false, table, columns, expr, transaction)
                 def + " ON DUPLICATE KEY UPDATE " + uniqueCols.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
             }
             ignore && uniqueCols.isNotEmpty() && transaction.isMySQLMode -> {
                 super.insert(false, table, columns, expr, transaction).replace("INSERT", "INSERT IGNORE")
             }
+            ignore -> transaction.throwUnsupportedException("INSERT IGNORE supported only on H2 v1.4.197+ with MODE=MYSQL.")
             else -> super.insert(ignore, table, columns, expr, transaction)
         }
     }
@@ -70,14 +73,15 @@ internal object H2FunctionProvider : FunctionProvider() {
         tableToUpdate.describe(transaction, this)
         +" USING "
 
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.forEach {
             if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
             }
-            + " ON "
+            +" ON "
             it.appendConditions(this)
         }
         +" WHEN MATCHED THEN UPDATE SET "
@@ -87,7 +91,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
 
         where?.let {
-            + " WHERE "
+            +" WHERE "
             +it
         }
         toString()
@@ -116,19 +120,38 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+    internal enum class H2MajorVersion {
+        One, Two
+    }
 
-    private var isMySQLMode: Boolean? = null
+    internal val version by lazy {
+        exactH2Version(TransactionManager.current())
+    }
 
-    internal fun isMySQLMode(): Boolean {
-        return isMySQLMode
-            ?: TransactionManager.currentOrNull()?.let { tr ->
-                tr.exec("SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'") { rs ->
-                    rs.next()
-                    rs.getString("VALUE")?.equals("MySQL", ignoreCase = true)?.also {
-                        isMySQLMode = it
-                    } ?: false
-                }
-            } ?: false
+    internal val majorVersion: H2MajorVersion by lazy {
+        when {
+            version.startsWith("1.") -> H2MajorVersion.One
+            version.startsWith("2.") -> H2MajorVersion.Two
+            else -> error("Unsupported H2 version: $version")
+        }
+    }
+
+    val isSecondVersion get() = majorVersion == H2MajorVersion.Two
+
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
+
+    internal val isMySQLMode: Boolean by lazy {
+        val (settingNameField, settingValueField) = when (majorVersion) {
+            H2MajorVersion.One -> "NAME" to "VALUE"
+            H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+        }
+        @Language("H2")
+        val mySQLModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+        val mySQLMode = TransactionManager.current().exec(mySQLModeQuery) { rs ->
+            rs.next()
+            rs.getString(settingValueField)
+        }
+        mySQLMode.equals("MySQL", ignoreCase = true)
     }
 
     override val name: String
@@ -141,7 +164,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = !TransactionManager.current().isMySQLMode
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }.filterValues { it.isNotEmpty() }
+        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
+            .filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -151,7 +175,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             return ""
         }
         if (index.indexType != null) {
-            exposedLogger.warn("Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+            exposedLogger.warn(
+                "Index of type ${index.indexType} on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2"
+            )
             return ""
         }
         return super.createIndex(index)
@@ -159,8 +185,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
 
-    override fun modifyColumn(column: Column<*>): String =
-        super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
+        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 

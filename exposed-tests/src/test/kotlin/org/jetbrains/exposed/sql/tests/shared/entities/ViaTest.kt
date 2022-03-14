@@ -24,21 +24,36 @@ object ViaTestData {
         override val primaryKey = PrimaryKey(id)
     }
 
-    object ConnectionTable : Table() {
-        val numId = reference("numId", NumbersTable, ReferenceOption.CASCADE)
-        val stringId = reference("stringId", StringsTable, ReferenceOption.CASCADE)
+    interface IConnectionTable {
+        val numId: Column<EntityID<UUID>>
+        val stringId: Column<EntityID<Long>>
+    }
+
+    object ConnectionTable : Table(), IConnectionTable {
+        override val numId = reference("numId", NumbersTable, ReferenceOption.CASCADE)
+        override val stringId = reference("stringId", StringsTable, ReferenceOption.CASCADE)
 
         init {
             index(true, numId, stringId)
         }
     }
 
-    val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable)
+    object ConnectionAutoIncTable : IntIdTable(), IConnectionTable {
+        override val numId = reference("numId", NumbersTable, ReferenceOption.CASCADE)
+        override val stringId = reference("stringId", StringsTable, ReferenceOption.CASCADE)
+
+        init {
+            index(true, numId, stringId)
+        }
+    }
+
+    val allTables: Array<Table> = arrayOf(NumbersTable, StringsTable, ConnectionTable, ConnectionAutoIncTable)
 }
 
 class VNumber(id: EntityID<UUID>) : UUIDEntity(id) {
     var number by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
+    var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoIncTable
 
     companion object : UUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
 }
@@ -49,15 +64,29 @@ class VString(id: EntityID<Long>) : Entity<Long>(id) {
 }
 
 class ViaTests : DatabaseTestsBase() {
+
+    private fun VNumber.testWithBothTables(valuesToSet: List<VString>, body: (ViaTestData.IConnectionTable, List<ResultRow>) -> Unit) {
+        listOf(ViaTestData.ConnectionTable, ViaTestData.ConnectionAutoIncTable).forEach { t ->
+            if (t == ViaTestData.ConnectionTable) {
+                connectedStrings = SizedCollection(valuesToSet)
+            } else {
+                connectedAutoStrings = SizedCollection(valuesToSet)
+            }
+
+            val result = t.selectAll().toList()
+            body(t, result)
+        }
+    }
+
     @Test fun testConnection01() {
         withTables(*ViaTestData.allTables) {
             val n = VNumber.new { number = 10 }
             val s = VString.new { text = "aaa" }
-            n.connectedStrings = SizedCollection(listOf(s))
-
-            val row = ViaTestData.ConnectionTable.selectAll().single()
-            assertEquals(n.id, row[ViaTestData.ConnectionTable.numId])
-            assertEquals(s.id, row[ViaTestData.ConnectionTable.stringId])
+            n.testWithBothTables(listOf(s)) { table, result ->
+                val row = result.single()
+                assertEquals(n.id, row[table.numId])
+                assertEquals(s.id, row[table.stringId])
+            }
         }
     }
 
@@ -68,13 +97,12 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection(listOf(s1, s2))
-
-            val row = ViaTestData.ConnectionTable.selectAll().toList()
-            assertEquals(2, row.count())
-            assertEquals(n1.id, row[0][ViaTestData.ConnectionTable.numId])
-            assertEquals(n1.id, row[1][ViaTestData.ConnectionTable.numId])
-            assertEqualCollections(listOf(s1.id, s2.id), row.map { it[ViaTestData.ConnectionTable.stringId] })
+            n1.testWithBothTables(listOf(s1, s2)) { table, row ->
+                assertEquals(2, row.count())
+                assertEquals(n1.id, row[0][table.numId])
+                assertEquals(n1.id, row[1][table.numId])
+                assertEqualCollections(listOf(s1.id, s2.id), row.map { it[table.stringId] })
+            }
         }
     }
 
@@ -85,23 +113,17 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection(listOf(s1, s2))
-            n2.connectedStrings = SizedCollection(listOf(s1, s2))
-
-            run {
-                val row = ViaTestData.ConnectionTable.selectAll().toList()
+            n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
+            n2.testWithBothTables(listOf(s1, s2)) { _, row ->
                 assertEquals(4, row.count())
                 assertEqualCollections(n1.connectedStrings, listOf(s1, s2))
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
-            n1.connectedStrings = SizedCollection(emptyList())
-
-            run {
-                val row = ViaTestData.ConnectionTable.selectAll().toList()
+            n1.testWithBothTables(emptyList()) { table, row ->
                 assertEquals(2, row.count())
-                assertEquals(n2.id, row[0][ViaTestData.ConnectionTable.numId])
-                assertEquals(n2.id, row[1][ViaTestData.ConnectionTable.numId])
+                assertEquals(n2.id, row[0][table.numId])
+                assertEquals(n2.id, row[1][table.numId])
                 assertEqualCollections(n1.connectedStrings, emptyList())
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
@@ -115,20 +137,14 @@ class ViaTests : DatabaseTestsBase() {
             val s1 = VString.new { text = "aaa" }
             val s2 = VString.new { text = "bbb" }
 
-            n1.connectedStrings = SizedCollection(listOf(s1, s2))
-            n2.connectedStrings = SizedCollection(listOf(s1, s2))
-
-            run {
-                val row = ViaTestData.ConnectionTable.selectAll().toList()
+            n1.testWithBothTables(listOf(s1, s2)) { _, _ -> }
+            n2.testWithBothTables(listOf(s1, s2)) { _, row ->
                 assertEquals(4, row.count())
                 assertEqualCollections(n1.connectedStrings, listOf(s1, s2))
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
-            n1.connectedStrings = SizedCollection(listOf(s1))
-
-            run {
-                val row = ViaTestData.ConnectionTable.selectAll().toList()
+            n1.testWithBothTables(listOf(s1)) { table, row ->
                 assertEquals(3, row.count())
                 assertEqualCollections(n1.connectedStrings, listOf(s1))
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
@@ -154,11 +170,12 @@ class ViaTests : DatabaseTestsBase() {
     @Test
     fun testHierarchicalReferences() {
         withTables(NodeToNodes) {
+            addLogger(StdOutSqlLogger)
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
+                parents = SizedCollection(root)
             }
-            child1.parents = SizedCollection(root)
 
             assertEquals(0L, root.parents.count())
             assertEquals(1L, root.children.count())

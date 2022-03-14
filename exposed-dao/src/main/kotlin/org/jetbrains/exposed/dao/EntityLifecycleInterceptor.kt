@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
@@ -22,13 +23,17 @@ internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
 
 class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
+    override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
+        return userData.filterValues { it is EntityCache }
+    }
+
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         when (val statement = context.statement) {
             is Query -> transaction.flushEntities(statement)
 
             is DeleteStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                transaction.entityCache.removeTablesReferrers(listOf(statement.table), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
@@ -38,14 +43,15 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
             is InsertStatement<*> -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(listOf(statement.table))
+                transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
             }
 
-            is BatchUpdateStatement -> {}
+            is BatchUpdateStatement -> {
+            }
 
             is UpdateStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables())
+                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()
@@ -54,8 +60,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
             }
 
             else -> {
-                if (statement.type.group == StatementGroup.DDL)
-                    transaction.flushCache()
+                if (statement.type.group == StatementGroup.DDL) transaction.flushCache()
             }
         }
     }

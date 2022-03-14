@@ -11,7 +11,6 @@ import java.util.*
 
 open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, null) {
     val data = ArrayList<Pair<EntityID<*>, Map<Column<*>, Any?>>>()
-
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 
     fun addBatch(id: EntityID<*>) {
@@ -29,6 +28,7 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
         if (data.isNotEmpty()) {
             data[data.size - 1] = lastBatch!!.copy(second = values.toMap())
             values.clear()
+            hasBatchedValues = true
         }
         data.add(id to values)
     }

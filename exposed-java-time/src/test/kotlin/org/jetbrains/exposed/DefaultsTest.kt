@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.`java-time`.*
+import org.jetbrains.exposed.sql.javatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -27,7 +27,7 @@ class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val t1 = datetime("t1").defaultExpression(CurrentDateTime)
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
@@ -144,7 +144,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaults01() {
-        val currentDT = CurrentDateTime()
+        val currentDT = CurrentDateTime
         val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (val dialect = currentDialectTest) {
@@ -191,6 +191,7 @@ class DefaultsTest : DatabaseTestsBase() {
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val longType = currentDialectTest.dataTypeProvider.longType()
+            val timeType = currentDialectTest.dataTypeProvider.timeType()
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
@@ -207,14 +208,15 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
                 "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                "${"t9".inProperCase()} TIME ${tLiteral.itOrNull()}, " +
-                "${"t10".inProperCase()} TIME ${tLiteral.itOrNull()}" +
+                "${"t9".inProperCase()} $timeType ${tLiteral.itOrNull()}, " +
+                "${"t10".inProperCase()} $timeType ${tLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect)
-                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
-            else
+            val expected = if (currentDialectTest is OracleDialect) {
+                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+            } else {
                 arrayListOf(baseExpression)
+            }
 
             assertEqualLists(expected, TestTable.ddl)
 
@@ -247,7 +249,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 

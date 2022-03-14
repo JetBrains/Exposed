@@ -86,7 +86,7 @@ class ImmutableEntityTest : DatabaseTestsBase() {
                 }
 
                 // Populate _cachedValues in ImmutableCachedEntityClass with inconsistent entity value
-                val updatedOrg = ECachedOrganization.all().single()
+                ECachedOrganization.all().single()
             }
 
             transaction {

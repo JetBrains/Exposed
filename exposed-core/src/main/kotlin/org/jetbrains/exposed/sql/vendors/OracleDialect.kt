@@ -14,6 +14,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
     override fun textType(): String = "CLOB"
+    override fun timeType(): String = dateTimeType()
     override fun binaryType(): String {
         exposedLogger.error("Binary type is unsupported for Oracle. Please use blob column type instead.")
         error("Binary type is unsupported for Oracle. Please use blob column type instead.")
@@ -64,9 +65,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         vararg expr: Expression<*>
     ): Unit = queryBuilder {
         if (separator == "") {
-            expr.toList().appendTo(separator = " || ") { +it }
+            expr.appendTo(separator = " || ") { +it }
         } else {
-            expr.toList().appendTo(separator = " || '$separator' || ") { +it }
+            expr.appendTo(separator = " || '$separator' || ") { +it }
         }
     }
 
@@ -206,10 +207,24 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsMultipleGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsDualTableConcept: Boolean = true
+    override val supportsOrderByNullsFirstLast: Boolean = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>): String = super.modifyColumn(column).replace("MODIFY COLUMN", "MODIFY")
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val result = super.modifyColumn(column, columnDiff).map {
+            it.replace("MODIFY COLUMN", "MODIFY")
+        }
+        return if (!columnDiff.nullability) {
+            val nullableState = if (column.columnType.nullable) "NULL " else "NOT NULL"
+            result.map {
+                it.replace(nullableState, "")
+            }
+        } else {
+            result
+        }
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 

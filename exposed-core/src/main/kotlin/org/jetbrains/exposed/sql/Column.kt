@@ -15,7 +15,7 @@ private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }
  * Represents a column.
  */
 class Column<T>(
-    /** Table where the columns is declared. */
+    /** Table where the columns are declared. */
     val table: Table,
     /** Name of the column. */
     val name: String,
@@ -26,14 +26,12 @@ class Column<T>(
 
     /** Returns the column that this column references. */
     val referee: Column<*>?
-        get() = foreignKey?.target
+        get() = foreignKey?.targetOf(this)
 
     /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
 
-    /** Returns the index of this column in the primary key if there is a primary key, `null` otherwise. */
-    var indexInPK: Int? = null
     /** Returns the function that calculates the default value for this column. */
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
@@ -46,21 +44,32 @@ class Column<T>(
 
     fun nameInDatabaseCase(): String = name.inProperCase()
 
+    private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
+
+    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
+        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+        table.isCustomPKNameDefined() -> isLastColumnInPK
+        isOneColumnPK() -> false
+        else -> isLastColumnInPK
+    }
+
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
-        val isLastColumnInPK = table.primaryKey?.columns?.last() == this
+        val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val columnDefinition = when {
-            isOneColumnPK() && table.isCustomPKNameDefined() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
-            isOneColumnPK() && (currentDialect is H2Dialect || currentDialect is SQLiteDialect) -> descriptionDdl(false).removeSuffix(" PRIMARY KEY")
-            !isOneColumnPK() && isLastColumnInPK && currentDialect !is H2Dialect -> descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint ->
+                descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+            isH2withCustomPKConstraint -> descriptionDdl(true)
             else -> descriptionDdl(false)
         }
 
-        val addConstr = if (isLastColumnInPK && currentDialect is H2Dialect) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
+        val addConstr = if (isH2withCustomPKConstraint) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
-    override fun modifyStatement(): List<String> = listOf("ALTER TABLE ${TransactionManager.current().identity(table)} ${currentDialect.modifyColumn(this)}")
+    fun modifyStatements(columnDiff: ColumnDiff): List<String> = currentDialect.modifyColumn(this, columnDiff)
+
+    override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)
 
     override fun dropStatement(): List<String> {
         val tr = TransactionManager.current()
@@ -72,16 +81,21 @@ class Column<T>(
     /** Returns the SQL representation of this column. */
     fun descriptionDdl(modify: Boolean = false): String = buildString {
         val tr = TransactionManager.current()
-        append(tr.identity(this@Column))
+        val column = this@Column
+        append(tr.identity(column))
         append(" ")
-        val isPKColumn = table.primaryKey?.columns?.contains(this@Column) == true
-        val colType = columnType
-        val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && colType.isAutoInc
+        val isPKColumn = table.primaryKey?.columns?.contains(column) == true
+        val isSQLiteAutoIncColumn = currentDialect is SQLiteDialect && columnType.isAutoInc
 
         when {
             !isPKColumn && isSQLiteAutoIncColumn -> tr.throwUnsupportedException("Auto-increment could be applied only to primary key column")
-            isSQLiteAutoIncColumn && (!isOneColumnPK() || table.isCustomPKNameDefined()) && table.primaryKey != null -> append(currentDialect.dataTypeProvider.integerType())
-            else -> append(colType.sqlType())
+            isSQLiteAutoIncColumn && !isOneColumnPK() -> tr.throwUnsupportedException("Auto-increment could be applied only to a single column primary key")
+            isSQLiteAutoIncColumn && table.isCustomPKNameDefined() -> {
+                val rawType = columnType.sqlType().substringBefore("PRIMARY KEY")
+                val constraintPart = table.primaryKeyConstraint()!!.substringBefore("(")
+                append("$rawType $constraintPart AUTOINCREMENT")
+            }
+            else -> append(columnType.sqlType())
         }
 
         val defaultValue = dbDefaultValue
@@ -90,7 +104,7 @@ class Column<T>(
             if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
                 val clientDefault = when {
                     defaultValueFun != null -> " Expression will be evaluated on the client."
-                    !colType.nullable -> " Column will be created with NULL marker."
+                    !columnType.nullable -> " Column will be created with NULL marker."
                     else -> ""
                 }
                 exposedLogger.error("${currentDialect.name} ${tr.db.version} doesn't support expression '$expressionSQL' as default value.$clientDefault")
@@ -99,24 +113,38 @@ class Column<T>(
             }
         }
 
-        if (colType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
+        if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
             if (currentDialect !is DB2Dialect) // in db2 columns are null by default - there is no NULL keyword
-            append(" NULL")
-        } else if (!isPKColumn || (currentDialect is SQLiteDialect && !colType.isAutoInc)) {
+               append(" NULL")
+        } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
             append(" NOT NULL")
         }
 
-        if (!modify && !table.isCustomPKNameDefined() && isOneColumnPK() && !isSQLiteAutoIncColumn) {
+        if (!modify && isOneColumnPK() && !isPrimaryConstraintWillBeDefined && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
     }
+
+
+    /**
+     * Returns a copy of this column, but with the given column type.
+     */
+    fun withColumnType(columnType: IColumnType) = Column<T>(
+        table = this.table,
+        name = this.name,
+        columnType = columnType
+    ).also{
+        it.foreignKey = this.foreignKey
+        it.defaultValueFun = this.defaultValueFun
+        it.dbDefaultValue = this.dbDefaultValue
+    }
+
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Column<*>) return false
-        if (!super.equals(other)) return false
 
         if (table != other.table) return false
         if (name != other.name) return false

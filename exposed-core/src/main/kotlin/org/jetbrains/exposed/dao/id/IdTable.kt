@@ -39,8 +39,8 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
  * @param columnName name for a primary key, "id" by default
  */
 open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<Int>(name) {
-    override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
+    final override val id: Column<EntityID<Int>> = integer(columnName).autoIncrement().entityId()
+    final override val primaryKey = PrimaryKey(id)
 }
 
 /**
@@ -50,8 +50,8 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
  * @param columnName name for a primary key, "id" by default
  */
 open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<Long>(name) {
-    override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
+    final override val id: Column<EntityID<Long>> = long(columnName).autoIncrement().entityId()
+    final override val primaryKey = PrimaryKey(id)
 }
 
 /**
@@ -65,8 +65,6 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
  * @param columnName name for a primary key, "id" by default
  */
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
-    override val id: Column<EntityID<UUID>> = uuid(columnName)
-        .autoGenerate()
-        .entityId()
-    override val primaryKey by lazy { super.primaryKey ?: PrimaryKey(id) }
+    final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
+    final override val primaryKey = PrimaryKey(id)
 }

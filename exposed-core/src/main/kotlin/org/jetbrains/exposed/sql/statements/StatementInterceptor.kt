@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
@@ -12,6 +13,8 @@ interface StatementInterceptor {
 
     fun beforeRollback(transaction: Transaction) {}
     fun afterRollback() {}
+
+    fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> = emptyMap()
 }
 
 interface GlobalStatementInterceptor : StatementInterceptor

@@ -20,7 +20,7 @@ open class CustomFunction<T>(
 ) : Function<T>(_columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(functionName, '(')
-        expr.toList().appendTo { +it }
+        expr.appendTo { +it }
         append(')')
     }
 }
@@ -87,7 +87,7 @@ class Concat(
     /** Returns the expressions being concatenated. */
     vararg val expr: Expression<*>
 ) : Function<String>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, *expr)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, expr = expr)
 }
 
 /**
@@ -276,11 +276,18 @@ class CaseWhen<T>(val value: Expression<*>?) {
     fun <R : T> Else(e: Expression<R>): Expression<R> = CaseWhenElse(this, e)
 }
 
-class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : Expression<R>(), ComplexExpression {
+class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : ExpressionWithColumnType<R>(), ComplexExpression {
+
+    override val columnType: IColumnType =
+        (elseResult as? ExpressionWithColumnType<R>)?.columnType
+            ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<*>>().firstOrNull()?.columnType
+            ?: BooleanColumnType.INSTANCE
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("CASE ")
-        if (caseWhen.value != null)
+        if (caseWhen.value != null) {
             +caseWhen.value
+        }
 
         for ((first, second) in caseWhen.cases) {
             append(" WHEN ", first, " THEN ", second)
@@ -295,9 +302,16 @@ class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expressi
  */
 class Coalesce<out T, S : T?, R : T>(
     private val expr: ExpressionWithColumnType<S>,
-    private val alternate: ExpressionWithColumnType<out T>
-) : Function<R>(alternate.columnType) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("COALESCE(", expr, ", ", alternate, ")") }
+    private val alternate: Expression<out T>,
+    private vararg val others: Expression<out T>
+) : Function<R>(expr.columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        (listOf(expr, alternate) + others).appendTo(
+            prefix = "COALESCE(",
+            postfix = ")",
+            separator = ", "
+        ) { +it }
+    }
 }
 
 // Value Expressions

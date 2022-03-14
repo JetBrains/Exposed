@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.*
+import java.util.Deque
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -14,7 +14,12 @@ enum class EntityChangeType {
     Removed;
 }
 
-data class EntityChange(val entityClass: EntityClass<*, Entity<*>>, val entityId: EntityID<*>, val changeType: EntityChangeType, val transactionId: String)
+data class EntityChange(
+    val entityClass: EntityClass<*, Entity<*>>,
+    val entityId: EntityID<*>,
+    val changeType: EntityChangeType,
+    val transactionId: String
+)
 
 fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? = (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
 

@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.OracleDialect
@@ -119,6 +119,35 @@ class OrderByTests : DatabaseTestsBase() {
             // St. Petersburg - 1 user
             // Prague - 0 users
             println(result)
+        }
+    }
+
+    @Test
+    fun testOrderByNullsFirst() {
+        // city IDs null, user IDs sorted ascending
+        val usersWithoutCities = listOf("alex", "smth")
+        // city IDs sorted descending, user IDs sorted ascending
+        val otherUsers = listOf("eugene", "sergey", "andrey")
+        // city IDs sorted ascending, user IDs sorted ascending
+        val otherUsersAsc = listOf("andrey", "eugene", "sergey")
+
+        val cases = listOf(
+            SortOrder.ASC_NULLS_FIRST to usersWithoutCities + otherUsersAsc,
+            SortOrder.ASC_NULLS_LAST to otherUsersAsc + usersWithoutCities,
+            SortOrder.DESC_NULLS_FIRST to usersWithoutCities + otherUsers,
+            SortOrder.DESC_NULLS_LAST to otherUsers + usersWithoutCities,
+        )
+        withCitiesAndUsers { _, users, _ ->
+            cases.forEach { (sortOrder, expected) ->
+                val r = users.selectAll().orderBy(
+                    users.cityId to sortOrder,
+                    users.id to SortOrder.ASC
+                ).toList()
+                assertEquals(5, r.size)
+                expected.forEachIndexed { index, e ->
+                    assertEquals(e, r[index][users.id])
+                }
+            }
         }
     }
 }

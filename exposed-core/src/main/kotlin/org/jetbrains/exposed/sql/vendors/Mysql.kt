@@ -23,6 +23,26 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun ulongType(): String = "BIGINT UNSIGNED"
 
     override fun textType(): String = "longtext"
+
+    override fun booleanFromStringToBoolean(value: String): Boolean = when(value) {
+        "0" -> false
+        "1" -> true
+        else -> value.toBoolean()
+    }
+
+    override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
+
+        when (sortOrder) {
+            SortOrder.ASC, SortOrder.DESC -> super.precessOrderByClause(queryBuilder, expression, sortOrder)
+            SortOrder.ASC_NULLS_FIRST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.ASC)
+            SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
+            else -> {
+                val exp = (expression as? ExpressionAlias<*>)?.alias ?: expression
+                val sortOrderAdjusted = if (sortOrder == SortOrder.ASC_NULLS_LAST) SortOrder.DESC else SortOrder.ASC
+                queryBuilder.append("-", exp, " ", sortOrderAdjusted.code)
+            }
+        }
+    }
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -124,6 +144,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsSubqueryUnions: Boolean = true
 
+    override val supportsOrderByNullsFirstLast: Boolean = false
+
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
@@ -138,23 +160,24 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
         val tr = TransactionManager.current()
         val schemaName = "'${getDatabase()}'"
-        val constraintsToLoad = HashMap<String, MutableList<ForeignKeyConstraint>>()
+        val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
         tr.exec(
-            "SELECT\n" +
-                "  rc.CONSTRAINT_NAME,\n" +
-                "  ku.TABLE_NAME,\n" +
-                "  ku.COLUMN_NAME,\n" +
-                "  ku.REFERENCED_TABLE_NAME,\n" +
-                "  ku.REFERENCED_COLUMN_NAME,\n" +
-                "  rc.UPDATE_RULE,\n" +
-                "  rc.DELETE_RULE\n" +
-                "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
-                "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku\n" +
-                "    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME\n" +
-                "WHERE ku.TABLE_SCHEMA = $schemaName " +
-                "   AND ku.CONSTRAINT_SCHEMA = $schemaName" +
-                "   AND rc.CONSTRAINT_SCHEMA = $schemaName" +
-                "   AND $inTableList"
+            """SELECT
+                  rc.CONSTRAINT_NAME,
+                  ku.TABLE_NAME,
+                  ku.COLUMN_NAME,
+                  ku.REFERENCED_TABLE_NAME,
+                  ku.REFERENCED_COLUMN_NAME,
+                  rc.UPDATE_RULE,
+                  rc.DELETE_RULE
+                FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
+                    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                WHERE ku.TABLE_SCHEMA = $schemaName
+                  AND ku.CONSTRAINT_SCHEMA = $schemaName
+                  AND rc.CONSTRAINT_SCHEMA = $schemaName
+                  AND $inTableList
+                ORDER BY ku.ORDINAL_POSITION""".trimIndent()
         ) { rs ->
             while (rs.next()) {
                 val fromTableName = rs.getString("TABLE_NAME")!!
@@ -171,19 +194,21 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                     }
                     val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
                     val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-                    constraintsToLoad.getOrPut(fromTableName) { arrayListOf() }.add(
+                    constraintsToLoad.getOrPut(fromTableName) { mutableMapOf() }.merge(
+                        constraintName,
                         ForeignKeyConstraint(
                             target = targetColumn,
                             from = fromColumn,
                             onUpdate = constraintUpdateRule,
                             onDelete = constraintDeleteRule,
                             name = constraintName
-                        )
+                        ),
+                        ForeignKeyConstraint::plus
                     )
                 }
             }
 
-            columnConstraintsCache.putAll(constraintsToLoad)
+            columnConstraintsCache.putAll(constraintsToLoad.mapValues { (_, v) -> v.values })
         }
     }
 

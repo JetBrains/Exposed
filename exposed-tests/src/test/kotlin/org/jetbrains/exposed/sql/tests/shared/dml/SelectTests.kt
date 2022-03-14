@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.crypt.Algorithms
+import org.jetbrains.exposed.crypt.encryptedBinary
+import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -111,7 +114,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList04() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name inList listOf("andrey" to "Andrey")
             }.toList()
@@ -123,7 +126,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList05() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name inList emptyList()
             }.toList()
@@ -134,7 +137,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList06() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name notInList emptyList()
             }.toList()
@@ -145,7 +148,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList07() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
             val r = users.select {
                 Triple(users.id, users.name, users.cityId) notInList listOf(Triple("alex", "Alex", null))
             }.toList()
@@ -233,9 +236,10 @@ class SelectTests : DatabaseTestsBase() {
             secondTable.insert { }
 
             assertEquals(2L, secondTable.selectAll().count())
-            val secondEntries = secondTable.select { secondTable.firstOpt eq firstId.value }.toList()
-
-            assertEquals(1, secondEntries.size)
+            assertEquals(1, secondTable.select { secondTable.firstOpt eq firstId.value }.toList().size)
+            assertEquals(0, secondTable.select { secondTable.firstOpt neq firstId.value }.toList().size)
+            assertEquals(1, secondTable.select { secondTable.firstOpt eq null }.count())
+            assertEquals(1, secondTable.select { secondTable.firstOpt neq null }.count())
         }
     }
 
@@ -253,6 +257,32 @@ class SelectTests : DatabaseTestsBase() {
 
             val veryLongString = "1".repeat(255)
             assertEquals(0, stringTable.select { stringTable.name eq veryLongString }.count())
+        }
+    }
+
+    @Test
+    fun `test encryptedColumnType with a string`() {
+        val stringTable = object : IntIdTable("StringTable") {
+            val name = encryptedVarchar("name", 80, Algorithms.AES_256_PBE_CBC("passwd", "5c0744940b5c369b"))
+            val city = encryptedBinary("city", 80, Algorithms.AES_256_PBE_GCM("passwd", "5c0744940b5c369b"))
+            val address = encryptedVarchar("address", 100, Algorithms.BLOW_FISH("key"))
+            val age = encryptedVarchar("age", 100, Algorithms.TRIPLE_DES("1".repeat(24)))
+        }
+
+        withTables(stringTable) {
+            val id1 = stringTable.insertAndGetId {
+                it[name] = "testName"
+                it[city] = "testCity".toByteArray()
+                it[address] = "testAddress"
+                it[age] = "testAge"
+            }
+
+            assertEquals(1L, stringTable.selectAll().count())
+
+            assertEquals("testName", stringTable.select { stringTable.id eq id1 }.first()[stringTable.name])
+            assertEquals("testCity", String(stringTable.select { stringTable.id eq id1 }.first()[stringTable.city]))
+            assertEquals("testAddress", stringTable.select { stringTable.id eq id1 }.first()[stringTable.address])
+            assertEquals("testAge", stringTable.select { stringTable.id eq id1 }.first()[stringTable.age])
         }
     }
 }

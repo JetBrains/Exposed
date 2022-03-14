@@ -5,9 +5,11 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.Assume
 import org.junit.Test
 
 class SchemaTests : DatabaseTestsBase() {
@@ -115,6 +117,41 @@ class SchemaTests : DatabaseTestsBase() {
             /** schema1 and schema2 variables have the same schema name */
             SchemaUtils.dropSchema(schema1)
             assertFalse(schema2.exists())
+        }
+    }
+
+    @Test
+    fun `test default schema`() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        val schema = Schema("schema")
+        TestDB.H2.connect()
+
+        transaction {
+            connection.metadata {
+                assertEquals("PUBLIC", currentScheme)
+            }
+        }
+
+        transaction {
+            SchemaUtils.createSchema(schema)
+        }
+
+        val db = TestDB.H2.connect {
+            defaultSchema = schema
+        }
+
+        transaction(db) {
+            connection.metadata {
+                val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                assertEquals(schema.identifier, currentScheme)
+            }
+            // Nested transaction
+            transaction(db) {
+                connection.metadata {
+                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                    assertEquals(schema.identifier, currentScheme)
+                }
+            }
         }
     }
 }

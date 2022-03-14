@@ -9,3 +9,11 @@ include("exposed-jdbc")
 include("exposed-tests")
 include("exposed-money")
 include("exposed-bom")
+include("exposed-kotlin-datetime")
+include("exposed-crypt")
+
+pluginManagement {
+    plugins {
+        id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    }
+}

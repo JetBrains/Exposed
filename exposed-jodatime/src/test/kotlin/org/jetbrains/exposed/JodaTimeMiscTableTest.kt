@@ -417,6 +417,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
     }
 }
 
+@Suppress("LongParameterList")
 fun Misc.checkRowFull(
     row: ResultRow,
     by: Byte,

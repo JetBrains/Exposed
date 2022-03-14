@@ -1,11 +1,11 @@
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.`java-time`.date
-import org.jetbrains.exposed.sql.`java-time`.datetime
-import org.jetbrains.exposed.sql.`java-time`.duration
-import org.jetbrains.exposed.sql.`java-time`.time
-import org.jetbrains.exposed.sql.`java-time`.timestamp
+import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.duration
+import org.jetbrains.exposed.sql.javatime.time
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
@@ -19,6 +19,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 object Misc : MiscTable() {
     val d = date("d")
@@ -37,6 +38,7 @@ object Misc : MiscTable() {
     val drn = duration("drn").nullable()
 }
 
+@Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testInsert01() {
@@ -1207,8 +1209,51 @@ class MiscTableTest : DatabaseTestsBase() {
             )
         }
     }
+
+    private object ZeroDateTimeTable : Table("zerodatetimetable") {
+        val id = integer("id")
+
+        val dt1 = datetime("dt1").nullable() // We need nullable() to convert '0000-00-00 00:00:00' to null
+        val dt2 = datetime("dt2").nullable()
+        val ts1 = datetime("ts1").nullable() // We need nullable() to convert '0000-00-00 00:00:00' to null
+        val ts2 = datetime("ts2").nullable()
+
+        override val primaryKey = PrimaryKey(id)
+    }
+    private val zeroDateTimeTableDdl = """
+        CREATE TABLE `zerodatetimetable` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `dt1` datetime NOT NULL,
+        `dt2` datetime NULL,
+        `ts1` timestamp NOT NULL,
+        `ts2` timestamp NULL,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB
+    """.trimIndent()
+
+    @Test
+    fun testZeroDateTimeIsNull() {
+        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+            exec(zeroDateTimeTableDdl)
+            try {
+                // Need ignore to bypass strict mode
+                exec("INSERT IGNORE INTO `zerodatetimetable` (dt1,dt2,ts1,ts2) VALUES ('0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00');")
+                val row = ZeroDateTimeTable.selectAll().first()
+
+                for (c in listOf(ZeroDateTimeTable.dt1, ZeroDateTimeTable.dt2, ZeroDateTimeTable.ts1, ZeroDateTimeTable.ts2)) {
+                    val actual = row[c]
+                    assertNull(actual, "$c expected null but was $actual")
+                }
+                commit() // Need commit to persist data before drop tables
+            } finally {
+                SchemaUtils.drop(ZeroDateTimeTable)
+                commit()
+            }
+        }
+    }
 }
 
+@Suppress("LongParameterList")
 fun Misc.checkRowFull(
     row: ResultRow,
     by: Byte,
@@ -1244,6 +1289,7 @@ fun Misc.checkRowFull(
     checkRowDates(row, d, dn, t, tn, dt, dtn, ts, tsn, dr, drn)
 }
 
+@Suppress("LongParameterList")
 fun Misc.checkRowDates(
     row: ResultRow,
     d: LocalDate,

@@ -10,8 +10,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
         private set
-    var distinct: Boolean = false
-        protected set
+
     var limit: Int? = null
         protected set
     var offset: Long = 0
@@ -23,7 +22,6 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     protected fun copyTo(other: AbstractQuery<T>) {
         other.orderByExpressions = orderByExpressions.toMutableList()
-        other.distinct = distinct
         other.limit = limit
         other.offset = offset
         other.fetchSize = fetchSize
@@ -38,9 +36,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
         if (it.args.isNotEmpty()) listOf(it.args) else emptyList()
     }
 
-    fun withDistinct(value: Boolean = true): T = apply {
-        distinct = value
-    } as T
+    abstract fun withDistinct(value: Boolean = true): T
 
     override fun limit(n: Int, offset: Long): T = apply {
         limit = n
@@ -63,28 +59,50 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
 
     override fun iterator(): Iterator<ResultRow> {
         val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
-        return if (transaction.db.supportsMultipleResultSets) resultIterator
-        else {
+        return if (transaction.db.supportsMultipleResultSets) {
+            resultIterator
+        } else {
             Iterable { resultIterator }.toList().iterator()
         }
     }
 
-    protected inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
-        private var hasNext: Boolean? = null
+    private inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
+        private var hasNext = false
+            set(value) {
+                field = value
+                if (!field) {
+                    rs.statement?.close()
+                    transaction.openResultSetsCount--
+                }
+            }
 
         private val fieldsIndex = set.realFields.toSet().mapIndexed { index, expression -> expression to index }.toMap()
 
-        override operator fun next(): ResultRow {
-            if (hasNext == null) hasNext()
-            if (hasNext == false) throw NoSuchElementException()
-            hasNext = null
-            return ResultRow.create(rs, fieldsIndex)
+        init {
+            hasNext = rs.next()
+            if (hasNext) trackResultSet(transaction)
         }
 
-        override fun hasNext(): Boolean {
-            if (hasNext == null) hasNext = rs.next()
-            if (hasNext == false) rs.close()
-            return hasNext!!
+        override operator fun next(): ResultRow {
+            if (!hasNext) throw NoSuchElementException()
+            val result = ResultRow.create(rs, fieldsIndex)
+            hasNext = rs.next()
+            return result
+        }
+
+        override fun hasNext(): Boolean = hasNext
+    }
+
+    companion object {
+        private fun trackResultSet(transaction: Transaction) {
+            val threshold = transaction.db.config.logTooMuchResultSetsThreshold
+            if (threshold > 0 && threshold < transaction.openResultSetsCount) {
+                val message =
+                    "Current opened result sets size ${transaction.openResultSetsCount} exceeds $threshold threshold for transaction ${transaction.id} "
+                val stackTrace = Exception(message).stackTraceToString()
+                exposedLogger.error(stackTrace)
+            }
+            transaction.openResultSetsCount++
         }
     }
 }

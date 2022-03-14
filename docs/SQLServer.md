@@ -1,8 +1,7 @@
 ## SQL Server dialect  
 
 ### Running tests locally with Gradle
-* Set `dialect` in gradle.properties to 'sqlserver'
-* Run `exposedDialectTestWithDocker` gradle task  
+* Run `sqlServerTest` gradle task  
 
 ### Running tests locally with Docker
 * Run SQL Server locally, e.g. with Docker image with command like

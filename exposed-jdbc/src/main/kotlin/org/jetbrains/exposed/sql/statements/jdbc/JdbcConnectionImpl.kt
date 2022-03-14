@@ -14,7 +14,7 @@ import java.sql.PreparedStatement
 
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
-    // Oracle driver could throw excpection on catalog
+    // Oracle driver could throw exception on catalog
     override var catalog: String
         get() = try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
         set(value) { try { connection.catalog = value } catch (_: Exception) {} }
@@ -40,9 +40,13 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         get() = connection.autoCommit
         set(value) { connection.autoCommit = value }
 
-    override var transactionIsolation: Int
-        get() = connection.transactionIsolation
-        set(value) { connection.transactionIsolation = value }
+    override var transactionIsolation: Int = connection.transactionIsolation
+        set(value) {
+            if (field != value) {
+                connection.transactionIsolation = value
+                field = value
+            }
+        }
 
     private val metadata by lazy {
         JdbcDatabaseMetadataImpl(catalog, connection.metaData)
@@ -51,10 +55,11 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
     override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
 
     override fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatementApi {
-        val generated = if (returnKeys)
+        val generated = if (returnKeys) {
             PreparedStatement.RETURN_GENERATED_KEYS
-        else
+        } else {
             PreparedStatement.NO_GENERATED_KEYS
+        }
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
     }
 

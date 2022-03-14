@@ -31,7 +31,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val t1 = datetime("t1").defaultExpression(CurrentDateTime)
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
@@ -137,7 +137,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
     @Test
     fun testDefaults01() {
-        val currentDT = CurrentDateTime()
+        val currentDT = CurrentDateTime
         val nowExpression = object : Expression<DateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (val dialect = currentDialect) {
@@ -183,10 +183,11 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect)
-                arrayListOf("CREATE SEQUENCE t_id_seq", baseExpression)
-            else
+            val expected = if (currentDialectTest is OracleDialect) {
+                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+            } else {
                 arrayListOf(baseExpression)
+            }
 
             assertEqualLists(expected, TestTable.ddl)
 
@@ -202,7 +203,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id2 = TestTable.insertAndGetId { it[TestTable.sn] = null }
 
-            val row2 = TestTable.select { TestTable.id eq id2 }.single()
+            TestTable.select { TestTable.id eq id2 }.single()
         }
     }
 
@@ -217,7 +218,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
@@ -236,7 +237,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     fun testDefaultExpressions02() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
         }
 
         val nonDefaultDate = DateTime.parse("2000-01-01")
@@ -265,7 +266,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     @Test
     fun defaultCurrentDateTimeTest() {
         val TestDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime())
+            val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withTables(TestDate) {
@@ -273,12 +274,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val before = currentDateTime()
             Thread.sleep(duration)
-            for (i in 0..1) {
+            repeat(2) {
                 TestDate.insertAndWait(duration)
             }
             val middle = currentDateTime()
             Thread.sleep(duration)
-            for (i in 0..1) {
+            repeat(2) {
                 TestDate.insertAndWait(duration)
             }
             val after = currentDateTime()
@@ -296,12 +297,14 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     @Test
     fun testSQLiteDateTimeFieldRegression() {
         val TestDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime())
+            val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withDb(TestDB.SQLITE) {
             try {
-                exec("CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);")
+                exec(
+                    "CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);"
+                )
                 TestDate.insert { }
                 val year = TestDate.time.year()
                 val month = TestDate.time.month()
