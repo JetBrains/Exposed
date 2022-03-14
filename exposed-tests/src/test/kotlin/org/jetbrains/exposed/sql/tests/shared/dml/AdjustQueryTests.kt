@@ -51,6 +51,12 @@ class AdjustQueryTests : DatabaseTestsBase() {
         }
     }
 
+    private fun Op<Boolean>.repr(): String {
+        val builder = QueryBuilder(false)
+        builder.append(this)
+        return builder.toString()
+    }
+
     @Test
     fun testAdjustQueryWhere() {
         withCitiesAndUsers { cities, users, _ ->
@@ -62,11 +68,6 @@ class AdjustQueryTests : DatabaseTestsBase() {
                 predicate
             }
             val actualWhere = queryAdjusted.where
-            fun Op<Boolean>.repr(): String {
-                val builder = QueryBuilder(false)
-                builder.append(this)
-                return builder.toString()
-            }
 
             assertEquals(predicate.repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)
@@ -84,14 +85,105 @@ class AdjustQueryTests : DatabaseTestsBase() {
                 predicate
             }
             val actualWhere = queryAdjusted.where
-            fun Op<Boolean>.repr(): String {
-                val builder = QueryBuilder(false)
-                builder.append(this)
-                return builder.toString()
-            }
 
             assertEquals((predicate.and(predicate)).repr(), actualWhere!!.repr())
             assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
+    fun testQueryOrWhere() {
+        withCitiesAndUsers { cities, users, _ ->
+            val queryAdjusted = (users innerJoin cities)
+                .slice(users.name, cities.name)
+                .select { predicate }
+
+            queryAdjusted.orWhere {
+                predicate
+            }
+            val actualWhere = queryAdjusted.where
+
+            assertEquals((predicate.or(predicate)).repr(), actualWhere!!.repr())
+            assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
+    fun testAdjustQueryHaving() {
+        withCitiesAndUsers { cities, users, _ ->
+            val predicateHaving = Op.build {
+                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+            }
+
+            val queryAdjusted = (cities innerJoin users)
+                .slice(cities.name)
+                .selectAll()
+                .groupBy(cities.name)
+            queryAdjusted.adjustHaving {
+                assertNull(this)
+                predicateHaving
+            }
+            val actualHaving = queryAdjusted.having
+
+            assertEquals(predicateHaving.repr(), actualHaving!!.repr())
+            val r = queryAdjusted.orderBy(cities.name).toList()
+            assertEquals(2, r.size)
+            assertEquals("Munich", r[0][cities.name])
+            assertEquals("St. Petersburg", r[1][cities.name])
+        }
+    }
+
+    @Test
+    fun testQueryAndHaving() {
+        withCitiesAndUsers { cities, users, _ ->
+            val predicateHaving = Op.build {
+                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+            }
+
+            val queryAdjusted = (cities innerJoin users)
+                .slice(cities.name)
+                .selectAll()
+                .groupBy(cities.name)
+                .having { predicateHaving }
+
+            queryAdjusted.andHaving {
+                predicateHaving
+            }
+
+            val actualHaving = queryAdjusted.having
+            assertEquals((predicateHaving.and(predicateHaving)).repr(), actualHaving!!.repr())
+
+            val r = queryAdjusted.orderBy(cities.name).toList()
+            assertEquals(2, r.size)
+            assertEquals("Munich", r[0][cities.name])
+            assertEquals("St. Petersburg", r[1][cities.name])
+        }
+    }
+
+    @Test
+    fun testQueryOrHaving() {
+        withCitiesAndUsers { cities, users, _ ->
+            val predicateHaving = Op.build {
+                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+            }
+
+            val queryAdjusted = (cities innerJoin users)
+                .slice(cities.name)
+                .selectAll()
+                .groupBy(cities.name)
+                .having { predicateHaving }
+
+            queryAdjusted.orHaving {
+                predicateHaving
+            }
+
+            val actualHaving = queryAdjusted.having
+            assertEquals((predicateHaving.or(predicateHaving)).repr(), actualHaving!!.repr())
+
+            val r = queryAdjusted.orderBy(cities.name).toList()
+            assertEquals(2, r.size)
+            assertEquals("Munich", r[0][cities.name])
+            assertEquals("St. Petersburg", r[1][cities.name])
         }
     }
 

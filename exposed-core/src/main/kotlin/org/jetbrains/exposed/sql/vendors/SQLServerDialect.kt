@@ -25,6 +25,28 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
      * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
      */
     override fun textType(): String = "VARCHAR(MAX)"
+
+    override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
+        when (sortOrder) {
+            SortOrder.ASC, SortOrder.DESC -> super.precessOrderByClause(queryBuilder, expression, sortOrder)
+            SortOrder.ASC_NULLS_FIRST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.ASC)
+            SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
+            else -> {
+                val sortOrderClause = if (sortOrder == SortOrder.ASC_NULLS_LAST) {
+                    Expression.build {
+                        Case().When(expression.isNull(), intLiteral(1)).Else(intLiteral(0))
+                    } to SortOrder.ASC
+                } else {
+                    Expression.build {
+                        Case().When(expression.isNull(), intLiteral(0)).Else(intLiteral(1))
+                    } to SortOrder.DESC
+                }
+                queryBuilder.append(sortOrderClause.first, ", ")
+                super.precessOrderByClause(queryBuilder, expression, sortOrderClause.second)
+            }
+        }
+    }
+
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
@@ -81,7 +103,13 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("DATEPART(MINUTE, ", expr, ")")
     }
 
-    override fun update(target: Table, columnsAndValues: List<Pair<Column<*>, Any?>>, limit: Int?, where: Op<Boolean>?, transaction: Transaction): String {
+    override fun update(
+        target: Table,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String {
         val def = super.update(target, columnsAndValues, null, where, transaction)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
@@ -99,10 +127,11 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
-        if (limit != null)
+        if (limit != null) {
             +"UPDATE TOP($limit)"
-        else
+        } else {
             +"UPDATE "
+        }
         tableToUpdate.describe(transaction, this)
         +" SET "
         columnsAndValues.appendTo(this) { (col, value) ->
@@ -110,19 +139,21 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             registerArgument(col, value)
         }
         +" FROM "
-        if (targets.table != tableToUpdate)
+        if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+        }
 
         targets.joinParts.appendTo(this, ",") {
-            if (it.joinPart != tableToUpdate)
+            if (it.joinPart != tableToUpdate) {
                 it.joinPart.describe(transaction, this)
+            }
         }
         +" WHERE "
         targets.joinParts.appendTo(this, " AND ") {
             it.appendConditions(this)
         }
         where?.let {
-            + " AND "
+            +" AND "
             +it
         }
         limit?.let { +" LIMIT $it" }
@@ -152,12 +183,12 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
-        val columnDefault = e.toString().toUpperCase().trim()
+        val columnDefault = e.toString().uppercase().trim()
         return columnDefault !in nonAcceptableDefaults
     }
 
-    override fun modifyColumn(column: Column<*>): String =
-        super.modifyColumn(column).replace("MODIFY COLUMN", "ALTER COLUMN")
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
+        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 

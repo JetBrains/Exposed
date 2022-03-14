@@ -2,6 +2,8 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
 /**
  * An object to which SQL expressions and values can be appended.
@@ -19,6 +21,21 @@ class QueryBuilder(
 
     /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
     fun <T> Iterable<T>.appendTo(
+        separator: CharSequence = ", ",
+        prefix: CharSequence = "",
+        postfix: CharSequence = "",
+        transform: QueryBuilder.(T) -> Unit
+    ) {
+        internalBuilder.append(prefix)
+        forEachIndexed { index, element ->
+            if (index > 0) internalBuilder.append(separator)
+            transform(element)
+        }
+        internalBuilder.append(postfix)
+    }
+
+    /** Appends all the elements separated using [separator] and using the given [prefix] and [postfix] if supplied. */
+    fun <T> Array<T>.appendTo(
         separator: CharSequence = ", ",
         prefix: CharSequence = "",
         postfix: CharSequence = "",

@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ForeignKeyConstraint
+import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -8,7 +13,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
@@ -29,18 +34,20 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "IBM Data Server Driver for JDBC and SQLJ",
             "AS/400 Toolbox for Java JDBC Driver" -> DB2Dialect.dialectName
             else -> {
-                if (driverName.startsWith("Microsoft JDBC Driver "))
+                if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
-                else
-                    error("Unsupported driver $driverName detected")
+                } else {
+                    Database.getDialectName(url) ?: error("Unsupported driver $driverName detected")
+                }
             }
         }
     }
 
-    private val databaseName get() = when (databaseDialectName) {
-        MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
-        else -> database
-    }
+    private val databaseName
+        get() = when (databaseDialectName) {
+            MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+            else -> database
+        }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
@@ -50,7 +57,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
 
-    override val identifierManager: IdentifierManagerApi by lazyMetadata { JdbcIdentifierManager(this) }
+    override val identifierManager: IdentifierManagerApi by lazyMetadata {
+        identityManagerCache.getOrPut(url) {
+            JdbcIdentifierManager(this)
+        }
+    }
 
     private var _currentScheme: String? = null
         get() {
@@ -61,7 +72,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                         OracleDialect.dialectName -> databaseName
                         else -> metadata.connection.schema.orEmpty()
                     }
-                } catch (e: Throwable) { "" }
+                } catch (_: Throwable) {
+                    ""
+                }
             }
             return field!!
         }
@@ -73,16 +86,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
-        override fun get(key: K): V? = map.getOrPut(key, { default(key) })
+        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
     }
 
-    override val tableNames: Map<String, List<String>> get() = CachableMapWithDefault(
-        default = { schemeName ->
-            tableNamesFor(schemeName)
-        }
-    )
+    override val tableNames: Map<String, List<String>>
+        get() = CachableMapWithDefault(
+            default = { schemeName ->
+                tableNamesFor(schemeName)
+            }
+        )
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
@@ -117,7 +131,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(tables: Array<out Table>, extract: (ResultSet) -> Pair<String, ColumnMetadata>): Map<Table, List<ColumnMetadata>> {
+    private fun ResultSet.extractColumns(
+        tables: Array<out Table>,
+        extract: (ResultSet) -> Pair<String, ColumnMetadata>
+    ): Map<Table, List<ColumnMetadata>> {
         val mapping = tables.associateBy { it.nameInDatabaseCase() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
@@ -134,17 +151,30 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
         val result = rs.extractColumns(tables) {
             // @see java.sql.DatabaseMetaData.getColumns
+            // That read should go first as Oracle driver closes connection after that
+            val defaultDbValue = it.getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
+            val autoIncrement = it.getString("IS_AUTOINCREMENT") == "YES"
+            val type = it.getInt("DATA_TYPE")
             val columnMetadata = ColumnMetadata(
-                it.getString("COLUMN_NAME")/*.quoteIdentifierWhenWrongCaseOrNecessary(tr)*/,
-                it.getInt("DATA_TYPE"),
+                it.getString("COLUMN_NAME"),
+                type,
                 it.getBoolean("NULLABLE"),
                 it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                it.getString("IS_AUTOINCREMENT") == "YES",
+                autoIncrement,
+                // Not sure this filters enough but I dont think we ever want to have sequences here
+                defaultDbValue?.takeIf { !autoIncrement },
             )
             it.getString("TABLE_NAME") to columnMetadata
         }
         rs.close()
         return result
+    }
+
+    private fun sanitizedDefault(defaultValue: String) = when (currentDialect) {
+        is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
+        is OracleDialect -> defaultValue.trim().trim('\'')
+        is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'').trim()
+        else -> defaultValue.trim('\'').trim()
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
@@ -178,7 +208,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }?.let { c -> Index(c, index.second, index.first) }
+                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }
+                            ?.let { c -> Index(c, index.second, index.first) }
                     }
             }
         }
@@ -197,7 +228,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintName = getString("FK_NAME")!!
                 val targetTableName = getString("PKTABLE_NAME")!!
-                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("PKCOLUMN_NAME")!!)
+                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                    identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
+                )
                 val targetColumn = allTables.getValue(targetTableName).columns.first {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
                 }
@@ -210,7 +243,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     onDelete = constraintDeleteRule,
                     name = constraintName
                 )
-            }.filterNotNull()
+            }
+                .filterNotNull()
+                .groupBy { it.fkName }
+                .values
+                .map { it.reduce(ForeignKeyConstraint::plus) }
         }
     }
 
@@ -220,9 +257,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private fun <T> lazyMetadata(body: DatabaseMetaData.() -> T) = lazy { metadata.body() }
+
+    companion object {
+        private val identityManagerCache = ConcurrentHashMap<String, JdbcIdentifierManager>()
+    }
 }
 
-fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
+private fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
     val result = arrayListOf<T>()
     while (next()) {
         result.add(body())

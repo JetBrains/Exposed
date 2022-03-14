@@ -2,20 +2,24 @@ package org.jetbrains.exposed.sql.jodatime
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 
 class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
 }
 
-class CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
+object CurrentDateTime : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
             else -> "CURRENT_TIMESTAMP"
         }
     }
+
+    @Deprecated("This class is now a singleton, no need for its constructor call; this method is provided for backward-compatibility only, and will be removed in future releases")
+    operator fun invoke() = this
 }
 
 class Year<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
@@ -69,4 +73,5 @@ fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value,
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
-fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) = CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
+fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)

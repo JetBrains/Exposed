@@ -24,10 +24,7 @@ private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "YYYY-MM-dd HH:mm:ss"
-    val newFormat = if (fraction in 1..9)
-        (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
-    else
-        baseFormat
+    val newFormat = baseFormat + if (fraction in 1..9) ".${"S".repeat(fraction)}" else ""
     return DateTimeFormat.forPattern(newFormat)
 }
 
@@ -62,7 +59,12 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
             else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
         }
-        else -> valueFromDB(value.toString())
+        else -> {
+            if (localDateTimeClass == value.javaClass)
+                DateTime.parse(value.toString())
+            else
+                valueFromDB(value.toString())
+        }
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
@@ -73,10 +75,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
          MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
           regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
          */
-        if (time && !hasLocalDateTime && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-            return rs.getObject(index, String::class.java)
-        }
-        return super.readObject(rs, index)
+        return if (time && localDateTimeClass != null && currentDialect is MysqlDialect) {
+            rs.getObject(index, localDateTimeClass)
+        } else if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
+            rs.getObject(index, String::class.java)
+        } else super.readObject(rs, index)
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
@@ -104,11 +107,10 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
 
     companion object {
         // https://www.baeldung.com/java-check-class-exists
-        private val hasLocalDateTime = try {
-            Class.forName("java.time.LocalDateTime", false, javaClass.classLoader)
-            true
-        } catch (e: ClassNotFoundException) {
-            false
+        private val localDateTimeClass = try {
+            Class.forName("java.time.LocalDateTime", false, this::class.java.classLoader)
+        } catch (_: ClassNotFoundException) {
+            null
         }
     }
 }

@@ -2,7 +2,10 @@
 **/.idea/*
 !.idea/vcs.xml
 !.idea/icon.png
-.gradle
-out
-build
-classes
+!.idea/detekt.xml
+!.idea/externalDependencies.xml
+.gradle/
+out/
+build/
+classes/
+**/jetbrains.db

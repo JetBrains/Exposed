@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
 
 class Key<T>
 
@@ -29,43 +31,50 @@ open class UserDataHolder {
 }
 
 open class Transaction(private val transactionImpl: TransactionInterface) : UserDataHolder(), TransactionInterface by transactionImpl {
+    final override val db: Database = transactionImpl.db
 
-    init {
-        Companion.globalInterceptors // init interceptors
-    }
+    var statementCount: Int = 0
+    var duration: Long = 0
+    var warnLongQueriesDuration: Long? = db.config.warnLongQueriesDuration
+    var debug = false
+    val id by lazy { UUID.randomUUID().toString() }
+
+    // currently executing statement. Used to log error properly
+    var currentStatement: PreparedStatementApi? = null
+    internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
+    internal var openResultSetsCount: Int = 0
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
+
+    val statements = StringBuilder()
+
+    // prepare statement as key and count to execution time as value
+    val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
+
+    init {
+        addLogger(db.config.sqlLogger)
+        globalInterceptors // init interceptors
+    }
 
     fun registerInterceptor(interceptor: StatementInterceptor) = interceptors.add(interceptor)
 
     fun unregisterInterceptor(interceptor: StatementInterceptor) = interceptors.remove(interceptor)
 
-    var statementCount: Int = 0
-    var duration: Long = 0
-    var warnLongQueriesDuration: Long? = null
-    var debug = false
-    val id = UUID.randomUUID().toString()
-
-    // currently executing statement. Used to log error properly
-    var currentStatement: PreparedStatementApi? = null
-    internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
-
-    val statements = StringBuilder()
-
-    // prepare statement as key and count to execution time as value
-    val statementStats = hashMapOf<String, Pair<Int, Long>>()
-
-    init {
-        addLogger(Slf4jSqlDebugLogger)
-    }
-
     override fun commit() {
-        globalInterceptors.forEach { it.beforeCommit(this) }
-        interceptors.forEach { it.beforeCommit(this) }
+        val dataToStore = HashMap<Key<*>, Any?>()
+        globalInterceptors.forEach {
+            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+            it.beforeCommit(this)
+        }
+        interceptors.forEach {
+            dataToStore.putAll(it.keepUserDataInTransactionStoreOnCommit(userdata))
+            it.beforeCommit(this)
+        }
         transactionImpl.commit()
+        userdata.clear()
         globalInterceptors.forEach { it.afterCommit() }
         interceptors.forEach { it.afterCommit() }
-        userdata.clear()
+        userdata.putAll(dataToStore)
     }
 
     override fun rollback() {
@@ -79,11 +88,11 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
+    fun exec(@Language("sql") stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
         exec(stmt, args, explicitStatementType) { }
 
     fun <T : Any> exec(
-        stmt: String,
+        @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null,
         transform: (ResultSet) -> T
@@ -103,13 +112,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
                         resultSet
                     }
                 }
-                return result?.let {
-                    try {
-                        transform(it)
-                    } finally {
-                        it.close()
-                    }
-                }
+                return result?.use { transform(it) }
             }
 
             override fun prepareSQL(transaction: Transaction): String = stmt
@@ -148,7 +151,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
             }
         }
 
-        if (delta > warnLongQueriesDuration ?: Long.MAX_VALUE) {
+        if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
             exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", RuntimeException())
         }
 
@@ -164,10 +167,11 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     }.toString()
 
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
-        if (column.table is Alias<*>)
+        if (column.table is Alias<*>) {
             append(db.identifierManager.quoteIfNecessary(column.table.alias))
-        else
+        } else {
             append(db.identifierManager.quoteIfNecessary(column.table.tableName.inProperCase()))
+        }
         append('.')
         append(identity(column))
     }
@@ -178,6 +182,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         executedStatements.forEach {
             it.closeIfPossible()
         }
+        openResultSetsCount = 0
         executedStatements.clear()
     }
 

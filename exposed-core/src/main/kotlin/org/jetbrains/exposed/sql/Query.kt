@@ -6,11 +6,18 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
 
-enum class SortOrder {
-    ASC, DESC
+enum class SortOrder(val code: String) {
+    ASC(code = "ASC"),
+    DESC(code = "DESC"),
+    ASC_NULLS_FIRST(code = "ASC NULLS FIRST"),
+    DESC_NULLS_FIRST(code = "DESC NULLS FIRST"),
+    ASC_NULLS_LAST(code = "ASC NULLS LAST"),
+    DESC_NULLS_LAST(code = "DESC NULLS LAST")
 }
 
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
+    var distinct: Boolean = false
+        protected set
 
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
@@ -34,6 +41,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
+        copy.distinct = distinct
         copy.groupedByColumns = groupedByColumns.toMutableList()
         copy.having = having
         copy.forUpdate = forUpdate
@@ -44,6 +52,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    override fun withDistinct(value: Boolean): Query = apply {
+        distinct = value
+    }
+
     override fun notForUpdate(): Query {
         forUpdate = false
         return this
@@ -51,15 +63,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
-     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an , you are expected to slice it
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQuerySlice
+     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an argument, you are expected to slice it
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
      * Changes [set.source] field of a Query, [set.fields] will be preserved
      * @param body builder for new column set, previous value used as a receiver
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryColumnSet
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSlice { oldSlice -> body().slice(oldSlice.fields) }
@@ -68,9 +80,16 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     /**
      * Changes [where] field of a Query.
      * @param body new WHERE condition builder, previous value used as a receiver
-     * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testAdjustQueryWhere
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
+
+    /**
+     * Changes [having] field of a Query.
+     * @param body new HAVING condition builder, previous value used as a receiver
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
+     */
+    fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
     fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
@@ -95,8 +114,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 }
                 set.realFields.appendTo { +it }
             }
-            append(" FROM ")
-            set.source.describe(transaction, this)
+            if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
+                append(" FROM ")
+                set.source.describe(transaction, this)
+            }
 
             where?.let {
                 append(" WHERE ")
@@ -118,8 +139,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
                 if (orderByExpressions.isNotEmpty()) {
                     append(" ORDER BY ")
-                    orderByExpressions.appendTo {
-                        append((it.first as? ExpressionAlias<*>)?.alias ?: it.first, " ", it.second.name)
+                    orderByExpressions.appendTo { (expression, sortOrder) ->
+                        currentDialect.dataTypeProvider.precessOrderByClause(this, expression, sortOrder)
                     }
                 }
 
@@ -209,11 +230,31 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
 }
 
 /**
- * Mutate Query instance and add `andPart` to where condition with `or` operator.
+ * Mutate Query instance and add `orPart` to where condition with `or` operator.
  * @return same Query instance which was provided as a receiver.
  */
-fun Query.orWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
+fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
+    val expr = Op.build { orPart() }
+    if (this == null) expr
+    else this or expr
+}
+
+/**
+ * Mutate Query instance and add `andPart` to having condition with `and` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
+fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
     val expr = Op.build { andPart() }
+    if (this == null) expr
+    else this and expr
+}
+
+/**
+ * Mutate Query instance and add `orPart` to having condition with `or` operator.
+ * @return same Query instance which was provided as a receiver.
+ */
+fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
+    val expr = Op.build { orPart() }
     if (this == null) expr
     else this or expr
 }

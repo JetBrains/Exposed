@@ -53,7 +53,9 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
             // REVIEW
             if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
         }
-        if (!transaction.db.supportsMultipleResultSets) transaction.closeExecutedStatements()
+        if (!transaction.db.supportsMultipleResultSets) {
+            transaction.closeExecutedStatements()
+        }
 
         transaction.currentStatement = statement
         val result = try {
@@ -97,10 +99,7 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
                     val (col, value) = iterator.next()
                     append(col.valueToString(value))
                 }
-                continue
-            }
-
-            if (char == '\'' || char == '\"') {
+            } else if (char == '\'' || char == '\"') {
                 if (quoteStack.isEmpty()) {
                     quoteStack.push(char)
                 } else {

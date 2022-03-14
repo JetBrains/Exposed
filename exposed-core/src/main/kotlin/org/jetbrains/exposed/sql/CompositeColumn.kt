@@ -56,6 +56,6 @@ abstract class BiCompositeColumn<C1, C2, T>(
         check(result != null || nullable) {
             "Null value received from DB for non-nullable ${this::class.simpleName} column"
         }
-        return result as T
+        return result
     }
 }

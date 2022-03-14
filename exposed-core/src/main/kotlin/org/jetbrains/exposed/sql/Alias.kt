@@ -4,21 +4,22 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
-    val tableNameWithAlias: String = "${delegate.tableName} AS $alias"
+    val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
     fun <R> originalColumn(column: Column<R>): Column<R>? {
         @Suppress("UNCHECKED_CAST")
-        return if (column.table == this)
+        return if (column.table == this) {
             delegate.columns.first { column.name == it.name } as Column<R>
-        else
+        } else {
             null
+        }
     }
 
-    override val columns: List<Column<*>> = delegate.columns.map { it.clone() }
+    override val fields: List<Expression<*>> = delegate.fields.map { (it as? Column<*>)?.clone() ?: it }
 
-    override val fields: List<Expression<*>> = columns
+    override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
     override fun createStatement() = throw UnsupportedOperationException("Unsupported for aliases")
 
@@ -63,8 +64,11 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         append(") ", alias)
     }
 
-    override val columns: List<Column<*>>
-        get() = query.set.source.columns.filter { it in query.set.fields }.map { it.clone() }
+    override val fields: List<Expression<*>> = query.set.fields.map { expression ->
+            (expression as? Column<*>)?.clone() ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression() ?: expression
+    }
+
+    override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Column<T>): Column<T> =
@@ -73,12 +77,17 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
-        val expressionAlias = query.set.fields.find { it == original } as? ExpressionAlias<T>
-            ?: error("Field not found in original table fields")
-        return expressionAlias.delegate.alias("$alias.${expressionAlias.alias}").aliasOnlyExpression()
+        val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
+        return aliases.find { it == original }?.let {
+            it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
+        } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
+          ?: error("Field not found in original table fields")
     }
 
-    override fun join(otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?, additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?): Join =
+    override fun join(
+        otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+    ): Join =
         Join(this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)

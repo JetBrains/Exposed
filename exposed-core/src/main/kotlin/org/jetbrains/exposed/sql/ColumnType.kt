@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.lang.IllegalArgumentException
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
@@ -62,14 +63,15 @@ interface IColumnType {
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        if (value == null)
+        if (value == null || value is Op.NULL) {
             stmt.setNull(index, this)
-        else
+        } else {
             stmt[index] = value
+        }
     }
 
     /**
-     * Function checks that provided value suites the column type and throws [IllegalArgumentException] otherwise.
+     * Function checks that provided value is suites the column type and throws [IllegalArgumentException] otherwise.
      * [value] can be of any type (including [Expression])
      * */
     @Throws(IllegalArgumentException::class)
@@ -161,6 +163,9 @@ val Column<*>.autoIncColumnType: AutoIncColumnType?
 @Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
 val Column<*>.autoIncSeqName: String?
     get() = autoIncColumnType?.autoincSeq
+internal fun IColumnType.rawSqlType(): IColumnType =
+    if (this is AutoIncColumnType) this.delegate else if (this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType) this.idColumn.columnType.delegate else this
+
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
@@ -407,13 +412,28 @@ class DecimalColumnType(
     val scale: Int
 ) : ColumnType() {
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return rs.getBigDecimal(index)
+    }
+
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
-        is Double -> value.toBigDecimal()
-        is Float -> value.toBigDecimal()
+        is Double -> {
+            if (value.isNaN())
+                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+            else
+                value.toBigDecimal()
+        }
+        is Float -> {
+            if (value.isNaN())
+                error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
+            else
+                value.toBigDecimal()
+        }
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
-        else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
+        else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
     }.setScale(scale, RoundingMode.HALF_EVEN)
 
     override fun equals(other: Any?): Boolean {
@@ -434,6 +454,10 @@ class DecimalColumnType(
         result = 31 * result + precision
         result = 31 * result + scale
         return result
+    }
+
+    companion object {
+        internal val INSTANCE = DecimalColumnType(MathContext.DECIMAL64.precision, 20)
     }
 }
 
@@ -636,7 +660,7 @@ open class BasicBinaryColumnType : ColumnType() {
 /**
  * Binary column for storing binary strings of a specific [length].
  */
-class BinaryColumnType(
+open class BinaryColumnType(
     /** Returns the length of the column- */
     val length: Int
 ) : BasicBinaryColumnType() {
@@ -698,7 +722,7 @@ class BlobColumnType : ColumnType() {
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
             is InputStream -> stmt.setInputStream(index, toSetValue)
-            null -> stmt.setNull(index, this)
+            null, is Op.NULL -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
         }
     }
@@ -749,6 +773,10 @@ class BooleanColumnType : ColumnType() {
     }
 
     override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
+
+    companion object {
+        internal val INSTANCE = BooleanColumnType()
+    }
 }
 
 // Enumeration columns
@@ -761,10 +789,11 @@ class EnumerationColumnType<T : Enum<T>>(
     val klass: KClass<T>
 ) : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.integerType()
+    private val enumConstants by lazy { klass.java.enumConstants!! }
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is Number -> klass.java.enumConstants!![value.toInt()]
+        is Number -> enumConstants[value.toInt()]
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.simpleName}")
     }
@@ -802,9 +831,11 @@ class EnumerationNameColumnType<T : Enum<T>>(
     val klass: KClass<T>,
     colLength: Int
 ) : VarCharColumnType(colLength) {
+    private val enumConstants by lazy { klass.java.enumConstants!!.associateBy { it.name } }
+
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> klass.java.enumConstants!!.firstOrNull { it.name == value } ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
+        is String -> enumConstants[value] ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }

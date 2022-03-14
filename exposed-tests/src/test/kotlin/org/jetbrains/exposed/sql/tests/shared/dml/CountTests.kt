@@ -34,7 +34,7 @@ class CountTests : DatabaseTestsBase() {
             val org1 = Org.new {
                 name = "FOo"
             }
-            val membership = OrgMembership.new {
+            OrgMembership.new {
                 org = org1
             }
 

@@ -13,13 +13,6 @@ interface SqlLogger {
 
 val exposedLogger = LoggerFactory.getLogger("Exposed")!!
 
-inline fun <R> logTimeSpent(message: String, block: () -> R): R {
-    val start = System.currentTimeMillis()
-    val answer = block()
-    exposedLogger.info(message + " took " + (System.currentTimeMillis() - start) + "ms")
-    return answer
-}
-
 object StdOutSqlLogger : SqlLogger {
     override fun log(context: StatementContext, transaction: Transaction) {
         System.out.println("SQL: ${context.expandArgs(transaction)}")

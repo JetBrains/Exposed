@@ -18,7 +18,7 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>
     <artifactId>exposed-spring-boot-starter</artifactId>
-    <version>0.31.2</version>
+    <version>0.37.3</version>
   </dependency>
 </dependencies>
 ```
@@ -28,7 +28,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.31.2'
+  implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.37.3'
 }
 ```
 
