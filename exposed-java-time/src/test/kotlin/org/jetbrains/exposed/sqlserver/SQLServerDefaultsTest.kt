@@ -12,13 +12,16 @@ import org.junit.Test
 import java.time.*
 
 class SQLServerDefaultsTest : DatabaseTestsBase() {
+    companion object {
+        private val UTC_ZONE_ID = ZoneId.of("UTC")
+    }
 
     @Test
     fun testDefaultExpressionsForTemporalTable() {
 
         fun databaseGeneratedTimestamp() = object : ExpressionWithColumnType<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { +"DEFAULT" }
-            override val columnType: IColumnType = JavaLocalDateTimeColumnType()
+            override val columnType: IColumnType = JavaLocalDateTimeColumnType(UTC_ZONE_ID)
         }
 
         val temporalTable = object : UUIDTable("TemporalTable") {

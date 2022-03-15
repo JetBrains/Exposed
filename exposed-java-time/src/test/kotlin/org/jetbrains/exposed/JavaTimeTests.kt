@@ -14,6 +14,9 @@ import java.time.temporal.Temporal
 import kotlin.test.assertEquals
 
 open class JavaTimeBaseTest : DatabaseTestsBase() {
+    companion object {
+        private val UTC_ZONE_ID = ZoneId.of("UTC")
+    }
 
     @Test
     fun javaTimeFunctions() {
@@ -45,7 +48,7 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
     @Test
     fun testSQLiteDateTimeFieldRegression() {
         val TestDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime)
+            val time = datetime("time").defaultExpression(CurrentDateTime(UTC_ZONE_ID))
         }
 
         withDb(TestDB.SQLITE) {

@@ -24,10 +24,14 @@ import org.junit.Test
 import java.time.*
 
 class DefaultsTest : DatabaseTestsBase() {
+    companion object {
+        private val UTC_ZONE_ID = ZoneId.of("UTC")
+    }
+
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = datetime("t1").defaultExpression(CurrentDateTime)
+        val t1 = datetime("t1", UTC_ZONE_ID).defaultExpression(CurrentDateTime(UTC_ZONE_ID))
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
@@ -144,7 +148,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaults01() {
-        val currentDT = CurrentDateTime
+        val currentDT = CurrentDateTime(UTC_ZONE_ID)
         val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (val dialect = currentDialectTest) {
@@ -156,14 +160,14 @@ class DefaultsTest : DatabaseTestsBase() {
             }
         }
         val dtConstValue = LocalDate.of(2010, 1, 1)
-        val dLiteral = dateLiteral(dtConstValue)
-        val dtLiteral = dateTimeLiteral(dtConstValue.atStartOfDay())
+        val dLiteral = dateLiteral(dtConstValue, UTC_ZONE_ID)
+        val dtLiteral = dateTimeLiteral(dtConstValue.atStartOfDay(), UTC_ZONE_ID)
         val tsConstValue = dtConstValue.atStartOfDay(ZoneOffset.UTC).plusSeconds(42).toInstant()
-        val tsLiteral = timestampLiteral(tsConstValue)
+        val tsLiteral = timestampLiteral(tsConstValue, UTC_ZONE_ID)
         val durConstValue = Duration.between(Instant.EPOCH, tsConstValue)
         val durLiteral = durationLiteral(durConstValue)
         val tmConstValue = LocalTime.of(12, 0)
-        val tLiteral = timeLiteral(tmConstValue)
+        val tLiteral = timeLiteral(tmConstValue, UTC_ZONE_ID)
 
         val TestTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
@@ -249,7 +253,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime(UTC_ZONE_ID))
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
