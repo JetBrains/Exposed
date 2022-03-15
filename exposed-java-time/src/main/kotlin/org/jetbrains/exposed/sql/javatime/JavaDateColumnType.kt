@@ -14,7 +14,10 @@ import java.util.*
 
 private fun defaultDateStringFormatter(zoneId: ZoneId) = DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(zoneId)
 private fun defaultDateTimeStringFormatter(zoneId: ZoneId) = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(zoneId)
-private fun sqliteAndOracleDateTimeStringFormatter(zoneId: ZoneId) = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(zoneId)
+private fun sqliteAndOracleDateTimeStringFormatter(zoneId: ZoneId) = DateTimeFormatter.ofPattern(
+    "yyyy-MM-dd HH:mm:ss.SSS",
+    Locale.ROOT
+).withZone(zoneId)
 private fun oracleTimeStringFormatter(zoneId: ZoneId) = DateTimeFormatter.ofPattern(
     "1900-01-01 HH:mm:ss",
     Locale.ROOT
@@ -100,23 +103,14 @@ class JavaLocalDateTimeColumnType(private val zoneId: ZoneId) : ColumnType(), ID
         is java.sql.Timestamp -> longToLocalDateTime(value.time / 1000, value.nanos.toLong())
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
-        is String -> {
-            if (currentDialect is OracleDialect) {
-                formatterForDateString(zoneId, value)
-            } else {
-                defaultDateTimeStringFormatter.parse(value, LocalDateTime::from)
-            }
-        }
+        is Instant -> LocalDateTime.from(value)
+        is String -> formatterForDateString(zoneId, value).parse(value, LocalDateTime::from)
         else -> valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
-        value is LocalDateTime && currentDialect is SQLiteDialect ->
-            sqliteAndOracleDateTimeStringFormatter.format(value.atZone(zoneId))
-        value is LocalDateTime -> {
-            val instant = value.atZone(zoneId).toInstant()
-            java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
-        }
+        value is LocalDateTime && currentDialect is SQLiteDialect -> sqliteAndOracleDateTimeStringFormatter.format(value.atZone(zoneId))
+        value is LocalDateTime -> value
         else -> value
     }
 
@@ -189,7 +183,7 @@ class JavaInstantColumnType(private val zoneId: ZoneId) : ColumnType(), IDateCol
         }
 
         return when (currentDialect) {
-            is OracleDialect -> "'${sqliteAndOracleDateTimeStringFormatter.format(instant)}'"
+            is OracleDialect, is SQLiteDialect -> "'${sqliteAndOracleDateTimeStringFormatter.format(instant)}'"
             else -> "'${defaultDateTimeStringFormatter.format(instant)}'"
         }
     }
@@ -202,6 +196,9 @@ class JavaInstantColumnType(private val zoneId: ZoneId) : ColumnType(), IDateCol
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
+        // https://stackoverflow.com/questions/60793737/sqlite-jdbc-3-30-1-latest-does-not-support-java-time
+        if (currentDialect is SQLiteDialect)
+            return rs.getString(index)?.let { sqliteAndOracleDateTimeStringFormatter.parse(it, LocalDateTime::from) }
         return rs.getObject(index, LocalDateTime::class.java)
     }
 

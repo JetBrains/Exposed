@@ -253,7 +253,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime(UTC_ZONE_ID))
+            val defaultDateTime = datetime("defaultDateTime", UTC_ZONE_ID).defaultExpression(CurrentDateTime(UTC_ZONE_ID))
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
@@ -272,7 +272,7 @@ class DefaultsTest : DatabaseTestsBase() {
     fun testDefaultExpressions02() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentTimestamp())
+            val defaultDateTime = datetime("defaultDateTime", UTC_ZONE_ID).defaultExpression(CurrentTimestamp())
         }
 
         val nonDefaultDate = LocalDate.of(2000, 1, 1).atStartOfDay()
@@ -301,7 +301,7 @@ class DefaultsTest : DatabaseTestsBase() {
     @Test
     fun testBetweenFunction() {
         val foo = object : IntIdTable("foo") {
-            val dt = datetime("dateTime")
+            val dt = datetime("dateTime", UTC_ZONE_ID)
         }
 
         withTables(foo) {
