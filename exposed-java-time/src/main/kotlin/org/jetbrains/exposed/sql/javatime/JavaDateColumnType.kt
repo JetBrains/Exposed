@@ -100,7 +100,13 @@ class JavaLocalDateTimeColumnType(private val zoneId: ZoneId) : ColumnType(), ID
         is java.sql.Timestamp -> longToLocalDateTime(value.time / 1000, value.nanos.toLong())
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
-        is String -> LocalDateTime.parse(value, formatterForDateString(zoneId, value))
+        is String -> {
+            if (currentDialect is OracleDialect) {
+                formatterForDateString(zoneId, value)
+            } else {
+                defaultDateTimeStringFormatter.parse(value, LocalDateTime::from)
+            }
+        }
         else -> valueFromDB(value.toString())
     }
 
@@ -190,6 +196,7 @@ class JavaInstantColumnType(private val zoneId: ZoneId) : ColumnType(), IDateCol
 
     override fun valueFromDB(value: Any): Instant = when (value) {
         is java.sql.Timestamp -> value.toInstant()
+        is Instant -> value
         is String -> defaultDateTimeStringFormatter.parse(value, Instant::from)
         else -> valueFromDB(value.toString())
     }
