@@ -700,6 +700,19 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testCheckConstraint04() {
+        object : Table("test") {
+            val testColumn: Column<Int?> = integer("test_column").nullable()
+
+            init {
+                check("test_constraint") {
+                    testColumn.isNotNull() neq Op.TRUE
+                }
+            }
+        }
+    }
+
     internal enum class Foo { Bar, Baz }
 
     class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
@@ -719,7 +732,7 @@ class DDLTests : DatabaseTestsBase() {
 
             SchemaUtils.create(KeyWordTable)
 
-            val newKeyword = KeywordEntityClass.new { bool = true }
+            KeywordEntityClass.new { bool = true }
 
             SchemaUtils.drop(KeyWordTable)
         }

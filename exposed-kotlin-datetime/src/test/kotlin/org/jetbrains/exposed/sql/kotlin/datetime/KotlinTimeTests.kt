@@ -46,7 +46,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     @Test
     fun testSQLiteDateTimeFieldRegression() {
         val TestDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime())
+            val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withDb(TestDB.SQLITE) {

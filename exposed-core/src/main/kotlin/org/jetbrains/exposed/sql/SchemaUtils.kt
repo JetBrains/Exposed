@@ -173,71 +173,74 @@ object SchemaUtils {
     }
 
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
-        with(TransactionManager.current()) {
-            val statements = ArrayList<String>()
-            if (tables.isEmpty()) return statements
+        if (tables.isEmpty()) return emptyList()
 
-            val existingTableColumns = logTimeSpent("Extracting table columns", withLogs) {
-                currentDialect.tableColumns(*tables)
-            }
+        val statements = ArrayList<String>()
 
-            for (table in tables) {
-                // create columns
-                val thisTableExistingColumns = existingTableColumns[table].orEmpty()
-                val missingTableColumns = table.columns.filterNot { c -> thisTableExistingColumns.any { it.name.equals(c.name, true) } }
-                missingTableColumns.flatMapTo(statements) { it.ddl }
-
-                if (db.supportsAlterTableWithAddColumn) {
-                    // create indexes with new columns
-                    for (index in table.indices) {
-                        if (index.columns.any { missingTableColumns.contains(it) }) {
-                            statements.addAll(createIndex(index))
-                        }
-                    }
-
-                    // sync existing columns
-                    val dataTypeProvider = db.dialect.dataTypeProvider
-                    val redoColumn = table.columns.mapNotNull { c ->
-                        val changedState = thisTableExistingColumns.find { c.name.equals(it.name, true) }?.let {
-                            val incorrectNullability = it.nullable != c.columnType.nullable
-                            val incorrectAutoInc = it.autoIncrement != c.columnType.isAutoInc
-                            val incorrectDefaults =
-                                it.defaultDbValue != c.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
-                            val incorrectCaseSensitiveName = it.name.inProperCase() != c.nameInDatabaseCase()
-                            ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
-                        }
-
-                        changedState?.takeIf { it.hasDifferences() }?.let { c to changedState }
-                    }
-                    redoColumn.flatMapTo(statements) { (col, changedState) ->
-                        col.modifyStatements(changedState)
-                    }
-                }
-            }
-
-            if (db.supportsAlterTableWithAddColumn) {
-                val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
-                    db.dialect.columnConstraints(*tables)
-                }
-
-                for (table in tables) {
-                    for (foreignKey in table.foreignKeys) {
-                        val existingConstraint = existingColumnConstraint[table to foreignKey.from]?.firstOrNull()
-                        if (existingConstraint == null) {
-                            statements.addAll(createFKey(foreignKey))
-                        } else if (existingConstraint.targetTable != foreignKey.targetTable ||
-                            foreignKey.deleteRule != existingConstraint.deleteRule ||
-                            foreignKey.updateRule != existingConstraint.updateRule
-                        ) {
-                            statements.addAll(existingConstraint.dropStatement())
-                            statements.addAll(createFKey(foreignKey))
-                        }
-                    }
-                }
-            }
-
-            return statements
+        val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
+            currentDialect.tableColumns(*tables)
         }
+
+        val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
+
+        for (table in tables) {
+            // create columns
+            val thisTableExistingColumns = existingTablesColumns[table].orEmpty()
+            val existingTableColumns = table.columns.mapNotNull { column ->
+                val existingColumn = thisTableExistingColumns.find { column.name.equals(it.name, true) }
+                if (existingColumn != null) column to existingColumn else null
+            }.toMap()
+            val missingTableColumns = table.columns.filter { it !in existingTableColumns }
+
+            missingTableColumns.flatMapTo(statements) { it.ddl }
+
+            if (dbSupportsAlterTableWithAddColumn) {
+                // create indexes with new columns
+                table.indices
+                    .filter { index -> index.columns.any { missingTableColumns.contains(it) } }
+                    .forEach { statements.addAll(createIndex(it)) }
+
+                // sync existing columns
+                val dataTypeProvider = currentDialect.dataTypeProvider
+                val redoColumns = existingTableColumns
+                    .mapValues { (col, existingCol) ->
+                        val columnType = col.columnType
+                        val incorrectNullability = existingCol.nullable != columnType.nullable
+                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc
+                        val incorrectDefaults =
+                            existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
+                        val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()
+                        ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
+                    }
+                    .filterValues { it.hasDifferences() }
+
+                redoColumns.flatMapTo(statements) { (col, changedState) -> col.modifyStatements(changedState) }
+            }
+        }
+
+        if (dbSupportsAlterTableWithAddColumn) {
+            val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
+                currentDialect.columnConstraints(*tables)
+            }
+
+            val foreignKeyConstraints = tables.flatMap { table ->
+                table.foreignKeys.map { it to existingColumnConstraint[table to it.from]?.firstOrNull() }
+            }
+
+            for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
+                if (existingConstraint == null) {
+                    statements.addAll(createFKey(foreignKey))
+                } else if (existingConstraint.targetTable != foreignKey.targetTable ||
+                    foreignKey.deleteRule != existingConstraint.deleteRule ||
+                    foreignKey.updateRule != existingConstraint.updateRule
+                ) {
+                    statements.addAll(existingConstraint.dropStatement())
+                    statements.addAll(createFKey(foreignKey))
+                }
+            }
+        }
+
+        return statements
     }
 
     private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
@@ -399,10 +402,7 @@ object SchemaUtils {
     private fun checkMissingIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
         fun Collection<Index>.log(mainMessage: String) {
             if (withLogs && isNotEmpty()) {
-                exposedLogger.warn(mainMessage)
-                forEach {
-                    exposedLogger.warn("\t\t$it")
-                }
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
             }
         }
 
@@ -431,16 +431,15 @@ object SchemaUtils {
             val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
             val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
 
-            existingTableIndices.forEach { index ->
-                mappedIndices.firstOrNull { it.onlyNameDiffer(index) }?.let {
-                    if (withLogs) {
-                        exposedLogger.info(
-                            "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${it.indexName}"
-                        )
-                    }
-                    nameDiffers.add(index)
-                    nameDiffers.add(it)
+            for (index in existingTableIndices) {
+                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
+                if (withLogs) {
+                    exposedLogger.info(
+                        "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${mappedIndex.indexName}"
+                    )
                 }
+                nameDiffers.add(index)
+                nameDiffers.add(mappedIndex)
             }
 
             notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }.addAll(existingTableIndices.subtract(mappedIndices))

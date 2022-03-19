@@ -60,7 +60,7 @@ fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
 fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
     assertEqualDateTime(d1, d2)
     true
-} catch (e: Exception) {
+} catch (_: Exception) {
     false
 }
 

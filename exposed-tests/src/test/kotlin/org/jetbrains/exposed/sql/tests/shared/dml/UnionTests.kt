@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -196,6 +197,7 @@ class UnionTests : DatabaseTestsBase() {
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
             val intersectAppliedFirst = when (currentDialect) {
                 is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect -> true
+                is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
                 else -> false
             }
             usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {

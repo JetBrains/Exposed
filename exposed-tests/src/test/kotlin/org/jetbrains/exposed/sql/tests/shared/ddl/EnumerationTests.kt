@@ -17,7 +17,7 @@ import org.junit.Test
 
 class EnumerationTests : DatabaseTestsBase() {
     object EnumTable : IntIdTable("EnumTable") {
-        internal var enumColumn: Column<DDLTests.Foo> = enumeration("enumColumn", DDLTests.Foo::class)
+        internal var enumColumn: Column<DDLTests.Foo> = enumeration("enumColumn")
 
         internal fun initEnumColumn(sql: String) {
             (columns as MutableList<Column<*>>).remove(enumColumn)

@@ -70,7 +70,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                         OracleDialect.dialectName -> databaseName
                         else -> metadata.connection.schema.orEmpty()
                     }
-                } catch (e: Throwable) {
+                } catch (_: Throwable) {
                     ""
                 }
             }

@@ -293,9 +293,9 @@ private fun FieldSet.selectBatched(
                     // query.iterator() executes the query
                     val results = query.iterator().asSequence().toList()
 
-                    if (results.isEmpty()) break
-
-                    yield(results)
+                    if (results.isNotEmpty()) {
+                        yield(results)
+                    }
 
                     if (results.size < batchSize) break
 

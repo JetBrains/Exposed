@@ -45,7 +45,7 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
     @Test
     fun testSQLiteDateTimeFieldRegression() {
         val TestDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime())
+            val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withDb(TestDB.SQLITE) {
@@ -121,7 +121,7 @@ private fun DatabaseDialect.extractNanos(dt: LocalDateTime) = when (this) {
 fun equalDateTime(d1: Temporal?, d2: Temporal?) = try {
     assertEqualDateTime(d1, d2)
     true
-} catch (e: Exception) {
+} catch (_: Exception) {
     false
 }
 

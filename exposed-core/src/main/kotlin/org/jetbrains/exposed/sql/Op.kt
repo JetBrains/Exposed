@@ -68,7 +68,7 @@ interface ComplexExpression
  * @see AndOp
  * @see OrOp
  */
-abstract class CompoundBooleanOp<T : CompoundBooleanOp<T>>(
+sealed class CompoundBooleanOp(
     private val operator: String,
     internal val expressions: List<Expression<Boolean>>
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
@@ -80,12 +80,12 @@ abstract class CompoundBooleanOp<T : CompoundBooleanOp<T>>(
 /**
  * Represents a logical operator that performs an `and` operation between all the specified [expressions].
  */
-class AndOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp<AndOp>(" AND ", expressions)
+class AndOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp(" AND ", expressions)
 
 /**
  * Represents a logical operator that performs an `or` operation between all the specified [expressions].
  */
-class OrOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp<AndOp>(" OR ", expressions)
+class OrOp(expressions: List<Expression<Boolean>>) : CompoundBooleanOp(" OR ", expressions)
 
 /** Returns the inverse of this boolean expression. */
 fun not(op: Expression<Boolean>): Op<Boolean> = NotOp(op)
