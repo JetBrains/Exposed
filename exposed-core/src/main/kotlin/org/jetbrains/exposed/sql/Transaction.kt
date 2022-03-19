@@ -112,13 +112,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
                         resultSet
                     }
                 }
-                return result?.let {
-                    try {
-                        transform(it)
-                    } finally {
-                        it.close()
-                    }
-                }
+                return result?.use { transform(it) }
             }
 
             override fun prepareSQL(transaction: Transaction): String = stmt

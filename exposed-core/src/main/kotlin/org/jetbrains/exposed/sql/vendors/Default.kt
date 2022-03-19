@@ -786,7 +786,7 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
     }
 }
 
-/** Returns the dialect used in the current transaction, may trow an exception if there is no current transaction. */
+/** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
 val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
 
 internal val currentDialectIfAvailable: DatabaseDialect?

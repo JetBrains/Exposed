@@ -61,6 +61,9 @@ class GroupByTests : DatabaseTestsBase() {
                     val cityName = it[cities.name]
                     val userCount = it[scopedUsers.id.count()]
                     val userCountAlias = it[dAlias]
+
+                    assertEquals(userCount, userCountAlias)
+
                     when (cityName) {
                         "Munich" -> {
                             assertEquals(2, userCount)

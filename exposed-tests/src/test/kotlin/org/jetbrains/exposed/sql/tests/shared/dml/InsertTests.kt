@@ -20,6 +20,7 @@ import java.math.BigDecimal
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -459,7 +460,7 @@ class InsertTests : DatabaseTestsBase() {
         val TestTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
-        val dbToTest = TestDB.enabledInTests() - listOfNotNull(
+        val dbToTest = TestDB.enabledInTests() - setOfNotNull(
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
@@ -473,7 +474,7 @@ class InsertTests : DatabaseTestsBase() {
                         TestTable.insert { it[foo] = 0 }
                     }
                     fail("Should fail on constraint > 0")
-                } catch (e: SQLException) {
+                } catch (_: SQLException) {
                     // expected
                 }
                 withDb(db) {
@@ -509,7 +510,7 @@ class InsertTests : DatabaseTestsBase() {
                         }
                     }
                     fail("Should fail on constraint > 0")
-                } catch (e: SQLException) {
+                } catch (_: SQLException) {
                     // expected
                 }
 

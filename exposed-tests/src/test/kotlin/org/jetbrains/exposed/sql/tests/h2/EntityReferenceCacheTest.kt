@@ -340,7 +340,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
             assertEquals(orderItem1, order1.items.single())
             assertNotNull(entityCache.getReferrers<OrderItem>(order1.id, OrderItems.order))
 
-            val address1 = Address.new {
+            Address.new {
                 customer = customer1
                 street = "Test"
             }
@@ -387,7 +387,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
                 sku = "Test2"
             }
 
-            val address1 = Address.new {
+            Address.new {
                 customer = customer1
                 street = "Test"
             }
@@ -457,5 +457,4 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
             assertNull(entityCache.getReferrers<Address>(customer1.id, CustomerRoles.customer))
         }
     }
-
 }

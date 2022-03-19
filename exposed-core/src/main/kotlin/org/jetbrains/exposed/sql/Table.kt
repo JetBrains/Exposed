@@ -601,12 +601,22 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their ordinal. */
     fun <T : Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
 
+    /** Creates an enumeration column, with the specified [name], for storing enums of type [T] by their ordinal. */
+    inline fun <reified T : Enum<T>> enumeration(name: String) = enumeration(name, T::class)
+
     /**
      * Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their name.
      * With the specified maximum [length] for each name value.
      */
     fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> =
         registerColumn(name, EnumerationNameColumnType(klass, length))
+
+    /**
+     * Creates an enumeration column, with the specified [name], for storing enums of type [T] by their name.
+     * With the specified maximum [length] for each name value.
+     */
+    inline fun <reified T : Enum<T>> enumerationByName(name: String, length: Int) =
+        enumerationByName(name, length, T::class)
 
     /**
      * Creates an enumeration column with custom SQL type.
@@ -1058,7 +1068,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
-            this@cloneWithAutoInc.clone(mapOf(Column<T>::columnType to AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq")))
+            this.withColumnType(AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq"))
         }
         else -> error("Unsupported column type for auto-increment $columnType")
     }
