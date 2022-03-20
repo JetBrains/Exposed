@@ -46,6 +46,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val databaseName
         get() = when (databaseDialectName) {
             MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+            DB2Dialect.dialectName -> null
             else -> database
         }
 

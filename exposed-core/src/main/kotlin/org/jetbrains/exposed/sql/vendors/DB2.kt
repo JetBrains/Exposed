@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -125,7 +126,66 @@ internal object DB2FunctionProvider : FunctionProvider() {
 class DB2Dialect : VendorDialect(dialectName, DB2DataTypeProvider, DB2FunctionProvider) {
     override val name: String = dialectName
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsIfNotExists: Boolean = false
 
+
+    override fun createDatabase(name: String): String {
+        throw UnsupportedByDialectException("Create database can only run in clp(command line processor), thus it can not run here", currentDialect)
+    }
+
+    override fun dropDatabase(name: String): String {
+        throw UnsupportedByDialectException("Drop database can only run in clp(command line processor), thus it can not run here", currentDialect)
+    }
+
+    override fun createIndex(index: Index): String {
+        return super.createIndex(index)
+    }
+
+    override fun createSchema(schema: Schema): String = buildString {
+        append("CREATE SCHEMA ")
+        append(schema.identifier)
+
+        if (schema.authorization != null) {
+            append(" ")
+            append("AUTHORIZATION ")
+            append(schema.authorization)
+        }
+    }
+
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>  {
+        val sqls = mutableListOf<String>()
+        val identify = TransactionManager.current().identity(column)
+        val ddlSql = "ALTER TABLE ${TransactionManager.current().identity(column.table)} ALTER COLUMN " +
+            column.descriptionDdl(true).replace("NOT NULL", "")
+                .replace("MODIFY", "ALTER")
+                .replace(identify, "$identify SET DATA TYPE ")
+        sqls += ddlSql
+
+
+
+        if (columnDiff.nullability) {
+            val nullableSql = if (column.columnType.nullable) {
+                "ALTER TABLE ${TransactionManager.current().identity(column.table)} ALTER COLUMN $identify DROP NOT NULL"
+            } else {
+                "ALTER TABLE ${TransactionManager.current().identity(column.table)} ALTER COLUMN $identify SET NOT NULL"
+            }
+            sqls += nullableSql
+        }
+        sqls += "CALL SYSPROC.ADMIN_CMD('REORG TABLE ${TransactionManager.current().identity(column.table)}')"
+
+        return sqls
+    }
+
+
+    override fun dropSchema(schema: Schema, cascade: Boolean): String {
+        if (cascade) {
+            throw UnsupportedByDialectException(
+                "${currentDialect.name} There is no cascading drop function in DB2; you will have to drop each individual object that uses that schema first",
+                currentDialect
+            )
+        }
+        return "DROP SCHEMA ${schema.identifier} RESTRICT"
+    }
 
     companion object {
         /** DB2 dialect name */
