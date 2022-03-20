@@ -104,6 +104,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val (catalogName, schemeName) = when {
             useCatalogInsteadOfScheme -> scheme to "%"
             currentDialect is OracleDialect -> databaseName to databaseName
+            currentDialect is DB2Dialect -> null to scheme
             else -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
