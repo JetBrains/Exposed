@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.db2compat.DB2ResultSet
+import java.lang.reflect.Method
+import java.sql.PreparedStatement
+import java.sql.ResultSet
 
 internal object DB2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -33,3 +37,12 @@ class DB2Dialect : VendorDialect(dialectName, DB2DataTypeProvider, DB2FunctionPr
         const val dialectName: String = "db2"
     }
 }
+
+private val DB2Class by lazy { Class.forName("com.ibm.db2.jcc.DB2PreparedStatement") as Class<out PreparedStatement?> }
+val GET_DB_GENERATED_KEYS: Method by lazy { DB2Class.getDeclaredMethod("getDBGeneratedKeys"); }
+
+val PreparedStatement.db2ResultSetCompat: ResultSet
+    get() {
+        @Suppress("UNCHECKED_CAST")
+        return DB2ResultSet((GET_DB_GENERATED_KEYS.invoke(this) as Array<ResultSet>))
+    }
