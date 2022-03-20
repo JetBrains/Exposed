@@ -22,6 +22,10 @@ internal object DB2DataTypeProvider : DataTypeProvider() {
 internal object DB2FunctionProvider : FunctionProvider() {
 
     override fun random(seed: Int?) = "RAND(${seed?.toString().orEmpty()})"
+
+    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
+        return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
+    }
 }
 
 /**
