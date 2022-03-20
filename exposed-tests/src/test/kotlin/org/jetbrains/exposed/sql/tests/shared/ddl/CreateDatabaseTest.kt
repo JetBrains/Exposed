@@ -10,7 +10,8 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     @Test
     fun `create database test`() {
         // PostgreSQL will be tested in the next test function
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        // DB2:create database in db2 is a clp command, thus it cannot run in jdbc
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.DB2)) {
             val dbName = "jetbrains"
             SchemaUtils.createDatabase(dbName)
             SchemaUtils.dropDatabase(dbName)
