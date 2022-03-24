@@ -685,7 +685,7 @@ abstract class VendorDialect(
 
     override fun tableExists(table: Table): Boolean {
         val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
-        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
+        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }.trim()
         val allTables = getAllTableNamesCache().getValue(scheme)
         return allTables.any {
             when {

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
@@ -24,7 +25,7 @@ class OrderByTests : DatabaseTestsBase() {
     }
 
     private fun isNullFirst() = when (currentDialectTest) {
-        is OracleDialect, is PostgreSQLDialect -> true
+        is OracleDialect, is PostgreSQLDialect, is DB2Dialect -> true
         else -> false
     }
 

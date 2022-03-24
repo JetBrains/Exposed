@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -85,7 +86,7 @@ class UnionTests : DatabaseTestsBase() {
             val sergeyQuery = users.select { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
             val intersectAppliedFirst = when (currentDialect) {
-                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect -> true
+                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect, is DB2Dialect -> true
                 is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
                 else -> false
             }
@@ -251,7 +252,9 @@ class UnionTests : DatabaseTestsBase() {
             val andreyQuery2 = users.slice(users.id, exp1b, exp2b).select { users.id eq "andrey" }
             val unionAlias = andreyQuery1.unionAll(andreyQuery2)
             unionAlias.map { Triple(it[users.id], it[exp1a], it[exp2a]) }.apply {
-                assertEqualLists(this, listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
+                assertEqualLists(
+                    this.sortedBy { it.toString() },
+                    listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
             }
         }
     }
@@ -267,7 +270,9 @@ class UnionTests : DatabaseTestsBase() {
             val andreyQuery2 = users.slice(users.id, exp1b, exp2b).select { users.id eq "andrey" }
             val unionAlias = andreyQuery1.unionAll(andreyQuery2).alias("unionAlias")
             unionAlias.selectAll().map { Triple(it[unionAlias[users.id]], it[unionAlias[exp1a]], it[unionAlias[exp2a]]) }.apply {
-                assertEqualLists(this, listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
+                assertEqualLists(
+                    this.sortedBy { it.toString() },
+                    listOf(Triple("andrey", 10, "aaa"), Triple("andrey", 100, "bbb")))
             }
         }
     }

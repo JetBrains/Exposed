@@ -20,6 +20,13 @@ abstract class FunctionsTestBase : DatabaseTestsBase() {
         }
     }
 
+    protected fun withTableExcludeList(excludeDB: List<TestDB> = emptyList(), body: Transaction.(TestDB) -> Unit) {
+        withTables(excludeSettings = excludeDB, FakeTestTable) {
+            FakeTestTable.insert { }
+            body(it)
+        }
+    }
+
     protected fun <T> Transaction.assertExpressionEqual(expected: T, expression: Function<T>) {
         val result = FakeTestTable.slice(expression).selectAll().first()[expression]
         if (expected is BigDecimal && result is BigDecimal) {

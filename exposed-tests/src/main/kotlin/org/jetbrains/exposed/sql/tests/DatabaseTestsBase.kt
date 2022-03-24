@@ -103,7 +103,7 @@ enum class TestDB(
 
     DB2(
         connection = {
-            "jdbc:db2://${System.getProperty("exposed.test.db2.host", "192.168.99.100")}" +
+            "jdbc:db2://${System.getProperty("exposed.test.db2.host", "localhost")}" +
                     ":${System.getProperty("exposed.test.db2.port", "50000")}/testdb"
         },
         driver = "com.ibm.db2.jcc.DB2Driver",

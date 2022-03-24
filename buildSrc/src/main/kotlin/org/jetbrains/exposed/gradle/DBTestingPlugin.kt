@@ -67,7 +67,7 @@ class DBTestingPlugin : Plugin<Project> {
                 testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
             }
 
-            val db2 = register<DBTestWithDockerCompose>("db2Test", Parameters("DB2", 50000)) {
+            val db2 = register<DBTest>("db2Test", "db2") {
                 testRuntimeOnly("com.ibm.db2", "jcc", Versions.db2)
             }
 
@@ -77,7 +77,8 @@ class DBTestingPlugin : Plugin<Project> {
                     sqlite,
                     mysql51,
                     postgres,
-                    postgresNG
+                    postgresNG,
+                    db2
                 )
             }
         }

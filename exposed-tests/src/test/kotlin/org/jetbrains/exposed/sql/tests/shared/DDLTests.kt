@@ -14,8 +14,10 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
@@ -71,7 +73,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test fun unnamedTableWithQuotesSQL() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(UnnamedTable)) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.DB2), tables = arrayOf(UnnamedTable)) {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) { "$q${"UnnamedTable$1".inProperCase()}$q" } else { "UnnamedTable$1".inProperCase() }
             assertEquals(
@@ -115,7 +117,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE), tables = arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE, TestDB.DB2), tables = arrayOf(TestTable)) {
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
                     "(${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} NOT NULL, " +
@@ -135,7 +137,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE, TestDB.DB2), tables = arrayOf(TestTable)) {
             val q = db.identifierManager.quoteString
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
             val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"
@@ -767,7 +769,9 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1L, TableFromSchemeOne.selectAll().count())
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
 
-            if (currentDialectTest is SQLServerDialect) {
+            if (currentDialectTest is SQLServerDialect
+                || /* db2 not support cascade*/ currentDialectTest is DB2Dialect
+            ) {
                 SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }

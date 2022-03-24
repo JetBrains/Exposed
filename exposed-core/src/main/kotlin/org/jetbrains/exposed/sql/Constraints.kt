@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -118,10 +119,16 @@ data class ForeignKeyConstraint(
                 append(" ON DELETE $deleteRule")
             }
             if (updateRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is OracleDialect) {
-                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
-                } else {
-                    append(" ON UPDATE $updateRule")
+                when  {
+                    currentDialect is OracleDialect -> {
+                        exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                    }
+                    currentDialect is DB2Dialect && updateRule == ReferenceOption.CASCADE -> {
+                        exposedLogger.warn("DB2 doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                    }
+                    else -> {
+                        append(" ON UPDATE $updateRule")
+                    }
                 }
             }
         }

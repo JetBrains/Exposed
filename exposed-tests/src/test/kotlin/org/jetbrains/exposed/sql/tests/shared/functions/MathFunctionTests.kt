@@ -114,7 +114,7 @@ class MathFunctionTests : FunctionsTestBase() {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }
                 }
-                TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE -> {
+                TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.DB2 -> {
                     // SQLite, PSQL, Oracle fail to execute sqrt with negative value
                     expectException<ExposedSQLException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
