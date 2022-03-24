@@ -3,7 +3,7 @@ version: '3.3'
 services:
   db2:
     container_name: DB2
-    image: ibmcom/db2:latest
+    image: ibmcom/db2:11.5.7.0
     ports:
       - "50000:50000"
     # Hide console output of db2 image

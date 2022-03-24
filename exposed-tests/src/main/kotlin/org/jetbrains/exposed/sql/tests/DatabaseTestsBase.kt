@@ -104,7 +104,8 @@ enum class TestDB(
     DB2(
         connection = {
             "jdbc:db2://${System.getProperty("exposed.test.db2.host", "localhost")}" +
-                    ":${System.getProperty("exposed.test.db2.port", "50000")}/testdb"
+                    ":${System.getProperty("exposed.test.db2.port", "50000")}/testdb" +
+                ":progressiveStreaming=2;"
         },
         driver = "com.ibm.db2.jcc.DB2Driver",
         user = "inst",
@@ -114,23 +115,25 @@ enum class TestDB(
                 DB2.connection(), user = TestDB.DB2.user, password = TestDB.DB2.pass, driver = TestDB.DB2.driver
             )
             var dbInitialized = false
-            repeat(10) {
+            repeat(20) {
                 if (!dbInitialized) {
                     transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
                         try {
                             exec("SELECT 1 FROM SYSIBM.SYSDUMMY1;")
+                            exposedLogger.info("DB2 database is initialized")
                             dbInitialized = true
+                            Thread.sleep(20_000) // Sleep additional 20 seconds to allow DB2 to start
                         } catch (e: Exception) {
-                            if (it < 9)
-                                exposedLogger.info("Awaiting on DB2 creates database (${it+1}/10)")
+                            if (it < 19)
+                                exposedLogger.info("Awaiting on DB2 creates database (${it+1}/20)")
                             else
-                                exposedLogger.error("DB2 wasn't initialized in 100 sec", e)
+                                exposedLogger.error("DB2 wasn't initialized in 200 sec", e)
                         }
                     }
                     Thread.sleep(10000)
                 }
             }
-            require(dbInitialized) { "DB2 wasn't initialized in 100 sec" }
+            require(dbInitialized) { "DB2 wasn't initialized in 200 sec" }
         }
     ),;
 
