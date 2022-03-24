@@ -17,9 +17,11 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.time.*
 
@@ -184,8 +186,9 @@ class DefaultsTest : DatabaseTestsBase() {
 
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
-                "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
-            else -> "NULL"
+                " DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+            currentDialect is DB2Dialect -> ""
+            else -> " NULL"
         }
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
@@ -197,19 +200,19 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                 "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
+                "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable'${if (currentDialect is DB2Dialect) "" else " NULL"}, " +
                 "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
                 "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE ${dLiteral.itOrNull()}, " +
-                "${"t5".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
-                "${"t6".inProperCase()} $dtType ${tsLiteral.itOrNull()}, " +
-                "${"t7".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                "${"t8".inProperCase()} $longType ${durLiteral.itOrNull()}, " +
-                "${"t9".inProperCase()} $timeType ${tLiteral.itOrNull()}, " +
-                "${"t10".inProperCase()} $timeType ${tLiteral.itOrNull()}" +
+                "${"t1".inProperCase()} $dtType${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE${dLiteral.itOrNull()}, " +
+                "${"t5".inProperCase()} $dtType${tsLiteral.itOrNull()}, " +
+                "${"t6".inProperCase()} $dtType${tsLiteral.itOrNull()}, " +
+                "${"t7".inProperCase()} $longType${durLiteral.itOrNull()}, " +
+                "${"t8".inProperCase()} $longType${durLiteral.itOrNull()}, " +
+                "${"t9".inProperCase()} $timeType${tLiteral.itOrNull()}, " +
+                "${"t10".inProperCase()} $timeType${tLiteral.itOrNull()}" +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect) {
