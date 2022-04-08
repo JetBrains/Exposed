@@ -33,7 +33,8 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 //}
 
 tasks.withType<Test>().configureEach {
-    jvmArgs = listOf("-XX:MaxPermSize=256m")
+    if (JavaVersion.VERSION_1_8 > JavaVersion.current())
+        jvmArgs = listOf("-XX:MaxPermSize=256m")
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
         showStandardStreams = true
