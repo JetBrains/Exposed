@@ -199,6 +199,8 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
         idColumn.table as IdTable<T>
     )
 
+    override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
