@@ -527,8 +527,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    fun nullableType():Int? = 42
-
     @Test fun `test optReference allows null values`() {
         withTables(EntityTests.Posts) {
             val id1 = EntityTests.Posts.insertAndGetId {
@@ -553,13 +551,15 @@ class InsertTests : DatabaseTestsBase() {
                 it[board] = boardId.value
             }
 
-//            val nullableCategoryID: UUID? = UUID.randomUUID()
-//            val nullableBoardId: Int? = 42
-//            EntityTests.Posts.insertAndGetId {
-//                it[board] = Op.nullOp()
-//                it[category] = nullableCategoryID
-//                it[board] = nullableType()
-//            }
+            EntityTests.Posts.deleteWhere { EntityTests.Posts.id eq id2 }
+
+            val nullableCategoryID: UUID? = categoryId
+            val nullableBoardId: Int? = boardId.value
+            EntityTests.Posts.insertAndGetId {
+                it[board] = Op.nullOp()
+                it[category] = nullableCategoryID
+                it[board] = nullableBoardId
+            }
         }
 
     }
