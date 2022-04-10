@@ -42,15 +42,12 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override var transactionIsolation: Int = -1
         get() {
-            if (field != -1) {
-                return field
+            if (field == -1) {
+                synchronized(this) {
+                    field = connection.transactionIsolation
+                }
             }
-
-            return synchronized(this) {
-                val value = connection.transactionIsolation
-                field = value
-                value
-            }
+            return field
         }
         set(value) {
             if (field != value) {
