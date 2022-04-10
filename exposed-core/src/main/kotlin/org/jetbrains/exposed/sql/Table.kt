@@ -617,6 +617,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
             override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
             override fun notNullValueToDB(value: Any): Any = toDb(value as T)
+            override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
         }
     )
 

@@ -712,7 +712,11 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    internal enum class Foo { Bar, Baz }
+    internal enum class Foo {
+        Bar, Baz;
+
+        override fun toString(): String = "Foo Enum ToString: $name"
+    }
 
     class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
         init {
