@@ -410,9 +410,9 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>> {
+    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
-        return inList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
+        return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
 
     /** Checks if this expression is not equals to any element from [list]. */
