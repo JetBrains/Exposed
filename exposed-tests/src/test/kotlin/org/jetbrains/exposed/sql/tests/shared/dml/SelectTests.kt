@@ -169,7 +169,9 @@ class SelectTests : DatabaseTestsBase() {
                 this.board = board1
             }
 
-            EntityTests.Post.new {  }
+            EntityTests.Post.new {
+                category = EntityTests.Category.new { title = "Category1" }
+            }
 
             val result = EntityTests.Posts.select { EntityTests.Posts.board inList listOf(board1.id) }.singleOrNull()?.get(EntityTests.Posts.id)
             assertEquals(post1.id, result)
