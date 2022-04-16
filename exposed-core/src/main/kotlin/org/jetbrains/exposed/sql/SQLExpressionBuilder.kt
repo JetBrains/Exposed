@@ -1,3 +1,4 @@
+@file:Suppress("internal", "INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.ops.TripleInListOp
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
+import kotlin.internal.LowPriorityInOverloadResolution
 
 // String Functions
 
@@ -137,6 +139,7 @@ interface ISqlExpressionBuilder {
     // Comparison Operators
 
     /** Checks if this expression is equals to some [t] value. */
+    @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = if (t == null) isNull() else EqOp(this, wrap(t))
 
     /** Checks if this expression is equals to some [t] value. */
@@ -154,7 +157,9 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.eq(t: T): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
+        if (t == null) return isNull()
+
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
