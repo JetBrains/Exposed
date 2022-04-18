@@ -63,8 +63,17 @@ class DBTestingPlugin : Plugin<Project> {
                 testRuntimeOnly("com.microsoft.sqlserver", "mssql-jdbc", Versions.sqlserver)
             }
 
-            val mariadb = register<DBTestWithDockerCompose>("mariadbTest", Parameters("MARIADB", 3306)) {
-                testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB)
+            val mariadb_v2 = register<DBTestWithDockerCompose>("mariadb_v2Test", Parameters("MARIADB", 3306)) {
+                testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB_v2)
+            }
+
+            val mariadb_v3 = register<DBTestWithDockerCompose>("mariadb_v3Test", Parameters("MARIADB", 3306)) {
+                testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB_v3)
+            }
+
+            val mariadb = register<Test>("mariadbTest") {
+                group = "verification"
+                delegatedTo(mariadb_v2, mariadb_v3)
             }
 
             named<Test>("test") {

@@ -12,6 +12,7 @@ Fetched the following versions and changes from upstream:
 Fetched the following versions & changes from upstream:
 
 ### Upstream Version 0.37.3
+
 Bug Fixes:
 * Many-to-many reference broken in version 0.37.1 ([#1413](https://github.com/JetBrains/Exposed/issues/1413))
 * NPE on Enum columns initialization

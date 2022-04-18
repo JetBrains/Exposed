@@ -200,7 +200,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -208,7 +215,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     ")"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 
@@ -230,7 +237,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -238,7 +252,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     ")"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 
@@ -258,7 +272,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -266,7 +287,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
                     ")"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 
@@ -288,7 +309,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -296,7 +324,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
                     ")"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 
@@ -325,7 +353,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -333,7 +368,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
                     " ON DELETE CASCADE ON UPDATE CASCADE)"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 
@@ -363,7 +398,14 @@ class CreateTableTests : DatabaseTestsBase() {
         withTables(parent, child) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).createStatement().single() },
+                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+                    Sequence(
+                        it,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    ).createStatement().single()
+                },
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -371,7 +413,7 @@ class CreateTableTests : DatabaseTestsBase() {
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
                     ")"
             )
-            assertEqualCollections(expected, child.ddl)
+            assertEqualCollections(child.ddl, expected)
         }
     }
 

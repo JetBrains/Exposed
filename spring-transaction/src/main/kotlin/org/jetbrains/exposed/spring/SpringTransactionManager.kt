@@ -22,7 +22,7 @@ import javax.sql.DataSource
 
 class SpringTransactionManager(
     _dataSource: DataSource,
-    databaseConfig: DatabaseConfig,
+    databaseConfig: DatabaseConfig = DatabaseConfig{ },
     private val showSql: Boolean = false,
     @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {

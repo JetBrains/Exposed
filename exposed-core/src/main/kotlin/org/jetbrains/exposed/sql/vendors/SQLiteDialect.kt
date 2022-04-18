@@ -13,11 +13,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun longAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
-    override fun binaryType(): String {
-        exposedLogger.error("The length of the Binary column is missing.")
-        error("The length of the Binary column is missing.")
-    }
-
+    override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }

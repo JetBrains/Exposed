@@ -11,7 +11,7 @@ open class ColumnWithTransform<TColumn, TReal>(
     val column: Column<TColumn>,
     val toColumn: (TReal) -> TColumn,
     toReal: (TColumn) -> TReal,
-    protected val cacheResult: Boolean
+    protected val cacheResult: Boolean = false
 ) {
     private var cache: Pair<TColumn, TReal>? = null
 

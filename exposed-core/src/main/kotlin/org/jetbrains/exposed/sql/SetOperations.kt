@@ -5,11 +5,12 @@ import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 
 sealed class SetOperation(
-    val operationName: String,
+    operationName: String,
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()) {
@@ -43,6 +44,8 @@ sealed class SetOperation(
     override val set: FieldSet = firstStatement.set
 
     override val queryToExecute: Statement<ResultSet> get() = this
+
+    open val operationName = operationName
 
     override fun count(): Long {
         try {
@@ -159,6 +162,12 @@ class Intersect(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery
 }
 
 class Except(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("EXCEPT", firstStatement, secondStatement) {
+
+    override val operationName: String get() = when(currentDialect) {
+        is OracleDialect -> "MINUS"
+        else -> "EXCEPT"
+    }
+
     override fun copy() = Intersect(firstStatement, secondStatement).also {
         copyTo(it)
     }

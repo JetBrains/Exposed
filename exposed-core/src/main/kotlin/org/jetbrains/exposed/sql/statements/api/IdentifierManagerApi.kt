@@ -18,11 +18,11 @@ abstract class IdentifierManagerApi {
     protected abstract val oracleVersion: OracleVersion
     protected abstract val maxColumnNameLength: Int
 
-    protected enum class OracleVersion { Oracle11g, Oracle12plus, NonOracle }
+    protected enum class OracleVersion { Oracle11g, Oracle12_1g, Oracle12plus, NonOracle }
 
     protected val identifierLengthLimit by lazy {
         when (oracleVersion) {
-            OracleVersion.Oracle11g -> 30
+            OracleVersion.Oracle11g, OracleVersion.Oracle12_1g -> 30
             OracleVersion.Oracle12plus -> 128
             else -> maxColumnNameLength.takeIf { it > 0 } ?: Int.MAX_VALUE
         }

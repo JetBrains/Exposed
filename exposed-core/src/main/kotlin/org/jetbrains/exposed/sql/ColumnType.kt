@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.lang.IllegalArgumentException
@@ -197,6 +198,8 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
         },
         idColumn.table as IdTable<T>
     )
+
+    override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -751,6 +754,11 @@ class UUIDColumnType : ColumnType() {
         is String -> UUID.fromString(value)
         is ByteArray -> ByteBuffer.wrap(value).let { UUID(it.long, it.long) }
         else -> error("Unexpected value of type UUID: ${value.javaClass.canonicalName}")
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+        is MariaDBDialect -> rs.getBytes(index)
+        else -> super.readObject(rs, index)
     }
 
     companion object {

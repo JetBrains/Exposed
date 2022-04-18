@@ -83,7 +83,7 @@ interface TransactionManager {
                 registeredDatabases.remove(database)
                 databases.remove(database)
                 currentDefaultDatabase.compareAndSet(database, null)
-                if (currentThreadManager.get() == it) {
+                if (currentThreadManager.isInitialized && currentThreadManager.get() == it) {
                     currentThreadManager.remove()
                 }
             }
@@ -91,11 +91,26 @@ interface TransactionManager {
 
         fun managerFor(database: Database?) = if (database != null) registeredDatabases[database] else manager
 
-        private val currentThreadManager = object : ThreadLocal<TransactionManager>() {
+        private class TransactionManagerThreadLocal : ThreadLocal<TransactionManager>() {
+            var isInitialized = false
+
             override fun initialValue(): TransactionManager {
+                isInitialized = true
                 return defaultDatabase?.let { registeredDatabases.getValue(it) } ?: NotInitializedManager
             }
+
+            override fun set(value: TransactionManager?) {
+                isInitialized = true
+                super.set(value)
+            }
+
+            override fun remove() {
+                isInitialized = false
+                super.remove()
+            }
         }
+
+        private val currentThreadManager = TransactionManagerThreadLocal()
 
         val manager: TransactionManager
             get() = currentThreadManager.get()

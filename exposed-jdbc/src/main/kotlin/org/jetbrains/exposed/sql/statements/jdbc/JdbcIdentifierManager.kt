@@ -17,6 +17,7 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     override val oracleVersion = when {
         metadata.databaseProductName != "Oracle" -> OracleVersion.NonOracle
         metadata.databaseMajorVersion <= 11 -> OracleVersion.Oracle11g
+        metadata.databaseMajorVersion == 12 && metadata.databaseMinorVersion == 1 -> OracleVersion.Oracle12_1g
         else -> OracleVersion.Oracle12plus
     }
     override val maxColumnNameLength: Int = metadata.maxColumnNameLength
