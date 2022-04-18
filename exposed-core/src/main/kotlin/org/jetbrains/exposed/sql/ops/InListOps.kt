@@ -75,7 +75,7 @@ abstract class InListOrNotInListBaseOp<V> (
 }
 
 class SingleValueInListOp<T>(
-    expr: ExpressionWithColumnType<T>,
+    expr: ExpressionWithColumnType<out T>,
     list: Iterable<T>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<T>(expr, list, isInList) {
