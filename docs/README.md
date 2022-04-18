@@ -22,14 +22,14 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("io.taff.exposed:exposed-bom:0.5.0"))
+    implementation(platform("io.taff.exposed:exposed-bom:0.6.0"))
     implementation("io.taff.exposed", "exposed-core")
     implementation("io.taff.exposed", "exposed-dao")
     implementation("io.taff.exposed", "exposed-jdbc")
 }
 ```
 
-The latest release version is `0.5.0` (pegged against `org.jetbrains.exposed:exposed:0.37.2`)
+The latest release version is `0.6.0` (pegged against `org.jetbrains.exposed:exposed:0.38.1`)
 and is available on JFrog at `https://tmpasipanodya.jfrog.io/artifactory/releases`.
 
 ## Examples
