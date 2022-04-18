@@ -176,8 +176,8 @@ class SelectTests : DatabaseTestsBase() {
                                      scopedUsers.cityId.isNull()
                              }.count())
 
-            assertEquals(2L, users.select{ users.cityId eq null } .count())
-            assertEquals(0L, scopedUsers.select{ users.cityId eq null } .count())
+            assertEquals(2L, users.select { users.cityId eq null }.count())
+            assertEquals(2L, scopedUsers.select { scopedUsers.cityId eq null }.count())
         }
     }
 
