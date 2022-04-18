@@ -1,3 +1,46 @@
+# 0.6.0
+
+Fetched the following versions and changes from upstream:
+
+
+### Upstream Version 0.38.1
+Infrastructure:
+* Kotlin 1.6.20
+* h2 updated to 2.1.210
+* MariaDB driver 3.0.4 supported
+* Exposed can be build on Java 17+ (`MaxPermSize` is optional in build scripts), thanks to [MrPowerGamerBR](https://github.com/MrPowerGamerBR)
+
+Feature:
+* New `exposed-crypt` module added. Module contains two new `encryptedVarchar` and `encryptedBinary` columns which allows to store encrypted values in database and encode/decode them on client.
+  Check `SelectTests.test encryptedColumnType with a string` test for the sample usage
+* Allow to pass DatabaseConfig in SpringTransactionManager. PR by [stengvac](https://github.com/stengvac)
+* `CompoundBooleanOp` (`AndOp` and `OrOp`) is sealed class now
+* Entity explicit constructor lambda can be defined on `EntityClass` via `entityCtor` parameter to prevent using reflection (for example). Improved by [m-sasha](https://github.com/m-sasha)
+* `memoizedTransform` function similar to `transform` added. The delegate will cache value on read for the same value from DB.
+* Reified versions of `enumeration` and `enumerationByName` functions
+* `CurrentDateTime` became object instance
+
+Performance:
+* Faster initialization: reflection replaced with regular code in `Column<T>.cloneWithAutoInc`. Found and fixed by [m-sasha](https://github.com/m-sasha)
+* ResultRow stores evaluated values in local cache
+* Prevent unnecessary calls to get current transaction isolation level. Problem located and fixed by [shunyy](https://github.com/shunyy)
+
+Bug Fixes:
+* Proper handling of Op.NULL in eq/neq and other places, found by [naftalmm](https://github.com/naftalmm)
+* Wrong SortOrder representation in order by and group by
+* SQLServer dialect now have default transaction isolation level READ_COMMITTED.
+* Unable to use nullable reference with lookup ([#1437](https://github.com/JetBrains/Exposed/issues/1437)) fixed by [naftalmm](https://github.com/naftalmm)
+* Wrong behavior when ColumnType returns null on read ([#1435](https://github.com/JetBrains/Exposed/issues/1435)), also fixed by [naftalmm](https://github.com/naftalmm)
+* `closeAndUnregister` makes a thread local transaction manager completely dead ([#1476](https://github.com/JetBrains/Exposed/issues/1476))
+* Call to `Entity.load` for new entities leads to exception ([#1472](https://github.com/JetBrains/Exposed/issues/1472))
+* Broken behavior of `customEnumeration` for Enums with overridden `toString` ([#1475](https://github.com/JetBrains/Exposed/issues/1475))
+* Another attempt to fix `optReference` column should allow update { it[column] = nullableValue } ([#1275](https://github.com/JetBrains/Exposed/issues/1275))
+
+### Upstream Version 0.37.3
+Bug Fixes:
+* Many-to-many reference broken in version 0.37.1 ([#1413](https://github.com/JetBrains/Exposed/issues/1413))
+* NPE on Enum columns initialization
+
 # 0.5.0
 
 Fetched the following versions and changes from upstream:
