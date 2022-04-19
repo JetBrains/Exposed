@@ -440,9 +440,9 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>> {
+    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
-        return notInList(list.map { EntityIDFunctionProvider.createEntityID(it, idTable) })
+        return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
 
     // Misc.
