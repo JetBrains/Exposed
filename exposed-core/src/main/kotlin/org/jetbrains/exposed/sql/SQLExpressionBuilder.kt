@@ -167,6 +167,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equals to some [other] value. */
+    @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
 
     /** Checks if this expression is not equals to some [other] expression. */
@@ -176,7 +177,8 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.neq(t: T): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
+        if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
