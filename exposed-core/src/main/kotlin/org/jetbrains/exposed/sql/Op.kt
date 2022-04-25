@@ -116,6 +116,20 @@ infix fun Expression<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = when {
     else -> OrOp(listOf(this, op))
 }
 
+/**
+ * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+infix fun Op<Boolean>.andIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
+    op?.let { this and it } ?: this
+
+/**
+ * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+infix fun Op<Boolean>.orIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
+    op?.let { this or it } ?: this
+
 /** Reduces this list to a single expression by performing an `and` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 
@@ -133,6 +147,18 @@ inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>
 
 /** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
 inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
+
+/**
+ * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+inline fun Op<Boolean>.andIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = andIfNotNull(SqlExpressionBuilder.op())
+
+/**
+ * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+inline fun Op<Boolean>.orIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = orIfNotNull(SqlExpressionBuilder.op())
 
 // Comparison Operators
 
