@@ -383,7 +383,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 distinctRefIds.forEach { id ->
                     cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }.also {
                         if (keepLoadedReferenceOutOfTransaction) {
-                            findById(id)?.storeReferenceInCache(refColumn, it)
+                            cache.data[id.table]?.get(id.value)?.storeReferenceInCache(refColumn, it)
                         }
                     }
                 }
