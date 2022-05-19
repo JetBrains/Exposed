@@ -48,7 +48,7 @@ internal class TransactionCoroutineElement(private val newTransaction: Lazy<Tran
 }
 
 suspend fun <T> newSuspendedTransaction(
-    context: CoroutineDispatcher? = null,
+    context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
     statement: suspend Transaction.() -> T
