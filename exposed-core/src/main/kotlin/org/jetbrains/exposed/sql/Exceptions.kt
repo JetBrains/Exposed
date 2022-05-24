@@ -47,4 +47,13 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  */
 class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError("Duplicate column name \"$columnName\" in table \"$tableName\"")
 
+/**
+ * LongQueryException is thrown:
+ *
+ * When query running time is greater than value defined in DatabaseConfig.warnLongQueriesDuration
+ *
+ * @see org.jetbrains.exposed.sql.DatabaseConfig.warnLongQueriesDuration
+ */
+class LongQueryException : RuntimeException("Long query was executed")
+
 internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)
