@@ -1,9 +1,40 @@
+# 0.7.0
+
+* `org.jetbrains.kotlin.jvm` version `1.6.21`
+
+Fetched the following versions and changes from upstream:
+
+### Upstream Version 0.38.2
+
+Infrastructure:
+* Kotlin Coroutines 1.6.1
+* slf4j 1.7.36
+* log4j2 2.17.2
+* h2-database 2.1.212
+* MaridDB driver 2.7.5
+* MySQL driver 8.0.28
+* PostgreSQL driver 4.3.3
+
+Feature:
+* New `optimizedLoad` param introduced for `EntityClass.warmUpLinkedReferences`.
+  It will force to make to two queries to load ids and referenced entities separately.
+  Can be useful when references target the same entities. That will prevent from loading them multiple times
+  (per each reference row) and will require less memory/bandwidth for "heavy" entities (with a lot of columns or columns with huge data in it)
+
+Bug Fixes:
+* Regression on 0.38.1 - SpringTransactionManager requires DatabaseConfig ([#1488](https://github.com/JetBrains/Exposed/issues/1488))
+* `inList`/`notInList` doesn't work with list of EntityIDs ([#1490](https://github.com/JetBrains/Exposed/issues/1490))
+* `eq`/`neq` was broken for nullable columns with nullable value ([#1489](https://github.com/JetBrains/Exposed/issues/1489))
+* `Except` union operation doesn't work on Oracle
+* ORA-00972: identifier is too long. Oracle 12.1.0.2.0 ([#1483](https://github.com/JetBrains/Exposed/issues/1483))
+* Can't create arbitrary-size BINARY column in SQLite ([#1443](https://github.com/JetBrains/Exposed/issues/1443))
+
 # 0.6.0
 
 Fetched the following versions and changes from upstream:
 
-
 ### Upstream Version 0.38.1
+
 Infrastructure:
 * Kotlin 1.6.20
 * h2 updated to 2.1.210
