@@ -8,7 +8,7 @@ Bill of Materials for all Exposed modules
     <repository>
         <id>mavenCentral</id>
         <name>mavenCentral</name>
-        <url>https://repo1.maven.org/maven2/</url>
+        <url>https://tmpasipanodya.jfrog.io/artifactory/releases</url>
     </repository>
 </repositories>
 
@@ -17,7 +17,7 @@ Bill of Materials for all Exposed modules
         <dependency>
             <groupId>io.taff.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.6.0</version>
+            <version>0.7.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -45,13 +45,12 @@ Bill of Materials for all Exposed modules
 
 # Gradle
 ```kotlin
-repositories {
-  // Versions after 0.33.1
-  mavenCentral()
+repositories { 
+    maven("https://tmpasipanodya.jfrog.io/artifactory/releases")
 }
 
 dependencies {
-    implementation(platform("io.taff.exposed:exposed-bom:0.6.0"))
+    implementation(platform("io.taff.exposed:exposed-bom:0.7.0"))
     implementation("io.taff.exposed", "exposed-core")
     implementation("io.taff.exposed", "exposed-dao")
     implementation("io.taff.exposed", "exposed-jdbc")
