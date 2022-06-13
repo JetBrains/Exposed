@@ -72,8 +72,8 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         }
         transactionImpl.commit()
         userdata.clear()
-        globalInterceptors.forEach { it.afterCommit() }
-        interceptors.forEach { it.afterCommit() }
+        globalInterceptors.forEach { it.afterCommit(this) }
+        interceptors.forEach { it.afterCommit(this) }
         userdata.putAll(dataToStore)
     }
 
@@ -81,8 +81,8 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         globalInterceptors.forEach { it.beforeRollback(this) }
         interceptors.forEach { it.beforeRollback(this) }
         transactionImpl.rollback()
-        globalInterceptors.forEach { it.afterRollback() }
-        interceptors.forEach { it.afterRollback() }
+        globalInterceptors.forEach { it.afterRollback(this) }
+        interceptors.forEach { it.afterRollback(this) }
         userdata.clear()
     }
 

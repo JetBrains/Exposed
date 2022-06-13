@@ -9,10 +9,10 @@ interface StatementInterceptor {
     fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {}
 
     fun beforeCommit(transaction: Transaction) {}
-    fun afterCommit() {}
+    fun afterCommit(transaction: Transaction) {}
 
     fun beforeRollback(transaction: Transaction) {}
-    fun afterRollback() {}
+    fun afterRollback(transaction: Transaction) {}
 
     fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> = emptyMap()
 }
