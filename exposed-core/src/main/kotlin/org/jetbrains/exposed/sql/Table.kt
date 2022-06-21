@@ -419,7 +419,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
         /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
+        val name: String = "pk_$tableNameWithoutScheme"
     ) {
         constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableNameWithoutScheme") :
             this(arrayOf(firstColumn, *columns), name)
