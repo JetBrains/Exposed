@@ -924,4 +924,27 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun createTableWithCompositePrimaryKeyAndSchema() {
+        val one = Schema("test")
+        val tableA = object : Table("test.table_a") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            override val primaryKey = PrimaryKey(idA, idB)
+        }
+
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(one)) {
+            SchemaUtils.create(tableA)
+            tableA.insert { it[idA] = 1; it[idB] = 1 }
+
+            assertEquals(1, tableA.selectAll().count())
+
+            if (currentDialectTest is SQLServerDialect) {
+                SchemaUtils.drop(tableA)
+            }
+
+        }
+    }
+
 }
