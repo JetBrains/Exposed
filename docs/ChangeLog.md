@@ -6,7 +6,7 @@ Infrastructure:
 * h2-database 2.1.212
 * MaridDB driver 2.7.5
 * MySQL driver 8.0.28
-* PostgreSQL driver 4.3.3
+* PostgreSQL driver 42.3.3
 
 Feature:
 * New `optimizedLoad` param introduced for `EntityClass.warmUpLinkedReferences`. 
