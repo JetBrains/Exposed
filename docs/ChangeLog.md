@@ -1,3 +1,6 @@
+# 0.7.1
+- `jvm` version `1.7.0`
+
 # 0.7.0
 
 * `org.jetbrains.kotlin.jvm` version `1.6.21`
