@@ -6,7 +6,7 @@ Infrastructure:
 * h2-database 2.1.212
 * MaridDB driver 2.7.5
 * MySQL driver 8.0.28
-* PostgreSQL driver 4.3.3
+* PostgreSQL driver 42.3.3
 
 Feature:
 * New `optimizedLoad` param introduced for `EntityClass.warmUpLinkedReferences`. 
@@ -32,7 +32,7 @@ Infrastructure:
 
 Feature:
 * New `exposed-crypt` module added. Module contains two new `encryptedVarchar` and `encryptedBinary` columns which allows to store encrypted values in database and encode/decode them on client. 
-  Check `SelectTests.test encryptedColumnType with a string` test for the sample usage 
+  Check [`SelectTests.test encryptedColumnType with a string`](https://github.com/JetBrains/Exposed/blob/0.38.1/exposed-tests/src/test/kotlin/org/jetbrains/exposed/sql/tests/shared/dml/SelectTests.kt#L264) test for the sample usage 
 * Allow to pass DatabaseConfig in SpringTransactionManager. PR by [stengvac](https://github.com/stengvac)
 * `CompoundBooleanOp` (`AndOp` and `OrOp`) is sealed class now
 * Entity explicit constructor lambda can be defined on `EntityClass` via `entityCtor` parameter to prevent using reflection (for example). Improved by [m-sasha](https://github.com/m-sasha)
