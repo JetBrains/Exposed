@@ -34,6 +34,21 @@ class ReplaceTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testReplaceWithExpression() {
+        val NewAuth = object : Table("new_auth") {
+            val username = varchar("username", 16)
+            val password = varchar("password", 64)
+            override val primaryKey = PrimaryKey(username)
+        }
+        withTables(notSupportsReplace, NewAuth) {
+            NewAuth.replace {
+                it[username] = "username"
+                it[password] = stringLiteral("  password1 ").trim()
+            }
+        }
+    }
+
+    @Test
     fun testBatchReplace01() {
         withCitiesAndUsers(notSupportsReplace) { cities, users, userData ->
             val (munichId, pragueId, saintPetersburgId) = cities.slice(cities.id).select {
