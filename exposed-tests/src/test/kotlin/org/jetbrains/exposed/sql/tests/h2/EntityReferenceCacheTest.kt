@@ -14,6 +14,10 @@ import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.demo.dao.Cities
+import org.jetbrains.exposed.sql.tests.demo.dao.City
+import org.jetbrains.exposed.sql.tests.demo.dao.User
+import org.jetbrains.exposed.sql.tests.demo.dao.Users
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
@@ -162,7 +166,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test referrersOn works out of transaction via warmup`() {
+    fun `test optionalReferrersOn works out of transaction via warmup`() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
         var p2: EntityTests.Post by Delegates.notNull()
@@ -191,6 +195,32 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
             }
 
             assertEqualCollections(b1.posts.map { it.id }, p1.id, p2.id)
+        }
+    }
+
+    @Test
+    fun `test referrersOn works out of transaction via warmup`() {
+        var c1: City by Delegates.notNull()
+        var u1: User by Delegates.notNull()
+        var u2: User by Delegates.notNull()
+        executeOnH2(Cities, Users) {
+            transaction(dbWithCache) {
+                c1 = City.new {
+                    name = "Seoul"
+                }
+                u1 = User.new {
+                    name = "a"
+                    city = c1
+                    age = 5
+                }
+                u2 = User.new {
+                    name = "b"
+                    city = c1
+                    age = 27
+                }
+                City.all().with(City::users).toList()
+            }
+            assertEqualCollections(c1.users.map { it.id }, u1.id, u2.id)
         }
     }
 
