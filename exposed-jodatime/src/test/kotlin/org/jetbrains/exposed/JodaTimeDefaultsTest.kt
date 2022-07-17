@@ -220,7 +220,6 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
             val defaultDate = date("defaultDate").defaultExpression(CurrentDate)
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
