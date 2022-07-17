@@ -38,16 +38,18 @@ class DefaultsTest : DatabaseTestsBase() {
         var cIndex = 0
         val field = varchar("field", 100)
         val t1 = datetime("t1").defaultExpression(CurrentDateTime)
+        val t2 = date("t2").defaultExpression(CurrentDate)
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
 
     class DBDefault(id: EntityID<Int>) : IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
+        var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && t1 == it.t1 } ?: false
+            return (other as? DBDefault)?.let { id == it.id && field == it.field && t1 == it.t1 && t2 == it.t2 } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -262,6 +264,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+            val defaultDate = date("defaultDate").defaultExpression(CurrentDate)
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
@@ -272,6 +275,7 @@ class DefaultsTest : DatabaseTestsBase() {
             val result = foo.select { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].date)
+            assertEquals(today, result[foo.defaultDate])
             assertEquals(100, result[foo.defaultInt])
         }
     }

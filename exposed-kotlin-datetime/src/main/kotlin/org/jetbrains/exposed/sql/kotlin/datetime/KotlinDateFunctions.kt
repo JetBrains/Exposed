@@ -39,6 +39,15 @@ object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.I
     operator fun invoke() = this
 }
 
+object CurrentDate : Function<LocalDate>(KotlinLocalDateTimeColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when (currentDialect) {
+            is MysqlDialect -> "CURRENT_DATE()"
+            else -> "CURRENT_DATE"
+        }
+    }
+}
+
 class CurrentTimestamp<T> : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
