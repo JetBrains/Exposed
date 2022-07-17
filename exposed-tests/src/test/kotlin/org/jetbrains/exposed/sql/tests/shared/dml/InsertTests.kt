@@ -550,6 +550,17 @@ class InsertTests : DatabaseTestsBase() {
                 it[category] = categoryId
                 it[board] = boardId.value
             }
+
+            EntityTests.Posts.deleteWhere { EntityTests.Posts.id eq id2 }
+
+            val nullableCategoryID: UUID? = categoryId
+            val nullableBoardId: Int? = boardId.value
+            EntityTests.Posts.insertAndGetId {
+                it[board] = Op.nullOp()
+                it[category] = nullableCategoryID
+                it[board] = nullableBoardId
+            }
         }
+
     }
 }

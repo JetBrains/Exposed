@@ -405,6 +405,13 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals("$secondOp OR $secondOp OR $secondOp OR $secondOp", (secondOp or secondOp or secondOp or secondOp).toString())
             assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or (initialOp or initialOp) or initialOp).toString())
             assertEquals("($initialOp) OR ($secondOp AND $secondOp) OR ($initialOp)", (initialOp or (secondOp and secondOp) or initialOp).toString())
+            assertEquals("$initialOp", (initialOp orIfNotNull (null as Expression<Boolean>?)).toString())
+            assertEquals("$initialOp", (initialOp andIfNotNull (null as Op<Boolean>?)).toString())
+            assertEquals("($initialOp) AND ($initialOp)", (initialOp andIfNotNull (initialOp andIfNotNull (null as Op<Boolean>?))).toString())
+            assertEquals("($initialOp) AND ($initialOp)", (initialOp andIfNotNull (null as Op<Boolean>?) andIfNotNull initialOp).toString())
+            assertEquals("($initialOp) AND $secondOp", (initialOp andIfNotNull (secondOp andIfNotNull (null as Op<Boolean>?))).toString())
+            assertEquals( "(($initialOp) AND $secondOp) OR $secondOp", (initialOp andIfNotNull (secondOp andIfNotNull (null as Expression<Boolean>?)) orIfNotNull secondOp).toString())
+            assertEquals("($initialOp) AND ($initialOp)", (initialOp.andIfNotNull { initialOp }).toString())
         }
     }
 

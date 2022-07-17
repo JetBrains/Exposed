@@ -34,10 +34,8 @@ enum class TestDB(
                 val mode = Mode.getInstance("MySQL")
                 (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
             }
-        },
-        dbConfig = {
-            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-        }),
+        }
+    ),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {

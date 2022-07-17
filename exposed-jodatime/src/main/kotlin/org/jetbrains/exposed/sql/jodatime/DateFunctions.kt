@@ -10,13 +10,16 @@ class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColu
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
 }
 
-class CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
+object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
             else -> "CURRENT_TIMESTAMP"
         }
     }
+
+    @Deprecated("This class is now a singleton, no need for its constructor call; this method is provided for backward-compatibility only, and will be removed in future releases")
+    operator fun invoke() = this
 }
 
 object CurrentDate : Function<DateTime>(DateColumnType(false)) {

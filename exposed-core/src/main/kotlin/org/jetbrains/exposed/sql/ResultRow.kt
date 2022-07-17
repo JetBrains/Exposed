@@ -9,6 +9,7 @@ class ResultRow(
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
     private val database: Database? = TransactionManager.currentOrNull()?.db
+    private val lookUpCache = HashMap<Expression<*>, Any?>()
 
     /**
      * Retrieves value of a given expression on this row.
@@ -19,6 +20,8 @@ class ResultRow(
      * @see [getOrNull] to get null in the cases an exception would be thrown
      */
     operator fun <T> get(c: Expression<T>): T {
+        if (c in lookUpCache) return lookUpCache[c] as T
+
         val d = getRaw(c)
 
         if (d == null && c is Column<*> && c.dbDefaultValue != null && !c.columnType.nullable) {
@@ -28,21 +31,28 @@ class ResultRow(
             )
         }
 
-        return database?.dialect?.let {
+        val result = database?.dialect?.let {
             withDialect(it) {
                 rawToColumnValue(d, c)
             }
         } ?: rawToColumnValue(d, c)
+        lookUpCache[c] = result
+        return result
     }
 
     operator fun <T> set(c: Expression<out T>, value: T) {
+        setInternal(c, value)
+        lookUpCache.remove(c)
+    }
+
+    private fun <T> setInternal(c: Expression<out T>, value: T) {
         val index = fieldIndex[c] ?: error("$c is not in record set")
         data[index] = value
     }
 
     fun <T> hasValue(c: Expression<T>): Boolean = fieldIndex[c]?.let { data[it] != NotInitializedValue } ?: false
 
-    fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) rawToColumnValue(getRaw(c), c) else null
+    fun <T> getOrNull(c: Expression<T>): T? = if (hasValue(c)) get(c) else null
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> rawToColumnValue(raw: T?, c: Expression<T>): T {
@@ -66,10 +76,10 @@ class ResultRow(
         val index = fieldIndex[c]
             ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
             ?: fieldIndex.keys.firstOrNull { exp ->
-                when {
-//                    exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
-                    exp is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == c
-                    exp is ExpressionAlias<*> -> exp.delegate == c
+                when (exp) {
+                    // exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
+                    is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == c
+                    is ExpressionAlias<*> -> exp.delegate == c
                     else -> false
                 }
             }?.let { fieldIndex[it] }
@@ -109,7 +119,8 @@ class ResultRow(
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {
-                    this[it] = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
+                    val value = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
+                    setInternal(it, value)
                 }
             }
     }

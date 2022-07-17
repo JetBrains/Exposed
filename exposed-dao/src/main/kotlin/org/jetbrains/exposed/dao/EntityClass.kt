@@ -343,7 +343,16 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(
         toColumn: (TReal) -> TColumn,
         toReal: (TColumn) -> TReal
-    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal)
+    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal, false)
+
+    /**
+     * Function will return [ColumnWithTransform] delegate that will cache value on read for the same [TColumn] value.
+     * @param toReal should be pure function
+     */
+    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.memoizedTransform(
+        toColumn: (TReal) -> TColumn,
+        toReal: (TColumn) -> TReal
+    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal, true)
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
@@ -410,13 +419,18 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         else -> findQuery
     }.toList()
 
-    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null): List<T> {
+    /**
+     * @param optimizedLoad will force to make to two queries to load ids and referenced entities separately.
+     * Can be useful when references target the same entities. That will prevent from loading them multiple times (per each reference row) and will require
+     * less memory/bandwidth for "heavy" entities (with a lot of columns or columns with huge data in it)
+     */
+    fun warmUpLinkedReferences(references: List<EntityID<*>>, linkTable: Table, forUpdate: Boolean? = null, optimizedLoad: Boolean = false): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<*>>
             ?: error("Can't detect source reference column")
         val targetRefColumn =
-            linkTable.columns.singleOrNull { it.referee == table.id } as? Column<EntityID<*>> ?: error("Can't detect target reference column")
+            linkTable.columns.singleOrNull { it.referee == table.id } as? Column<EntityID<ID>> ?: error("Can't detect target reference column")
 
         val transaction = TransactionManager.current()
 
@@ -425,24 +439,40 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
 
-            val columns = (
-                dependsOnColumns + (if (!alreadyInJoin) linkTable.columns else emptyList()) -
-                    sourceRefColumn
-                ).distinct() + sourceRefColumn
+            val columns = when {
+                optimizedLoad -> listOf(sourceRefColumn, targetRefColumn)
+                alreadyInJoin -> (dependsOnColumns + sourceRefColumn).distinct()
+                else -> (dependsOnColumns + linkTable.columns + sourceRefColumn).distinct()
+            }
 
             val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
+            val targetEntities = mutableMapOf<EntityID<ID>, T>()
             val entitiesWithRefs = when (forUpdate) {
                 true -> query.forUpdate()
                 false -> query.notForUpdate()
                 else -> query
-            }.map { it[sourceRefColumn] to wrapRow(it) }
+            }.map {
+                val targetId = it[targetRefColumn]
+                 if (!optimizedLoad) {
+                    targetEntities.getOrPut(targetId) { wrapRow(it) }
+                }
+                it[sourceRefColumn] to targetId
+            }
 
-            val groupedBySourceId = entitiesWithRefs.groupBy { it.first }.mapValues { it.value.map { it.second } }
+            if (optimizedLoad) {
+                forEntityIds(entitiesWithRefs.map { it.second }).forEach {
+                    targetEntities[it.id] = it
+                }
+            }
+
+            val groupedBySourceId = entitiesWithRefs.groupBy({ it.first }) { targetEntities.getValue(it.second) }
 
             idsToLoad.forEach {
-                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) { SizedCollection(groupedBySourceId[it] ?: emptyList()) }
+                transaction.entityCache.getOrPutReferrers(it, sourceRefColumn) {
+                    SizedCollection(groupedBySourceId[it] ?: emptyList())
+                }
             }
-            entitiesWithRefs.map { it.second }
+            targetEntities.values
         }
         return inCache.values.flatMap { it.toList() as List<T> } + loaded.orEmpty()
     }

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.junit.Test
 import kotlin.test.assertNull
 
@@ -75,6 +76,8 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(true, cities.select { cities.name eq "Qwertt" }.empty())
             assertEquals(0L, cities.select { cities.name eq "Qwertt" }.count())
             assertEquals(3L, cities.selectAll().count())
+            val cityID: Int? = null
+            assertEquals(2L, users.select{ users.cityId eq cityID } .count())
         }
     }
 
@@ -154,6 +157,26 @@ class SelectTests : DatabaseTestsBase() {
             }.toList()
 
             assertEquals(users.selectAll().count().toInt() - 1, r.size)
+        }
+    }
+
+    @Test
+    fun testInList08() {
+        withTables(EntityTests.Posts) {
+            val board1 = EntityTests.Board.new {
+                this.name = "Board1"
+            }
+
+            val post1 = EntityTests.Post.new {
+                this.board = board1
+            }
+
+            EntityTests.Post.new {
+                category = EntityTests.Category.new { title = "Category1" }
+            }
+
+            val result = EntityTests.Posts.select { EntityTests.Posts.board inList listOf(board1.id) }.singleOrNull()?.get(EntityTests.Posts.id)
+            assertEquals(post1.id, result)
         }
     }
 

@@ -39,5 +39,6 @@ nexusPublishing {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }

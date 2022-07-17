@@ -19,13 +19,16 @@ class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLoc
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
 }
 
-class CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
+object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
             else -> "CURRENT_TIMESTAMP"
         }
     }
+
+    @Deprecated("This class is now a singleton, no need for its constructor call; this method is provided for backward-compatibility only, and will be removed in future releases")
+    operator fun invoke() = this
 }
 
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {

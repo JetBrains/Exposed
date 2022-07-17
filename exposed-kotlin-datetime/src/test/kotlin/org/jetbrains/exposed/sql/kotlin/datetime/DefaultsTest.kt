@@ -37,7 +37,7 @@ class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)
-        val t1 = datetime("t1").defaultExpression(CurrentDateTime())
+        val t1 = datetime("t1").defaultExpression(CurrentDateTime)
         val t2 = date("t2").defaultExpression(CurrentDate)
         val clientDefault = integer("clientDefault").clientDefault { cIndex++ }
     }
@@ -156,7 +156,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaults01() {
-        val currentDT = CurrentDateTime()
+        val currentDT = CurrentDateTime
         val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
                 +when (val dialect = currentDialectTest) {
@@ -263,7 +263,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
             val defaultDate = date("defaultDate").defaultExpression(CurrentDate)
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }

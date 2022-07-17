@@ -407,7 +407,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutScheme" } == true
 
     /**
      * Represents a primary key composed by the specified [columns], and with the specified [name].
@@ -419,9 +419,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
         /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
+        val name: String = "pk_$tableNameWithoutScheme"
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableName") :
+        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableNameWithoutScheme") :
             this(arrayOf(firstColumn, *columns), name)
 
         init {
@@ -577,12 +577,22 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their ordinal. */
     fun <T : Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
 
+    /** Creates an enumeration column, with the specified [name], for storing enums of type [T] by their ordinal. */
+    inline fun <reified T : Enum<T>> enumeration(name: String) = enumeration(name, T::class)
+
     /**
      * Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their name.
      * With the specified maximum [length] for each name value.
      */
     fun <T : Enum<T>> enumerationByName(name: String, length: Int, klass: KClass<T>): Column<T> =
         registerColumn(name, EnumerationNameColumnType(klass, length))
+
+    /**
+     * Creates an enumeration column, with the specified [name], for storing enums of type [T] by their name.
+     * With the specified maximum [length] for each name value.
+     */
+    inline fun <reified T : Enum<T>> enumerationByName(name: String, length: Int) =
+        enumerationByName(name, length, T::class)
 
     /**
      * Creates an enumeration column with custom SQL type.
@@ -607,6 +617,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
             override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
             override fun notNullValueToDB(value: Any): Any = toDb(value as T)
+            override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
         }
     )
 

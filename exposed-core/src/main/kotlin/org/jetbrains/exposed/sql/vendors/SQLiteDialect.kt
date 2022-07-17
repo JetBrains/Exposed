@@ -13,11 +13,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun longAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
-    override fun binaryType(): String {
-        exposedLogger.error("The length of the Binary column is missing.")
-        error("The length of the Binary column is missing.")
-    }
-
+    override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
 }
@@ -118,7 +114,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
         val builder = QueryBuilder(true)
         val columns = data.joinToString { transaction.identity(it.first) }
-        val values = builder.apply { data.appendTo { registerArgument(it.first.columnType, it.second) } }.toString()
+        val values = builder.apply { data.appendTo { registerArgument(it.first, it.second) } }.toString()
         return "INSERT OR REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
     }
 

@@ -116,6 +116,20 @@ infix fun Expression<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = when {
     else -> OrOp(listOf(this, op))
 }
 
+/**
+ * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+infix fun Op<Boolean>.andIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
+    op?.let { this and it } ?: this
+
+/**
+ * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+infix fun Op<Boolean>.orIfNotNull(op: Expression<Boolean>?): Op<Boolean> =
+    op?.let { this or it } ?: this
+
 /** Reduces this list to a single expression by performing an `and` operation between all the expressions in the list. */
 fun List<Op<Boolean>>.compoundAnd(): Op<Boolean> = reduce(Op<Boolean>::and)
 
@@ -133,6 +147,18 @@ inline fun Expression<Boolean>.andNot(op: SqlExpressionBuilder.() -> Op<Boolean>
 
 /** Returns the result of performing a logical `or` operation between this expression and the negate [op]. */
 inline fun Expression<Boolean>.orNot(op: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> = or(not(Op.build(op)))
+
+/**
+ * Returns the result of performing a logical `and` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+inline fun Op<Boolean>.andIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = andIfNotNull(SqlExpressionBuilder.op())
+
+/**
+ * Returns the result of performing a logical `or` operation between this expression and the [op] **if** [op] is not null.
+ * Otherwise, this expression will be returned.
+ */
+inline fun Op<Boolean>.orIfNotNull(op: SqlExpressionBuilder.() -> Op<Boolean>?): Op<Boolean> = orIfNotNull(SqlExpressionBuilder.op())
 
 // Comparison Operators
 
@@ -389,11 +415,22 @@ class XorBitOp<T, S : T>(
 /**
  * Represents an SQL operator that checks if [expr1] matches [expr2].
  */
+class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) : ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        super.toQueryBuilder(queryBuilder)
+        if (escapeChar != null){
+            with(queryBuilder){
+                +" ESCAPE "
+                +stringParam(escapeChar.toString())
+            }
+        }
+    }
+}
+
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, true, null)"), level = DeprecationLevel.WARNING)
 class LikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "LIKE")
 
-/**
- * Represents an SQL operator that checks if [expr1] doesn't match [expr2].
- */
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, false, null)"), level = DeprecationLevel.WARNING)
 class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT LIKE")
 
 /**

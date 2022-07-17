@@ -1,3 +1,61 @@
+# 0.38.2
+Infrastructure:
+* Kotlin Coroutines 1.6.1
+* slf4j 1.7.36
+* log4j2 2.17.2
+* h2-database 2.1.212
+* MaridDB driver 2.7.5
+* MySQL driver 8.0.28
+* PostgreSQL driver 42.3.3
+
+Feature:
+* New `optimizedLoad` param introduced for `EntityClass.warmUpLinkedReferences`. 
+It will force to make to two queries to load ids and referenced entities separately.
+Can be useful when references target the same entities. That will prevent from loading them multiple times 
+(per each reference row) and will require less memory/bandwidth for "heavy" entities (with a lot of columns or columns with huge data in it)
+
+Bug Fixes:
+* Regression on 0.38.1 - SpringTransactionManager requires DatabaseConfig ([#1488](https://github.com/JetBrains/Exposed/issues/1488))
+* `inList`/`notInList` doesn't work with list of EntityIDs ([#1490](https://github.com/JetBrains/Exposed/issues/1490))
+* `eq`/`neq` was broken for nullable columns with nullable value ([#1489](https://github.com/JetBrains/Exposed/issues/1489))
+* `Except` union operation doesn't work on Oracle
+* ORA-00972: identifier is too long. Oracle 12.1.0.2.0 ([#1483](https://github.com/JetBrains/Exposed/issues/1483))
+* Can't create arbitrary-size BINARY column in SQLite ([#1443](https://github.com/JetBrains/Exposed/issues/1443))
+
+
+# 0.38.1
+Infrastructure:
+* Kotlin 1.6.20
+* h2 updated to 2.1.210
+* MariaDB driver 3.0.4 supported
+* Exposed can be build on Java 17+ (`MaxPermSize` is optional in build scripts), thanks to [MrPowerGamerBR](https://github.com/MrPowerGamerBR)
+
+Feature:
+* New `exposed-crypt` module added. Module contains two new `encryptedVarchar` and `encryptedBinary` columns which allows to store encrypted values in database and encode/decode them on client. 
+  Check [`SelectTests.test encryptedColumnType with a string`](https://github.com/JetBrains/Exposed/blob/0.38.1/exposed-tests/src/test/kotlin/org/jetbrains/exposed/sql/tests/shared/dml/SelectTests.kt#L264) test for the sample usage 
+* Allow to pass DatabaseConfig in SpringTransactionManager. PR by [stengvac](https://github.com/stengvac)
+* `CompoundBooleanOp` (`AndOp` and `OrOp`) is sealed class now
+* Entity explicit constructor lambda can be defined on `EntityClass` via `entityCtor` parameter to prevent using reflection (for example). Improved by [m-sasha](https://github.com/m-sasha)
+* `memoizedTransform` function similar to `transform` added. The delegate will cache value on read for the same value from DB.
+* Reified versions of `enumeration` and `enumerationByName` functions
+* `CurrentDateTime` became object instance
+
+Performance:
+* Faster initialization: reflection replaced with regular code in `Column<T>.cloneWithAutoInc`. Found and fixed by [m-sasha](https://github.com/m-sasha)
+* ResultRow stores evaluated values in local cache 
+* Prevent unnecessary calls to get current transaction isolation level. Problem located and fixed by [shunyy](https://github.com/shunyy)
+
+Bug Fixes:
+* Proper handling of Op.NULL in eq/neq and other places, found by [naftalmm](https://github.com/naftalmm)
+* Wrong SortOrder representation in order by and group by
+* SQLServer dialect now have default transaction isolation level READ_COMMITTED.
+* Unable to use nullable reference with lookup ([#1437](https://github.com/JetBrains/Exposed/issues/1437)) fixed by [naftalmm](https://github.com/naftalmm)
+* Wrong behavior when ColumnType returns null on read ([#1435](https://github.com/JetBrains/Exposed/issues/1435)), also fixed by [naftalmm](https://github.com/naftalmm)
+* `closeAndUnregister` makes a thread local transaction manager completely dead ([#1476](https://github.com/JetBrains/Exposed/issues/1476))
+* Call to `Entity.load` for new entities leads to exception ([#1472](https://github.com/JetBrains/Exposed/issues/1472))
+* Broken behavior of `customEnumeration` for Enums with overridden `toString` ([#1475](https://github.com/JetBrains/Exposed/issues/1475)) 
+* Another attempt to fix `optReference` column should allow update { it[column] = nullableValue } ([#1275](https://github.com/JetBrains/Exposed/issues/1275))
+
 # 0.37.3
 Bug Fixes:
 * Many-to-many reference broken in version 0.37.1 ([#1413](https://github.com/JetBrains/Exposed/issues/1413))

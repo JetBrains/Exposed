@@ -357,7 +357,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
@@ -712,7 +712,11 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    internal enum class Foo { Bar, Baz }
+    internal enum class Foo {
+        Bar, Baz;
+
+        override fun toString(): String = "Foo Enum ToString: $name"
+    }
 
     class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
         init {
@@ -920,4 +924,35 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun createTableWithCompositePrimaryKeyAndSchema() {
+        val one = Schema("test")
+        val tableA = object : Table("test.table_a") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            override val primaryKey = PrimaryKey(idA, idB)
+        }
+
+        val tableB = object : Table("test.table_b") {
+            val idA = integer("id_a")
+            val idB = integer("id_b")
+            override val primaryKey = PrimaryKey(arrayOf(idA, idB))
+        }
+
+        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(one)) {
+            SchemaUtils.create(tableA, tableB)
+            tableA.insert { it[idA] = 1; it[idB] = 1 }
+            tableB.insert { it[idA] = 1; it[idB] = 1 }
+
+            assertEquals(1, tableA.selectAll().count())
+            assertEquals(1, tableB.selectAll().count())
+
+            if (currentDialectTest is SQLServerDialect) {
+                SchemaUtils.drop(tableA, tableB)
+            }
+
+        }
+    }
+
 }

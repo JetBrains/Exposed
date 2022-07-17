@@ -7,7 +7,27 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
-open class ColumnWithTransform<TColumn, TReal>(val column: Column<TColumn>, val toColumn: (TReal) -> TColumn, val toReal: (TColumn) -> TReal)
+open class ColumnWithTransform<TColumn, TReal>(
+    val column: Column<TColumn>,
+    val toColumn: (TReal) -> TColumn,
+    toReal: (TColumn) -> TReal,
+    protected val cacheResult: Boolean = false
+) {
+    private var cache: Pair<TColumn, TReal>? = null
+
+    val toReal: (TColumn) -> TReal = { columnValue ->
+        if (cacheResult) {
+            val localCache = cache
+            if (localCache != null && localCache.first == columnValue) {
+                localCache.second
+            } else {
+                toReal(columnValue).also { cache = columnValue to it }
+            }
+        } else {
+            toReal(columnValue)
+        }
+    }
+}
 
 open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
