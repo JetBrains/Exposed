@@ -407,7 +407,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableName" } == true
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutScheme" } == true
 
     /**
      * Represents a primary key composed by the specified [columns], and with the specified [name].
@@ -419,9 +419,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
         /** Returns the name of the primary key. */
-        val name: String = "pk_$tableName"
+        val name: String = "pk_$tableNameWithoutScheme"
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableName") :
+        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableNameWithoutScheme") :
             this(arrayOf(firstColumn, *columns), name)
 
         init {
