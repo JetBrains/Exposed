@@ -415,11 +415,22 @@ class XorBitOp<T, S : T>(
 /**
  * Represents an SQL operator that checks if [expr1] matches [expr2].
  */
+class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) : ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        super.toQueryBuilder(queryBuilder)
+        if (escapeChar != null){
+            with(queryBuilder){
+                +" ESCAPE "
+                +stringParam(escapeChar.toString())
+            }
+        }
+    }
+}
+
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, true, null)"), level = DeprecationLevel.WARNING)
 class LikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "LIKE")
 
-/**
- * Represents an SQL operator that checks if [expr1] doesn't match [expr2].
- */
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, false, null)"), level = DeprecationLevel.WARNING)
 class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT LIKE")
 
 /**

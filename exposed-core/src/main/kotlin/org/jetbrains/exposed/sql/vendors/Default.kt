@@ -564,6 +564,8 @@ interface DatabaseDialect {
 
     val supportsOrderByNullsFirstLast: Boolean get() = false
 
+    val likePatternSpecialChars: String get() = "%_"
+
     /** Returns the name of the current database. */
     fun getDatabase(): String
 

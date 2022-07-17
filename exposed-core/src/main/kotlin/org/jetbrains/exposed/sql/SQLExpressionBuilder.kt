@@ -130,6 +130,36 @@ fun CustomLongFunction(
     vararg params: Expression<*>
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
+data class LikePattern(
+    val pattern: String,
+    val escapeChar: Char? = null
+) {
+
+    infix operator fun plus(rhs: LikePattern): LikePattern {
+        require(escapeChar == rhs.escapeChar) { "Mixing escape chars '$escapeChar' vs. '${rhs.escapeChar} is not allowed" }
+        return LikePattern(pattern + rhs.pattern, rhs.escapeChar)
+    }
+
+    infix operator fun plus(rhs: String): LikePattern {
+        return LikePattern(pattern + rhs, escapeChar)
+    }
+
+    companion object {
+        fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
+            val likePatternSpecialChars = currentDialect.likePatternSpecialChars
+            val escapedPattern = buildString {
+                text.forEach {
+                    if (it in likePatternSpecialChars || it == escapeChar){
+                        append(escapeChar)
+                    }
+                    append(it)
+                }
+            }
+            return LikePattern(escapedPattern, escapeChar)
+        }
+    }
+}
+
 @Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class")
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
@@ -325,18 +355,25 @@ interface ISqlExpressionBuilder {
     // Pattern Matching
 
     /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
+    infix fun <T : String?> Expression<T>.like(pattern: String) = like(LikePattern(pattern))
+
+    /** Checks if this expression matches the specified [pattern]. */
+    infix fun <T : String?> Expression<T>.like(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
     /** Checks if this expression matches the specified [pattern]. */
     @JvmName("likeWithEntityID")
-    infix fun Expression<EntityID<String>>.like(pattern: String): LikeOp = LikeOp(this, stringParam(pattern))
+    infix fun Expression<EntityID<String>>.like(pattern: String) = like(LikePattern(pattern))
+
+    /** Checks if this expression matches the specified [pattern]. */
+    @JvmName("likeWithEntityID")
+    infix fun Expression<EntityID<String>>.like(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
     /** Checks if this expression matches the specified [expression]. */
-    infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeOp = LikeOp(this, expression)
+    infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, true, null)
 
     /** Checks if this expression matches the specified [expression]. */
     @JvmName("likeWithEntityIDAndExpression")
-    infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeOp = LikeOp(this, expression)
+    infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, true, null)
 
     /** Checks if this expression matches the specified [pattern]. */
     infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
@@ -348,18 +385,25 @@ interface ISqlExpressionBuilder {
     ): Op<Boolean> = with(currentDialect.functionProvider) { this@match.match(pattern, mode) }
 
     /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+    infix fun <T : String?> Expression<T>.notLike(pattern: String): LikeEscapeOp = notLike(LikePattern(pattern))
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
+    infix fun <T : String?> Expression<T>.notLike(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
-    infix fun Expression<EntityID<String>>.notLike(pattern: String): NotLikeOp = NotLikeOp(this, stringParam(pattern))
+    infix fun Expression<EntityID<String>>.notLike(pattern: String): LikeEscapeOp = notLike(LikePattern(pattern))
 
     /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): NotLikeOp = NotLikeOp(this, expression)
+    @JvmName("notLikeWithEntityID")
+    infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
+
+    /** Checks if this expression doesn't match the specified [pattern]. */
+    infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
 
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityIDAndExpression")
-    infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): NotLikeOp = NotLikeOp(this, expression)
+    infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
 
     /** Checks if this expression matches the [pattern]. Supports regular expressions. */
     infix fun <T : String?> Expression<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)

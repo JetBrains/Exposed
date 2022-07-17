@@ -213,6 +213,9 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return "CREATE $type INDEX $name ON $table $columns"
     }
 
+    // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
+    override val likePatternSpecialChars: String = "%_[]"
+
     companion object {
         /** SQLServer dialect name */
         const val dialectName: String = "sqlserver"
