@@ -25,8 +25,8 @@ class LikeTests : DatabaseTestsBase() {
     fun detectSpecialChars() {
         withTables(t) {
             // Lets assume there are no special chars outside this range
-            val charRange = Char.MIN_VALUE..1000.toChar()
-            val escapeChar = 1001.toChar()
+            val escapeChar = '+'
+            val charRange = ('A'..'Z').toSet() + db.dialect.likePatternSpecialChars.toList()
 
             charRange.forEach { chr ->
                 t.insert {
