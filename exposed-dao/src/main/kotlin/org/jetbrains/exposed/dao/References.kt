@@ -167,6 +167,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
                     val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
                     refObject.factory.warmUpReferences(refIds, refColumn)
+                    storeReferenceCache(refColumn, prop)
                 }
             }
             is OptionalReferrers<*, *, *, *, *> -> {
