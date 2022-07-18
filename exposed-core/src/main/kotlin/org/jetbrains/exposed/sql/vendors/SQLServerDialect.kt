@@ -214,10 +214,11 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     }
 
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
-    override val likePatternSpecialChars: String = "%_[]"
+    override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
 
     companion object {
         /** SQLServer dialect name */
         const val dialectName: String = "sqlserver"
+        private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')
     }
 }

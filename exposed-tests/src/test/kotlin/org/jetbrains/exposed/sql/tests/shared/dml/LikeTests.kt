@@ -26,7 +26,8 @@ class LikeTests : DatabaseTestsBase() {
         withTables(t) {
             // Lets assume there are no special chars outside this range
             val escapeChar = '+'
-            val charRange = ('A'..'Z').toSet() + db.dialect.likePatternSpecialChars.toList()
+            val dialectSpecialChars = db.dialect.likePatternSpecialChars
+            val charRange = ('A'..'Z').toSet() + dialectSpecialChars.keys + dialectSpecialChars.values.filterNotNull()
 
             charRange.forEach { chr ->
                 t.insert {
@@ -37,7 +38,7 @@ class LikeTests : DatabaseTestsBase() {
             val specialChars = charRange.filter {
                 t.select { t.char like LikePattern("" + it, escapeChar = escapeChar) }.count() != 1L
             }
-            assertEquals(db.dialect.likePatternSpecialChars.toSet(), specialChars.toSet())
+            assertEquals(specialChars.toSet(), dialectSpecialChars.keys)
         }
     }
 

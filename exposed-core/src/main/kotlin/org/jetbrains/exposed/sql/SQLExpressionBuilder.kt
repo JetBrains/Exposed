@@ -147,9 +147,27 @@ data class LikePattern(
     companion object {
         fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
             val likePatternSpecialChars = currentDialect.likePatternSpecialChars
+            val nextExpectedPatternQueue = arrayListOf<Char>()
+            var nextCharToEscape: Char? = null
             val escapedPattern = buildString {
                 text.forEach {
-                    if (it in likePatternSpecialChars || it == escapeChar){
+                    val shouldEscape = when (it) {
+                        escapeChar -> true
+                        in likePatternSpecialChars -> {
+                            likePatternSpecialChars[it]?.let { nextChar ->
+                                nextExpectedPatternQueue.add(nextChar)
+                                nextCharToEscape = nextChar
+                            }
+                            true
+                        }
+                        nextCharToEscape -> {
+                            nextExpectedPatternQueue.removeLast()
+                            nextCharToEscape = nextExpectedPatternQueue.lastOrNull()
+                            true
+                        }
+                        else -> false
+                    }
+                    if (shouldEscape){
                         append(escapeChar)
                     }
                     append(it)
