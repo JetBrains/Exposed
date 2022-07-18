@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.javatime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.time.Duration
 import java.time.Instant
@@ -35,6 +36,7 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
             is MysqlDialect -> "CURRENT_DATE()"
+            is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
         }
     }

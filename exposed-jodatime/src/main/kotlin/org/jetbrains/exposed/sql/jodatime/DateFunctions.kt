@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.jodatime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
 
@@ -26,6 +27,7 @@ object CurrentDate : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
             is MysqlDialect -> "CURRENT_DATE()"
+            is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
         }
     }
