@@ -178,9 +178,15 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
-                refObject.target.warmUpLinkedReferences(this.map { it.id }, refObject.table)
-                val refColumn = refObject.table.columns.single { it.referee == this.first().id.table.id }
-                storeReferenceCache(refColumn, prop)
+                (refObject as InnerTableLink<ID, Entity<ID>, Comparable<Comparable<*>>, Entity<Comparable<Comparable<*>>>>).let { innerTableLink ->
+                    innerTableLink.target.warmUpLinkedReferences(
+                        references = this.map { it.id },
+                        sourceRefColumn = innerTableLink.sourceColumn,
+                        targetRefColumn = innerTableLink.targetColumn,
+                        linkTable = innerTableLink.table
+                    )
+                    storeReferenceCache(innerTableLink.sourceColumn, prop)
+                }
             }
             is BackReference<*, *, *, *, *> -> {
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->

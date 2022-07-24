@@ -8,9 +8,11 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
+import kotlin.reflect.jvm.isAccessible
 
 object ViaTestData {
     object NumbersTable : UUIDTable() {
@@ -165,12 +167,13 @@ class ViaTests : DatabaseTestsBase() {
         var name by NodesTable.name
         var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
         var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
+
+        override fun equals(other: Any?): Boolean = (other as? Node)?.id == id
     }
 
     @Test
     fun testHierarchicalReferences() {
         withTables(NodeToNodes) {
-            addLogger(StdOutSqlLogger)
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
@@ -194,6 +197,48 @@ class ViaTests : DatabaseTestsBase() {
                 refresh(true)
             }
             assertEquals("ccc", s.text)
+        }
+    }
+
+    @Test
+    fun testWarmUpOnHierarchicalEntities() {
+        withTables(NodeToNodes) {
+            val child1 = Node.new { name = "child1" }
+            val child2 = Node.new { name = "child1" }
+            val root1 = Node.new {
+                name = "root1"
+                children = SizedCollection(child1)
+            }
+            val root2 = Node.new {
+                name = "root2"
+                children = SizedCollection(child1, child2)
+            }
+
+            entityCache.clear(flush = true)
+
+            fun checkChildrenReferences(node: Node, values: List<Node>) {
+                val sourceColumn = (Node::children.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
+                val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
+                assertEqualLists(children?.toList().orEmpty(), values)
+            }
+
+            Node.all().with(Node::children).toList()
+            checkChildrenReferences(child1, emptyList())
+            checkChildrenReferences(child2, emptyList())
+            checkChildrenReferences(root1, listOf(child1))
+            checkChildrenReferences(root2, listOf(child1, child2))
+
+            fun checkParentsReferences(node: Node, values: List<Node>) {
+                val sourceColumn =  (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
+                val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
+                assertEqualLists(children?.toList().orEmpty(), values)
+            }
+
+            Node.all().with(Node::parents).toList()
+            checkParentsReferences(child1, listOf(root1, root2))
+            checkParentsReferences(child2, listOf(root2))
+            checkParentsReferences(root1, emptyList())
+            checkParentsReferences(root2, emptyList())
         }
     }
 }

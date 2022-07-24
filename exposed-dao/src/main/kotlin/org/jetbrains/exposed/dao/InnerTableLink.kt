@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
@@ -9,52 +10,57 @@ import kotlin.reflect.KProperty
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
     val table: Table,
+    sourceTable: IdTable<SID>,
     val target: EntityClass<ID, Target>,
-    val sourceColumn: Column<EntityID<SID>>? = null,
-    targetColumn: Column<EntityID<ID>>? = null
+    _sourceColumn: Column<EntityID<SID>>? = null,
+    _targetColumn: Column<EntityID<ID>>? = null,
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
     init {
-        targetColumn?.let {
-            requireNotNull(sourceColumn) { "Both source and target columns should be specified" }
-            require(targetColumn.referee?.table == target.table) {
-                "Column $targetColumn point to wrong table, expected ${target.table.tableName}"
+        _targetColumn?.let {
+            requireNotNull(_sourceColumn) { "Both source and target columns should be specified" }
+            require(_targetColumn.referee?.table == target.table) {
+                "Column $_targetColumn point to wrong table, expected ${target.table.tableName}"
             }
-            require(targetColumn.table == sourceColumn.table) {
+            require(_targetColumn.table == _sourceColumn.table) {
                 "Both source and target columns should be from the same table"
             }
         }
-        sourceColumn?.let {
-            requireNotNull(targetColumn) { "Both source and target columns should be specified" }
+        _sourceColumn?.let {
+            requireNotNull(_targetColumn) { "Both source and target columns should be specified" }
+            require(_sourceColumn.referee?.table == sourceTable) {
+                "Column $_sourceColumn point to wrong table, expected ${sourceTable.tableName}"
+            }
         }
     }
 
-    private val targetColumn = targetColumn
+    val sourceColumn = _sourceColumn
+        ?: table.columns.singleOrNull { it.referee == sourceTable.id } as? Column<EntityID<SID>>
+        ?: error("Table does not reference source")
+
+    val targetColumn = _targetColumn
         ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
         ?: error("Table does not reference target")
 
-    private fun getSourceRefColumn(o: Source): Column<EntityID<SID>> {
-        return sourceColumn
-            ?: table.columns.singleOrNull { it.referee == o.klass.table.id } as? Column<EntityID<SID>>
-            ?: error("Table does not reference source")
-    }
-
-    override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
-        if (o.id._value == null && !o.isNewEntity()) return emptySized()
-        val sourceRefColumn = getSourceRefColumn(o)
-        val transaction = TransactionManager.currentOrNull()
-            ?: return o.getReferenceFromCache(sourceRefColumn)
+    private val columnsAndTables by lazy {
         val alreadyInJoin = (target.dependsOnTables as? Join)?.alreadyInJoin(table) ?: false
         val entityTables =
             if (alreadyInJoin) target.dependsOnTables else target.dependsOnTables.join(table, JoinType.INNER, target.table.id, targetColumn)
 
-        val columns = (
-            target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList()) -
-                sourceRefColumn
-            ).distinct() + sourceRefColumn
+        val columns = (target.dependsOnColumns + (if (!alreadyInJoin) table.columns else emptyList()) - sourceColumn).distinct() + sourceColumn
 
-        val query = { target.wrapRows(entityTables.slice(columns).select { sourceRefColumn eq o.id }) }
-        return transaction.entityCache.getOrPutReferrers(o.id, sourceRefColumn, query).also {
-            o.storeReferenceInCache(sourceRefColumn, it)
+        columns to entityTables
+    }
+
+    override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
+        if (o.id._value == null && !o.isNewEntity()) return emptySized()
+        val transaction = TransactionManager.currentOrNull()
+            ?: return o.getReferenceFromCache(sourceColumn)
+
+        val (columns, entityTables) = columnsAndTables
+
+        val query = { target.wrapRows(entityTables.slice(columns).select { sourceColumn eq o.id }) }
+        return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
+            o.storeReferenceInCache(sourceColumn, it)
         }
     }
 
@@ -70,20 +76,18 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     }
 
     private fun setReference(o: Source, unused: KProperty<*>, value: SizedIterable<Target>) {
-        val sourceRefColumn = getSourceRefColumn(o)
-
         val tx = TransactionManager.current()
         val entityCache = tx.entityCache
         entityCache.flush()
         val oldValue = getValue(o, unused)
         val existingIds = oldValue.map { it.id }.toSet()
-        entityCache.referrers[sourceRefColumn]?.remove(o.id)
+        entityCache.referrers[sourceColumn]?.remove(o.id)
 
         val targetIds = value.map { it.id }
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { (sourceRefColumn eq o.id) and (targetColumn notInList targetIds) }
+            table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
             table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
-                this[sourceRefColumn] = o.id
+                this[sourceColumn] = o.id
                 this[targetColumn] = targetId
             }
         }

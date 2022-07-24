@@ -228,13 +228,12 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     infix fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
-        InnerTableLink(table, this@via)
+        InnerTableLink(table, this@Entity.id.table, this@via)
 
     fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
         targetColumn: Column<EntityID<TID>>
-    ) =
-        InnerTableLink(sourceColumn.table, this@via, sourceColumn, targetColumn)
+    ) = InnerTableLink(sourceColumn.table, this@Entity.id.table, this@via, sourceColumn, targetColumn)
 
     /**
      * Delete this entity.
