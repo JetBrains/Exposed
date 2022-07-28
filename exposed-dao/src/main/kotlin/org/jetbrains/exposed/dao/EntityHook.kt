@@ -53,10 +53,18 @@ fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId:
     }
 }
 
+
+private var isProcessingEventsLaunched by transactionScope { false }
 fun Transaction.alertSubscribers() {
+    if (isProcessingEventsLaunched) return
     while (true) {
-        val event = unprocessedEvents.pollFirst() ?: break
-        entitySubscribers.forEach { it(event) }
+        try {
+            isProcessingEventsLaunched = true
+            val event = unprocessedEvents.pollFirst() ?: break
+            entitySubscribers.forEach { it(event) }
+        } finally {
+            isProcessingEventsLaunched = false
+        }
     }
 }
 
