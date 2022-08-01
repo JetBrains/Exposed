@@ -1,3 +1,25 @@
+# 0.39.1
+Infrastructure:
+* Kotlin 1.7.10
+* Kotlin Coroutines 1.6.4
+* Datetime/Timestamp comparison test improvements by [Jerbell](https://github.com/Jerbell)  
+
+Feature:
+* `Transaction` added into `afterCommit` and `afterRollback` in `StatementInterceptor` ([#1530](https://github.com/JetBrains/Exposed/issues/1530)). PR by [rsromanowski](https://github.com/rsromanowski) 
+* `andIfNotNull` and `orIfNotNull` operators was added by [xJoeWoo](https://github.com/xJoeWoo) to perform logical operations with nullable condition
+* `like/notLike` support providing escape character when used with `LikePattern`. Improvement contributed by [spand](https://github.com/spand)
+* `CurrentDate` function introduced by [naftalmm](https://github.com/naftalmm)
+* Better representation of long query in logs 
+
+Bug Fixes:
+* `neq` incorrectly resolved with nullable values  ([#1489](https://github.com/JetBrains/Exposed/issues/1489))
+* `newSuspendedTransaction` now accepts generic `CoroutineContext` instead of `CoroutineDispatcher`, fixed by [rasharab](https://github.com/rasharab) 
+* Argument value error acquires when `REPLACE` used with expressions under MySQL. Founded and fixed by [Tiscs](https://github.com/Tiscs)
+* `EntityClass#wramUpReferences` doesn't store the cached values. Resolved by [Joddev](https://github.com/Joddev)
+* Creating tables with composite primary key and defined schema doesn't work. Fixed by [davidwheeler123](https://github.com/davidwheeler123)
+* Eager loading of Parent-Child relations doen't work ([#1363](https://github.com/JetBrains/Exposed/issues/1363))
+* Possible StackOverflowError when processing entities hooks which executes flush
+
 # 0.38.2
 Infrastructure:
 * Kotlin Coroutines 1.6.1
