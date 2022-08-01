@@ -34,7 +34,7 @@ class DefaultsTest : DatabaseTestsBase() {
     class DBDefault(id: EntityID<Int>) : IntEntity(id) {
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
-        val clientDefault by TableWithDBDefault.clientDefault
+        var clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
             return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) } ?: false
@@ -95,6 +95,23 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEquals(0, db1.clientDefault)
             assertEquals(1, db2.clientDefault)
             assertEquals(2, TableWithDBDefault.cIndex)
+        }
+    }
+
+    @Test
+    fun testDefaultsCanBeOverridden() {
+        withTables(TableWithDBDefault) {
+            TableWithDBDefault.cIndex = 0
+            val db1 = DBDefault.new { field = "1" }
+            val db2 = DBDefault.new { field = "2" }
+            db1.clientDefault = 12345
+            flushCache()
+            assertEquals(12345, db1.clientDefault)
+            assertEquals(1, db2.clientDefault)
+            assertEquals(2, TableWithDBDefault.cIndex)
+
+            flushCache()
+            assertEquals(12345, db1.clientDefault)
         }
     }
 
