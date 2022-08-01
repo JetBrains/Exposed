@@ -104,7 +104,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList03() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.DB2)) { _, users, _ ->
             val r = users.select {
                 users.id to users.name inList listOf("andrey" to "Andrey", "alex" to "Alex")
             }.orderBy(users.name).toList()

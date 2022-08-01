@@ -4,14 +4,26 @@ import org.jetbrains.exposed.sql.BinaryColumnType
 import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.db2ResultSetCompat
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 
 class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGeneratedKeysRequested: Boolean) : PreparedStatementApi {
+
     override val resultSet: ResultSet?
-        get() = if (wasGeneratedKeysRequested) statement.generatedKeys else statement.resultSet
+        get() = if (wasGeneratedKeysRequested) {
+            // https://stackoverflow.com/questions/41725492/how-to-get-auto-generated-keys-of-batch-insert-statement
+            // https://github.com/ebean-orm/ebean/blob/15f1bd310bee6edddbf11dd51feb2f43c4f85528/ebean-core/src/main/java/io/ebeaninternal/server/persist/DB2GetKeys.java
+            if (currentDialect is DB2Dialect) {
+                statement.db2ResultSetCompat
+            } else {
+                statement.generatedKeys
+            }
+        } else statement.resultSet
 
     override var fetchSize: Int?
         get() = statement.fetchSize

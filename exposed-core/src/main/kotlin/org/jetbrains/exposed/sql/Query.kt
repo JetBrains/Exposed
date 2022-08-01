@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -117,6 +118,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
                 set.source.describe(transaction, this)
+            }
+
+            if (set.source == Table.Dual && currentDialect is DB2Dialect) {
+                append(" FROM SYSIBM.SYSDUMMY1 ")
             }
 
             where?.let {

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.DB2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
@@ -45,12 +46,13 @@ class Column<T>(
 
     private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
 
-    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
-        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
-        table.isCustomPKNameDefined() -> isLastColumnInPK
-        isOneColumnPK() -> false
-        else -> isLastColumnInPK
-    }
+    internal val isPrimaryConstraintWillBeDefined: Boolean
+        get() = when {
+            currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+            table.isCustomPKNameDefined() -> isLastColumnInPK
+            isOneColumnPK() -> false
+            else -> isLastColumnInPK
+        }
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
@@ -113,11 +115,11 @@ class Column<T>(
         }
 
         if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
-            append(" NULL")
-        } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
+            if (currentDialect !is DB2Dialect) // in db2 columns are null by default - there is no NULL keyword
+                append(" NULL")
+        } else if (!isPKColumn || (currentDialect is DB2Dialect && !columnType.isAutoInc)|| (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
             append(" NOT NULL")
         }
-
         if (!modify && isOneColumnPK() && !isPrimaryConstraintWillBeDefined && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
@@ -131,7 +133,7 @@ class Column<T>(
         table = this.table,
         name = this.name,
         columnType = columnType
-    ).also{
+    ).also {
         it.foreignKey = this.foreignKey
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue

@@ -76,13 +76,18 @@ class DBTestingPlugin : Plugin<Project> {
                 delegatedTo(mariadb_v2, mariadb_v3)
             }
 
+            val db2 = register<DBTest>("db2Test", "db2") {
+                testRuntimeOnly("com.ibm.db2", "jcc", Versions.db2)
+            }
+
             named<Test>("test") {
                 delegatedTo(
                     h2,
                     sqlite,
                     mysql51,
                     postgres,
-                    postgresNG
+                    postgresNG,
+                    db2
                 )
             }
         }

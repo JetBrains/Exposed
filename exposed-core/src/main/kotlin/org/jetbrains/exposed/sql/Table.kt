@@ -6,10 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.math.BigDecimal
@@ -1069,7 +1066,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 it,
                 startWith = 1,
                 minValue = 1,
-                maxValue = Long.MAX_VALUE
+                maxValue = if (currentDialect is DB2Dialect) Int.MAX_VALUE.toLong() else Long.MAX_VALUE
             ).createStatement()
         }.orEmpty()
 

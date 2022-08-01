@@ -147,12 +147,12 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
-         autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
+        autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() ->
             // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
+            transaction.connection.prepareStatement(sql, autoIncColumns.map { transaction.identity(it) }.toTypedArray())
 
         else -> transaction.connection.prepareStatement(sql, false)
     }

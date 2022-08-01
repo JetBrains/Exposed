@@ -39,7 +39,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "HASH")
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), tables = arrayOf(TestTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE, TestDB.DB2), tables = arrayOf(TestTable)) {
             SchemaUtils.createMissingTablesAndColumns(TestTable)
             assertTrue(TestTable.exists())
         }

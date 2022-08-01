@@ -99,7 +99,40 @@ enum class TestDB(
                 ":${System.getProperty("exposed.test.mariadb.port", "3306")}/testdb"
         },
         "org.mariadb.jdbc.Driver"
-    );
+    ),
+
+    DB2(
+        connection = {
+            "jdbc:db2://${System.getProperty("exposed.test.db2.host", "localhost")}" +
+                    ":${System.getProperty("exposed.test.db2.port", "50000")}/testdb"
+        },
+        driver = "com.ibm.db2.jcc.DB2Driver",
+        user = "inst",
+        pass = "yourStrong(!)Password",
+        beforeConnection = {
+            val tmp = Database.connect(
+                DB2.connection(), user = TestDB.DB2.user, password = TestDB.DB2.pass, driver = TestDB.DB2.driver
+            )
+            var dbInitialized = false
+            repeat(10) {
+                if (!dbInitialized) {
+                    transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+                        try {
+                            exec("SELECT 1 FROM SYSIBM.SYSDUMMY1;")
+                            dbInitialized = true
+                        } catch (e: Exception) {
+                            if (it < 9)
+                                exposedLogger.info("Awaiting on DB2 creates database (${it+1}/10)")
+                            else
+                                exposedLogger.error("DB2 wasn't initialized in 100 sec", e)
+                        }
+                    }
+                    Thread.sleep(10000)
+                }
+            }
+            require(dbInitialized) { "DB2 wasn't initialized in 100 sec" }
+        }
+    ),;
 
     var db: Database? = null
 

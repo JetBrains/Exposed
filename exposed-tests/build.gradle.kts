@@ -9,6 +9,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://repository.novatec-gmbh.de/content/repositories/novatec/")
 }
 
 dependencies {

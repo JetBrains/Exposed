@@ -31,6 +31,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
+            "IBM Data Server Driver for JDBC and SQLJ",
+            "AS/400 Toolbox for Java JDBC Driver" -> DB2Dialect.dialectName
             else -> {
                 if (driverName.startsWith("Microsoft JDBC Driver ")) {
                     SQLServerDialect.dialectName
@@ -44,6 +46,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     private val databaseName
         get() = when (databaseDialectName) {
             MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentScheme
+            DB2Dialect.dialectName -> null
             else -> database
         }
 
@@ -101,6 +104,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val (catalogName, schemeName) = when {
             useCatalogInsteadOfScheme -> scheme to "%"
             currentDialect is OracleDialect -> databaseName to databaseName
+            currentDialect is DB2Dialect -> null to scheme
             else -> databaseName to scheme.ifEmpty { "%" }
         }
         val resultSet = getTables(catalogName, schemeName, "%", arrayOf("TABLE"))
