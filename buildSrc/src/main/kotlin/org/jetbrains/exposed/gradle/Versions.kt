@@ -9,20 +9,20 @@ object Versions {
 
     /** JDBC drivers **/
     const val h2 = "1.4.199"
-    const val h2_v2 = "2.1.212"
-    const val mariaDB_v2 = "2.7.5"
-    const val mariaDB_v3 = "3.0.4"
+    const val h2_v2 = "2.1.214"
+    const val mariaDB_v2 = "2.7.6"
+    const val mariaDB_v3 = "3.0.6"
     const val mysql51 = "5.1.49"
-    const val mysql80 = "8.0.28"
+    const val mysql80 = "8.0.30"
     const val oracle12 = "12.2.0.1"
-    const val postgre = "42.3.3"
+    const val postgre = "42.4.0"
     const val postgreNG = "0.8.9"
     const val sqlLite3 = "3.36.0.3"
-    const val sqlserver = "8.4.1.jre8"
+    const val sqlserver = "9.4.1.jre8"
 
     /** Spring **/
-    const val springFramework = "5.3.18"
-    const val springBoot = "2.6.6"
+    const val springFramework = "5.3.22"
+    const val springBoot = "2.7.2"
 
     /** Test Dependencies **/
     const val testContainers = "1.16.3"

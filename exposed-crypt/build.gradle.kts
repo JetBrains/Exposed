@@ -8,5 +8,5 @@ repositories {
 
 dependencies {
     api(project(":exposed-core"))
-    api("org.springframework.security", "spring-security-crypto", "5.5.3")
+    api("org.springframework.security", "spring-security-crypto", "5.6.6")
 }
