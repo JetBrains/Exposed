@@ -1,3 +1,23 @@
+# 0.39.2
+Infrastructure:
+* All modules built with Kotlin 1.6 as a target
+
+Libs updates:
+* h2-database 2.1.214
+* MaridDB driver 2.7.6 and 3.0.6
+* MySQL driver 8.0.30
+* PostgreSQL driver 42.4.0
+* SQLServer driver 9.4.1.jre8
+* Java Money API 1.1
+* Spring Framework 5.3.22
+* Spring Boot 2.7.2
+* Spring Security Crypto 5.6.6
+
+Bug Fixes:
+* Converting of `LocalDateTime` values to `Instant` supported for `JavaInstantColumnType` by [hfazai](https://github.com/hfazai)
+* [Oracle] Better handling of bool column in queries ([#1540](https://github.com/JetBrains/Exposed/issues/1540)). PR by [maio](https://github.com/maio)
+* [Oracle] Proper resolving tables with schemas
+
 # 0.39.1
 Infrastructure:
 * Kotlin 1.7.10
