@@ -76,7 +76,7 @@ enum class TestDB(
                 try {
                     exec("DROP USER ExposedTest CASCADE")
                 } catch (e: Exception) { // ignore
-                    exposedLogger.warn("Exception on deleting ExposedTest user", e)
+                    exposedLogger.warn("Exception on deleting ExposedTest user")
                 }
                 exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
                 exec("grant all privileges to ExposedTest")
@@ -245,5 +245,9 @@ abstract class DatabaseTestsBase {
         "IF NOT EXISTS "
     } else {
         ""
+    }
+
+    protected fun prepareSchemaForTest(schemaName: String) : Schema {
+        return Schema(schemaName, defaultTablespace = "USERS", temporaryTablespace = "TEMP ", quota = "20M", on = "USERS")
     }
 }

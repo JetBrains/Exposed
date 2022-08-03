@@ -40,11 +40,8 @@ class SchemaTests : DatabaseTestsBase() {
                         exec("SETUSER 'guest'")
                         Schema("MYSCHEMA", "guest")
                     }
-                    is OracleDialect -> {
-                        Schema("MYSCHEMA", password = "pwd4myschema", defaultTablespace = "tbs_perm_01", quota = "20M", on = "tbs_perm_01")
-                    }
                     else -> {
-                        Schema("MYSCHEMA")
+                        prepareSchemaForTest("MYSCHEMA")
                     }
                 }
 

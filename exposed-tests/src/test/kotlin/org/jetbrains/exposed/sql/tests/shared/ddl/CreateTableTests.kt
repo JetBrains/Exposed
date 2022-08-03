@@ -422,7 +422,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun `test create table with same name in different schemas`() {
-        val one = Schema("one")
+        val one = prepareSchemaForTest("one")
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
