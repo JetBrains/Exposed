@@ -763,7 +763,6 @@ class DDLTests : DatabaseTestsBase() {
         val two = prepareSchemaForTest("two")
         withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(two, one)) {
             SchemaUtils.create(TableFromSchemeOne)
-            SchemaUtils.setSchema(two)
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT SELECT ON ${TableFromSchemeOne.tableName} to TWO;")
             }
