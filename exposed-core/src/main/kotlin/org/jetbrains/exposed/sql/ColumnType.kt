@@ -7,9 +7,9 @@ import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -781,6 +781,12 @@ class BooleanColumnType : ColumnType() {
     }
 
     override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
+
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is Boolean && currentDialect is OracleDialect ->
+            nonNullValueToString(value)
+        else -> value
+    }
 
     companion object {
         internal val INSTANCE = BooleanColumnType()
