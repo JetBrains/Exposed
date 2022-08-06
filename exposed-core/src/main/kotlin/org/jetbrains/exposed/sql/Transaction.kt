@@ -12,10 +12,8 @@ import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
 
 class Key<T>
 
@@ -90,7 +88,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         userdata.clear()
     }
 
-    private fun describeStatement(delta: Duration, stmt: String): String = "[$delta] ${stmt.take(1024)}\n\n"
+    private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
     fun exec(@Language("sql") stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
         exec(stmt, args, explicitStatementType) { }
@@ -135,31 +133,28 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         connection.executeInBatch(stmts)
     }
 
-    @OptIn(ExperimentalTime::class)
     fun <T, R> exec(stmt: Statement<T>, body: Statement<T>.(T) -> R): R? {
         statementCount++
 
-        val (answer, execDuration) = measureTimedValue {
-            stmt.executeIn(this)
-        }
+        val start = System.nanoTime()
+        val answer = stmt.executeIn(this)
+        val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
         val lazySQL = lazy(LazyThreadSafetyMode.NONE) {
             answer.second.map { it.sql(this) }.distinct().joinToString()
         }
 
-        val delta = execDuration.inWholeMilliseconds
-
         duration += delta
 
         if (debug) {
-            statements.append(describeStatement(execDuration, lazySQL.value))
+            statements.append(describeStatement(delta, lazySQL.value))
             statementStats.getOrPut(lazySQL.value, { 0 to 0L }).let { (count, time) ->
                 statementStats[lazySQL.value] = (count + 1) to (time + delta)
             }
         }
 
         if (delta > (warnLongQueriesDuration ?: Long.MAX_VALUE)) {
-            exposedLogger.warn("Long query: ${describeStatement(execDuration, lazySQL.value)}", LongQueryException())
+            exposedLogger.warn("Long query: ${describeStatement(delta, lazySQL.value)}", LongQueryException())
         }
 
         return answer.first?.let { stmt.body(it) }
