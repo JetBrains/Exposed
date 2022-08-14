@@ -39,6 +39,14 @@ class DeleteTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testDeleteTableInContext() {
+        withCitiesAndUsers { _, users, _ ->
+            // Now deleteWhere should bring the table it operates on into context
+            users.deleteWhere { name like "%thing" }
+        }
+    }
+
+    @Test
     fun testDeleteWithLimitAndOffset01() {
         withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData ->
             userData.deleteWhere(limit = 1) { userData.value eq 20 }
