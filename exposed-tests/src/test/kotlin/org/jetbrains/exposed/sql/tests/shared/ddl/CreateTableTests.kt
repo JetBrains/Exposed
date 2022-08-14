@@ -220,6 +220,27 @@ class CreateTableTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun createTableWithQuotes() {
+        val parent = object : LongIdTable("\"Parent\"") {}
+        val child = object : LongIdTable("\"Child\"") {
+            val parentId = reference(
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+            )
+        }
+        withTables(parent, child) {
+            val expected = listOf(
+                """
+                    CREATE TABLE IF NOT EXISTS "Child" (ID BIGINT AUTO_INCREMENT PRIMARY KEY, PARENT_ID BIGINT NOT NULL, CONSTRAINT FK_CHILD_PARENT_ID__ID FOREIGN KEY (PARENT_ID) REFERENCES "Parent"(ID))
+                """.trimIndent()
+            )
+            assertEqualCollections(child.ddl, expected)
+        }
+    }
+
+    @Test
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : LongIdTable("parent2") {
