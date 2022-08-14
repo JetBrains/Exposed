@@ -3,6 +3,7 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
