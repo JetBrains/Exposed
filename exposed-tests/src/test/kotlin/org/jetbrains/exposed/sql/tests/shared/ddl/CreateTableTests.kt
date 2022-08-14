@@ -231,10 +231,14 @@ class CreateTableTests : DatabaseTestsBase() {
             )
         }
         withTables(parent, child) {
+            // Different dialects use different mix of lowercase/uppercase in their names
             val expected = listOf(
-                """
-                    CREATE TABLE IF NOT EXISTS "Child" (ID BIGINT AUTO_INCREMENT PRIMARY KEY, PARENT_ID BIGINT NOT NULL, CONSTRAINT FK_CHILD_PARENT_ID__ID FOREIGN KEY (PARENT_ID) REFERENCES "Parent"(ID))
-                """.trimIndent()
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
+                    " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
+                    " FOREIGN KEY (${this.identity(child.parentId)})" +
+                    " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                    ")"
             )
             assertEqualCollections(child.ddl, expected)
         }
