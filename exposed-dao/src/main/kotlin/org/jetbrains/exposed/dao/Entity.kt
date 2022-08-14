@@ -243,9 +243,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      */
     open fun delete() {
         val table = klass.table
-        TransactionManager.current().registerChange(klass, id, EntityChangeType.Removed)
+        // Capture reference to the field
+        val entityId = this.id
+        TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { table.id eq id }
+            table.deleteWhere { table.id eq entityId }
         }
         klass.removeFromCache(this)
     }
