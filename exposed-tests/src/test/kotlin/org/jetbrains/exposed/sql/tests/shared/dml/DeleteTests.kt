@@ -40,9 +40,9 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteTableInContext() {
-        withCitiesAndUsers { _, users, _ ->
-            // Now deleteWhere should bring the table it operates on into context
-            users.deleteWhere { name like "%thing" }
+        withCitiesAndUsers { _, users, userData ->
+            // Now deleteWhere and deleteIgnoreWhere should bring the table it operates on into context
+            users.deleteIgnoreWhere { name like "%thing" }
         }
     }
 
