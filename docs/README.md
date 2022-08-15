@@ -10,6 +10,9 @@
 
 ## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
 
+Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.
+Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
+
 With EXPOSED you can have two levels of databases Access. you would like to use exposed because the database access includes wrapping DSL and a lightweigh data access object. Also our official Mascot is Cuttlefish whick is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. Similar to our Mascot, EXPOSED can be used to mimc a variety of database engines and help you build data base applications without hard Dependencies on any specific database engine and switch between them with verry little or no changes.
 
 ## Supported Databases
@@ -27,13 +30,39 @@ With EXPOSED you can have two levels of databases Access. you would like to use 
 
 ## Links
 
-Exposed is currently available for **maven/gradle builds** at [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)).
+Currently EXPOSED is available for **maven/gradle builds**. kindly click the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read ( [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)) to get get an insight on setting up EXPOSED.<br><br>
+for more information visit the links below:
 
 -   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs.
 -   [Roadmap](ROADMAP.md) to see what's coming next.
 -   [Change log](ChangeLog.md) of improvements and bug fixes.
 
 If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
+<br><br>
+
+## Community
+
+Do you have questions? feel free to ask and Join our project conversation at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com) on ![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white) .
+<br><br>
+
+## Recommended Mode of Communication
+
+-   Always leave screenshots for visuals changes
+-   Always leave a detailed description in the Pull Request. Leave nothing ambiguous for the reviewer.
+-   Always review your code first. Do this by leaving comments in your coding noting questions, or - interesting things for the reviewer.
+-   Always communicate. Whether it is in the issue or the pull request, keeping the lines of communication helps everyone.
+    <br><br>
+
+## Pull requests​
+
+We actively welcome your pull requests, however linking your work to an existing issue is preferred.
+
+-   Fork the repo and create your branch from main.
+-   Name your branch something that is descriptive to the work you are doing. i.e. adds-new-thing.
+-   If you've added code that should be tested, add tests and Ensure the test suite passes.
+-   If you make visual changes, screenshots are required.
+-   Make sure you address any lint warnings.
+-   If you make the existing code better, please let us know in your PR description.
 
 ## Examples
 
@@ -289,6 +318,6 @@ Generated SQL:
     Adults: b, c
 ```
 
-## License
+## ⚖️ LICENSE
 
-Apache License, Version 2.0, ([LICENSE](/LICENSE.txt) or https://www.apache.org/licenses/LICENSE-2.0)
+By contributing to the Open Sauced project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
