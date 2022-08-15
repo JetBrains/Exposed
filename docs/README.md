@@ -1,12 +1,14 @@
-<img src="./logo.png" alt="Exposed" width="315" />
+<div align="center">
+<img  align="center" src="./logo.png" alt="Exposed" width="315" /></div>
+<br><br>
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
-[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)
+[![TC Build status](<https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon>)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Welcome to **Exposed**, an ORM framework for 
+Welcome to **Exposed**, an ORM framework for
 [Kotlin](https://github.com/JetBrains/kotlin).
 Exposed offers two levels of database access: typesafe SQL
 wrapping DSL and lightweight data access objects.
@@ -19,25 +21,24 @@ switch between them with very little or no changes in your code.
 
 ## Supported Databases
 
-* H2
-* MySQL
-* MariaDB
-* [Oracle](ORACLE.md)
-* PostgreSQL
-* PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
-* [SQL Server](SQLServer.md)
-* SQLite
+-   H2
+-   MySQL
+-   MariaDB
+-   [Oracle](ORACLE.md)
+-   PostgreSQL
+-   PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
+-   [SQL Server](SQLServer.md)
+-   SQLite
 
 ## Links
 
 Exposed is currently available for **maven/gradle builds** at [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) (read [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)).
 
-* [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs. 
-* [Roadmap](ROADMAP.md) to see what's coming next.
-* [Change log](ChangeLog.md) of improvements and bug fixes.
+-   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs.
+-   [Roadmap](ROADMAP.md) to see what's coming next.
+-   [Change log](ChangeLog.md) of improvements and bug fixes.
 
 If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
-
 
 ## Examples
 
@@ -167,6 +168,7 @@ fun main() {
 ```
 
 Generated SQL:
+
 ```sql
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT PK_Cities_ID PRIMARY KEY (id))
     SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10) NOT NULL, name VARCHAR(50) NOT NULL, city_id INT NULL, CONSTRAINT PK_User_ID PRIMARY KEY (id))
@@ -276,6 +278,7 @@ fun main() {
 ```
 
 Generated SQL:
+
 ```sql
     SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT pk_Cities PRIMARY KEY (id))
     SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL, CONSTRAINT pk_Users PRIMARY KEY (id))
