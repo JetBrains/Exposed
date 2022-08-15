@@ -8,27 +8,22 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Welcome to **Exposed**, an ORM framework for
-[Kotlin](https://github.com/JetBrains/kotlin).
-Exposed offers two levels of database access: typesafe SQL
-wrapping DSL and lightweight data access objects.
-Our official mascot is Cuttlefish, which is best known for its
-outstanding mimicry abilities letting it blend seamlessly in
-any environment. Just like our mascot, Exposed can mimic a variety
-of database engines and help you build database applications
-without hard dependencies on any specific database engine, and
-switch between them with very little or no changes in your code.
+## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
+
+With EXPOSED you can have two levels of databases Access. you would like to use exposed because the database access includes wrapping DSL and a lightweigh data access object. Also our official Mascot is Cuttlefish whick is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. Similar to our Mascot, EXPOSED can be used to mimc a variety of database engines and help you build data base applications without hard Dependencies on any specific database engine and switch between them with verry little or no changes.
 
 ## Supported Databases
 
+-   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+
+-   ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+
+-   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+-   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 -   H2
--   MySQL
--   MariaDB
 -   [Oracle](ORACLE.md)
--   PostgreSQL
 -   PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 -   [SQL Server](SQLServer.md)
--   SQLite
 
 ## Links
 
