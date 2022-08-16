@@ -77,7 +77,7 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(0L, cities.select { cities.name eq "Qwertt" }.count())
             assertEquals(3L, cities.selectAll().count())
             val cityID: Int? = null
-            assertEquals(2L, users.select{ users.cityId eq cityID } .count())
+            assertEquals(2L, users.select { users.cityId eq cityID }.count())
         }
     }
 
@@ -92,13 +92,6 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun `test select for update`() {
-        withCitiesAndUsers {cities, _, _ ->
-            cities.selectAll().forUpdate().toList()
-            cities.selectAll().forUpdate(cities).toList()
-        }
-    }
     @Test
     fun testInList02() {
         withCitiesAndUsers { cities, users, userData ->
@@ -313,6 +306,20 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals("testCity", String(stringTable.select { stringTable.id eq id1 }.first()[stringTable.city]))
             assertEquals("testAddress", stringTable.select { stringTable.id eq id1 }.first()[stringTable.address])
             assertEquals("testAge", stringTable.select { stringTable.id eq id1 }.first()[stringTable.age])
+        }
+    }
+
+    @Test
+    fun `test select for update`() {
+        withCitiesAndUsers { cities, _, _ ->
+            assertEquals(
+                cities.selectAll().forUpdate().prepareSQL(this),
+                "SELECT cities.\"cityId\", cities.\"name\" FROM cities FOR UPDATE"
+            )
+            assertEquals(
+                cities.selectAll().forUpdate(cities).prepareSQL(this),
+                "SELECT cities.\"cityId\", cities.\"name\" FROM cities FOR UPDATE OF cities"
+            )
         }
     }
 }
