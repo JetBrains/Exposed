@@ -155,8 +155,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             if (isForUpdate()) {
                 append(" FOR UPDATE")
                 if (tableRefs.isNotEmpty()) {
-                    append(" OF")
-                    append(tableRefs.joinToString { it.tableNameWithoutScheme })
+                    append(tableRefs.joinToString(prefix = " OF ") { it.nameInDatabaseCase() })
                 }
             }
         }

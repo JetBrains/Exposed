@@ -56,11 +56,11 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        { "jdbc:postgresql://localhost:${postgresSQLProcess.port}/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
         beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     POSTGRESQLNG(
-        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
+        { "jdbc:pgsql://localhost:${postgresSQLProcess.port}/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
         user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     ORACLE(
@@ -124,11 +124,9 @@ enum class TestDB(
 private val registeredOnShutdown = HashSet<TestDB>()
 
 private val postgresSQLProcess by lazy {
-    EmbeddedPostgres.builder()
-        .setPgBinaryResolver { system, _ ->
-            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
-        }
-        .setPort(12346).start()
+    EmbeddedPostgres
+        .builder()
+        .start()
 }
 
 // MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
@@ -247,7 +245,7 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    protected fun prepareSchemaForTest(schemaName: String) : Schema {
+    protected fun prepareSchemaForTest(schemaName: String): Schema {
         return Schema(schemaName, defaultTablespace = "USERS", temporaryTablespace = "TEMP ", quota = "20M", on = "USERS")
     }
 }

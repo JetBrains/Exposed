@@ -26,5 +26,5 @@ object Versions {
 
     /** Test Dependencies **/
     const val testContainers = "1.16.3"
-    const val otjPgEmbedded = "0.13.4"
+    const val otjPgEmbedded = "1.0.1"
 }

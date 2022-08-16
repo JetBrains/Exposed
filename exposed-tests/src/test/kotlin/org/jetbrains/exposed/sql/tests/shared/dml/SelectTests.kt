@@ -93,6 +93,13 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test select for update`() {
+        withCitiesAndUsers {cities, _, _ ->
+            cities.selectAll().forUpdate().toList()
+            cities.selectAll().forUpdate(cities).toList()
+        }
+    }
+    @Test
     fun testInList02() {
         withCitiesAndUsers { cities, users, userData ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
