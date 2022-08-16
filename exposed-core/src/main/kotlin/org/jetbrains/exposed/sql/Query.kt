@@ -26,6 +26,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         private set
 
     private var forUpdate: Boolean? = null
+    private val tableRefs: MutableList<Table> = mutableListOf()
 
     // private set
     var where: Op<Boolean>? = where
@@ -47,8 +48,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         copy.forUpdate = forUpdate
     }
 
-    override fun forUpdate(): Query {
+    override fun forUpdate(vararg tableRefs: Table): Query {
         this.forUpdate = true
+        this.tableRefs.addAll(tableRefs)
         return this
     }
 
@@ -152,6 +154,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
             if (isForUpdate()) {
                 append(" FOR UPDATE")
+                if (tableRefs.isNotEmpty()) {
+                    append(" OF")
+                    tableRefs.joinToString { ref -> ref.tableNameWithoutScheme }
+                }
             }
         }
         return builder.toString()
