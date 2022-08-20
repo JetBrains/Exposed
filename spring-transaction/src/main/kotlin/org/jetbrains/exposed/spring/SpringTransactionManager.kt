@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
+import org.jetbrains.exposed.sql.transactions.DEFAULT_READ_ONLY
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.jdbc.datasource.ConnectionHolder
@@ -24,6 +25,7 @@ class SpringTransactionManager(
     _dataSource: DataSource,
     databaseConfig: DatabaseConfig = DatabaseConfig{ },
     private val showSql: Boolean = false,
+    @Volatile override var defaultReadOnly: Boolean = DEFAULT_READ_ONLY,
     @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
@@ -92,8 +94,11 @@ class SpringTransactionManager(
         }
     }
 
-    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
-        val tDefinition = DefaultTransactionDefinition().apply { isolationLevel = isolation }
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
+        val tDefinition = DefaultTransactionDefinition().apply {
+            isReadOnly = readOnly
+            isolationLevel = isolation
+        }
 
         getTransaction(tDefinition)
 
@@ -104,7 +109,7 @@ class SpringTransactionManager(
         val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
         val transactionImpl = try {
-            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
+            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
         } catch (e: Exception) {
             exposedLogger.error("Failed to start transaction. Connection will be closed.", e)
             connection.close()
@@ -137,6 +142,7 @@ class SpringTransactionManager(
         override val connection: ExposedConnection<*>,
         override val db: Database,
         override val transactionIsolation: Int,
+        override val readOnly: Boolean,
         override val outerTransaction: Transaction?
     ) : TransactionInterface {
 
