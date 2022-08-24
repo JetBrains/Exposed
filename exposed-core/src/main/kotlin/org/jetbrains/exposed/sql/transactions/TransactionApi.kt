@@ -26,10 +26,7 @@ interface TransactionInterface {
 
     fun close()
 }
-
-@Deprecated("There is no single default level for all databases, please don't use that constant")
-const val DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_REPEATABLE_READ
-
+````````````
 const val DEFAULT_READ_ONLY = false
 
 private object NotInitializedManager : TransactionManager {
