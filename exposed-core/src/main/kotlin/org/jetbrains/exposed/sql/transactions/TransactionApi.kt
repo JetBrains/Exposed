@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
-import java.sql.Connection
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicReference
@@ -26,9 +25,6 @@ interface TransactionInterface {
 
     fun close()
 }
-
-@Deprecated("There is no single default level for all databases, please don't use that constant")
-const val DEFAULT_ISOLATION_LEVEL = Connection.TRANSACTION_REPEATABLE_READ
 
 const val DEFAULT_READ_ONLY = false
 
