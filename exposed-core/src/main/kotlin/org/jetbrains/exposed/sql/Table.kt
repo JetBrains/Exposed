@@ -539,6 +539,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
         registerColumn(name, TextColumnType(collate, eagerLoading))
 
+    fun mediumText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, MediumTextColumnType(collate, eagerLoading))
+    fun largeText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, LargeTextColumnType(collate, eagerLoading))
+
     // Binary columns
 
     /**

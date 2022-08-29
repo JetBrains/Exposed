@@ -22,7 +22,14 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun ulongType(): String = "BIGINT UNSIGNED"
 
-    override fun textType(): String = "longtext"
+    override fun textType(): String = "text"
+    // override fun textType(): String = "longtext"
+
+    /** Character type for storing strings of variable and _unlimited_ length. */
+    override fun mediumTextType(): String = "MEDIUMTEXT"
+
+    /** Character type for storing strings of variable and _unlimited_ length. */
+    override fun largeTextType(): String = "LONGTEXT"
 
     override fun booleanFromStringToBoolean(value: String): Boolean = when(value) {
         "0" -> false

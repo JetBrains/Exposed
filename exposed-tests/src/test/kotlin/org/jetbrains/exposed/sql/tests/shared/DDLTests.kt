@@ -616,6 +616,55 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun tableWithDifferentTextTypes() {
+        val TestTable = object : Table("different_text_column_types") {
+            val id = integer("id").autoIncrement()
+            val txt = text("txt")
+            val txtMed = mediumText("txt_med")
+            val txtLong = largeText("txt_large")
+
+            override val primaryKey: PrimaryKey = PrimaryKey(id)
+        }
+
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.MYSQL)) {
+            SchemaUtils.create(TestTable)
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_text_column_types".inProperCase()} " +
+                    "(${TestTable.id.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                    "${TestTable.txt.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.textType()} NOT NULL, " +
+                    "${TestTable.txtMed.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.mediumTextType()} NOT NULL, " +
+                    "${TestTable.txtLong.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.largeTextType()} NOT NULL)",
+                TestTable.ddl
+            )
+
+            // double check that different types were applied indeed
+            assert(
+                currentDialectTest.name == "postgresql" ||
+                    (
+                        currentDialectTest.dataTypeProvider.textType() != currentDialectTest.dataTypeProvider.mediumTextType() &&
+                            currentDialectTest.dataTypeProvider.mediumTextType() != currentDialectTest.dataTypeProvider.largeTextType() &&
+                            currentDialectTest.dataTypeProvider.textType() != currentDialectTest.dataTypeProvider.largeTextType()
+                        )
+            )
+
+            TestTable.insert {
+                it[txt] = "1Txt"
+                it[txtMed] = "1TxtMed"
+                it[txtLong] = "1TxtLong"
+            }
+
+            val concat = SqlExpressionBuilder.concat(
+                separator = " ",
+                listOf(LowerCase(TestTable.txt), UpperCase(TestTable.txtMed), LowerCase(TestTable.txtLong))
+            )
+
+            // just to be sure new type didn't break the functions
+            TestTable.slice(concat).selectAll().forEach {
+                assertEquals(it[concat], "1txt 1TXTMED 1txtlong")
+            }
+        }
+    }
+
     @Test fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {

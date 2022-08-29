@@ -55,8 +55,15 @@ abstract class DataTypeProvider {
 
     // Character types
 
-    /** Character type for storing strings of variable and _unlimited_ length. */
+    /** Character type for storing strings of variable length.
+     * Some database (postgresql) use the same data type name to provide virtually _unlimited_ length. */
     open fun textType(): String = "TEXT"
+
+    /** Character type for storing strings of _medium_ length. */
+    open fun mediumTextType(): String = "TEXT"
+
+    /** Character type for storing strings of variable and _large_ length. */
+    open fun largeTextType(): String = "TEXT"
 
     // Binary data types
 

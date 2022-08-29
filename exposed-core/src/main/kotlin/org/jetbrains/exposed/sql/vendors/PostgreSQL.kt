@@ -16,7 +16,6 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         exposedLogger.warn("The length of the binary column is not required.")
         return binaryType()
     }
-
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
