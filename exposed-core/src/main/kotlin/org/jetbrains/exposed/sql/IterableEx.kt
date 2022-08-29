@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
+
 interface SizedIterable<out T> : Iterable<T> {
     fun limit(n: Int, offset: Long = 0): SizedIterable<T>
     fun count(): Long
     fun empty(): Boolean
-    fun forUpdate(): SizedIterable<T> = this
+    fun forUpdate(option: ForUpdateOption = ForUpdateOption.ForUpdate): SizedIterable<T> = this
     fun notForUpdate(): SizedIterable<T> = this
     fun copy(): SizedIterable<T>
     fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
@@ -66,13 +68,13 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     override operator fun iterator() = wrapper.iterator()
     override fun count(): Long = _wrapper?.size?.toLong() ?: _count()
     override fun empty() = _wrapper?.isEmpty() ?: _empty()
-    override fun forUpdate(): SizedIterable<T> {
+    override fun forUpdate(option: ForUpdateOption): SizedIterable<T> {
         val localDelegate = delegate
         if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && !localDelegate.isForUpdate()) {
             throw IllegalStateException("Impossible to change forUpdate state for loaded data")
         }
         if (_wrapper == null) {
-            delegate = delegate.forUpdate()
+            delegate = delegate.forUpdate(option)
         }
         return this
     }
@@ -118,7 +120,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {
         override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
-        override fun forUpdate(): SizedIterable<R> = source.copy().forUpdate().mapLazy(f)
+        override fun forUpdate(option: ForUpdateOption): SizedIterable<R> = source.copy().forUpdate(option).mapLazy(f)
         override fun notForUpdate(): SizedIterable<R> = source.copy().notForUpdate().mapLazy(f)
         override fun count(): Long = source.count()
         override fun empty(): Boolean = source.empty()
