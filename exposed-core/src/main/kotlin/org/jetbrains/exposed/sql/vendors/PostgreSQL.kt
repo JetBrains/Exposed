@@ -250,6 +250,17 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
     companion object {
         /** PostgreSQL dialect name */
         const val dialectName: String = "postgresql"
+
+        // check https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
+        val ForKeyShare = object : ForUpdateOption {
+            override val querySuffix = "FOR KEY SHARE"
+        }
+        val ForShare = object : ForUpdateOption {
+            override val querySuffix = "FOR SHARE"
+        }
+        val ForNoKeyUpdate = object : ForUpdateOption {
+            override val querySuffix = "FOR NO KEY UPDATE"
+        }
     }
 }
 
@@ -262,16 +273,15 @@ open class PostgreSQLNGDialect : PostgreSQLDialect() {
     companion object {
         /** PostgreSQL-NG dialect name */
         const val dialectName: String = "pgsql"
-    }
 
-    // check https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
-    val ForKeyShare = object : ForUpdateOption {
-        override val querySuffix = "FOR KEY SHARE"
-    }
-    val ForShare = object : ForUpdateOption {
-        override val querySuffix = "FOR SHARE"
-    }
-    val ForNoKeyUpdate = object : ForUpdateOption {
-        override val querySuffix = "FOR NO KEY UPDATE"
+        val ForKeyShare = object : ForUpdateOption {
+            override val querySuffix = "FOR KEY SHARE"
+        }
+        val ForShare = object : ForUpdateOption {
+            override val querySuffix = "FOR SHARE"
+        }
+        val ForNoKeyUpdate = object : ForUpdateOption {
+            override val querySuffix = "FOR NO KEY UPDATE"
+        }
     }
 }
