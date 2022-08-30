@@ -6,6 +6,7 @@ interface ExposedConnection<OriginalConnection : Any> {
     fun rollback()
     fun close()
     var autoCommit: Boolean
+    var readOnly: Boolean
     var transactionIsolation: Int
     val connection: OriginalConnection
 

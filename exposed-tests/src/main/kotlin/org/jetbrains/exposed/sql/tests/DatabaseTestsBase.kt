@@ -72,7 +72,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
-            transaction(Connection.TRANSACTION_READ_COMMITTED, 1, tmp) {
+            transaction(Connection.TRANSACTION_READ_COMMITTED, 1, db  = tmp) {
                 try {
                     exec("DROP USER ExposedTest CASCADE")
                 } catch (e: Exception) { // ignore

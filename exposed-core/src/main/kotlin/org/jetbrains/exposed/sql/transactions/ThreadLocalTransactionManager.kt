@@ -12,7 +12,8 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 
 class ThreadLocalTransactionManager(
-    private val db: Database
+    private val db: Database,
+    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
 ) : TransactionManager {
     @Volatile
     override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
@@ -32,14 +33,19 @@ class ThreadLocalTransactionManager(
         @TestOnly
         set
 
+    @Volatile
+    override var defaultReadOnly: Boolean = DEFAULT_READ_ONLY
+
     val threadLocal = ThreadLocal<Transaction>()
 
-    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction =
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
         (
             outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
                 ThreadLocalTransaction(
                     db = db,
+                    readOnly = outerTransaction?.readOnly ?: readOnly,
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                    setupTxConnection = setupTxConnection,
                     threadLocal = threadLocal,
                     outerTransaction = outerTransaction
                 )
@@ -60,15 +66,23 @@ class ThreadLocalTransactionManager(
 
     private class ThreadLocalTransaction(
         override val db: Database,
+        private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
         override val transactionIsolation: Int,
+        override val readOnly: Boolean,
         val threadLocal: ThreadLocal<Transaction>,
         override val outerTransaction: Transaction?
     ) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                autoCommit = false
-                transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                    // The order of `setReadOnly` and `setAutoCommit` is important.
+                    // Some drivers start a transaction right after `setAutoCommit(false)`,
+                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                    readOnly = this@ThreadLocalTransaction.readOnly
+                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    autoCommit = false
+                }
             }
         }
         override val connection: ExposedConnection<*>
@@ -129,16 +143,26 @@ class ThreadLocalTransactionManager(
 }
 
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
-    transaction(db.transactionManager.defaultIsolationLevel, db.transactionManager.defaultRepetitionAttempts, db, statement)
+    transaction(
+        db.transactionManager.defaultIsolationLevel,
+        db.transactionManager.defaultRepetitionAttempts,
+        db.transactionManager.defaultReadOnly,
+        db, statement)
 
-fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Database? = null, statement: Transaction.() -> T): T =
+fun <T> transaction(
+    transactionIsolation: Int,
+    repetitionAttempts: Int,
+    readOnly: Boolean = false,
+    db: Database? = null,
+    statement: Transaction.() -> T
+): T =
     keepAndRestoreTransactionRefAfterRun(db) {
         val outer = TransactionManager.currentOrNull()
 
         if (outer != null && (db == null || outer.db == db)) {
             val outerManager = outer.db.transactionManager
 
-            val transaction = outerManager.newTransaction(transactionIsolation, outer)
+            val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
             try {
                 transaction.statement().also {
                     if (outer.db.useNestedTransactions) {
@@ -162,13 +186,14 @@ fun <T> transaction(transactionIsolation: Int, repetitionAttempts: Int, db: Data
                 } finally {
                     TransactionManager.resetCurrent(currentManager)
                 }
-            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, db, null, statement)
+            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, readOnly, db, null, statement)
         }
     }
 
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     repetitionAttempts: Int,
+    readOnly: Boolean = false,
     db: Database? = null,
     outerTransaction: Transaction? = null,
     statement: Transaction.() -> T
@@ -181,7 +206,7 @@ fun <T> inTopLevelTransaction(
 
         while (true) {
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
-            val transaction = db.transactionManager.newTransaction(transactionIsolation, outerTransaction)
+            val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
 
             @Suppress("TooGenericExceptionCaught")
             try {
