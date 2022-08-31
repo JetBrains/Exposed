@@ -79,8 +79,8 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
         else -> LocalDate.parse(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any) = when {
-        value is LocalDate -> java.sql.Date(value.millis)
+    override fun notNullValueToDB(value: Any) = when (value) {
+        is LocalDate -> java.sql.Date(value.millis)
         else -> value
     }
 
