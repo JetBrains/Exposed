@@ -190,8 +190,10 @@ fun <T: Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement
 fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
-        execute(TransactionManager.current())
-        getOrNull(id)
+        when (execute(TransactionManager.current())) {
+            null, 0 -> null
+            else -> getOrNull(id)
+        }
     }
 
 /**
