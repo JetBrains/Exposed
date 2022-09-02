@@ -228,13 +228,15 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     }
 }
 
-fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>> Iterable<SRC>.with(vararg relations: KProperty1<out REF, Any?>): Iterable<SRC> =
+fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L: Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
         if (any { it.isNewEntity() }) {
             TransactionManager.current().flushCache()
         }
         preloadRelations(*relations)
     }
+    return this
+}
 
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)
