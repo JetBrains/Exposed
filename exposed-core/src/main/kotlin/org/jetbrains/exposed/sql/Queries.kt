@@ -53,11 +53,11 @@ fun FieldSet.selectAllBatched(
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
  */
-fun Table.deleteWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.() -> Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, SqlExpressionBuilder.op(), false, limit, offset)
+fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit, offset)
 
-fun Table.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: SqlExpressionBuilder.() -> Op<Boolean>) =
-    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, SqlExpressionBuilder.op(), true, limit, offset)
+fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit, offset)
 
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
@@ -136,7 +136,7 @@ private fun <T : Table, E> T.batchReplace(
     BatchReplaceStatement(this, shouldReturnGeneratedValues)
 }
 
-private fun <E, S: BaseBatchInsertStatement> executeBatch(
+private fun <E, S : BaseBatchInsertStatement> executeBatch(
     data: Iterator<E>,
     body: S.(E) -> Unit,
     newBatchStatement: () -> S
@@ -182,7 +182,7 @@ private fun <E, S: BaseBatchInsertStatement> executeBatch(
     return result
 }
 
-fun <T: Table> T.insertIgnore(body: T.(UpdateBuilder<*>)->Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
