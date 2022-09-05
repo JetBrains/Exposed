@@ -154,15 +154,15 @@ object SchemaUtils {
                 is String -> when (currentDialect) {
                     is PostgreSQLDialect ->
                         when(column.columnType) {
-                            is VarCharColumnType -> "${exp.value}::character varying"
-                            is TextColumnType -> "${exp.value}::text"
+                            is VarCharColumnType -> "'${exp.value}'::character varying"
+                            is TextColumnType -> "'${exp.value}'::text"
                             else -> processForDefaultValue(exp)
                         }
                     else -> exp.value
                 }
                 is Enum<*> -> when (exp.columnType) {
                     is EnumerationNameColumnType<*> -> when (currentDialect) {
-                        is PostgreSQLDialect -> "${exp.value.name}::character varying"
+                        is PostgreSQLDialect -> "'${exp.value.name}'::character varying"
                         else -> exp.value.name
                     }
                     else -> processForDefaultValue(exp)
