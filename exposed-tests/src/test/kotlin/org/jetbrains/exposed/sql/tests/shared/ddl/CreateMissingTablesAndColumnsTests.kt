@@ -262,7 +262,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val text = text("text_column").default("")
         }
 
-        withDb {
+        // MySQL doesn't support default values on text columns, hence excluded
+        withDb(excludeSettings = listOf(TestDB.MYSQL)) {
             try {
                 SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
