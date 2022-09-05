@@ -143,7 +143,7 @@ object SchemaUtils {
     fun createIndex(index: Index) = index.createStatement()
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
-    private fun DataTypeProvider.dbDefaultToString(exp: Expression<*>): String {
+    private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
         return when (exp) {
             is LiteralOp<*> -> when (exp.value) {
                 is Boolean -> when (currentDialect) {
@@ -152,12 +152,17 @@ object SchemaUtils {
                     else -> booleanToStatementString(exp.value)
                 }
                 is String -> when (currentDialect) {
-                    is PostgreSQLDialect -> "${exp.value}'::character varying"
+                    is PostgreSQLDialect ->
+                        when(column.columnType) {
+                            is VarCharColumnType -> "${exp.value}::character varying"
+                            is TextColumnType -> "${exp.value}::text"
+                            else -> processForDefaultValue(exp)
+                        }
                     else -> exp.value
                 }
                 is Enum<*> -> when (exp.columnType) {
                     is EnumerationNameColumnType<*> -> when (currentDialect) {
-                        is PostgreSQLDialect -> "${exp.value.name}'::character varying"
+                        is PostgreSQLDialect -> "${exp.value.name}::character varying"
                         else -> exp.value.name
                     }
                     else -> processForDefaultValue(exp)
@@ -208,7 +213,7 @@ object SchemaUtils {
                         val incorrectNullability = existingCol.nullable != columnType.nullable
                         val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc
                         val incorrectDefaults =
-                            existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(it) }
+                            existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(col, it) }
                         val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()
                         ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                     }

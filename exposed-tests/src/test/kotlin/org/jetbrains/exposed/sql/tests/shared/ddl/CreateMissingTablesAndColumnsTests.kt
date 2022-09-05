@@ -256,6 +256,24 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `columns with default values that haven't changed shouldn't trigger change`() {
+        val table = object : Table("varchar_test") {
+            val varchar = varchar("varchar_column", 255).default("")
+            val text = text("text_column").default("")
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(table)
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
+                assertEqualLists(emptyList(), actual)
+            } finally {
+                SchemaUtils.drop(table)
+            }
+        }
+    }
+
+    @Test
     fun testAddMissingColumnsStatementsChangeDefault() {
         val t1 = object : Table("foo") {
             val id = integer("idcol")
