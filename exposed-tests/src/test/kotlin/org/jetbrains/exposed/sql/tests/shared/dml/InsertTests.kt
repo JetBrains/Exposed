@@ -84,6 +84,13 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(null, idNull)
+
+            val shouldNotReturnProvidedIdOnConflict = idTable.insertIgnoreAndGetId {
+                it[idTable.id] = EntityID(100, idTable)
+                it[idTable.name] = "2"
+            }
+
+            assertEquals(null, shouldNotReturnProvidedIdOnConflict)
         }
     }
 
