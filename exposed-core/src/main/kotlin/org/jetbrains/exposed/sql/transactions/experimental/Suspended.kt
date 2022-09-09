@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.transactions.experimental
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ThreadContextElement
