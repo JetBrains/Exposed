@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 class MoneyDefaultsTest : DatabaseTestsBase() {
 
     object TableWithDBDefault : IntIdTable() {
-        val defaultValue = Money.of(BigDecimal.ONE, "USD")
+        val defaultValue: Money = Money.of(BigDecimal.ONE, "USD")
 
         var cIndex = 0
         val field = varchar("field", 100)
