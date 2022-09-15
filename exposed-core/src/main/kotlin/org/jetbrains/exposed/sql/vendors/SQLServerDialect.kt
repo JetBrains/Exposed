@@ -139,14 +139,16 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             registerArgument(col, value)
         }
         +" FROM "
+        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
         if (targets.table != tableToUpdate) {
             targets.table.describe(transaction, this)
+            if (joinPartsToAppend.isNotEmpty()) {
+                +", "
+            }
         }
 
-        targets.joinParts.appendTo(this, ",") {
-            if (it.joinPart != tableToUpdate) {
-                it.joinPart.describe(transaction, this)
-            }
+        joinPartsToAppend.appendTo(this, ", ") {
+            it.joinPart.describe(transaction, this)
         }
         +" WHERE "
         targets.joinParts.appendTo(this, " AND ") {

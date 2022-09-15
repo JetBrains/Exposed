@@ -70,10 +70,26 @@ class UpdateTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateWithJoin() {
+    fun testUpdateWithJoin01() {
         val dialects = listOf(TestDB.SQLITE)
         withCitiesAndUsers(dialects) { cities, users, userData ->
             val join = users.innerJoin(userData)
+            join.update {
+                it[userData.comment] = users.name
+                it[userData.value] = 123
+            }
+
+            join.selectAll().forEach {
+                assertEquals(it[users.name], it[userData.comment])
+                assertEquals(123, it[userData.value])
+            }
+        }
+    }
+    @Test
+    fun testUpdateWithJoin02() {
+        val dialects = listOf(TestDB.SQLITE)
+        withCitiesAndUsers(dialects) { cities, users, userData ->
+            val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
                 it[userData.value] = 123

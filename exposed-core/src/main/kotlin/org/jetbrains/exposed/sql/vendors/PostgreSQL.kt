@@ -147,12 +147,17 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             registerArgument(col, value)
         }
         +" FROM "
-        if (targets.table != tableToUpdate)
-            targets.table.describe(transaction, this)
 
-        targets.joinParts.appendTo(this, ",") {
-            if (it.joinPart != tableToUpdate)
-                it.joinPart.describe(transaction, this)
+        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
+        if (targets.table != tableToUpdate) {
+            targets.table.describe(transaction, this)
+            if (joinPartsToAppend.isNotEmpty()) {
+                +", "
+            }
+        }
+
+        joinPartsToAppend.appendTo(this, ", ") {
+            it.joinPart.describe(transaction, this)
         }
         +" WHERE "
         targets.joinParts.appendTo(this, " AND ") {
