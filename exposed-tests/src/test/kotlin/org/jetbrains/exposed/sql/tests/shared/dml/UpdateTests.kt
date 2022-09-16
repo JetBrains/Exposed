@@ -87,7 +87,7 @@ class UpdateTests : DatabaseTestsBase() {
     }
     @Test
     fun testUpdateWithJoin02() {
-        val dialects = listOf(TestDB.SQLITE)
+        val dialects = listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL)
         withCitiesAndUsers(dialects) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
