@@ -27,7 +27,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
     implementation("org.testcontainers", "mysql", Versions.testContainers)
-    implementation("com.opentable.components", "otj-pg-embedded", Versions.otjPgEmbedded)
+    implementation("org.testcontainers", "postgresql", Versions.testContainers)
     testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
     testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
     compileOnly("com.h2database", "h2", Versions.h2)
