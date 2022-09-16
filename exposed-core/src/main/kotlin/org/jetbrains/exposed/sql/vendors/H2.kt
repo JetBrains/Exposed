@@ -66,24 +66,19 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
-        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
+        val joinPart = targets.joinParts.singleOrNull()
+            ?: transaction.throwUnsupportedException("H2 supports a join updates with only one table to join.")
+        if (joinPart.joinType != JoinType.INNER) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }
         +"MERGE INTO "
         tableToUpdate.describe(transaction, this)
         +" USING "
 
-        if (targets.table != tableToUpdate) {
-            targets.table.describe(transaction, this)
-        }
+        (joinPart.joinPart.takeIf { it != tableToUpdate } ?: targets.table).describe(transaction, this)
+        +" ON "
+        joinPart.appendConditions(this)
 
-        targets.joinParts.forEach {
-            if (it.joinPart != tableToUpdate) {
-                it.joinPart.describe(transaction, this)
-            }
-            +" ON "
-            it.appendConditions(this)
-        }
         +" WHEN MATCHED THEN UPDATE SET "
         columnsAndValues.appendTo(this) { (col, value) ->
             append("${transaction.fullIdentity(col)}=")

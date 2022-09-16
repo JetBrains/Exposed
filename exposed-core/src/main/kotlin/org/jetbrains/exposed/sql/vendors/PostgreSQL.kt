@@ -146,23 +146,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             append("${transaction.identity(col)}=")
             registerArgument(col, value)
         }
-        +" FROM "
 
-        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
-        if (targets.table != tableToUpdate) {
-            targets.table.describe(transaction, this)
-            if (joinPartsToAppend.isNotEmpty()) {
-                +", "
-            }
-        }
+        appendJoinPartForUpdateClause(tableToUpdate, targets, transaction)
 
-        joinPartsToAppend.appendTo(this, ", ") {
-            it.joinPart.describe(transaction, this)
-        }
-        +" WHERE "
-        targets.joinParts.appendTo(this, " AND ") {
-            it.appendConditions(this)
-        }
         where?.let {
             +" AND "
             +it

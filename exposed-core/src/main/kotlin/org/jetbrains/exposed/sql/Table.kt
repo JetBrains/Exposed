@@ -212,19 +212,7 @@ class Join(
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
         table.describe(s, this)
         for (p in joinParts) {
-            append(" ${p.joinType} JOIN ")
-            val isJoin = p.joinPart is Join
-            if (isJoin) {
-                append("(")
-            }
-            p.joinPart.describe(s, this)
-            if (isJoin) {
-                append(")")
-            }
-            if (p.joinType != JoinType.CROSS) {
-                append(" ON ")
-                p.appendConditions(this)
-            }
+            p.describe(s, this)
         }
     }
 
@@ -300,6 +288,22 @@ class Join(
     ) {
         init {
             require(joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null) { "Missing join condition on $${this.joinPart}" }
+        }
+
+        fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
+            append(" $joinType JOIN ")
+            val isJoin = joinPart is Join
+            if (isJoin) {
+                append("(")
+            }
+            joinPart.describe(transaction, this)
+            if (isJoin) {
+                append(")")
+            }
+            if (joinType != JoinType.CROSS) {
+                append(" ON ")
+                appendConditions(this)
+            }
         }
 
         fun appendConditions(builder: QueryBuilder) = builder {

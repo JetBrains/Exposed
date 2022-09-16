@@ -138,22 +138,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
-        +" FROM "
-        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
-        if (targets.table != tableToUpdate) {
-            targets.table.describe(transaction, this)
-            if (joinPartsToAppend.isNotEmpty()) {
-                +", "
-            }
-        }
 
-        joinPartsToAppend.appendTo(this, ", ") {
-            it.joinPart.describe(transaction, this)
-        }
-        +" WHERE "
-        targets.joinParts.appendTo(this, " AND ") {
-            it.appendConditions(this)
-        }
+        appendJoinPartForUpdateClause(tableToUpdate, targets, transaction)
+
         where?.let {
             +" AND "
             +it

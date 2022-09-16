@@ -432,6 +432,26 @@ abstract class FunctionProvider {
         transaction: Transaction
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
+    protected fun QueryBuilder.appendJoinPartForUpdateClause(tableToUpdate: Table, targets: Join, transaction: Transaction) {
+        +" FROM "
+        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
+        if (targets.table != tableToUpdate) {
+            targets.table.describe(transaction, this)
+            if (joinPartsToAppend.isNotEmpty()) {
+                +", "
+            }
+        }
+
+        joinPartsToAppend.appendTo(this, ", ") {
+            it.joinPart.describe(transaction, this)
+        }
+
+        +" WHERE "
+        targets.joinParts.appendTo(this, " AND ") {
+            it.appendConditions(this)
+        }
+    }
+
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
      * This operation is also known as "Insert or update".
