@@ -667,6 +667,14 @@ interface DatabaseDialect {
     }
 }
 
+interface ForUpdateOption {
+    companion object ForUpdate : ForUpdateOption {
+        override val querySuffix = "FOR UPDATE"
+    }
+    val querySuffix: String
+}
+
+
 /**
  * Base implementation of a vendor dialect
  */

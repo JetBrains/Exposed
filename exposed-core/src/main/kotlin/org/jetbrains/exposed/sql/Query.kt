@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -15,6 +16,11 @@ enum class SortOrder(val code: String) {
     DESC_NULLS_LAST(code = "DESC NULLS LAST")
 }
 
+private object NoForUpdateOption : ForUpdateOption {
+    override val querySuffix: String
+        get() = error("querySuffix should not be called for NoForUpdateOption object")
+}
+
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
     var distinct: Boolean = false
         protected set
@@ -25,7 +31,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var having: Op<Boolean>? = null
         private set
 
-    private var forUpdate: Boolean? = null
+    private var forUpdate: ForUpdateOption? = null
 
     // private set
     var where: Op<Boolean>? = where
@@ -47,18 +53,18 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         copy.forUpdate = forUpdate
     }
 
-    override fun forUpdate(): Query {
-        this.forUpdate = true
+    override fun forUpdate(option: ForUpdateOption): Query {
+        this.forUpdate = option
+        return this
+    }
+
+    override fun notForUpdate(): Query {
+        forUpdate = NoForUpdateOption
         return this
     }
 
     override fun withDistinct(value: Boolean): Query = apply {
         distinct = value
-    }
-
-    override fun notForUpdate(): Query {
-        forUpdate = false
-        return this
     }
 
     /**
@@ -92,7 +98,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
-    fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
+    fun isForUpdate() = (forUpdate?.let { it !is NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
@@ -151,7 +157,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             }
 
             if (isForUpdate()) {
-                append(" FOR UPDATE")
+                forUpdate?.apply {
+                    append(" $querySuffix")
+                }
             }
         }
         return builder.toString()
