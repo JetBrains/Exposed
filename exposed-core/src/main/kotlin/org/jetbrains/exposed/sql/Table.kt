@@ -534,17 +534,34 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a character column, with the specified [name], for storing strings of arbitrary length using the specified [collate] type.
-     * If no collate type is specified then the database default is used.
+     * If no collated type is specified, then the database default is used.
      *
-     * Some database drivers do not load text content immediately (by performance and memory reasons)
-     * what means that you can obtain column value only within the open transaction.
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
      * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
     fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
         registerColumn(name, TextColumnType(collate, eagerLoading))
 
+    /**
+     * Creates a character column, with the specified [name], for storing strings of _medium_ length using the specified [collate] type.
+     * If no collated type is specified, then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
+     */
     fun mediumText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
         registerColumn(name, MediumTextColumnType(collate, eagerLoading))
+
+    /**
+     * Creates a character column, with the specified [name], for storing strings of _large_ length using the specified [collate] type.
+     * If no collated type is specified, then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
+     */
     fun largeText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
         registerColumn(name, LargeTextColumnType(collate, eagerLoading))
 
