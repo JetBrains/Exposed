@@ -25,6 +25,8 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
      * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
      */
     override fun textType(): String = "VARCHAR(MAX)"
+    override fun mediumTextType(): String = textType()
+    override fun largeTextType(): String = textType()
 
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         when (sortOrder) {
