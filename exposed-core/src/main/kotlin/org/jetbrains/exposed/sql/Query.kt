@@ -16,11 +16,6 @@ enum class SortOrder(val code: String) {
     DESC_NULLS_LAST(code = "DESC NULLS LAST")
 }
 
-private object NoForUpdateOption : ForUpdateOption {
-    override val querySuffix: String
-        get() = error("querySuffix should not be called for NoForUpdateOption object")
-}
-
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
     var distinct: Boolean = false
         protected set
@@ -59,7 +54,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     override fun notForUpdate(): Query {
-        forUpdate = NoForUpdateOption
+        forUpdate = ForUpdateOption.NoForUpdateOption
         return this
     }
 
@@ -98,7 +93,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
-    fun isForUpdate() = (forUpdate?.let { it !is NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
+    fun isForUpdate() = (forUpdate?.let { it != ForUpdateOption.NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize

@@ -667,11 +667,41 @@ interface DatabaseDialect {
     }
 }
 
-interface ForUpdateOption {
-    companion object ForUpdate : ForUpdateOption {
-        override val querySuffix = "FOR UPDATE"
+sealed class ForUpdateOption(open val querySuffix: String)  {
+
+    internal object NoForUpdateOption : ForUpdateOption("") {
+        override val querySuffix: String get() = error("querySuffix should not be called for NoForUpdateOption object")
     }
-    val querySuffix: String
+
+    object ForUpdate : ForUpdateOption("FOR UPDATE")
+
+    // https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
+    object MySQL {
+        object ForShare : ForUpdateOption("FOR SHARE")
+
+        object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
+    }
+
+    // https://mariadb.com/kb/en/select/#lock-in-share-modefor-update
+    object MariaDB {
+        object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
+    }
+
+    // https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
+    object PostgreSQL {
+        object ForNoKeyUpdate : ForUpdateOption("FOR NO KEY UPDATE")
+
+        object ForShare : ForUpdateOption("FOR SHARE")
+
+        object ForKeyShare : ForUpdateOption("FOR KEY SHARE")
+    }
+
+    // https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
+    object Oracle {
+        object ForUpdateNoWait : ForUpdateOption("FOR UPDATE NOWAIT")
+
+        class ForUpdateWait(timeout: Int) : ForUpdateOption("FOR UPDATE WAIT $timeout")
+    }
 }
 
 

@@ -40,9 +40,9 @@ class PostgresqlTests : DatabaseTestsBase() {
 
                 val defaultForUpdateRes = table.select { table.id eq id }.city()
                 val forUpdateRes = select(ForUpdateOption.ForUpdate)
-                val forShareRes = select(PostgreSQLDialect.ForShare)
-                val forKeyShareRes = select(PostgreSQLDialect.ForKeyShare)
-                val forNoKeyUpdateRes = select(PostgreSQLDialect.ForNoKeyUpdate)
+                val forShareRes = select(ForUpdateOption.PostgreSQL.ForShare)
+                val forKeyShareRes = select(ForUpdateOption.PostgreSQL.ForKeyShare)
+                val forNoKeyUpdateRes = select(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
                 val notForUpdateRes = table.select { table.id eq id }.notForUpdate().city()
 
                 assertEquals(name, defaultForUpdateRes)

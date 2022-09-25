@@ -240,12 +240,4 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         /** MySQL dialect name */
         const val dialectName: String = "mysql"
     }
-
-    // check https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
-    val LockInShareMod = object : ForUpdateOption {
-        override val querySuffix = "LOCK IN SHARE MODE"
-    }
-    val ForShare = object : ForUpdateOption {
-        override val querySuffix = "FOR SHARE"
-    }
 }
