@@ -317,14 +317,27 @@ class ModOp<T : Number?, S : Number?>(
     val expr2: Expression<S>,
     override val columnType: IColumnType
 ) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
+}
+
+class ModOpEntityID<T, S : Number?>(
+    /** Returns the left-hand side operand. */
+    val expr1: Expression<EntityID<T>>,
+    /** Returns the right-hand side operand. */
+    val expr2: Expression<S>,
+    override val columnType: IColumnType
+) : ExpressionWithColumnType<T>() where T : Comparable<T>, T : Number? {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
+}
+
+private fun dbModOp(queryBuilder: QueryBuilder, expr1: Expression<*>, expr2: Expression<*>) {
+    queryBuilder {
         when (currentDialectIfAvailable) {
             is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
             else -> append('(', expr1, " % ", expr2, ')')
         }
     }
 }
-
 
 // https://github.com/h2database/h2database/issues/3253
 private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>) =
