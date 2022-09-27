@@ -1,4 +1,5 @@
 @file:Suppress("internal", "INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -316,6 +317,13 @@ interface ISqlExpressionBuilder {
 
     /** Calculates the remainder of dividing this expression by the [other] expression. */
     infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>): ModOp<T, S> = ModOp(this, other, columnType)
+
+    /**
+     * Calculates the remainder of dividing the value of a numeric PK by the [other] number.
+     */
+    infix operator fun <T, S : Number> ExpressionWithColumnType<EntityID<T>>.rem(other: S): ModOpEntityID<T, S>
+        where T : Number?, T : Comparable<T> =
+        ModOpEntityID(this, wrap(other), this.columnType)
 
     /** Calculates the remainder of dividing this expression by the [t] value. */
     infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S): ModOp<T, S> = this % t
