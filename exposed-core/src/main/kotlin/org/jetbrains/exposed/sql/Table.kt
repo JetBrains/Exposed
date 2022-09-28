@@ -425,7 +425,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String? = null
     ) {
         /** Returns the name of the primary key. */
-        val name: String by lazy { name ?:  "pk_$tableNameWithoutScheme" }
+        val name: String by lazy { name ?: "pk_$tableNameWithoutScheme" }
 
         constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
             this(arrayOf(firstColumn, *columns), name)
