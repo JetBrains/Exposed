@@ -294,8 +294,9 @@ class CreateTableTests : DatabaseTestsBase() {
     @Test
     fun createTableWithExplicitForeignKeyName4() {
         val fkName = "MyForeignKey4"
-        val parent = object : LongIdTable("parent4") {
+        val parent = object : LongIdTable() {
             val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            override val tableName = "parent4"
         }
         val child = object : LongIdTable("child4") {
             val parentId = optReference(

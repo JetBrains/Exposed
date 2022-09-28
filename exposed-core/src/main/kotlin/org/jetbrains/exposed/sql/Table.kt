@@ -422,10 +422,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     inner class PrimaryKey(
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
-        /** Returns the name of the primary key. */
-        val name: String = "pk_$tableNameWithoutScheme"
+        name: String? = null
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableNameWithoutScheme") :
+        /** Returns the name of the primary key. */
+        val name: String by lazy { name ?:  "pk_$tableNameWithoutScheme" }
+
+        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
             this(arrayOf(firstColumn, *columns), name)
 
         init {
