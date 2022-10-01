@@ -114,6 +114,8 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
         delegate = delegate.orderBy(*order)
         return this
     }
+
+    fun isLoaded(): Boolean = _wrapper != null
 }
 
 infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
