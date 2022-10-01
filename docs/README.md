@@ -4,7 +4,7 @@
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
-[![TC Build status](<https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon>)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)
+[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -13,54 +13,43 @@
 Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.
 Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
 
-With EXPOSED you can have two levels of databases Access. you would like to use exposed because the database access includes wrapping DSL and a lightweigh data access object. Also our official Mascot is Cuttlefish whick is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. Similar to our Mascot, EXPOSED can be used to mimc a variety of database engines and help you build data base applications without hard Dependencies on any specific database engine and switch between them with verry little or no changes.
+With Exposed you can have two levels of databases Access. You would like to use exposed because the database access includes wrapping DSL and a lightweight data access object. Also, our official mascot is Cuttlefish, which is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. 
+Similar to our mascot, Exposed can be used to mimic a variety of database engines and help you build applications without dependencies on any specific database engine and switch between them with very little or no changes.
 
 ## Supported Databases
 
--   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
-
--   ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-
+-   ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) (Also, PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver)
 -   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+-   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 -   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 -   H2
 -   [Oracle](ORACLE.md)
--   PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver
 -   [SQL Server](SQLServer.md)
 
 ## Links
 
-Currently EXPOSED is available for **maven/gradle builds**. kindly click the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read ( [Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)) to get get an insight on setting up EXPOSED.<br><br>
-for more information visit the links below:
+Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read ([Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)) to get an insight on setting up Exposed.
+<br><br>
+For more information visit the links below:
 
--   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs.
--   [Roadmap](ROADMAP.md) to see what's coming next.
--   [Change log](ChangeLog.md) of improvements and bug fixes.
-
-If you have any questions feel free to ask at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
+-   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
+-   [Roadmap](ROADMAP.md) to see what's coming next
+-   [Change log](ChangeLog.md) of improvements and bug fixes
+-   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 <br><br>
 
 ## Community
 
-Do you have questions? feel free to ask and Join our project conversation at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com) on ![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white) .
+Do you have questions? Feel free to ask and join our project conversation at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com).
 <br><br>
 
-## Recommended Mode of Communication
+## Pull requests
 
--   Always leave screenshots for visuals changes
--   Always leave a detailed description in the Pull Request. Leave nothing ambiguous for the reviewer.
--   Always review your code first. Do this by leaving comments in your coding noting questions, or - interesting things for the reviewer.
--   Always communicate. Whether it is in the issue or the pull request, keeping the lines of communication helps everyone.
-    <br><br>
-
-## Pull requests​
-
-We actively welcome your pull requests, however linking your work to an existing issue is preferred.
+We actively welcome your pull requests. However, linking your work to an existing issue is preferred.
 
 -   Fork the repo and create your branch from main.
 -   Name your branch something that is descriptive to the work you are doing. i.e. adds-new-thing.
--   If you've added code that should be tested, add tests and Ensure the test suite passes.
--   If you make visual changes, screenshots are required.
+-   If you've added code that should be tested, add tests and ensure the test suite passes.
 -   Make sure you address any lint warnings.
 -   If you make the existing code better, please let us know in your PR description.
 
