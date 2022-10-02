@@ -498,7 +498,6 @@ class CreateTableTests : DatabaseTestsBase() {
     @Test fun `create table with quoted name with camel case`() {
         val testTable = object : IntIdTable("quotedTable") {
             val int = integer("intColumn")
-            override val tableName = "test"
         }
 
         withDb {
