@@ -220,6 +220,31 @@ class CreateTableTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun createTableWithQuotes() {
+        val parent = object : LongIdTable("\"Parent\"") {}
+        val child = object : LongIdTable("\"Child\"") {
+            val parentId = reference(
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+            )
+        }
+        withTables(parent, child) {
+            // Different dialects use different mix of lowercase/uppercase in their names
+            val expected = listOf(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
+                    " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
+                    " FOREIGN KEY (${this.identity(child.parentId)})" +
+                    " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                    ")"
+            )
+            assertEqualCollections(child.ddl, expected)
+        }
+    }
+
+    @Test
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
         val parent = object : LongIdTable("parent2") {
