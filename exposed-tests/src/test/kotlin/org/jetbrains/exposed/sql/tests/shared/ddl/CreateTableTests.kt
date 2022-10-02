@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -223,6 +224,31 @@ class CreateTableTests : DatabaseTestsBase() {
     fun createTableWithQuotes() {
         val parent = object : LongIdTable("\"Parent\"") {}
         val child = object : LongIdTable("\"Child\"") {
+            val parentId = reference(
+                name = "parent_id",
+                foreign = parent,
+                onUpdate = ReferenceOption.NO_ACTION,
+                onDelete = ReferenceOption.NO_ACTION,
+            )
+        }
+        withTables(parent, child) {
+            // Different dialects use different mix of lowercase/uppercase in their names
+            val expected = listOf(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
+                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
+                    " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
+                    " FOREIGN KEY (${this.identity(child.parentId)})" +
+                    " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                    ")"
+            )
+            assertEqualCollections(child.ddl, expected)
+        }
+    }
+
+    @Test
+    fun createTableWithSingleQuotes() {
+        val parent = object : LongIdTable("'Parent'") {}
+        val child = object : LongIdTable("'Child'") {
             val parentId = reference(
                 name = "parent_id",
                 foreign = parent,
@@ -465,6 +491,24 @@ class CreateTableTests : DatabaseTestsBase() {
                 SchemaUtils.drop(OneTable, OneOneTable)
                 val cascade = testDb != TestDB.SQLSERVER
                 SchemaUtils.dropSchema(one, cascade = cascade)
+            }
+        }
+    }
+
+    @Test fun `create table with quoted name with camel case`() {
+        val testTable = object : IntIdTable("quotedTable") {
+            val int = integer("intColumn")
+            override val tableName = "test"
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(testTable)
+                assertTrue(testTable.exists())
+                testTable.insert { it[int] = 10 }
+                assertEquals(10, testTable.selectAll().singleOrNull()?.get(testTable.int))
+            } finally {
+                SchemaUtils.drop(testTable)
             }
         }
     }

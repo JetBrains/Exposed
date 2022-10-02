@@ -336,6 +336,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
+    // Table name may contain quotes, remove those before appending
+    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -411,7 +413,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutScheme" } == true
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutSchemeSanitized" } == true
 
     /**
      * Represents a primary key composed by the specified [columns], and with the specified [name].
@@ -425,7 +427,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String? = null
     ) {
         /** Returns the name of the primary key. */
-        val name: String by lazy { name ?: "pk_$tableNameWithoutScheme" }
+        val name: String by lazy { name ?: "pk_$tableNameWithoutSchemeSanitized" }
 
         constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
             this(arrayOf(firstColumn, *columns), name)
