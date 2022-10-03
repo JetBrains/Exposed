@@ -247,8 +247,8 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun createTableWithSingleQuotes() {
-        val parent = object : LongIdTable("'Parent'") {}
-        val child = object : LongIdTable("'Child'") {
+        val parent = object : LongIdTable("'Parent2'") {}
+        val child = object : LongIdTable("'Child2'") {
             val parentId = reference(
                 name = "parent_id",
                 foreign = parent,
@@ -261,7 +261,7 @@ class CreateTableTests : DatabaseTestsBase() {
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
-                    " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
+                    " CONSTRAINT ${"fk_Child2_parent_id__id".inProperCase()}" +
                     " FOREIGN KEY (${this.identity(child.parentId)})" +
                     " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
                     ")"
