@@ -222,7 +222,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             metadata.getImportedKeys(databaseName, currentScheme, table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
                 val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
-                val fromColumn = allTables.getValue(fromTableName).columns.firstOrNull {
+                val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintName = getString("FK_NAME")!!
@@ -230,9 +230,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
                     identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
                 )
-                val targetColumn = allTables.getValue(targetTableName).columns.first {
+                val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
-                }
+                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintUpdateRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("UPDATE_RULE"))
                 val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
                 ForeignKeyConstraint(

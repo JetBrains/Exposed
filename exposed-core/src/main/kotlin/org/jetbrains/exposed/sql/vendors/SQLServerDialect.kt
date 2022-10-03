@@ -25,6 +25,8 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
      * https://docs.microsoft.com/en-us/sql/t-sql/data-types/ntext-text-and-image-transact-sql?view=sql-server-ver15
      */
     override fun textType(): String = "VARCHAR(MAX)"
+    override fun mediumTextType(): String = textType()
+    override fun largeTextType(): String = textType()
 
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         when (sortOrder) {
@@ -138,20 +140,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             append("${transaction.fullIdentity(col)}=")
             registerArgument(col, value)
         }
-        +" FROM "
-        if (targets.table != tableToUpdate) {
-            targets.table.describe(transaction, this)
-        }
 
-        targets.joinParts.appendTo(this, ",") {
-            if (it.joinPart != tableToUpdate) {
-                it.joinPart.describe(transaction, this)
-            }
-        }
-        +" WHERE "
-        targets.joinParts.appendTo(this, " AND ") {
-            it.appendConditions(this)
-        }
+        appendJoinPartForUpdateClause(tableToUpdate, targets, transaction)
+
         where?.let {
             +" AND "
             +it

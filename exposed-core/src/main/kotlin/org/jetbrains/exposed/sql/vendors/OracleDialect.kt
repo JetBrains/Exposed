@@ -14,6 +14,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
     override fun textType(): String = "CLOB"
+    override fun mediumTextType(): String = textType()
+    override fun largeTextType(): String = textType()
     override fun timeType(): String = dateTimeType()
     override fun binaryType(): String {
         exposedLogger.error("Binary type is unsupported for Oracle. Please use blob column type instead.")
