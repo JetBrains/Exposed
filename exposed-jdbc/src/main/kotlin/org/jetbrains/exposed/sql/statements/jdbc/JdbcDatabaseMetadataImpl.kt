@@ -172,8 +172,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
         is OracleDialect -> defaultValue.trim().trim('\'')
         is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'').trim()
-        is PostgreSQLDialect -> defaultValue.trim()
-        else -> defaultValue.trim('\'').trim()
+        is PostgreSQLDialect -> defaultValue
+        else -> defaultValue.trim('\'')
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()

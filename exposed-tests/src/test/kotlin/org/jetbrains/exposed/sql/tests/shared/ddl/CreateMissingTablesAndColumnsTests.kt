@@ -275,6 +275,31 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
+        val tableWhitespaceDefault = object : Table("varchar_test") {
+            val varchar = varchar("varchar_column", 255).default(" ")
+            val text = text("text_column").default(" ")
+        }
+
+        val tableEmptyStringDefault = object : Table("varchar_test") {
+            val varchar = varchar("varchar_column", 255).default("")
+            val text = text("text_column").default("")
+        }
+
+        // MySQL doesn't support default values on text columns, hence excluded
+        withDb(excludeSettings = listOf(TestDB.MYSQL)) {
+            try {
+                SchemaUtils.create(tableWhitespaceDefault)
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(tableEmptyStringDefault)
+                // Both columns should be considered as changed, since "" != " "
+                assertEquals(2, actual.size)
+            } finally {
+                SchemaUtils.drop(tableEmptyStringDefault, tableWhitespaceDefault)
+            }
+        }
+    }
+
+    @Test
     fun testAddMissingColumnsStatementsChangeDefault() {
         val t1 = object : Table("foo") {
             val id = integer("idcol")
