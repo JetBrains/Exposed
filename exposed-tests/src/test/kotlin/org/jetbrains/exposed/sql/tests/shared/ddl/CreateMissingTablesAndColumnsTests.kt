@@ -287,7 +287,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         // MySQL doesn't support default values on text columns, hence excluded
-        withDb(excludeSettings = listOf(TestDB.MYSQL)) {
+        // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
+        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE)) {
             try {
                 SchemaUtils.create(tableWhitespaceDefault)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(tableEmptyStringDefault)
