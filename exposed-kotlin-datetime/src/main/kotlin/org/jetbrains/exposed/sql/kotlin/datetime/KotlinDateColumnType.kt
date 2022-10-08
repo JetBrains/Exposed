@@ -35,16 +35,16 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     ).withZone(ZoneId.systemDefault())
 }
 
-// private val ORACLE_TIME_STRING_FORMATTER by lazy {
-//    DateTimeFormatter.ofPattern(
-//        "1900-01-01 HH:mm:ss",
-//        Locale.ROOT
-//    ).withZone(ZoneOffset.UTC)
-// }
-//
-// private val DEFAULT_TIME_STRING_FORMATTER by lazy {
-//    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
-// }
+ private val ORACLE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "1900-01-01 HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneId.of("UTC"))
+ }
+
+ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+ }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
@@ -149,56 +149,56 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-// class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
-//    override val hasTimePart: Boolean = true
-//
-//    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
-//
-//    override fun nonNullValueToString(value: Any): String {
-//        val instant = when (value) {
-//            is String -> return value
-//            is LocalTime -> value
-//            is java.sql.Time -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
-//            is java.sql.Timestamp -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
-//            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
-//        }
-//
-//        val formatter = if (currentDialect is OracleDialect) {
-//            ORACLE_TIME_STRING_FORMATTER
-//        } else {
-//            DEFAULT_TIME_STRING_FORMATTER
-//        }
-//        return "'${formatter.format(instant)}'"
-//    }
-//
-//    override fun valueFromDB(value: Any): LocalTime = when (value) {
-//        is LocalTime -> value
-//        is java.sql.Time -> value.toLocalTime()
-//        is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime()
-//        is Int -> longToLocalTime(value.toLong())
-//        is Long -> longToLocalTime(value)
-//        is String -> {
-//            val formatter = if (currentDialect is OracleDialect) {
-//                formatterForDateString(value)
-//            } else {
-//                DEFAULT_TIME_STRING_FORMATTER
-//            }
-//            LocalTime.parse(value, formatter)
-//        }
-//        else -> valueFromDB(value.toString())
-//    }
-//
-//    override fun notNullValueToDB(value: Any): Any = when (value) {
-//        is LocalTime -> java.sql.Time.valueOf(value)
-//        else -> value
-//    }
-//
-//    private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
-//
-//    companion object {
-//        internal val INSTANCE = JavaLocalTimeColumnType()
-//    }
-// }
+class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
+
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
+
+    override fun nonNullValueToString(value: Any): String {
+        val formatter = if (currentDialect is OracleDialect) {
+            ORACLE_TIME_STRING_FORMATTER
+        } else {
+            DEFAULT_TIME_STRING_FORMATTER
+        }
+
+        val instant = when (value) {
+            is String -> return value
+            is LocalTime -> value.toJavaLocalTime()
+            is java.sql.Time -> Instant.fromEpochMilliseconds(value.time).toJavaInstant()
+            is java.sql.Timestamp -> Instant.fromEpochSeconds(value.time / MILLIS_IN_SECOND, value.nanos.toLong()).toJavaInstant()
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+        return "'${formatter.format(instant)}'"
+    }
+
+    override fun valueFromDB(value: Any): LocalTime = when (value) {
+        is LocalTime -> value
+        is java.sql.Time -> value.toLocalTime().toKotlinLocalTime()
+        is java.sql.Timestamp -> value.toLocalDateTime().toLocalTime().toKotlinLocalTime()
+        is Int -> longToLocalTime(value.toLong())
+        is Long -> longToLocalTime(value)
+        is String -> {
+            val formatter = if (currentDialect is OracleDialect) {
+                formatterForDateString(value)
+            } else {
+                DEFAULT_TIME_STRING_FORMATTER
+            }
+            java.time.LocalTime.parse(value, formatter).toKotlinLocalTime()
+        }
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is LocalTime -> java.sql.Time.valueOf(value.toJavaLocalTime())
+        else -> value
+    }
+
+    private fun longToLocalTime(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(DEFAULT_TIME_ZONE).time
+
+    companion object {
+        internal val INSTANCE = KotlinLocalTimeColumnType()
+    }
+}
 
 class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -295,15 +295,14 @@ fun Table.date(name: String): Column<LocalDate> = registerColumn(name, KotlinLoc
  */
 fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, KotlinLocalDateTimeColumnType())
 
-// /**
-// * A time column to store a time.
-// *
-// * Doesn't return nanos from database.
-// *
-// * @param name The column name
-// * @author Maxim Vorotynsky
-// */
-// fun Table.time(name: String): Column<LocalTime> = registerColumn(name, JavaLocalTimeColumnType())
+/**
+ * A time column to store a time.
+ *
+ * Doesn't return nanos from database.
+ *
+ * @param name The column name
+ */
+fun Table.time(name: String): Column<LocalTime> = registerColumn(name, KotlinLocalTimeColumnType())
 
 /**
  * A timestamp column to store both a date and a time.
