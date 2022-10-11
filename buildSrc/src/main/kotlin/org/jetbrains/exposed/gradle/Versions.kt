@@ -26,7 +26,4 @@ object Versions {
 
     /** Test Dependencies **/
     const val testContainers = "1.17.3"
-
-    /** Formatting **/
-    const val detekt = "1.21.0"
 }

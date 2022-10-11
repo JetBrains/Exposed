@@ -1,6 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
-import org.jetbrains.exposed.gradle.Versions
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -23,7 +22,7 @@ val reportMerge by tasks.registering(ReportMergeTask::class) {
 
 subprojects {
     dependencies {
-        detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", Versions.detekt)
+        detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", "1.21.0")
     }
     tasks.withType<Detekt>().configureEach detekt@{
         finalizedBy(reportMerge)
