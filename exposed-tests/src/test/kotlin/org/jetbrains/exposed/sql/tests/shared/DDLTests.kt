@@ -810,7 +810,7 @@ class DDLTests : DatabaseTestsBase() {
     fun createTableWithForeignKeyToAnotherSchema() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
-        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(two, one)) {
+        withSchemas(two, one) {
             SchemaUtils.create(TableFromSchemeOne)
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT SELECT ON ${TableFromSchemeOne.tableName} to TWO;")
@@ -994,7 +994,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(arrayOf(idA, idB))
         }
 
-        withSchemas(excludeSettings = listOf(TestDB.SQLITE), schemas = arrayOf(one)) {
+        withSchemas(one) {
             SchemaUtils.create(tableA, tableB)
             tableA.insert { it[idA] = 1; it[idB] = 1 }
             tableB.insert { it[idA] = 1; it[idB] = 1 }

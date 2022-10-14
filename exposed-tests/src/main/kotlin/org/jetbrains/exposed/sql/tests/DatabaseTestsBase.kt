@@ -243,14 +243,16 @@ abstract class DatabaseTestsBase {
         Assume.assumeTrue(toTest.isNotEmpty())
         toTest.forEach { testDB ->
             withDb(testDB) {
-                SchemaUtils.createSchema(*schemas)
-                try {
-                    statement()
-                    commit() // Need commit to persist data before drop schemas
-                } finally {
-                    val cascade = it != TestDB.SQLSERVER
-                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
-                    commit()
+                if (currentDialectTest.supportsCreateSchema) {
+                    SchemaUtils.createSchema(*schemas)
+                    try {
+                        statement()
+                        commit() // Need commit to persist data before drop schemas
+                    } finally {
+                        val cascade = it != TestDB.SQLSERVER
+                        SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                        commit()
+                    }
                 }
             }
         }

@@ -34,7 +34,7 @@ class ThreadLocalTransactionManager(
         set
 
     @Volatile
-    override var defaultReadOnly: Boolean = DEFAULT_READ_ONLY
+    override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     val threadLocal = ThreadLocal<Transaction>()
 
