@@ -5,6 +5,7 @@ package org.jetbrains.exposed.sql.kotlin.datetime
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -24,9 +25,16 @@ fun <T: LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInt
 @JvmName("InstantDateFunction")
 fun <T: Instant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
 
-//internal class Time(val expr: Expression<*>) : Function<LocalTime>(JavaLocalTimeColumnType.INSTANCE) {
-//    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
-//}
+internal class TimeFunction(val expr: Expression<*>) : Function<LocalTime>(KotlinLocalTimeColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
+}
+
+@JvmName("LocalDateTimeFunction")
+fun <T: LocalDate?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+@JvmName("LocalDateTimeTimeFunction")
+fun <T: LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+@JvmName("InstantTimeFunction")
+fun <T: Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
 
 object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -189,7 +197,7 @@ fun <T : LocalDateTime?> Expression<T>.second() = Second(this)
 fun <T : Instant?> Expression<T>.second() = Second(this)
 
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, KotlinLocalDateColumnType.INSTANCE)
-// fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, JavaLocalTimeColumnType.INSTANCE)
+fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, KotlinLocalTimeColumnType.INSTANCE)
 fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParameter(value, KotlinLocalDateTimeColumnType.INSTANCE)
 
 fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, KotlinInstantColumnType.INSTANCE)
@@ -197,7 +205,7 @@ fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, 
 fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value, KotlinDurationColumnType.INSTANCE)
 
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(KotlinLocalDateColumnType.INSTANCE, value)
-// fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(JavaLocalTimeColumnType.INSTANCE, value)
+fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(KotlinLocalTimeColumnType.INSTANCE, value)
 fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(KotlinLocalDateTimeColumnType.INSTANCE, value)
 
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(KotlinInstantColumnType.INSTANCE, value)
@@ -207,8 +215,8 @@ fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(KotlinDura
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDate?> =
     CustomFunction(functionName, KotlinLocalDateColumnType.INSTANCE, *params)
 
-// fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
-//    CustomFunction(functionName, JavaLocalTimeColumnType.INSTANCE, *params)
+ fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
+    CustomFunction(functionName, KotlinLocalTimeColumnType.INSTANCE, *params)
 
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDateTime?> =
     CustomFunction(functionName, KotlinLocalDateTimeColumnType.INSTANCE, *params)

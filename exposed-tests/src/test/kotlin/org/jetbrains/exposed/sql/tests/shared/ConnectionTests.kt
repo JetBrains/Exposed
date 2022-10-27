@@ -53,7 +53,7 @@ class ConnectionTests : DatabaseTestsBase() {
         val child = object : LongIdTable("child") {
             val scale = reference("scale", parent.scale)
         }
-        withTables(listOf(TestDB.MYSQL), child) {
+        withTables(listOf(TestDB.MYSQL), child, parent) {
             val constraints = connection.metadata {
                 tableConstraints(listOf(child))
             }

@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     api(project(":exposed-core"))
-    api("org.jetbrains.kotlinx", "kotlinx-datetime-jvm", "0.3.1")
+    api("org.jetbrains.kotlinx", "kotlinx-datetime-jvm", "0.4.0")
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation("junit", "junit", "4.12")

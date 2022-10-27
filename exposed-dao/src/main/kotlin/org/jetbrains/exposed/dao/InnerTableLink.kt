@@ -3,6 +3,8 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty

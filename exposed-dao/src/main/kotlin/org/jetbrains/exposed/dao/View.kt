@@ -4,14 +4,14 @@ import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import kotlin.reflect.KProperty
 
 class View<out Target : Entity<*>> (val op: Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
     override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n, offset)
     override fun count(): Long = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
-    override fun forUpdate(vararg tableRefs: Table): SizedIterable<Target> = factory.find(op).forUpdate(*tableRefs)
+    override fun forUpdate(option: ForUpdateOption): SizedIterable<Target> = factory.find(op).forUpdate(option)
     override fun notForUpdate(): SizedIterable<Target> = factory.find(op).notForUpdate()
 
     override operator fun iterator(): Iterator<Target> = factory.find(op).iterator()

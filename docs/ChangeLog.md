@@ -1,3 +1,27 @@
+# 0.40.1
+Infrastructure:
+* Kotlin 1.7.20
+
+Feature:
+* Read-only transactions/connections support. Read-Only option can be set on all levels (via `DatabaseConfig`, `transaction`, `TransactionManager`). Thanks [Alex Shubert](https://github.com/lure) for the improvement
+* `Table.deleteWhere` now captures receiver table and allows to omit the table in a lambda. Greetings to [Alexey Soshin](https://github.com/AlexeySoshin) for the first PR in the project!  
+* New `mediumText` and `largeText` columns were introduced by [Alex Shubert](https://github.com/lure) to allow use more suitable data types for databases where they are supported.
+* `ForUpdateOption` (like `ForUpdateOption.PostgreSQL.ForKeyShare`) added for more flexible management of locks in your `SELECT` queries. You can set it as a parameter via `Query.forUpdate` function. Another kudos goes to [Alex Shubert](https://github.com/lure)
+* Preserve a colection type for `Iterable.with()` function 
+* `LazySizedCollection` can be checked for loaded data with `LazySizedCollection.isLoaded()`. Added by [unbearables](https://github.com/unbearables)
+* 
+
+Bug Fixes:
+* [Regression] `NoSuchMethod` error: `long kotlin.time.TimeSource$Monotonic.markNow` ([#1556](https://github.com/JetBrains/Exposed/issues/1540)) 
+* `insertIgnoreAndGet` must explicitly mark failed insert on conflicts. Fixed by [Alex Shubert](https://github.com/lure) in PR ([#1584](https://github.com/JetBrains/Exposed/issues/1584))
+* Comma is missing in `UPDATE` with multiple tables  ([#1595](https://github.com/JetBrains/Exposed/issues/1595))
+* `suspendedTransaction` should accept `CoroutineContext` instead of `CourutineDispatcher` was fixed by [rasharab](https://github.com/rasharab) in PR ([#1515](https://github.com/JetBrains/Exposed/issues/1515))
+* [MySQL/MariaDB] `REPLACE` fails when `Expression` used as a replacement parameter. Thank you [Tiscs](https://github.com/Tiscs) for the fix.
+* `EntityClass#wramUpReferences` should cache reference of referrer. Located and fixed by [Joddev](https://github.com/Joddev).  
+* `NullPointerException` when IdTable with overridden tableName is defined ([#1588](https://github.com/JetBrains/Exposed/issues/1588))
+* `SchemaUtils.createMissingTablesAndColumns` raises `NoSuchElementException` ([#1568](https://github.com/JetBrains/Exposed/issues/1568))
+* Better handling of tables with names covered with quotes. Issue [#1550](https://github.com/JetBrains/Exposed/issues/1550) resolved by [Alexey Soshin](https://github.com/AlexeySoshin). 
+
 # 0.39.2
 Infrastructure:
 * All modules built with Kotlin 1.6 as a target

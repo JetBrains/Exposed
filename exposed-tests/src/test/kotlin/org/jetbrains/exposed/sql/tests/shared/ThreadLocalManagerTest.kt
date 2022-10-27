@@ -56,7 +56,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db = db) {
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -119,7 +119,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -153,7 +153,7 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -177,7 +177,7 @@ class ConnectionExceptions {
         val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -256,6 +256,21 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
             SchemaUtils.drop(DMLTestsData.Cities)
         }
         assertEquals(secondThreadTm, db2.transactionManager)
+    }
+
+    @Test
+    fun testReadOnly() {
+        //Explanation: MariaDB driver never set readonly to true, MSSQL silently ignores the call, SQLLite does not
+        // promise anything, H2 has very limited functionality
+        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.H2,
+                                            TestDB.H2_MYSQL, TestDB.MARIADB,
+                                            TestDB.SQLSERVER, TestDB.ORACLE), RollbackTable) {
+            assertFails {
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1, true) {
+                    RollbackTable.insert { it[value] = "random-something" }
+                }
+            }.message?.run { assertTrue(contains("read-only")) } ?: fail("message should not be null")
+        }
     }
 }
 

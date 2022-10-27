@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.spring
 
-import org.jetbrains.exposed.sql.DEFAULT_REPETITION_ATTEMPTS
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -24,7 +23,8 @@ class SpringTransactionManager(
     _dataSource: DataSource,
     databaseConfig: DatabaseConfig = DatabaseConfig{ },
     private val showSql: Boolean = false,
-    @Volatile override var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS
+    @Volatile override var defaultReadOnly: Boolean = databaseConfig.defaultReadOnly,
+    @Volatile override var defaultRepetitionAttempts: Int = databaseConfig.defaultRepetitionAttempts
 ) : DataSourceTransactionManager(_dataSource), TransactionManager {
 
     init {
@@ -92,8 +92,11 @@ class SpringTransactionManager(
         }
     }
 
-    override fun newTransaction(isolation: Int, outerTransaction: Transaction?): Transaction {
-        val tDefinition = DefaultTransactionDefinition().apply { isolationLevel = isolation }
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
+        val tDefinition = DefaultTransactionDefinition().apply {
+            isReadOnly = readOnly
+            isolationLevel = isolation
+        }
 
         getTransaction(tDefinition)
 
@@ -104,7 +107,7 @@ class SpringTransactionManager(
         val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
         val transactionImpl = try {
-            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, currentOrNull())
+            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
         } catch (e: Exception) {
             exposedLogger.error("Failed to start transaction. Connection will be closed.", e)
             connection.close()
@@ -137,6 +140,7 @@ class SpringTransactionManager(
         override val connection: ExposedConnection<*>,
         override val db: Database,
         override val transactionIsolation: Int,
+        override val readOnly: Boolean,
         override val outerTransaction: Transaction?
     ) : TransactionInterface {
 

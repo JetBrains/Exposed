@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.util.*
@@ -25,8 +26,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var having: Op<Boolean>? = null
         private set
 
-    private var forUpdate: Boolean? = null
-    private val tableRefs: MutableList<Table> = mutableListOf()
+    private var forUpdate: ForUpdateOption? = null
 
     // private set
     var where: Op<Boolean>? = where
@@ -48,19 +48,18 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         copy.forUpdate = forUpdate
     }
 
-    override fun forUpdate(vararg tableRefs: Table): Query {
-        this.forUpdate = true
-        this.tableRefs.addAll(tableRefs)
+    override fun forUpdate(option: ForUpdateOption): Query {
+        this.forUpdate = option
+        return this
+    }
+
+    override fun notForUpdate(): Query {
+        forUpdate = ForUpdateOption.NoForUpdateOption
         return this
     }
 
     override fun withDistinct(value: Boolean): Query = apply {
         distinct = value
-    }
-
-    override fun notForUpdate(): Query {
-        forUpdate = false
-        return this
     }
 
     /**
@@ -94,7 +93,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
     fun hasCustomForUpdateState() = forUpdate != null
-    fun isForUpdate() = (forUpdate ?: false) && currentDialect.supportsSelectForUpdate()
+    fun isForUpdate() = (forUpdate?.let { it != ForUpdateOption.NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
@@ -153,9 +152,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             }
 
             if (isForUpdate()) {
-                append(" FOR UPDATE")
-                if (tableRefs.isNotEmpty()) {
-                    append(tableRefs.joinToString(prefix = " OF ") { it.nameInDatabaseCase() })
+                forUpdate?.apply {
+                    append(" $querySuffix")
+                    if (tableRefs.isNotEmpty()) {
+                      append(tableRefs.joinToString(prefix = " OF ") { it.nameInDatabaseCase() })
+                    }
                 }
             }
         }
