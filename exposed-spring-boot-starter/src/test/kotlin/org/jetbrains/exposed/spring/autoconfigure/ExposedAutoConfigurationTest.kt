@@ -4,6 +4,7 @@ import org.jetbrains.exposed.spring.DatabaseInitializer
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.spring.tables.TestTable
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
@@ -117,5 +118,5 @@ open class AsyncExposedService {
     open fun allTestData() = TestTable.selectAll().toList()
 
     // you need to put open otherwise @Transactional is not applied since spring plugin not applied (similar to maven kotlin plugin)
-    open fun allTestDataAsync() = CompletableFuture.completedFuture(TestTable.selectAll().toList())
+    open fun allTestDataAsync(): CompletableFuture<List<ResultRow>> = CompletableFuture.completedFuture(TestTable.selectAll().toList())
 }

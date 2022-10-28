@@ -55,8 +55,15 @@ abstract class DataTypeProvider {
 
     // Character types
 
-    /** Character type for storing strings of variable and _unlimited_ length. */
+    /** Character type for storing strings of variable length.
+     * Some database (postgresql) use the same data type name to provide virtually _unlimited_ length. */
     open fun textType(): String = "TEXT"
+
+    /** Character type for storing strings of _medium_ length. */
+    open fun mediumTextType(): String = "TEXT"
+
+    /** Character type for storing strings of variable and _large_ length. */
+    open fun largeTextType(): String = "TEXT"
 
     // Binary data types
 
@@ -432,6 +439,26 @@ abstract class FunctionProvider {
         transaction: Transaction
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
+    protected fun QueryBuilder.appendJoinPartForUpdateClause(tableToUpdate: Table, targets: Join, transaction: Transaction) {
+        +" FROM "
+        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
+        if (targets.table != tableToUpdate) {
+            targets.table.describe(transaction, this)
+            if (joinPartsToAppend.isNotEmpty()) {
+                +", "
+            }
+        }
+
+        joinPartsToAppend.appendTo(this, ", ") {
+            it.joinPart.describe(transaction, this)
+        }
+
+        +" WHERE "
+        targets.joinParts.appendTo(this, " AND ") {
+            it.appendConditions(this)
+        }
+    }
+
     /**
      * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
      * This operation is also known as "Insert or update".
@@ -639,6 +666,44 @@ interface DatabaseDialect {
         private val defaultLikePatternSpecialChars = mapOf('%' to null, '_' to null)
     }
 }
+
+sealed class ForUpdateOption(open val querySuffix: String)  {
+
+    internal object NoForUpdateOption : ForUpdateOption("") {
+        override val querySuffix: String get() = error("querySuffix should not be called for NoForUpdateOption object")
+    }
+
+    object ForUpdate : ForUpdateOption("FOR UPDATE")
+
+    // https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
+    object MySQL {
+        object ForShare : ForUpdateOption("FOR SHARE")
+
+        object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
+    }
+
+    // https://mariadb.com/kb/en/select/#lock-in-share-modefor-update
+    object MariaDB {
+        object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
+    }
+
+    // https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
+    object PostgreSQL {
+        object ForNoKeyUpdate : ForUpdateOption("FOR NO KEY UPDATE")
+
+        object ForShare : ForUpdateOption("FOR SHARE")
+
+        object ForKeyShare : ForUpdateOption("FOR KEY SHARE")
+    }
+
+    // https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
+    object Oracle {
+        object ForUpdateNoWait : ForUpdateOption("FOR UPDATE NOWAIT")
+
+        class ForUpdateWait(timeout: Int) : ForUpdateOption("FOR UPDATE WAIT $timeout")
+    }
+}
+
 
 /**
  * Base implementation of a vendor dialect

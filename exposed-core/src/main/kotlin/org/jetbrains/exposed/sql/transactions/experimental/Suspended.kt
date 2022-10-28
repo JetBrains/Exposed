@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.transactions.experimental
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ThreadContextElement
@@ -57,13 +56,13 @@ suspend fun <T> newSuspendedTransaction(
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
-suspend fun <T> Transaction.suspendedTransaction(context: CoroutineDispatcher? = null, statement: suspend Transaction.() -> T): T =
+suspend fun <T> Transaction.suspendedTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
         suspendedTransactionAsyncInternal(false, statement).await()
     }
 
 suspend fun <T> suspendedTransactionAsync(
-    context: CoroutineDispatcher? = null,
+    context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
     statement: suspend Transaction.() -> T

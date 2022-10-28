@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.7.10"
+    const val kotlin = "1.7.20"
     const val kotlinCoroutines = "1.6.4"
 
     const val slf4j = "1.7.36"
@@ -25,6 +25,5 @@ object Versions {
     const val springBoot = "2.7.2"
 
     /** Test Dependencies **/
-    const val testContainers = "1.16.3"
-    const val otjPgEmbedded = "0.13.4"
+    const val testContainers = "1.17.3"
 }

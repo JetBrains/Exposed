@@ -2,8 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
-const val DEFAULT_REPETITION_ATTEMPTS = 3
-
 @Suppress("LongParameterList")
 class DatabaseConfig private constructor(
     val sqlLogger: SqlLogger,
@@ -11,6 +9,7 @@ class DatabaseConfig private constructor(
     val defaultFetchSize: Int?,
     val defaultIsolationLevel: Int,
     val defaultRepetitionAttempts: Int,
+    val defaultReadOnly: Boolean,
     val warnLongQueriesDuration: Long?,
     val maxEntitiesToStoreInCachePerEntity: Int,
     val keepLoadedReferencesOutOfTransaction: Boolean,
@@ -43,7 +42,13 @@ class DatabaseConfig private constructor(
          * Can be overridden on per-transaction level by specifying `repetitionAttempts` parameter on call
          * Default attempts are 3
          */
-        var defaultRepetitionAttempts: Int = DEFAULT_REPETITION_ATTEMPTS,
+        var defaultRepetitionAttempts: Int = 3,
+
+        /**
+         * Should all connections/transactions be executed in read-only mode by default or not
+         * Default state is false
+         */
+        var defaultReadOnly: Boolean = false,
         /**
          * Threshold in milliseconds to log queries which exceed the threshold with WARN level
          * No tracing enabled by default
@@ -91,6 +96,7 @@ class DatabaseConfig private constructor(
                 defaultFetchSize = builder.defaultFetchSize,
                 defaultIsolationLevel = builder.defaultIsolationLevel,
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
+                defaultReadOnly = builder.defaultReadOnly,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
                 keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction,

@@ -212,19 +212,7 @@ class Join(
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
         table.describe(s, this)
         for (p in joinParts) {
-            append(" ${p.joinType} JOIN ")
-            val isJoin = p.joinPart is Join
-            if (isJoin) {
-                append("(")
-            }
-            p.joinPart.describe(s, this)
-            if (isJoin) {
-                append(")")
-            }
-            if (p.joinType != JoinType.CROSS) {
-                append(" ON ")
-                p.appendConditions(this)
-            }
+            p.describe(s, this)
         }
     }
 
@@ -302,6 +290,22 @@ class Join(
             require(joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null) { "Missing join condition on $${this.joinPart}" }
         }
 
+        fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
+            append(" $joinType JOIN ")
+            val isJoin = joinPart is Join
+            if (isJoin) {
+                append("(")
+            }
+            joinPart.describe(transaction, this)
+            if (isJoin) {
+                append(")")
+            }
+            if (joinType != JoinType.CROSS) {
+                append(" ON ")
+                appendConditions(this)
+            }
+        }
+
         fun appendConditions(builder: QueryBuilder) = builder {
             conditions.appendTo(this, " AND ") { (pkColumn, fkColumn) -> append(pkColumn, " = ", fkColumn) }
             if (additionalConstraint != null) {
@@ -332,6 +336,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
+    // Table name may contain quotes, remove those before appending
+    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -407,7 +413,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutScheme" } == true
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutSchemeSanitized" } == true
 
     /**
      * Represents a primary key composed by the specified [columns], and with the specified [name].
@@ -418,10 +424,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     inner class PrimaryKey(
         /** Returns the columns that compose the primary key. */
         val columns: Array<Column<*>>,
-        /** Returns the name of the primary key. */
-        val name: String = "pk_$tableNameWithoutScheme"
+        name: String? = null
     ) {
-        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String = "pk_$tableNameWithoutScheme") :
+        /** Returns the name of the primary key. */
+        val name: String by lazy { name ?: "pk_$tableNameWithoutSchemeSanitized" }
+
+        constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
             this(arrayOf(firstColumn, *columns), name)
 
         init {
@@ -530,14 +538,36 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a character column, with the specified [name], for storing strings of arbitrary length using the specified [collate] type.
-     * If no collate type is specified then the database default is used.
+     * If no collated type is specified, then the database default is used.
      *
-     * Some database drivers do not load text content immediately (by performance and memory reasons)
-     * what means that you can obtain column value only within the open transaction.
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
      * If you desire to make content available outside the transaction use [eagerLoading] param.
      */
     fun text(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
         registerColumn(name, TextColumnType(collate, eagerLoading))
+
+    /**
+     * Creates a character column, with the specified [name], for storing strings of _medium_ length using the specified [collate] type.
+     * If no collated type is specified, then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
+     */
+    fun mediumText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, MediumTextColumnType(collate, eagerLoading))
+
+    /**
+     * Creates a character column, with the specified [name], for storing strings of _large_ length using the specified [collate] type.
+     * If no collated type is specified, then the database default is used.
+     *
+     * Some database drivers do not load text content immediately (for performance and memory reasons),
+     * which means that you can obtain column value only within the open transaction.
+     * If you desire to make content available outside the transaction use [eagerLoading] param.
+     */
+    fun largeText(name: String, collate: String? = null, eagerLoading: Boolean = false): Column<String> =
+        registerColumn(name, LargeTextColumnType(collate, eagerLoading))
 
     // Binary columns
 

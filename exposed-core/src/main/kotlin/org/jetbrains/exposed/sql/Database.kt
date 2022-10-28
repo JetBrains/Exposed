@@ -200,7 +200,7 @@ class Database private constructor(
             databaseConfig: DatabaseConfig? = null,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
-            Class.forName(driver).newInstance()
+            Class.forName(driver).getDeclaredConstructor().newInstance()
             val dialectName = getDialectName(url) ?: error("Can't resolve dialect for connection: $url")
             return doConnect(dialectName, databaseConfig, { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
         }

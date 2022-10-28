@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.tests
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
@@ -9,7 +8,9 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.Connection
+import java.time.Duration
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.reflect.KMutableProperty1
@@ -123,12 +124,32 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
+internal class SpecifiedPGContainer(val image: String) : PostgreSQLContainer<SpecifiedPGContainer>(image) {
+    fun exposeFixedPort(hostPort: Int, containerPort: Int): SpecifiedPGContainer {
+        super.addFixedExposedPort(hostPort, containerPort)
+        return this
+    }
+
+}
+
 private val postgresSQLProcess by lazy {
-    EmbeddedPostgres.builder()
-        .setPgBinaryResolver { system, _ ->
-            EmbeddedPostgres::class.java.getResourceAsStream("/postgresql-$system-x86_64.txz")
+    SpecifiedPGContainer(image ="postgres:13.8-alpine")
+        .withUsername("postgres")
+        .withPassword("")
+        .withStartupTimeout(Duration.ofSeconds(60))
+        .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
+        .exposeFixedPort(hostPort = 12346, containerPort = 5432)
+        .apply {
+            listOf(
+                "timezone=UTC",
+                "synchronous_commit=off",
+                "max_connections=300",
+                "fsync=off"
+            ).forEach{
+                setCommand("postgres", "-c", it)
+            }
+            start()
         }
-        .setPort(12346).start()
 }
 
 // MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
@@ -222,14 +243,16 @@ abstract class DatabaseTestsBase {
         Assume.assumeTrue(toTest.isNotEmpty())
         toTest.forEach { testDB ->
             withDb(testDB) {
-                SchemaUtils.createSchema(*schemas)
-                try {
-                    statement()
-                    commit() // Need commit to persist data before drop schemas
-                } finally {
-                    val cascade = it != TestDB.SQLSERVER
-                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
-                    commit()
+                if (currentDialectTest.supportsCreateSchema) {
+                    SchemaUtils.createSchema(*schemas)
+                    try {
+                        statement()
+                        commit() // Need commit to persist data before drop schemas
+                    } finally {
+                        val cascade = it != TestDB.SQLSERVER
+                        SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                        commit()
+                    }
                 }
             }
         }

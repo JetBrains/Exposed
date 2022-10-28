@@ -26,12 +26,10 @@ interface TransactionInterface {
     fun close()
 }
 
-const val DEFAULT_READ_ONLY = false
-
 private object NotInitializedManager : TransactionManager {
     override var defaultIsolationLevel: Int = -1
 
-    override var defaultReadOnly: Boolean = DEFAULT_READ_ONLY
+    override var defaultReadOnly: Boolean = false
 
     override var defaultRepetitionAttempts: Int = -1
 

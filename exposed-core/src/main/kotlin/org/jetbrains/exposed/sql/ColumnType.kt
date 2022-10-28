@@ -622,8 +622,10 @@ open class VarCharColumnType(
  * [eagerLoading] means what content will be loaded immediately when data loaded from database.
  */
 open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
+    open fun preciseType() = currentDialect.dataTypeProvider.textType()
+
     override fun sqlType(): String = buildString {
-        append(currentDialect.dataTypeProvider.textType())
+        append(preciseType())
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
@@ -636,6 +638,14 @@ open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = f
         else
             value
     }
+}
+
+open class MediumTextColumnType(collate: String? = null, eagerLoading: Boolean = false) : TextColumnType(collate, eagerLoading) {
+    override fun preciseType(): String = currentDialect.dataTypeProvider.mediumTextType()
+}
+
+open class LargeTextColumnType(collate: String? = null, eagerLoading: Boolean = false) : TextColumnType(collate, eagerLoading) {
+    override fun preciseType(): String = currentDialect.dataTypeProvider.largeTextType()
 }
 
 // Binary columns
