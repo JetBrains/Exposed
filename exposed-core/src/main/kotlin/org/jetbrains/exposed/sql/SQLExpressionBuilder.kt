@@ -321,7 +321,7 @@ interface ISqlExpressionBuilder {
     /**
      * Calculates the remainder of dividing the value of a numeric PK by the [other] number.
      */
-    infix operator fun <T, S : Number> ExpressionWithColumnType<EntityID<T>>.rem(other: S): ModOpEntityID<T, S>
+    infix operator fun <T, S : Number> ExpressionWithColumnType<EntityID<T>>.rem(other: S): ModOpEntityID<T, S, EntityID<T>>
         where T : Number?, T : Comparable<T> =
         ModOpEntityID(this, wrap(other), this.columnType)
 
@@ -329,7 +329,15 @@ interface ISqlExpressionBuilder {
     infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S): ModOp<T, S> = this % t
 
     /** Calculates the remainder of dividing this expression by the [other] expression. */
-    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> = this % other
+    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> =
+        this % other
+
+    /**
+     * Calculates the remainder of dividing the value of a numeric PK by the [other] number.
+     */
+    infix fun <T, S : Number> ExpressionWithColumnType<EntityID<T>>.mod(other: S): ModOpEntityID<T, S, EntityID<T>>
+        where T : Number?, T : Comparable<T> =
+        ModOpEntityID(this, wrap(other), this.columnType)
 
     /**
      * Performs a bitwise `and` on this expression and [t].
@@ -568,7 +576,8 @@ interface ISqlExpressionBuilder {
         else -> LiteralOp(columnType, value)
     } as LiteralOp<T>
 
-    fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
+    fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
+        NoOpConversion(this, DecimalColumnType(15, 0))
 }
 
 /**

@@ -320,13 +320,13 @@ class ModOp<T : Number?, S : Number?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
 }
 
-class ModOpEntityID<T, S : Number?>(
+class ModOpEntityID<T, S : Number?, K : EntityID<T>>(
     /** Returns the left-hand side operand. */
-    val expr1: Expression<EntityID<T>>,
+    val expr1: Expression<K>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() where T : Comparable<T>, T : Number? {
+) : ExpressionWithColumnType<K>() where T : Comparable<T>, T : Number? {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
 }
 
