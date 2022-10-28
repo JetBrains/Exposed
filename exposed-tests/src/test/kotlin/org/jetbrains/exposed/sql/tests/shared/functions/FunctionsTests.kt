@@ -2,14 +2,11 @@ package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.crypt.Algorithms
 import org.jetbrains.exposed.crypt.Encryptor
-import org.jetbrains.exposed.dao.DaoEntityID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.mod
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.rem
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -22,7 +19,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import org.jetbrains.exposed.sql.transactions.*
 
 class FunctionsTests : DatabaseTestsBase() {
 
