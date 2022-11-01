@@ -101,8 +101,8 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         return result
     }
 
-    override fun prepareSQL(transaction: Transaction): String {
-        val builder = QueryBuilder(true)
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
+        val builder = QueryBuilder(prepared)
         val values = arguments!!.first()
         val sql = if (values.isEmpty()) ""
         else with(builder) {

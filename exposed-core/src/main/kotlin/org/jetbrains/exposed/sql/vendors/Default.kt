@@ -470,7 +470,8 @@ abstract class FunctionProvider {
     open fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        transaction: Transaction,
+        prepared: Boolean = true
     ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be vendor specific implementation.")
 
     /**

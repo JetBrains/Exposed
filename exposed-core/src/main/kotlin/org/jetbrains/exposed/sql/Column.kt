@@ -35,6 +35,8 @@ class Column<T>(
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
 
+    fun defaultValueInDb() = dbDefaultValue
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 

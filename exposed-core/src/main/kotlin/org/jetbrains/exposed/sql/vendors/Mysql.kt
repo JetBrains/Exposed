@@ -85,8 +85,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        val builder = QueryBuilder(true)
+    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction, prepared: Boolean): String {
+        val builder = QueryBuilder(prepared)
         val columns = data.joinToString { transaction.identity(it.first) }
         val values = builder.apply { data.appendTo { registerArgument(it.first, it.second) } }.toString()
         return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"

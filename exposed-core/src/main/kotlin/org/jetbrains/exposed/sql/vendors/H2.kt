@@ -95,7 +95,8 @@ internal object H2FunctionProvider : FunctionProvider() {
     override fun replace(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        transaction: Transaction,
+        prepared: Boolean
     ): String {
         if (data.isEmpty()) {
             return ""
@@ -103,7 +104,7 @@ internal object H2FunctionProvider : FunctionProvider() {
 
         val columns = data.map { it.first }
 
-        val builder = QueryBuilder(true)
+        val builder = QueryBuilder(prepared)
 
         val sql = data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
 
