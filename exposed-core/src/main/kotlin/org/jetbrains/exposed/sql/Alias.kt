@@ -65,7 +65,7 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     }
 
     override val fields: List<Expression<*>> = query.set.fields.map { expression ->
-            (expression as? Column<*>)?.clone() ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression() ?: expression
+        (expression as? Column<*>)?.clone() ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression() ?: expression
     }
 
     override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
@@ -81,11 +81,14 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         return aliases.find { it == original }?.let {
             it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
         } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
-          ?: error("Field not found in original table fields")
+            ?: error("Field not found in original table fields")
     }
 
     override fun join(
-        otherTable: ColumnSet, joinType: JoinType, onColumn: Expression<*>?, otherColumn: Expression<*>?,
+        otherTable: ColumnSet,
+        joinType: JoinType,
+        onColumn: Expression<*>?,
+        otherColumn: Expression<*>?,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
     ): Join =
         Join(this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)

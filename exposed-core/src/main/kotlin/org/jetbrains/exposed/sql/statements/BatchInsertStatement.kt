@@ -12,10 +12,11 @@ open class BatchInsertStatement(
     shouldReturnGeneratedValues: Boolean = true
 ) : BaseBatchInsertStatement(table, ignore, shouldReturnGeneratedValues)
 
+private const val OUTPUT_ROW_LIMIT = 1000
+
 open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) :
     BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
-    private val OUTPUT_ROW_LIMIT = 1000
 
     override fun validateLastBatch() {
         super.validateLastBatch()

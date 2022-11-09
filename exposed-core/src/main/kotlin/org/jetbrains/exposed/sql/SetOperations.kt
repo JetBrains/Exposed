@@ -163,7 +163,7 @@ class Intersect(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery
 
 class Except(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("EXCEPT", firstStatement, secondStatement) {
 
-    override val operationName: String get() = when(currentDialect) {
+    override val operationName: String get() = when (currentDialect) {
         is OracleDialect -> "MINUS"
         else -> "EXCEPT"
     }

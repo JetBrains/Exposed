@@ -7,6 +7,7 @@ import java.math.BigDecimal
 /**
  * Represents an SQL operator.
  */
+@Suppress("UnnecessaryAbstractClass")
 abstract class Op<T> : Expression<T>() {
     companion object {
         /** Builds a new operator using provided [op]. */
@@ -325,7 +326,6 @@ class ModOp<T : Number?, S : Number?>(
     }
 }
 
-
 // https://github.com/h2database/h2database/issues/3253
 private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>) =
     if (e !is Column<*> && e !is LiteralOp<*>) e.castTo(columnType) else e
@@ -415,11 +415,12 @@ class XorBitOp<T, S : T>(
 /**
  * Represents an SQL operator that checks if [expr1] matches [expr2].
  */
-class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) : ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
+class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) :
+    ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         super.toQueryBuilder(queryBuilder)
-        if (escapeChar != null){
-            with(queryBuilder){
+        if (escapeChar != null) {
+            with(queryBuilder) {
                 +" ESCAPE "
                 +stringParam(escapeChar.toString())
             }

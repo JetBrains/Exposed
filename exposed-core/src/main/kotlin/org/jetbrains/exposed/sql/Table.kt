@@ -327,6 +327,7 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
+@Suppress("TooManyFunctions")
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {

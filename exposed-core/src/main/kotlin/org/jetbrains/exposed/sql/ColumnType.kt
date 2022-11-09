@@ -161,12 +161,19 @@ val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
-@Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
+@Deprecated(
+    message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
+    replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
+    level = DeprecationLevel.ERROR
+)
 val Column<*>.autoIncSeqName: String?
     get() = autoIncColumnType?.autoincSeq
-internal fun IColumnType.rawSqlType(): IColumnType =
-    if (this is AutoIncColumnType) this.delegate else if (this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType) this.idColumn.columnType.delegate else this
 
+internal fun IColumnType.rawSqlType(): IColumnType = when {
+    this is AutoIncColumnType -> delegate
+    this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
+    else -> this
+}
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
@@ -423,16 +430,18 @@ class DecimalColumnType(
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
         is Double -> {
-            if (value.isNaN())
+            if (value.isNaN()) {
                 error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
-            else
+            } else {
                 value.toBigDecimal()
+            }
         }
         is Float -> {
-            if (value.isNaN())
+            if (value.isNaN()) {
                 error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
-            else
+            } else {
                 value.toBigDecimal()
+            }
         }
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
@@ -633,10 +642,11 @@ open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = f
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         val value = super.readObject(rs, index)
-        return if (eagerLoading && value != null)
+        return if (eagerLoading && value != null) {
             valueFromDB(value)
-        else
+        } else {
             value
+        }
     }
 }
 

@@ -11,16 +11,16 @@ interface StatementInterceptor {
     fun beforeCommit(transaction: Transaction) {}
 
     @Deprecated("using afterCommit with transaction")
-    //@Deprecated("using afterCommit with transaction", level = DeprecationLevel.ERROR) \\ next version
-    //@Deprecated("using afterCommit with transaction", level = DeprecationLevel.HIDDEN) \\ next version, backward compatibility
+    // @Deprecated("using afterCommit with transaction", level = DeprecationLevel.ERROR) \\ next version
+    // @Deprecated("using afterCommit with transaction", level = DeprecationLevel.HIDDEN) \\ next version, backward compatibility
     fun afterCommit() {}
     fun afterCommit(transaction: Transaction) { afterCommit() }
 
     fun beforeRollback(transaction: Transaction) {}
 
     @Deprecated("using afterRollback with transaction")
-    //@Deprecated("using afterRollback with transaction", level = DeprecationLevel.ERROR) \\ next version
-    //@Deprecated("using afterRollback with transaction", level = DeprecationLevel.HIDDEN) \\ next version, backward compatibility
+    // @Deprecated("using afterRollback with transaction", level = DeprecationLevel.ERROR) \\ next version
+    // @Deprecated("using afterRollback with transaction", level = DeprecationLevel.HIDDEN) \\ next version, backward compatibility
     fun afterRollback() {}
     fun afterRollback(transaction: Transaction) { afterRollback() }
 

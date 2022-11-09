@@ -1,4 +1,4 @@
-@file:Suppress("PackageDirectoryMismatch")
+@file:Suppress("PackageDirectoryMismatch", "InvalidPackageDeclaration")
 package org.jetbrains.exposed.exceptions
 
 import org.jetbrains.exposed.sql.AbstractQuery
@@ -35,6 +35,7 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
     override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
 }
 
+@Suppress("MaximumLineLength")
 class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
 
 /**
@@ -45,6 +46,7 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  *
  * @param columnName the duplicated column name
  */
+@Suppress("MaximumLineLength")
 class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError("Duplicate column name \"$columnName\" in table \"$tableName\"")
 
 /**

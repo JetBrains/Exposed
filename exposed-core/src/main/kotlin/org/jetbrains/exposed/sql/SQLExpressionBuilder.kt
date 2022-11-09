@@ -167,7 +167,7 @@ data class LikePattern(
                         }
                         else -> false
                     }
-                    if (shouldEscape){
+                    if (shouldEscape) {
                         append(escapeChar)
                     }
                     append(it)
@@ -205,7 +205,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
         if (t == null) return isNull()
 
         @Suppress("UNCHECKED_CAST")
@@ -225,7 +225,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
         if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
@@ -479,7 +479,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
@@ -504,7 +504,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }

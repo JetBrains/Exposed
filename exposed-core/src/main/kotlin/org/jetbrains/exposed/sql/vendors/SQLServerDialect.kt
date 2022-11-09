@@ -48,7 +48,6 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             }
         }
     }
-
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {

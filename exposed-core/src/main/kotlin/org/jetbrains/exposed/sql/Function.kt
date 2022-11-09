@@ -259,11 +259,12 @@ sealed class NextVal<T> (
 }
 
 // Conditional Expressions
-
+@Suppress("FunctionNaming")
 class Case(val value: Expression<*>? = null) {
     fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
 }
 
+@Suppress("FunctionNaming")
 class CaseWhen<T>(val value: Expression<*>?) {
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
 

@@ -348,7 +348,7 @@ abstract class FunctionProvider {
     }
 
     // Commands
-
+    @Suppress("VariableNaming")
     open val DEFAULT_VALUE_EXPRESSION: String = "DEFAULT VALUES"
 
     /**
@@ -667,7 +667,7 @@ interface DatabaseDialect {
     }
 }
 
-sealed class ForUpdateOption(open val querySuffix: String)  {
+sealed class ForUpdateOption(open val querySuffix: String) {
 
     internal object NoForUpdateOption : ForUpdateOption("") {
         override val querySuffix: String get() = error("querySuffix should not be called for NoForUpdateOption object")
@@ -703,7 +703,6 @@ sealed class ForUpdateOption(open val querySuffix: String)  {
         class ForUpdateWait(timeout: Int) : ForUpdateOption("FOR UPDATE WAIT $timeout")
     }
 }
-
 
 /**
  * Base implementation of a vendor dialect

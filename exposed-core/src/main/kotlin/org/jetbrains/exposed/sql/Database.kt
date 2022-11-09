@@ -188,7 +188,8 @@ class Database private constructor(
                 explicitVendor = null,
                 config = databaseConfig,
                 getNewConnection = getNewConnection,
-                manager = manager)
+                manager = manager
+            )
         }
 
         fun connect(

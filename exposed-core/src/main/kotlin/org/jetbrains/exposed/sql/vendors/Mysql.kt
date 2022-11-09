@@ -30,7 +30,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     /** Character type for storing strings of variable and _unlimited_ length. */
     override fun largeTextType(): String = "LONGTEXT"
 
-    override fun booleanFromStringToBoolean(value: String): Boolean = when(value) {
+    override fun booleanFromStringToBoolean(value: String): Boolean = when (value) {
         "0" -> false
         "1" -> true
         else -> value.toBoolean()
@@ -183,7 +183,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                   AND ku.CONSTRAINT_SCHEMA = $schemaName
                   AND rc.CONSTRAINT_SCHEMA = $schemaName
                   AND $inTableList
-                ORDER BY ku.ORDINAL_POSITION""".trimIndent()
+                ORDER BY ku.ORDINAL_POSITION
+            """.trimIndent()
         ) { rs ->
             while (rs.next()) {
                 val fromTableName = rs.getString("TABLE_NAME")!!

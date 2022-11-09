@@ -23,6 +23,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun binaryType(length: Int): String {
+        @Suppress("MagicNumber")
         return if (length < 2000) "RAW ($length)"
         else binaryType()
     }
