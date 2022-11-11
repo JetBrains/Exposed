@@ -13,6 +13,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun longType(): String = "NUMBER(19)"
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
+    override fun varcharType(colLength: Int): String = "VARCHAR2($colLength CHAR)"
     override fun textType(): String = "CLOB"
     override fun mediumTextType(): String = textType()
     override fun largeTextType(): String = textType()
