@@ -700,7 +700,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Sets the default value for this column in the client side. */
-    fun <T : Any> Column<T>.clientDefault(defaultValue: () -> T): Column<T> = apply {
+    fun <T> Column<T>.clientDefault(defaultValue: () -> T): Column<T> = apply {
         dbDefaultValue = null
         defaultValueFun = defaultValue
     }

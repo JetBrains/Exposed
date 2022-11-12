@@ -22,6 +22,9 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.time.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class DefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
@@ -43,6 +46,32 @@ class DefaultsTest : DatabaseTestsBase() {
         override fun hashCode(): Int = id.value.hashCode()
 
         companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
+    }
+
+    @Test
+    fun testCanUseClientDefaultOnNullableColumn() {
+        val defaultValue: Int? = null
+        val table = object : IntIdTable() {
+            val clientDefault = integer("clientDefault").nullable().clientDefault { defaultValue }
+        }
+        val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
+
+        assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
+        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
+        assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
+    }
+
+    @Test
+    fun testCanSetNullableColumnToUseClientDefault() {
+        val defaultValue = 123
+        val table = object : IntIdTable() {
+            val clientDefault = integer("clientDefault").clientDefault { defaultValue }.nullable()
+        }
+        val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
+
+        assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
+        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
+        assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 
     @Test
@@ -257,7 +286,6 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaultExpressions01() {
-
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
