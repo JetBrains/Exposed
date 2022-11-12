@@ -57,11 +57,11 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
         beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     POSTGRESQLNG(
-        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
+        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
         user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     ORACLE(
@@ -124,21 +124,13 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-internal class SpecifiedPGContainer(val image: String) : PostgreSQLContainer<SpecifiedPGContainer>(image) {
-    fun exposeFixedPort(hostPort: Int, containerPort: Int): SpecifiedPGContainer {
-        super.addFixedExposedPort(hostPort, containerPort)
-        return this
-    }
-
-}
-
 private val postgresSQLProcess by lazy {
-    SpecifiedPGContainer(image ="postgres:13.8-alpine")
+    PostgreSQLContainer("postgres:13.8-alpine")
         .withUsername("postgres")
         .withPassword("")
+        .withDatabaseName("template1")
         .withStartupTimeout(Duration.ofSeconds(60))
         .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
-        .exposeFixedPort(hostPort = 12346, containerPort = 5432)
         .apply {
             listOf(
                 "timezone=UTC",
