@@ -55,6 +55,9 @@ abstract class DataTypeProvider {
 
     // Character types
 
+    /** Character type for storing strings of variable length up to a maximum. */
+    open fun varcharType(colLength: Int): String = "VARCHAR($colLength)"
+
     /** Character type for storing strings of variable length.
      * Some database (postgresql) use the same data type name to provide virtually _unlimited_ length. */
     open fun textType(): String = "TEXT"

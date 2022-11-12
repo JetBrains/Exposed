@@ -592,8 +592,10 @@ open class VarCharColumnType(
     val colLength: Int = 255,
     collate: String? = null
 ) : StringColumnType(collate) {
+    open fun preciseType() = currentDialect.dataTypeProvider.varcharType(colLength)
+
     override fun sqlType(): String = buildString {
-        append("VARCHAR($colLength)")
+        append(preciseType())
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
