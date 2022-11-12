@@ -38,7 +38,7 @@ object CurrentDate : Function<DateTime>(DateColumnType(false)) {
 class Year<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -49,7 +49,7 @@ class Year<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumn
 class Month<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -60,7 +60,7 @@ class Month<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColum
 class Day<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -71,7 +71,7 @@ class Day<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnT
 class Hour<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -82,7 +82,7 @@ class Hour<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumn
 class Minute<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -93,7 +93,7 @@ class Minute<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColu
 class Second<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
-        val functionProvider = when(dialect.h2Mode) {
+        val functionProvider = when (dialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.SQLServer -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }

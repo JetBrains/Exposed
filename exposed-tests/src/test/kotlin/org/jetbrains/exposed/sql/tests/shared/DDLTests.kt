@@ -560,8 +560,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @ExperimentalUnsignedTypes
-    @Test fun testUByteColumnType() {
+        @Test fun testUByteColumnType() {
         val UbyteTable = object : Table("ubyteTable") {
             val ubyte = ubyte("ubyte")
         }
@@ -576,8 +575,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @ExperimentalUnsignedTypes
-    @Test fun testUshortColumnType() {
+        @Test fun testUshortColumnType() {
         val UshortTable = object : Table("ushortTable") {
             val ushort = ushort("ushort")
         }
@@ -592,8 +590,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @ExperimentalUnsignedTypes
-    @Test fun testUintColumnType() {
+        @Test fun testUintColumnType() {
         val UintTable = object : Table("uintTable") {
             val uint = uinteger("uint")
         }
@@ -608,8 +605,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @ExperimentalUnsignedTypes
-    @Test fun testUlongColumnType() {
+        @Test fun testUlongColumnType() {
         val UlongTable = object : Table("ulongTable") {
             val ulong = ulong("ulong")
         }

@@ -195,7 +195,7 @@ class InsertTests : DatabaseTestsBase() {
 
             val batchesSize = Cities.selectAll().count()
 
-            kotlin.test.assertEquals(25, batchesSize)
+            assertEquals(25, batchesSize)
         }
     }
 

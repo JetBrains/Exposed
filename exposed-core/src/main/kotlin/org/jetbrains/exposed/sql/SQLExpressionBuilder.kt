@@ -416,10 +416,10 @@ interface ISqlExpressionBuilder {
     @JvmName("notLikeWithEntityID")
     infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    /** Checks if this expression doesn't match the specified [expression]. */
     infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    /** Checks if this expression doesn't match the specified [expression]. */
     @JvmName("notLikeWithEntityIDAndExpression")
     infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
 
@@ -513,7 +513,6 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
         is Byte -> byteParam(value)
@@ -532,7 +531,6 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST")
-//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)

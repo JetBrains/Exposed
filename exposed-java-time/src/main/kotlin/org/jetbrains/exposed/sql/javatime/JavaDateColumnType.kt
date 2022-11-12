@@ -208,7 +208,8 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         }
 
         return when {
-            currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }

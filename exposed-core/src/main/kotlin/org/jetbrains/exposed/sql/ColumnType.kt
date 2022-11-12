@@ -244,7 +244,6 @@ class ByteColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 1-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UByteColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
 
@@ -285,7 +284,6 @@ class ShortColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 2-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UShortColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
     override fun valueFromDB(value: Any): UShort {
@@ -325,7 +323,6 @@ class IntegerColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 4-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UIntegerColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
     override fun valueFromDB(value: Any): UInt {
@@ -365,7 +362,6 @@ class LongColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 8-byte integers.
  */
-@ExperimentalUnsignedTypes
 class ULongColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ulongType()
     override fun valueFromDB(value: Any): ULong {

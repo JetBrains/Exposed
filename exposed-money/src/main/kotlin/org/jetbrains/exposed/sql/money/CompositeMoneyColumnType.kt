@@ -18,7 +18,7 @@ fun Table.compositeMoney(amountColumn: Column<BigDecimal>, currencyColumn: Colum
 }
 
 @JvmName("compositeMoneyNullable")
-fun Table.compositeMoney(amountColumn: Column<BigDecimal?>, currencyColumn: Column<CurrencyUnit?>): CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> {
+fun Table.compositeMoney(amountColumn: Column<BigDecimal?>, currencyColumn: Column<CurrencyUnit?>) : CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> {
     return CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
             registerCompositeColumn(it)

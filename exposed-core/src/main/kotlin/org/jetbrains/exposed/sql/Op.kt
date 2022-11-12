@@ -560,28 +560,24 @@ fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumn
 fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
 
 /** Returns the specified [value] as a unsigned byte literal. */
-@ExperimentalUnsignedTypes
 fun ubyteLiteral(value: UByte): LiteralOp<UByte> = LiteralOp(UByteColumnType(), value)
 
 /** Returns the specified [value] as a short literal. */
 fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
 
 /** Returns the specified [value] as a unsigned short literal. */
-@ExperimentalUnsignedTypes
 fun ushortLiteral(value: UShort): LiteralOp<UShort> = LiteralOp(UShortColumnType(), value)
 
 /** Returns the specified [value] as an int literal. */
 fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), value)
 
 /** Returns the specified [value] as a unsigned int literal. */
-@ExperimentalUnsignedTypes
 fun uintLiteral(value: UInt): LiteralOp<UInt> = LiteralOp(UIntegerColumnType(), value)
 
 /** Returns the specified [value] as a long literal. */
 fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
 
 /** Returns the specified [value] as a unsigned long literal. */
-@ExperimentalUnsignedTypes
 fun ulongLiteral(value: ULong): LiteralOp<ULong> = LiteralOp(ULongColumnType(), value)
 
 /** Returns the specified [value] as a float literal. */
@@ -620,28 +616,24 @@ fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, Bo
 fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())
 
 /** Returns the specified [value] as a unsigned byte query parameter. */
-@ExperimentalUnsignedTypes
 fun ubyteParam(value: UByte): Expression<UByte> = QueryParameter(value, UByteColumnType())
 
 /** Returns the specified [value] as a short query parameter. */
 fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())
 
 /** Returns the specified [value] as a unsigned short query parameter. */
-@ExperimentalUnsignedTypes
 fun ushortParam(value: UShort): Expression<UShort> = QueryParameter(value, UShortColumnType())
 
 /** Returns the specified [value] as an int query parameter. */
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 
 /** Returns the specified [value] as a unsigned int query parameter. */
-@ExperimentalUnsignedTypes
 fun uintParam(value: UInt): Expression<UInt> = QueryParameter(value, UIntegerColumnType())
 
 /** Returns the specified [value] as a long query parameter. */
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 
 /** Returns the specified [value] as a unsigned long query parameter. */
-@ExperimentalUnsignedTypes
 fun ulongParam(value: ULong): Expression<ULong> = QueryParameter(value, ULongColumnType())
 
 /** Returns the specified [value] as a float query parameter. */
