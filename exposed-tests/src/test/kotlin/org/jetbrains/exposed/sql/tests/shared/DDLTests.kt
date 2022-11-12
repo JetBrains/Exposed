@@ -344,9 +344,11 @@ class DDLTests : DatabaseTestsBase() {
             } get (t.id)
 
             val readOn = t.select { t.id eq id }.first()[t.b]
-            val text = String(readOn.bytes) // .reader().readText()
+            val text1 = String(readOn.bytes)
+            val text2 = readOn.inputStream.bufferedReader().readText()
 
-            assertEquals("Hello there!", text)
+            assertEquals("Hello there!", text1)
+            assertEquals("Hello there!", text2)
         }
     }
 

@@ -724,8 +724,8 @@ class BlobColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): ExposedBlob = when (value) {
         is ExposedBlob -> value
-        is Blob -> ExposedBlob(value.binaryStream.use { it.readBytes() })
-        is InputStream -> ExposedBlob(value.use { it.readBytes() })
+        is Blob -> ExposedBlob(value.binaryStream)
+        is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
@@ -740,10 +740,10 @@ class BlobColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String = "?"
 
-    override fun readObject(rs: ResultSet, index: Int) = rs.getBytes(index)?.let(::ExposedBlob)
+    override fun readObject(rs: ResultSet, index: Int) = rs.getBinaryStream(index)?.let(::ExposedBlob)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
+        when (val toSetValue = (value as? ExposedBlob)?.inputStream ?: value) {
             is InputStream -> stmt.setInputStream(index, toSetValue)
             null, is Op.NULL -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
