@@ -145,7 +145,7 @@ class Database private constructor(
         }
 
         @Deprecated(
-            level = DeprecationLevel.ERROR,
+            level = DeprecationLevel.HIDDEN,
             replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"),
             message = "Use connectPool instead"
         )

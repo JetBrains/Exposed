@@ -21,7 +21,12 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
         }
     }
 
-    @Deprecated("This class is now a singleton, no need for its constructor call; this method is provided for backward-compatibility only, and will be removed in future releases")
+    @Deprecated(
+        message = "This class is now a singleton, no need for its constructor call; " +
+            "this method is provided for backward-compatibility only, and will be removed in future releases",
+        replaceWith = ReplaceWith("this"),
+        level = DeprecationLevel.ERROR,
+    )
     operator fun invoke() = this
 }
 

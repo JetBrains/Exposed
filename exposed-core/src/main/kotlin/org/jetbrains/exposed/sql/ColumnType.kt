@@ -167,7 +167,7 @@ val Column<*>.autoIncColumnType: AutoIncColumnType?
 @Deprecated(
     message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
     replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 val Column<*>.autoIncSeqName: String?
     get() = autoIncColumnType?.autoincSeq
