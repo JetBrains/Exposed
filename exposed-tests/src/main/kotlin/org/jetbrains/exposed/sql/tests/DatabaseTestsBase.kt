@@ -152,11 +152,8 @@ private val postgresSQLProcess by lazy {
         }
 }
 
-// MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
-internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<SpecifiedMySQLContainer>(image)
-
 private val mySQLProcess by lazy {
-    SpecifiedMySQLContainer(image = "mysql:5")
+    MySQLContainer("mysql:5")
         .withDatabaseName("testdb")
         .withEnv("MYSQL_ROOT_PASSWORD", "test")
         .withExposedPorts().apply {
