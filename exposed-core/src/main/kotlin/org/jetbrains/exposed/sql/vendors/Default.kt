@@ -687,13 +687,41 @@ sealed class ForUpdateOption(open val querySuffix: String) {
         object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
     }
 
+    // https://www.postgresql.org/docs/current/sql-select.html
     // https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
     object PostgreSQL {
-        object ForNoKeyUpdate : ForUpdateOption("FOR NO KEY UPDATE")
+        enum class MODE(val statement: String) {
+            NO_WAIT("NOWAIT"), SKIP_LOCKED("SKIP LOCKED")
+        }
 
-        object ForShare : ForUpdateOption("FOR SHARE")
+        abstract class ForUpdateBase(querySuffix: String, private val mode: MODE? = null, private vararg val ofTables: Table) : ForUpdateOption("") {
+            private val preparedQuerySuffix = buildString {
+                append(querySuffix)
+                ofTables.takeIf { it.isNotEmpty() }?.let { tables ->
+                    append(" OF ")
+                    tables.joinTo(this, separator = ",") { it.tableName }
+                }
+                mode?.let {
+                    append(" ${it.statement}")
+                }
+            }
+            final override val querySuffix: String = preparedQuerySuffix
+        }
 
-        object ForKeyShare : ForUpdateOption("FOR KEY SHARE")
+        class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, *ofTables)
+
+
+        open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, *ofTables) {
+            companion object : ForNoKeyUpdate()
+        }
+
+        open class ForShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR SHARE", mode, *ofTables) {
+            companion object : ForShare()
+        }
+
+        open class ForKeyShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR KEY SHARE", mode, *ofTables) {
+            companion object : ForKeyShare()
+        }
     }
 
     // https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
