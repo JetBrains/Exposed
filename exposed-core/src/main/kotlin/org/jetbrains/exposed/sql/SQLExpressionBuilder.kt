@@ -178,7 +178,7 @@ data class LikePattern(
     }
 }
 
-@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class", DeprecationLevel.ERROR)
+@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class", level = DeprecationLevel.ERROR)
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
