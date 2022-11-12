@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption.PostgreSQL
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
