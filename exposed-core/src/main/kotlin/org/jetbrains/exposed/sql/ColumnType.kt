@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.math.BigDecimal
@@ -742,7 +743,10 @@ class BlobColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String = "?"
 
-    override fun readObject(rs: ResultSet, index: Int) = rs.getBinaryStream(index)?.let(::ExposedBlob)
+    override fun readObject(rs: ResultSet, index: Int) = when {
+        currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
+        else -> rs.getBinaryStream(index)?.let(::ExposedBlob)
+    }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (val toSetValue = (value as? ExposedBlob)?.inputStream ?: value) {
