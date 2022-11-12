@@ -95,7 +95,11 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         targets.forEach { table ->
             table.columns.forEach { column ->
                 if ((column.dbDefaultValue != null || column.defaultValueFun != null) && column !in values.keys) {
-                    result[column] = (column.defaultValueFun?.invoke() ?: DefaultValueMarker)
+                    val value = when {
+                        column.defaultValueFun != null -> column.defaultValueFun!!()
+                        else -> DefaultValueMarker
+                    }
+                    result[column] = value
                 }
             }
         }
