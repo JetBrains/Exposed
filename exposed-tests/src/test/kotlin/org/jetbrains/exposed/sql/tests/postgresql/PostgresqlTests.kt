@@ -29,7 +29,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             return table.select { table.id eq id }.forUpdate(option).city()
         }
 
-        withDb(TestDB.POSTGRESQL) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             withTable {
                 val name = "name"
                 table.insert {

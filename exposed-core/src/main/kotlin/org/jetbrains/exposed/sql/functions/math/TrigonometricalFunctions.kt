@@ -10,7 +10,7 @@ import java.math.BigDecimal
  */
 class ACosFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "ACOS",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -19,7 +19,7 @@ class ACosFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custo
  */
 class ASinFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "ASIN",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -28,7 +28,7 @@ class ASinFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custo
  */
 class ATanFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "ATAN",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -37,7 +37,7 @@ class ATanFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custo
  */
 class CosFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "COS",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -46,7 +46,7 @@ class CosFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  */
 class CotFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "COT",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -55,7 +55,7 @@ class CotFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  */
 class DegreesFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "DEGREES",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -64,7 +64,7 @@ class DegreesFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Cu
  */
 object PiFunction : CustomFunction<BigDecimal>(
     functionName = "PI",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf()
 )
 
@@ -73,7 +73,7 @@ object PiFunction : CustomFunction<BigDecimal>(
  */
 class RadiansFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "RADIANS",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -82,7 +82,7 @@ class RadiansFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Cu
  */
 class SinFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "SIN",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -91,6 +91,6 @@ class SinFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  */
 class TanFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "TAN",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )

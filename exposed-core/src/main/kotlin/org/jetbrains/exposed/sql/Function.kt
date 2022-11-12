@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.math.BigDecimal
 
 /**
@@ -14,10 +17,10 @@ abstract class Function<T>(override val columnType: IColumnType) : ExpressionWit
 open class CustomFunction<T>(
     /** Returns the name of the function. */
     val functionName: String,
-    _columnType: IColumnType,
+    columnType: IColumnType,
     /** Returns the list of arguments of this function. */
     vararg val expr: Expression<*>
-) : Function<T>(_columnType) {
+) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(functionName, '(')
         expr.appendTo { +it }
@@ -31,12 +34,12 @@ open class CustomFunction<T>(
 open class CustomOperator<T>(
     /** Returns the name of the operator. */
     val operatorName: String,
-    _columnType: IColumnType,
+    columnType: IColumnType,
     /** Returns the left-hand side operand. */
     val expr1: Expression<*>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<*>
-) : Function<T>(_columnType) {
+) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append('(', expr1, ' ', operatorName, ' ', expr2, ')')
     }
@@ -53,7 +56,13 @@ class Random(
     /** Returns the seed. */
     val seed: Int? = null
 ) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +currentDialect.functionProvider.random(seed) }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.Oracle, H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        +functionProvider.random(seed)
+    }
 }
 
 // String Functions
@@ -136,8 +145,8 @@ class Trim<T : String?>(
 class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
 }
 
@@ -147,8 +156,8 @@ class Min<T : Comparable<T>, in S : T?>(
 class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
 }
 
@@ -169,8 +178,8 @@ class Avg<T : Comparable<T>, in S : T?>(
 class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
     val expr: Expression<T>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("SUM(", expr, ")") }
 }
 

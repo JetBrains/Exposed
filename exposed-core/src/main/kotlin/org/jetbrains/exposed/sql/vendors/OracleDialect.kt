@@ -257,8 +257,5 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    companion object {
-        /** Oracle dialect name */
-        const val dialectName: String = "oracle"
-    }
+    companion object : DialectNameProvider("oracle")
 }

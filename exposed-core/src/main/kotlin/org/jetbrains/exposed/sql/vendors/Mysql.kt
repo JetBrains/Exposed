@@ -12,7 +12,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
+    override fun dateTimeType(): String = if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) "DATETIME(6)" else "DATETIME"
 
     override fun ubyteType(): String = "TINYINT UNSIGNED"
 
@@ -237,8 +237,5 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
 
-    companion object {
-        /** MySQL dialect name */
-        const val dialectName: String = "mysql"
-    }
+    companion object : DialectNameProvider("mysql")
 }

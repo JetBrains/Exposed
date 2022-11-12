@@ -68,7 +68,7 @@ class Database private constructor(
     }
 
     companion object {
-        private val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
+        internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
             ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()

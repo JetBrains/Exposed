@@ -3,10 +3,12 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.sql.ResultSet
 
 sealed class SetOperation(
@@ -163,8 +165,8 @@ class Intersect(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery
 
 class Except(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("EXCEPT", firstStatement, secondStatement) {
 
-    override val operationName: String get() = when (currentDialect) {
-        is OracleDialect -> "MINUS"
+    override val operationName: String get() = when {
+        currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "MINUS"
         else -> "EXCEPT"
     }
 

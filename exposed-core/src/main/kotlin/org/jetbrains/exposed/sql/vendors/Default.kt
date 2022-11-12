@@ -744,6 +744,8 @@ abstract class VendorDialect(
     override val functionProvider: FunctionProvider
 ) : DatabaseDialect {
 
+    abstract class DialectNameProvider(val dialectName: String)
+
     /* Cached values */
     private var _allTableNames: Map<String, List<String>>? = null
     private var _allSchemaNames: List<String>? = null

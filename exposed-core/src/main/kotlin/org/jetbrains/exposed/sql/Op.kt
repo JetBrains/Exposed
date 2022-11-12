@@ -21,8 +21,10 @@ abstract class Op<T> : Expression<T>() {
     /** Boolean operator corresponding to the SQL value `TRUE` */
     object TRUE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-            when (currentDialect) {
-                is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
+            when {
+                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
+
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(true))
             }
         }
@@ -31,8 +33,9 @@ abstract class Op<T> : Expression<T>() {
     /** Boolean operator corresponding to the SQL value `FALSE` */
     object FALSE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-            when (currentDialect) {
-                is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
+            when {
+                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle  ->
+                    build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(false))
             }
         }
@@ -327,8 +330,13 @@ class ModOp<T : Number?, S : Number?>(
 }
 
 // https://github.com/h2database/h2database/issues/3253
-private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>) =
-    if (e !is Column<*> && e !is LiteralOp<*>) e.castTo(columnType) else e
+private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>, queryBuilder: QueryBuilder) {
+    when {
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> H2FunctionProvider.cast(e, ByteColumnType(), queryBuilder)
+        e is Column<*> || e is LiteralOp<*> -> queryBuilder.append(e)
+        else -> currentDialect.functionProvider.cast(e, columnType, queryBuilder)
+    }
+}
 
 /**
  * Represents an SQL operator that performs a bitwise `and` on [expr1] and [expr2].
@@ -347,7 +355,13 @@ class AndBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITAND(", expr1, ", ", expr2, ")")
-                    true -> append("BITAND(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITAND("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " & ", expr2, ')')
@@ -373,7 +387,13 @@ class OrBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITOR(", expr1, ", ", expr2, ")")
-                    true -> append("BITOR(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITOR("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " | ", expr2, ')')
@@ -402,7 +422,13 @@ class XorBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITXOR(", expr1, ", ", expr2, ")")
-                    true -> append("BITXOR(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITXOR("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " ^ ", expr2, ')')
