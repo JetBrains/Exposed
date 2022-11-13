@@ -6,9 +6,12 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -161,12 +164,19 @@ val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
-@Deprecated("Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead", ReplaceWith("this.autoIncColumnType.autoincSeq"), DeprecationLevel.ERROR)
+@Deprecated(
+    message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
+    replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
+    level = DeprecationLevel.HIDDEN
+)
 val Column<*>.autoIncSeqName: String?
     get() = autoIncColumnType?.autoincSeq
-internal fun IColumnType.rawSqlType(): IColumnType =
-    if (this is AutoIncColumnType) this.delegate else if (this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType) this.idColumn.columnType.delegate else this
 
+internal fun IColumnType.rawSqlType(): IColumnType = when {
+    this is AutoIncColumnType -> delegate
+    this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate
+    else -> this
+}
 
 class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
 
@@ -234,7 +244,6 @@ class ByteColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 1-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UByteColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
 
@@ -275,7 +284,6 @@ class ShortColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 2-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UShortColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
     override fun valueFromDB(value: Any): UShort {
@@ -315,7 +323,6 @@ class IntegerColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 4-byte integers.
  */
-@ExperimentalUnsignedTypes
 class UIntegerColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
     override fun valueFromDB(value: Any): UInt {
@@ -355,7 +362,6 @@ class LongColumnType : ColumnType() {
 /**
  * Numeric column for storing unsigned 8-byte integers.
  */
-@ExperimentalUnsignedTypes
 class ULongColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ulongType()
     override fun valueFromDB(value: Any): ULong {
@@ -423,16 +429,18 @@ class DecimalColumnType(
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
         is Double -> {
-            if (value.isNaN())
+            if (value.isNaN()) {
                 error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
-            else
+            } else {
                 value.toBigDecimal()
+            }
         }
         is Float -> {
-            if (value.isNaN())
+            if (value.isNaN()) {
                 error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
-            else
+            } else {
                 value.toBigDecimal()
+            }
         }
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
@@ -583,8 +591,10 @@ open class VarCharColumnType(
     val colLength: Int = 255,
     collate: String? = null
 ) : StringColumnType(collate) {
+    open fun preciseType() = currentDialect.dataTypeProvider.varcharType(colLength)
+
     override fun sqlType(): String = buildString {
-        append("VARCHAR($colLength)")
+        append(preciseType())
         if (collate != null) {
             append(" COLLATE ${escape(collate)}")
         }
@@ -633,10 +643,11 @@ open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = f
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         val value = super.readObject(rs, index)
-        return if (eagerLoading && value != null)
+        return if (eagerLoading && value != null) {
             valueFromDB(value)
-        else
+        } else {
             value
+        }
     }
 }
 
@@ -714,8 +725,8 @@ class BlobColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): ExposedBlob = when (value) {
         is ExposedBlob -> value
-        is Blob -> ExposedBlob(value.binaryStream.use { it.readBytes() })
-        is InputStream -> ExposedBlob(value.use { it.readBytes() })
+        is Blob -> ExposedBlob(value.binaryStream)
+        is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
@@ -730,10 +741,13 @@ class BlobColumnType : ColumnType() {
 
     override fun nonNullValueToString(value: Any): String = "?"
 
-    override fun readObject(rs: ResultSet, index: Int) = rs.getBytes(index)?.let(::ExposedBlob)
+    override fun readObject(rs: ResultSet, index: Int) = when {
+        currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
+        else -> rs.getBinaryStream(index)?.let(::ExposedBlob)
+    }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when (val toSetValue = (value as? ExposedBlob)?.bytes?.inputStream() ?: value) {
+        when (val toSetValue = (value as? ExposedBlob)?.inputStream ?: value) {
             is InputStream -> stmt.setInputStream(index, toSetValue)
             null, is Op.NULL -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
@@ -793,7 +807,7 @@ class BooleanColumnType : ColumnType() {
     override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
 
     override fun notNullValueToDB(value: Any): Any = when {
-        value is Boolean && currentDialect is OracleDialect ->
+        value is Boolean && (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) ->
             nonNullValueToString(value)
         else -> value
     }

@@ -16,7 +16,7 @@ import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
-        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
             exclude.add(TestDB.SQLITE)
         }
@@ -71,8 +71,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoin01() {
-        val dialects = listOf(TestDB.SQLITE)
-        withCitiesAndUsers(dialects) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             val join = users.innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -87,8 +86,7 @@ class UpdateTests : DatabaseTestsBase() {
     }
     @Test
     fun testUpdateWithJoin02() {
-        val dialects = listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL)
-        withCitiesAndUsers(dialects) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name

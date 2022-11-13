@@ -146,7 +146,7 @@ class ViaTests : DatabaseTestsBase() {
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))
             }
 
-            n1.testWithBothTables(listOf(s1)) { table, row ->
+            n1.testWithBothTables(listOf(s1)) { _, row ->
                 assertEquals(3, row.count())
                 assertEqualCollections(n1.connectedStrings, listOf(s1))
                 assertEqualCollections(n2.connectedStrings, listOf(s1, s2))

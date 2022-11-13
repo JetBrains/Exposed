@@ -58,7 +58,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -142,7 +142,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
         withTables(insertIgnoreSupportedDB, idTable) {
             val insertedStatement = idTable.insertIgnore {
@@ -195,7 +195,7 @@ class InsertTests : DatabaseTestsBase() {
 
             val batchesSize = Cities.selectAll().count()
 
-            kotlin.test.assertEquals(25, batchesSize)
+            assertEquals(25, batchesSize)
         }
     }
 
@@ -379,7 +379,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), table) {
+        withTables(TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.ORACLE, table) {
             val isOldMySQL = currentDialectTest is MysqlDialect && db.isVersionCovers(BigDecimal("5.5"))
             if (isOldMySQL) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
@@ -398,7 +398,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
+        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL), table) {
             expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
@@ -505,7 +505,7 @@ class InsertTests : DatabaseTestsBase() {
         val TestTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
-        val dbToTest = TestDB.enabledInTests() - listOfNotNull(
+        val dbToTest = TestDB.enabledInTests() - setOfNotNull(
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )

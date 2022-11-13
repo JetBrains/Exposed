@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.sql.functions.math
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.math.BigDecimal
 import java.math.MathContext
 
@@ -12,7 +14,7 @@ import java.math.MathContext
  */
 class AbsFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<T>(
     functionName = "ABS",
-    _columnType = expression.columnType,
+    columnType = expression.columnType,
     expr = arrayOf(expression)
 )
 
@@ -20,8 +22,8 @@ class AbsFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  * Returns the smallest integer value that is >= a number
  */
 class CeilingFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Long?>(
-    functionName = if (currentDialectIfAvailable is SQLiteDialect || currentDialectIfAvailable is OracleDialect) "CEIL" else "CEILING",
-    _columnType = LongColumnType(),
+    functionName = if (currentDialectIfAvailable is SQLiteDialect || currentDialectIfAvailable is OracleDialect || currentDialectIfAvailable?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "CEIL" else "CEILING",
+    columnType = LongColumnType(),
     expr = arrayOf(expression)
 )
 
@@ -30,7 +32,7 @@ class CeilingFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Cu
  */
 class ExpFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "EXP",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )
 
@@ -39,7 +41,7 @@ class ExpFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  */
 class FloorFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Long?>(
     functionName = "FLOOR",
-    _columnType = LongColumnType(),
+    columnType = LongColumnType(),
     expr = arrayOf(expression)
 )
 
@@ -54,7 +56,7 @@ class PowerFunction<B : Number?, E : Number?>(
     scale: Int = 10
 ) : CustomFunction<BigDecimal?>(
     functionName = "POWER",
-    _columnType = DecimalColumnType(precision, scale),
+    columnType = DecimalColumnType(precision, scale),
     expr = arrayOf(base, exponent)
 )
 
@@ -63,7 +65,7 @@ class PowerFunction<B : Number?, E : Number?>(
  */
 class RoundFunction<T : Number?>(expression: ExpressionWithColumnType<T>, scale: Int) : CustomFunction<BigDecimal?>(
     functionName = "ROUND",
-    _columnType = DecimalColumnType(MathContext.DECIMAL64.precision, scale).apply { nullable = true },
+    columnType = DecimalColumnType(MathContext.DECIMAL64.precision, scale).apply { nullable = true },
     expr = arrayOf(expression, intLiteral(scale))
 )
 
@@ -75,7 +77,7 @@ class RoundFunction<T : Number?>(expression: ExpressionWithColumnType<T>, scale:
  */
 class SignFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Int?>(
     functionName = "SIGN",
-    _columnType = IntegerColumnType(),
+    columnType = IntegerColumnType(),
     expr = arrayOf(expression)
 )
 
@@ -84,6 +86,6 @@ class SignFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custo
  */
 class SqrtFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<BigDecimal?>(
     functionName = "SQRT",
-    _columnType = DecimalColumnType.INSTANCE,
+    columnType = DecimalColumnType.INSTANCE,
     expr = arrayOf(expression)
 )

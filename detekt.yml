@@ -5,7 +5,7 @@ build:
 
 formatting:
     MaximumLineLength:
-        maxLineLength: 150
+        maxLineLength: 166
     MultiLineIfElse:
         active: true
         autoCorrect: true
@@ -22,7 +22,7 @@ formatting:
 style:
     MaxLineLength:
         active: false
-        maxLineLength: 150
+        maxLineLength: 166
     ReturnCount:
         active: false
     WildcardImport:
@@ -39,4 +39,6 @@ complexity:
     TooManyFunctions:
         thresholdInClasses: 40
         thresholdInFiles: 100
-        thresholdInObjects: 25
+        thresholdInObjects: 26
+    ComplexMethod:
+        threshold: 26

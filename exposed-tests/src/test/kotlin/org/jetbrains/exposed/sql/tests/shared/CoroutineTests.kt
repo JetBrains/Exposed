@@ -26,6 +26,7 @@ import kotlin.test.assertNotNull
 private val singleThreadDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
 @ExperimentalCoroutinesApi
+@DelicateCoroutinesApi
 class CoroutineTests : DatabaseTestsBase() {
 
     object Testing : IntIdTable("COROUTINE_TESTING")

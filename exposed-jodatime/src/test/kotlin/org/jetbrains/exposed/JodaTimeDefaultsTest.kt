@@ -17,10 +17,12 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.Test
@@ -171,12 +173,13 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         withTables(listOf(TestDB.SQLITE), TestTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
+            val varCharType = currentDialectTest.dataTypeProvider.varcharType(100)
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                "${"s".inProperCase()} VARCHAR(100) DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} VARCHAR(100) DEFAULT 'testNullable' NULL, " +
+                "${"s".inProperCase()} $varCharType DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} $varCharType DEFAULT 'testNullable' NULL, " +
                 "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
                 "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
                 "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
@@ -185,7 +188,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect) {
+            val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                 arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
             } else {
                 arrayListOf(baseExpression)

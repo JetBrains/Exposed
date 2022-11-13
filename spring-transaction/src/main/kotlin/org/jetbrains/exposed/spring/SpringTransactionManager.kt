@@ -20,19 +20,19 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource
 
 class SpringTransactionManager(
-    _dataSource: DataSource,
-    databaseConfig: DatabaseConfig = DatabaseConfig{ },
+    dataSource: DataSource,
+    databaseConfig: DatabaseConfig = DatabaseConfig { },
     private val showSql: Boolean = false,
     @Volatile override var defaultReadOnly: Boolean = databaseConfig.defaultReadOnly,
     @Volatile override var defaultRepetitionAttempts: Int = databaseConfig.defaultRepetitionAttempts
-) : DataSourceTransactionManager(_dataSource), TransactionManager {
+) : DataSourceTransactionManager(dataSource), TransactionManager {
 
     init {
         this.isRollbackOnCommitFailure = true
     }
 
     private val db = Database.connect(
-        datasource = _dataSource,
+        datasource = dataSource,
         databaseConfig = databaseConfig
     ) { this }
 

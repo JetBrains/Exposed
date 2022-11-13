@@ -13,7 +13,7 @@ abstract class BaseBatchInsertStatement(
     table: Table,
     ignore: Boolean,
     protected val shouldReturnGeneratedValues: Boolean = true
-) : InsertStatement<List<ResultRow>>(table, ignore)  {
+) : InsertStatement<List<ResultRow>>(table, ignore) {
     override val isAlwaysBatch = true
 
     internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
@@ -22,11 +22,8 @@ abstract class BaseBatchInsertStatement(
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            throw BatchDataInconsistentException(
-                "Can't set $value for ${
-                    TransactionManager.current().fullIdentity(column)
-                } because previous insertion can't be defaulted for that column."
-            )
+            val fullIdentity = TransactionManager.current().fullIdentity(column)
+            throw BatchDataInconsistentException("Can't set $value for $fullIdentity because previous insertion can't be defaulted for that column.")
         }
         super.set(column, value)
     }
@@ -67,13 +64,15 @@ abstract class BaseBatchInsertStatement(
         }
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
-            throw BatchDataInconsistentException("Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts")
+            throw BatchDataInconsistentException(
+                "Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts"
+            )
         }
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
-    private fun allColumnsInDataSet() = allColumnsInDataSet + (data.lastOrNull()?.keys
-        ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
+    private fun allColumnsInDataSet() = allColumnsInDataSet +
+        (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {

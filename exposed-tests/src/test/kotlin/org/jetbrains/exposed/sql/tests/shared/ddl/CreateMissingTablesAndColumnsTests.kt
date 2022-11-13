@@ -247,7 +247,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = arrayOf(initialTable)) {
+        withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
@@ -274,7 +274,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         val excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)
-        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_PSQL)
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)

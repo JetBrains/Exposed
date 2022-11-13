@@ -14,6 +14,7 @@ interface SizedIterable<out T> : Iterable<T> {
 
 fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 
+@Suppress("IteratorNotThrowingNoSuchElementException")
 class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun count(): Long = 0
 
@@ -37,10 +38,11 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
 class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     constructor(vararg values: T) : this(values.toList())
     override fun limit(n: Int, offset: Long): SizedIterable<T> {
-        return if (offset >= Int.MAX_VALUE)
+        return if (offset >= Int.MAX_VALUE) {
             EmptySizedIterable()
-        else
+        } else {
             SizedCollection(delegate.drop(offset.toInt()).take(n))
+        }
     }
 
     override operator fun iterator() = delegate.iterator()
@@ -66,12 +68,12 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
 
     override fun limit(n: Int, offset: Long): SizedIterable<T> = LazySizedCollection(delegate.limit(n, offset))
     override operator fun iterator() = wrapper.iterator()
-    override fun count(): Long = _wrapper?.size?.toLong() ?: _count()
-    override fun empty() = _wrapper?.isEmpty() ?: _empty()
+    override fun count(): Long = _wrapper?.size?.toLong() ?: countInternal()
+    override fun empty() = _wrapper?.isEmpty() ?: emptyInternal()
     override fun forUpdate(option: ForUpdateOption): SizedIterable<T> {
         val localDelegate = delegate
         if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && !localDelegate.isForUpdate()) {
-            throw IllegalStateException("Impossible to change forUpdate state for loaded data")
+            error("Impossible to change forUpdate state for loaded data")
         }
         if (_wrapper == null) {
             delegate = delegate.forUpdate(option)
@@ -82,7 +84,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     override fun notForUpdate(): SizedIterable<T> {
         val localDelegate = delegate
         if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && localDelegate.isForUpdate()) {
-            throw IllegalStateException("Impossible to change forUpdate state for loaded data")
+            error("Impossible to change forUpdate state for loaded data")
         }
         if (_wrapper == null) {
             delegate = delegate.notForUpdate()
@@ -90,7 +92,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
         return this
     }
 
-    private fun _count(): Long {
+    private fun countInternal(): Long {
         if (_size == null) {
             _size = delegate.count()
             _empty = (_size == 0L)
@@ -98,7 +100,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
         return _size!!
     }
 
-    private fun _empty(): Boolean {
+    private fun emptyInternal(): Boolean {
         if (_empty == null) {
             _empty = delegate.empty()
             if (_empty == true) _size = 0
@@ -129,6 +131,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
         override fun copy(): SizedIterable<R> = source.copy().mapLazy(f)
         override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = source.orderBy(*order).mapLazy(f)
 
+        @Suppress("IteratorNotThrowingNoSuchElementException")
         override operator fun iterator(): Iterator<R> {
             val sourceIterator = source.iterator()
             return object : Iterator<R> {
