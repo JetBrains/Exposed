@@ -11,7 +11,6 @@ class ExposedBlob(val inputStream: InputStream) {
         if (this === other) return true
         if (other !is ExposedBlob) return false
 
-
         if (!bytes.contentEquals(other.bytes)) return false
 
         return true

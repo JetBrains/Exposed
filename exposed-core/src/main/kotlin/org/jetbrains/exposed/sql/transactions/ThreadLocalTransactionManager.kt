@@ -75,11 +75,12 @@ class ThreadLocalTransactionManager(
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
                 setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
-                    // The order of `setReadOnly` and `setAutoCommit` is important.
+                    // The order of setters here is important.
+                    // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    readOnly = this@ThreadLocalTransaction.readOnly
                     transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    readOnly = this@ThreadLocalTransaction.readOnly
                     autoCommit = false
                 }
             }
