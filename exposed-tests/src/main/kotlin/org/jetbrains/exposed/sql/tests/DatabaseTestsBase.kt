@@ -2,7 +2,9 @@ package org.jetbrains.exposed.sql.tests
 
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Assume
@@ -162,10 +164,18 @@ private val mySQLProcess by lazy {
 private fun runTestContainersMySQL(): Boolean =
     (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
 
+internal var currentTestDB by nullableTransactionScope<TestDB>()
+
 @Suppress("UnnecessaryAbstractClass")
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
+
+    private object CurrentTestDBInterceptor : StatementInterceptor {
+        override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
+            return userData.filterValues { it is TestDB }
+        }
     }
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
@@ -191,6 +201,8 @@ abstract class DatabaseTestsBase {
         val database = dbSettings.db!!
 
         transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+            registerInterceptor(CurrentTestDBInterceptor)
+            currentTestDB = dbSettings
             statement(dbSettings)
         }
     }

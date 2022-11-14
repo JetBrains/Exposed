@@ -274,28 +274,71 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
+    private class StringFieldTable(name: String, isTextColumn: Boolean, default: String) : IntIdTable(name) {
+        // nullable column is here as Oracle treat '' as NULL
+        val column: Column<String?> = if (isTextColumn) {
+            text("test_column").default(default).nullable()
+        } else {
+            varchar("test_column", 255).default(default).nullable()
+        }
+    }
+
     @Test
     fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
-        val tableWhitespaceDefault = object : Table("varchar_test") {
-            val varchar = varchar("varchar_column", 255).default(" ")
-            val text = text("text_column").default(" ")
-        }
+        val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false," ")
 
-        val tableEmptyStringDefault = object : Table("varchar_test") {
-            val varchar = varchar("varchar_column", 255).default("")
-            val text = text("text_column").default("")
-        }
+        val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
 
-        // MySQL doesn't support default values on text columns, hence excluded
+        val tableEmptyStringDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, "")
+
+        val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
+
         // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
-        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE)) {
-            try {
-                SchemaUtils.create(tableWhitespaceDefault)
-                val actual = SchemaUtils.statementsRequiredToActualizeScheme(tableEmptyStringDefault)
-                // Both columns should be considered as changed, since "" != " "
-                assertEquals(2, actual.size)
-            } finally {
-                SchemaUtils.drop(tableEmptyStringDefault, tableWhitespaceDefault)
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            // MySQL doesn't support default values on text columns, hence excluded
+            val supportsTextDefault = testDb !in listOf(TestDB.MYSQL)
+            val tablesToTest = listOfNotNull(
+                tableWhitespaceDefaultVarchar to tableEmptyStringDefaultVarchar,
+                (tableWhitespaceDefaultText to tableEmptyStringDefaultText).takeIf { supportsTextDefault },
+            )
+            tablesToTest.forEach { (whiteSpaceTable, emptyTable) ->
+                try {
+                    SchemaUtils.create(whiteSpaceTable)
+
+                    val whiteSpaceId = whiteSpaceTable.insertAndGetId { }
+
+                    assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
+
+                    val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
+                    // Both columns should be considered as changed, since "" != " "
+                    val expected = when (testDb) {
+                        TestDB.ORACLE, TestDB.H2_ORACLE -> 2
+                        else -> 1
+                    }
+
+                    assertEquals(expected, actual.size)
+
+                    // SQL Server requires drop/create constraint to change defaults, unsupported for now
+                    if (testDb != TestDB.SQLSERVER) {
+                        // Apply changes
+                        actual.forEach { exec(it) }
+                    } else {
+                        SchemaUtils.drop(whiteSpaceTable)
+                        SchemaUtils.create(whiteSpaceTable)
+                    }
+
+                    val emptyId = emptyTable.insertAndGetId { }
+
+                    // null is here as Oracle treat '' as NULL
+                    val expectedEmptyValue = when (testDb) {
+                        TestDB.ORACLE, TestDB.H2_ORACLE -> null
+                        else -> ""
+                    }
+
+                    assertEquals(expectedEmptyValue, emptyTable.select { emptyTable.id eq emptyId }.single()[emptyTable.column])
+                } finally {
+                    SchemaUtils.drop(whiteSpaceTable, emptyTable)
+                }
             }
         }
     }
