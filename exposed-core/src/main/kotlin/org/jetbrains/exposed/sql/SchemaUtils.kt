@@ -220,7 +220,8 @@ object SchemaUtils {
                     .mapValues { (col, existingCol) ->
                         val columnType = col.columnType
                         val incorrectNullability = existingCol.nullable != columnType.nullable
-                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc
+                        // Exposed doesn't support changing sequences on columns
+                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
                         val incorrectDefaults =
                             existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(col, it) }
                         val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()

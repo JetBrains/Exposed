@@ -19,6 +19,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
+import kotlin.properties.Delegates
 
 class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
@@ -257,14 +258,24 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun `columns with default values that haven't changed shouldn't trigger change`() {
-        val table = object : Table("varchar_test") {
-            val varchar = varchar("varchar_column", 255).default("")
-            val text = text("text_column").default("")
-        }
-
-        // MySQL doesn't support default values on text columns, hence excluded
-        withDb(excludeSettings = listOf(TestDB.MYSQL)) {
+        var table by Delegates.notNull<Table>()
+        withDb { testDb ->
             try {
+                // MySQL doesn't support default values on text columns, hence excluded
+                table = if(testDb != TestDB.MYSQL) {
+                    object : Table("varchar_test") {
+                        val varchar = varchar("varchar_column", 255).default(" ")
+                        val text = text("text_column").default(" ")
+                    }
+                } else {
+
+                    object : Table("varchar_test") {
+                        val varchar = varchar("varchar_column", 255).default(" ")
+                    }
+                }
+
+                // MySQL doesn't support default values on text columns, hence excluded
+
                 SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
                 assertEqualLists(emptyList(), actual)
@@ -310,16 +321,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
-                    // Both columns should be considered as changed, since "" != " "
-                    val expected = when (testDb) {
-                        TestDB.ORACLE, TestDB.H2_ORACLE -> 2
-                        else -> 1
-                    }
-
-                    assertEquals(expected, actual.size)
+                    assertEquals(1, actual.size)
 
                     // SQL Server requires drop/create constraint to change defaults, unsupported for now
-                    if (testDb != TestDB.SQLSERVER) {
+                    // Oracle treat '' as NULL column and can't alter from NULL to NULL
+                    if (testDb !in listOf(TestDB.SQLSERVER, TestDB.ORACLE)) {
                         // Apply changes
                         actual.forEach { exec(it) }
                     } else {

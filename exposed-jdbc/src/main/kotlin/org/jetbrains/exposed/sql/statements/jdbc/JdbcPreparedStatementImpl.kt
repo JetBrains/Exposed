@@ -30,10 +30,11 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
     }
 
     override fun setNull(index: Int, columnType: IColumnType) {
-        if (columnType is BinaryColumnType || columnType is BlobColumnType)
+        if (columnType is BinaryColumnType || columnType is BlobColumnType) {
             statement.setNull(index, Types.LONGVARBINARY)
-        else
+        } else {
             statement.setObject(index, null)
+        }
     }
 
     override fun setInputStream(index: Int, inputStream: InputStream) {
@@ -41,14 +42,12 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
     }
 
     override fun closeIfPossible() {
-        if (!statement.isClosed)
-            statement.close()
+        if (!statement.isClosed) statement.close()
     }
 
     override fun executeBatch(): List<Int> = statement.executeBatch().toList()
 
     override fun cancel() {
-        if (!statement.isClosed)
-            statement.cancel()
+        if (!statement.isClosed) statement.cancel()
     }
 }
