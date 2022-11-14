@@ -177,7 +177,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().trim('\'')
             dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB ->
                 defaultValue.substringAfter("b'").trim('\'')
-            dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> defaultValue
+            dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> when {
+                defaultValue.startsWith('\'') && defaultValue.endsWith('\'') -> defaultValue.trim('\'')
+                else -> defaultValue
+            }
             else -> defaultValue.trim('\'')
         }
     }

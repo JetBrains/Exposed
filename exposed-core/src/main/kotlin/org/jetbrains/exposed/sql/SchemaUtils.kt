@@ -145,33 +145,42 @@ object SchemaUtils {
     @Suppress("NestedBlockDepth", "ComplexMethod")
     private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
         return when (exp) {
-            is LiteralOp<*> -> when (exp.value) {
-                is Boolean -> when (currentDialect) {
-                    is MysqlDialect -> if (exp.value) "1" else "0"
-                    is PostgreSQLDialect -> exp.value.toString()
-                    else -> booleanToStatementString(exp.value)
-                }
-                is String -> when (currentDialect) {
-                    is PostgreSQLDialect ->
-                        when(column.columnType) {
-                            is VarCharColumnType -> "'${exp.value}'::character varying"
-                            is TextColumnType -> "'${exp.value}'::text"
-                            else -> processForDefaultValue(exp)
+            is LiteralOp<*> -> {
+                val dialect = currentDialect
+                when (val value = exp.value) {
+                    is Boolean -> when (dialect) {
+                        is MysqlDialect -> if (value) "1" else "0"
+                        is PostgreSQLDialect -> value.toString()
+                        else -> booleanToStatementString(value)
+                    }
+                    is String -> when {
+                        dialect is PostgreSQLDialect ->
+                            when(column.columnType) {
+                                is VarCharColumnType -> "'${value}'::character varying"
+                                is TextColumnType -> "'${value}'::text"
+                                else -> processForDefaultValue(exp)
+                            }
+                        dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                            when {
+                                column.columnType is VarCharColumnType && value == "" -> "NULL"
+                                column.columnType is TextColumnType && value == "" -> "NULL"
+                                else -> value
+                            }
+                        else -> value
+                    }
+                    is Enum<*> -> when (exp.columnType) {
+                        is EnumerationNameColumnType<*> -> when (dialect) {
+                            is PostgreSQLDialect -> "'${value.name}'::character varying"
+                            else -> value.name
                         }
-                    else -> exp.value
-                }
-                is Enum<*> -> when (exp.columnType) {
-                    is EnumerationNameColumnType<*> -> when (currentDialect) {
-                        is PostgreSQLDialect -> "'${exp.value.name}'::character varying"
-                        else -> exp.value.name
+                        else -> processForDefaultValue(exp)
+                    }
+                    is BigDecimal -> when (dialect) {
+                        is MysqlDialect -> value.setScale((exp.columnType as DecimalColumnType).scale).toString()
+                        else -> processForDefaultValue(exp)
                     }
                     else -> processForDefaultValue(exp)
                 }
-                is BigDecimal -> when (currentDialect) {
-                    is MysqlDialect -> exp.value.setScale((exp.columnType as DecimalColumnType).scale).toString()
-                    else -> processForDefaultValue(exp)
-                }
-                else -> processForDefaultValue(exp)
             }
             else -> processForDefaultValue(exp)
         }

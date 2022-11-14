@@ -12,6 +12,7 @@ import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.Connection
+import java.sql.SQLException
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.thread
@@ -199,11 +200,16 @@ abstract class DatabaseTestsBase {
         }
 
         val database = dbSettings.db!!
-
-        transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
-            registerInterceptor(CurrentTestDBInterceptor)
-            currentTestDB = dbSettings
-            statement(dbSettings)
+        try {
+            transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+                registerInterceptor(CurrentTestDBInterceptor)
+                currentTestDB = dbSettings
+                statement(dbSettings)
+            }
+        } catch (e: SQLException) {
+            throw e
+        } catch (e: Exception) {
+            throw Exception("Failed on ${dbSettings.name}", e)
         }
     }
 

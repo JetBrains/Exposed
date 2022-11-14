@@ -486,7 +486,7 @@ class InsertTests : DatabaseTestsBase() {
                         TestTable.insert { it[foo] = 1 }
                         TestTable.insert { it[foo] = 0 }
                     }
-                    fail("Should fail on constraint > 0")
+                    fail("Should fail on constraint > 0 with $db")
                 } catch (_: SQLException) {
                     // expected
                 }
