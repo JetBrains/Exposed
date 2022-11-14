@@ -28,8 +28,5 @@ class MariaDBDialect : MysqlDialect() {
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    companion object {
-        /** MariaDB dialect name */
-        const val dialectName: String = "mariadb"
-    }
+    companion object : DialectNameProvider("mariadb")
 }

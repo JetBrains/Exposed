@@ -237,10 +237,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         return "CREATE INDEX $name ON $table USING $type $columns"
     }
 
-    companion object {
-        /** PostgreSQL dialect name */
-        const val dialectName: String = "postgresql"
-    }
+    companion object : DialectNameProvider("postgresql")
 }
 
 /**
@@ -249,8 +246,5 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
 open class PostgreSQLNGDialect : PostgreSQLDialect() {
-    companion object {
-        /** PostgreSQL-NG dialect name */
-        const val dialectName: String = "pgsql"
-    }
+    companion object : DialectNameProvider("pgsql")
 }

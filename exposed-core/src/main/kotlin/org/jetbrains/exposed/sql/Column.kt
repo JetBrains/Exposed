@@ -123,7 +123,6 @@ class Column<T>(
         }
     }
 
-
     /**
      * Returns a copy of this column, but with the given column type.
      */
@@ -131,12 +130,11 @@ class Column<T>(
         table = this.table,
         name = this.name,
         columnType = columnType
-    ).also{
+    ).also {
         it.foreignKey = this.foreignKey
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue
     }
-
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)
 

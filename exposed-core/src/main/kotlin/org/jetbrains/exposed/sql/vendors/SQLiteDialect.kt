@@ -162,10 +162,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
 
-    companion object {
-        /** SQLite dialect name */
-        const val dialectName: String = "sqlite"
-
+    companion object : DialectNameProvider("sqlite") {
         val ENABLE_UPDATE_DELETE_LIMIT by lazy {
             var conn: Connection? = null
             var stmt: Statement? = null

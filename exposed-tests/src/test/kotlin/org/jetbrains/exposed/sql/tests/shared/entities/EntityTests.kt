@@ -1269,8 +1269,8 @@ class EntityTests : DatabaseTestsBase() {
                 dateOfBirth = "01/01/2000"
             }
 
-            kotlin.test.assertEquals(bio1, student1.bio)
-            kotlin.test.assertEquals(bio1.student, student1)
+            assertEquals(bio1, student1.bio)
+            assertEquals(bio1.student, student1)
         }
     }
 

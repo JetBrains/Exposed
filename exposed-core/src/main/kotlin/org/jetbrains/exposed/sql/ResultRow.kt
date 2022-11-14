@@ -119,7 +119,11 @@ class ResultRow(
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {
-                    val value = it.defaultValueFun?.invoke() ?: if (!it.columnType.nullable) NotInitializedValue else null
+                    val value = when {
+                        it.defaultValueFun != null -> it.defaultValueFun!!()
+                        it.columnType.nullable -> null
+                        else -> NotInitializedValue
+                    }
                     setInternal(it, value)
                 }
             }

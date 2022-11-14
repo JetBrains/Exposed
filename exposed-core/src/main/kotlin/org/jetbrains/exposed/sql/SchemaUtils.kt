@@ -120,7 +120,7 @@ object SchemaUtils {
     @Deprecated(
         "Will be removed in upcoming releases. Please use overloaded version instead",
         ReplaceWith("createFKey(checkNotNull(reference.foreignKey) { \"${"$"}reference does not reference anything\" })"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     fun createFKey(reference: Column<*>): List<String> {
         val foreignKey = reference.foreignKey

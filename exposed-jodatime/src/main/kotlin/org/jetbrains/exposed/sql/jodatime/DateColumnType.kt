@@ -42,10 +42,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return if (time)
+        return if (time) {
             "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
-        else
+        } else {
             "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
+        }
     }
 
     override fun valueFromDB(value: Any): Any {
@@ -62,10 +63,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             }
 
             else -> {
-                if (localDateTimeClass == value.javaClass)
+                if (localDateTimeClass == value.javaClass) {
                     DateTime.parse(value.toString())
-                else
+                } else {
                     valueFromDB(value.toString()) as DateTime
+                }
             }
         }
         return when (time) {

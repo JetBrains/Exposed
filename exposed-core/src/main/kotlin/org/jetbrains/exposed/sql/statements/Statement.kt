@@ -29,7 +29,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     internal fun executeIn(transaction: Transaction): Pair<T?, List<StatementContext>> {
         val arguments = arguments()
-        val contexts = if (arguments.count() > 0) {
+        val contexts = if (arguments.any()) {
             arguments.map { args ->
                 val context = StatementContext(this, args)
                 Transaction.globalInterceptors.forEach { it.beforeExecution(transaction, context) }
@@ -79,8 +79,7 @@ class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<ICol
 fun StatementContext.expandArgs(transaction: Transaction): String {
     val sql = sql(transaction)
     val iterator = args.iterator()
-    if (!iterator.hasNext())
-        return sql
+    if (!iterator.hasNext()) return sql
 
     return buildString {
         val quoteStack = Stack<Char>()
@@ -104,16 +103,18 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
                     quoteStack.push(char)
                 } else {
                     val currentQuote = quoteStack.peek()
-                    if (currentQuote == char)
+                    if (currentQuote == char) {
                         quoteStack.pop()
-                    else
+                    } else {
                         quoteStack.push(char)
+                    }
                 }
             }
         }
 
-        if (lastPos < sql.length)
+        if (lastPos < sql.length) {
             append(sql.substring(lastPos))
+        }
     }
 }
 
