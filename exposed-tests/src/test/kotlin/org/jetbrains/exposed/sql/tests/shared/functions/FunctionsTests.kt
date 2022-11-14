@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.crypt.Algorithms
 import org.jetbrains.exposed.crypt.Encryptor
-import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
@@ -69,51 +68,57 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-
     @Test
     fun `rem on numeric PK should work`() {
         // Create a new table here, since the other tables don't define PK
         val table = object : IntIdTable("test_mod_on_pk") {
-
+            val otherColumn = short("other")
         }
         withTables(table) {
-            repeat(10) {
+            repeat(5) {
                 table.insert {
-
+                    it[otherColumn] = 4
                 }
             }
 
-            val modOnPK = Expression.build { table.id % 3 }.alias("shard")
+            val modOnPK1 = Expression.build { table.id % 3 }.alias("shard1")
+            val modOnPK2 = Expression.build { table.id % intLiteral(3) }.alias("shard2")
+            val modOnPK3 = Expression.build { table.id % table.otherColumn }.alias("shard3")
+            val modOnPK4 = Expression.build { table.otherColumn % table.id }.alias("shard4")
 
-            val r = (table).slice(table.id, modOnPK)
-                .selectAll().groupBy(table.id).orderBy(table.id).toList()
+            val r = table.slice(table.id, modOnPK1, modOnPK2, modOnPK3, modOnPK4).selectAll().last()
 
-            val shardedPK: EntityID<Int> = r[1][modOnPK]
-            assertEquals(10, r.size)
-            assertEquals(2, shardedPK.value)
+            assertEquals(2, r[modOnPK1])
+            assertEquals(2, r[modOnPK2])
+            assertEquals(1, r[modOnPK3])
+            assertEquals(4, r[modOnPK4])
         }
     }
 
     @Test
     fun `mod on numeric PK should work`() {
+        // Create a new table here, since the other tables don't define PK
         val table = object : IntIdTable("test_mod_on_pk") {
-
+            val otherColumn = short("other")
         }
         withTables(table) {
-            repeat(10) {
+            repeat(5) {
                 table.insert {
-
+                    it[otherColumn] = 4
                 }
             }
 
-            val modOnPK = Expression.build { table.id mod 3 }.alias("shard")
+            val modOnPK1 = Expression.build { table.id mod 3 }.alias("shard1")
+            val modOnPK2 = Expression.build { table.id mod intLiteral(3) }.alias("shard2")
+            val modOnPK3 = Expression.build { table.id mod table.otherColumn }.alias("shard3")
+            val modOnPK4 = Expression.build { table.otherColumn mod table.id }.alias("shard4")
 
-            val r = (table).slice(table.id, modOnPK)
-                .selectAll().groupBy(table.id).orderBy(table.id).toList()
+            val r = table.slice(table.id, modOnPK1, modOnPK2, modOnPK3, modOnPK4).selectAll().last()
 
-            val shardedPK: EntityID<Int> = r[0][modOnPK]
-            assertEquals(10, r.size)
-            assertEquals(1, shardedPK.value)
+            assertEquals(2, r[modOnPK1])
+            assertEquals(2, r[modOnPK2])
+            assertEquals(1, r[modOnPK3])
+            assertEquals(4, r[modOnPK4])
         }
     }
 
@@ -310,7 +315,7 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test 
+    @Test
     fun testRegexp01() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id regexp "a.+" }.count())
@@ -320,7 +325,7 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test 
+    @Test
     fun testRegexp02() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id.regexp(stringLiteral("a.+")) }.count())

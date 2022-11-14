@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
@@ -314,31 +315,51 @@ class DivideOp<T, S : T>(
 /**
  * Represents an SQL operator that calculates the remainder of dividing [expr1] by [expr2].
  */
-class ModOp<T : Number?, S : Number?>(
+class ModOp<T : Number?, S : Number?, R : Number?>(
     /** Returns the left-hand side operand. */
     val expr1: Expression<T>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
-}
+) : ExpressionWithColumnType<R>() {
 
-class ModOpEntityID<T, S : Number?, K : EntityID<T>>(
-    /** Returns the left-hand side operand. */
-    val expr1: Expression<K>,
-    /** Returns the right-hand side operand. */
-    val expr2: Expression<S>,
-    override val columnType: IColumnType
-) : ExpressionWithColumnType<K>() where T : Comparable<T>, T : Number? {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = dbModOp(queryBuilder, expr1, expr2)
-}
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            when (currentDialectIfAvailable) {
+                is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
+                else -> append('(', expr1, " % ", expr2, ')')
+            }
+        }
+    }
 
-private fun dbModOp(queryBuilder: QueryBuilder, expr1: Expression<*>, expr2: Expression<*>) {
-    queryBuilder {
-        when (currentDialectIfAvailable) {
-            is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
-            else -> append('(', expr1, " % ", expr2, ')')
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        private fun <T : Number?, K : EntityID<T>?> originalColumn(expr1: ExpressionWithColumnType<K>): Column<T> {
+            return (expr1.columnType as EntityIDColumnType<*>).idColumn as Column<T>
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: ExpressionWithColumnType<K>,
+            expr2: Expression<S>
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr1)
+            return ModOp(column, expr2, column.columnType)
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: Expression<S>,
+            expr2: ExpressionWithColumnType<K>
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr2)
+            return ModOp(expr1, column, column.columnType)
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: ExpressionWithColumnType<K>,
+            expr2: S
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr1)
+            return ModOp(column, column.wrap(expr2), column.columnType)
         }
     }
 }
