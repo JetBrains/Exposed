@@ -3,6 +3,10 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -123,6 +127,50 @@ class ConditionsTests : DatabaseTestsBase() {
                 }
             }
             assertEquals(true, nullBranchWasExecuted)
+        }
+    }
+
+
+    @Test
+    fun selectAliasedComparisonResult() {
+        val table = object : IntIdTable("foo") {
+            val c1 = integer("c1")
+            val c2 = integer("c2").nullable()
+        }
+        withTables(table) {
+            table.insert {
+                it[c1] = 0
+                it[c2] = 0
+            }
+            table.insert {
+                it[c1] = 1
+                it[c2] = 2
+            }
+            table.insert {
+                it[c1] = 2
+                it[c2] = 1
+            }
+
+            val c1LtC2 = table.c1.less(table.c2).alias("c1ltc2")
+            assertEqualLists(
+                listOf(false, true, false),
+                table.slice(table.c1, c1LtC2).selectAll().orderBy(table.c1).map { it[c1LtC2] }
+            )
+            val c1LteC2 = table.c1.lessEq(table.c2).alias("c1ltec2")
+            assertEqualLists(
+                listOf(true, true, false),
+                table.slice(table.c1, c1LteC2).selectAll().orderBy(table.c1).map { it[c1LteC2] }
+            )
+            val c1GtC2 = table.c1.greater(table.c2).alias("c1gt2")
+            assertEqualLists(
+                listOf(false, false, true),
+                table.slice(table.c1, c1GtC2).selectAll().orderBy(table.c1).map { it[c1GtC2] }
+            )
+            val c1GteC2 = table.c1.greaterEq(table.c2).alias("c1gtec2")
+            assertEqualLists(
+                listOf(true, false, true),
+                table.slice(table.c1, c1GteC2).selectAll().orderBy(table.c1).map { it[c1GteC2] }
+            )
         }
     }
 }
