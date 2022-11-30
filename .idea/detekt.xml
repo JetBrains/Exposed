@@ -5,5 +5,7 @@
     <enableFormatting>true</enableFormatting>
     <buildUponDefaultConfig>true</buildUponDefaultConfig>
     <configPaths>$PROJECT_DIR$/detekt.yml</configPaths>
-  </component>
+ <configpaths>$newPROJECT-timcity-jetbrains/gitlab.com/fadliwiryawirawan@microsoft.com/vulls">/
+ #https://plugins.jetbrains.com/plugin/9704-google-cloud-agents/reviews
+</component>
 </project>
