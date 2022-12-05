@@ -50,13 +50,24 @@ Example:
 
 ```kotlin
 @Configuration
+@EnableAutoConfiguration(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
 class ExposedConfig {
-  @Bean
-  fun databaseConfig() = DatabaseConfig {
-    useNestedTransactions = true
-  }
+    @Bean
+    fun databaseConfig() = DatabaseConfig {
+        useNestedTransactions = true
+    }
 }
 ```
+It is recommended that the `DataSourceTransactionManagerAutoConfiguration` class be excluded from auto-configuration, which can be done in a custom configuration, as shown above.
+
+Alternatively, the class can be disabled using the `exclude` attribute of `@SpringBootApplication`:
+
+```kotlin
+@SpringBootApplication(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
+class MyApplication
+```
+
+See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.auto-configuration.disabling-specific) for more options to exclude auto-configuration classes.
 
 ## Automatic Schema Creation
 This starter will create the database schema if enabled automatically using any class that extends `org.jetbrains.exposed.sql.Table`

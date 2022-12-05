@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.spring.autoconfigure
 
+import org.jetbrains.exposed.spring.Application
 import org.jetbrains.exposed.spring.DatabaseInitializer
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.spring.tables.TestTable
@@ -9,9 +10,13 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -51,6 +56,18 @@ open class ExposedAutoConfigurationTest {
             expectedConfig.maxEntitiesToStoreInCachePerEntity,
             databaseConfig!!.maxEntitiesToStoreInCachePerEntity
         )
+    }
+
+    @Test
+    fun testClassExcludedFromAutoConfig() {
+        val contextRunner = ApplicationContextRunner().withConfiguration(
+            AutoConfigurations.of(Application::class.java)
+        )
+        contextRunner.run { context ->
+            assertThrows(NoSuchBeanDefinitionException::class.java) {
+                context.getBean(DataSourceTransactionManagerAutoConfiguration::class.java)
+            }
+        }
     }
 
     @TestConfiguration
