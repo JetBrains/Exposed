@@ -20,6 +20,7 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
+import kotlin.random.Random
 import kotlin.test.assertNotNull
 
 class DDLTests : DatabaseTestsBase() {
@@ -337,24 +338,37 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val bytes = "Hello there!".toByteArray()
-            val blob = ExposedBlob(bytes)
+            val shortBytes = "Hello there!".toByteArray()
+            val longBytes = Random.nextBytes(1024)
+            val shotBlob = ExposedBlob(shortBytes)
+            val longBlob = ExposedBlob(longBytes)
 //            if (currentDialectTest.dataTypeProvider.blobAsStream) {
 //                    SerialBlob(bytes)
 //                } else connection.createBlob().apply {
 //                    setBytes(1, bytes)
 //                }
 
-            val id = t.insert {
-                it[t.b] = blob
+            val id1 = t.insert {
+                it[t.b] = shotBlob
             } get (t.id)
 
-            val readOn = t.select { t.id eq id }.first()[t.b]
-            val text1 = String(readOn.bytes)
-            val text2 = readOn.inputStream.bufferedReader().readText()
+            val id2 = t.insert {
+                it[t.b] = longBlob
+            } get (t.id)
+
+            val readOn1 = t.select { t.id eq id1 }.first()[t.b]
+            val text1 = String(readOn1.bytes)
+            val text2 = readOn1.inputStream.bufferedReader().readText()
 
             assertEquals("Hello there!", text1)
             assertEquals("Hello there!", text2)
+
+            val readOn2 = t.select { t.id eq id2 }.first()[t.b]
+            val bytes1 = readOn2.bytes
+            val bytes2 = readOn2.inputStream.readBytes()
+
+            assertTrue(longBytes.contentEquals(bytes1))
+            assertTrue(longBytes.contentEquals(bytes2))
         }
     }
 
