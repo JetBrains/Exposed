@@ -6,9 +6,11 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertNull
@@ -92,6 +94,10 @@ class MoneyDefaultsTest : DatabaseTestsBase() {
             db1.refresh(flush = true)
             assertEquals(money, db1.t1)
             assertEquals(TableWithDBDefault.defaultValue, db1.t1)
+            TableWithDBDefault.update {
+                it[t2] = null
+            }
+            assertNull(TableWithDBDefault.selectAll().single()[TableWithDBDefault.t2])
         }
     }
 }
