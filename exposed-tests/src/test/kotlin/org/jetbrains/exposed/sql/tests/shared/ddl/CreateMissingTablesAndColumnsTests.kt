@@ -19,7 +19,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 import kotlin.properties.Delegates
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -540,7 +540,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test fun testCreateTableWithReferenceMultipleTimes() {
-        withTables(PlayerTable, SessionsTable) {
+        withTables(SessionsTable, PlayerTable) {
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
         }
@@ -620,7 +620,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyTableMultipleTimes() {
-        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+        withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
