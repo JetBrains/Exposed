@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.Cities
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
@@ -53,120 +53,102 @@ class MultiDatabaseTest {
     @Test
     fun testTransactionWithDatabase() {
         transaction(db1) {
-            assertFalse(DMLTestsData.Cities.exists())
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.exists())
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertFalse(Cities.exists())
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.exists())
+            SchemaUtils.drop(Cities)
         }
 
         transaction(db2) {
-            assertFalse(DMLTestsData.Cities.exists())
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.exists())
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertFalse(Cities.exists())
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.exists())
+            SchemaUtils.drop(Cities)
         }
     }
 
     @Test
     fun testSimpleInsertsInDifferentDatabase() {
         transaction(db1) {
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.selectAll().empty())
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
-            }
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.selectAll().empty())
+            Cities.insert { it[Cities.name] = "city1" }
         }
 
         transaction(db2) {
-            assertFalse(DMLTestsData.Cities.exists())
-            SchemaUtils.create(DMLTestsData.Cities)
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city2"
+            assertFalse(Cities.exists())
+            SchemaUtils.create(Cities)
+            Cities.insert {
+                it[Cities.name] = "city2"
             }
         }
 
         transaction(db1) {
-            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-            assertEquals("city1", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertEquals(1L, Cities.selectAll().count())
+            assertEquals("city1", Cities.selectAll().single()[Cities.name])
+            SchemaUtils.drop(Cities)
         }
 
         transaction(db2) {
-            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-            assertEquals("city2", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertEquals(1L, Cities.selectAll().count())
+            assertEquals("city2", Cities.selectAll().single()[Cities.name])
+            SchemaUtils.drop(Cities)
         }
     }
 
     @Test
     fun testEmbeddedInsertsInDifferentDatabase() {
         transaction(db1) {
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.selectAll().empty())
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
-            }
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.selectAll().empty())
+            Cities.insert { it[name] = "city1" }
 
             transaction(db2) {
-                assertFalse(DMLTestsData.Cities.exists())
-                SchemaUtils.create(DMLTestsData.Cities)
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
-                }
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
-                }
-                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
-                SchemaUtils.drop(DMLTestsData.Cities)
+                assertFalse(Cities.exists())
+                SchemaUtils.create(Cities)
+                Cities.insert { it[name] = "city2" }
+                Cities.insert { it[name] = "city3" }
+                assertEquals(2L, Cities.selectAll().count())
+                assertEquals("city3", Cities.selectAll().last()[Cities.name])
+                SchemaUtils.drop(Cities)
             }
 
-            assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-            assertEquals("city1", DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name])
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertEquals(1L, Cities.selectAll().count())
+            assertEquals("city1", Cities.selectAll().single()[Cities.name])
+            SchemaUtils.drop(Cities)
         }
     }
 
     @Test
     fun testEmbeddedInsertsInDifferentDatabaseDepth2() {
         transaction(db1) {
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.selectAll().empty())
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
-            }
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.selectAll().empty())
+            Cities.insert { it[name] = "city1" }
 
             transaction(db2) {
-                assertFalse(DMLTestsData.Cities.exists())
-                SchemaUtils.create(DMLTestsData.Cities)
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
-                }
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
-                }
-                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+                assertFalse(Cities.exists())
+                SchemaUtils.create(Cities)
+                Cities.insert { it[name] = "city2" }
+                Cities.insert { it[name] = "city3" }
+                assertEquals(2L, Cities.selectAll().count())
+                assertEquals("city3", Cities.selectAll().last()[Cities.name])
 
                 transaction(db1) {
-                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-                    DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city4"
-                    }
-                    DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city5"
-                    }
-                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(1L, Cities.selectAll().count())
+                    Cities.insert { it[name] = "city4" }
+                    Cities.insert { it[name] = "city5" }
+                    assertEquals(3L, Cities.selectAll().count())
                 }
 
-                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
-                SchemaUtils.drop(DMLTestsData.Cities)
+                assertEquals(2L, Cities.selectAll().count())
+                assertEquals("city3", Cities.selectAll().last()[Cities.name])
+                SchemaUtils.drop(Cities)
             }
 
-            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
-            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertEquals(3L, Cities.selectAll().count())
+            assertEqualLists(listOf("city1", "city4", "city5"), Cities.selectAll().map { it[Cities.name] })
+            SchemaUtils.drop(Cities)
         }
     }
 
@@ -174,43 +156,33 @@ class MultiDatabaseTest {
     fun testCoroutinesWithMultiDb() = runBlocking {
         newSuspendedTransaction(Dispatchers.IO, db1) {
             val tr1 = this
-            SchemaUtils.create(DMLTestsData.Cities)
-            assertTrue(DMLTestsData.Cities.selectAll().empty())
-            DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
-            }
+            SchemaUtils.create(Cities)
+            assertTrue(Cities.selectAll().empty())
+            Cities.insert { it[name] = "city1" }
 
             newSuspendedTransaction(Dispatchers.IO, db2) {
-                assertFalse(DMLTestsData.Cities.exists())
-                SchemaUtils.create(DMLTestsData.Cities)
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
-                }
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
-                }
-                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+                assertFalse(Cities.exists())
+                SchemaUtils.create(Cities)
+                Cities.insert { it[name] = "city2" }
+                Cities.insert { it[name] = "city3" }
+                assertEquals(2L, Cities.selectAll().count())
+                assertEquals("city3", Cities.selectAll().last()[Cities.name])
 
                 tr1.suspendedTransaction {
-                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-                    DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city4"
-                    }
-                    DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city5"
-                    }
-                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
+                    assertEquals(1L, Cities.selectAll().count())
+                    Cities.insert { it[name] = "city4" }
+                    Cities.insert { it[name] = "city5" }
+                    assertEquals(3L, Cities.selectAll().count())
                 }
 
-                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
-                SchemaUtils.drop(DMLTestsData.Cities)
+                assertEquals(2L, Cities.selectAll().count())
+                assertEquals("city3", Cities.selectAll().last()[Cities.name])
+                SchemaUtils.drop(Cities)
             }
 
-            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
-            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
-            SchemaUtils.drop(DMLTestsData.Cities)
+            assertEquals(3L, Cities.selectAll().count())
+            assertEqualLists(listOf("city1", "city4", "city5"), Cities.selectAll().map { it[Cities.name] })
+            SchemaUtils.drop(Cities)
         }
     }
 

@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -86,6 +87,11 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     }
 
     override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
+        table.materializeDefaultFilter()?.let {
+            TransactionManager
+                .current()
+                .throwUnsupportedException("REPLACE on tables with a default scope isn't supported.")
+        }
         val builder = QueryBuilder(true)
         val columns = data.joinToString { transaction.identity(it.first) }
         val values = builder.apply { data.appendTo { registerArgument(it.first, it.second) } }.toString()

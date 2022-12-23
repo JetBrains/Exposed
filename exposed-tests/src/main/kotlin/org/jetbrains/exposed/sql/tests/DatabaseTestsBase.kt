@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
-import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -18,6 +17,7 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.declaredMemberProperties
+
 
 enum class TestDB(
     val connection: () -> String,
@@ -65,12 +65,12 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
-        beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "jdbc:postgresql://localhost:5432/exposed_template1?user=exposed_template1&password=exposed_template1&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        user = "exposed_template1", pass = "exposed_template1"
     ),
     POSTGRESQLNG(
-        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
-        user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "jdbc:pgsql://localhost:5432/exposed_template1?user=exposed_template1&password=exposed_template1" }, "com.impossibl.postgres.jdbc.PGDriver",
+        user = "exposed_template1", pass = "exposed_template1"
     ),
     ORACLE(
         driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
@@ -133,33 +133,12 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-private val postgresSQLProcess by lazy {
-    PostgreSQLContainer("postgres:13.8-alpine")
-        .withUsername("postgres")
-        .withPassword("")
-        .withDatabaseName("template1")
-        .withStartupTimeout(Duration.ofSeconds(60))
-        .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
-        .apply {
-            listOf(
-                "timezone=UTC",
-                "synchronous_commit=off",
-                "max_connections=300",
-                "fsync=off"
-            ).forEach{
-                setCommand("postgres", "-c", it)
-            }
-            start()
-        }
-}
-
 private val mySQLProcess by lazy {
     MySQLContainer("mysql:5")
         .withDatabaseName("testdb")
         .withEnv("MYSQL_ROOT_PASSWORD", "test")
-        .withExposedPorts().apply {
-            start()
-        }
+        .withExposedPorts()
+        .apply { start() }
 }
 
 private fun runTestContainersMySQL(): Boolean =

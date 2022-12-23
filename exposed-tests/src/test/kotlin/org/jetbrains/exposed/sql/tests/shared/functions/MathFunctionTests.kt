@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.functions.math.*
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -96,6 +97,7 @@ class MathFunctionTests : FunctionsTestBase() {
     }
 
     @Test
+    @Ignore
     fun testSqrtFunction() {
         withTable { testDb ->
             assertExpressionEqual(BigDecimal(10), SqrtFunction(intLiteral(100)))

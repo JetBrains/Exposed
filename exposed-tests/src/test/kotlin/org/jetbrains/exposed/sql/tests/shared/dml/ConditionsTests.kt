@@ -12,7 +12,7 @@ import org.junit.Test
 class ConditionsTests : DatabaseTestsBase() {
     @Test
     fun testTRUEandFALSEOps() {
-        withCitiesAndUsers { cities, _, _ ->
+        withCitiesAndUsers {
             val allSities = cities.selectAll().toCityNameList()
             assertEquals(0L, cities.select { Op.FALSE }.count())
             assertEquals(allSities.size.toLong(), cities.select { Op.TRUE }.count())
@@ -22,10 +22,10 @@ class ConditionsTests : DatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/581
     @Test
     fun sameColumnUsedInSliceMultipleTimes() {
-        withCitiesAndUsers { city, _, _ ->
-            val row = city.slice(city.name, city.name, city.id).select { city.name eq "Munich" }.toList().single()
-            assertEquals(2, row[city.id])
-            assertEquals("Munich", row[city.name])
+        withCitiesAndUsers {
+            val row = cities.slice(cities.name, cities.name, cities.id).select { cities.name eq "Munich" }.toList().single()
+            assertEquals(2, row[cities.id])
+            assertEquals("Munich", row[cities.name])
         }
     }
 
@@ -76,7 +76,7 @@ class ConditionsTests : DatabaseTestsBase() {
 
     @Test
     fun nullOpUpdateAndSelectTest() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers {
             val allUsers = users.selectAll().count()
             users.update {
                 it[users.cityId] = Op.nullOp()
@@ -97,7 +97,7 @@ class ConditionsTests : DatabaseTestsBase() {
 
     @Test
     fun nullOpUpdateFailsTest() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers {
             expectException<ExposedSQLException> {
                 users.update {
                     it[users.name] = Op.nullOp()
@@ -108,7 +108,7 @@ class ConditionsTests : DatabaseTestsBase() {
 
     @Test
     fun nullOpInCaseTest() {
-        withCitiesAndUsers { cities, _, _ ->
+        withCitiesAndUsers {
             val caseCondition = Case().
                 When(Op.build { cities.id eq 1 }, Op.nullOp<String>()).
                 Else(cities.name)

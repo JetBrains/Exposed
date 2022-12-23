@@ -28,7 +28,7 @@ typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 /**
  * Represents a set of expressions, contained in the given column set.
  */
-interface FieldSet {
+interface FieldSet : DefaultFilterMaterializer {
     /** Return the column set that contains this field set. */
     val source: ColumnSet
 
@@ -150,7 +150,9 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
 /**
  * Represents a subset of [fields] from a given [source].
  */
-class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet
+class Slice(override val source: ColumnSet, override val fields: List<Expression<*>>) : FieldSet {
+    override fun materializeDefaultFilter() = source.materializeDefaultFilter()
+}
 
 /**
  * Represents column set join types.
@@ -197,7 +199,7 @@ class Join(
                 join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
             }
             onColumn != null || otherColumn != null -> {
-                error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
+                error("Can't prepare join on $table and $otherTable when only column from one side provided.")
             }
             additionalConstraint != null -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
@@ -240,6 +242,17 @@ class Join(
     override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
+
+    override fun materializeDefaultFilter() = table.materializeDefaultFilter()
+        .let { sourceDefaultFilter ->
+            joinParts
+                .mapNotNull { it.joinPart.materializeDefaultFilter() }
+                .reduceOrNull { result, op -> result and op }
+                .let {
+                    it?.let { targetsDefaultFilter -> sourceDefaultFilter?.and(targetsDefaultFilter) }
+                        ?: it
+                } ?: sourceDefaultFilter
+        }
 
     private fun implicitJoin(
         otherTable: ColumnSet,
@@ -336,6 +349,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
+    open val defaultFilter: (() -> Op<Boolean>)? = null
+
+    /**
+     * Returns a new instance of a table that will ignore the default scope when generating/running queries.
+     */
+    open fun stripDefaultFilter() = TableWithDefaultFilterStriped(this)
+
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
     // Table name may contain quotes, remove those before appending
     internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
@@ -365,6 +385,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Should be called within transaction or default [tableName] will be returned.
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
+
+    override fun materializeDefaultFilter() = defaultFilter?.invoke()
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
 
@@ -1183,4 +1205,14 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Table -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
+}
+
+/** A table with a default scope whose default scope has been temporarily striped */
+open class TableWithDefaultFilterStriped(val actualTable: Table) : Table(name = actualTable.tableName), FieldSet by actualTable {
+
+    override val columns: List<Column<*>> = actualTable.columns
+
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) = actualTable.describe(s, queryBuilder)
+
+    override fun materializeDefaultFilter() : Op<Boolean>? = null
 }

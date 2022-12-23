@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.dao.id
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import java.util.*
 
 interface EntityIDFactory {
@@ -28,8 +27,12 @@ object EntityIDFunctionProvider {
  *
  * @param name table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
-abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
-    abstract val id: Column<EntityID<T>>
+abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name), IdAware<T> {
+
+    /**
+     * Returns a new instance of a table that will ignore the default scope when generating/running queries.
+     */
+    override fun stripDefaultFilter() : IdTableWithDefaultFilterStriped<T> = IdTableWithDefaultFilterStriped(this)
 }
 
 /**
@@ -67,4 +70,10 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
     final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)
+}
+
+/** An Id table that ignores the actualTable's default scope */
+open class IdTableWithDefaultFilterStriped<ID : Comparable<ID>>(actualTable: IdTable<ID>)
+    : TableWithDefaultFilterStriped(actualTable), IdAware<ID> {
+    override val id: Column<EntityID<ID>> = actualTable.id
 }

@@ -160,6 +160,11 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         data: List<Pair<Column<*>, Any?>>,
         transaction: Transaction
     ): String {
+        table.materializeDefaultFilter()?.let {
+            TransactionManager
+                .current()
+                .throwUnsupportedException("REPLACE on tables with a default scope isn't supported.")
+        }
         val builder = QueryBuilder(true)
         val sql = if (data.isEmpty()) {
             ""

@@ -10,36 +10,30 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.api.plugins.JavaPluginExtension
 
-infix fun <T> Property<T>.by(value: T) {
-    set(value)
-}
 
-fun MavenPom.configureMavenCentralMetadata(project: Project) {
-    name by project.name
-    description by "Exposed, an ORM framework for Kotlin"
-    url by "https://github.com/JetBrains/Exposed"
-
-    licenses {
-        license {
-            name by "The Apache Software License, Version 2.0"
-            url by "https://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution by "repo"
-        }
-    }
+fun MavenPom.setPomMetadata(project: Project) {
+    name.set(project.name)
+    description.set("${project.name}; an ORM framework for Kotlin")
+    url.set("https://github.com/tpasipanodya/Exposed")
 
     developers {
         developer {
-            id by "JetBrains"
-            name by "JetBrains Team"
-            organization by "JetBrains"
-            organizationUrl by "https://www.jetbrains.com"
+            id.set("Tafadzwa Pasipanodya")
+            name.set("Tafadzwa Pasipanodya")
+            email.set("tmpasipanodya@gmail.com")
+        }
+        developer {
+            id.set("JetBrains")
+            name.set("JetBrains Team")
+            organization.set("JetBrains")
+            organizationUrl.set("https://www.jetbrains.com")
         }
     }
 
     scm {
-        url by "https://github.com/JetBrains/Exposed"
-        connection by "scm:git:git://github.com/JetBrains/Exposed.git"
-        developerConnection by "scm:git:git@github.com:JetBrains/Exposed.git"
+        connection.set("scm:git:git://github.com/tpasipanodya/Exposed.git")
+        developerConnection.set("scm:git:ssh://github.com/tpasipanodya/Exposed.git")
+        url.set("http://github.com/tpasipanodya/Exposed/tree/main")
     }
 }
 
@@ -55,10 +49,4 @@ fun MavenPublication.signPublicationIfKeyPresent(project: Project) {
     }
 }
 
-fun Project._publishing(configure: PublishingExtension.() -> Unit) {
-    extensions.configure("publishing", configure)
-}
-
-fun Project._java(configure: JavaPluginExtension.() -> Unit) {
-    extensions.configure("java", configure)
-}
+fun isReleaseBuild() = System.getenv("IS_RELEASE_BUILD")?.toBoolean() == true

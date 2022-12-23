@@ -164,7 +164,7 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchInsert01() {
-        withCitiesAndUsers { cities, users, _ ->
+        withCitiesAndUsers {
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
             val allCitiesID = cities.batchInsert(cityNames) { name ->
                 this[cities.name] = name
@@ -188,7 +188,6 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using a sequence should work`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = List(25) { UUID.randomUUID().toString() }.asSequence()
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -201,7 +200,6 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using empty sequence should work`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = emptySequence<String>()
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -214,11 +212,11 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testGeneratedKey01() {
-        withTables(DMLTestsData.Cities) {
-            val id = DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "FooCity"
-            } get DMLTestsData.Cities.id
-            assertEquals(DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.id], id)
+        withTables(Cities) {
+            val id = Cities.insert {
+                it[name] = "FooCity"
+            } get Cities.id
+            assertEquals(Cities.selectAll().last()[Cities.id], id)
         }
     }
 

@@ -29,8 +29,14 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     private var forUpdate: ForUpdateOption? = null
 
     // private set
-    var where: Op<Boolean>? = where
+    var where: Op<Boolean>? = initializeWhere(where)
         private set
+
+    private fun initializeWhere(where: Op<Boolean>?) = set.materializeDefaultFilter()
+        ?.let { safeFilterScope ->
+            where?.let { it and safeFilterScope }
+                ?: safeFilterScope
+        } ?: where
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
@@ -84,7 +90,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @param body new WHERE condition builder, previous value used as a receiver
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
-    fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
+    fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply {
+        initializeWhere(where.body()).also { this.where = it }
+    }
 
     /**
      * Changes [having] field of a Query.

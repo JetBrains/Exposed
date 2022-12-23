@@ -3,35 +3,69 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.util.*
-import kotlin.test.*
 
 class SelectBatchedTests : DatabaseTestsBase() {
+    private val scopedCities = object : Table(Cities.tableName) {
+        val id: Column<Int> = integer("cityId").autoIncrement()
+        val name: Column<String> = varchar("name", 50)
+        override val primaryKey = PrimaryKey(id)
+        override val defaultFilter = { Op.build { id less 51} }
+    }
+
     @Test
     fun `selectBatched should respect 'where' expression and the provided batch size`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        withTables(Cities, scopedCities) {
             val names = List(100) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
 
-            val batches = Cities.selectBatched(batchSize = 25) { Cities.id less 51 }
+            Cities.selectBatched(batchSize = 25) { Cities.id less 51 }
                 .toList().map { it.toCityNameList() }
+                .let { batches ->
+                    val expectedNames = names.take(50)
+                    assertEqualLists(
+                        listOf(expectedNames.take(25),
+                               expectedNames.takeLast(25)),
+                        batches
+                    )
+                }
 
-            val expectedNames = names.take(50)
-            assertEqualLists(
-                listOf(
-                    expectedNames.take(25),
-                    expectedNames.takeLast(25)
-                ),
-                batches
-            )
+            scopedCities.selectBatched(batchSize = 25) { scopedCities.id less 51 }
+                .map { it.map { batch -> batch[scopedCities.name] } }
+                .let { batches ->
+                    val expectedNames = names.take(50)
+                    assertEqualLists(
+                        listOf(expectedNames.take(25),
+                               expectedNames.takeLast(25)),
+                        batches
+                    )
+                }
+
+            scopedCities.stripDefaultFilter()
+                .selectBatched(batchSize = 25) { scopedCities.id less 51 }
+                .map { it.map { batch -> batch[scopedCities.name] } }
+                .let { batches ->
+                    val expectedNames = names.take(50)
+                    assertEqualLists(
+                        listOf(expectedNames.take(25),
+                               expectedNames.takeLast(25)),
+                        batches
+                    )
+                }
+
+            scopedCities.selectBatched(batchSize = 25) { scopedCities.id greater  51 }
+                .toList().let { batches -> assertTrue(batches.isEmpty()) }
+
+            scopedCities.stripDefaultFilter()
+                .selectBatched(batchSize = 25) { scopedCities.id greater  51 }
+                .toList().let { batches -> assertTrue(batches.isNotEmpty()) }
         }
     }
 
     @Test
     fun `when batch size is greater than the amount of available items, selectAllBatched should return 1 batch`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = List(25) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -44,7 +78,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items, selectAllBatched should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val batches = Cities.selectAllBatched().toList()
 
@@ -54,7 +87,6 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items of the given condition, should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
         withTables(Cities) {
             val names = List(25) { UUID.randomUUID().toString() }
             Cities.batchInsert(names) { name -> this[Cities.name] = name }
@@ -68,11 +100,11 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test(expected = java.lang.UnsupportedOperationException::class)
     fun `when the table doesn't have an autoinc column, selectAllBatched should throw an exception`() {
-        DMLTestsData.UserData.selectAllBatched()
+        UserData.selectAllBatched()
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `when batch size is 0 or less, should throw an exception`() {
-        DMLTestsData.Cities.selectAllBatched(batchSize = -1)
+        Cities.selectAllBatched(batchSize = -1)
     }
 }

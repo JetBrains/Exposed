@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.dml.Cities
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -14,38 +14,32 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun testNestedTransactions() {
-        withTables(DMLTestsData.Cities) {
+        withTables(Cities) {
             try {
                 db.useNestedTransactions = true
-                assertTrue(DMLTestsData.Cities.selectAll().empty())
+                assertTrue(Cities.selectAll().empty())
 
-                DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city1"
-                }
+                Cities.insert { it[name] = "city1" }
 
-                assertEquals(1L, DMLTestsData.Cities.selectAll().count())
+                assertEquals(1L, Cities.selectAll().count())
 
-                assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                assertEqualLists(listOf("city1"), Cities.selectAll().map { it[Cities.name] })
 
                 transaction {
-                    DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city2"
-                    }
-                    assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                    Cities.insert { it[Cities.name] = "city2" }
+                    assertEqualLists(listOf("city1", "city2"), Cities.selectAll().map { it[Cities.name] })
 
                     transaction {
-                        DMLTestsData.Cities.insert {
-                            it[DMLTestsData.Cities.name] = "city3"
-                        }
-                        assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                        Cities.insert { it[name] = "city3" }
+                        assertEqualLists(listOf("city1", "city2", "city3"), Cities.selectAll().map { it[Cities.name] })
                     }
 
-                    assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                    assertEqualLists(listOf("city1", "city2", "city3"), Cities.selectAll().map { it[Cities.name] })
 
                     rollback()
                 }
 
-                assertEqualLists(listOf("city1"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+                assertEqualLists(listOf("city1"), Cities.selectAll().map { it[Cities.name] })
             } finally {
                 db.useNestedTransactions = false
             }
@@ -54,7 +48,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
     @Test
     fun `test outer transaction restored after nested transaction failed`() {
-        withTables(DMLTestsData.Cities) {
+        withTables(Cities) {
             assertNotNull(TransactionManager.currentOrNull())
 
             try {

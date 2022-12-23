@@ -7,8 +7,15 @@ dependencies {
     gradleApi()
     implementation("org.jetbrains.kotlin.jvm", "org.jetbrains.kotlin.jvm.gradle.plugin", "1.7.21")
     implementation("com.avast.gradle", "gradle-docker-compose-plugin", "0.14.9")
-    implementation("io.github.gradle-nexus", "publish-plugin", "1.0.0")
-    implementation("io.gitlab.arturbosch.detekt", "detekt-gradle-plugin", "1.21.0")
+//    implementation("io.gitlab.arturbosch.detekt", "detekt-gradle-plugin", "1.21.0")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile> {
+    kotlinOptions {
+        jvmTarget = "16"
+        apiVersion = "1.5"
+        languageVersion = "1.5"
+    }
 }
 
 plugins {

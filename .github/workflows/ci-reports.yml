@@ -1,0 +1,65 @@
+name: 'CI Reports'
+on:
+  workflow_run:
+    workflows:
+      - 'CI'
+      - 'CI & CD'
+    types:
+      - completed
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+    steps:
+      - name: Upload Postgres Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: Postgres Test Results
+          path: postgresTest/*.xml
+          reporter: java-junit
+      - name: Upload Postgres Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: Postgres Test Results
+          path: postgresTest/*.xml
+          reporter: java-junit
+      - name: Upload Mysql Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: Postgres Test Results
+          path: mysql51Test/*.xml
+          reporter: java-junit
+      - name: Upload SQL lite Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: SQL lite Test Results
+          path: sqliteTest/*.xml
+          reporter: java-junit
+      - name: Upload Postgres NG Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: Postgres NG Results
+          path: postgresNGTest/*.xml
+          reporter: java-junit
+      - name: Upload H2 V2 Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: H2 V2 Test Results
+          path: h2_v2Test/*.xml
+          reporter: java-junit
+      - name: Upload H2 V1 Test Results
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: Test Artifacts
+          name: H2 V1 Test Results
+          path: h2_v1Test/*.xml
+          reporter: java-junit

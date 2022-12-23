@@ -1,0 +1,32 @@
+name: "CI & CD"
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 18
+      - name: Start Databases
+        run: ./scripts/setup.sh
+      - name: Release
+        uses: gradle/gradle-build-action@v2
+        env:
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+          IS_RELEASE_BUILD: true
+        with:
+          gradle-version: 7.6
+          arguments: clean test build artifactoryPublish
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: Test Artifacts
+          path: exposed-tests/build/test-results/*/*.xml
