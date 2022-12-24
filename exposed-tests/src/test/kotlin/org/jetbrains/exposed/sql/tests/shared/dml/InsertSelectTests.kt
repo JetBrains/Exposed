@@ -30,10 +30,14 @@ class InsertSelectTests : DatabaseTestsBase() {
 
             cities.slice(cities.name)
                 .selectAll().orderBy(cities.id, SortOrder.DESC)
-                .limit(2).toList().let { reloadedCities ->
+                .limit(2).toList()
+                .map { it[cities.name] }
+                .sortedByDescending { it }
+                .let { reloadedCities ->
+                    println("aye! ${reloadedCities}")
                     assertEquals(2, reloadedCities.size)
-                    assertEquals("Se", reloadedCities[0][cities.name])
-                    assertEquals("Eu", reloadedCities[1][cities.name])
+                    assertEquals("Se", reloadedCities[0])
+                    assertEquals("Eu", reloadedCities[1])
                 }
         }
     }

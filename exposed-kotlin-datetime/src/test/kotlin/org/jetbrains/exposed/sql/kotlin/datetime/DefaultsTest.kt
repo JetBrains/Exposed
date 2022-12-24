@@ -1,6 +1,7 @@
 @file:OptIn(ExperimentalTime::class)
 package org.jetbrains.exposed.sql.kotlin.datetime
 
+import java.time.temporal.ChronoUnit
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -17,15 +18,14 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.junit.Ignore
-import org.junit.Test
-import java.time.temporal.ChronoUnit
 import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -55,21 +55,26 @@ class DefaultsTest : DatabaseTestsBase() {
         var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?) = (other as? DBDefault)?.let {
-            id == it.id &&
-            field == it.field &&
-                t1?.let { safeT1 ->
-                    ChronoUnit.MILLIS
-                        .between(safeT1.toJavaLocalDateTime(),
-                                 it.t1!!.toJavaLocalDateTime()) < 1
-                } ?: it.t1 == null
-
-        } ?: false
+        override fun equals(other: Any?): Boolean {
+            return (other as? DBDefault)?.let { id == it.id && field == it.field && t1 == it.t1 && t2 == it.t2 } ?: false
+        }
 
         override fun hashCode(): Int = id.value.hashCode()
 
         companion object : IntEntityClass<DBDefault>(TableWithDBDefault)
     }
+
+    fun dbDefaultEquals(item1: DBDefault, item2: DBDefault) =
+        item1.id == item2.id &&
+        item1.field == item2.field &&
+        ChronoUnit.MILLIS.between(
+            item1.t1.toJavaLocalDateTime(),
+            item2.t1.toJavaLocalDateTime()
+        ) < 1 &&
+        ChronoUnit.DAYS.between(
+            item1.t2.toJavaLocalDate(),
+            item2.t2.toJavaLocalDate()
+        ) < 1
 
     @Test
     fun testCanUseClientDefaultOnNullableColumn() {
@@ -112,13 +117,21 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.removeFromCache(it)
             }
 
+
             val entities = DBDefault.all().toList()
-            assertEqualCollections(created.map { it.id }, entities.map { it.id })
+            val indexedEntities = entities.associateBy { it.id }
+            val indexedCreateds = created.associateBy { it.id }
+
+            created.forEach {
+                assertTrue(dbDefaultEquals(it, indexedEntities[it.id]!!))
+            }
+            entities.forEach {
+                assertTrue(dbDefaultEquals(it, indexedCreateds[it.id]!!))
+            }
         }
     }
 
     @Test
-    @Ignore
     fun testDefaultsWithExplicit02() {
         withTables(TableWithDBDefault) {
             val created = listOf(
@@ -134,9 +147,15 @@ class DefaultsTest : DatabaseTestsBase() {
                 DBDefault.removeFromCache(it)
             }
             val entities = DBDefault.all().toList()
+            val indexedEntities = entities.associateBy { it.id }
+            val indexedCreateds = created.associateBy { it.id }
 
-
-            assertEqualCollections(created, entities)
+            created.forEach {
+                assertTrue(dbDefaultEquals(it, indexedEntities[it.id]!!))
+            }
+            entities.forEach {
+                assertTrue(dbDefaultEquals(it, indexedCreateds[it.id]!!))
+            }
         }
     }
 

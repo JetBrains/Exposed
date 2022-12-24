@@ -4,7 +4,7 @@ on:
     tags:
       - '*'
 jobs:
-  Explore-GitHub-Actions:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

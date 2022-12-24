@@ -17,8 +17,17 @@ import org.jetbrains.exposed.sql.tests.shared.checkRow
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.math.BigDecimal
+import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
+import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
@@ -74,7 +83,17 @@ class MiscTableTest : DatabaseTestsBase() {
                 row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
-            tbl.checkRowDates(row, date, null, time, null, dateTime, null, timestamp, null, duration, null)
+            tbl.checkRowDates(row,
+                date,
+                null,
+                time,
+                null,
+                dateTime,
+                null,
+                timestamp,
+                null,
+                duration,
+                null)
             assertEquals('(', row[tbl.char])
         }
     }
@@ -437,7 +456,10 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select {
+                    tbl.dt.greater(dateTime.toJavaLocalDateTime().minusMinutes(1).toKotlinLocalDateTime())
+                        .and(tbl.dt.less(dateTime.toJavaLocalDateTime().plusMinutes(1).toKotlinLocalDateTime()))
+                }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -859,7 +881,10 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select {
+                    tbl.dt.greater(dateTime.toJavaLocalDateTime().minusMinutes(1).toKotlinLocalDateTime())
+                    .and(tbl.dt.less(dateTime.toJavaLocalDateTime().plusMinutes(1).toKotlinLocalDateTime()))
+                }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1305,17 +1330,27 @@ fun Misc.checkRowDates(
     dr: Duration,
     drn: Duration? = null
 ) {
-    assertEquals(d, row[this.d])
-    assertEquals(dn, row[this.dn])
-    assertLocalTime(t, row[this.t])
-    assertLocalTime(tn, row[this.tn])
-    assertEquals(dt, row[this.dt])
-    assertEquals(dtn, row[this.dtn])
-    assertEquals(ts, row[this.ts])
-    assertEquals(tsn, row[this.tsn])
+    assertTemporalsEqual(d.toJavaLocalDate(), row[this.d].toJavaLocalDate(), ChronoUnit.DAYS)
+    assertTemporalsEqual(dn?.toJavaLocalDate(), row[this.dn]?.toJavaLocalDate(), ChronoUnit.DAYS)
+    assertTemporalsEqual(t.toJavaLocalTime(), row[this.t].toJavaLocalTime(), ChronoUnit.MILLIS)
+    assertTemporalsEqual(tn?.toJavaLocalTime(), row[this.tn]?.toJavaLocalTime(), ChronoUnit.MILLIS)
+    assertTemporalsEqual(dt.toJavaLocalDateTime(), row[this.dt].toJavaLocalDateTime(), ChronoUnit.MILLIS)
+    assertTemporalsEqual(dtn?.toJavaLocalDateTime(), row[this.dtn]?.toJavaLocalDateTime(), ChronoUnit.MILLIS)
+    assertTemporalsEqual(ts.toJavaInstant(), row[this.ts].toJavaInstant(), ChronoUnit.MILLIS)
+    assertTemporalsEqual(tsn?.toJavaInstant(), row[this.tsn]?.toJavaInstant(), ChronoUnit.MILLIS)
     assertEquals(dr, row[this.dr])
     assertEquals(drn, row[this.drn])
 }
+
+fun assertTemporalsEqual(t1: Temporal?, t2: Temporal?, unit: ChronoUnit) =
+    t1?.let { safeT1 ->
+        t2?.let { safeT2 ->
+            assertTrue(unit.between(safeT1, t2) < 1)
+        } ?: error("Expected: $t1, actual: $t2")
+    } ?: if (t2 != null) {
+        error("Expected: $t1, actual: $t2")
+    }  else { }
+
 
 private fun assertLocalTime(d1: LocalTime?, d2: LocalTime?) {
     when {

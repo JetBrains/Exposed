@@ -435,7 +435,10 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select {
+                    tbl.dt.greater(dateTime.minusMinutes(1))
+                        .and(tbl.dt.less(dateTime.plusMinutes(1)))
+                }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -857,7 +860,10 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select {
+                    tbl.dt.greater(dateTime.minusMinutes(1))
+                        .and(tbl.dt.less(dateTime.plusMinutes(1)))
+                }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
