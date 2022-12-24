@@ -17,7 +17,7 @@ Bill of Materials for all Exposed modules
         <dependency>
             <groupId>io.taff.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.8.0</version>
+            <version>0.8.1</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -50,7 +50,7 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("io.taff.exposed:exposed-bom:0.8.0"))
+    implementation(platform("io.taff.exposed:exposed-bom:0.8.1"))
     implementation("io.taff.exposed", "exposed-core")
     implementation("io.taff.exposed", "exposed-dao")
     implementation("io.taff.exposed", "exposed-jdbc")
