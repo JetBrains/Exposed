@@ -1,6 +1,16 @@
 name: "CI"
 on: [pull_request]
 jobs:
+  Detekt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v3
+      - name: "detekt"
+        uses: alaegin/Detekt-Action@v1.22.0-RC3
+        with:
+          github_token: ${{ secrets.github_token }}
+          detekt_config: detekt.yml
   Build:
     runs-on: ubuntu-latest
     steps:
