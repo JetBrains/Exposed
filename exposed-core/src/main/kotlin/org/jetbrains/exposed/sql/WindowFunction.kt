@@ -236,11 +236,13 @@ open class UnboundedWindowFrameBound(
 }
 
 /** Represents UNBOUNDED PRECEDING window function frame bound. */
-class UnboundedPrecedingWindowFrameBound : UnboundedWindowFrameBound(WindowFrameBoundDirection.PRECEDING),
+class UnboundedPrecedingWindowFrameBound :
+    UnboundedWindowFrameBound(WindowFrameBoundDirection.PRECEDING),
     CurrentOrPreceding
 
 /** Represents UNBOUNDED FOLLOWING window function frame bound. */
-class UnboundedFollowingWindowFrameBound : UnboundedWindowFrameBound(WindowFrameBoundDirection.FOLLOWING),
+class UnboundedFollowingWindowFrameBound :
+    UnboundedWindowFrameBound(WindowFrameBoundDirection.FOLLOWING),
     CurrentOrFollowing
 
 /**
