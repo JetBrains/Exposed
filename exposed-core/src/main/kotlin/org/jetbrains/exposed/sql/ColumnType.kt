@@ -557,8 +557,9 @@ open class CharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -602,8 +603,9 @@ open class VarCharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -692,8 +694,9 @@ open class BinaryColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is ByteArray) {
-            require(value.size <= length) {
-                "Value '$value' can't be stored to database column because exceeds length ($length)"
+            val valueLength = value.size
+            require(valueLength <= length) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $length)"
             }
         }
     }
