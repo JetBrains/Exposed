@@ -6,13 +6,13 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.BatchUpdateStatement
 import java.util.*
 
-class EntityBatchUpdate(val klass: EntityClass<*, Entity<*>>) {
+class EntityBatchUpdate(private val klass: EntityClass<*, Entity<*>>) {
 
     private val data = ArrayList<Pair<EntityID<*>, SortedMap<Column<*>, Any?>>>()
 
-    fun addBatch(id: EntityID<*>) {
-        if (id.table != klass.table) error("Table from Entity ID ${id.table.tableName} differs from entity class ${klass.table.tableName}")
-        data.add(id to TreeMap())
+    fun addBatch(entity: Entity<*>) {
+        if (entity.klass != klass) error("Entity class${entity.klass} differs from expected entity class $klass")
+        data.add(entity.id to TreeMap())
     }
 
     operator fun set(column: Column<*>, value: Any?) {
