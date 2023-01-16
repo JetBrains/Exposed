@@ -309,4 +309,4 @@ Generated SQL:
 
 ## ⚖️ LICENSE
 
-By contributing to the Open Sauced project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
