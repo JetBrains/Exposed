@@ -43,6 +43,21 @@ spring.datasource.username=sa
 spring.datasource.password=password
 ```
 
+### Configuring Exposed 
+When using this starter, you can customize typical Exposed configuration by registering a [DatabaseConfig](https://github.com/JetBrains/Exposed/blob/master/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/DatabaseConfig.kt). See the class itself for available configuration options.
+
+Example:
+
+```kotlin
+@Configuration
+class ExposedConfig {
+  @Bean
+  fun databaseConfig() = DatabaseConfig {
+    useNestedTransactions = true
+  }
+}
+```
+
 ## Automatic Schema Creation
 This starter will create the database schema if enabled automatically using any class that extends `org.jetbrains.exposed.sql.Table`
 
