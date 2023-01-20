@@ -353,7 +353,7 @@ class DDLTests : DatabaseTestsBase() {
             } get (t.id)
 
             val id2 = t.insert {
-                it[t.b] = longBlob
+                it[t.b] = blobParam(longBlob)
             } get (t.id)
 
             val readOn1 = t.select { t.id eq id1 }.first()[t.b]
