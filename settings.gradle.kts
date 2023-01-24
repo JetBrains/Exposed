@@ -24,10 +24,38 @@ include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
 include("exposed-gradle-plugin")
 
+val kotlin_version: String by settings
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        val libs by creating {
+            if (extra.has("kotlin_version")) {
+                val kotlinVersion = extra["kotlin_version"].toString()
+                version("kotlin-version", kotlinVersion)
+            }
+        }
+    }
+}
+
+pluginManagement.resolutionStrategy.eachPlugin {
+    if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
+        useVersion(kotlin_version)
+        // Confusing log in CI build with community-plugin. Use it for local debug
+//        println("Using kotlin compiler version: $kotlin_version")
+    }
+}
+
+
 pluginManagement {
     repositories {
+        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+        if (kotlinRepoUrl?.isNotEmpty() == true) {
+            maven(kotlinRepoUrl)
+        }
         google()
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
+        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        maven("https://packages.jetbrains.team/maven/p/kt/dev")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -35,6 +63,12 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+        if (kotlinRepoUrl?.isNotEmpty() == true) {
+            maven(kotlinRepoUrl)
+        }
+        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        maven("https://packages.jetbrains.team/maven/p/kt/dev")
         google()
         maven("https://maven-central-eu.storage-download.googleapis.com/maven2/")
         mavenCentral()
