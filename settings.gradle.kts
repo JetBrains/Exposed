@@ -17,9 +17,32 @@ include("exposed-crypt")
 include("exposed-json")
 include("exposed-migration")
 
+val kotlin_version: String by settings
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        val libs by creating {
+            if (extra.has("kotlin_version")) {
+                val kotlinVersion = extra["kotlin_version"].toString()
+                version("kotlin-version", kotlinVersion)
+            }
+        }
+    }
+}
+
+pluginManagement.resolutionStrategy.eachPlugin {
+    if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
+        useVersion(kotlin_version)
+        // Confusing log in CI build with community-plugin. Use it for local debug
+//        println("Using kotlin compiler version: $kotlin_version")
+    }
+}
+
+
 pluginManagement {
     repositories {
         google()
+        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -27,6 +50,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         google()
         mavenCentral()
     }
