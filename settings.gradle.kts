@@ -13,6 +13,27 @@ include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
 
+val kotlin_version: String by settings
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        val libs by creating {
+            if (extra.has("kotlin_version")) {
+                val kotlinVersion = extra["kotlin_version"].toString()
+                version("kotlin-version", kotlinVersion)
+            }
+        }
+    }
+}
+
+pluginManagement.resolutionStrategy.eachPlugin {
+    if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
+        useVersion(kotlin_version)
+        println("Using kotlin compiler version: $kotlin_version")
+    }
+}
+
+
 pluginManagement {
     repositories {
         google()

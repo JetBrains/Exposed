@@ -1,6 +1,19 @@
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configurePublishing
 import org.jetbrains.exposed.gradle.testDb
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
+val buildScriptLogger: Logger = Logging.getLogger("buildScriptLogger")
+
+/* Kotlin-community project related parameter settings */
+
+val kotlin_version: String by project
+val kotlin_repo_url: String? by project
+val kotlin_language_version: String? by project
+val kotlin_api_version: String? by project
+buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
+buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
+buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
 
 plugins {
     kotlin("jvm") apply true
@@ -12,6 +25,16 @@ plugins {
 repositories {
     mavenLocal()
     mavenCentral()
+}
+
+configurations.configureEach {
+    if (isCanBeResolved) {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion(kotlin_version)
+            }
+        }
+    }
 }
 
 allprojects {
@@ -29,6 +52,15 @@ subprojects {
 
     dependencies {
         detektPlugins(rootProject.libs.detekt.formatting)
+    }
+
+}
+
+tasks.withType<KotlinJvmCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "21"
+        apiVersion = kotlin_api_version ?: "1.9"
+        languageVersion = kotlin_language_version ?: "1.9" //
     }
 }
 
