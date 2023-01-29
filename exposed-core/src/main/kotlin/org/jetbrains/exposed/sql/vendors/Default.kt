@@ -1,13 +1,12 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashSet
 
 /**
  * Provides definitions for all the supported SQL data types.
@@ -206,6 +205,21 @@ abstract class FunctionProvider {
             append(" SEPARATOR '$it'")
         }
         append(")")
+    }
+
+    /**
+     * SQL function that returns the index of the first occurrence of the given substring [char]
+     * in the string expression [expr]
+     *
+     * @param queryBuilder Query builder to append the SQL function to.
+     * @param expr String expression to find the substring in.
+     * @param char: Substring to find
+     * @return index of the first occurrence of [char] in [expr] starting from 1 or 0 if [expr] doesn't contain [char]
+     */
+    open fun <T : String?> charIndex(queryBuilder: QueryBuilder, expr: Expression<T>, char: String) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for CHARINDEX. There must be vendor specific implementation.", currentDialect
+        )
     }
 
     // Pattern matching

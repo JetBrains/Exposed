@@ -137,6 +137,14 @@ class Trim<T : String?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
+/**
+ * Represents an SQL function that returns the index of the first occurrence of [char] in [expr] or 0
+ */
+class CharIndex<T : String?>(val expr: Expression<T>, val char: String) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.charIndex(queryBuilder, expr, char)
+}
+
 // General-Purpose Aggregate Functions
 
 /**

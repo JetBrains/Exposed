@@ -73,6 +73,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun <T : String?> charIndex(queryBuilder: QueryBuilder, expr: Expression<T>, char: String) = queryBuilder {
+        append("CHARINDEX(\'", char, "\',", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,
