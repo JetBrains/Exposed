@@ -303,7 +303,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCharIndex() {
-        withCitiesAndUsers { cities, _, _ ->
+        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
             val charIndex = cities.name.charIndex("e")
             val results = cities.slice(charIndex).selectAll().toList()
 
@@ -315,7 +315,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCharIndex02() {
-        withCitiesAndUsers { cities, _, _ ->
+        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
             val charIndex = cities.name.charIndex("Peter")
             val results = cities.slice(charIndex).selectAll().toList()
 
@@ -327,7 +327,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCharIndex03() {
-        withCitiesAndUsers { cities, _, _ ->
+        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
             val charIndex = cities.name.charIndex("p")
             val results = cities.slice(charIndex).selectAll().toList()
 
