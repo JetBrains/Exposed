@@ -1328,5 +1328,5 @@ internal val currentDialectIfAvailable: DatabaseDialect?
         null
     }
 
-internal fun String.inProperCase(): String =
+fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
