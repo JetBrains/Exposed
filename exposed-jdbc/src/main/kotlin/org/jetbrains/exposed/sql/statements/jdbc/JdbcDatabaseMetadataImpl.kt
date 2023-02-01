@@ -325,7 +325,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
  */
 internal fun extractSchemas(tables: Array<out Table>): Set<String> {
     return tables.map { table ->
-        table.tableName.substringBefore(".")
+        table.schema
     }.toSet()
 }
 
