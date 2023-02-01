@@ -296,7 +296,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withDb { testDb ->
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if(testDb != TestDB.MYSQL) {
+                table = if (testDb != TestDB.MYSQL) {
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")
@@ -330,7 +330,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
-        val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false," ")
+        val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, " ")
 
         val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
 
@@ -541,7 +541,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCreateTableWithReferenceMultipleTimes() {
+    @Test
+    fun testCreateTableWithReferenceMultipleTimes() {
         withTables(PlayerTable, SessionsTable) {
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
@@ -556,7 +557,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val playerId = integer("player_id").references(PlayerTable.id)
     }
 
-    @Test fun createTableWithReservedIdentifierInColumnName() {
+    @Test
+    fun createTableWithReservedIdentifierInColumnName() {
         withDb(TestDB.MYSQL) {
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
@@ -569,11 +571,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     object ExplicitTable : IntIdTable() {
         val playerId = integer("player_id").references(PlayerTable.id, fkName = "Explicit_FK_NAME")
     }
+
     object NonExplicitTable : IntIdTable() {
         val playerId = integer("player_id").references(PlayerTable.id)
     }
 
-    @Test fun explicitFkNameIsExplicit() {
+    @Test
+    fun explicitFkNameIsExplicit() {
         withTables(ExplicitTable, NonExplicitTable) {
             assertEquals("Explicit_FK_NAME", ExplicitTable.playerId.foreignKey!!.customFkName)
             assertEquals(null, NonExplicitTable.playerId.foreignKey!!.customFkName)
@@ -584,6 +588,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val name = integer("name").uniqueIndex()
         val tmp = varchar("temp", 255)
     }
+
     object T2 : Table("CHAIN") {
         val ref = integer("ref").references(T1.name)
     }
