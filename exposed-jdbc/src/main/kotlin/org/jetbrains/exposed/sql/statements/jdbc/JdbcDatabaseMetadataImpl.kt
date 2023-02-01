@@ -151,13 +151,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val databases = mutableListOf(databaseName)
 
-        // For MySQL, table names that contain schema are considered to be in their own DB
-        // For example, if you connect to testdb, but your table is my_schema.test_table,
-        // the metadata you need to query is for my_schema, not testdb
-        if (currentDialect is MysqlDialect) {
-            databases.addAll(extractSchemas(tables))
-        }
-
         val result = mutableMapOf<Table, List<ColumnMetadata>>()
         for (database in databases) {
             val columnsMetadata = metadata.getColumns(database, null, "%", "%")
@@ -318,15 +311,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     companion object {
         private val identityManagerCache = ConcurrentHashMap<String, JdbcIdentifierManager>()
     }
-}
-
-/**
- * Returns the set of schemas the tables are defined in
- */
-internal fun extractSchemas(tables: Array<out Table>): Set<String> {
-    return tables.map { table ->
-        table.schema
-    }.toSet()
 }
 
 private fun <T> ResultSet.iterate(body: ResultSet.() -> T): List<T> {
