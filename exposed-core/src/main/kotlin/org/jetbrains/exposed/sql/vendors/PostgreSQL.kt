@@ -46,6 +46,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
+    /**
+     * Implementation of [FunctionProvider.locate]
+     * Note: search is case-sensitive
+     * */
     override fun <T : String?> locate(
         queryBuilder: QueryBuilder,
         expr: Expression<T>,

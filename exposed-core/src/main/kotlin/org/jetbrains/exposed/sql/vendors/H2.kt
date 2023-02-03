@@ -109,6 +109,10 @@ internal object H2FunctionProvider : FunctionProvider() {
         return super.insert(false, table, columns, sql, transaction).replaceFirst("INSERT", "MERGE")
     }
 
+    /**
+     * Implementation of [FunctionProvider.locate]
+     * Note: search is case-sensitive
+     * */
     override fun <T : String?> locate(
         queryBuilder: QueryBuilder,
         expr: Expression<T>,
