@@ -303,7 +303,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testLocate() {
-        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
+        withCitiesAndUsers { cities, _, _ ->
             val locate = cities.name.locate("e")
             val results = cities.slice(locate).selectAll().toList()
 
@@ -315,7 +315,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testLocate02() {
-        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
+        withCitiesAndUsers { cities, _, _ ->
             val locate = cities.name.locate("Peter")
             val results = cities.slice(locate).selectAll().toList()
 
@@ -327,7 +327,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testLocate03() {
-        withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
+        withCitiesAndUsers { cities, _, _ ->
             val locate = cities.name.locate("p")
             val results = cities.slice(locate).selectAll().toList()
 
