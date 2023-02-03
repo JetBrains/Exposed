@@ -208,17 +208,18 @@ abstract class FunctionProvider {
     }
 
     /**
-     * SQL function that returns the index of the first occurrence of the given substring [char]
+     * SQL function that returns the index of the first occurrence of the given substring [substring]
      * in the string expression [expr]
      *
      * @param queryBuilder Query builder to append the SQL function to.
      * @param expr String expression to find the substring in.
-     * @param char: Substring to find
-     * @return index of the first occurrence of [char] in [expr] starting from 1 or 0 if [expr] doesn't contain [char]
+     * @param substring: Substring to find
+     * @return index of the first occurrence of [substring] in [expr] starting from 1
+     * or 0 if [expr] doesn't contain [substring]
      */
-    open fun <T : String?> charIndex(queryBuilder: QueryBuilder, expr: Expression<T>, char: String) {
+    open fun <T : String?> locate(queryBuilder: QueryBuilder, expr: Expression<T>, substring: String) {
         throw UnsupportedByDialectException(
-            "There's no generic SQL for CHARINDEX. There must be vendor specific implementation.", currentDialect
+            "There's no generic SQL for LOCATE. There must be vendor specific implementation.", currentDialect
         )
     }
 

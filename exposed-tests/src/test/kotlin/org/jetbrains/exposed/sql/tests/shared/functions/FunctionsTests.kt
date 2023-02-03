@@ -302,38 +302,38 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCharIndex() {
+    fun testLocate() {
         withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
-            val charIndex = cities.name.charIndex("e")
-            val results = cities.slice(charIndex).selectAll().toList()
+            val locate = cities.name.locate("e")
+            val results = cities.slice(locate).selectAll().toList()
 
-            assertEquals(6, results[0][charIndex]) // St. Petersburg
-            assertEquals(0, results[1][charIndex]) // Munich
-            assertEquals(6, results[2][charIndex]) // Prague
+            assertEquals(6, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(6, results[2][locate]) // Prague
         }
     }
 
     @Test
-    fun testCharIndex02() {
+    fun testLocate02() {
         withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
-            val charIndex = cities.name.charIndex("Peter")
-            val results = cities.slice(charIndex).selectAll().toList()
+            val locate = cities.name.locate("Peter")
+            val results = cities.slice(locate).selectAll().toList()
 
-            assertEquals(5, results[0][charIndex]) // St. Petersburg
-            assertEquals(0, results[1][charIndex]) // Munich
-            assertEquals(0, results[2][charIndex]) // Prague
+            assertEquals(5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(0, results[2][locate]) // Prague
         }
     }
 
     @Test
-    fun testCharIndex03() {
+    fun testLocate03() {
         withCitiesAndUsers(TestDB.values().asList().minus(TestDB.SQLSERVER)) { cities, _, _ ->
-            val charIndex = cities.name.charIndex("p")
-            val results = cities.slice(charIndex).selectAll().toList()
+            val locate = cities.name.locate("p")
+            val results = cities.slice(locate).selectAll().toList()
 
-            assertEquals(5, results[0][charIndex]) // St. Petersburg
-            assertEquals(0, results[1][charIndex]) // Munich
-            assertEquals(1, results[2][charIndex]) // Prague
+            assertEquals(5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(1, results[2][locate]) // Prague
         }
     }
 

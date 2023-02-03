@@ -138,11 +138,11 @@ class Trim<T : String?>(
 }
 
 /**
- * Represents an SQL function that returns the index of the first occurrence of [char] in [expr] or 0
+ * Represents an SQL function that returns the index of the first occurrence of [substring] in [expr] or 0
  */
-class CharIndex<T : String?>(val expr: Expression<T>, val char: String) : Function<Int>(IntegerColumnType()) {
+class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
-        currentDialect.functionProvider.charIndex(queryBuilder, expr, char)
+        currentDialect.functionProvider.locate(queryBuilder, expr, substring)
 }
 
 // General-Purpose Aggregate Functions
