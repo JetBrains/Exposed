@@ -137,45 +137,60 @@ abstract class ColumnSet : FieldSet {
     fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }
 
-/** Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
+/**
+ * Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] equality
+ * and/or [additionalConstraint] as the join condition.
+ */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
-    onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>,
+    onColumn: (C1.() -> Expression<*>)? = null,
+    otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.INNER, onColumn(this), otherColumn(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
 
-/** Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
+/**
+ * Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
+ * and/or [additionalConstraint] as the join condition.
+ */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
-    onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>,
+    onColumn: (C1.() -> Expression<*>)? = null,
+    otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.LEFT, onColumn(), otherTable.otherColumn(), additionalConstraint)
+): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
 
-/** Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
+/**
+ * Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
+ * and/or [additionalConstraint] as the join condition.
+ */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
-    onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>,
+    onColumn: (C1.() -> Expression<*>)? = null,
+    otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.RIGHT, onColumn(), otherTable.otherColumn(), additionalConstraint)
+): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
 
-/** Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
+/**
+ * Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
+ * and/or [additionalConstraint] as the join condition.
+ */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
-    onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>,
+    onColumn: (C1.() -> Expression<*>)? = null,
+    otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.FULL, onColumn(), otherTable.otherColumn(), additionalConstraint)
+): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
 
-/** Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
+/**
+ * Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] equality
+ * and/or [additionalConstraint] as the join condition.
+ */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
-    onColumn: C1.() -> Expression<*>,
-    otherColumn: C2.() -> Expression<*>,
+    onColumn: (C1.() -> Expression<*>)? = null,
+    otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.CROSS, onColumn(), otherTable.otherColumn(), additionalConstraint)
+): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
 
 /**
  * Represents a subset of [fields] from a given [source].
