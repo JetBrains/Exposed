@@ -109,9 +109,13 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
+        returning: FieldSet?,
         transaction: Transaction
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction)
+        if (returning != null) {
+            transaction.throwUnsupportedException("SQLServer doesn't support RETURNING in UPDATE clause.")
+        }
+        val def = super.update(target, columnsAndValues, null, where, returning, transaction)
         return if (limit != null) def.replaceFirst("UPDATE", "UPDATE TOP($limit)") else def
     }
 

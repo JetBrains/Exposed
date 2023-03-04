@@ -54,6 +54,20 @@ internal object H2FunctionProvider : FunctionProvider() {
     }
 
     override fun update(
+        target: Table,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        returning: FieldSet?,
+        transaction: Transaction
+    ): String {
+        if (returning != null) {
+            transaction.throwUnsupportedException("H2 doesn't support RETURNING in UPDATE clause.")
+        }
+        return super.update(target, columnsAndValues, limit, where, returning, transaction)
+    }
+
+    override fun update(
         targets: Join,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,

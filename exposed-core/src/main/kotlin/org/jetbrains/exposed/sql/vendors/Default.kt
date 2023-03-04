@@ -400,6 +400,7 @@ abstract class FunctionProvider {
      * @param columnsAndValues Pairs of column to update and values to update with.
      * @param limit Maximum number of rows to update.
      * @param where Condition that decides the rows to update.
+     * @param returning Updated Column/Fiels to return.
      * @param transaction Transaction where the operation is executed.
      */
     open fun update(
@@ -407,6 +408,7 @@ abstract class FunctionProvider {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
+        returning: FieldSet?,
         transaction: Transaction
     ): String = with(QueryBuilder(true)) {
         +"UPDATE "
@@ -422,6 +424,11 @@ abstract class FunctionProvider {
             +it
         }
         limit?.let { +" LIMIT $it" }
+
+        returning?.let {
+            +" RETURNING "
+            returning.realFields.appendTo { +it }
+        }
         toString()
     }
 

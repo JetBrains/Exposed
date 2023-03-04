@@ -115,12 +115,13 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
+        returning: FieldSet?,
         transaction: Transaction
     ): String {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction)
+        return super.update(target, columnsAndValues, limit, where, returning, transaction)
     }
 
     override fun update(

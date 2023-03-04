@@ -230,6 +230,17 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
     return query.execute(TransactionManager.current())!!
 }
 
+fun <T : Table> T.updateReturning(
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    limit: Int? = null,
+    returning: FieldSet,
+    body: T.(UpdateReturningStatement) -> Unit
+): Iterator<ResultRow> {
+    val query = UpdateReturningStatement(this, limit, where?.let { SqlExpressionBuilder.it() }, returning)
+    body(query)
+    return query.execute(TransactionManager.current())!!
+}
+
 /**
  * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
  */

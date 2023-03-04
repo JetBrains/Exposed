@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
@@ -343,6 +344,35 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
         }
     }
+//
+//    @Test
+//    fun testDefaultExpressions03() {
+//        val foo = object : IntIdTable("foo") {
+//            val name = text("name")
+//            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentTimestamp())
+//        }
+//
+//        val nonDefaultDate = LocalDate.of(2000, 1, 1).atStartOfDay()
+//
+//        withTables(foo) {
+//            val id = foo.insertAndGetId {
+//                it[foo.name] = "bar"
+//                it[foo.defaultDateTime] = nonDefaultDate
+//            }
+//
+//            val result = foo.select { foo.id eq id }.single()
+//
+//            assertEquals("bar", result[foo.name])
+//            assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
+//
+//            val result2 = foo.updateReturning({ foo.id eq id }, null, foo) {
+//                it[foo.name] = "baz"
+//            }.asSequence().toList()
+//
+//            assertEquals("baz", result2[0][foo.name])
+//            assertEqualDateTime(nonDefaultDate, result2[0][foo.defaultDateTime])
+//        }
+//    }
 
     @Test
     fun testBetweenFunction() {

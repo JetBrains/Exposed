@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements.api
 
 import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.ResultRow
 import java.io.InputStream
 import java.sql.ResultSet
 
@@ -21,6 +22,8 @@ interface PreparedStatementApi {
     fun executeQuery(): ResultSet
 
     fun executeUpdate(): Int
+
+    fun executeUpdateReturning(): ResultSet
 
     val resultSet: ResultSet?
 

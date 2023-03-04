@@ -133,9 +133,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
         where: Op<Boolean>?,
+        returning: FieldSet?,
         transaction: Transaction
     ): String {
-        val def = super.update(target, columnsAndValues, null, where, transaction)
+        val def = super.update(target, columnsAndValues, null, where, returning, transaction)
         return when {
             limit != null && where != null -> "$def AND ROWNUM <= $limit"
             limit != null -> "$def WHERE ROWNUM <= $limit"
