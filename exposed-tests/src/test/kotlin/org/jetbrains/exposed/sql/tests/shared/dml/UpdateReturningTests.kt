@@ -157,7 +157,7 @@ class UpdateReturningTests : DatabaseTestsBase() {
             val address = encryptedVarchar("address", 100, Algorithms.BLOW_FISH("key"))
         }
 
-        withTables(stringTable) {
+        withTables(notSupportReturning, stringTable) {
             val id = stringTable.insertAndGetId {
                 it[name] = "TestName"
                 it[city] = "TestCity".toByteArray()
