@@ -23,7 +23,7 @@ class UpdateReturningTests : DatabaseTestsBase() {
         exclude
     }
     private val notSupportReturning by lazy {
-        val exclude = arrayListOf(TestDB.H2, TestDB.MARIADB, TestDB.SQLSERVER, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.H2_MARIADB)
+        val exclude = arrayListOf(TestDB.H2, TestDB.MARIADB, TestDB.SQLSERVER, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.H2_MARIADB, TestDB.H2_SQLSERVER, TestDB.H2_PSQL, TestDB.H2_ORACLE)
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
             exclude.add(TestDB.SQLITE)
         }
