@@ -180,7 +180,7 @@ open class Transaction(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null,
-        transform: (ResultSet) -> T
+        transform: (ResultSet) -> T?
     ): T? {
         if (stmt.isEmpty()) return null
 
