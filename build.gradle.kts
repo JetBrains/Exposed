@@ -29,7 +29,7 @@ subprojects {
     }
     tasks.withType<KotlinJvmCompile>().configureEach {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "17"
             apiVersion = "1.6"
             languageVersion = "1.6"
         }
