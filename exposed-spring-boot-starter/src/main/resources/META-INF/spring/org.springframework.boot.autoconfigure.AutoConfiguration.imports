@@ -1,0 +1,2 @@
+org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
+org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration

@@ -21,8 +21,8 @@ object Versions {
     const val sqlserver = "9.4.1.jre8"
 
     /** Spring **/
-    const val springFramework = "5.3.22"
-    const val springBoot = "2.7.2"
+    const val springFramework = "6.0.6"
+    const val springBoot = "3.0.4"
 
     /** Test Dependencies **/
     const val testContainers = "1.16.3"

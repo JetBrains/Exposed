@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -189,7 +188,8 @@ class Database private constructor(
                 explicitVendor = null,
                 config = databaseConfig,
                 getNewConnection = getNewConnection,
-                manager = manager)
+                manager = manager
+            )
         }
 
         fun connect(
