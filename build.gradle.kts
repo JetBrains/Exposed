@@ -54,3 +54,11 @@ repositories {
     mavenLocal()
     mavenCentral()
 }
+
+allprojects {
+    plugins.withId("java-base") {
+        extensions.getByType<JavaPluginExtension>().toolchain {
+            languageVersion.set(JavaLanguageVersion.of(8))
+        }
+    }
+}
