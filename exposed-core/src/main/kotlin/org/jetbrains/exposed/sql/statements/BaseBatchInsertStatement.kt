@@ -56,7 +56,7 @@ abstract class BaseBatchInsertStatement(
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException(
-                "Can't add a new batch because columns: $columnList don't have client default values. DB defaults don't support in batch inserts"
+                "Can't add a new batch because columns: $columnList don't have client default values. DB defaults are not supported in batch inserts"
             )
         }
         val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter {
@@ -65,7 +65,7 @@ abstract class BaseBatchInsertStatement(
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException(
-                "Can't add a new batch because columns: $columnList don't have default values. DB defaults don't support in batch inserts"
+                "Can't add a new batch because columns: $columnList don't have default values. DB defaults are not supported in batch inserts"
             )
         }
     }
