@@ -329,7 +329,7 @@ class UIntegerColumnType : ColumnType() {
         return when (value) {
             is UInt -> value
             is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toInt().takeIf { it >= 0 }?.toUInt()
+            is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
             is String -> value.toUInt()
             else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
         } ?: error("negative value but type is UInt: $value")
