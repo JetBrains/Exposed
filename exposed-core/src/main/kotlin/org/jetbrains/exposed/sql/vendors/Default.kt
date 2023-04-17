@@ -339,7 +339,7 @@ abstract class FunctionProvider {
      * SQL function that casts an expression to a specific type.
      *
      * @param expr Expression to cast.
-     * @param type Type to cast hte expression to.
+     * @param type Type to cast the expression to.
      * @param builder Query builder to append the SQL function to.
      */
     open fun cast(
