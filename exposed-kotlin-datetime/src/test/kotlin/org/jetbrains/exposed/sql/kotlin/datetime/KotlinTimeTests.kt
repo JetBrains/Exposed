@@ -91,15 +91,33 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     }
 }
 
-fun assertEqualDateTime(d1: LocalDateTime?, d2: LocalDateTime?) {
+fun <T> assertEqualDateTime(d1: T?, d2: T?) {
     when {
         d1 == null && d2 == null -> return
         d1 == null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
         d2 == null -> error("d1 is not null while d2 is null on ${currentDialectTest.name}")
-        else -> {
-            assertEquals(d1.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC), d2.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC), "Failed on epoch seconds ${currentDialectTest.name}")
+        d1 is LocalTime && d2 is LocalTime -> {
+            assertEquals(d1.toSecondOfDay(), d2.toSecondOfDay(), "Failed on seconds ${currentDialectTest.name}")
+            if (d2.nanosecond != 0) {
+                assertEqualFractionalPart(d1.nanosecond, d2.nanosecond)
+            }
+        }
+
+        d1 is LocalDateTime && d2 is LocalDateTime -> {
+            assertEquals(
+                d1.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC),
+                d2.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC),
+                "Failed on epoch seconds ${currentDialectTest.name}"
+            )
             assertEqualFractionalPart(d1.nanosecond, d2.nanosecond)
         }
+
+        d1 is Instant && d2 is Instant -> {
+            assertEquals(d1.epochSeconds, d2.epochSeconds, "Failed on epoch seconds ${currentDialectTest.name}")
+            assertEqualFractionalPart(d1.nanosecondsOfSecond, d2.nanosecondsOfSecond)
+        }
+
+        else -> assertEquals(d1, d2, "Failed on ${currentDialectTest.name}")
     }
 }
 
