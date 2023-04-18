@@ -914,3 +914,10 @@ class EnumerationNameColumnType<T : Enum<T>>(
 interface IDateColumnType {
     val hasTimePart: Boolean
 }
+
+/**
+ * Marker interface for columns/expressions with a column type
+ */
+interface WithColumnType {
+    val columnType: IColumnType
+}

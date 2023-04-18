@@ -146,7 +146,11 @@ class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WithColumnType {
+
+    override val columnType: IColumnType
+        get() = super.columnType
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
 }
 
@@ -157,7 +161,10 @@ class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WithColumnType {
+    override val columnType: IColumnType
+        get() = super.columnType
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
 }
 
