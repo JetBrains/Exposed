@@ -9,7 +9,7 @@ import java.math.BigDecimal
 /**
  * Represents an SQL function.
  */
-abstract class Function<T>(override val columnType: IColumnType) : ExpressionWithColumnType<T>()
+abstract class Function<T>(override val columnType: IColumnType) : ExpressionWithColumnType<T>(), WithColumnType
 
 /**
  * Represents a custom SQL function.
@@ -146,11 +146,7 @@ class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType), WithColumnType {
-
-    override val columnType: IColumnType
-        get() = super.columnType
-
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
 }
 
@@ -161,9 +157,7 @@ class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType), WithColumnType {
-    override val columnType: IColumnType
-        get() = super.columnType
+) : Function<T?>(columnType) {
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
 }

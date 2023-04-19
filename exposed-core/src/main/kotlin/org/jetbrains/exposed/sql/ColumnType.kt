@@ -161,9 +161,11 @@ class AutoIncColumnType(
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+
 @Deprecated(
     message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
     replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
@@ -916,7 +918,7 @@ interface IDateColumnType {
 }
 
 /**
- * Marker interface for columns/expressions with a column type
+ * Marker interface for columns/expressions with a column type.
  */
 interface WithColumnType {
     val columnType: IColumnType
