@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
@@ -33,6 +34,107 @@ class CreateTableTests : DatabaseTestsBase() {
             assertFails(assertionFailureMessage) {
                 SchemaUtils.create(TableDuplicatedColumnRefereToTable)
             }
+        }
+    }
+
+    @Test
+    fun testCreateIdTableWithPrimaryKeyByEntityID() {
+        val testTable = object : IdTable<String>("test_table") {
+            val column1 = varchar("column_1", 30)
+            override val id = column1.entityId()
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb {
+            val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
+
+            assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + testTable.tableName.inProperCase() + " (" +
+                    singleColumnDescription +
+                    ")",
+                testTable.ddl
+            )
+        }
+    }
+
+    @Test
+    fun testCreateIdTableWithPrimaryKeyByColumn() {
+        val testTable = object : IdTable<String>("test_table") {
+            val column1 = varchar("column_1", 30)
+            override val id = column1.entityId()
+
+            override val primaryKey = PrimaryKey(column1)
+        }
+
+        withDb {
+            val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
+
+            assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + testTable.tableName.inProperCase() + " (" +
+                    singleColumnDescription +
+                    ")",
+                testTable.ddl
+            )
+        }
+    }
+
+    @Test
+    fun testCreateIdTableWithNamedPrimaryKeyByColumn() {
+        val pkConstraintName = "PK_Constraint_name"
+        val testTable = object : IdTable<String>("test_table") {
+            val column1 = varchar("column_1", 30)
+            override val id = column1.entityId()
+
+            override val primaryKey = PrimaryKey(column1, name = pkConstraintName)
+        }
+
+        withDb {
+            val singleColumn = testTable.columns.single()
+
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + testTable.tableName.inProperCase() + " (" +
+                    "${singleColumn.descriptionDdl(false)}, " +
+                    "CONSTRAINT $pkConstraintName PRIMARY KEY (${singleColumn.name.inProperCase()})" +
+                    ")",
+                testTable.ddl
+            )
+        }
+    }
+
+    @Test
+    fun testCreateTableWithSingleColumnPrimaryKey() {
+        val stringPKTable = object : Table("string_pk_table") {
+            val column1 = varchar("column_1", 30)
+
+            override val primaryKey = PrimaryKey(column1)
+        }
+        val intPKTable = object : Table("int_pk_table") {
+            val column1 = integer("column_1")
+
+            override val primaryKey = PrimaryKey(column1)
+        }
+
+        withDb {
+            val stringColumnDescription = stringPKTable.columns.single().descriptionDdl(false)
+            val intColumnDescription = intPKTable.columns.single().descriptionDdl(false)
+
+            assertTrue(stringColumnDescription.contains("PRIMARY KEY"))
+            assertTrue(intColumnDescription.contains("PRIMARY KEY"))
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + stringPKTable.tableName.inProperCase() + " (" +
+                    stringColumnDescription +
+                    ")",
+                stringPKTable.ddl
+            )
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + intPKTable.tableName.inProperCase() + " (" +
+                    intColumnDescription +
+                    ")",
+                intPKTable.ddl
+            )
         }
     }
 
