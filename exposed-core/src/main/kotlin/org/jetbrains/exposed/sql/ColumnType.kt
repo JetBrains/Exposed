@@ -213,13 +213,12 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as EntityIDColumnType<*>
-
-        if (idColumn != other.idColumn) return false
-
-        return true
+        return when (other) {
+            is EntityIDColumnType<*> -> idColumn == other.idColumn
+            is IColumnType -> idColumn.columnType == other
+            else -> false
+        }
     }
 
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
