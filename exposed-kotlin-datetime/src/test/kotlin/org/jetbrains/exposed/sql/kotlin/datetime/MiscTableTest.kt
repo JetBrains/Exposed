@@ -1221,7 +1221,6 @@ class MiscTableTest : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
-
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,
