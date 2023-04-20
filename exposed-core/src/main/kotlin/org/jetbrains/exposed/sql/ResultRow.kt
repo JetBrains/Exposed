@@ -98,7 +98,7 @@ class ResultRow(
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
-                    val columnType = (field as? WithColumnType)?.columnType
+                    val columnType = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null)
                         columnType.readObject(rs, index + 1)
                     else rs.getObject(index + 1)

@@ -20,7 +20,7 @@ class Column<T>(
     val name: String,
     /** Data type of the column. */
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>>, WithColumnType {
+) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     var foreignKey: ForeignKeyConstraint? = null
 
     /** Returns the column that this column references. */

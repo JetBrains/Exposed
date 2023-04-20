@@ -425,29 +425,32 @@ class DecimalColumnType(
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getBigDecimal(index)
+        return rs.getObject(index)
     }
 
-    override fun valueFromDB(value: Any): BigDecimal = when (value) {
-        is BigDecimal -> value
-        is Double -> {
-            if (value.isNaN()) {
-                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
-            } else {
-                value.toBigDecimal()
+    override fun valueFromDB(value: Any): BigDecimal {
+        if (value is BigDecimal) return value
+
+        return when (value) {
+            is Double -> {
+                if (value.isNaN()) {
+                    error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+                } else {
+                    value.toBigDecimal()
+                }
             }
-        }
-        is Float -> {
-            if (value.isNaN()) {
-                error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
-            } else {
-                value.toBigDecimal()
+            is Float -> {
+                if (value.isNaN()) {
+                    error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
+                } else {
+                    value.toBigDecimal()
+                }
             }
-        }
-        is Long -> value.toBigDecimal()
-        is Int -> value.toBigDecimal()
-        else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
-    }.setScale(scale, RoundingMode.HALF_EVEN)
+            is Long -> value.toBigDecimal()
+            is Int -> value.toBigDecimal()
+            else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
+        }.setScale(scale, RoundingMode.HALF_EVEN)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -915,11 +918,4 @@ class EnumerationNameColumnType<T : Enum<T>>(
  **/
 interface IDateColumnType {
     val hasTimePart: Boolean
-}
-
-/**
- * Marker interface for columns/expressions with a column type.
- */
-interface WithColumnType {
-    val columnType: IColumnType
 }
