@@ -89,6 +89,39 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             assertEqualDateTime(dateTimeWithNanos, dateTimeFromDB)
         }
     }
+
+    @Test
+    fun `test selecting Instant using expressions`() {
+        val TestTable = object : Table() {
+            val ts = timestamp("ts")
+            val tsn = timestamp("tsn").nullable()
+        }
+
+        val now = Clock.System.now()
+
+        withTables(TestTable) {
+            TestTable.insert {
+                it[ts] = now
+                it[tsn] = now
+            }
+
+            val maxTsExpr = TestTable.ts.max()
+            val maxTimestamp = TestTable.slice(maxTsExpr).selectAll().single()[maxTsExpr]
+            assertEqualDateTime(now, maxTimestamp)
+
+            val minTsExpr = TestTable.ts.min()
+            val minTimestamp = TestTable.slice(minTsExpr).selectAll().single()[minTsExpr]
+            assertEqualDateTime(now, minTimestamp)
+
+            val maxTsnExpr = TestTable.tsn.max()
+            val maxNullableTimestamp = TestTable.slice(maxTsnExpr).selectAll().single()[maxTsnExpr]
+            assertEqualDateTime(now, maxNullableTimestamp)
+
+            val minTsnExpr = TestTable.tsn.min()
+            val minNullableTimestamp = TestTable.slice(minTsnExpr).selectAll().single()[minTsnExpr]
+            assertEqualDateTime(now, minNullableTimestamp)
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {

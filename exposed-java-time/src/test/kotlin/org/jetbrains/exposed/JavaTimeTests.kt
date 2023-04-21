@@ -12,7 +12,11 @@ import org.junit.Assert.fail
 import org.junit.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.time.temporal.Temporal
 import kotlin.test.assertEquals
 
@@ -88,6 +92,39 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
 
             val dateTimeFromDB = TestDate.selectAll().single()[TestDate.time]
             assertEqualDateTime(dateTimeWithNanos, dateTimeFromDB)
+        }
+    }
+
+    @Test
+    fun `test selecting Instant using expressions`() {
+        val TestTable = object : Table() {
+            val ts = timestamp("ts")
+            val tsn = timestamp("tsn").nullable()
+        }
+
+        val now = Instant.now()
+
+        withTables(TestTable) {
+            TestTable.insert {
+                it[ts] = now
+                it[tsn] = now
+            }
+
+            val maxTsExpr = TestTable.ts.max()
+            val maxTimestamp = TestTable.slice(maxTsExpr).selectAll().single()[maxTsExpr]
+            assertEqualDateTime(now, maxTimestamp)
+
+            val minTsExpr = TestTable.ts.min()
+            val minTimestamp = TestTable.slice(minTsExpr).selectAll().single()[minTsExpr]
+            assertEqualDateTime(now, minTimestamp)
+
+            val maxTsnExpr = TestTable.tsn.max()
+            val maxNullableTimestamp = TestTable.slice(maxTsnExpr).selectAll().single()[maxTsnExpr]
+            assertEqualDateTime(now, maxNullableTimestamp)
+
+            val minTsnExpr = TestTable.tsn.min()
+            val minNullableTimestamp = TestTable.slice(minTsnExpr).selectAll().single()[minTsnExpr]
+            assertEqualDateTime(now, minNullableTimestamp)
         }
     }
 }

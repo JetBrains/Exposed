@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.sql.tests.shared.checkRow
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals

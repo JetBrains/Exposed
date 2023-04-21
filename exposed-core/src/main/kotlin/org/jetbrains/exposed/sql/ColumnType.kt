@@ -161,9 +161,11 @@ class AutoIncColumnType(
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+
 @Deprecated(
     message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
     replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
@@ -422,7 +424,7 @@ class DecimalColumnType(
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getBigDecimal(index)
+        return rs.getObject(index)
     }
 
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
