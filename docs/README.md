@@ -307,6 +307,7 @@ Generated SQL:
     Adults: b, c
 ```
 
-## ⚖️ LICENSE
+## Contributing
+Please see the [contribution guide](https://github.com/JetBrains/Exposed/blob/master/docs/CONTRIBUTING.md) before contributing.
 
 By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
