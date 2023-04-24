@@ -46,7 +46,17 @@ class ResultRow(
     }
 
     private fun <T> setInternal(c: Expression<out T>, value: T) {
-        val index = fieldIndex[c] ?: error("$c is not in record set")
+        val index = fieldIndex[c]
+            ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
+            ?: fieldIndex.keys.firstOrNull { exp ->
+                when (exp) {
+                    // exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
+                    is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == c
+                    is ExpressionAlias<*> -> exp.delegate == c
+                    else -> false
+                }
+            }?.let { fieldIndex[it] }
+            ?: error("$c is not in record set")
         data[index] = value
     }
 
