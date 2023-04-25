@@ -113,7 +113,8 @@ class UpdateTests : DatabaseTestsBase() {
 
         val supportWhere = TestDB.values().toList() - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
 
-        withTables(parent, child) { testingDb ->
+        withDb { testingDb ->
+            SchemaUtils.create(parent, child)
             val pId = parent.insertAndGetId { it[foo] = "foo" }
             child.insert {
                 it[bar] = "zip"
@@ -136,6 +137,7 @@ class UpdateTests : DatabaseTestsBase() {
                     }
                 }
             }
+            SchemaUtils.drop(parent, child)
         }
     }
 
