@@ -46,17 +46,7 @@ class ResultRow(
     }
 
     private fun <T> setInternal(c: Expression<out T>, value: T) {
-        val index = fieldIndex[c]
-            ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
-            ?: fieldIndex.keys.firstOrNull { exp ->
-                when (exp) {
-                    // exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
-                    is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == c
-                    is ExpressionAlias<*> -> exp.delegate == c
-                    else -> false
-                }
-            }?.let { fieldIndex[it] }
-            ?: error("$c is not in record set")
+        val index = getExpressionIndex(c)
         data[index] = value
     }
 
@@ -83,7 +73,18 @@ class ResultRow(
             return c.restoreValueFromParts(rawParts)
         }
 
-        val index = fieldIndex[c]
+        val index = getExpressionIndex(c)
+        return data[index] as T?
+    }
+
+    /**
+     * Retrieves the index of a given expression in the [fieldIndex] map.
+     *
+     * @param c expression for which to get the index
+     * @throws IllegalStateException if expression is not in record set
+     */
+    private fun <T> getExpressionIndex(c: Expression<T>): Int {
+        return fieldIndex[c]
             ?: ((c as? Column<*>)?.columnType as? EntityIDColumnType<*>)?.let { fieldIndex[it.idColumn] }
             ?: fieldIndex.keys.firstOrNull { exp ->
                 when (exp) {
@@ -94,8 +95,6 @@ class ResultRow(
                 }
             }?.let { fieldIndex[it] }
             ?: error("$c is not in record set")
-
-        return data[index] as T?
     }
 
     override fun toString(): String =
