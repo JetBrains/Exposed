@@ -63,6 +63,9 @@ internal object H2FunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
         }
+        if (where != null && (transaction.db.dialect as H2Dialect).h2Mode != H2Dialect.H2CompatibilityMode.Oracle) {
+            transaction.throwUnsupportedException("H2 doesn't support WHERE in UPDATE with join clause.")
+        }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
         val joinPart = targets.joinParts.singleOrNull()
