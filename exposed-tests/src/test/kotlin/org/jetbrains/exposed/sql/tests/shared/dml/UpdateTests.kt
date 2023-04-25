@@ -103,41 +103,39 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoinAndWhere() {
-        val parent = object : LongIdTable("parent") {
+        val tableA = object : LongIdTable("test_table_a") {
             val foo = varchar("foo", 255)
         }
-        val child = object : LongIdTable("child") {
+        val tableB = object : LongIdTable("test_table_b") {
             val bar = varchar("bar", 255)
-            val parentId = reference("parent_id", parent)
+            val tableAId = reference("table_a_id", tableA)
         }
 
         val supportWhere = TestDB.values().toList() - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
 
-        withDb { testingDb ->
-            SchemaUtils.create(parent, child)
-            val pId = parent.insertAndGetId { it[foo] = "foo" }
-            child.insert {
+        withTables(tableA, tableB) { testingDb ->
+            val aId = tableA.insertAndGetId { it[foo] = "foo" }
+            tableB.insert {
                 it[bar] = "zip"
-                it[parentId] = pId
+                it[tableAId] = aId
             }
 
-            val join = parent.innerJoin(child)
+            val join = tableA.innerJoin(tableB)
 
             if (testingDb in supportWhere) {
-                join.update({ parent.foo eq "foo" }) {
-                    it[child.bar] = "baz"
+                join.update({ tableA.foo eq "foo" }) {
+                    it[tableB.bar] = "baz"
                 }
                 join.selectAll().single().also {
-                    assertEquals("baz", it[child.bar])
+                    assertEquals("baz", it[tableB.bar])
                 }
             } else {
                 expectException<UnsupportedByDialectException> {
-                    join.update({ parent.foo eq "foo" }) {
-                        it[child.bar] = "baz"
+                    join.update({ tableA.foo eq "foo" }) {
+                        it[tableB.bar] = "baz"
                     }
                 }
             }
-            SchemaUtils.drop(parent, child)
         }
     }
 
