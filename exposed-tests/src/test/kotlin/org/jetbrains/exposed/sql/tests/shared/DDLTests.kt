@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -14,6 +15,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -22,6 +24,7 @@ import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.assertNotNull
+import kotlin.test.expect
 
 class DDLTests : DatabaseTestsBase() {
 
@@ -206,6 +209,33 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testPrimaryKeyOnTextColumnInH2() {
+        val testTable = object : Table("test_pk_table") {
+            val column1 = text("column_1")
+
+            override val primaryKey = PrimaryKey(column1)
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            val h2Dialect = currentDialectTest as H2Dialect
+            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
+
+            assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
+
+            if (h2Dialect.isSecondVersion && !isOracleMode) {
+                expect(Unit) {
+                    SchemaUtils.create(testTable)
+                }
+            } else {
+                expectException<ExposedSQLException> {
+                    SchemaUtils.create(testTable)
+                }
+            }
+        }
+    }
+
     @Test fun testIndices01() {
         val t = object : Table("t1") {
             val id = integer("id")
@@ -246,6 +276,42 @@ class DDLTests : DatabaseTestsBase() {
                     "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})",
                 a2
             )
+        }
+    }
+
+    @Test
+    fun testIndexOnTextColumnInH2() {
+        val testTable = object : Table("test_index_table") {
+            val column1 = text("column_1")
+
+            init {
+                index(isUnique = false, column1)
+            }
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            val h2Dialect = currentDialectTest as H2Dialect
+            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val tableProperName = testTable.tableName.inProperCase()
+            val columnProperName = testTable.columns.single().name.inProperCase()
+            val indexProperName = "${tableProperName}_$columnProperName"
+
+            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
+
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName +
+                    " (" + testTable.columns.single().descriptionDdl(false) + ")",
+                testTable.ddl
+            )
+
+            if (h2Dialect.isSecondVersion && !isOracleMode) {
+                assertEquals(
+                    "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)",
+                    indexStatement
+                )
+            } else {
+                assertTrue(indexStatement.single().isEmpty())
+            }
         }
     }
 

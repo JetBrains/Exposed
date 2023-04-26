@@ -227,8 +227,11 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
-        if (index.columns.any { it.columnType is TextColumnType }) {
-            exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created in H2")
+        if (
+            (majorVersion == H2MajorVersion.One || h2Mode == H2CompatibilityMode.Oracle) &&
+            index.columns.any { it.columnType is TextColumnType }
+        ) {
+            exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created on CLOB in H2")
             return ""
         }
         if (index.indexType != null) {
