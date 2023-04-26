@@ -28,7 +28,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     }
 
     @LowPriorityInOverloadResolution
-    open operator fun < S> set(column: Column<S>, value: S) {
+    open operator fun <S> set(column: Column<S>, value: S) {
         require(column.columnType.nullable || (value != null && value !is Op.NULL)) {
             "Trying to set null to not nullable column $column"
         }
@@ -66,7 +66,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     open operator fun <S> set(column: Column<S>, value: Query) = update(column, wrapAsExpression(value))
 
-    open operator fun <S : Any> set(column: CompositeColumn<S>, value: S) {
+    open operator fun <S> set(column: CompositeColumn<S>, value: S) {
         column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) -> set(realColumn as Column<Any?>, itsValue) }
     }
 
