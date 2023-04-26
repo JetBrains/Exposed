@@ -16,6 +16,9 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 }
 
 internal object H2FunctionProvider : FunctionProvider() {
+    private val DatabaseDialect.isH2Oracle: Boolean
+        get() = h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
         when ((TransactionManager.current().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
@@ -63,7 +66,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("H2 doesn't support LIMIT in UPDATE with join clause.")
         }
-        if (where != null && (transaction.db.dialect as H2Dialect).h2Mode != H2Dialect.H2CompatibilityMode.Oracle) {
+        if (where != null && !transaction.db.dialect.isH2Oracle) {
             transaction.throwUnsupportedException("H2 doesn't support WHERE in UPDATE with join clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
