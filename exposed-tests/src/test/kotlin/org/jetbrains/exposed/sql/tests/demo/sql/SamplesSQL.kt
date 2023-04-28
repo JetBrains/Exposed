@@ -9,16 +9,16 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 object Users : Table() {
-    val id = varchar("id", 10) // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
-    val cityId = (integer("city_id") references Cities.id).nullable() // Column<Int?>
+    val id: Column<String> = varchar("id", 10)
+    val name: Column<String> = varchar("name", length = 50)
+    val cityId: Column<Int?> = (integer("city_id") references Cities.id).nullable()
 
-    override val primaryKey = PrimaryKey(id, name = "PK_User_ID")
+    override val primaryKey = PrimaryKey(id, name = "PK_User_ID") // name is optional here
 }
 
 object Cities : Table() {
-    val id = integer("id").autoIncrement() // Column<Int>
-    val name = varchar("name", 50) // Column<String>
+    val id: Column<Int> = integer("id").autoIncrement()
+    val name: Column<String> = varchar("name", 50)
 
     override val primaryKey = PrimaryKey(id, name = "PK_Cities_ID")
 }
@@ -90,7 +90,8 @@ fun main() {
         }
 
         println("Manual join:")
-        (Users innerJoin Cities).slice(Users.name, Cities.name)
+        (Users innerJoin Cities)
+            .slice(Users.name, Cities.name)
             .select {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
@@ -100,8 +101,10 @@ fun main() {
 
         println("Join with foreign key:")
 
-        (Users innerJoin Cities).slice(Users.name, Users.cityId, Cities.name)
-            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }.forEach {
+        (Users innerJoin Cities)
+            .slice(Users.name, Users.cityId, Cities.name)
+            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
+            .forEach {
                 if (it[Users.cityId] != null) {
                     println("${it[Users.name]} lives in ${it[Cities.name]}")
                 } else {
@@ -111,16 +114,20 @@ fun main() {
 
         println("Functions and group by:")
 
-        ((Cities innerJoin Users).slice(Cities.name, Users.id.count()).selectAll().groupBy(Cities.name)).forEach {
-            val cityName = it[Cities.name]
-            val userCount = it[Users.id.count()]
+        ((Cities innerJoin Users)
+            .slice(Cities.name, Users.id.count())
+            .selectAll()
+            .groupBy(Cities.name)
+            ).forEach {
+                val cityName = it[Cities.name]
+                val userCount = it[Users.id.count()]
 
-            if (userCount > 0) {
-                println("$userCount user(s) live(s) in $cityName")
-            } else {
-                println("Nobody lives in $cityName")
+                if (userCount > 0) {
+                    println("$userCount user(s) live(s) in $cityName")
+                } else {
+                    println("Nobody lives in $cityName")
+                }
             }
-        }
 
         SchemaUtils.drop(Users, Cities)
     }
