@@ -22,7 +22,7 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 -   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
 -   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 -   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
--   H2 (versions 2.x, with reducing support for versions 1.x)
+-   H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
 -   [Oracle](ORACLE.md)
 -   [SQL Server](SQLServer.md)
 
