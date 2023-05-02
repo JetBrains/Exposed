@@ -55,6 +55,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
      */
     override fun random(seed: Int?): String = "dbms_random.value"
 
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
+
     override fun <T : String?> substring(
         expr: Expression<T>,
         start: Expression<Int>,

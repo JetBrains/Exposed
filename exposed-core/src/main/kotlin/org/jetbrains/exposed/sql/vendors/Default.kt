@@ -150,6 +150,16 @@ abstract class FunctionProvider {
     // String functions
 
     /**
+     * SQL function that returns the length of [expr], measured in characters, or `null` if [expr] is null.
+     *
+     * @param expr String expression to count characters in.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("CHAR_LENGTH(", expr, ")")
+    }
+
+    /**
      * SQL function that extracts a substring from the specified string expression.
      *
      * @param expr The expression to extract the substring from.

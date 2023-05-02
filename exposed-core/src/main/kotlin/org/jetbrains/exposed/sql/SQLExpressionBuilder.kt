@@ -16,6 +16,9 @@ import kotlin.internal.LowPriorityInOverloadResolution
 
 // String Functions
 
+/** Returns the length of this string expression, measured in characters, or `null` if this expression is null. */
+fun <T : String?> Expression<T>.charLength(): CharLength<T> = CharLength(this)
+
 /** Converts this string expression to lower case. */
 fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 
