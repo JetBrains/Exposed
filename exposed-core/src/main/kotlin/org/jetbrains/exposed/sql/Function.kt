@@ -68,6 +68,15 @@ class Random(
 // String Functions
 
 /**
+ * Represents an SQL function that returns the length of [expr], measured in characters, or `null` if [expr] is null.
+ */
+class CharLength<T : String?>(
+    val expr: Expression<T>
+) : Function<Int?>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.charLength(expr, queryBuilder)
+}
+
+/**
  * Represents an SQL function that converts [expr] to lower case.
  */
 class LowerCase<T : String?>(

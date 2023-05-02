@@ -19,6 +19,10 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
+
     override fun <T : String?> substring(
         expr: Expression<T>,
         start: Expression<Int>,
