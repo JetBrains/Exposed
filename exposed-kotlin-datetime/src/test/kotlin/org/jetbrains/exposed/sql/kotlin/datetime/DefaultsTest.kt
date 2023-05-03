@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalTime::class)
+
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
@@ -24,6 +25,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
+import org.junit.runners.model.MultipleFailureException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -230,6 +232,7 @@ class DefaultsTest : DatabaseTestsBase() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
@@ -352,15 +355,34 @@ class DefaultsTest : DatabaseTestsBase() {
 
         withTables(foo) {
             val d2020 = LocalDate(2020, 1, 1)
-            val dt2020 = d2020.atTime(0,0,0)
-            val dt2020m1w = d2020.minus(DateTimeUnit.WEEK).atTime(0,0,0)
-            val dt2020p1w = d2020.plus(DateTimeUnit.WEEK).atTime(0,0,0)
+            val dt2020 = d2020.atTime(0, 0, 0)
+            val dt2020m1w = d2020.minus(DateTimeUnit.WEEK).atTime(0, 0, 0)
+            val dt2020p1w = d2020.plus(DateTimeUnit.WEEK).atTime(0, 0, 0)
 
             foo.insert { it[dt] = LocalDateTime(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
             foo.insert { it[dt] = LocalDateTime(2021, 1, 1, 1, 1) }
             val count = foo.select { foo.dt.between(dt2020m1w, dt2020p1w) }.count()
             assertEquals(1, count)
+        }
+    }
+
+    @Test
+    fun testConsistentSchemeWithFunctionAsDefaultExpression() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(foo)
+
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+                assertTrue(actual.isEmpty())
+            } finally {
+                SchemaUtils.drop(foo)
+            }
         }
     }
 }
