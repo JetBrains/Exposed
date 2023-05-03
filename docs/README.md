@@ -36,7 +36,12 @@ For more information visit the links below:
 -   [Roadmap](ROADMAP.md) to see what's coming next
 -   [Change log](ChangeLog.md) of improvements and bug fixes
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
+-   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
+
+## Filing issues
+
+Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). 
 
 ## Community
 
