@@ -73,6 +73,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("CHARINDEX(\'", substring, "\',", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,

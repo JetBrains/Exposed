@@ -72,6 +72,14 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> =
         MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,

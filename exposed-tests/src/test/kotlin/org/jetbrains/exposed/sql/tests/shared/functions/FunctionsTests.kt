@@ -15,7 +15,9 @@ import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -298,6 +300,46 @@ class FunctionsTests : DatabaseTestsBase() {
 
             val ucase = DMLTestsData.Cities.name.upperCase()
             assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
+        }
+    }
+
+    @Test
+    fun testLocate() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = cities.name.locate("e")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(6, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(6, results[2][locate]) // Prague
+        }
+    }
+
+    @Test
+    fun testLocate02() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = cities.name.locate("Peter")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(0, results[2][locate]) // Prague
+        }
+    }
+
+    @Test
+    fun testLocate03() {
+        withCitiesAndUsers { cities, _, _ ->
+            val isCaseSensitiveDialect = currentDialectTest is SQLiteDialect ||
+                currentDialectTest is PostgreSQLDialect ||
+                currentDialectTest is H2Dialect
+
+            val locate = cities.name.locate("p")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(if (isCaseSensitiveDialect) 0 else 5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(if (isCaseSensitiveDialect) 0 else 1, results[2][locate]) // Prague
         }
     }
 

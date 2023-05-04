@@ -92,6 +92,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(col, " ", order.name, ")")
     }
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("INSTR(", expr, ",\'", substring, "\')")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(YEAR FROM ")
         append(expr)

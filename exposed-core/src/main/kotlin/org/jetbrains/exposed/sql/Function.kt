@@ -137,6 +137,14 @@ class Trim<T : String?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
+/**
+ * Represents an SQL function that returns the index of the first occurrence of [substring] in [expr] or 0
+ */
+class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.locate(queryBuilder, expr, substring)
+}
+
 // General-Purpose Aggregate Functions
 
 /**
