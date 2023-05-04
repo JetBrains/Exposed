@@ -353,7 +353,11 @@ class DDLTests : DatabaseTestsBase() {
             } get (t.id)
 
             val id2 = t.insert {
-                it[t.b] = blobParam(longBlob)
+                it[t.b] = longBlob
+            } get (t.id)
+
+            val id3 = t.insert {
+                it[t.b] = blobParam(ExposedBlob(shortBytes))
             } get (t.id)
 
             val readOn1 = t.select { t.id eq id1 }.first()[t.b]
@@ -369,6 +373,9 @@ class DDLTests : DatabaseTestsBase() {
 
             assertTrue(longBytes.contentEquals(bytes1))
             assertTrue(longBytes.contentEquals(bytes2))
+
+            val bytes3 = t.select { t.id eq id3 }.first()[t.b].inputStream.readBytes()
+            assertTrue(shortBytes.contentEquals(bytes3))
         }
     }
 
