@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
@@ -287,9 +288,23 @@ object SchemaUtils {
      * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
-            val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
-            execStatements(inBatch, createStatements)
+        val transaction = TransactionManager.current()
+        try {
+            with(transaction) {
+                val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
+                execStatements(inBatch, createStatements)
+            }
+        } catch (e: ExposedSQLException) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
+                throw ExposedSQLException(
+                    cause = Exception(
+                        "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
+                        e.cause
+                    ),
+                    e.contexts,
+                    transaction
+                )
+            } else throw e
         }
     }
 
@@ -304,9 +319,23 @@ object SchemaUtils {
      * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
-            val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
-            execStatements(inBatch, createStatements)
+        val transaction = TransactionManager.current()
+        try {
+            with(transaction) {
+                val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
+                execStatements(inBatch, createStatements)
+            }
+        } catch (e: ExposedSQLException) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
+                throw ExposedSQLException(
+                    cause = Exception(
+                        "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
+                        e.cause
+                    ),
+                    e.contexts,
+                    transaction
+                )
+            } else throw e
         }
     }
 

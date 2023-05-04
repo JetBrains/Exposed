@@ -213,6 +213,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override val supportsOrderByNullsFirstLast: Boolean = true
 
+    override val requiresAutoCommitOnCreateDrop: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(buildString {
@@ -258,5 +260,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
 open class PostgreSQLNGDialect : PostgreSQLDialect() {
+    override val requiresAutoCommitOnCreateDrop: Boolean = true
+
     companion object : DialectNameProvider("pgsql")
 }
