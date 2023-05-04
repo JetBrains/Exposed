@@ -281,6 +281,10 @@ object SchemaUtils {
      *
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
+     *
+     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
+     * and followed by connection.autoCommit = false.
+     * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
@@ -294,6 +298,10 @@ object SchemaUtils {
      *
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
+     *
+     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
+     * and followed by connection.autoCommit = false.
+     * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
