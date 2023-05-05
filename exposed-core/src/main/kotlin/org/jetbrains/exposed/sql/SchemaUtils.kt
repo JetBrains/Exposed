@@ -294,17 +294,13 @@ object SchemaUtils {
                 val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
                 execStatements(inBatch, createStatements)
             }
-        } catch (e: ExposedSQLException) {
+        } catch (exception: ExposedSQLException) {
             if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
-                throw ExposedSQLException(
-                    cause = Exception(
-                        "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
-                        e.cause
-                    ),
-                    e.contexts,
-                    transaction
+                throw IllegalStateException(
+                    "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
+                    exception
                 )
-            } else throw e
+            } else throw exception
         }
     }
 
@@ -325,17 +321,13 @@ object SchemaUtils {
                 val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
                 execStatements(inBatch, createStatements)
             }
-        } catch (e: ExposedSQLException) {
+        } catch (exception: ExposedSQLException) {
             if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
-                throw ExposedSQLException(
-                    cause = Exception(
-                        "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
-                        e.cause
-                    ),
-                    e.contexts,
-                    transaction
+                throw IllegalStateException(
+                    "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
+                    exception
                 )
-            } else throw e
+            } else throw exception
         }
     }
 
