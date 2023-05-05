@@ -122,6 +122,42 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             assertEqualDateTime(now, minNullableTimestamp)
         }
     }
+
+    @Test
+    fun testLocalDateComparison() {
+        val testTable = object : Table("test_table") {
+            val created = date("created")
+            val deleted = date("deleted")
+        }
+
+        withTables(testTable) {
+            val mayTheFourth = LocalDate(2023, 5, 4)
+            testTable.insert {
+                it[created] = mayTheFourth
+                it[deleted] = mayTheFourth
+            }
+            testTable.insert {
+                it[created] = mayTheFourth
+                it[deleted] = mayTheFourth.plus(1, DateTimeUnit.DAY)
+            }
+
+            val sameDateResult = testTable.select { testTable.created eq testTable.deleted }.toList()
+            assertEquals(1, sameDateResult.size)
+            assertEquals(mayTheFourth, sameDateResult.single()[testTable.deleted])
+
+            val sameMonthResult = testTable.select { testTable.created.month() eq testTable.deleted.month() }.toList()
+            assertEquals(2, sameMonthResult.size)
+
+            val year2023 = if (currentDialectTest is PostgreSQLDialect) {
+                // PostgreSQL requires explicit type cast to resolve function date_part
+                dateParam(mayTheFourth).castTo<LocalDate>(KotlinLocalDateColumnType()).year()
+            } else {
+                dateParam(mayTheFourth).year()
+            }
+            val createdIn2023 = testTable.select { testTable.created.year() eq year2023 }.toList()
+            assertEquals(2, createdIn2023.size)
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {
