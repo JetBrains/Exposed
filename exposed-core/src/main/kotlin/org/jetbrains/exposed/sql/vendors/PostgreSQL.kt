@@ -46,6 +46,18 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
+    /**
+     * Implementation of [FunctionProvider.locate]
+     * Note: search is case-sensitive
+     * */
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("POSITION(\'", substring, "\' IN ", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,
@@ -222,7 +234,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
             column.dbDefaultValue?.let {
                 append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
             } ?: run {
-                ",  ALTER COLUMN $colName DROP DEFAULT"
+                append(",  ALTER COLUMN $colName DROP DEFAULT")
             }
         }
     })

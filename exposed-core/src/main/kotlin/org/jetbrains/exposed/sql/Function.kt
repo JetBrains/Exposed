@@ -68,6 +68,15 @@ class Random(
 // String Functions
 
 /**
+ * Represents an SQL function that returns the length of [expr], measured in characters, or `null` if [expr] is null.
+ */
+class CharLength<T : String?>(
+    val expr: Expression<T>
+) : Function<Int?>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.charLength(expr, queryBuilder)
+}
+
+/**
  * Represents an SQL function that converts [expr] to lower case.
  */
 class LowerCase<T : String?>(
@@ -135,6 +144,14 @@ class Trim<T : String?>(
     val expr: Expression<T>
 ) : Function<T>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
+}
+
+/**
+ * Represents an SQL function that returns the index of the first occurrence of [substring] in [expr] or 0
+ */
+class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.locate(queryBuilder, expr, substring)
 }
 
 // General-Purpose Aggregate Functions

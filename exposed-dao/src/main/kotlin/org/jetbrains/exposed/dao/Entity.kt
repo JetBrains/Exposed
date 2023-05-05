@@ -273,7 +273,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     }
                 }
             } else {
-                batch.addBatch(id)
+                batch.addBatch(this)
                 for ((c, v) in writeValues) {
                     batch[c] = v
                 }

@@ -19,6 +19,10 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 }
 
 internal object SQLiteFunctionProvider : FunctionProvider() {
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
+
     override fun <T : String?> substring(
         expr: Expression<T>,
         start: Expression<Int>,
@@ -42,6 +46,18 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
             else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
         }
+    }
+
+    /**
+     * Implementation of [FunctionProvider.locate]
+     * Note: search is case-sensitive
+     * */
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("INSTR(", expr, ",\'", substring, "\')")
     }
 
     override fun <T : String?> regexp(

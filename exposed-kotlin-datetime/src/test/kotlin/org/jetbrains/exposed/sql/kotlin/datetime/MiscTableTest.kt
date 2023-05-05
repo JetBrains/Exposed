@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.sql.tests.shared.checkRow
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -1309,10 +1308,10 @@ fun Misc.checkRowDates(
     assertEquals(dn, row[this.dn])
     assertLocalTime(t, row[this.t])
     assertLocalTime(tn, row[this.tn])
-    assertEquals(dt, row[this.dt])
-    assertEquals(dtn, row[this.dtn])
-    assertEquals(ts, row[this.ts])
-    assertEquals(tsn, row[this.tsn])
+    assertEqualDateTime(dt, row[this.dt])
+    assertEqualDateTime(dtn, row[this.dtn])
+    assertEqualDateTime(ts, row[this.ts])
+    assertEqualDateTime(tsn, row[this.tsn])
     assertEquals(dr, row[this.dr])
     assertEquals(drn, row[this.drn])
 }

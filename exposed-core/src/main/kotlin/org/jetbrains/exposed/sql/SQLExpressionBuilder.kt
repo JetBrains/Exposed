@@ -16,6 +16,9 @@ import kotlin.internal.LowPriorityInOverloadResolution
 
 // String Functions
 
+/** Returns the length of this string expression, measured in characters, or `null` if this expression is null. */
+fun <T : String?> Expression<T>.charLength(): CharLength<T> = CharLength(this)
+
 /** Converts this string expression to lower case. */
 fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 
@@ -39,6 +42,9 @@ fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T>
 
 /** Removes the longest string containing only spaces from both ends of string expression. */
 fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
+
+/** Returns the index of the first occurrence of [substring] in this string expression or 0 if it doesn't contain [substring] */
+fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(this, substring)
 
 // General-Purpose Aggregate Functions
 

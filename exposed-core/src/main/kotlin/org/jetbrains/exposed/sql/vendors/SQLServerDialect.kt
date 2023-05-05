@@ -57,6 +57,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun random(seed: Int?): String = if (seed != null) "RAND($seed)" else "RAND(CHECKSUM(NEWID()))"
 
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LEN(", expr, ")")
+    }
+
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
         return when {
@@ -71,6 +75,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
                 }
             }
         }
+    }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("CHARINDEX(\'", substring, "\',", expr, ")")
     }
 
     override fun <T : String?> regexp(

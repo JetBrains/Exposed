@@ -1319,4 +1319,28 @@ class EntityTests : DatabaseTestsBase() {
             )
         }
     }
+
+    object RequestsTable : IdTable<String>() {
+        val requestId: Column<String> = varchar("requestId", 256)
+        override val primaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+    }
+
+    @Test
+    fun testSelectFromStringIdTableWithPrimaryKeyByColumn() {
+        withTables(RequestsTable) {
+            Request.new {
+                requestId = "123"
+            }
+
+            val count = Request.all().count()
+            assertEquals(1, count)
+        }
+    }
 }

@@ -55,6 +55,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
      */
     override fun random(seed: Int?): String = "dbms_random.value"
 
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
+
     override fun <T : String?> substring(
         expr: Expression<T>,
         start: Expression<Int>,
@@ -90,6 +94,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(") WITHIN GROUP (ORDER BY ")
         val (col, order) = expr.orderBy.single()
         append(col, " ", order.name, ")")
+    }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("INSTR(", expr, ",\'", substring, "\')")
     }
 
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {

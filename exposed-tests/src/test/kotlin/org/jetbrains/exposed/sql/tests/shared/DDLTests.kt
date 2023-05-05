@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -14,13 +15,16 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
+import kotlin.random.Random
 import kotlin.test.assertNotNull
+import kotlin.test.expect
 
 class DDLTests : DatabaseTestsBase() {
 
@@ -205,6 +209,33 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testPrimaryKeyOnTextColumnInH2() {
+        val testTable = object : Table("test_pk_table") {
+            val column1 = text("column_1")
+
+            override val primaryKey = PrimaryKey(column1)
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            val h2Dialect = currentDialectTest as H2Dialect
+            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
+
+            assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
+
+            if (h2Dialect.isSecondVersion && !isOracleMode) {
+                expect(Unit) {
+                    SchemaUtils.create(testTable)
+                }
+            } else {
+                expectException<ExposedSQLException> {
+                    SchemaUtils.create(testTable)
+                }
+            }
+        }
+    }
+
     @Test fun testIndices01() {
         val t = object : Table("t1") {
             val id = integer("id")
@@ -245,6 +276,42 @@ class DDLTests : DatabaseTestsBase() {
                     "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})",
                 a2
             )
+        }
+    }
+
+    @Test
+    fun testIndexOnTextColumnInH2() {
+        val testTable = object : Table("test_index_table") {
+            val column1 = text("column_1")
+
+            init {
+                index(isUnique = false, column1)
+            }
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            val h2Dialect = currentDialectTest as H2Dialect
+            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val tableProperName = testTable.tableName.inProperCase()
+            val columnProperName = testTable.columns.single().name.inProperCase()
+            val indexProperName = "${tableProperName}_$columnProperName"
+
+            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
+
+            assertEquals(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName +
+                    " (" + testTable.columns.single().descriptionDdl(false) + ")",
+                testTable.ddl
+            )
+
+            if (h2Dialect.isSecondVersion && !isOracleMode) {
+                assertEquals(
+                    "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)",
+                    indexStatement
+                )
+            } else {
+                assertTrue(indexStatement.single().isEmpty())
+            }
         }
     }
 
@@ -337,24 +404,37 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val bytes = "Hello there!".toByteArray()
-            val blob = ExposedBlob(bytes)
+            val shortBytes = "Hello there!".toByteArray()
+            val longBytes = Random.nextBytes(1024)
+            val shotBlob = ExposedBlob(shortBytes)
+            val longBlob = ExposedBlob(longBytes)
 //            if (currentDialectTest.dataTypeProvider.blobAsStream) {
 //                    SerialBlob(bytes)
 //                } else connection.createBlob().apply {
 //                    setBytes(1, bytes)
 //                }
 
-            val id = t.insert {
-                it[t.b] = blob
+            val id1 = t.insert {
+                it[t.b] = shotBlob
             } get (t.id)
 
-            val readOn = t.select { t.id eq id }.first()[t.b]
-            val text1 = String(readOn.bytes)
-            val text2 = readOn.inputStream.bufferedReader().readText()
+            val id2 = t.insert {
+                it[t.b] = longBlob
+            } get (t.id)
+
+            val readOn1 = t.select { t.id eq id1 }.first()[t.b]
+            val text1 = String(readOn1.bytes)
+            val text2 = readOn1.inputStream.bufferedReader().readText()
 
             assertEquals("Hello there!", text1)
             assertEquals("Hello there!", text2)
+
+            val readOn2 = t.select { t.id eq id2 }.first()[t.b]
+            val bytes1 = readOn2.bytes
+            val bytes2 = readOn2.inputStream.readBytes()
+
+            assertTrue(longBytes.contentEquals(bytes1))
+            assertTrue(longBytes.contentEquals(bytes2))
         }
     }
 

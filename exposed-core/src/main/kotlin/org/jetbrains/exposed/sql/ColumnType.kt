@@ -161,9 +161,11 @@ class AutoIncColumnType(
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+
 @Deprecated(
     message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
     replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
@@ -213,13 +215,12 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as EntityIDColumnType<*>
-
-        if (idColumn != other.idColumn) return false
-
-        return true
+        return when (other) {
+            is EntityIDColumnType<*> -> idColumn == other.idColumn
+            is IColumnType -> idColumn.columnType == other
+            else -> false
+        }
     }
 
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
@@ -329,7 +330,7 @@ class UIntegerColumnType : ColumnType() {
         return when (value) {
             is UInt -> value
             is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toInt().takeIf { it >= 0 }?.toUInt()
+            is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
             is String -> value.toUInt()
             else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
         } ?: error("negative value but type is UInt: $value")
@@ -423,7 +424,7 @@ class DecimalColumnType(
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getBigDecimal(index)
+        return rs.getObject(index)
     }
 
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
@@ -557,8 +558,9 @@ open class CharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -602,8 +604,9 @@ open class VarCharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -692,8 +695,9 @@ open class BinaryColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is ByteArray) {
-            require(value.size <= length) {
-                "Value '$value' can't be stored to database column because exceeds length ($length)"
+            val valueLength = value.size
+            require(valueLength <= length) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $length)"
             }
         }
     }

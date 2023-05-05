@@ -18,6 +18,14 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     ): Unit = queryBuilder {
         append(expr1, " REGEXP ", pattern)
     }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("LOCATE(\'", substring, "\',", expr, ")")
+    }
 }
 
 /**
