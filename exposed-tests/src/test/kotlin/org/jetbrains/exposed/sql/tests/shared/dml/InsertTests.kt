@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -573,5 +574,36 @@ class InsertTests : DatabaseTestsBase() {
             }
         }
 
+    }
+
+    class BatchInsertOnConflictDoNothing(
+        table: Table,
+    ) : BatchInsertStatement(table) {
+        override fun prepareSQL(transaction: Transaction) = buildString {
+            append(super.prepareSQL(transaction))
+            append(" ON CONFLICT (id) DO NOTHING")
+        }
+    }
+
+    @Test fun `batch insert number of inserted rows is accurate`() {
+        val tab = object : Table("tab") {
+            val id = varchar("id", 10).uniqueIndex()
+        }
+
+        withTables(TestDB.allH2TestDB + listOf(TestDB.MYSQL), tab) {
+            tab.insert { it[id] = "foo" }
+
+            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
+                addBatch()
+                this[tab.id] = "foo"
+
+                addBatch()
+                this[tab.id] = "bar"
+
+                execute(this@withTables)
+            }
+
+            assertEquals(1, numInserted)
+        }
     }
 }
