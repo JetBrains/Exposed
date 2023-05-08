@@ -19,6 +19,55 @@ class ConditionsTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testNullSafeEqualityOps() {
+        val table = object : IntIdTable("foo") {
+            val number1 = integer("number_1").nullable()
+            val number2 = integer("number_2").nullable()
+        }
+
+        withTables(table) {
+            val sameNumberId = table.insert {
+                it[number1] = 0
+                it[number2] = 0
+            } get table.id
+            val differentNumberId = table.insert {
+                it[number1] = 0
+                it[number2] = 1
+            } get table.id
+            val oneNullId = table.insert {
+                it[number1] = 0
+                it[number2] = null
+            } get table.id
+            val bothNullId = table.insert {
+                it[number1] = null
+                it[number2] = null
+            } get table.id
+
+            // null == null returns null
+            assertEqualLists(
+                table.select { table.number1 eq table.number2 }.map { it[table.id] },
+                listOf(sameNumberId)
+            )
+            // null == null returns true
+            assertEqualLists(
+                table.select { table.number1 isNotDistinctFrom table.number2 }.map { it[table.id] },
+                listOf(sameNumberId, bothNullId)
+            )
+
+            // number != null returns null
+            assertEqualLists(
+                table.select { table.number1 neq table.number2 }.map { it[table.id] },
+                listOf(differentNumberId)
+            )
+            // number != null returns true
+            assertEqualLists(
+                table.select { table.number1 isDistinctFrom table.number2 }.map { it[table.id] },
+                listOf(differentNumberId, oneNullId)
+            )
+        }
+    }
+
     // https://github.com/JetBrains/Exposed/issues/581
     @Test
     fun sameColumnUsedInSliceMultipleTimes() {
