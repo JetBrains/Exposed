@@ -249,6 +249,42 @@ class IsNotNullOp(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
+/**
+ * Represents an SQL operator that checks if [expression1] is equal to [expression2], with `null` treated as a comparable value.
+ * This comparison never returns null.
+ */
+class IsNotDistinctFromOp(
+    val expression1: Expression<*>,
+    val expression2: Expression<*>
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is MariaDBDialect, is MysqlDialect -> append(expression1, " <=> ", expression2)
+            is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 1")
+            is SQLiteDialect -> append(expression1, " IS ", expression2)
+            else -> append(expression1, " IS NOT DISTINCT FROM ", expression2)
+        }
+    }
+}
+
+/**
+ * Represents an SQL operator that checks if [expression1] is not equal to [expression2], with `null` treated as a comparable value.
+ * This comparison never returns null.
+ */
+class IsDistinctFromOp(
+    val expression1: Expression<*>,
+    val expression2: Expression<*>
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is MariaDBDialect, is MysqlDialect -> append("NOT (", expression1, " <=> ", expression2, ")")
+            is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 0")
+            is SQLiteDialect -> append(expression1, " IS NOT ", expression2)
+            else -> append(expression1, " IS DISTINCT FROM ", expression2)
+        }
+    }
+}
+
 // Mathematical Operators
 
 /**

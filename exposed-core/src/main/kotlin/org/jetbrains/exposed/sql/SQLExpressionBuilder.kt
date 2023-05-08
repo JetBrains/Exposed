@@ -286,6 +286,26 @@ interface ISqlExpressionBuilder {
     /** Returns `true` if this expression is not null, `false` otherwise. */
     fun <T> Expression<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
 
+    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is equal to some [other] expression, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.isNotDistinctFrom(other: Expression<in S>): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
+
+    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    @JvmName("isNotDistinctFromEntityID")
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is not equal to some [other] expression, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.isDistinctFrom(other: Expression<in S>): IsDistinctFromOp = IsDistinctFromOp(this, other)
+
+    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    @JvmName("isDistinctFromEntityID")
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+
     // Mathematical Operators
 
     /** Adds the [t] value to this expression. */
