@@ -406,7 +406,7 @@ class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             val shortBytes = "Hello there!".toByteArray()
             val longBytes = Random.nextBytes(1024)
-            val shotBlob = ExposedBlob(shortBytes)
+            val shortBlob = ExposedBlob(shortBytes)
             val longBlob = ExposedBlob(longBytes)
 //            if (currentDialectTest.dataTypeProvider.blobAsStream) {
 //                    SerialBlob(bytes)
@@ -415,7 +415,7 @@ class DDLTests : DatabaseTestsBase() {
 //                }
 
             val id1 = t.insert {
-                it[t.b] = shotBlob
+                it[t.b] = shortBlob
             } get (t.id)
 
             val id2 = t.insert {
