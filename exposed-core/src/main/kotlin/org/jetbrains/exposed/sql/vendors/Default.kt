@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.nio.ByteBuffer
 import java.util.*
@@ -108,6 +109,7 @@ abstract class DataTypeProvider {
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
     open fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> -> "$e"
+        e is Function<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
         currentDialect is SQLServerDialect -> "$e"
         else -> "($e)"
