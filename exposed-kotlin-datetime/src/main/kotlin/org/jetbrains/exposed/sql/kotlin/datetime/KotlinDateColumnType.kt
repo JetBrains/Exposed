@@ -66,7 +66,7 @@ private val LocalDate.millis get() = this.atStartOfDayIn(TimeZone.currentSystemD
 class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
-    override fun sqlType(): String = "DATE"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
