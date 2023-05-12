@@ -623,6 +623,9 @@ interface DatabaseDialect {
 
     val likePatternSpecialChars: Map<Char, Char?> get() = defaultLikePatternSpecialChars
 
+    /** Returns true if autoCommit should be enabled to create/drop database */
+    val requiresAutoCommitOnCreateDrop: Boolean get() = false
+
     /** Returns the name of the current database. */
     fun getDatabase(): String
 
