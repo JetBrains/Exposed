@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
@@ -11,7 +11,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     @Test
     fun `create database test`() {
         // PostgreSQL will be tested in the next test function
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)) {
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
@@ -26,7 +26,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     @Test
     fun `create database test in postgreSQL`() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             SchemaUtils.createDatabase(dbName)
