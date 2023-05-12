@@ -439,6 +439,37 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testBlobDefault() {
+        val defaultBlobStr = "test"
+        val defaultBlob = ExposedBlob(defaultBlobStr.encodeToByteArray())
+
+        val TestTable = object : Table("TestTable") {
+            val number = integer("number")
+            val blobWithDefault = blob("blobWithDefault").default(defaultBlob)
+        }
+
+        withDb { testDb ->
+            when (testDb) {
+                TestDB.MYSQL -> {
+                    expectException<ExposedSQLException> {
+                        SchemaUtils.create(TestTable)
+                    }
+                }
+                else -> {
+                    SchemaUtils.create(TestTable)
+
+                    TestTable.insert {
+                        it[number] = 1
+                    }
+                    assertEquals(defaultBlobStr, String(TestTable.selectAll().first()[TestTable.blobWithDefault].bytes))
+
+                    SchemaUtils.drop(TestTable)
+                }
+            }
+        }
+    }
+
+    @Test
     fun testBinaryWithoutLength() {
         val tableWithBinary = object : Table("TableWithBinary") {
             val binaryColumn = binary("binaryColumn")

@@ -23,4 +23,9 @@ class ExposedBlob(inputStream: InputStream) {
     }
 
     override fun hashCode(): Int = bytes.contentHashCode()
+
+    fun hexString(): String = bytes.toHexString()
+
+    /** Returns the hex-encoded string of a ByteArray. */
+    private fun ByteArray.toHexString(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 }
