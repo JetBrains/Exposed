@@ -2,17 +2,18 @@ package org.jetbrains.exposed
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.junit.Assert
 import org.junit.Test
-import java.math.BigDecimal
-import java.math.RoundingMode
 import kotlin.test.assertEquals
 
 open class JodaTimeBaseTest : DatabaseTestsBase() {
@@ -43,6 +44,137 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             assertEquals(now.hourOfDay, insertedHour)
             assertEquals(now.minuteOfHour, insertedMinute)
             assertEquals(now.secondOfMinute, insertedSecond)
+        }
+    }
+
+    @Test
+    fun testSQLiteDateFieldRegression01() {
+        val (tableName, columnName) = "test_table" to "date_col"
+        val testTable = object : IntIdTable(tableName) {
+            val dateCol = date(columnName).defaultExpression(CurrentDate)
+        }
+
+        withDb(TestDB.SQLITE) {
+            // force table creation using old numeric date column instead of new text column
+            val createStatement = "CREATE TABLE IF NOT EXISTS $tableName (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "$columnName DATE DEFAULT (CURRENT_DATE) NOT NULL);"
+            try {
+                exec(createStatement)
+                testTable.insert { }
+
+                val year = testTable.dateCol.year()
+                val month = testTable.dateCol.month()
+                val day = testTable.dateCol.day()
+
+                val result1 = testTable.slice(year, month, day).selectAll().single()
+                assertEquals(today.year, result1[year])
+                assertEquals(today.monthOfYear, result1[month])
+                assertEquals(today.dayOfMonth, result1[day])
+
+                val lastDayOfMonth = CustomDateFunction(
+                    "date",
+                    testTable.dateCol,
+                    stringLiteral("start of month"),
+                    stringLiteral("+1 month"),
+                    stringLiteral("-1 day")
+                )
+                val nextMonth = DateTime.parse("${today.year}-${today.monthOfYear}-01").plusMonths(1)
+                val expectedLastDayOfMonth = nextMonth.minusDays(1)
+
+                val result2 = testTable.slice(lastDayOfMonth).selectAll().single()
+                assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
+            } finally {
+                SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    @Test
+    fun testSQLiteDateFieldRegression02() {
+        val (tableName, eventColumn, dateColumn) = Triple("test_table", "event", "date_col")
+        val testTable = object : IntIdTable(tableName) {
+            val event = varchar(eventColumn, 32)
+            val defaultDate = date(dateColumn).defaultExpression(CurrentDate)
+        }
+
+        withDb(TestDB.SQLITE) {
+            // force table creation using old numeric date column instead of new text column
+            val createStatement = "CREATE TABLE IF NOT EXISTS $tableName (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "$eventColumn VARCHAR(32) NOT NULL, $dateColumn DATE DEFAULT (CURRENT_DATE) NOT NULL);"
+            try {
+                exec(createStatement)
+                val eventAId = testTable.insertAndGetId {
+                    it[event] = "A"
+                    it[defaultDate] = DateTime.parse("2000-12-25")
+                }
+                val eventBId = testTable.insertAndGetId {
+                    it[event] = "B"
+                }
+
+                val inYear2000 = testTable.defaultDate.castTo<String>(TextColumnType()) like "2000%"
+                assertEquals(1, testTable.select { inYear2000 }.count())
+
+                val todayResult1 = testTable.select { testTable.defaultDate eq today }.single()
+                assertEquals(eventBId, todayResult1[testTable.id])
+
+                testTable.update({ testTable.id eq eventAId }) {
+                    it[testTable.defaultDate] = today
+                }
+
+                val todayResult2 = testTable.select { testTable.defaultDate eq today }.count()
+                assertEquals(2, todayResult2)
+
+                val twoYearsAgo = today.minusYears(2)
+                val twoYearsInFuture = today.plusYears(2)
+                val isWithinTwoYears = testTable.defaultDate.between(twoYearsAgo, twoYearsInFuture)
+                assertEquals(2, testTable.select { isWithinTwoYears }.count())
+
+                val yesterday = today.minusDays(1)
+
+                testTable.deleteWhere {
+                    testTable.defaultDate.day() eq dateParam(yesterday).day()
+                }
+
+                assertEquals(2, testTable.selectAll().count())
+            } finally {
+                SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    @Test
+    fun testLocalDateComparison() {
+        val testTable = object : Table("test_table") {
+            val created = date("created")
+            val deleted = date("deleted")
+        }
+
+        withTables(testTable) {
+            val mayTheFourth = DateTime.parse("2023-05-04")
+            testTable.insert {
+                it[created] = mayTheFourth
+                it[deleted] = mayTheFourth
+            }
+            testTable.insert {
+                it[created] = mayTheFourth
+                it[deleted] = mayTheFourth.plusDays(1)
+            }
+
+            val sameDateResult = testTable.select { testTable.created eq testTable.deleted }.toList()
+            assertEquals(1, sameDateResult.size)
+            assertEquals(mayTheFourth, sameDateResult.single()[testTable.deleted])
+
+            val sameMonthResult = testTable.select { testTable.created.month() eq testTable.deleted.month() }.toList()
+            assertEquals(2, sameMonthResult.size)
+
+            val year2023 = if (currentDialectTest is PostgreSQLDialect) {
+                // PostgreSQL requires explicit type cast to resolve function date_part
+                dateParam(mayTheFourth).castTo<DateTime>(DateColumnType(false)).year()
+            } else {
+                dateParam(mayTheFourth).year()
+            }
+            val createdIn2023 = testTable.select { testTable.created.year() eq year2023 }.toList()
+            assertEquals(2, createdIn2023.size)
         }
     }
 }

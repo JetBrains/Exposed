@@ -30,7 +30,11 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 
 class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = time
-    override fun sqlType(): String = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
+    override fun sqlType(): String = if (time) {
+        currentDialect.dataTypeProvider.dateTimeType()
+    } else {
+        currentDialect.dataTypeProvider.dateType()
+    }
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
@@ -94,6 +98,7 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     override fun notNullValueToDB(value: Any): Any = when {
         value is DateTime && time && currentDialect is SQLiteDialect -> SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.print(value)
         value is DateTime && time -> java.sql.Timestamp(value.millis)
+        value is DateTime && currentDialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.print(value)
         value is DateTime -> java.sql.Date(value.millis)
         else -> value
     }

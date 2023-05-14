@@ -141,7 +141,7 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
         withDb(TestDB.SQLITE) {
             // force table creation using old numeric date column instead of new text column
             val createStatement = "CREATE TABLE IF NOT EXISTS $tableName (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "$columnName NUMERIC DEFAULT (CURRENT_DATE) NOT NULL);"
+                "$columnName DATE DEFAULT (CURRENT_DATE) NOT NULL);"
             try {
                 exec(createStatement)
                 testTable.insert { }
@@ -184,7 +184,7 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
         withDb(TestDB.SQLITE) {
             // force table creation using old numeric date column instead of new text column
             val createStatement = "CREATE TABLE IF NOT EXISTS $tableName (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "$eventColumn VARCHAR(32) NOT NULL, $dateColumn NUMERIC DEFAULT (CURRENT_DATE) NOT NULL);"
+                "$eventColumn VARCHAR(32) NOT NULL, $dateColumn DATE DEFAULT (CURRENT_DATE) NOT NULL);"
             try {
                 exec(createStatement)
                 val eventAId = testTable.insertAndGetId {
