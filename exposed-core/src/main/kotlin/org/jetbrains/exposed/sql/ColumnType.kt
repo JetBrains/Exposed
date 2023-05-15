@@ -741,13 +741,7 @@ class BlobColumnType : ColumnType() {
     override fun nonNullValueToString(value: Any): String =
         if (value is ExposedBlob) {
             val hexString = value.hexString()
-            when (currentDialect) {
-                is H2Dialect, is SQLiteDialect -> "X'$hexString'"
-                is MariaDBDialect, is MysqlDialect, is SQLServerDialect -> "0x$hexString"
-                is PostgreSQLNGDialect, is PostgreSQLDialect -> """E'\\x$hexString'"""
-                is OracleDialect -> "HEXTORAW('$hexString')"
-                else -> error("$currentDialect not supported")
-            }
+            currentDialect.dataTypeProvider.hexToDb(hexString)
         } else error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
 
     override fun readObject(rs: ResultSet, index: Int) = when {

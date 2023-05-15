@@ -48,6 +48,8 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             }
         }
     }
+
+    override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {

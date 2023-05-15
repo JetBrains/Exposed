@@ -49,6 +49,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             }
         }
     }
+
+    override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {

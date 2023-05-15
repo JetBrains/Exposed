@@ -13,6 +13,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "UUID"
     override fun dateTimeType(): String = "DATETIME(9)"
+    override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
 internal object H2FunctionProvider : FunctionProvider() {

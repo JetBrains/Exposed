@@ -44,6 +44,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
         else -> super.processForDefaultValue(e)
     }
+
+    override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 
 internal object OracleFunctionProvider : FunctionProvider() {

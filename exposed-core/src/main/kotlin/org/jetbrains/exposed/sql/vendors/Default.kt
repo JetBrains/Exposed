@@ -118,6 +118,9 @@ abstract class DataTypeProvider {
     open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
     }
+
+    /** Returns the hex-encoded value to be inserted into the database. */
+    abstract fun hexToDb(hexString: String): String
 }
 
 /**
