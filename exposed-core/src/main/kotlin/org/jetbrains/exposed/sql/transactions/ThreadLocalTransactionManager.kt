@@ -256,6 +256,7 @@ fun <T> inTopLevelTransaction(
                 } else {
                     0
                 }
+                exposedLogger.warn("Wait $delay seconds before retrying")
                 try {
                     Thread.sleep(delay * 1000)
                 } catch (e: InterruptedException) {
