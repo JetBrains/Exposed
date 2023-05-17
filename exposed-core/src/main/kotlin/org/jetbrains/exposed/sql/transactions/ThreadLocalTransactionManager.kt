@@ -248,12 +248,18 @@ fun <T> inTopLevelTransaction(
                 if (repetitions >= repetitionAttempts) {
                     throw e
                 }
-                if (minRepetitionDelay <= maxRepetitionDelay) {
-                    try {
-                        Thread.sleep(minRepetitionDelay + Random(System.currentTimeMillis()).nextLong(maxRepetitionDelay - minRepetitionDelay))
-                    } catch (e: InterruptedException) {
-                        // Do nothing
-                    }
+                // set delay value
+                val delay = if (minRepetitionDelay < maxRepetitionDelay) {
+                    minRepetitionDelay + Random(System.currentTimeMillis()).nextLong(maxRepetitionDelay - minRepetitionDelay)
+                } else if (minRepetitionDelay == maxRepetitionDelay) {
+                    minRepetitionDelay
+                } else {
+                    0
+                }
+                try {
+                    Thread.sleep(delay * 1000)
+                } catch (e: InterruptedException) {
+                  // Do nothing
                 }
             } catch (e: Throwable) {
                 val currentStatement = transaction.currentStatement

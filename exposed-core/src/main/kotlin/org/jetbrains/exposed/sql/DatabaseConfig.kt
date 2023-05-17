@@ -47,13 +47,13 @@ class DatabaseConfig private constructor(
         var defaultRepetitionAttempts: Int = 3,
         /**
          * The minimum time to wait before retrying a transaction if SQLException happens
-         * Can be overridden on per-transaction level by specifying `minimalDelay` parameter on call
+         * Can be overridden on per-transaction level by specifying `minRepetitionDelay` parameter on call
          * Default minimum delay is 0
          */
         var defaultMinRepetitionDelay: Long = 0,
         /**
          * The maximum time to wait before retrying a transaction if SQLException happens
-         * Can be overridden on per-transaction level by specifying `maximumDelay` parameter on call
+         * Can be overridden on per-transaction level by specifying `maxRepetitionDelay` parameter on call
          * Default maximum delay is 0
          */
         var defaultMaxRepetitionDelay: Long = 0,
