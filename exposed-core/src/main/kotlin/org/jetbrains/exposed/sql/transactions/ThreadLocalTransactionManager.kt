@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
+import kotlin.random.Random
 
 class ThreadLocalTransactionManager(
     private val db: Database,
@@ -18,6 +19,18 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
         @Deprecated("Use DatabaseConfig to define the defaultRepetitionAttempts")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMinRepetitionDelay: Long = db.config.defaultMinRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMinRepetitionDelay")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMaxRepetitionDelay")
         @TestOnly
         set
 
@@ -147,7 +160,10 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
         db.transactionManager.defaultIsolationLevel,
         db.transactionManager.defaultRepetitionAttempts,
         db.transactionManager.defaultReadOnly,
-        db, statement
+        db,
+        db.transactionManager.defaultMinRepetitionDelay,
+        db.transactionManager.defaultMaxRepetitionDelay,
+        statement
     )
 
 fun <T> transaction(
@@ -155,6 +171,8 @@ fun <T> transaction(
     repetitionAttempts: Int,
     readOnly: Boolean = false,
     db: Database? = null,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: Transaction.() -> T
 ): T =
     keepAndRestoreTransactionRefAfterRun(db) {
@@ -187,7 +205,14 @@ fun <T> transaction(
                 } finally {
                     TransactionManager.resetCurrent(currentManager)
                 }
-            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, readOnly, db, null, statement)
+            } ?: inTopLevelTransaction(transactionIsolation,
+                                       repetitionAttempts,
+                                       readOnly,
+                                       db,
+                                       null,
+                                       minRepetitionDelay,
+                                       maxRepetitionDelay,
+                                       statement)
         }
     }
 
@@ -197,6 +222,8 @@ fun <T> inTopLevelTransaction(
     readOnly: Boolean = false,
     db: Database? = null,
     outerTransaction: Transaction? = null,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: Transaction.() -> T
 ): T {
 
@@ -220,6 +247,13 @@ fun <T> inTopLevelTransaction(
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
                     throw e
+                }
+                if (minRepetitionDelay <= maxRepetitionDelay) {
+                    try {
+                        Thread.sleep(minRepetitionDelay + Random(System.currentTimeMillis()).nextLong(maxRepetitionDelay - minRepetitionDelay))
+                    } catch (e: InterruptedException) {
+                        // Do nothing
+                    }
                 }
             } catch (e: Throwable) {
                 val currentStatement = transaction.currentStatement

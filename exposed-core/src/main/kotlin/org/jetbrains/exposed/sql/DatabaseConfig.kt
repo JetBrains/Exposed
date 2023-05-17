@@ -9,6 +9,8 @@ class DatabaseConfig private constructor(
     val defaultFetchSize: Int?,
     val defaultIsolationLevel: Int,
     val defaultRepetitionAttempts: Int,
+    val defaultMinRepetitionDelay: Long,
+    val defaultMaxRepetitionDelay: Long,
     val defaultReadOnly: Boolean,
     val warnLongQueriesDuration: Long?,
     val maxEntitiesToStoreInCachePerEntity: Int,
@@ -43,6 +45,18 @@ class DatabaseConfig private constructor(
          * Default attempts are 3
          */
         var defaultRepetitionAttempts: Int = 3,
+        /**
+         * The minimum time to wait before retrying a transaction if SQLException happens
+         * Can be overridden on per-transaction level by specifying `minimalDelay` parameter on call
+         * Default minimum delay is 0
+         */
+        var defaultMinRepetitionDelay: Long = 0,
+        /**
+         * The maximum time to wait before retrying a transaction if SQLException happens
+         * Can be overridden on per-transaction level by specifying `maximumDelay` parameter on call
+         * Default maximum delay is 0
+         */
+        var defaultMaxRepetitionDelay: Long = 0,
 
         /**
          * Should all connections/transactions be executed in read-only mode by default or not
@@ -96,6 +110,8 @@ class DatabaseConfig private constructor(
                 defaultFetchSize = builder.defaultFetchSize,
                 defaultIsolationLevel = builder.defaultIsolationLevel,
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
+                defaultMinRepetitionDelay = builder.defaultMinRepetitionDelay,
+                defaultMaxRepetitionDelay = builder.defaultMaxRepetitionDelay,
                 defaultReadOnly = builder.defaultReadOnly,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,
