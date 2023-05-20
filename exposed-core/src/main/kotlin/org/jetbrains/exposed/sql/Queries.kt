@@ -231,6 +231,27 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
 }
 
 /**
+ * Represents the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
+ *
+ * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
+ *
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match.
+ * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
+ */
+fun <T : Table> T.upsert(
+    vararg keys: Column<*>,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpsertStatement<Long>) -> Unit
+) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, where = where?.let { SqlExpressionBuilder.it() }).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
+
+/**
  * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)

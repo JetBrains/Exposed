@@ -162,6 +162,18 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         toString()
     }
 
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        // SQLSERVER MERGE statement must be terminated by a semi-colon (;)
+        return super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
+    }
+
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def

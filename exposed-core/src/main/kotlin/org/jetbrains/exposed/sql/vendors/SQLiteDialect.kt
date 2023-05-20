@@ -134,6 +134,35 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return "INSERT OR REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
     }
 
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String = with(QueryBuilder(true)) {
+        appendInsertToUpsertClause(table, data, transaction)
+
+        +" ON CONFLICT"
+        val keyColumns = getKeyColumnsForUpsert(table, *keys) ?: emptyList()
+        if (keyColumns.isNotEmpty()) {
+            keyColumns.appendTo(prefix = " (", postfix = ")") { column ->
+                append(transaction.identity(column))
+            }
+        }
+
+        +" DO"
+        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
+
+        where?.let {
+            +" WHERE "
+            +it
+        }
+        toString()
+    }
+
     override fun delete(
         ignore: Boolean,
         table: Table,
