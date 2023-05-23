@@ -123,3 +123,6 @@ fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumn
 
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
+
+fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
