@@ -6,12 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -743,7 +738,12 @@ class BlobColumnType : ColumnType() {
         }
     }
 
-    override fun nonNullValueToString(value: Any): String = "?"
+    override fun nonNullValueToString(value: Any): String {
+        if (value !is ExposedBlob)
+            error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
+
+        return currentDialect.dataTypeProvider.hexToDb(value.hexString())
+    }
 
     override fun readObject(rs: ResultSet, index: Int) = when {
         currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
