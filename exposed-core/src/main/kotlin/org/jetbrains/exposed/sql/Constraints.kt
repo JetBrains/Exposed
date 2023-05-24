@@ -29,7 +29,8 @@ enum class ReferenceOption {
     CASCADE,
     SET_NULL,
     RESTRICT,
-    NO_ACTION;
+    NO_ACTION,
+    SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
 
@@ -40,6 +41,7 @@ enum class ReferenceOption {
             DatabaseMetaData.importedKeySetNull -> SET_NULL
             DatabaseMetaData.importedKeyRestrict -> RESTRICT
             DatabaseMetaData.importedKeyNoAction -> NO_ACTION
+            DatabaseMetaData.importedKeySetDefault -> SET_DEFAULT
             else -> currentDialect.defaultReferenceOption
         }
     }
