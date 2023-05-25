@@ -383,6 +383,24 @@ abstract class FunctionProvider {
         append("CAST(", expr, " AS ", type.sqlType(), ")")
     }
 
+    // Aggregate Functions for Statistics
+
+    open fun <T> stdDevPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDDEV_POP(", expression, ")")
+    }
+
+    open fun <T> stdDevSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDDEV_SAMP(", expression, ")")
+    }
+
+    open fun <T> varPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VAR_POP(", expression, ")")
+    }
+
+    open fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VAR_SAMP(", expression, ")")
+    }
+
     // Commands
     @Suppress("VariableNaming")
     open val DEFAULT_VALUE_EXPRESSION: String = "DEFAULT VALUES"

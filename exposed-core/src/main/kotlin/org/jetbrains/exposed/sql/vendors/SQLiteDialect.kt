@@ -105,6 +105,28 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         append(")")
     }
 
+    private const val UNSUPPORTED_AGGREGATE = "SQLite doesn't provide built-in aggregate function"
+
+    override fun <T> stdDevPop(
+        expression: Expression<T>,
+        queryBuilder: QueryBuilder
+    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
+
+    override fun <T> stdDevSamp(
+        expression: Expression<T>,
+        queryBuilder: QueryBuilder
+    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
+
+    override fun <T> varPop(
+        expression: Expression<T>,
+        queryBuilder: QueryBuilder
+    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
+
+    override fun <T> varSamp(
+        expression: Expression<T>,
+        queryBuilder: QueryBuilder
+    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
+
     override fun insert(
         ignore: Boolean,
         table: Table,

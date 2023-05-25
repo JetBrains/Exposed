@@ -225,10 +225,16 @@ class Count(
  */
 class StdDevPop<T>(
     /** Returns the expression from which the population standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_POP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        functionProvider.stdDevPop(expression, this)
+    }
 }
 
 /**
@@ -237,10 +243,16 @@ class StdDevPop<T>(
  */
 class StdDevSamp<T>(
     /** Returns the expression from which the sample standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_SAMP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        functionProvider.stdDevSamp(expression, this)
+    }
 }
 
 /**
@@ -249,10 +261,16 @@ class StdDevSamp<T>(
  */
 class VarPop<T>(
     /** Returns the expression from which the population variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_POP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        functionProvider.varPop(expression, this)
+    }
 }
 
 /**
@@ -261,10 +279,16 @@ class VarPop<T>(
  */
 class VarSamp<T>(
     /** Returns the expression from which the sample variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_SAMP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        functionProvider.varSamp(expression, this)
+    }
 }
 
 // Sequence Manipulation Functions
