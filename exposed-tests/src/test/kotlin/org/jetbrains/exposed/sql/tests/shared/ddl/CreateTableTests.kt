@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
+import java.math.BigDecimal
 import java.util.*
 import kotlin.test.assertFails
 
@@ -572,6 +573,50 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testOnDeleteSetDefault() {
+        val category = object : Table("Category") {
+            val id = integer("id")
+            val name = varchar(name = "name", length = 20)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val defaultCategoryId = 0
+
+        val item = object : Table("Item") {
+            val id = integer("id")
+            val name = varchar(name = "name", length = 20)
+            val categoryId = integer("categoryId")
+                .default(defaultCategoryId)
+                .references(
+                    category.id,
+                    onUpdate = ReferenceOption.SET_DEFAULT,
+                    onDelete = ReferenceOption.SET_DEFAULT
+                )
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(category, item) { testDb ->
+            val isSetDefaultSupported = testDb != TestDB.MYSQL || this.db.isVersionCovers(BigDecimal("8.0"))
+            val onDeleteSetDefaultPart = if (isSetDefaultSupported) " ON DELETE SET DEFAULT" else ""
+            val onUpdateSetDefaultPart = if (isSetDefaultSupported && testDb !in listOf(TestDB.ORACLE, TestDB.H2_ORACLE)) " ON UPDATE SET DEFAULT" else ""
+
+            val expected = listOf(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(item)} (" +
+                    "${item.columns.joinToString { it.descriptionDdl(false) }}," +
+                    " CONSTRAINT ${"fk_Item_categoryId__id".inProperCase()}" +
+                    " FOREIGN KEY (${this.identity(item.categoryId)})" +
+                    " REFERENCES ${this.identity(category)}(${this.identity(category.id)})" +
+                    onDeleteSetDefaultPart +
+                    onUpdateSetDefaultPart +
+                    ")"
+            )
+            assertEqualCollections(item.ddl, expected)
+        }
+    }
+
     object OneTable : IntIdTable("one")
     object OneOneTable : IntIdTable("one.one")
 
@@ -598,7 +643,8 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `create table with quoted name with camel case`() {
+    @Test
+    fun `create table with quoted name with camel case`() {
         val testTable = object : IntIdTable("quotedTable") {
             val int = integer("intColumn")
         }

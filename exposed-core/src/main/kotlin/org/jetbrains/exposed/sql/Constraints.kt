@@ -117,11 +117,17 @@ data class ForeignKeyConstraint(
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                append(" ON DELETE $deleteRule")
+                if (deleteRule == ReferenceOption.SET_DEFAULT && (currentDialect as? MysqlDialect)?.isMysql8 == false) {
+                    exposedLogger.warn("This MySQL version doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. Please check your $fromTableName table.")
+                } else {
+                    append(" ON DELETE $deleteRule")
+                }
             }
             if (updateRule != ReferenceOption.NO_ACTION) {
                 if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (updateRule == ReferenceOption.SET_DEFAULT && (currentDialect as? MysqlDialect)?.isMysql8 == false) {
+                    exposedLogger.warn("This MySQL version doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. Please check your $fromTableName table.")
                 } else {
                     append(" ON UPDATE $updateRule")
                 }
