@@ -195,7 +195,12 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Up
     }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
+ * Represents the SQL command that either inserts a new row into a table, or deletes the existing row if insertion would violate a unique constraint,
+ * before inserting the new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplace01
  */
 fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
