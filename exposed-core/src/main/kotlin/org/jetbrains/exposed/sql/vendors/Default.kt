@@ -496,7 +496,7 @@ abstract class FunctionProvider {
     }
 
     /**
-     * Represents the SQL command that either inserts a new row into a table, or deletes the existing row if insertion would violate a unique constraint,
+     * Represents the SQL command that either inserts a new row into a table, or first deletes the existing row if insertion would violate a unique constraint,
      * before inserting the new row.
      *
      * **Note:** This operation is not supported by all vendors, please check the documentation.
@@ -507,9 +507,10 @@ abstract class FunctionProvider {
      */
     open fun replace(
         table: Table,
-        data: List<Pair<Column<*>, Any?>>,
+        columns: List<Column<*>>,
+        expression: String,
         transaction: Transaction
-    ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be vendor specific implementation.")
+    ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be a vendor specific implementation.")
 
     /**
      * Returns the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
