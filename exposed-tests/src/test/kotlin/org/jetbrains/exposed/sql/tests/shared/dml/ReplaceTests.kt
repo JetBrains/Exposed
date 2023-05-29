@@ -128,7 +128,7 @@ class ReplaceTests : DatabaseTestsBase() {
 
             val cityNames = cities.slice(cities.name)
                 .select { cities.id inList cityUpdates.unzip().first }
-                .orderBy(cities.name).map { it[cities.name] }
+                .orderBy(cities.name).toCityNameList()
 
             assertEqualLists(cityUpdates.unzip().second, cityNames)
         }
@@ -146,7 +146,7 @@ class ReplaceTests : DatabaseTestsBase() {
                 this[Cities.name] = name
             }
 
-            val namesFromDB1 = Cities.selectAll().map { it[Cities.name] }
+            val namesFromDB1 = Cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB1.size)
             assertEqualLists(names.unzip().second, namesFromDB1)
 
@@ -157,7 +157,7 @@ class ReplaceTests : DatabaseTestsBase() {
                 this[Cities.name] = name
             }
 
-            val namesFromDB2 = Cities.selectAll().map { it[Cities.name] }
+            val namesFromDB2 = Cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB2.size)
             assertEqualLists(namesToReplace.unzip().second, namesFromDB2)
         }
