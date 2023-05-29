@@ -12,6 +12,8 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 
+// Upsert implementation does not support H2 version 1
+// https://youtrack.jetbrains.com/issue/EXPOSED-30/Phase-Out-Support-for-H2-Version-1.x
 class UpsertTests : DatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
     private val upsertViaMergeDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE) + TestDB.allH2TestDB - TestDB.H2_MYSQL
@@ -27,23 +29,25 @@ class UpsertTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val id1 = tester.insert {
-                it[name] = "A"
-            } get tester.id
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val id1 = tester.insert {
+                    it[name] = "A"
+                } get tester.id
 
-            tester.upsert {
-                if (currentTestDB in upsertViaMergeDB) it[id] = 2
-                it[name] = "B"
-            }
-            tester.upsert {
-                it[id] = id1
-                it[name] = "C"
-            }
+                tester.upsert {
+                    if (testDb in upsertViaMergeDB) it[id] = 2
+                    it[name] = "B"
+                }
+                tester.upsert {
+                    it[id] = id1
+                    it[name] = "C"
+                }
 
-            assertEquals(2, tester.selectAll().count())
-            val updatedResult = tester.select { tester.id eq id1 }.single()
-            assertEquals("C", updatedResult[tester.name])
+                assertEquals(2, tester.selectAll().count())
+                val updatedResult = tester.select { tester.id eq id1 }.single()
+                assertEquals("C", updatedResult[tester.name])
+            }
         }
     }
 
@@ -57,32 +61,34 @@ class UpsertTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(idA, idB)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val insertStmt = tester.insert {
-                it[idA] = 1
-                it[idB] = 1
-                it[name] = "A"
-            }
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val insertStmt = tester.insert {
+                    it[idA] = 1
+                    it[idB] = 1
+                    it[name] = "A"
+                }
 
-            tester.upsert {  // insert because only 1 constraint is equal
-                it[idA] = 7
-                it[idB] = insertStmt get tester.idB
-                it[name] = "B"
-            }
-            tester.upsert {  // insert because both constraints differ
-                it[idA] = 99
-                it[idB] = 99
-                it[name] = "C"
-            }
-            tester.upsert {  // update because both constraints match
-                it[idA] = insertStmt get tester.idA
-                it[idB] = insertStmt get tester.idB
-                it[name] = "D"
-            }
+                tester.upsert {  // insert because only 1 constraint is equal
+                    it[idA] = 7
+                    it[idB] = insertStmt get tester.idB
+                    it[name] = "B"
+                }
+                tester.upsert {  // insert because both constraints differ
+                    it[idA] = 99
+                    it[idB] = 99
+                    it[name] = "C"
+                }
+                tester.upsert {  // update because both constraints match
+                    it[idA] = insertStmt get tester.idA
+                    it[idB] = insertStmt get tester.idB
+                    it[name] = "D"
+                }
 
-            assertEquals(3, tester.selectAll().count())
-            val updatedResult = tester.select { tester.idA eq insertStmt[tester.idA] }.single()
-            assertEquals("D", updatedResult[tester.name])
+                assertEquals(3, tester.selectAll().count())
+                val updatedResult = tester.select { tester.idA eq insertStmt[tester.idA] }.single()
+                assertEquals("D", updatedResult[tester.name])
+            }
         }
     }
 
@@ -93,23 +99,25 @@ class UpsertTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val nameA = tester.upsert {
-                it[name] = "A"
-                it[age] = 10
-            } get tester.name
-            tester.upsert {
-                it[name] = "B"
-                it[age] = 10
-            }
-            tester.upsert {
-                it[name] = "A"
-                it[age] = 9
-            }
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val nameA = tester.upsert {
+                    it[name] = "A"
+                    it[age] = 10
+                } get tester.name
+                tester.upsert {
+                    it[name] = "B"
+                    it[age] = 10
+                }
+                tester.upsert {
+                    it[name] = "A"
+                    it[age] = 9
+                }
 
-            assertEquals(2, tester.selectAll().count())
-            val updatedResult = tester.select { tester.name eq nameA }.single()
-            assertEquals(9, updatedResult[tester.age])
+                assertEquals(2, tester.selectAll().count())
+                val updatedResult = tester.select { tester.name eq nameA }.single()
+                assertEquals(9, updatedResult[tester.age])
+            }
         }
     }
 
@@ -121,39 +129,41 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        withTables(excludeSettings = mySqlLikeDB + TestDB.H2, tester) {
-            val oldIdA = tester.insert {
-                it[idA] = 1
-                it[idB] = 1
-                it[name] = "A"
-            } get tester.idA
+        withTables(excludeSettings = mySqlLikeDB, tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val oldIdA = tester.insert {
+                    it[idA] = 1
+                    it[idB] = 1
+                    it[name] = "A"
+                } get tester.idA
 
-            val newIdB = tester.upsert(tester.idA) {
-                it[idA] = oldIdA
-                it[idB] = 2
-                it[name] = "B"
-            } get tester.idB
-            assertEquals("B", tester.selectAll().single()[tester.name])
+                val newIdB = tester.upsert(tester.idA) {
+                    it[idA] = oldIdA
+                    it[idB] = 2
+                    it[name] = "B"
+                } get tester.idB
+                assertEquals("B", tester.selectAll().single()[tester.name])
 
-            val newIdA = tester.upsert(tester.idB) {
-                it[idA] = 99
-                it[idB] = newIdB
-                it[name] = "C"
-            } get tester.idA
-            assertEquals("C", tester.selectAll().single()[tester.name])
-
-            if (currentTestDB in upsertViaMergeDB) {
-                // passes since these DB use 'AND' within ON clause (other DB require single uniqueness constraint)
-                tester.upsert(tester.idA, tester.idB) {
-                    it[idA] = newIdA
+                val newIdA = tester.upsert(tester.idB) {
+                    it[idA] = 99
                     it[idB] = newIdB
-                    it[name] = "D"
-                }
+                    it[name] = "C"
+                } get tester.idA
+                assertEquals("C", tester.selectAll().single()[tester.name])
 
-                val result = tester.selectAll().single()
-                assertEquals(newIdA, result[tester.idA])
-                assertEquals(newIdB, result[tester.idB])
-                assertEquals("D", result[tester.name])
+                if (testDb in upsertViaMergeDB) {
+                    // passes since these DB use 'AND' within ON clause (other DB require single uniqueness constraint)
+                    tester.upsert(tester.idA, tester.idB) {
+                        it[idA] = newIdA
+                        it[idB] = newIdB
+                        it[name] = "D"
+                    }
+
+                    val result = tester.selectAll().single()
+                    assertEquals(newIdA, result[tester.idA])
+                    assertEquals(newIdB, result[tester.idB])
+                    assertEquals("D", result[tester.name])
+                }
             }
         }
     }
@@ -166,16 +176,18 @@ class UpsertTests : DatabaseTestsBase() {
 
         val okWithNoUniquenessDB = mySqlLikeDB + listOf(TestDB.SQLITE)
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            if (currentTestDB in okWithNoUniquenessDB) {
-                tester.upsert {
-                    it[name] = "A"
-                }
-                assertEquals(1, tester.selectAll().count())
-            } else {
-                expectException<UnsupportedByDialectException> {
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                if (testDb in okWithNoUniquenessDB) {
                     tester.upsert {
                         it[name] = "A"
+                    }
+                    assertEquals(1, tester.selectAll().count())
+                } else {
+                    expectException<UnsupportedByDialectException> {
+                        tester.upsert {
+                            it[name] = "A"
+                        }
                     }
                 }
             }
@@ -189,17 +201,19 @@ class UpsertTests : DatabaseTestsBase() {
             val count = integer("count").default(1)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val testWord = "Test"
-            val incrementCount = listOf(tester.count to tester.count.plus(1))
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val testWord = "Test"
+                val incrementCount = listOf(tester.count to tester.count.plus(1))
 
-            repeat(3) {
-                tester.upsert(onUpdate = incrementCount) {
-                    it[word] = testWord
+                repeat(3) {
+                    tester.upsert(onUpdate = incrementCount) {
+                        it[word] = testWord
+                    }
                 }
-            }
 
-            assertEquals(3, tester.selectAll().single()[tester.count])
+                assertEquals(3, tester.selectAll().single()[tester.count])
+            }
         }
     }
 
@@ -212,34 +226,36 @@ class UpsertTests : DatabaseTestsBase() {
             val losses = integer("losses").default(100)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val itemA = tester.upsert {
-                it[item] = "Item A"
-            } get tester.item
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val itemA = tester.upsert {
+                    it[item] = "Item A"
+                } get tester.item
 
-            val adjustGainAndLoss = listOf(
-                tester.gains to tester.gains.plus(tester.amount),
-                tester.losses to tester.losses.minus(tester.amount)
-            )
-            tester.upsert(onUpdate = adjustGainAndLoss) {
-                it[item] = "Item B"
-                it[gains] = 200
-                it[losses] = 0
+                val adjustGainAndLoss = listOf(
+                    tester.gains to tester.gains.plus(tester.amount),
+                    tester.losses to tester.losses.minus(tester.amount)
+                )
+                tester.upsert(onUpdate = adjustGainAndLoss) {
+                    it[item] = "Item B"
+                    it[gains] = 200
+                    it[losses] = 0
+                }
+
+                val insertResult = tester.select { tester.item neq itemA }.single()
+                assertEquals(200, insertResult[tester.gains])
+                assertEquals(0, insertResult[tester.losses])
+
+                tester.upsert(onUpdate = adjustGainAndLoss) {
+                    it[item] = itemA
+                    it[gains] = 200
+                    it[losses] = 0
+                }
+
+                val updateResult = tester.select { tester.item eq itemA }.single()
+                assertEquals(125, updateResult[tester.gains])
+                assertEquals(75, updateResult[tester.losses])
             }
-
-            val insertResult = tester.select { tester.item neq itemA }.single()
-            assertEquals(200, insertResult[tester.gains])
-            assertEquals(0, insertResult[tester.losses])
-
-            tester.upsert(onUpdate = adjustGainAndLoss) {
-                it[item] = itemA
-                it[gains] = 200
-                it[losses] = 0
-            }
-
-            val updateResult = tester.select { tester.item eq itemA }.single()
-            assertEquals(125, updateResult[tester.gains])
-            assertEquals(75, updateResult[tester.losses])
         }
     }
 
@@ -251,24 +267,26 @@ class UpsertTests : DatabaseTestsBase() {
             val phrase = varchar("phrase", 256).defaultExpression(stringParam(defaultPhrase))
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester) {
-            val testWord = "Test"
-            tester.upsert {  // default expression in insert
-                it[word] = testWord
-            }
-            assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val testWord = "Test"
+                tester.upsert {  // default expression in insert
+                    it[word] = testWord
+                }
+                assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
-            val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
-            tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) {  // expression in update
-                it[word] = testWord
-            }
-            assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
+                val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
+                tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) {  // expression in update
+                    it[word] = testWord
+                }
+                assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
-            tester.upsert {  // provided expression in insert
-                it[word] = "$testWord 2"
-                it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
+                tester.upsert {  // provided expression in insert
+                    it[word] = "$testWord 2"
+                    it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
+                }
+                assertEquals("foobar", tester.select { tester.word eq "$testWord 2" }.single()[tester.phrase])
             }
-            assertEquals("foobar", tester.select { tester.word eq "$testWord 2" }.single()[tester.phrase])
         }
     }
 
@@ -280,7 +298,7 @@ class UpsertTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        withTables(excludeSettings = mySqlLikeDB + upsertViaMergeDB + TestDB.H2, tester) {
+        withTables(excludeSettings = mySqlLikeDB + upsertViaMergeDB, tester) {
             val id1 = tester.insertAndGetId {
                 it[name] = "A"
                 it[address] = "Place A"
@@ -322,27 +340,29 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 32)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2), tester1, tester2) {
-            val id1 = tester1.insertAndGetId {
-                it[name] = "foo"
-            }
-            val id2 = tester1.insertAndGetId {
-                it[name] = "bar"
-            }
+        withTables(tester1, tester2) { testDb ->
+            excludingH2Version1(testDb) {
+                val id1 = tester1.insertAndGetId {
+                    it[name] = "foo"
+                }
+                val id2 = tester1.insertAndGetId {
+                    it[name] = "bar"
+                }
 
-            val query1 = tester1.slice(tester1.name).select { tester1.id eq id1 }
-            val id3 = tester2.upsert {
-                if (currentTestDB in upsertViaMergeDB) it[id] = 1
-                it[name] = query1
-            } get tester2.id
-            assertEquals("foo", tester2.selectAll().single()[tester2.name])
+                val query1 = tester1.slice(tester1.name).select { tester1.id eq id1 }
+                val id3 = tester2.upsert {
+                    if (testDb in upsertViaMergeDB) it[id] = 1
+                    it[name] = query1
+                } get tester2.id
+                assertEquals("foo", tester2.selectAll().single()[tester2.name])
 
-            val query2 = tester1.slice(tester1.name).select { tester1.id eq id2 }
-            tester2.upsert {
-                it[id] = id3
-                it[name] = query2
+                val query2 = tester1.slice(tester1.name).select { tester1.id eq id2 }
+                tester2.upsert {
+                    it[id] = id3
+                    it[name] = query2
+                }
+                assertEquals("bar", tester2.selectAll().single()[tester2.name])
             }
-            assertEquals("bar", tester2.selectAll().single()[tester2.name])
         }
     }
 }
