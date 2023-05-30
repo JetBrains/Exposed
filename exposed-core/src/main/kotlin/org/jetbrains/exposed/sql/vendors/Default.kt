@@ -496,13 +496,14 @@ abstract class FunctionProvider {
     }
 
     /**
-     * Represents the SQL command that either inserts a new row into a table, or first deletes the existing row if insertion would violate a unique constraint,
-     * before inserting the new row.
+     * Returns the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+     * first deletes the existing row before inserting a new row.
      *
      * **Note:** This operation is not supported by all vendors, please check the documentation.
      *
      * @param table Table to either insert values into or delete values from then insert into.
-     * @param data Pairs of column to replace and values to replace with.
+     * @param columns Columns to replace the values in.
+     * @param expression Expression with the values to use in replace.
      * @param transaction Transaction where the operation is executed.
      */
     open fun replace(

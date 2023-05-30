@@ -110,7 +110,7 @@ class ReplaceTests : DatabaseTestsBase() {
                 .select { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }
                 .orderBy(cities.name).map { it[cities.id] }
 
-            // replace is implemented as deleted-then-insert on conflict, which breaks foreign key constraints,
+            // replace is implemented as delete-then-insert on conflict, which breaks foreign key constraints,
             // so this test will only work if those related rows are deleted.
             userData.deleteAll()
             users.deleteAll()
