@@ -11,7 +11,8 @@ import java.util.*
 
 class ReplaceTests : DatabaseTestsBase() {
 
-    private val replaceNotSupported = TestDB.values().toList() - listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.SQLITE)
+    private val mysqlLikeDialects = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.H2_MYSQL, TestDB.H2_MARIADB)
+    private val replaceNotSupported = TestDB.values().toList() - mysqlLikeDialects - TestDB.SQLITE
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)
@@ -100,6 +101,21 @@ class ReplaceTests : DatabaseTestsBase() {
             }
 
             assertEquals("serverID1", NewAuth.selectAll().single()[NewAuth.serverID])
+        }
+    }
+
+    @Test
+    fun testEmptyReplace() {
+        val tester = object : Table("tester") {
+            val id = integer("id").autoIncrement()
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(replaceNotSupported, tester) {
+            tester.replace { }
+
+            assertEquals(1, tester.selectAll().count())
         }
     }
 
