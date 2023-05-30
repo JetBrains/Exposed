@@ -385,18 +385,46 @@ abstract class FunctionProvider {
 
     // Aggregate Functions for Statistics
 
+    /**
+     * SQL function that returns the population standard deviation of the non-null input values,
+     * or `null` if there are no non-null values.
+     *
+     * @param expression Expression from which the population standard deviation is calculated.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
     open fun <T> stdDevPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STDDEV_POP(", expression, ")")
     }
 
+    /**
+     * SQL function that returns the sample standard deviation of the non-null input values,
+     * or `null` if there are no non-null values.
+     *
+     * @param expression Expression from which the sample standard deviation is calculated.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
     open fun <T> stdDevSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("STDDEV_SAMP(", expression, ")")
     }
 
+    /**
+     * SQL function that returns the population variance of the non-null input values (square of the population standard deviation),
+     * or `null` if there are no non-null values.
+     *
+     * @param expression Expression from which the population variance is calculated.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
     open fun <T> varPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR_POP(", expression, ")")
     }
 
+    /**
+     * SQL function that returns the sample variance of the non-null input values (square of the sample standard deviation),
+     * or `null` if there are no non-null values.
+     *
+     * @param expression Expression from which the sample variance is calculated.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
     open fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR_SAMP(", expression, ")")
     }
