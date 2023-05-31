@@ -228,12 +228,14 @@ class StdDevPop<T>(
     val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        val functionProvider = when (currentDialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
-            else -> currentDialect.functionProvider
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevPop(expression, this)
         }
-        functionProvider.stdDevPop(expression, this)
     }
 }
 
@@ -246,12 +248,14 @@ class StdDevSamp<T>(
     val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        val functionProvider = when (currentDialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
-            else -> currentDialect.functionProvider
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevSamp(expression, this)
         }
-        functionProvider.stdDevSamp(expression, this)
     }
 }
 
@@ -264,12 +268,14 @@ class VarPop<T>(
     val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        val functionProvider = when (currentDialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
-            else -> currentDialect.functionProvider
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varPop(expression, this)
         }
-        functionProvider.varPop(expression, this)
     }
 }
 
@@ -282,12 +288,14 @@ class VarSamp<T>(
     val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        val functionProvider = when (currentDialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
-            else -> currentDialect.functionProvider
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varSamp(expression, this)
         }
-        functionProvider.varSamp(expression, this)
     }
 }
 
