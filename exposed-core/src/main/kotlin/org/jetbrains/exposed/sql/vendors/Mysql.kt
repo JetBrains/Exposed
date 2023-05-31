@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -144,6 +145,49 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
         limit?.let { +" LIMIT $it" }
         toString()
+    }
+
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        if (keys.isNotEmpty()) {
+            transaction.throwUnsupportedException("MySQL doesn't support specifying conflict keys in UPSERT clause")
+        }
+        if (where != null) {
+            transaction.throwUnsupportedException("MySQL doesn't support WHERE in UPSERT clause")
+        }
+
+        val isAliasSupported = when (val dialect = transaction.db.dialect) {
+            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            else -> false  // H2_MySQL mode also uses this function provider & requires older version
+        }
+
+        return with(QueryBuilder(true)) {
+            appendInsertToUpsertClause(table, data, transaction)
+            if (isAliasSupported) {
+                +" AS NEW"
+            }
+
+            +" ON DUPLICATE KEY UPDATE "
+            onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
+                append("${transaction.identity(columnToUpdate)}=${updateExpression}")
+            } ?: run {
+                data.unzip().first.appendTo { column ->
+                    val columnName = transaction.identity(column)
+                    if (isAliasSupported) {
+                        append("$columnName=NEW.$columnName")
+                    } else {
+                        append("$columnName=VALUES($columnName)")
+                    }
+                }
+            }
+            toString()
+        }
     }
 }
 
