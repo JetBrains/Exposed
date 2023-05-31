@@ -196,12 +196,15 @@ class Join(
             onColumn != null && otherColumn != null -> {
                 join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
             }
+
             onColumn != null || otherColumn != null -> {
                 error("Can't prepare join on $table and $otherTable when only column from a one side provided.")
             }
+
             additionalConstraint != null -> {
                 join(otherTable, joinType, emptyList(), additionalConstraint)
             }
+
             else -> {
                 implicitJoin(otherTable, joinType)
             }
@@ -250,10 +253,12 @@ class Join(
             joinType != JoinType.CROSS && fkKeys.isEmpty() -> {
                 error("Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing")
             }
+
             fkKeys.any { it.second.size > 1 } -> {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
                 error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
             }
+
             else -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
                 join(otherTable, joinType, cond, null)
@@ -337,6 +342,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
+
     // Table name may contain quotes, remove those before appending
     internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
 
@@ -478,25 +484,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers. */
-        fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType())
+    fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers. */
-        fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType())
+    fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers. */
-        fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType())
+    fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers. */
-        fun ulong(name: String): Column<ULong> = registerColumn(name, ULongColumnType())
+    fun ulong(name: String): Column<ULong> = registerColumn(name, ULongColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte (single precision) floating-point numbers. */
     fun float(name: String): Column<Float> = registerColumn(name, FloatColumnType())
@@ -943,9 +949,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param columns Columns that compose the index.
      * @param isUnique Whether the index is unique or not.
      * @param indexType A custom index type (e.g., "BTREE" or "HASH").
+     * @param filterCondition A custom index type (e.g., "BTREE" or "HASH").
      */
-    fun index(customIndexName: String? = null, isUnique: Boolean = false, vararg columns: Column<*>, indexType: String? = null) {
-        _indices.add(Index(columns.toList(), isUnique, customIndexName, indexType = indexType))
+    fun index(
+        customIndexName: String? = null,
+        isUnique: Boolean = false,
+        vararg columns: Column<*>,
+        indexType: String? = null,
+        filterCondition: FilterCondition = null
+    ) {
+        _indices.add(Index(columns.toList(), isUnique, customIndexName, indexType = indexType, filterCondition?.invoke(SqlExpressionBuilder)))
     }
 
     /**
@@ -962,14 +975,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @param customIndexName Name of the index.
      */
-    fun <T> Column<T>.uniqueIndex(customIndexName: String? = null): Column<T> = index(customIndexName, true)
+    fun <T> Column<T>.uniqueIndex(customIndexName: String? = null): Column<T> =
+        index(customIndexName, true)
 
     /**
      * Creates a unique index.
      *
      * @param columns Columns that compose the index.
      */
-    fun uniqueIndex(vararg columns: Column<*>): Unit = index(null, true, *columns)
+    fun uniqueIndex(vararg columns: Column<*>, filterCondition: FilterCondition = null): Unit =
+        index(null, true, *columns, filterCondition = filterCondition)
 
     /**
      * Creates a unique index.
@@ -977,7 +992,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param customIndexName Name of the index.
      * @param columns Columns that compose the index.
      */
-    fun uniqueIndex(customIndexName: String? = null, vararg columns: Column<*>): Unit = index(customIndexName, true, *columns)
+    fun uniqueIndex(customIndexName: String? = null, vararg columns: Column<*>, filterCondition: FilterCondition = null): Unit =
+        index(customIndexName, true, *columns, filterCondition = filterCondition)
 
     /**
      * Creates a composite foreign key.
@@ -1074,6 +1090,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         is ColumnType -> {
             this.withColumnType(AutoIncColumnType(columnType, idSeqName, "${tableName}_${name}_seq"))
         }
+
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 

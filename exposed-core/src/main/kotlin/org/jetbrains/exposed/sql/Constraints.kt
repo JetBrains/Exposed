@@ -193,6 +193,8 @@ data class CheckConstraint(
     }
 }
 
+typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
+
 /**
  * Represents an index.
  */
@@ -204,7 +206,9 @@ data class Index(
     /** Optional custom name for the index. */
     val customName: String? = null,
     /** Optional custom index type (e.g, BTREE or HASH) */
-    val indexType: String? = null
+    val indexType: String? = null,
+    /** Partial index filter condition */
+    val filterCondition: Op<Boolean>? = null
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table
@@ -229,7 +233,7 @@ data class Index(
 
     override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
-    override fun dropStatement(): List<String> = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName))
+    override fun dropStatement(): List<String> = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName, unique, filterCondition != null))
 
     /** Returns `true` if the [other] index has the same columns and uniqueness as this index, but a different name, `false` otherwise */
     fun onlyNameDiffer(other: Index): Boolean = indexName != other.indexName && columns == other.columns && unique == other.unique
