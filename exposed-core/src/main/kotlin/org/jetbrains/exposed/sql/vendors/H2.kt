@@ -98,24 +98,6 @@ internal object H2FunctionProvider : FunctionProvider() {
         toString()
     }
 
-    override fun replace(
-        table: Table,
-        data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
-    ): String {
-        if (data.isEmpty()) {
-            return ""
-        }
-
-        val columns = data.map { it.first }
-
-        val builder = QueryBuilder(true)
-
-        val sql = data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
-
-        return super.insert(false, table, columns, sql, transaction).replaceFirst("INSERT", "MERGE")
-    }
-
     /**
      * Implementation of [FunctionProvider.locate]
      * Note: search is case-sensitive

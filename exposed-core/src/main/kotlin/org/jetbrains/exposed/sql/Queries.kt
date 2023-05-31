@@ -112,7 +112,15 @@ private fun <T : Table, E> T.batchInsert(
 }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Collection of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
  */
 fun <T : Table, E : Any> T.batchReplace(
     data: Iterable<E>,
@@ -120,12 +128,34 @@ fun <T : Table, E : Any> T.batchReplace(
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Sequence of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplaceWithSequence
+ */
 fun <T : Table, E : Any> T.batchReplace(
     data: Sequence<E>,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Iterator over a collection of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
+ */
 private fun <T : Table, E> T.batchReplace(
     data: Iterator<E>,
     shouldReturnGeneratedValues: Boolean = true,
@@ -195,7 +225,12 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Up
     }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
+ * Represents the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+ * first deletes the existing row before inserting a new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
  */
 fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)

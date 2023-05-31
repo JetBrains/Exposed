@@ -167,33 +167,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
         toString()
     }
-
-    override fun replace(
-        table: Table,
-        data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
-    ): String {
-        val builder = QueryBuilder(true)
-        val sql = if (data.isEmpty()) {
-            ""
-        } else {
-            data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
-        }
-
-        val columns = data.map { it.first }
-
-        val def = super.insert(false, table, columns, sql, transaction)
-
-        val uniqueCols = table.primaryKey?.columns
-        if (uniqueCols.isNullOrEmpty()) {
-            transaction.throwUnsupportedException("PostgreSQL replace table must supply at least one primary key.")
-        }
-        val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
-        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString {
-            "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"
-        }
-    }
-
+    
     override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,

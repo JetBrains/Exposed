@@ -496,18 +496,22 @@ abstract class FunctionProvider {
     }
 
     /**
-     * Returns the SQL command that insert a new row into a table, but if another row with the same primary/unique key already exists then it updates the values of that row instead.
-     * This operation is also known as "Insert or update".
+     * Returns the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+     * first deletes the existing row before inserting a new row.
      *
      * **Note:** This operation is not supported by all vendors, please check the documentation.
      *
-     * @param data Pairs of column to replace and values to replace with.
+     * @param table Table to either insert values into or delete values from then insert into.
+     * @param columns Columns to replace the values in.
+     * @param expression Expression with the values to use in replace.
+     * @param transaction Transaction where the operation is executed.
      */
     open fun replace(
         table: Table,
-        data: List<Pair<Column<*>, Any?>>,
+        columns: List<Column<*>>,
+        expression: String,
         transaction: Transaction
-    ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be vendor specific implementation.")
+    ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be a vendor specific implementation.")
 
     /**
      * Returns the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
