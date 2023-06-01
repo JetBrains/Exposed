@@ -19,8 +19,6 @@ class UpsertTests : DatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
     private val upsertViaMergeDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE) + TestDB.allH2TestDB - TestDB.H2_MYSQL
 
-    private val mySqlLikeDB = listOf(TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.MARIADB, TestDB.H2_MARIADB)
-
     @Test
     fun testUpsertWithPKConflict() {
         val tester = object : Table("tester") {
@@ -125,7 +123,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        withTables(excludeSettings = mySqlLikeDB, tester) { testDb ->
+        withTables(excludeSettings = TestDB.mySqlRelatedDB, tester) { testDb ->
             excludingH2Version1(testDb) {
                 val oldIdA = tester.insert {
                     it[idA] = 1
@@ -170,7 +168,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        val okWithNoUniquenessDB = mySqlLikeDB + listOf(TestDB.SQLITE)
+        val okWithNoUniquenessDB = TestDB.mySqlRelatedDB + TestDB.SQLITE
 
         withTables(tester) { testDb ->
             excludingH2Version1(testDb) {
@@ -289,7 +287,7 @@ class UpsertTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        withTables(excludeSettings = mySqlLikeDB + upsertViaMergeDB, tester) {
+        withTables(excludeSettings = TestDB.mySqlRelatedDB + upsertViaMergeDB, tester) {
             val id1 = tester.insertAndGetId {
                 it[name] = "A"
                 it[address] = "Place A"
@@ -370,6 +368,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(amountOfWords, generatedIds.size)
+                assertEquals(amountOfWords.toLong(), Words.selectAll().count())
             }
         }
     }
@@ -380,10 +379,10 @@ class UpsertTests : DatabaseTestsBase() {
             excludingH2Version1(testDb) {
                 val vowels = listOf("A", "E", "I", "O", "U")
                 val alphabet = ('A'..'Z').map { it.toString() }
-                val allLetters = alphabet + vowels
+                val lettersWithDuplicates = alphabet + vowels
                 val incrementCount = listOf(Words.count to Words.count.plus(1))
 
-                Words.batchUpsert(allLetters, onUpdate = incrementCount) { letter ->
+                Words.batchUpsert(lettersWithDuplicates, onUpdate = incrementCount) { letter ->
                     this[Words.word] = letter
                 }
 

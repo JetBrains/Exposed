@@ -289,7 +289,7 @@ fun <T : Table> T.upsert(
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
- * @param data Collection of values to use in replace.
+ * @param data Collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
@@ -304,12 +304,14 @@ fun <T : Table, E : Any> T.batchUpsert(
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
-): List<ResultRow> = batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+): List<ResultRow> {
+    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+}
 
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
- * @param data Sequence of values to use in replace.
+ * @param data Sequence of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
@@ -324,12 +326,14 @@ fun <T : Table, E : Any> T.batchUpsert(
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
-): List<ResultRow> = batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+): List<ResultRow> {
+    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+}
 
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
- * @param data Iterator over a collection of values to use in replace.
+ * @param data Iterator over a collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
