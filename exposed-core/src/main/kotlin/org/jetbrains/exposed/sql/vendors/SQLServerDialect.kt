@@ -118,6 +118,22 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("DATEPART(MINUTE, ", expr, ")")
     }
 
+    override fun <T> stdDevPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDEVP(", expression, ")")
+    }
+
+    override fun <T> stdDevSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDEV(", expression, ")")
+    }
+
+    override fun <T> varPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VARP(", expression, ")")
+    }
+
+    override fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VAR(", expression, ")")
+    }
+
     override fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
