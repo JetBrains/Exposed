@@ -289,6 +289,9 @@ fun <T : Table> T.upsert(
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
+ *
  * @param data Collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
@@ -311,6 +314,9 @@ fun <T : Table, E : Any> T.batchUpsert(
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
+ *
  * @param data Sequence of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
@@ -332,6 +338,9 @@ fun <T : Table, E : Any> T.batchUpsert(
 
 /**
  * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
  *
  * @param data Iterator over a collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
