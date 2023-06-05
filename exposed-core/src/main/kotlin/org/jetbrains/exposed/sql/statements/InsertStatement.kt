@@ -123,7 +123,7 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
     }
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
-        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().count() else executeUpdate()
+        val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         val rs = if (autoIncColumns.isNotEmpty()) {
             resultSet
         } else null
