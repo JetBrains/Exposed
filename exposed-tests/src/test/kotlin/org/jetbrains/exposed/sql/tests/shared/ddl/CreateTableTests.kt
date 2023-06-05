@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -15,7 +16,6 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
-import java.math.BigDecimal
 import java.util.*
 import kotlin.test.assertFails
 
@@ -575,7 +575,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun testOnDeleteSetDefault() {
-        val category = object : Table("Category") {
+        val Category = object : Table("Category") {
             val id = integer("id")
             val name = varchar(name = "name", length = 20)
 
@@ -584,36 +584,69 @@ class CreateTableTests : DatabaseTestsBase() {
 
         val defaultCategoryId = 0
 
-        val item = object : Table("Item") {
+        val Item = object : Table("Item") {
             val id = integer("id")
             val name = varchar(name = "name", length = 20)
             val categoryId = integer("categoryId")
                 .default(defaultCategoryId)
                 .references(
-                    category.id,
-                    onUpdate = ReferenceOption.SET_DEFAULT,
-                    onDelete = ReferenceOption.SET_DEFAULT
+                    Category.id,
+                    onDelete = ReferenceOption.SET_DEFAULT,
+                    onUpdate = ReferenceOption.NO_ACTION
                 )
 
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(category, item) { testDb ->
-            val isSetDefaultSupported = testDb != TestDB.MYSQL || this.db.isVersionCovers(BigDecimal("8.0"))
-            val onDeleteSetDefaultPart = if (isSetDefaultSupported) " ON DELETE SET DEFAULT" else ""
-            val onUpdateSetDefaultPart = if (isSetDefaultSupported && testDb !in listOf(TestDB.ORACLE, TestDB.H2_ORACLE)) " ON UPDATE SET DEFAULT" else ""
+        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL)) { testDb ->
+            println("testDb = $testDb")
+            println("version = ${this.db.version}")
+            addLogger(StdOutSqlLogger)
 
             val expected = listOf(
-                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(item)} (" +
-                    "${item.columns.joinToString { it.descriptionDdl(false) }}," +
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
+                    "${Item.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${"fk_Item_categoryId__id".inProperCase()}" +
-                    " FOREIGN KEY (${this.identity(item.categoryId)})" +
-                    " REFERENCES ${this.identity(category)}(${this.identity(category.id)})" +
-                    onDeleteSetDefaultPart +
-                    onUpdateSetDefaultPart +
+                    " FOREIGN KEY (${this.identity(Item.categoryId)})" +
+                    " REFERENCES ${this.identity(Category)}(${this.identity(Category.id)})" +
+                    " ON DELETE SET DEFAULT" +
                     ")"
             )
-            assertEqualCollections(item.ddl, expected)
+            assertEqualCollections(Item.ddl, expected)
+
+            SchemaUtils.create(Category, Item)
+
+            Category.insert {
+                it[id] = defaultCategoryId
+                it[name] = "Default"
+            }
+
+            val saladsId = 1
+            Category.insert {
+                it[id] = saladsId
+                it[name] = "Salads"
+            }
+
+            val tabboulehId = 0
+            Item.insert {
+                it[id] = tabboulehId
+                it[name] = "Tabbouleh"
+                it[categoryId] = saladsId
+            }
+
+            assertEquals(
+                saladsId,
+                Item.select { Item.id eq tabboulehId }.single().also {
+                    println("SELECT result = $it")
+                }[Item.categoryId]
+            )
+
+            Category.deleteWhere { Category.id eq saladsId }
+
+            assertEquals(
+                defaultCategoryId,
+                Item.select { Item.id eq tabboulehId }.single()[Item.categoryId]
+            )
         }
     }
 
