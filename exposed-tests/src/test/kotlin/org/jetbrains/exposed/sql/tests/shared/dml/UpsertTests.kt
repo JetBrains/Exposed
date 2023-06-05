@@ -7,11 +7,13 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.tests.*
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.util.*
+import kotlin.properties.Delegates
 
 // Upsert implementation does not support H2 version 1
 // https://youtrack.jetbrains.com/issue/EXPOSED-30/Phase-Out-Support-for-H2-Version-1.x
@@ -21,31 +23,24 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertWithPKConflict() {
-        val tester = object : Table("tester") {
-            val id = integer("id").autoIncrement()
-            val name = varchar("name", 64)
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        withTables(tester) { testDb ->
+        withTables(AutoIncTable) { testDb ->
             excludingH2Version1(testDb) {
-                val id1 = tester.insert {
+                val id1 = AutoIncTable.insert {
                     it[name] = "A"
-                } get tester.id
+                } get AutoIncTable.id
 
-                tester.upsert {
+                AutoIncTable.upsert {
                     if (testDb in upsertViaMergeDB) it[id] = 2
                     it[name] = "B"
                 }
-                tester.upsert {
+                AutoIncTable.upsert {
                     it[id] = id1
                     it[name] = "C"
                 }
 
-                assertEquals(2, tester.selectAll().count())
-                val updatedResult = tester.select { tester.id eq id1 }.single()
-                assertEquals("C", updatedResult[tester.name])
+                assertEquals(2, AutoIncTable.selectAll().count())
+                val updatedResult = AutoIncTable.select { AutoIncTable.id eq id1 }.single()
+                assertEquals("C", updatedResult[AutoIncTable.name])
             }
         }
     }
@@ -422,6 +417,56 @@ class UpsertTests : DatabaseTestsBase() {
                 assertEquals(0, batchesSize)
             }
         }
+    }
+
+    @Test
+    fun testInsertedCountWithBatchUpsert() {
+        withTables(AutoIncTable) { testDb ->
+            excludingH2Version1(testDb) {
+                // SQL Server requires statements to be executed before results can be obtained
+                val isNotSqlServer = testDb != TestDB.SQLSERVER
+                val data = listOf(1 to "A", 2 to "B", 3 to "C")
+                val newDataSize = data.size
+                var statement: BatchUpsertStatement by Delegates.notNull()
+
+                // all new rows inserted
+                AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(newDataSize, statement.insertedCount)
+
+                // all existing rows set to their current values
+                val isH2MysqlMode = testDb == TestDB.H2_MYSQL || testDb == TestDB.H2_MARIADB
+                var expected = if (isH2MysqlMode) 0 else newDataSize
+                AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(expected, statement.insertedCount)
+
+                // all existing rows updated & 1 new row inserted
+                val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
+                expected = if (testDb in TestDB.mySqlRelatedDB) newDataSize * 2 + 1 else newDataSize + 1
+                AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(expected, statement.insertedCount)
+
+                assertEquals(updatedData.size.toLong(), AutoIncTable.selectAll().count())
+            }
+        }
+    }
+
+    private object AutoIncTable : Table("auto_inc_table") {
+        val id = integer("id").autoIncrement()
+        val name = varchar("name", 64)
+
+        override val primaryKey = PrimaryKey(id)
     }
 
     private object Words : Table("words") {

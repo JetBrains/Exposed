@@ -205,6 +205,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsCreateSequence: Boolean = false
 
+    override val supportsTernaryAffectedRowValues: Boolean = true
+
     override val supportsSubqueryUnions: Boolean = true
 
     override val supportsOrderByNullsFirstLast: Boolean = false

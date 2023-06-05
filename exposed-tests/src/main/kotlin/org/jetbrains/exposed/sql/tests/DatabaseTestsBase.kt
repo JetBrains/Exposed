@@ -7,11 +7,11 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
-import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -286,7 +286,7 @@ abstract class DatabaseTestsBase {
     }
 
     fun Transaction.excludingH2Version1(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if (dbSettings !in TestDB.allH2TestDB || db.isVersionCovers(BigDecimal("2.0"))) {
+        if (dbSettings !in TestDB.allH2TestDB || (db.dialect as H2Dialect).isSecondVersion) {
             statement(dbSettings)
         }
     }
