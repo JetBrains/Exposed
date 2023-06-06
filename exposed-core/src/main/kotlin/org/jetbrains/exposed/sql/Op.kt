@@ -552,7 +552,7 @@ class RegexpOp<T : String?>(
 /**
  * Represents an SQL operator that checks if [query] returns at least one row.
  */
-class Exists(
+class exists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
 ) : Op<Boolean>(), Op.OpBoolean {
@@ -566,7 +566,7 @@ class Exists(
 /**
  * Represents an SQL operator that checks if [query] doesn't returns any row.
  */
-class NotExists(
+class notExists(
     /** Returns the query being checked. */
     val query: AbstractQuery<*>
 ) : Op<Boolean>(), Op.OpBoolean {
