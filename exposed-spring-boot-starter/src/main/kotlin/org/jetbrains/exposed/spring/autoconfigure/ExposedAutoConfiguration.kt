@@ -36,7 +36,7 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     @Bean
     @ConditionalOnMissingBean(DatabaseConfig::class)
     open fun databaseConfig(): DatabaseConfig {
-        return DatabaseConfig {  }
+        return DatabaseConfig {}
     }
 
     @Bean
