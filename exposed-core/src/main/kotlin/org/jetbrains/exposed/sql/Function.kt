@@ -55,7 +55,7 @@ open class CustomOperator<T>(
 class Random(
     /** Returns the seed. */
     val seed: Int? = null
-) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
+) : Function<BigDecimal>(DecimalColumnType(precision = 38, scale = 20)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         val functionProvider = when (currentDialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.Oracle, H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider

@@ -669,9 +669,9 @@ abstract class FunctionProvider {
         onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
             if (isAliasNeeded) {
                 val aliasExpression = updateExpression.toString().replace(transaction.identity(table), "T")
-                append("T.${transaction.identity(columnToUpdate)}=${aliasExpression}")
+                append("T.${transaction.identity(columnToUpdate)}=$aliasExpression")
             } else {
-                append("${transaction.identity(columnToUpdate)}=${updateExpression}")
+                append("${transaction.identity(columnToUpdate)}=$updateExpression")
             }
         } ?: run {
             updateColumns.appendTo { column ->
@@ -924,7 +924,6 @@ sealed class ForUpdateOption(open val querySuffix: String) {
         }
 
         class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, *ofTables)
-
 
         open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, *ofTables) {
             companion object : ForNoKeyUpdate()

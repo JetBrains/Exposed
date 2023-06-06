@@ -9,10 +9,11 @@ class ExposedBlob(inputStream: InputStream) {
         private set
 
     val bytes get() = inputStream.readBytes().also {
-        if (inputStream.markSupported())
+        if (inputStream.markSupported()) {
             inputStream.reset()
-        else
+        } else {
             inputStream = it.inputStream()
+        }
     }
 
     override fun equals(other: Any?): Boolean {

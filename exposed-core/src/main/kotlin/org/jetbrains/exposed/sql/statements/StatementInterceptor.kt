@@ -10,7 +10,7 @@ interface StatementInterceptor {
 
     fun beforeCommit(transaction: Transaction) {}
 
-     @Deprecated("using afterCommit with transaction", level = DeprecationLevel.ERROR)
+    @Deprecated("using afterCommit with transaction", level = DeprecationLevel.ERROR)
     // @Deprecated("using afterCommit with transaction", level = DeprecationLevel.HIDDEN) \\ next version, backward compatibility
     fun afterCommit() {}
     fun afterCommit(transaction: Transaction) {}
