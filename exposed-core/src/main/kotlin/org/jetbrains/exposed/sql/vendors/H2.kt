@@ -133,7 +133,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     val isSecondVersion get() = majorVersion == H2MajorVersion.Two
 
-    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata {
+        databaseProductVersion.substringBefore(" (")
+    }
 
     enum class H2CompatibilityMode {
         MySQL, MariaDB, SQLServer, Oracle, PostgreSQL
