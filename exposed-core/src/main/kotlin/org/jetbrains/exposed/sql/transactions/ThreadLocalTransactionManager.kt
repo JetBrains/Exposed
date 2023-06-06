@@ -250,15 +250,15 @@ fun <T> inTopLevelTransaction(
                 }
                 // set delay value
                 val delay = if (minRepetitionDelay < maxRepetitionDelay) {
-                    minRepetitionDelay + Random(System.currentTimeMillis()).nextLong(maxRepetitionDelay - minRepetitionDelay)
+                    Random(System.currentTimeMillis()).nextLong(minRepetitionDelay, maxRepetitionDelay)
                 } else if (minRepetitionDelay == maxRepetitionDelay) {
                     minRepetitionDelay
                 } else {
                     0
                 }
-                exposedLogger.warn("Wait $delay seconds before retrying")
+                exposedLogger.warn("Wait $delay milliseconds before retrying")
                 try {
-                    Thread.sleep(delay * 1000)
+                    Thread.sleep(delay)
                 } catch (e: InterruptedException) {
                   // Do nothing
                 }
