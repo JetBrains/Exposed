@@ -152,7 +152,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     private var delegatedDialect: DatabaseDialect? = null
 
-    private fun resolveDelegatedDialect() : DatabaseDialect? {
+    private fun resolveDelegatedDialect(): DatabaseDialect? {
         return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.let {
             val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
@@ -208,7 +208,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val needsSequenceToAutoInc: Boolean by lazy { resolveDelegatedDialect()?.needsSequenceToAutoInc ?: super.needsSequenceToAutoInc }
     override val defaultReferenceOption: ReferenceOption by lazy { resolveDelegatedDialect()?.defaultReferenceOption ?: super.defaultReferenceOption }
 //    override val needsQuotesWhenSymbolsInNames: Boolean by lazy { resolveDelegatedDialect()?.needsQuotesWhenSymbolsInNames ?: super.needsQuotesWhenSymbolsInNames }
-    override val supportsSequenceAsGeneratedKeys: Boolean by lazy { resolveDelegatedDialect()?.supportsSequenceAsGeneratedKeys ?: super.supportsSequenceAsGeneratedKeys }
+    override val supportsSequenceAsGeneratedKeys: Boolean by lazy {
+        resolveDelegatedDialect()?.supportsSequenceAsGeneratedKeys ?: super.supportsSequenceAsGeneratedKeys
+    }
     override val supportsCreateSchema: Boolean by lazy { resolveDelegatedDialect()?.supportsCreateSchema ?: super.supportsCreateSchema }
     override val supportsSubqueryUnions: Boolean by lazy { resolveDelegatedDialect()?.supportsSubqueryUnions ?: super.supportsSubqueryUnions }
     override val supportsDualTableConcept: Boolean by lazy { resolveDelegatedDialect()?.supportsDualTableConcept ?: super.supportsDualTableConcept }

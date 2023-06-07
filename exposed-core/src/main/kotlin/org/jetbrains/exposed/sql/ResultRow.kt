@@ -107,9 +107,11 @@ class ResultRow(
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
                     val columnType = (field as? ExpressionWithColumnType)?.columnType
-                    val value = if (columnType != null)
+                    val value = if (columnType != null) {
                         columnType.readObject(rs, index + 1)
-                    else rs.getObject(index + 1)
+                    } else {
+                        rs.getObject(index + 1)
+                    }
                     data[index] = value
                 }
             }

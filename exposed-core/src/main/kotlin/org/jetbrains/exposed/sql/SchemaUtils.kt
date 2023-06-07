@@ -156,9 +156,9 @@ object SchemaUtils {
                     }
                     is String -> when {
                         dialect is PostgreSQLDialect ->
-                            when(column.columnType) {
-                                is VarCharColumnType -> "'${value}'::character varying"
-                                is TextColumnType -> "'${value}'::text"
+                            when (column.columnType) {
+                                is VarCharColumnType -> "'$value'::character varying"
+                                is TextColumnType -> "'$value'::text"
                                 else -> processForDefaultValue(exp)
                             }
                         dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
