@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
-import kotlin.random.Random
+import java.util.concurrent.ThreadLocalRandom
 
 class ThreadLocalTransactionManager(
     private val db: Database,
@@ -232,6 +232,11 @@ fun <T> inTopLevelTransaction(
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
 
+        var intermediateDelay = minRepetitionDelay
+        var retryInterval = if (repetitionAttempts > 0) {
+             maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+        } else 0
+
         while (true) {
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
             val transaction = db.transactionManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
@@ -248,13 +253,14 @@ fun <T> inTopLevelTransaction(
                 if (repetitions >= repetitionAttempts) {
                     throw e
                 }
-                // set delay value
-                val delay = if (minRepetitionDelay < maxRepetitionDelay) {
-                    Random(System.currentTimeMillis()).nextLong(minRepetitionDelay, maxRepetitionDelay)
-                } else if (minRepetitionDelay == maxRepetitionDelay) {
-                    minRepetitionDelay
-                } else {
-                    0
+                // set delay value with an exponential backoff time period.
+                val delay = when {
+                    minRepetitionDelay < maxRepetitionDelay -> {
+                        intermediateDelay += retryInterval * repetitions
+                        ThreadLocalRandom.current().nextLong(intermediateDelay , intermediateDelay + retryInterval)
+                    }
+                    minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
+                    else -> 0
                 }
                 exposedLogger.warn("Wait $delay milliseconds before retrying")
                 try {
