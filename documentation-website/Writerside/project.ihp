@@ -4,5 +4,5 @@
 <ihp version="2.0">
     <topics dir="topics"/>
     <images dir="images"/>
-    <instance src="hi.tree" web-path="/hi/" version="1.0"/>
+    <instance src="hi.tree"  version="1.0" web-path="/docs"/>
 </ihp>
