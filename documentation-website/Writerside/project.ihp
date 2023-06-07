@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ihp SYSTEM "https://helpserver.labs.jb.gg/help/schemas/mvp/ihp.dtd">
+
+<ihp version="2.0">
+    <topics dir="topics"/>
+    <images dir="images"/>
+    <instance src="hi.tree" web-path="/hi/" version="1.0"/>
+</ihp>
