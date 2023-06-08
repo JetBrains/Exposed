@@ -4,11 +4,12 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.Category
+import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
@@ -534,6 +535,7 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : Table("parent2") {
             val idA = integer("id_a")
             val idB = integer("id_b")
+
             init {
                 uniqueIndex(idA, idB)
             }
@@ -574,35 +576,8 @@ class CreateTableTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testOnDeleteSetDefault() {
-        val Category = object : Table("Category") {
-            val id = integer("id")
-            val name = varchar(name = "name", length = 20)
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        val defaultCategoryId = 0
-
-        val Item = object : Table("Item") {
-            val id = integer("id")
-            val name = varchar(name = "name", length = 20)
-            val categoryId = integer("categoryId")
-                .default(defaultCategoryId)
-                .references(
-                    Category.id,
-                    onDelete = ReferenceOption.SET_DEFAULT,
-                    onUpdate = ReferenceOption.NO_ACTION
-                )
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL)) { testDb ->
-            println("testDb = $testDb")
-            println("version = ${this.db.version}")
-            addLogger(StdOutSqlLogger)
-
+    fun createTableWithOnDeleteSetDefault() {
+        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL)) {
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                     "${Item.columns.joinToString { it.descriptionDdl(false) }}," +
@@ -612,41 +587,8 @@ class CreateTableTests : DatabaseTestsBase() {
                     " ON DELETE SET DEFAULT" +
                     ")"
             )
+
             assertEqualCollections(Item.ddl, expected)
-
-            SchemaUtils.create(Category, Item)
-
-            Category.insert {
-                it[id] = defaultCategoryId
-                it[name] = "Default"
-            }
-
-            val saladsId = 1
-            Category.insert {
-                it[id] = saladsId
-                it[name] = "Salads"
-            }
-
-            val tabboulehId = 0
-            Item.insert {
-                it[id] = tabboulehId
-                it[name] = "Tabbouleh"
-                it[categoryId] = saladsId
-            }
-
-            assertEquals(
-                saladsId,
-                Item.select { Item.id eq tabboulehId }.single().also {
-                    println("SELECT result = $it")
-                }[Item.categoryId]
-            )
-
-            Category.deleteWhere { Category.id eq saladsId }
-
-            assertEquals(
-                defaultCategoryId,
-                Item.select { Item.id eq tabboulehId }.single()[Item.categoryId]
-            )
         }
     }
 
