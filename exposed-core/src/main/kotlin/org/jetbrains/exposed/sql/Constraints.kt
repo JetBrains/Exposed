@@ -125,12 +125,12 @@ data class ForeignKeyConstraint(
             if (deleteRule != ReferenceOption.NO_ACTION) {
                 if (deleteRule == ReferenceOption.SET_DEFAULT) {
                     when (currentDialect) {
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
                         is MariaDBDialect -> exposedLogger.warn(
                             "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        is MysqlDialect -> exposedLogger.warn(
+                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
                                 "Please check your $fromTableName table."
                         )
                         else -> append(" ON DELETE $deleteRule")
@@ -144,15 +144,14 @@ data class ForeignKeyConstraint(
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
                 } else if (updateRule == ReferenceOption.SET_DEFAULT) {
                     when (currentDialect) {
+                        is MariaDBDialect -> exposedLogger.warn(
+                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                                "Please check your $fromTableName table."
+                        )
                         is MysqlDialect -> exposedLogger.warn(
                             "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
                                 "Please check your $fromTableName table."
                         )
-                        is MariaDBDialect ->
-                            exposedLogger.warn(
-                                "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
-                                    "Please check your $fromTableName table."
-                            )
                         else -> append(" ON UPDATE $updateRule")
                     }
                 } else {
