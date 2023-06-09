@@ -37,6 +37,6 @@ open class BatchUpsertStatement(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, null, transaction, *keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, null, transaction, keys = keys)
     }
 }

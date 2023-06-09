@@ -28,6 +28,6 @@ open class UpsertStatement<Key : Any>(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, *keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, keys = keys)
     }
 }
