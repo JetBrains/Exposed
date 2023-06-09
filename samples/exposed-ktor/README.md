@@ -1,6 +1,6 @@
 # Exposed-Ktor
 
-This Ktor based project uses Exposed for CRUD (Create, Read, Update, Delete) operations. Here's how they work:
+This Ktor-based project uses Exposed for CRUD (Create, Read, Update, Delete) operations. Here's how they work:
 
 - [UsersSchema.kt](src/main/kotlin/plugins/UsersSchema.kt): Describes our database schema. If you need to modify the structure, please take care to
   understand the existing design first.
