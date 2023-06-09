@@ -793,6 +793,9 @@ interface DatabaseDialect {
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
 
+    /** Returns `true` if the dialect supports an upsert operation returning an affected-row value of 0, 1, or 2. */
+    val supportsTernaryAffectedRowValues: Boolean get() = false
+
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
 
