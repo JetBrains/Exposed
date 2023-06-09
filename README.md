@@ -13,7 +13,7 @@
 Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.
 Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
 
-With Exposed, you can have two levels of databases Access. You would like to use exposed because the database access includes wrapping DSL and a lightweight data access object. Also, our official mascot is Cuttlefish, which is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. 
+With Exposed, you have two ways for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
 Similar to our mascot, Exposed can be used to mimic a variety of database engines and help you build applications without dependencies on any specific database engine and switch between them with very little or no changes.
 
 ## Samples
