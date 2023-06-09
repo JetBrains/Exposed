@@ -1,0 +1,22 @@
+public class org/jetbrains/exposed/spring/DatabaseInitializer : org/springframework/boot/ApplicationRunner, org/springframework/core/Ordered {
+	public static final field Companion Lorg/jetbrains/exposed/spring/DatabaseInitializer$Companion;
+	public static final field DATABASE_INITIALIZER_ORDER I
+	public fun <init> (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)V
+	public fun getOrder ()I
+	public fun run (Lorg/springframework/boot/ApplicationArguments;)V
+}
+
+public final class org/jetbrains/exposed/spring/DatabaseInitializer$Companion {
+}
+
+public final class org/jetbrains/exposed/spring/DatabaseInitializerKt {
+	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
+}
+
+public class org/jetbrains/exposed/spring/autoconfigure/ExposedAutoConfiguration {
+	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
+	public fun databaseConfig ()Lorg/jetbrains/exposed/sql/DatabaseConfig;
+	public fun databaseInitializer ()Lorg/jetbrains/exposed/spring/DatabaseInitializer;
+	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;)Lorg/jetbrains/exposed/spring/SpringTransactionManager;
+}
+
