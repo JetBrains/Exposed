@@ -579,8 +579,8 @@ class InsertTests : DatabaseTestsBase() {
     class BatchInsertOnConflictDoNothing(
         table: Table,
     ) : BatchInsertStatement(table) {
-        override fun prepareSQL(transaction: Transaction) = buildString {
-            append(super.prepareSQL(transaction))
+        override fun prepareSQL(transaction: Transaction, prepared: Boolean) = buildString {
+            append(super.prepareSQL(transaction, prepared))
             append(" ON CONFLICT (id) DO NOTHING")
         }
     }
