@@ -949,7 +949,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param columns Columns that compose the index.
      * @param isUnique Whether the index is unique or not.
      * @param indexType A custom index type (e.g., "BTREE" or "HASH").
-     * @param filterCondition A custom index type (e.g., "BTREE" or "HASH").
+     * @param filterCondition Index filtering conditions (also known as "partial index") declaration.
      */
     fun index(
         customIndexName: String? = null,
