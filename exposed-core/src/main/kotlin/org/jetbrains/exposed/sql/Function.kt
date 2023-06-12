@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.math.BigDecimal
 
 /**
@@ -14,10 +17,10 @@ abstract class Function<T>(override val columnType: IColumnType) : ExpressionWit
 open class CustomFunction<T>(
     /** Returns the name of the function. */
     val functionName: String,
-    _columnType: IColumnType,
+    columnType: IColumnType,
     /** Returns the list of arguments of this function. */
     vararg val expr: Expression<*>
-) : Function<T>(_columnType) {
+) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(functionName, '(')
         expr.appendTo { +it }
@@ -31,12 +34,12 @@ open class CustomFunction<T>(
 open class CustomOperator<T>(
     /** Returns the name of the operator. */
     val operatorName: String,
-    _columnType: IColumnType,
+    columnType: IColumnType,
     /** Returns the left-hand side operand. */
     val expr1: Expression<*>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<*>
-) : Function<T>(_columnType) {
+) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append('(', expr1, ' ', operatorName, ' ', expr2, ')')
     }
@@ -52,11 +55,26 @@ open class CustomOperator<T>(
 class Random(
     /** Returns the seed. */
     val seed: Int? = null
-) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +currentDialect.functionProvider.random(seed) }
+) : Function<BigDecimal>(DecimalColumnType(precision = 38, scale = 20)) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.Oracle, H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        +functionProvider.random(seed)
+    }
 }
 
 // String Functions
+
+/**
+ * Represents an SQL function that returns the length of [expr], measured in characters, or `null` if [expr] is null.
+ */
+class CharLength<T : String?>(
+    val expr: Expression<T>
+) : Function<Int?>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.charLength(expr, queryBuilder)
+}
 
 /**
  * Represents an SQL function that converts [expr] to lower case.
@@ -128,6 +146,14 @@ class Trim<T : String?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
+/**
+ * Represents an SQL function that returns the index of the first occurrence of [substring] in [expr] or 0
+ */
+class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.locate(queryBuilder, expr, substring)
+}
+
 // General-Purpose Aggregate Functions
 
 /**
@@ -136,8 +162,8 @@ class Trim<T : String?>(
 class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
 }
 
@@ -147,8 +173,8 @@ class Min<T : Comparable<T>, in S : T?>(
 class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
 }
 
@@ -169,8 +195,8 @@ class Avg<T : Comparable<T>, in S : T?>(
 class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
     val expr: Expression<T>,
-    _columnType: IColumnType
-) : Function<T?>(_columnType) {
+    columnType: IColumnType
+) : Function<T?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("SUM(", expr, ")") }
 }
 
@@ -199,10 +225,18 @@ class Count(
  */
 class StdDevPop<T>(
     /** Returns the expression from which the population standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_POP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevPop(expression, this)
+        }
+    }
 }
 
 /**
@@ -211,10 +245,18 @@ class StdDevPop<T>(
  */
 class StdDevSamp<T>(
     /** Returns the expression from which the sample standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_SAMP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevSamp(expression, this)
+        }
+    }
 }
 
 /**
@@ -223,10 +265,18 @@ class StdDevSamp<T>(
  */
 class VarPop<T>(
     /** Returns the expression from which the population variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_POP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varPop(expression, this)
+        }
+    }
 }
 
 /**
@@ -235,10 +285,18 @@ class VarPop<T>(
  */
 class VarSamp<T>(
     /** Returns the expression from which the sample variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_SAMP(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varSamp(expression, this)
+        }
+    }
 }
 
 // Sequence Manipulation Functions
@@ -259,11 +317,12 @@ sealed class NextVal<T> (
 }
 
 // Conditional Expressions
-
+@Suppress("FunctionNaming")
 class Case(val value: Expression<*>? = null) {
     fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
 }
 
+@Suppress("FunctionNaming")
 class CaseWhen<T>(val value: Expression<*>?) {
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
 

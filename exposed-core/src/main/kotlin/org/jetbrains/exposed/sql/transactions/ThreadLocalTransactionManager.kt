@@ -38,21 +38,20 @@ class ThreadLocalTransactionManager(
 
     val threadLocal = ThreadLocal<Transaction>()
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
-        (
-            outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
-                ThreadLocalTransaction(
-                    db = db,
-                    readOnly = outerTransaction?.readOnly ?: readOnly,
-                    transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-                    setupTxConnection = setupTxConnection,
-                    threadLocal = threadLocal,
-                    outerTransaction = outerTransaction
-                )
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
+        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
+            ThreadLocalTransaction(
+                db = db,
+                readOnly = outerTransaction?.readOnly ?: readOnly,
+                transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                setupTxConnection = setupTxConnection,
+                threadLocal = threadLocal,
+                outerTransaction = outerTransaction
             )
-            ).apply {
-                bindTransactionToThread(this)
-            }
+        )
+
+        return transaction.apply { bindTransactionToThread(this) }
+    }
 
     override fun currentOrNull(): Transaction? = threadLocal.get()
 
@@ -76,11 +75,12 @@ class ThreadLocalTransactionManager(
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
                 setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
-                    // The order of `setReadOnly` and `setAutoCommit` is important.
+                    // The order of setters here is important.
+                    // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    readOnly = this@ThreadLocalTransaction.readOnly
                     transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    readOnly = this@ThreadLocalTransaction.readOnly
                     autoCommit = false
                 }
             }
@@ -147,7 +147,8 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
         db.transactionManager.defaultIsolationLevel,
         db.transactionManager.defaultRepetitionAttempts,
         db.transactionManager.defaultReadOnly,
-        db, statement)
+        db, statement
+    )
 
 fun <T> transaction(
     transactionIsolation: Int,

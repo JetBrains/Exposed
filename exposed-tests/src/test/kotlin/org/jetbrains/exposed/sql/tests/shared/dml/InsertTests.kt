@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -58,7 +59,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreSupportedDB = TestDB.values().toList() -
-        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -142,7 +143,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
         withTables(insertIgnoreSupportedDB, idTable) {
             val insertedStatement = idTable.insertIgnore {
@@ -195,7 +196,7 @@ class InsertTests : DatabaseTestsBase() {
 
             val batchesSize = Cities.selectAll().count()
 
-            kotlin.test.assertEquals(25, batchesSize)
+            assertEquals(25, batchesSize)
         }
     }
 
@@ -379,7 +380,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), table) {
+        withTables(TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.ORACLE, table) {
             val isOldMySQL = currentDialectTest is MysqlDialect && db.isVersionCovers(BigDecimal("5.5"))
             if (isOldMySQL) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
@@ -398,7 +399,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
+        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL), table) {
             expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
@@ -486,7 +487,7 @@ class InsertTests : DatabaseTestsBase() {
                         TestTable.insert { it[foo] = 1 }
                         TestTable.insert { it[foo] = 0 }
                     }
-                    fail("Should fail on constraint > 0")
+                    fail("Should fail on constraint > 0 with $db")
                 } catch (_: SQLException) {
                     // expected
                 }
@@ -505,7 +506,7 @@ class InsertTests : DatabaseTestsBase() {
         val TestTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
-        val dbToTest = TestDB.enabledInTests() - listOfNotNull(
+        val dbToTest = TestDB.enabledInTests() - setOfNotNull(
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
@@ -573,5 +574,36 @@ class InsertTests : DatabaseTestsBase() {
             }
         }
 
+    }
+
+    class BatchInsertOnConflictDoNothing(
+        table: Table,
+    ) : BatchInsertStatement(table) {
+        override fun prepareSQL(transaction: Transaction) = buildString {
+            append(super.prepareSQL(transaction))
+            append(" ON CONFLICT (id) DO NOTHING")
+        }
+    }
+
+    @Test fun `batch insert number of inserted rows is accurate`() {
+        val tab = object : Table("tab") {
+            val id = varchar("id", 10).uniqueIndex()
+        }
+
+        withTables(TestDB.allH2TestDB + listOf(TestDB.MYSQL), tab) {
+            tab.insert { it[id] = "foo" }
+
+            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
+                addBatch()
+                this[tab.id] = "foo"
+
+                addBatch()
+                this[tab.id] = "bar"
+
+                execute(this@withTables)
+            }
+
+            assertEquals(1, numInserted)
+        }
     }
 }

@@ -2,10 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -17,10 +14,7 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 object EntityTestsData {
 
@@ -371,6 +365,58 @@ class EntityTests : DatabaseTestsBase() {
             board2.refresh(flush = false)
             assertNotNull(Board.testCache(board2.id))
             assertEquals("relevant2", board2.name)
+        }
+    }
+
+    object Items : IntIdTable("items") {
+        val name = varchar("name", 255).uniqueIndex()
+        val price = double("price")
+    }
+
+    class Item(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Item>(Items)
+        var name by Items.name
+        var price by Items.price
+    }
+
+    @Test
+    fun testCacheInvalidatedOnDSLUpsert() {
+        withTables(Items) { testDb ->
+            excludingH2Version1(testDb) {
+                val oldPrice = 20.0
+                val itemA = Item.new {
+                    name = "Item A"
+                    price = oldPrice
+                }
+                assertEquals(oldPrice, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+
+                val newPrice = 50.0
+                val conflictKeys = if (testDb in TestDB.mySqlRelatedDB) emptyArray<Column<*>>() else arrayOf(Items.name)
+                Items.upsert(*conflictKeys) {
+                    it[name] = itemA.name
+                    it[price] = newPrice
+                }
+                assertEquals(oldPrice, itemA.price)
+                assertNull(Item.testCache(itemA.id))
+
+                itemA.refresh(flush = false)
+                assertEquals(newPrice, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+
+                val newPricePlusExtra = 100.0
+                val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
+                Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
+                    this[Items.name] = name
+                    this[Items.price] = price
+                }
+                assertEquals(newPrice, itemA.price)
+                assertNull(Item.testCache(itemA.id))
+
+                itemA.refresh(flush = false)
+                assertEquals(newPricePlusExtra, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+            }
         }
     }
 
@@ -1269,8 +1315,8 @@ class EntityTests : DatabaseTestsBase() {
                 dateOfBirth = "01/01/2000"
             }
 
-            kotlin.test.assertEquals(bio1, student1.bio)
-            kotlin.test.assertEquals(bio1.student, student1)
+            assertEquals(bio1, student1.bio)
+            assertEquals(bio1.student, student1)
         }
     }
 
@@ -1317,6 +1363,30 @@ class EntityTests : DatabaseTestsBase() {
                 createBoardCalled,
                 "Expected createBoardCalled to be called"
             )
+        }
+    }
+
+    object RequestsTable : IdTable<String>() {
+        val requestId: Column<String> = varchar("requestId", 256)
+        override val primaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+    }
+
+    @Test
+    fun testSelectFromStringIdTableWithPrimaryKeyByColumn() {
+        withTables(RequestsTable) {
+            Request.new {
+                requestId = "123"
+            }
+
+            val count = Request.all().count()
+            assertEquals(1, count)
         }
     }
 }

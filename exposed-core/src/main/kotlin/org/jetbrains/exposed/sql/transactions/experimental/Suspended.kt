@@ -27,7 +27,10 @@ internal class TransactionScope(internal val tx: Lazy<Transaction>, parent: Coro
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
-internal class TransactionCoroutineElement(private val newTransaction: Lazy<Transaction>, val manager: TransactionManager) : ThreadContextElement<TransactionContext> {
+internal class TransactionCoroutineElement(
+    private val newTransaction: Lazy<Transaction>,
+    val manager: TransactionManager
+) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {

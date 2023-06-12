@@ -51,9 +51,11 @@ interface TransactionManager {
 
     var defaultRepetitionAttempts: Int
 
-    fun newTransaction(isolation: Int = defaultIsolationLevel,
-                       readOnly: Boolean = defaultReadOnly,
-                       outerTransaction: Transaction? = null): Transaction
+    fun newTransaction(
+        isolation: Int = defaultIsolationLevel,
+        readOnly: Boolean = defaultReadOnly,
+        outerTransaction: Transaction? = null
+    ): Transaction
 
     fun currentOrNull(): Transaction?
 
@@ -133,6 +135,7 @@ interface TransactionManager {
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {
     try {
         rollback()
@@ -141,6 +144,7 @@ internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> U
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit) {
     try {
         close()

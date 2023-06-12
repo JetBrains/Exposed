@@ -49,6 +49,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
         }
     }
 
+    override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
 internal object SQLServerFunctionProvider : FunctionProvider() {
@@ -57,6 +58,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     }
 
     override fun random(seed: Int?): String = if (seed != null) "RAND($seed)" else "RAND(CHECKSUM(NEWID()))"
+
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LEN(", expr, ")")
+    }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
@@ -72,6 +77,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
                 }
             }
         }
+    }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("CHARINDEX(\'", substring, "\',", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -103,6 +116,22 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun <T> minute(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("DATEPART(MINUTE, ", expr, ")")
+    }
+
+    override fun <T> stdDevPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDEVP(", expression, ")")
+    }
+
+    override fun <T> stdDevSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("STDEV(", expression, ")")
+    }
+
+    override fun <T> varPop(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VARP(", expression, ")")
+    }
+
+    override fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("VAR(", expression, ")")
     }
 
     override fun update(
@@ -151,6 +180,18 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         toString()
     }
 
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        // SQLSERVER MERGE statement must be terminated by a semi-colon (;)
+        return super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
+    }
+
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
@@ -178,6 +219,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
+    // TODO: Fix changing default value on column as it requires to drop/create constraint
+    // https://stackoverflow.com/questions/15547210/modify-default-value-in-sql-server
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
@@ -207,9 +250,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
     override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
 
-    companion object {
-        /** SQLServer dialect name */
-        const val dialectName: String = "sqlserver"
+    companion object : DialectNameProvider("sqlserver") {
         private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')
     }
 }

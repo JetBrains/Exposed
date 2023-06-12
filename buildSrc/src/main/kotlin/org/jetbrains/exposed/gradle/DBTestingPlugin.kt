@@ -24,7 +24,7 @@ class DBTestingPlugin : Plugin<Project> {
             val h2_v1 = register<DBTest>("h2_v1Test", "H2,H2_MYSQL") {
                 testRuntimeOnly("com.h2database", "h2", Versions.h2)
             }
-            val h2_v2 = register<DBTest>("h2_v2Test", "H2,H2_MYSQL") {
+            val h2_v2 = register<DBTest>("h2_v2Test", "H2,H2_MYSQL,H2_PSQL,H2_MARIADB,H2_ORACLE,H2_SQLSERVER") {
                 testRuntimeOnly("com.h2database", "h2", Versions.h2_v2)
             }
             val h2 = register<Test>("h2Test") {

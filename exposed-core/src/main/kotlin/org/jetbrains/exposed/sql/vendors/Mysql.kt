@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -12,7 +13,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override fun dateTimeType(): String = if ((currentDialect as MysqlDialect).isFractionDateTimeSupported()) "DATETIME(6)" else "DATETIME"
+    override fun dateTimeType(): String = if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) "DATETIME(6)" else "DATETIME"
 
     override fun ubyteType(): String = "TINYINT UNSIGNED"
 
@@ -30,7 +31,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     /** Character type for storing strings of variable and _unlimited_ length. */
     override fun largeTextType(): String = "LONGTEXT"
 
-    override fun booleanFromStringToBoolean(value: String): Boolean = when(value) {
+    override fun booleanFromStringToBoolean(value: String): Boolean = when (value) {
         "0" -> false
         "1" -> true
         else -> value.toBoolean()
@@ -49,6 +50,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             }
         }
     }
+
+    override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -72,6 +75,14 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> =
         MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,
@@ -85,11 +96,15 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction, prepared: Boolean): String {
-        val builder = QueryBuilder(prepared)
-        val columns = data.joinToString { transaction.identity(it.first) }
-        val values = builder.apply { data.appendTo { registerArgument(it.first, it.second) } }.toString()
-        return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
+    override fun replace(
+        table: Table,
+        columns: List<Column<*>>,
+        expression: String,
+        transaction: Transaction,
+        prepared: Boolean
+    ): String {
+        val insertStatement = super.insert(false, table, columns, expression, transaction)
+        return insertStatement.replace("INSERT", "REPLACE")
     }
 
     private object CharColumnType : StringColumnType() {
@@ -135,6 +150,49 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         limit?.let { +" LIMIT $it" }
         toString()
     }
+
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        if (keys.isNotEmpty()) {
+            transaction.throwUnsupportedException("MySQL doesn't support specifying conflict keys in UPSERT clause")
+        }
+        if (where != null) {
+            transaction.throwUnsupportedException("MySQL doesn't support WHERE in UPSERT clause")
+        }
+
+        val isAliasSupported = when (val dialect = transaction.db.dialect) {
+            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            else -> false // H2_MySQL mode also uses this function provider & requires older version
+        }
+
+        return with(QueryBuilder(true)) {
+            appendInsertToUpsertClause(table, data, transaction)
+            if (isAliasSupported) {
+                +" AS NEW"
+            }
+
+            +" ON DUPLICATE KEY UPDATE "
+            onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
+                append("${transaction.identity(columnToUpdate)}=$updateExpression")
+            } ?: run {
+                data.unzip().first.appendTo { column ->
+                    val columnName = transaction.identity(column)
+                    if (isAliasSupported) {
+                        append("$columnName=NEW.$columnName")
+                    } else {
+                        append("$columnName=VALUES($columnName)")
+                    }
+                }
+            }
+            toString()
+        }
+    }
 }
 
 /**
@@ -147,6 +205,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override val supportsCreateSequence: Boolean = false
+
+    override val supportsTernaryAffectedRowValues: Boolean = true
 
     override val supportsSubqueryUnions: Boolean = true
 
@@ -183,7 +243,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                   AND ku.CONSTRAINT_SCHEMA = $schemaName
                   AND rc.CONSTRAINT_SCHEMA = $schemaName
                   AND $inTableList
-                ORDER BY ku.ORDINAL_POSITION""".trimIndent()
+                ORDER BY ku.ORDINAL_POSITION
+            """.trimIndent()
         ) { rs ->
             while (rs.next()) {
                 val fromTableName = rs.getString("TABLE_NAME")!!
@@ -236,8 +297,5 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
 
-    companion object {
-        /** MySQL dialect name */
-        const val dialectName: String = "mysql"
-    }
+    companion object : DialectNameProvider("mysql")
 }

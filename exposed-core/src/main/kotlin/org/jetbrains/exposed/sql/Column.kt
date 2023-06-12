@@ -45,7 +45,8 @@ class Column<T>(
 
     fun nameInDatabaseCase(): String = name.inProperCase()
 
-    private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
+    private val isLastColumnInPK: Boolean
+        get() = this == table.primaryKey?.columns?.last()
 
     internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
         currentDialect is SQLiteDialect && columnType.isAutoInc -> false
@@ -77,7 +78,7 @@ class Column<T>(
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
 
-    internal fun isOneColumnPK(): Boolean = table.primaryKey?.columns?.singleOrNull() == this
+    internal fun isOneColumnPK(): Boolean = this == table.primaryKey?.columns?.singleOrNull()
 
     /** Returns the SQL representation of this column. */
     fun descriptionDdl(modify: Boolean = false): String = buildString {
@@ -125,7 +126,6 @@ class Column<T>(
         }
     }
 
-
     /**
      * Returns a copy of this column, but with the given column type.
      */
@@ -133,12 +133,11 @@ class Column<T>(
         table = this.table,
         name = this.name,
         columnType = columnType
-    ).also{
+    ).also {
         it.foreignKey = this.foreignKey
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue
     }
-
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)
 

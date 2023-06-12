@@ -88,6 +88,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         userdata.clear()
     }
 
+    @Suppress("MagicNumber")
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
     fun exec(@Language("sql") stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =

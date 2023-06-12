@@ -1,4 +1,5 @@
 @file:Suppress("internal", "INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -14,6 +15,9 @@ import java.math.BigDecimal
 import kotlin.internal.LowPriorityInOverloadResolution
 
 // String Functions
+
+/** Returns the length of this string expression, measured in characters, or `null` if this expression is null. */
+fun <T : String?> Expression<T>.charLength(): CharLength<T> = CharLength(this)
 
 /** Converts this string expression to lower case. */
 fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
@@ -38,6 +42,9 @@ fun <T : String?> Expression<T>.substring(start: Int, length: Int): Substring<T>
 
 /** Removes the longest string containing only spaces from both ends of string expression. */
 fun <T : String?> Expression<T>.trim(): Trim<T> = Trim(this)
+
+/** Returns the index of the first occurrence of [substring] in this string expression or 0 if it doesn't contain [substring] */
+fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(this, substring)
 
 // General-Purpose Aggregate Functions
 
@@ -92,11 +99,12 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
-@Deprecated("please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"))
+@Deprecated("please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.ERROR)
 fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
 
 /** Advances this sequence and returns the new value. */
 fun Sequence.nextIntVal(): NextVal<Int> = NextVal.IntNextVal(this)
+
 /** Advances this sequence and returns the new value. */
 fun Sequence.nextLongVal(): NextVal<Long> = NextVal.LongNextVal(this)
 
@@ -167,7 +175,7 @@ data class LikePattern(
                         }
                         else -> false
                     }
-                    if (shouldEscape){
+                    if (shouldEscape) {
                         append(escapeChar)
                     }
                     append(it)
@@ -178,7 +186,7 @@ data class LikePattern(
     }
 }
 
-@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class")
+@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class", level = DeprecationLevel.ERROR)
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
@@ -205,7 +213,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
         if (t == null) return isNull()
 
         @Suppress("UNCHECKED_CAST")
@@ -225,7 +233,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equals to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V: T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
         if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
@@ -284,6 +292,26 @@ interface ISqlExpressionBuilder {
     /** Returns `true` if this expression is not null, `false` otherwise. */
     fun <T> Expression<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
 
+    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is equal to some [other] expression, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.isNotDistinctFrom(other: Expression<in S>): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
+
+    /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    @JvmName("isNotDistinctFromEntityID")
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+
+    /** Checks if this expression is not equal to some [other] expression, with `null` treated as a comparable value */
+    infix fun <T : Comparable<T>, S : T?> Expression<in S>.isDistinctFrom(other: Expression<in S>): IsDistinctFromOp = IsDistinctFromOp(this, other)
+
+    /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    @JvmName("isDistinctFromEntityID")
+    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+
     // Mathematical Operators
 
     /** Adds the [t] value to this expression. */
@@ -311,16 +339,44 @@ interface ISqlExpressionBuilder {
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.div(other: Expression<S>): DivideOp<T, S> = DivideOp(this, other, columnType)
 
     /** Calculates the remainder of dividing this expression by the [t] value. */
-    infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S): ModOp<T, S> = ModOp(this, wrap(t), columnType)
+    infix operator fun <T : Number?, S : T> ExpressionWithColumnType<T>.rem(t: S) = ModOp<T, S, T>(this, wrap(t), columnType)
 
     /** Calculates the remainder of dividing this expression by the [other] expression. */
-    infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>): ModOp<T, S> = ModOp(this, other, columnType)
+    infix operator fun <T : Number?, S : Number> ExpressionWithColumnType<T>.rem(other: Expression<S>) = ModOp<T, S, T>(this, other, columnType)
+
+    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number. */
+    @JvmName("remWithEntityId")
+    infix operator fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.rem(other: S) where T : Number, T : Comparable<T> =
+        ModOp(this, other)
+
+    /** Calculates the remainder of dividing [this] number expression by [other] numeric PK */
+    @JvmName("remWithEntityId2")
+    infix operator fun <T, S : Number, ID : EntityID<T>?> Expression<S>.rem(other: ExpressionWithColumnType<ID>) where T : Number, T : Comparable<T> =
+        ModOp(this, other)
+
+    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number expression. */
+    @JvmName("remWithEntityId3")
+    infix operator fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.rem(other: Expression<S>) where T : Number, T : Comparable<T> =
+        ModOp(this, other)
 
     /** Calculates the remainder of dividing this expression by the [t] value. */
-    infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S): ModOp<T, S> = this % t
+    infix fun <T : Number?, S : T> ExpressionWithColumnType<T>.mod(t: S) = this % t
 
     /** Calculates the remainder of dividing this expression by the [other] expression. */
-    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>): ModOp<T, S> = this % other
+    infix fun <T : Number?, S : Number> ExpressionWithColumnType<T>.mod(other: Expression<S>) = this % other
+
+    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number. */
+    @JvmName("modWithEntityId")
+    infix fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.mod(other: S) where T : Number, T : Comparable<T> = this % other
+
+    /** Calculates the remainder of dividing [this] number expression by [other] numeric PK */
+    @JvmName("modWithEntityId2")
+    infix fun <T, S : Number, ID : EntityID<T>?> Expression<S>.mod(other: ExpressionWithColumnType<ID>) where T : Number, T : Comparable<T> = this % other
+
+    /** Calculates the remainder of dividing the value of [this] numeric PK by the [other] number expression. */
+    @JvmName("modWithEntityId3")
+    infix fun <T, S : Number, ID : EntityID<T>?> ExpressionWithColumnType<ID>.mod(other: Expression<S>) where T : Number, T : Comparable<T> =
+        ModOp(this, other)
 
     /**
      * Performs a bitwise `and` on this expression and [t].
@@ -376,7 +432,8 @@ interface ISqlExpressionBuilder {
     infix fun <T : String?> Expression<T>.like(pattern: String) = like(LikePattern(pattern))
 
     /** Checks if this expression matches the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.like(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
+    infix fun <T : String?> Expression<T>.like(pattern: LikePattern): LikeEscapeOp =
+        LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
     /** Checks if this expression matches the specified [pattern]. */
     @JvmName("likeWithEntityID")
@@ -384,14 +441,17 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression matches the specified [pattern]. */
     @JvmName("likeWithEntityID")
-    infix fun Expression<EntityID<String>>.like(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
+    infix fun Expression<EntityID<String>>.like(pattern: LikePattern): LikeEscapeOp =
+        LikeEscapeOp(this, stringParam(pattern.pattern), true, pattern.escapeChar)
 
     /** Checks if this expression matches the specified [expression]. */
-    infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, true, null)
+    infix fun <T : String?> Expression<T>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
+        LikeEscapeOp(this, expression, true, null)
 
     /** Checks if this expression matches the specified [expression]. */
     @JvmName("likeWithEntityIDAndExpression")
-    infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, true, null)
+    infix fun Expression<EntityID<String>>.like(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
+        LikeEscapeOp(this, expression, true, null)
 
     /** Checks if this expression matches the specified [pattern]. */
     infix fun <T : String?> Expression<T>.match(pattern: String): Op<Boolean> = match(pattern, null)
@@ -406,7 +466,8 @@ interface ISqlExpressionBuilder {
     infix fun <T : String?> Expression<T>.notLike(pattern: String): LikeEscapeOp = notLike(LikePattern(pattern))
 
     /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.notLike(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
+    infix fun <T : String?> Expression<T>.notLike(pattern: LikePattern): LikeEscapeOp =
+        LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
@@ -414,14 +475,17 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression doesn't match the specified [pattern]. */
     @JvmName("notLikeWithEntityID")
-    infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp = LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
+    infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp =
+        LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
     /** Checks if this expression doesn't match the specified [pattern]. */
-    infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
+    infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
+        LikeEscapeOp(this, expression, false, null)
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    /** Checks if this expression doesn't match the specified [expression]. */
     @JvmName("notLikeWithEntityIDAndExpression")
-    infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp = LikeEscapeOp(this, expression, false, null)
+    infix fun Expression<EntityID<String>>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
+        LikeEscapeOp(this, expression, false, null)
 
     /** Checks if this expression matches the [pattern]. Supports regular expressions. */
     infix fun <T : String?> Expression<T>.regexp(pattern: String): RegexpOp<T> = RegexpOp(this, stringParam(pattern), true)
@@ -473,38 +537,45 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from triple are equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(
+        list: Iterable<Triple<T1, T2, T3>>
+    ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = true)
 
     /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
 
     /** Checks if this expression is not equals to any element from [list]. */
-    infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = false)
+    infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> =
+        SingleValueInListOp(this, list, isInList = false)
 
     /**
      * Checks if both expressions are not equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
+    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(
+        list: Iterable<Pair<T1, T2>>
+    ): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = false)
 
     /**
      * Checks if expressions from triple are not equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(
+        list: Iterable<Triple<T1, T2, T3>>
+    ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = false)
 
     /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>, ID: EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
@@ -513,7 +584,6 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
         is Boolean -> booleanParam(value)
         is Byte -> byteParam(value)
@@ -532,7 +602,6 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST")
-//    @ExperimentalUnsignedTypes
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)
@@ -550,7 +619,8 @@ interface ISqlExpressionBuilder {
         else -> LiteralOp(columnType, value)
     } as LiteralOp<T>
 
-    fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> = NoOpConversion(this, DecimalColumnType(15, 0))
+    fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
+        NoOpConversion(this, DecimalColumnType(precision = 15, scale = 0))
 }
 
 /**

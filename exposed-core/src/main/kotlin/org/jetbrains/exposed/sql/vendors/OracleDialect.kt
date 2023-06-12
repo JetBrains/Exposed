@@ -13,6 +13,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun longType(): String = "NUMBER(19)"
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
+    override fun varcharType(colLength: Int): String = "VARCHAR2($colLength CHAR)"
     override fun textType(): String = "CLOB"
     override fun mediumTextType(): String = textType()
     override fun largeTextType(): String = textType()
@@ -23,6 +24,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun binaryType(length: Int): String {
+        @Suppress("MagicNumber")
         return if (length < 2000) "RAW ($length)"
         else binaryType()
     }
@@ -42,6 +44,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
         else -> super.processForDefaultValue(e)
     }
+
+    override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 
 internal object OracleFunctionProvider : FunctionProvider() {
@@ -52,6 +56,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
      * **Note:** Oracle ignores the [seed]. You have to use the `dbms_random.seed` function manually.
      */
     override fun random(seed: Int?): String = "dbms_random.value"
+
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
 
     override fun <T : String?> substring(
         expr: Expression<T>,
@@ -88,6 +96,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(") WITHIN GROUP (ORDER BY ")
         val (col, order) = expr.orderBy.single()
         append(col, " ", order.name, ")")
+    }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("INSTR(", expr, ",\'", substring, "\')")
     }
 
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
@@ -181,6 +197,28 @@ internal object OracleFunctionProvider : FunctionProvider() {
         toString()
     }
 
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        val statement = super.upsert(table, data, onUpdate, where, transaction, *keys)
+
+        val dualTable = data.appendTo(QueryBuilder(true), prefix = "(SELECT ", postfix = " FROM DUAL) S") { (column, value) ->
+            registerArgument(column, value)
+            +" AS "
+            append(transaction.identity(column))
+        }.toString()
+
+        val (leftReserved, rightReserved) = " USING " to " ON "
+        val leftBoundary = statement.indexOf(leftReserved) + leftReserved.length
+        val rightBoundary = statement.indexOf(rightReserved)
+        return statement.replaceRange(leftBoundary, rightBoundary, dualTable)
+    }
+
     override fun delete(
         ignore: Boolean,
         table: Table,
@@ -255,8 +293,5 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    companion object {
-        /** Oracle dialect name */
-        const val dialectName: String = "oracle"
-    }
+    companion object : DialectNameProvider("oracle")
 }
