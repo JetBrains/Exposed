@@ -138,9 +138,9 @@ class CreateIndexTests : DatabaseTestsBase() {
             val dropIndex = Index(columns = listOf(partialIndexTable.value, partialIndexTable.name), unique = false).dropStatement().first()
             kotlin.test.assertTrue(dropIndex.startsWith("DROP INDEX "), "Unique partial index must be created and dropped as index")
             val dropUniqueConstraint = Index(columns = listOf(partialIndexTable.anotherValue), unique = true).dropStatement().first()
-            kotlin.test.assertTrue(dropUniqConstraint.startsWith("ALTER TABLE "), "Unique index must be created and dropped as constraint")
+            kotlin.test.assertTrue(dropUniqueConstraint.startsWith("ALTER TABLE "), "Unique index must be created and dropped as constraint")
 
-            execInBatch(listOf(dropUniqConstraint, dropIndex))
+            execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
             assertEquals(getIndexes().size, 1)
             SchemaUtils.drop(partialIndexTable)
