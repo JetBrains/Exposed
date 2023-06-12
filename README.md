@@ -1,5 +1,5 @@
 <div align="center">
-<img  align="center" src="./logo.png" alt="Exposed" width="315" /></div>
+<img  align="center" src="./docs/logo.png" alt="Exposed" width="315" /></div>
 <br><br>
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
@@ -27,8 +27,8 @@ Check out the [samples](samples/README.md) for a quick start.
 -   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 -   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 -   H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
--   [Oracle](ORACLE.md)
--   [SQL Server](SQLServer.md)
+-   [Oracle](docs/ORACLE.md)
+-   [SQL Server](docs/SQLServer.md)
 
 ## Links
 
@@ -37,8 +37,8 @@ Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Ce
 For more information visit the links below:
 
 -   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
--   [Roadmap](ROADMAP.md) to see what's coming next
--   [Change log](ChangeLog.md) of improvements and bug fixes
+-   [Roadmap](docs/ROADMAP.md) to see what's coming next
+-   [Change log](docs/ChangeLog.md) of improvements and bug fixes
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
