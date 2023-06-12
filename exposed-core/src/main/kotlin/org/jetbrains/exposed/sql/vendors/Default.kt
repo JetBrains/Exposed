@@ -1100,7 +1100,7 @@ abstract class VendorDialect(
             index.unique -> {
                 "CREATE UNIQUE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
             }
-            // type -> can't be uniq or constraint
+            // type -> can't be unique or constraint
             index.indexType != null -> {
                 createIndexWithType(
                     name = quotedIndexName, table = quotedTableName,
