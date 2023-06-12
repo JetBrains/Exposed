@@ -1079,7 +1079,7 @@ abstract class VendorDialect(
     /**
      * Uniqueness might be required for foreign key constraints.
      *
-     * In postgresq (https://www.postgresql.org/docs/current/indexes-unique.html) Uniq means btree only.
+     * In PostgreSQL (https://www.postgresql.org/docs/current/indexes-unique.html), UNIQUE means B-tree only.
      * Unique constraints can not be partial
      * Unique indexes can be partial
      */
