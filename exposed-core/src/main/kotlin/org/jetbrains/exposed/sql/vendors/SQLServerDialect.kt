@@ -28,6 +28,8 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun mediumTextType(): String = textType()
     override fun largeTextType(): String = textType()
 
+    override fun jsonType(): String = "NVARCHAR(MAX)"
+
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         when (sortOrder) {
             SortOrder.ASC, SortOrder.DESC -> super.precessOrderByClause(queryBuilder, expression, sortOrder)

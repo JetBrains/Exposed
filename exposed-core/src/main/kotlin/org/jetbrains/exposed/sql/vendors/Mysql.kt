@@ -37,6 +37,9 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         else -> value.toBoolean()
     }
 
+    override fun jsonType(): String =
+        throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
+
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
 
         when (sortOrder) {

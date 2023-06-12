@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.*
+import org.postgresql.util.PGobject
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -905,6 +906,45 @@ class EnumerationNameColumnType<T : Enum<T>>(
         var result = super.hashCode()
         result = 31 * result + klass.hashCode()
         return result
+    }
+}
+
+// Serialization columns
+
+class JsonColumnType<T : Any>(
+    private val serialize: (T) -> String,
+    private val deserialize: (String) -> T
+): ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
+
+    override fun valueFromDB(value: Any): Any {
+        return when (value) {
+            is PGobject -> deserialize(value.value!!)
+            is String -> deserialize(value)
+            is Iterable<*> -> value
+            else -> deserialize(value as String)
+        }
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        return serialize(value as T)
+    }
+
+    override fun valueToString(value: Any?): String {
+        return when (value) {
+            is Iterable<*> -> nonNullValueToString(value)
+            else -> super.valueToString(value)
+        }
+    }
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue = when (currentDialect) {
+            is PostgreSQLDialect -> PGobject().apply {
+                type = currentDialect.dataTypeProvider.jsonType()
+                this.value = value as String?
+            }
+            else -> value
+        }
+        super.setParameter(stmt, index, parameterValue)
     }
 }
 

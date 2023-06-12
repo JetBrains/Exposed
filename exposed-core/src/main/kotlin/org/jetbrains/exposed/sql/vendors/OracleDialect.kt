@@ -39,6 +39,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         error("Unexpected value of type Boolean: $value")
     }
 
+    override fun jsonType(): String = "VARCHAR(32767)"
+
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
         e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"

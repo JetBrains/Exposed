@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -653,6 +655,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
         }
     )
+
+    // Serialization columns
+
+    fun <T : Any> json(name: String, stringify: (T) -> String, parse: (String) -> T): Column<T> =
+        registerColumn(name, JsonColumnType(stringify, parse))
+
+    fun <T : Any> json(name: String, actualJson: Json, kSerializer: KSerializer<T>): Column<T> =
+        json(name, { actualJson.encodeToString(kSerializer, it) }, { actualJson.decodeFromString(kSerializer, it) })
 
     // Auto-generated values
 

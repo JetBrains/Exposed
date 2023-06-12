@@ -107,6 +107,10 @@ abstract class DataTypeProvider {
     /** Returns the boolean value of the specified SQL [value]. */
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
+    // Serialization types
+
+    open fun jsonType(): String = "JSON"
+
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
