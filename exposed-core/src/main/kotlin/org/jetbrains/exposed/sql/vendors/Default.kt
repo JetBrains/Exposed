@@ -1092,7 +1092,7 @@ abstract class VendorDialect(
         val maybeFilterCondition = filterCondition(index) ?: ""
 
         return when {
-            // uniq and no filter -> constraint, the type is not supported
+            // unique and no filter -> constraint, the type is not supported
             index.unique && maybeFilterCondition.isEmpty() -> {
                 "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
             }
