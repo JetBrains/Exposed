@@ -1,10 +1,10 @@
 <div align="center">
-<img  align="center" src="./logo.png" alt="Exposed" width="315" /></div>
+<img  align="center" src="./docs/logo.png" alt="Exposed" width="315" /></div>
 <br><br>
 
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
-[![TC Build status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:KotlinTools_Exposed_Build)/statusIcon)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_Exposed_Build&guest=1)
+[![TC Build status](https://exposed.teamcity.com/app/rest/builds/buildType:id:Exposed_Build/statusIcon.svg)](https://exposed.teamcity.com/viewType.html?buildTypeId=Exposed_Build&guest=1)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -13,8 +13,12 @@
 Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.
 Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
 
-With Exposed you can have two levels of databases Access. You would like to use exposed because the database access includes wrapping DSL and a lightweight data access object. Also, our official mascot is Cuttlefish, which is well known for its outstanding mimicry ability that enables it to blend seamlessly in any environment. 
+With Exposed, you have two ways for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
 Similar to our mascot, Exposed can be used to mimic a variety of database engines and help you build applications without dependencies on any specific database engine and switch between them with very little or no changes.
+
+## Samples
+
+Check out the [samples](samples/README.md) for a quick start.
 
 ## Supported Databases
 
@@ -23,8 +27,8 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 -   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 -   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 -   H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
--   [Oracle](ORACLE.md)
--   [SQL Server](SQLServer.md)
+-   [Oracle](docs/ORACLE.md)
+-   [SQL Server](docs/SQLServer.md)
 
 ## Links
 
@@ -33,8 +37,8 @@ Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Ce
 For more information visit the links below:
 
 -   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
--   [Roadmap](ROADMAP.md) to see what's coming next
--   [Change log](ChangeLog.md) of improvements and bug fixes
+-   [Roadmap](docs/ROADMAP.md) to see what's coming next
+-   [Change log](docs/ChangeLog.md) of improvements and bug fixes
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>

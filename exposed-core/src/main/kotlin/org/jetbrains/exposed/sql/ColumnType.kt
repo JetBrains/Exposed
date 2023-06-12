@@ -739,8 +739,9 @@ class BlobColumnType : ColumnType() {
     }
 
     override fun nonNullValueToString(value: Any): String {
-        if (value !is ExposedBlob)
+        if (value !is ExposedBlob) {
             error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
+        }
 
         return currentDialect.dataTypeProvider.hexToDb(value.hexString())
     }

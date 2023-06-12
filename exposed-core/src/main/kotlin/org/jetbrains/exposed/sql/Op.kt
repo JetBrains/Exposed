@@ -35,7 +35,7 @@ abstract class Op<T> : Expression<T>() {
     object FALSE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when {
-                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle  ->
+                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                     build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(false))
             }

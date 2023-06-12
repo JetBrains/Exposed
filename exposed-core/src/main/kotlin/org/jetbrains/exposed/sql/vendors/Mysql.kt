@@ -167,7 +167,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
         val isAliasSupported = when (val dialect = transaction.db.dialect) {
             is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
-            else -> false  // H2_MySQL mode also uses this function provider & requires older version
+            else -> false // H2_MySQL mode also uses this function provider & requires older version
         }
 
         return with(QueryBuilder(true)) {
@@ -178,7 +178,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
             +" ON DUPLICATE KEY UPDATE "
             onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
-                append("${transaction.identity(columnToUpdate)}=${updateExpression}")
+                append("${transaction.identity(columnToUpdate)}=$updateExpression")
             } ?: run {
                 data.unzip().first.appendTo { column ->
                     val columnName = transaction.identity(column)
@@ -204,6 +204,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override val supportsCreateSequence: Boolean = false
+
+    override val supportsTernaryAffectedRowValues: Boolean = true
 
     override val supportsSubqueryUnions: Boolean = true
 

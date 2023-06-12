@@ -7,10 +7,13 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.tests.*
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
+import java.util.*
+import kotlin.properties.Delegates
 
 // Upsert implementation does not support H2 version 1
 // https://youtrack.jetbrains.com/issue/EXPOSED-30/Phase-Out-Support-for-H2-Version-1.x
@@ -18,35 +21,26 @@ class UpsertTests : DatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
     private val upsertViaMergeDB = listOf(TestDB.SQLSERVER, TestDB.ORACLE) + TestDB.allH2TestDB - TestDB.H2_MYSQL
 
-    private val mySqlLikeDB = listOf(TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.MARIADB, TestDB.H2_MARIADB)
-
     @Test
     fun testUpsertWithPKConflict() {
-        val tester = object : Table("tester") {
-            val id = integer("id").autoIncrement()
-            val name = varchar("name", 64)
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        withTables(tester) { testDb ->
+        withTables(AutoIncTable) { testDb ->
             excludingH2Version1(testDb) {
-                val id1 = tester.insert {
+                val id1 = AutoIncTable.insert {
                     it[name] = "A"
-                } get tester.id
+                } get AutoIncTable.id
 
-                tester.upsert {
+                AutoIncTable.upsert {
                     if (testDb in upsertViaMergeDB) it[id] = 2
                     it[name] = "B"
                 }
-                tester.upsert {
+                AutoIncTable.upsert {
                     it[id] = id1
                     it[name] = "C"
                 }
 
-                assertEquals(2, tester.selectAll().count())
-                val updatedResult = tester.select { tester.id eq id1 }.single()
-                assertEquals("C", updatedResult[tester.name])
+                assertEquals(2, AutoIncTable.selectAll().count())
+                val updatedResult = AutoIncTable.select { AutoIncTable.id eq id1 }.single()
+                assertEquals("C", updatedResult[AutoIncTable.name])
             }
         }
     }
@@ -94,29 +88,24 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertWithUniqueIndexConflict() {
-        val tester = object : Table("tester") {
-            val name = varchar("name", 64).uniqueIndex()
-            val age = integer("age")
-        }
-
-        withTables(tester) { testDb ->
+        withTables(Words) { testDb ->
             excludingH2Version1(testDb) {
-                val nameA = tester.upsert {
-                    it[name] = "A"
-                    it[age] = 10
-                } get tester.name
-                tester.upsert {
-                    it[name] = "B"
-                    it[age] = 10
+                val wordA = Words.upsert {
+                    it[word] = "A"
+                    it[count] = 10
+                } get Words.word
+                Words.upsert {
+                    it[word] = "B"
+                    it[count] = 10
                 }
-                tester.upsert {
-                    it[name] = "A"
-                    it[age] = 9
+                Words.upsert {
+                    it[word] = wordA
+                    it[count] = 9
                 }
 
-                assertEquals(2, tester.selectAll().count())
-                val updatedResult = tester.select { tester.name eq nameA }.single()
-                assertEquals(9, updatedResult[tester.age])
+                assertEquals(2, Words.selectAll().count())
+                val updatedResult = Words.select { Words.word eq wordA }.single()
+                assertEquals(9, updatedResult[Words.count])
             }
         }
     }
@@ -129,7 +118,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        withTables(excludeSettings = mySqlLikeDB, tester) { testDb ->
+        withTables(excludeSettings = TestDB.mySqlRelatedDB, tester) { testDb ->
             excludingH2Version1(testDb) {
                 val oldIdA = tester.insert {
                     it[idA] = 1
@@ -174,7 +163,7 @@ class UpsertTests : DatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        val okWithNoUniquenessDB = mySqlLikeDB + listOf(TestDB.SQLITE)
+        val okWithNoUniquenessDB = TestDB.mySqlRelatedDB + TestDB.SQLITE
 
         withTables(tester) { testDb ->
             excludingH2Version1(testDb) {
@@ -196,23 +185,18 @@ class UpsertTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertWithManualUpdateAssignment() {
-        val tester = object : Table("tester") {
-            val word = varchar("word", 256).uniqueIndex()
-            val count = integer("count").default(1)
-        }
-
-        withTables(tester) { testDb ->
+        withTables(Words) { testDb ->
             excludingH2Version1(testDb) {
                 val testWord = "Test"
-                val incrementCount = listOf(tester.count to tester.count.plus(1))
+                val incrementCount = listOf(Words.count to Words.count.plus(1))
 
                 repeat(3) {
-                    tester.upsert(onUpdate = incrementCount) {
+                    Words.upsert(onUpdate = incrementCount) {
                         it[word] = testWord
                     }
                 }
 
-                assertEquals(3, tester.selectAll().single()[tester.count])
+                assertEquals(3, Words.selectAll().single()[Words.count])
             }
         }
     }
@@ -298,7 +282,7 @@ class UpsertTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        withTables(excludeSettings = mySqlLikeDB + upsertViaMergeDB, tester) {
+        withTables(excludeSettings = TestDB.mySqlRelatedDB + upsertViaMergeDB, tester) {
             val id1 = tester.insertAndGetId {
                 it[name] = "A"
                 it[address] = "Place A"
@@ -364,5 +348,129 @@ class UpsertTests : DatabaseTestsBase() {
                 assertEquals("bar", tester2.selectAll().single()[tester2.name])
             }
         }
+    }
+
+    @Test
+    fun testBatchUpsertWithNoConflict() {
+        withTables(Words) { testDb ->
+            excludingH2Version1(testDb) {
+                val amountOfWords = 10
+                val allWords = List(amountOfWords) { i -> "Word ${'A' + i}" to amountOfWords * i + amountOfWords }
+
+                val generatedIds = Words.batchUpsert(allWords) { (word, count) ->
+                    this[Words.word] = word
+                    this[Words.count] = count
+                }
+
+                assertEquals(amountOfWords, generatedIds.size)
+                assertEquals(amountOfWords.toLong(), Words.selectAll().count())
+            }
+        }
+    }
+
+    @Test
+    fun testBatchUpsertWithConflict() {
+        withTables(Words) { testDb ->
+            excludingH2Version1(testDb) {
+                val vowels = listOf("A", "E", "I", "O", "U")
+                val alphabet = ('A'..'Z').map { it.toString() }
+                val lettersWithDuplicates = alphabet + vowels
+                val incrementCount = listOf(Words.count to Words.count.plus(1))
+
+                Words.batchUpsert(lettersWithDuplicates, onUpdate = incrementCount) { letter ->
+                    this[Words.word] = letter
+                }
+
+                assertEquals(alphabet.size.toLong(), Words.selectAll().count())
+                Words.selectAll().forEach {
+                    val expectedCount = if (it[Words.word] in vowels) 2 else 1
+                    assertEquals(expectedCount, it[Words.count])
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testBatchUpsertWithSequence() {
+        withTables(Words) { testDb ->
+            excludingH2Version1(testDb) {
+                val amountOfWords = 25
+                val allWords = List(amountOfWords) { UUID.randomUUID().toString() }.asSequence()
+                Words.batchUpsert(allWords) { word -> this[Words.word] = word }
+
+                val batchesSize = Words.selectAll().count()
+
+                assertEquals(amountOfWords.toLong(), batchesSize)
+            }
+        }
+    }
+
+    @Test
+    fun testBatchUpsertWithEmptySequence() {
+        withTables(Words) { testDb ->
+            excludingH2Version1(testDb) {
+                val allWords = emptySequence<String>()
+                Words.batchUpsert(allWords) { word -> this[Words.word] = word }
+
+                val batchesSize = Words.selectAll().count()
+
+                assertEquals(0, batchesSize)
+            }
+        }
+    }
+
+    @Test
+    fun testInsertedCountWithBatchUpsert() {
+        withTables(AutoIncTable) { testDb ->
+            excludingH2Version1(testDb) {
+                // SQL Server requires statements to be executed before results can be obtained
+                val isNotSqlServer = testDb != TestDB.SQLSERVER
+                val data = listOf(1 to "A", 2 to "B", 3 to "C")
+                val newDataSize = data.size
+                var statement: BatchUpsertStatement by Delegates.notNull()
+
+                // all new rows inserted
+                AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(newDataSize, statement.insertedCount)
+
+                // all existing rows set to their current values
+                val isH2MysqlMode = testDb == TestDB.H2_MYSQL || testDb == TestDB.H2_MARIADB
+                var expected = if (isH2MysqlMode) 0 else newDataSize
+                AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(expected, statement.insertedCount)
+
+                // all existing rows updated & 1 new row inserted
+                val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
+                expected = if (testDb in TestDB.mySqlRelatedDB) newDataSize * 2 + 1 else newDataSize + 1
+                AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+                    statement = this
+                    this[AutoIncTable.id] = id
+                    this[AutoIncTable.name] = name
+                }
+                assertEquals(expected, statement.insertedCount)
+
+                assertEquals(updatedData.size.toLong(), AutoIncTable.selectAll().count())
+            }
+        }
+    }
+
+    private object AutoIncTable : Table("auto_inc_table") {
+        val id = integer("id").autoIncrement()
+        val name = varchar("name", 64)
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    private object Words : Table("words") {
+        val word = varchar("name", 64).uniqueIndex()
+        val count = integer("count").default(1)
     }
 }

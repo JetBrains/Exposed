@@ -537,7 +537,9 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from triple are equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(
+        list: Iterable<Triple<T1, T2, T3>>
+    ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = true)
 
     /** Checks if this expression is equals to any element from [list]. */
@@ -556,14 +558,18 @@ interface ISqlExpressionBuilder {
      * Checks if both expressions are not equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
+    infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(
+        list: Iterable<Pair<T1, T2>>
+    ): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = false)
 
     /**
      * Checks if expressions from triple are not equal to elements from [list].
      * This syntax is unsupported by SQLite and SQL Server
      **/
-    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(list: Iterable<Triple<T1, T2, T3>>): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
+    infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(
+        list: Iterable<Triple<T1, T2, T3>>
+    ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = false)
 
     /** Checks if this expression is not equals to any element from [list]. */
@@ -614,7 +620,7 @@ interface ISqlExpressionBuilder {
     } as LiteralOp<T>
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
-        NoOpConversion(this, DecimalColumnType(15, 0))
+        NoOpConversion(this, DecimalColumnType(precision = 15, scale = 0))
 }
 
 /**

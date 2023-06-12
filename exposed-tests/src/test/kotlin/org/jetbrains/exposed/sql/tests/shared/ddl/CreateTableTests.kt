@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.Category
+import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
@@ -533,6 +535,7 @@ class CreateTableTests : DatabaseTestsBase() {
         val parent = object : Table("parent2") {
             val idA = integer("id_a")
             val idB = integer("id_b")
+
             init {
                 uniqueIndex(idA, idB)
             }
@@ -572,6 +575,23 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun createTableWithOnDeleteSetDefault() {
+        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL)) {
+            val expected = listOf(
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
+                    "${Item.columns.joinToString { it.descriptionDdl(false) }}," +
+                    " CONSTRAINT ${"fk_Item_categoryId__id".inProperCase()}" +
+                    " FOREIGN KEY (${this.identity(Item.categoryId)})" +
+                    " REFERENCES ${this.identity(Category)}(${this.identity(Category.id)})" +
+                    " ON DELETE SET DEFAULT" +
+                    ")"
+            )
+
+            assertEqualCollections(Item.ddl, expected)
+        }
+    }
+
     object OneTable : IntIdTable("one")
     object OneOneTable : IntIdTable("one.one")
 
@@ -598,7 +618,8 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `create table with quoted name with camel case`() {
+    @Test
+    fun `create table with quoted name with camel case`() {
         val testTable = object : IntIdTable("quotedTable") {
             val int = integer("intColumn")
         }
