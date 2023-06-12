@@ -1096,7 +1096,7 @@ abstract class VendorDialect(
             index.unique && maybeFilterCondition.isEmpty() -> {
                 "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
             }
-            // uniq and filter -> index only, the type is not supported
+            // unique and filter -> index only, the type is not supported
             index.unique -> {
                 "CREATE UNIQUE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
             }
