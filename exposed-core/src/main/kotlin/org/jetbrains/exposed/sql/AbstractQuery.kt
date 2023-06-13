@@ -27,7 +27,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(targets: List<Table>) : Sized
         other.fetchSize = fetchSize
     }
 
-    override fun prepareSQL(transaction: Transaction) = prepareSQL(QueryBuilder(true))
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean) = prepareSQL(QueryBuilder(prepared))
 
     abstract fun prepareSQL(builder: QueryBuilder): String
 

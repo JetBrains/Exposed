@@ -20,7 +20,7 @@ open class UpsertStatement<Key : Any>(
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table) {
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val functionProvider = when (val dialect = transaction.db.dialect) {
             is H2Dialect -> when (dialect.h2Mode) {
                 H2Dialect.H2CompatibilityMode.MariaDB, H2Dialect.H2CompatibilityMode.MySQL -> MysqlFunctionProvider()
@@ -28,6 +28,6 @@ open class UpsertStatement<Key : Any>(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, *keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, keys = keys)
     }
 }

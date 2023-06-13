@@ -119,7 +119,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                 executeUpdate()
             }
 
-            override fun prepareSQL(transaction: Transaction): String = sqls.joinToString("\n")
+            override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = sqls.joinToString("\n")
 
             override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
         }

@@ -155,7 +155,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         columns: List<Column<*>>,
         expression: String,
-        transaction: Transaction
+        transaction: Transaction,
+        prepared: Boolean
     ): String {
         val insertStatement = super.insert(false, table, columns, expression, transaction)
         return insertStatement.replace("INSERT", "INSERT OR REPLACE")
