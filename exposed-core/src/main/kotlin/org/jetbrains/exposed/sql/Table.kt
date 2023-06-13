@@ -982,6 +982,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Creates a unique index.
      *
      * @param columns Columns that compose the index.
+     * @param filterCondition Index filtering conditions (also known as "partial index") declaration.
      */
     fun uniqueIndex(vararg columns: Column<*>, filterCondition: FilterCondition = null): Unit =
         index(null, true, *columns, filterCondition = filterCondition)
@@ -991,6 +992,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @param customIndexName Name of the index.
      * @param columns Columns that compose the index.
+     * @param filterCondition Index filtering conditions (also known as "partial index") declaration.
      */
     fun uniqueIndex(customIndexName: String? = null, vararg columns: Column<*>, filterCondition: FilterCondition = null): Unit =
         index(customIndexName, true, *columns, filterCondition = filterCondition)
