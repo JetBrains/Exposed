@@ -109,7 +109,11 @@ abstract class DataTypeProvider {
 
     // Serialization types
 
+    /** Data type for storing JSON in a non-binary text format. */
     open fun jsonType(): String = "JSON"
+
+    /** Data type for storing JSON in a decomposed binary format. */
+    open fun jsonBType(): String = "JSON"
 
     // Misc.
 

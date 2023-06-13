@@ -911,9 +911,12 @@ class EnumerationNameColumnType<T : Enum<T>>(
 
 // Serialization columns
 
-class JsonColumnType<T : Any>(
-    private val serialize: (T) -> String,
-    private val deserialize: (String) -> T
+/**
+ * Column for storing JSON in non-binary text format.
+ */
+open class JsonColumnType<T : Any>(
+    val serialize: (T) -> String,
+    val deserialize: (String) -> T
 ): ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
@@ -946,6 +949,16 @@ class JsonColumnType<T : Any>(
         }
         super.setParameter(stmt, index, parameterValue)
     }
+}
+
+/**
+ * Column for storing JSON in binary format.
+ */
+class JsonBColumnType<T : Any>(
+    serialize: (T) -> String,
+    deserialize: (String) -> T
+): JsonColumnType<T>(serialize, deserialize) {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.jsonBType()
 }
 
 // Date/Time columns

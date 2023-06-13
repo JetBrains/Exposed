@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -658,11 +660,49 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Serialization columns
 
-    fun <T : Any> json(name: String, stringify: (T) -> String, parse: (String) -> T): Column<T> =
-        registerColumn(name, JsonColumnType(stringify, parse))
+    /**
+     * Creates a column, with the specified [name], for storing JSON in text format.
+     *
+     * @param name Name of the column
+     * @param serialize Function that encodes a data object to a JSON string.
+     * @param deserialize Function that decodes a JSON string into a data object.
+     */
+    fun <T : Any> json(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T> =
+        registerColumn(name, JsonColumnType(serialize, deserialize))
 
-    fun <T : Any> json(name: String, actualJson: Json, kSerializer: KSerializer<T>): Column<T> =
-        json(name, { actualJson.encodeToString(kSerializer, it) }, { actualJson.decodeFromString(kSerializer, it) })
+    /**
+     * Creates a column, with the specified [name], for storing JSON in text format.
+     *
+     * @param name Name of the column
+     * @param jsonConfig Instance of the `Json` class.
+     * The default `Json` object is used if a configured instance is not provided.
+     * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
+     * Defaults to a generic serializer for type [T].
+     */
+    inline fun <reified T : Any> json(name: String, jsonConfig: Json = Json, kSerializer: KSerializer<T> = serializer<T>()): Column<T> =
+        json(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
+
+    /**
+     * Creates a column, with the specified [name], for storing JSON in decomposed binary format.
+     *
+     * @param name Name of the column
+     * @param serialize Function that encodes a data object to a JSON string.
+     * @param deserialize Function that decodes a JSON string into a data object.
+     */
+    fun <T : Any> jsonb(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T> =
+        registerColumn(name, JsonColumnType(serialize, deserialize))
+
+    /**
+     * Creates a column, with the specified [name], for storing JSON in decomposed binary format.
+     *
+     * @param name Name of the column
+     * @param jsonConfig Instance of the `Json` class.
+     * The default `Json` object is used if a configured instance is not provided.
+     * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
+     * Defaults to a generic serializer for type [T].
+     */
+    inline fun <reified T : Any> jsonb(name: String, jsonConfig: Json = Json, kSerializer: KSerializer<T> = serializer<T>()): Column<T> =
+        jsonb(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
 
     // Auto-generated values
 
