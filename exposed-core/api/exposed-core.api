@@ -454,6 +454,7 @@ public final class org/jetbrains/exposed/sql/CompositeSqlLogger : org/jetbrains/
 	public fun afterExecution (Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public fun afterRollback ()V
 	public fun afterRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
+	public fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public fun beforeCommit (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun beforeExecution (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/StatementContext;)V
 	public fun beforeRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
@@ -2491,6 +2492,7 @@ public final class org/jetbrains/exposed/sql/statements/GlobalStatementIntercept
 	public static fun afterExecution (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public static fun afterRollback (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;)V
 	public static fun afterRollback (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public static fun beforeCommit (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
 	public static fun beforeExecution (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/StatementContext;)V
 	public static fun beforeRollback (Lorg/jetbrains/exposed/sql/statements/GlobalStatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
@@ -2583,6 +2585,7 @@ public abstract interface class org/jetbrains/exposed/sql/statements/StatementIn
 	public abstract fun afterExecution (Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public abstract fun afterRollback ()V
 	public abstract fun afterRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
+	public abstract fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public abstract fun beforeCommit (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public abstract fun beforeExecution (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/StatementContext;)V
 	public abstract fun beforeRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
@@ -2595,6 +2598,7 @@ public final class org/jetbrains/exposed/sql/statements/StatementInterceptor$Def
 	public static fun afterExecution (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public static fun afterRollback (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;)V
 	public static fun afterRollback (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
+	public static fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public static fun beforeCommit (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
 	public static fun beforeExecution (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/StatementContext;)V
 	public static fun beforeRollback (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;Lorg/jetbrains/exposed/sql/Transaction;)V
