@@ -927,17 +927,17 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             final override val querySuffix: String = preparedQuerySuffix
         }
 
-        class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, *ofTables)
+        class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
 
-        open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, *ofTables) {
+        open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, ofTables = ofTables) {
             companion object : ForNoKeyUpdate()
         }
 
-        open class ForShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR SHARE", mode, *ofTables) {
+        open class ForShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
             companion object : ForShare()
         }
 
-        open class ForKeyShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR KEY SHARE", mode, *ofTables) {
+        open class ForKeyShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR KEY SHARE", mode, ofTables = ofTables) {
             companion object : ForKeyShare()
         }
     }

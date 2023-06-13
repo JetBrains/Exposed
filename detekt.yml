@@ -47,7 +47,3 @@ complexity:
 naming:
     ConstructorParameterNaming:
         active: false
-
-performance:
-    SpreadOperator:
-        active: false
