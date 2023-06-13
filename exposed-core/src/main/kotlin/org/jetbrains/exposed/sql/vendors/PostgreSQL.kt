@@ -20,6 +20,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun ubyteType(): String = "SMALLINT"
+    override fun hexToDb(hexString: String): String = """E'\\x$hexString'"""
 }
 
 internal object PostgreSQLFunctionProvider : FunctionProvider() {
@@ -44,6 +45,18 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
                 append(")")
             }
         }
+    }
+
+    /**
+     * Implementation of [FunctionProvider.locate]
+     * Note: search is case-sensitive
+     * */
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("POSITION(\'", substring, "\' IN ", expr, ")")
     }
 
     override fun <T : String?> regexp(
@@ -155,29 +168,37 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         toString()
     }
 
-    override fun replace(
+    override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        transaction: Transaction
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
     ): String {
-        val builder = QueryBuilder(true)
-        val sql = if (data.isEmpty()) {
-            ""
-        } else {
-            data.appendTo(builder, prefix = "VALUES (", postfix = ")") { (col, value) -> registerArgument(col, value) }.toString()
+        val keyColumns = getKeyColumnsForUpsert(table, *keys)
+        if (keyColumns.isNullOrEmpty()) {
+            transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val columns = data.map { it.first }
+        val updateColumns = data.unzip().first.filter { it !in keyColumns }
 
-        val def = super.insert(false, table, columns, sql, transaction)
+        return with(QueryBuilder(true)) {
+            appendInsertToUpsertClause(table, data, transaction)
 
-        val uniqueCols = table.primaryKey?.columns
-        if (uniqueCols.isNullOrEmpty()) {
-            transaction.throwUnsupportedException("PostgreSQL replace table must supply at least one primary key.")
-        }
-        val conflictKey = uniqueCols.joinToString { transaction.identity(it) }
-        return def + "ON CONFLICT ($conflictKey) DO UPDATE SET " + columns.joinToString {
-            "${transaction.identity(it)}=EXCLUDED.${transaction.identity(it)}"
+            +" ON CONFLICT "
+            keyColumns.appendTo(prefix = "(", postfix = ")") { column ->
+                append(transaction.identity(column))
+            }
+
+            +" DO"
+            appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
+
+            where?.let {
+                +" WHERE "
+                +it
+            }
+            toString()
         }
     }
 
@@ -201,31 +222,35 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override val supportsOrderByNullsFirstLast: Boolean = true
 
+    override val requiresAutoCommitOnCreateDrop: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(buildString {
-        val tr = TransactionManager.current()
-        append("ALTER TABLE ${tr.identity(column.table)} ")
-        val colName = tr.identity(column)
-        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(
+        buildString {
+            val tr = TransactionManager.current()
+            append("ALTER TABLE ${tr.identity(column.table)} ")
+            val colName = tr.identity(column)
+            append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
 
-        if (columnDiff.nullability) {
-            append(", ALTER COLUMN $colName ")
-            if (column.columnType.nullable) {
-                append("DROP ")
-            } else {
-                append("SET ")
+            if (columnDiff.nullability) {
+                append(", ALTER COLUMN $colName ")
+                if (column.columnType.nullable) {
+                    append("DROP ")
+                } else {
+                    append("SET ")
+                }
+                append("NOT NULL")
             }
-            append("NOT NULL")
-        }
-        if (columnDiff.defaults) {
-            column.dbDefaultValue?.let {
-                append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
-            } ?: run {
-                ",  ALTER COLUMN $colName DROP DEFAULT"
+            if (columnDiff.defaults) {
+                column.dbDefaultValue?.let {
+                    append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+                } ?: run {
+                    append(",  ALTER COLUMN $colName DROP DEFAULT")
+                }
             }
         }
-    })
+    )
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
@@ -237,10 +262,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         return "CREATE INDEX $name ON $table USING $type $columns"
     }
 
-    companion object {
-        /** PostgreSQL dialect name */
-        const val dialectName: String = "postgresql"
-    }
+    companion object : DialectNameProvider("postgresql")
 }
 
 /**
@@ -249,8 +271,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
 open class PostgreSQLNGDialect : PostgreSQLDialect() {
-    companion object {
-        /** PostgreSQL-NG dialect name */
-        const val dialectName: String = "pgsql"
-    }
+    override val requiresAutoCommitOnCreateDrop: Boolean = true
+
+    companion object : DialectNameProvider("pgsql")
 }

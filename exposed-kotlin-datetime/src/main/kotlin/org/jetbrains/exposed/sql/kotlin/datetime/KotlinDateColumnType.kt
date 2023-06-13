@@ -1,3 +1,5 @@
+@file:Suppress("PrivatePropertyName")
+
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
@@ -6,15 +8,17 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.sql.ResultSet
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
+import kotlin.time.Duration.Companion.nanoseconds
 
 private const val MILLIS_IN_SECOND = 1000
 
@@ -35,16 +39,16 @@ private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     ).withZone(ZoneId.systemDefault())
 }
 
- private val ORACLE_TIME_STRING_FORMATTER by lazy {
+private val ORACLE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "1900-01-01 HH:mm:ss",
         Locale.ROOT
     ).withZone(ZoneId.of("UTC"))
- }
+}
 
- private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
- }
+}
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
@@ -62,7 +66,7 @@ private val LocalDate.millis get() = this.atStartOfDayIn(TimeZone.currentSystemD
 class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
-    override fun sqlType(): String = "DATE"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -89,8 +93,9 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
         else -> LocalDate.parse(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any) = when (value) {
-        is LocalDate -> java.sql.Date(value.millis)
+    override fun notNullValueToDB(value: Any) = when {
+        value is LocalDate && currentDialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.format(value.toJavaLocalDate())
+        value is LocalDate -> java.sql.Date(value.millis)
         else -> value
     }
 
@@ -114,8 +119,12 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return when (currentDialect) {
-            is SQLiteDialect, is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
+        val dialect = currentDialect
+
+        return when {
+            dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
+            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
         }
     }
@@ -155,7 +164,7 @@ class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: Any): String {
-        val formatter = if (currentDialect is OracleDialect) {
+        val formatter = if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
             ORACLE_TIME_STRING_FORMATTER
         } else {
             DEFAULT_TIME_STRING_FORMATTER
@@ -178,7 +187,7 @@ class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
         is Int -> longToLocalTime(value.toLong())
         is Long -> longToLocalTime(value)
         is String -> {
-            val formatter = if (currentDialect is OracleDialect) {
+            val formatter = if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                 formatterForDateString(value)
             } else {
                 DEFAULT_TIME_STRING_FORMATTER
@@ -212,8 +221,9 @@ class KotlinInstantColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        return when (currentDialect) {
-            is OracleDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+        return when {
+            currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -241,7 +251,6 @@ class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
-@ExperimentalTime
 class KotlinDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
@@ -258,8 +267,8 @@ class KotlinDurationColumnType : ColumnType() {
     }
 
     override fun valueFromDB(value: Any): Duration = when (value) {
-        is Long -> Duration.nanoseconds(value)
-        is Number -> Duration.nanoseconds(value.toLong())
+        is Long -> value.nanoseconds
+        is Number -> value.toLong().nanoseconds
         is String -> Duration.parse(value)
         else -> valueFromDB(value.toString())
     }
@@ -316,5 +325,4 @@ fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, Kotlin
  *
  * @param name The column name
  */
-@OptIn(ExperimentalTime::class)
 fun Table.duration(name: String): Column<Duration> = registerColumn(name, KotlinDurationColumnType())

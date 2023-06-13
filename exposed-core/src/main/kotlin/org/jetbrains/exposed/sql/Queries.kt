@@ -4,9 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import kotlin.sequences.Sequence
 
@@ -114,7 +112,15 @@ private fun <T : Table, E> T.batchInsert(
 }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Collection of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
  */
 fun <T : Table, E : Any> T.batchReplace(
     data: Iterable<E>,
@@ -122,12 +128,34 @@ fun <T : Table, E : Any> T.batchReplace(
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Sequence of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplaceWithSequence
+ */
 fun <T : Table, E : Any> T.batchReplace(
     data: Sequence<E>,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * first deletes the existing rows before inserting new rows.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param data Iterator over a collection of values to use in replace.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
+ */
 private fun <T : Table, E> T.batchReplace(
     data: Iterator<E>,
     shouldReturnGeneratedValues: Boolean = true,
@@ -197,7 +225,12 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Up
     }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testReplace01
+ * Represents the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+ * first deletes the existing row before inserting a new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
  */
 fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
@@ -230,6 +263,102 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current())!!
+}
+
+/**
+ * Represents the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
+ *
+ * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
+ *
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match.
+ * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
+ */
+fun <T : Table> T.upsert(
+    vararg keys: Column<*>,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpsertStatement<Long>) -> Unit
+) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, where = where?.let { SqlExpressionBuilder.it() }).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
+
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
+ *
+ * @param data Collection of values to use in batch upsert.
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
+ * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
+ */
+fun <T : Table, E : Any> T.batchUpsert(
+    data: Iterable<E>,
+    vararg keys: Column<*>,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchUpsertStatement.(E) -> Unit
+): List<ResultRow> {
+    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+}
+
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
+ *
+ * @param data Sequence of values to use in batch upsert.
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
+ * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithSequence
+ */
+fun <T : Table, E : Any> T.batchUpsert(
+    data: Sequence<E>,
+    vararg keys: Column<*>,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchUpsertStatement.(E) -> Unit
+): List<ResultRow> {
+    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+}
+
+/**
+ * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ *
+ * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
+ * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
+ *
+ * @param data Iterator over a collection of values to use in batch upsert.
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
+ * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
+ * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
+ */
+private fun <T : Table, E> T.batchUpsert(
+    data: Iterator<E>,
+    vararg keys: Column<*>,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    shouldReturnGeneratedValues: Boolean = true,
+    body: BatchUpsertStatement.(E) -> Unit
+): List<ResultRow> = executeBatch(data, body) {
+    BatchUpsertStatement(this, *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues)
 }
 
 /**

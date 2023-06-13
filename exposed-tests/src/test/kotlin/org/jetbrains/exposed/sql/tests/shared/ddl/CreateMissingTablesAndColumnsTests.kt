@@ -19,6 +19,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
+import kotlin.properties.Delegates
 
 class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
@@ -247,11 +248,104 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-        withTables(excludeSettings = listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), tables = arrayOf(initialTable)) {
+        withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+        }
+    }
+
+    @Test
+    fun `columns with default values that haven't changed shouldn't trigger change`() {
+        var table by Delegates.notNull<Table>()
+        withDb { testDb ->
+            try {
+                // MySQL doesn't support default values on text columns, hence excluded
+                table = if(testDb != TestDB.MYSQL) {
+                    object : Table("varchar_test") {
+                        val varchar = varchar("varchar_column", 255).default(" ")
+                        val text = text("text_column").default(" ")
+                    }
+                } else {
+
+                    object : Table("varchar_test") {
+                        val varchar = varchar("varchar_column", 255).default(" ")
+                    }
+                }
+
+                // MySQL doesn't support default values on text columns, hence excluded
+
+                SchemaUtils.create(table)
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
+                assertEqualLists(emptyList(), actual)
+            } finally {
+                SchemaUtils.drop(table)
+            }
+        }
+    }
+
+    private class StringFieldTable(name: String, isTextColumn: Boolean, default: String) : IntIdTable(name) {
+        // nullable column is here as Oracle treat '' as NULL
+        val column: Column<String?> = if (isTextColumn) {
+            text("test_column").default(default).nullable()
+        } else {
+            varchar("test_column", 255).default(default).nullable()
+        }
+    }
+
+    @Test
+    fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
+        val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false," ")
+
+        val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
+
+        val tableEmptyStringDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, "")
+
+        val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
+
+        // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            // MySQL doesn't support default values on text columns, hence excluded
+            val supportsTextDefault = testDb !in listOf(TestDB.MYSQL)
+            val tablesToTest = listOfNotNull(
+                tableWhitespaceDefaultVarchar to tableEmptyStringDefaultVarchar,
+                (tableWhitespaceDefaultText to tableEmptyStringDefaultText).takeIf { supportsTextDefault },
+            )
+            tablesToTest.forEach { (whiteSpaceTable, emptyTable) ->
+                try {
+                    SchemaUtils.create(whiteSpaceTable)
+
+                    val whiteSpaceId = whiteSpaceTable.insertAndGetId { }
+
+                    assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
+
+                    val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
+                    assertEquals(1, actual.size)
+
+                    // SQL Server requires drop/create constraint to change defaults, unsupported for now
+                    // Oracle treat '' as NULL column and can't alter from NULL to NULL
+                    if (testDb !in listOf(TestDB.SQLSERVER, TestDB.ORACLE)) {
+                        // Apply changes
+                        actual.forEach { exec(it) }
+                    } else {
+                        SchemaUtils.drop(whiteSpaceTable)
+                        SchemaUtils.create(whiteSpaceTable)
+                    }
+
+                    val emptyId = emptyTable.insertAndGetId { }
+
+                    // null is here as Oracle treat '' as NULL
+                    val expectedEmptyValue = when (testDb) {
+                        TestDB.ORACLE, TestDB.H2_ORACLE -> null
+                        else -> ""
+                    }
+
+                    assertEquals(expectedEmptyValue, emptyTable.select { emptyTable.id eq emptyId }.single()[emptyTable.column])
+                } finally {
+                    SchemaUtils.drop(whiteSpaceTable, emptyTable)
+                }
+            }
         }
     }
 
@@ -274,7 +368,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         val excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)
-        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_PSQL)
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)

@@ -1,3 +1,4 @@
+@file:Suppress("Filename", "MatchingDeclarationName")
 package org.jetbrains.exposed.sql.statements.api
 
 interface ExposedConnection<OriginalConnection : Any> {

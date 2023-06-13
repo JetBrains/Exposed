@@ -2,8 +2,8 @@ package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.crypt.Algorithms
 import org.jetbrains.exposed.crypt.Encryptor
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -12,17 +12,22 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, _, _ ->
             val r = cities.slice(cities.id.sum()).selectAll().toList()
             assertEquals(1, r.size)
             assertEquals(6, r[0][cities.id.sum()])
@@ -47,7 +52,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.H2_ORACLE)) { cities, users, userData ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val mod1 = Expression.build { sum % 100 }
             val mod2 = Expression.build { sum mod 100 }
@@ -66,10 +71,64 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `rem on numeric PK should work`() {
+        // Create a new table here, since the other tables don't define PK
+        val table = object : IntIdTable("test_mod_on_pk") {
+            val otherColumn = short("other")
+        }
+        withTables(table) {
+            repeat(5) {
+                table.insert {
+                    it[otherColumn] = 4
+                }
+            }
+
+            val modOnPK1 = Expression.build { table.id % 3 }.alias("shard1")
+            val modOnPK2 = Expression.build { table.id % intLiteral(3) }.alias("shard2")
+            val modOnPK3 = Expression.build { table.id % table.otherColumn }.alias("shard3")
+            val modOnPK4 = Expression.build { table.otherColumn % table.id }.alias("shard4")
+
+            val r = table.slice(table.id, modOnPK1, modOnPK2, modOnPK3, modOnPK4).selectAll().last()
+
+            assertEquals(2, r[modOnPK1])
+            assertEquals(2, r[modOnPK2])
+            assertEquals(1, r[modOnPK3])
+            assertEquals(4, r[modOnPK4])
+        }
+    }
+
+    @Test
+    fun `mod on numeric PK should work`() {
+        // Create a new table here, since the other tables don't define PK
+        val table = object : IntIdTable("test_mod_on_pk") {
+            val otherColumn = short("other")
+        }
+        withTables(table) {
+            repeat(5) {
+                table.insert {
+                    it[otherColumn] = 4
+                }
+            }
+
+            val modOnPK1 = Expression.build { table.id mod 3 }.alias("shard1")
+            val modOnPK2 = Expression.build { table.id mod intLiteral(3) }.alias("shard2")
+            val modOnPK3 = Expression.build { table.id mod table.otherColumn }.alias("shard3")
+            val modOnPK4 = Expression.build { table.otherColumn mod table.id }.alias("shard4")
+
+            val r = table.slice(table.id, modOnPK1, modOnPK2, modOnPK3, modOnPK4).selectAll().last()
+
+            assertEquals(2, r[modOnPK1])
+            assertEquals(2, r[modOnPK2])
+            assertEquals(1, r[modOnPK3])
+            assertEquals(4, r[modOnPK4])
+        }
+    }
+
+    @Test
     fun testBitwiseAnd1() {
         withCitiesAndUsers { _, users, _ ->
             // SQLServer and Oracle don't support = on bit values
-            val doesntSupportBitwiseEQ = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
+            val doesntSupportBitwiseEQ = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd adminFlag) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
@@ -202,15 +261,9 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testLengthWithCount01() {
-        class LengthFunction<T : ExpressionWithColumnType<String>>(val exp: T) : Function<Int>(IntegerColumnType()) {
-            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                if (currentDialectTest is SQLServerDialect) append("LEN(", exp, ')')
-                else append("LENGTH(", exp, ')')
-            }
-        }
+    fun testCharLengthWithSum() {
         withCitiesAndUsers { cities, _, _ ->
-            val sumOfLength = LengthFunction(cities.name).sum()
+            val sumOfLength = CharLength(cities.name).sum()
             val expectedValue = cities.selectAll().sumOf { it[cities.name].length }
 
             val results = cities.slice(sumOfLength).selectAll().toList()
@@ -220,8 +273,40 @@ class FunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCharLengthWithEdgeCaseStrings() {
+        val testTable = object : Table("test_table") {
+            val nullString = varchar("null_string", 32).nullable()
+            val emptyString = varchar("empty_string", 32).nullable()
+        }
+
+        withTables(testTable) {
+            testTable.insert {
+                it[nullString] = null
+                it[emptyString] = ""
+            }
+            val helloWorld = "こんにちは世界" // each character is a 3-byte character
+
+            val nullLength = testTable.nullString.charLength()
+            val emptyLength = testTable.emptyString.charLength()
+            val multiByteLength = CharLength(stringLiteral(helloWorld))
+
+            // Oracle treats empty strings as null
+            val isOracleDialect = currentDialectTest is OracleDialect ||
+                currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val expectedEmpty = if (isOracleDialect) null else 0
+            // char_length should return single-character count, not total byte count
+            val expectedMultibyte = helloWorld.length
+
+            val result = testTable.slice(nullLength, emptyLength, multiByteLength).selectAll().single()
+            assertNull(result[nullLength])
+            assertEquals(expectedEmpty, result[emptyLength])
+            assertEquals(expectedMultibyte, result[multiByteLength])
+        }
+    }
+
+    @Test
     fun testSelectCase01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
             val r = users.slice(users.id, field).selectAll().orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
@@ -234,13 +319,53 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testStringFunctions() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, _, _ ->
 
             val lcase = DMLTestsData.Cities.name.lowerCase()
             assert(cities.slice(lcase).selectAll().any { it[lcase] == "prague" })
 
             val ucase = DMLTestsData.Cities.name.upperCase()
             assert(cities.slice(ucase).selectAll().any { it[ucase] == "PRAGUE" })
+        }
+    }
+
+    @Test
+    fun testLocate() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = cities.name.locate("e")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(6, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(6, results[2][locate]) // Prague
+        }
+    }
+
+    @Test
+    fun testLocate02() {
+        withCitiesAndUsers { cities, _, _ ->
+            val locate = cities.name.locate("Peter")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(0, results[2][locate]) // Prague
+        }
+    }
+
+    @Test
+    fun testLocate03() {
+        withCitiesAndUsers { cities, _, _ ->
+            val isCaseSensitiveDialect = currentDialectTest is SQLiteDialect ||
+                currentDialectTest is PostgreSQLDialect ||
+                currentDialectTest is H2Dialect
+
+            val locate = cities.name.locate("p")
+            val results = cities.slice(locate).selectAll().toList()
+
+            assertEquals(if (isCaseSensitiveDialect) 0 else 5, results[0][locate]) // St. Petersburg
+            assertEquals(0, results[1][locate]) // Munich
+            assertEquals(if (isCaseSensitiveDialect) 0 else 1, results[2][locate]) // Prague
         }
     }
 
@@ -258,8 +383,9 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRegexp01() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    @Test
+    fun testRegexp01() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id regexp "a.+" }.count())
             assertEquals(1L, users.select { users.id regexp "an.+" }.count())
             assertEquals(users.selectAll().count(), users.select { users.id regexp ".*" }.count())
@@ -267,8 +393,9 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRegexp02() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    @Test
+    fun testRegexp02() {
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
             assertEquals(2L, users.select { users.id.regexp(stringLiteral("a.+")) }.count())
             assertEquals(1L, users.select { users.id.regexp(stringLiteral("an.+")) }.count())
             assertEquals(users.selectAll().count(), users.select { users.id.regexp(stringLiteral(".*")) }.count())
@@ -276,7 +403,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConcat01() {
+    @Test
+    fun testConcat01() {
         withCitiesAndUsers { cities, _, _ ->
             val concatField = concat(stringLiteral("Foo"), stringLiteral("Bar"))
             val result = cities.slice(concatField).selectAll().limit(1).single()
@@ -288,7 +416,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConcat02() {
+    @Test
+    fun testConcat02() {
         withCitiesAndUsers { _, users, _ ->
             val concatField = concat(users.id, stringLiteral(" - "), users.name)
             val result = users.slice(concatField).select { users.id eq "andrey" }.single()
@@ -300,7 +429,8 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConcatWithNumbers() {
+    @Test
+    fun testConcatWithNumbers() {
         withCitiesAndUsers { _, _, data ->
             val concatField = concat(data.user_id, stringLiteral(" - "), data.comment, stringLiteral(" - "), data.value)
             val result = data.slice(concatField).select { data.user_id eq "sergey" }.single()
@@ -399,18 +529,33 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals("(($initialOp) AND ($initialOp)) OR ($initialOp)", (initialOp and initialOp or initialOp).toString())
             assertEquals("(($initialOp) AND $secondOp) OR ($initialOp)", (initialOp and secondOp or initialOp).toString())
             assertEquals("($initialOp) AND (($initialOp) OR ($initialOp))", (initialOp and (initialOp or initialOp)).toString())
-            assertEquals("(($initialOp) OR ($initialOp)) AND (($initialOp) OR ($initialOp))", ((initialOp or initialOp) and (initialOp or initialOp)).toString())
-            assertEquals("((($initialOp) OR ($initialOp)) AND ($initialOp)) OR ($initialOp)", (initialOp or initialOp and initialOp or initialOp).toString())
-            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or initialOp or initialOp or initialOp).toString())
+            assertEquals(
+                "(($initialOp) OR ($initialOp)) AND (($initialOp) OR ($initialOp))",
+                ((initialOp or initialOp) and (initialOp or initialOp)).toString()
+            )
+            assertEquals(
+                "((($initialOp) OR ($initialOp)) AND ($initialOp)) OR ($initialOp)",
+                (initialOp or initialOp and initialOp or initialOp).toString()
+            )
+            assertEquals(
+                "($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)",
+                (initialOp or initialOp or initialOp or initialOp).toString()
+            )
             assertEquals("$secondOp OR $secondOp OR $secondOp OR $secondOp", (secondOp or secondOp or secondOp or secondOp).toString())
-            assertEquals("($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)", (initialOp or (initialOp or initialOp) or initialOp).toString())
+            assertEquals(
+                "($initialOp) OR ($initialOp) OR ($initialOp) OR ($initialOp)",
+                (initialOp or (initialOp or initialOp) or initialOp).toString()
+            )
             assertEquals("($initialOp) OR ($secondOp AND $secondOp) OR ($initialOp)", (initialOp or (secondOp and secondOp) or initialOp).toString())
             assertEquals("$initialOp", (initialOp orIfNotNull (null as Expression<Boolean>?)).toString())
             assertEquals("$initialOp", (initialOp andIfNotNull (null as Op<Boolean>?)).toString())
             assertEquals("($initialOp) AND ($initialOp)", (initialOp andIfNotNull (initialOp andIfNotNull (null as Op<Boolean>?))).toString())
             assertEquals("($initialOp) AND ($initialOp)", (initialOp andIfNotNull (null as Op<Boolean>?) andIfNotNull initialOp).toString())
             assertEquals("($initialOp) AND $secondOp", (initialOp andIfNotNull (secondOp andIfNotNull (null as Op<Boolean>?))).toString())
-            assertEquals( "(($initialOp) AND $secondOp) OR $secondOp", (initialOp andIfNotNull (secondOp andIfNotNull (null as Expression<Boolean>?)) orIfNotNull secondOp).toString())
+            assertEquals(
+                "(($initialOp) AND $secondOp) OR $secondOp",
+                (initialOp andIfNotNull (secondOp andIfNotNull (null as Expression<Boolean>?)) orIfNotNull secondOp).toString()
+            )
             assertEquals("($initialOp) AND ($initialOp)", (initialOp.andIfNotNull { initialOp }).toString())
         }
     }
@@ -421,7 +566,7 @@ class FunctionsTests : DatabaseTestsBase() {
         infix fun Expression<*>.plus(operand: Int) =
             CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
 
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, _, userData ->
             userData
                 .select { (userData.value plus 15).eq(35) }
                 .forEach {
@@ -432,7 +577,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCoalesceFunction() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
 
             users.slice(users.cityId, coalesceExp1).selectAll().forEach {
@@ -457,10 +602,12 @@ class FunctionsTests : DatabaseTestsBase() {
         }
     }
 
-    private val encryptors = arrayOf("AES_256_PBE_GCM" to Algorithms.AES_256_PBE_GCM("passwd", "12345678"),
-                                     "AES_256_PBE_CBC" to Algorithms.AES_256_PBE_CBC("passwd", "12345678"),
-                                     "BLOW_FISH" to Algorithms.BLOW_FISH("sadsad"),
-                                     "TRIPLE_DES" to Algorithms.TRIPLE_DES("1".repeat(24)))
+    private val encryptors = arrayOf(
+        "AES_256_PBE_GCM" to Algorithms.AES_256_PBE_GCM("passwd", "12345678"),
+        "AES_256_PBE_CBC" to Algorithms.AES_256_PBE_CBC("passwd", "12345678"),
+        "BLOW_FISH" to Algorithms.BLOW_FISH("sadsad"),
+        "TRIPLE_DES" to Algorithms.TRIPLE_DES("1".repeat(24))
+    )
     private val testStrings = arrayOf("1", "2".repeat(10), "3".repeat(31), "4".repeat(1001), "5".repeat(5391))
 
     @Test
@@ -469,7 +616,8 @@ class FunctionsTests : DatabaseTestsBase() {
             assertEquals(
                 encryptor.maxColLength(str.toByteArray().size),
                 encryptor.encrypt(str).toByteArray().size,
-                "Failed to calculate length of $algorithm's output.")
+                "Failed to calculate length of $algorithm's output."
+            )
 
         for ((algorithm, encryptor) in encryptors) {
             for (testStr in testStrings) {

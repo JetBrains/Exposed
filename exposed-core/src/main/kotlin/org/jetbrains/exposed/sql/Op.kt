@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
 /**
  * Represents an SQL operator.
  */
+@Suppress("UnnecessaryAbstractClass")
 abstract class Op<T> : Expression<T>() {
     companion object {
         /** Builds a new operator using provided [op]. */
@@ -20,8 +22,10 @@ abstract class Op<T> : Expression<T>() {
     /** Boolean operator corresponding to the SQL value `TRUE` */
     object TRUE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-            when (currentDialect) {
-                is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
+            when {
+                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    build { booleanLiteral(true) eq booleanLiteral(true) }.toQueryBuilder(this)
+
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(true))
             }
         }
@@ -30,8 +34,9 @@ abstract class Op<T> : Expression<T>() {
     /** Boolean operator corresponding to the SQL value `FALSE` */
     object FALSE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-            when (currentDialect) {
-                is SQLServerDialect, is OracleDialect -> build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
+            when {
+                currentDialect is SQLServerDialect || currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    build { booleanLiteral(true) eq booleanLiteral(false) }.toQueryBuilder(this)
                 else -> append(currentDialect.dataTypeProvider.booleanToStatementString(false))
             }
         }
@@ -244,6 +249,42 @@ class IsNotNullOp(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append(expr, " IS NOT NULL") }
 }
 
+/**
+ * Represents an SQL operator that checks if [expression1] is equal to [expression2], with `null` treated as a comparable value.
+ * This comparison never returns null.
+ */
+class IsNotDistinctFromOp(
+    val expression1: Expression<*>,
+    val expression2: Expression<*>
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is MariaDBDialect, is MysqlDialect -> append(expression1, " <=> ", expression2)
+            is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 1")
+            is SQLiteDialect -> append(expression1, " IS ", expression2)
+            else -> append(expression1, " IS NOT DISTINCT FROM ", expression2)
+        }
+    }
+}
+
+/**
+ * Represents an SQL operator that checks if [expression1] is not equal to [expression2], with `null` treated as a comparable value.
+ * This comparison never returns null.
+ */
+class IsDistinctFromOp(
+    val expression1: Expression<*>,
+    val expression2: Expression<*>
+) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialectIfAvailable) {
+            is MariaDBDialect, is MysqlDialect -> append("NOT (", expression1, " <=> ", expression2, ")")
+            is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 0")
+            is SQLiteDialect -> append(expression1, " IS NOT ", expression2)
+            else -> append(expression1, " IS DISTINCT FROM ", expression2)
+        }
+    }
+}
+
 // Mathematical Operators
 
 /**
@@ -310,25 +351,63 @@ class DivideOp<T, S : T>(
 /**
  * Represents an SQL operator that calculates the remainder of dividing [expr1] by [expr2].
  */
-class ModOp<T : Number?, S : Number?>(
+class ModOp<T : Number?, S : Number?, R : Number?>(
     /** Returns the left-hand side operand. */
     val expr1: Expression<T>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<S>,
     override val columnType: IColumnType
-) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        when (currentDialectIfAvailable) {
-            is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
-            else -> append('(', expr1, " % ", expr2, ')')
+) : ExpressionWithColumnType<R>() {
+
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            when (currentDialectIfAvailable) {
+                is OracleDialect -> append("MOD(", expr1, ", ", expr2, ")")
+                else -> append('(', expr1, " % ", expr2, ')')
+            }
+        }
+    }
+
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        private fun <T : Number?, K : EntityID<T>?> originalColumn(expr1: ExpressionWithColumnType<K>): Column<T> {
+            return (expr1.columnType as EntityIDColumnType<*>).idColumn as Column<T>
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: ExpressionWithColumnType<K>,
+            expr2: Expression<S>
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr1)
+            return ModOp(column, expr2, column.columnType)
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: Expression<S>,
+            expr2: ExpressionWithColumnType<K>
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr2)
+            return ModOp(expr1, column, column.columnType)
+        }
+
+        internal operator fun <T, S : Number, K : EntityID<T>?> invoke(
+            expr1: ExpressionWithColumnType<K>,
+            expr2: S
+        ): ExpressionWithColumnType<T> where T : Number, T : Comparable<T> {
+            val column = originalColumn(expr1)
+            return ModOp(column, column.wrap(expr2), column.columnType)
         }
     }
 }
 
-
 // https://github.com/h2database/h2database/issues/3253
-private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>) =
-    if (e !is Column<*> && e !is LiteralOp<*>) e.castTo(columnType) else e
+private fun <T> ExpressionWithColumnType<T>.castToExpressionTypeForH2BitWiseIps(e: Expression<out T>, queryBuilder: QueryBuilder) {
+    when {
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> H2FunctionProvider.cast(e, ByteColumnType(), queryBuilder)
+        e is Column<*> || e is LiteralOp<*> -> queryBuilder.append(e)
+        else -> currentDialect.functionProvider.cast(e, columnType, queryBuilder)
+    }
+}
 
 /**
  * Represents an SQL operator that performs a bitwise `and` on [expr1] and [expr2].
@@ -347,7 +426,13 @@ class AndBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITAND(", expr1, ", ", expr2, ")")
-                    true -> append("BITAND(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITAND("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " & ", expr2, ')')
@@ -373,7 +458,13 @@ class OrBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITOR(", expr1, ", ", expr2, ")")
-                    true -> append("BITOR(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITOR("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " | ", expr2, ')')
@@ -402,7 +493,13 @@ class XorBitOp<T, S : T>(
             is H2Dialect -> {
                 when (dialect.isSecondVersion) {
                     false -> append("BITXOR(", expr1, ", ", expr2, ")")
-                    true -> append("BITXOR(", castToExpressionTypeForH2BitWiseIps(expr1), ", ", castToExpressionTypeForH2BitWiseIps(expr2), ")")
+                    true -> {
+                        +"BITXOR("
+                        castToExpressionTypeForH2BitWiseIps(expr1, this)
+                        +", "
+                        castToExpressionTypeForH2BitWiseIps(expr2, this)
+                        +")"
+                    }
                 }
             }
             else -> append('(', expr1, " ^ ", expr2, ')')
@@ -415,11 +512,12 @@ class XorBitOp<T, S : T>(
 /**
  * Represents an SQL operator that checks if [expr1] matches [expr2].
  */
-class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) : ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
+class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, val escapeChar: Char?) :
+    ComparisonOp(expr1, expr2, if (like) "LIKE" else "NOT LIKE") {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         super.toQueryBuilder(queryBuilder)
-        if (escapeChar != null){
-            with(queryBuilder){
+        if (escapeChar != null) {
+            with(queryBuilder) {
                 +" ESCAPE "
                 +stringParam(escapeChar.toString())
             }
@@ -533,28 +631,24 @@ fun booleanLiteral(value: Boolean): LiteralOp<Boolean> = LiteralOp(BooleanColumn
 fun byteLiteral(value: Byte): LiteralOp<Byte> = LiteralOp(ByteColumnType(), value)
 
 /** Returns the specified [value] as a unsigned byte literal. */
-@ExperimentalUnsignedTypes
 fun ubyteLiteral(value: UByte): LiteralOp<UByte> = LiteralOp(UByteColumnType(), value)
 
 /** Returns the specified [value] as a short literal. */
 fun shortLiteral(value: Short): LiteralOp<Short> = LiteralOp(ShortColumnType(), value)
 
 /** Returns the specified [value] as a unsigned short literal. */
-@ExperimentalUnsignedTypes
 fun ushortLiteral(value: UShort): LiteralOp<UShort> = LiteralOp(UShortColumnType(), value)
 
 /** Returns the specified [value] as an int literal. */
 fun intLiteral(value: Int): LiteralOp<Int> = LiteralOp(IntegerColumnType(), value)
 
 /** Returns the specified [value] as a unsigned int literal. */
-@ExperimentalUnsignedTypes
 fun uintLiteral(value: UInt): LiteralOp<UInt> = LiteralOp(UIntegerColumnType(), value)
 
 /** Returns the specified [value] as a long literal. */
 fun longLiteral(value: Long): LiteralOp<Long> = LiteralOp(LongColumnType(), value)
 
 /** Returns the specified [value] as a unsigned long literal. */
-@ExperimentalUnsignedTypes
 fun ulongLiteral(value: ULong): LiteralOp<ULong> = LiteralOp(ULongColumnType(), value)
 
 /** Returns the specified [value] as a float literal. */
@@ -593,28 +687,24 @@ fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, Bo
 fun byteParam(value: Byte): Expression<Byte> = QueryParameter(value, ByteColumnType())
 
 /** Returns the specified [value] as a unsigned byte query parameter. */
-@ExperimentalUnsignedTypes
 fun ubyteParam(value: UByte): Expression<UByte> = QueryParameter(value, UByteColumnType())
 
 /** Returns the specified [value] as a short query parameter. */
 fun shortParam(value: Short): Expression<Short> = QueryParameter(value, ShortColumnType())
 
 /** Returns the specified [value] as a unsigned short query parameter. */
-@ExperimentalUnsignedTypes
 fun ushortParam(value: UShort): Expression<UShort> = QueryParameter(value, UShortColumnType())
 
 /** Returns the specified [value] as an int query parameter. */
 fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntegerColumnType())
 
 /** Returns the specified [value] as a unsigned int query parameter. */
-@ExperimentalUnsignedTypes
 fun uintParam(value: UInt): Expression<UInt> = QueryParameter(value, UIntegerColumnType())
 
 /** Returns the specified [value] as a long query parameter. */
 fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType())
 
 /** Returns the specified [value] as a unsigned long query parameter. */
-@ExperimentalUnsignedTypes
 fun ulongParam(value: ULong): Expression<ULong> = QueryParameter(value, ULongColumnType())
 
 /** Returns the specified [value] as a float query parameter. */

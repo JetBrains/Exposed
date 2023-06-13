@@ -36,8 +36,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         val distinctExpressions = set.fields.distinct()
         return if (distinctExpressions.size < set.fields.size) {
             copy().adjustSlice { slice(distinctExpressions) }
-        } else
+        } else {
             this
+        }
     }
 
     override fun copy(): Query = Query(set, where).also { copy ->
@@ -212,8 +213,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
-            if (!isForUpdate())
-                limit = 1
+            if (!isForUpdate()) limit = 1
             val resultSet = transaction.exec(this)!!
             return !resultSet.next().also { resultSet.close() }
         } finally {

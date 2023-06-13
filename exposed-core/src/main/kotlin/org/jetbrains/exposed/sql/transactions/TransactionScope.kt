@@ -26,10 +26,11 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
         TransactionManager.currentOrNull()?.let {
-            if (value == null)
+            if (value == null) {
                 it.removeUserData(key)
-            else
+            } else {
                 it.putUserData(key, value)
+            }
         }
     }
 }

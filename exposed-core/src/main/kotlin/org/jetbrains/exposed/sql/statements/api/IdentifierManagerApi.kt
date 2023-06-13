@@ -21,6 +21,7 @@ abstract class IdentifierManagerApi {
     protected enum class OracleVersion { Oracle11g, Oracle12_1g, Oracle12plus, NonOracle }
 
     protected val identifierLengthLimit by lazy {
+        @Suppress("MagicNumber")
         when (oracleVersion) {
             OracleVersion.Oracle11g, OracleVersion.Oracle12_1g -> 30
             OracleVersion.Oracle12plus -> 128

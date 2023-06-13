@@ -18,6 +18,14 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     ): Unit = queryBuilder {
         append(expr1, " REGEXP ", pattern)
     }
+
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("LOCATE(\'", substring, "\',", expr, ")")
+    }
 }
 
 /**
@@ -28,8 +36,5 @@ class MariaDBDialect : MysqlDialect() {
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
 
-    companion object {
-        /** MariaDB dialect name */
-        const val dialectName: String = "mariadb"
-    }
+    companion object : DialectNameProvider("mariadb")
 }

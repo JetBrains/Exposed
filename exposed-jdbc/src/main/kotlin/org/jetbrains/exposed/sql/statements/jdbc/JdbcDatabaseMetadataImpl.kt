@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -168,11 +169,20 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    private fun sanitizedDefault(defaultValue: String) = when (currentDialect) {
-        is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
-        is OracleDialect -> defaultValue.trim().trim('\'')
-        is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'').trim()
-        else -> defaultValue.trim('\'').trim()
+    private fun sanitizedDefault(defaultValue: String): String {
+        val dialect = currentDialect
+        val h2Mode = dialect.h2Mode
+        return when {
+            dialect is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
+            dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().trim('\'')
+            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB ->
+                defaultValue.substringAfter("b'").trim('\'')
+            dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> when {
+                defaultValue.startsWith('\'') && defaultValue.endsWith('\'') -> defaultValue.trim('\'')
+                else -> defaultValue
+            }
+            else -> defaultValue.trim('\'')
+        }
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()

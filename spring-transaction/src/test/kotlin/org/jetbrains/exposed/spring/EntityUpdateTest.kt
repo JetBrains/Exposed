@@ -27,7 +27,7 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
     open fun test1() {
         SchemaUtils.create(t1)
         t1.insert {
-            it[t1.c1] = "new"
+            it[c1] = "new"
         }
         Assert.assertEquals("new", dao.findById(1)?.c1)
     }

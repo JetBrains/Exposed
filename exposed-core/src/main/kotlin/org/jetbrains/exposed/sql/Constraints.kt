@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
 
@@ -31,7 +34,8 @@ enum class ReferenceOption {
     CASCADE,
     SET_NULL,
     RESTRICT,
-    NO_ACTION;
+    NO_ACTION,
+    SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
 
@@ -42,6 +46,7 @@ enum class ReferenceOption {
             DatabaseMetaData.importedKeySetNull -> SET_NULL
             DatabaseMetaData.importedKeyRestrict -> RESTRICT
             DatabaseMetaData.importedKeyNoAction -> NO_ACTION
+            DatabaseMetaData.importedKeySetDefault -> SET_DEFAULT
             else -> currentDialect.defaultReferenceOption
         }
     }
@@ -110,6 +115,7 @@ data class ForeignKeyConstraint(
                 from.joinToString("_") { it.name }
             }__${target.joinToString("_") { it.name }}"
         ).inProperCase()
+
     internal val foreignKeyPart: String
         get() = buildString {
             if (fkName.isNotBlank()) {
@@ -117,11 +123,37 @@ data class ForeignKeyConstraint(
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                append(" ON DELETE $deleteRule")
+                if (deleteRule == ReferenceOption.SET_DEFAULT) {
+                    when (currentDialect) {
+                        is MariaDBDialect -> exposedLogger.warn(
+                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        is MysqlDialect -> exposedLogger.warn(
+                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        else -> append(" ON DELETE $deleteRule")
+                    }
+                } else {
+                    append(" ON DELETE $deleteRule")
+                }
             }
             if (updateRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is OracleDialect) {
+                if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (updateRule == ReferenceOption.SET_DEFAULT) {
+                    when (currentDialect) {
+                        is MariaDBDialect -> exposedLogger.warn(
+                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        is MysqlDialect -> exposedLogger.warn(
+                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        else -> append(" ON UPDATE $updateRule")
+                    }
                 } else {
                     append(" ON UPDATE $updateRule")
                 }

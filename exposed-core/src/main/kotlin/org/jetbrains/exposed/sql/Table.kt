@@ -327,6 +327,7 @@ class Join(
  *
  * @param name Table name, by default name will be resolved from a class name with "Table" suffix removed (if present)
  */
+@Suppress("TooManyFunctions")
 open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns the table name. */
     open val tableName: String = when {
@@ -477,28 +478,24 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers. */
-    @ExperimentalUnsignedTypes
     fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers. */
-    @ExperimentalUnsignedTypes
     fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers. */
-    @ExperimentalUnsignedTypes
     fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers. */
-    @ExperimentalUnsignedTypes
     fun ulong(name: String): Column<ULong> = registerColumn(name, ULongColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte (single precision) floating-point numbers. */
@@ -699,7 +696,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Sets the default value for this column in the client side. */
-    fun <T : Any> Column<T>.clientDefault(defaultValue: () -> T): Column<T> = apply {
+    fun <T> Column<T>.clientDefault(defaultValue: () -> T): Column<T> = apply {
         dbDefaultValue = null
         defaultValueFun = defaultValue
     }

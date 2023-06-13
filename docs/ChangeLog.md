@@ -1,3 +1,31 @@
+# 0.41.1
+Infrastructure:
+* Kotlin 1.7.21 
+* spring-security-crypto 5.7.3
+* Few improvements in text infrastructure with help of [valery1707](https://github.com/valery1707)
+
+Deprecations:
+* `StatementInterceprot.afterCommit` and `StatementInterceptor.afterRollback` without `transaction` parameter have ERROR deprecation level
+* `Column<*>.autoIncSeqName` has HIDDEN deprecation level
+* `Database.connect` with `datasource: ConnectionPoolDataSource` parameter has HIDDEN deprecation level
+* `SchemaUtils.createFKey` with `reference: Column<*>` parameter has ERROR deprecation level
+* `Sequence.nextVal` has ERROR deprecation level
+* `SqlExpressionBuilderClass` has ERROR deprecation level
+* `CurrentDateTime()`  has ERROR deprecation level 
+
+Feature:
+* [PostgreSQL] `NOWAIT/SKIP LOCKED` modes supported in all kinds of `FOR UPDATE`. Also, it's now possible to provide tables to be locked ([#1623](https://github.com/JetBrains/Exposed/issues/1623)) 
+*`ExposedBlob` now wraps `InputStream` instead of `ByteArray` that can lead to significant memory improvements ([#1617](https://github.com/JetBrains/Exposed/issues/1617))
+* [H2] All [compatibility modes](http://www.h2database.com/html/features.html#compatibility) are fully supported for known dialects ([#1615](https://github.com/JetBrains/Exposed/issues/1615))
+* `mod`/`rem` operations with `EntityID` expressions supported with help of [Alexey Soshin](https://github.com/AlexeySoshin) ([#1597](https://github.com/JetBrains/Exposed/issues/1597))
+
+Bug Fixes:
+* Don't alert entity hook subscribers while inserting new entities as it can lead to entity cache misses
+* `clientDefault` should allow nullable values ([#1617](https://github.com/JetBrains/Exposed/issues/1617)). Reported and fixed by [terminalnode](https://github.com/terminalnode)
+* [Oracle] Use VARCHAR2 column for VarCharColumnType ([#1628](https://github.com/JetBrains/Exposed/issues/1628)). Reported and fixed by [dakriy](https://github.com/dakriy)
+* [PostgreSQL] Correct comparison of defaults for String type columns ([#1587](https://github.com/JetBrains/Exposed/issues/1587)). Resolved by [Alexey Soshin](https://github.com/AlexeySoshin)
+* Transaction was initialized with a wrong isolation level ([#1575](https://github.com/JetBrains/Exposed/issues/1575))
+
 # 0.40.1
 Infrastructure:
 * Kotlin 1.7.20
@@ -5,16 +33,17 @@ Infrastructure:
 Feature:
 * Read-only transactions/connections support. Read-Only option can be set on all levels (via `DatabaseConfig`, `transaction`, `TransactionManager`). Thanks [Alex Shubert](https://github.com/lure) for the improvement
 * `Table.deleteWhere` now captures receiver table and allows to omit the table in a lambda. Greetings to [Alexey Soshin](https://github.com/AlexeySoshin) for the first PR in the project!  
+    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq`.
+      Lambdas previously using an implicit `it` reference from an outer scope will also need to introduce an explicit name to access that binding.
 * New `mediumText` and `largeText` columns were introduced by [Alex Shubert](https://github.com/lure) to allow use more suitable data types for databases where they are supported.
 * `ForUpdateOption` (like `ForUpdateOption.PostgreSQL.ForKeyShare`) added for more flexible management of locks in your `SELECT` queries. You can set it as a parameter via `Query.forUpdate` function. Another kudos goes to [Alex Shubert](https://github.com/lure)
 * Preserve a colection type for `Iterable.with()` function 
 * `LazySizedCollection` can be checked for loaded data with `LazySizedCollection.isLoaded()`. Added by [unbearables](https://github.com/unbearables)
-* 
 
 Bug Fixes:
 * [Regression] `NoSuchMethod` error: `long kotlin.time.TimeSource$Monotonic.markNow` ([#1556](https://github.com/JetBrains/Exposed/issues/1540)) 
 * `insertIgnoreAndGet` must explicitly mark failed insert on conflicts. Fixed by [Alex Shubert](https://github.com/lure) in PR ([#1584](https://github.com/JetBrains/Exposed/issues/1584))
-* Comma is missing in `UPDATE` with multiple tables  ([#1595](https://github.com/JetBrains/Exposed/issues/1595))
+* Comma is missing in `UPDATE` with multiple tables ([#1595](https://github.com/JetBrains/Exposed/issues/1595))
 * `suspendedTransaction` should accept `CoroutineContext` instead of `CourutineDispatcher` was fixed by [rasharab](https://github.com/rasharab) in PR ([#1515](https://github.com/JetBrains/Exposed/issues/1515))
 * [MySQL/MariaDB] `REPLACE` fails when `Expression` used as a replacement parameter. Thank you [Tiscs](https://github.com/Tiscs) for the fix.
 * `EntityClass#wramUpReferences` should cache reference of referrer. Located and fixed by [Joddev](https://github.com/Joddev).  

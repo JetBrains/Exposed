@@ -2,14 +2,18 @@ package org.jetbrains.exposed.sql.tests
 
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.Connection
+import java.sql.SQLException
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.thread
@@ -25,6 +29,7 @@ enum class TestDB(
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
+
     H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
         defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }),
@@ -37,6 +42,10 @@ enum class TestDB(
             }
         }
     ),
+    H2_MARIADB({ "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_PSQL({ "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_ORACLE({ "jdbc:h2:mem:oracle;MODE=Oracle;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
@@ -57,11 +66,11 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "jdbc:postgresql://localhost:12346/template1?user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
+        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
         beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     POSTGRESQLNG(
-        { "jdbc:pgsql://localhost:12346/template1?user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
+        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
         user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
     ),
     ORACLE(
@@ -113,6 +122,8 @@ enum class TestDB(
     }
 
     companion object {
+        val allH2TestDB = listOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB, H2_ORACLE, H2_SQLSERVER)
+        val mySqlRelatedDB = listOf(MYSQL, MARIADB, H2_MYSQL, H2_MARIADB)
         fun enabledInTests(): Set<TestDB> {
             val concreteDialects = System.getProperty("exposed.test.dialects", "")
                 .split(",")
@@ -124,21 +135,13 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-internal class SpecifiedPGContainer(val image: String) : PostgreSQLContainer<SpecifiedPGContainer>(image) {
-    fun exposeFixedPort(hostPort: Int, containerPort: Int): SpecifiedPGContainer {
-        super.addFixedExposedPort(hostPort, containerPort)
-        return this
-    }
-
-}
-
 private val postgresSQLProcess by lazy {
-    SpecifiedPGContainer(image ="postgres:13.8-alpine")
+    PostgreSQLContainer("postgres:13.8-alpine")
         .withUsername("postgres")
         .withPassword("")
+        .withDatabaseName("template1")
         .withStartupTimeout(Duration.ofSeconds(60))
         .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
-        .exposeFixedPort(hostPort = 12346, containerPort = 5432)
         .apply {
             listOf(
                 "timezone=UTC",
@@ -152,11 +155,8 @@ private val postgresSQLProcess by lazy {
         }
 }
 
-// MySQLContainer has to be extended, otherwise it leads to Kotlin compiler issues: https://github.com/testcontainers/testcontainers-java/issues/318
-internal class SpecifiedMySQLContainer(val image: String) : MySQLContainer<SpecifiedMySQLContainer>(image)
-
 private val mySQLProcess by lazy {
-    SpecifiedMySQLContainer(image = "mysql:5")
+    MySQLContainer("mysql:5")
         .withDatabaseName("testdb")
         .withEnv("MYSQL_ROOT_PASSWORD", "test")
         .withExposedPorts().apply {
@@ -167,10 +167,18 @@ private val mySQLProcess by lazy {
 private fun runTestContainersMySQL(): Boolean =
     (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
 
+internal var currentTestDB by nullableTransactionScope<TestDB>()
+
 @Suppress("UnnecessaryAbstractClass")
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
+
+    private object CurrentTestDBInterceptor : StatementInterceptor {
+        override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
+            return userData.filterValues { it is TestDB }
+        }
     }
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
@@ -194,9 +202,16 @@ abstract class DatabaseTestsBase {
         }
 
         val database = dbSettings.db!!
-
-        transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
-            statement(dbSettings)
+        try {
+            transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+                registerInterceptor(CurrentTestDBInterceptor)
+                currentTestDB = dbSettings
+                statement(dbSettings)
+            }
+        } catch (e: SQLException) {
+            throw e
+        } catch (e: Exception) {
+            throw Exception("Failed on ${dbSettings.name}", e)
         }
     }
 
@@ -268,6 +283,12 @@ abstract class DatabaseTestsBase {
         "IF NOT EXISTS "
     } else {
         ""
+    }
+
+    fun Transaction.excludingH2Version1(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
+        if (dbSettings !in TestDB.allH2TestDB || (db.dialect as H2Dialect).isSecondVersion) {
+            statement(dbSettings)
+        }
     }
 
     protected fun prepareSchemaForTest(schemaName: String) : Schema {
