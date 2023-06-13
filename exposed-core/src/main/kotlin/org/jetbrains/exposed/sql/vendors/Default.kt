@@ -556,7 +556,8 @@ abstract class FunctionProvider {
         table: Table,
         columns: List<Column<*>>,
         expression: String,
-        transaction: Transaction
+        transaction: Transaction,
+        prepared: Boolean = true
     ): String = transaction.throwUnsupportedException("There's no generic SQL for REPLACE. There must be a vendor specific implementation.")
 
     /**
