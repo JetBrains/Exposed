@@ -118,7 +118,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
                 return result?.use { transform(it) }
             }
 
-            override fun prepareSQL(transaction: Transaction): String = stmt
+            override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
 
             override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
         })

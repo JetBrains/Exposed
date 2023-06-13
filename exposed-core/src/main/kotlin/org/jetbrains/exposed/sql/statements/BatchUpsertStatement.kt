@@ -29,7 +29,7 @@ open class BatchUpsertStatement(
     shouldReturnGeneratedValues: Boolean = true
 ) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues) {
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val functionProvider = when (val dialect = transaction.db.dialect) {
             is H2Dialect -> when (dialect.h2Mode) {
                 H2Dialect.H2CompatibilityMode.MariaDB, H2Dialect.H2CompatibilityMode.MySQL -> MysqlFunctionProvider()
@@ -37,6 +37,6 @@ open class BatchUpsertStatement(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, null, transaction, *keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, null, transaction, keys = keys)
     }
 }

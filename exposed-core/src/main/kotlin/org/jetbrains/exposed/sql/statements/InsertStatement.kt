@@ -112,14 +112,15 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         return result
     }
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val values = arguments!!.first()
-        val sql = values.toSqlString()
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.map { it.first }, sql, transaction)
+        val sql = values.toSqlString(prepared)
+        return transaction.db.dialect.functionProvider
+            .insert(isIgnore, table, values.map { it.first }, sql, transaction)
     }
 
-    protected fun List<Pair<Column<*>, Any?>>.toSqlString(): String {
-        val builder = QueryBuilder(true)
+    protected fun List<Pair<Column<*>, Any?>>.toSqlString(prepared: Boolean): String {
+        val builder = QueryBuilder(prepared)
         return if (isEmpty()) "" else with(builder) {
             this@toSqlString.appendTo(prefix = "VALUES (", postfix = ")") { (column, value) ->
                 registerArgument(column, value)
