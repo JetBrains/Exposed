@@ -243,7 +243,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         }
     }
 
-    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
         return "CREATE $type INDEX $name ON $table $columns"
     }
 

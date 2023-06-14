@@ -856,7 +856,7 @@ interface DatabaseDialect {
     fun createIndex(index: Index): String
 
     /** Returns the SQL command that drops the specified [indexName] from the specified [tableName]. */
-    fun dropIndex(tableName: String, indexName: String): String
+    fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String
 
     /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
@@ -958,6 +958,9 @@ abstract class VendorDialect(
     override val dataTypeProvider: DataTypeProvider,
     override val functionProvider: FunctionProvider
 ) : DatabaseDialect {
+
+    protected val identifierManager
+        get() = TransactionManager.current().db.identifierManager
 
     abstract class DialectNameProvider(val dialectName: String)
 
@@ -1062,30 +1065,61 @@ abstract class VendorDialect(
         resetCaches()
     }
 
+    fun filterCondition(index: Index): String? {
+        return if (currentDialect is PostgreSQLDialect) {
+            index.filterCondition?.let {
+                QueryBuilder(false)
+                    .append(" WHERE ").append(it)
+                    .toString()
+            }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Uniqueness might be required for foreign key constraints.
+     *
+     * In PostgreSQL (https://www.postgresql.org/docs/current/indexes-unique.html), UNIQUE means B-tree only.
+     * Unique constraints can not be partial
+     * Unique indexes can be partial
+     */
     override fun createIndex(index: Index): String {
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
+
+        val maybeFilterCondition = filterCondition(index) ?: ""
+
         return when {
-            index.unique -> {
+            // unique and no filter -> constraint, the type is not supported
+            index.unique && maybeFilterCondition.isEmpty() -> {
                 "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
             }
-            index.indexType != null -> {
-                createIndexWithType(name = quotedIndexName, table = quotedTableName, columns = columnsList, type = index.indexType)
+            // unique and filter -> index only, the type is not supported
+            index.unique -> {
+                "CREATE UNIQUE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
             }
+            // type -> can't be unique or constraint
+            index.indexType != null -> {
+                createIndexWithType(
+                    name = quotedIndexName, table = quotedTableName,
+                    columns = columnsList, type = index.indexType, filterCondition = maybeFilterCondition
+                )
+            }
+            // any other indexes. May be can be merged with `createIndexWithType`
             else -> {
-                "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList"
+                "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
             }
         }
     }
 
-    protected open fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
-        return "CREATE INDEX $name ON $table $columns USING $type"
+    protected open fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
+        return "CREATE INDEX $name ON $table $columns USING $type$filterCondition"
     }
 
-    override fun dropIndex(tableName: String, indexName: String): String {
-        val identifierManager = TransactionManager.current().db.identifierManager
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 

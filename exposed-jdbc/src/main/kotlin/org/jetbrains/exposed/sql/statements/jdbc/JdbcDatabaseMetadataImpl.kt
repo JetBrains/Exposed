@@ -1,11 +1,6 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -25,6 +20,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "MySQL-AB JDBC Driver",
             "MySQL Connector/J",
             "MySQL Connector Java" -> MysqlDialect.dialectName
+
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
@@ -177,10 +173,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().trim('\'')
             dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB ->
                 defaultValue.substringAfter("b'").trim('\'')
+
             dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> when {
                 defaultValue.startsWith('\'') && defaultValue.endsWith('\'') -> defaultValue.trim('\'')
                 else -> defaultValue
             }
+
             else -> defaultValue.trim('\'')
         }
     }
@@ -203,13 +201,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 }
                 val rs = metadata.getIndexInfo(databaseName, currentScheme, tableName, false, false)
 
-                val tmpIndices = hashMapOf<Pair<String, Boolean>, MutableList<String>>()
+                val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
 
                 while (rs.next()) {
                     rs.getString("INDEX_NAME")?.let {
                         val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("COLUMN_NAME")!!)
                         val isUnique = !rs.getBoolean("NON_UNIQUE")
-                        tmpIndices.getOrPut(it to isUnique) { arrayListOf() }.add(column)
+                        val isPartial = if (rs.getString("FILTER_CONDITION").isNullOrEmpty()) null else Op.TRUE
+                        tmpIndices.getOrPut(Triple(it, isUnique, isPartial)) { arrayListOf() }.add(column)
                     }
                 }
                 rs.close()
@@ -217,7 +216,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
                         columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }
-                            ?.let { c -> Index(c, index.second, index.first) }
+                            ?.let { c -> Index(c, index.second, index.first, filterCondition = index.third) }
                     }
             }
         }

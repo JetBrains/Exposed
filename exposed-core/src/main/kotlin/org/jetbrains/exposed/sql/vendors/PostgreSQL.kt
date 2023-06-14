@@ -258,8 +258,16 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
 
-    override fun createIndexWithType(name: String, table: String, columns: String, type: String): String {
-        return "CREATE INDEX $name ON $table USING $type $columns"
+    override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
+        return "CREATE INDEX $name ON $table USING $type $columns$filterCondition"
+    }
+
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
+        return if (isUnique && !isPartial) {
+            "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        } else {
+            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        }
     }
 
     companion object : DialectNameProvider("postgresql")

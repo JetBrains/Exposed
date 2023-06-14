@@ -279,7 +279,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         }
     }
 
-    override fun dropIndex(tableName: String, indexName: String): String = "ALTER TABLE $tableName DROP INDEX $indexName"
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String =
+        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
 
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
 
