@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rules SYSTEM "https://helpserver.labs.jb.gg/help/schemas/mvp/redirection-rules.dtd">
+<rules>
+    <rule id="${ID}">
+        <accepts>page.html</accepts>
+    </rule>
+    <rule id="11a0e21a">
+        <description>Created after removal of "Introduction" from Exposed Documentation</description>
+        <accepts>Introduction.html</accepts>
+    </rule>
+</rules>
