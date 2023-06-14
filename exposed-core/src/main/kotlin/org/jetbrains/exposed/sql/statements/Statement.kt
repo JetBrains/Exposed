@@ -58,6 +58,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         }
 
         transaction.currentStatement = statement
+        transaction.interceptors.forEach { it.afterStatementPrepared(transaction, statement) }
         val result = try {
             statement.executeInternal(transaction)
         } catch (e: SQLException) {
