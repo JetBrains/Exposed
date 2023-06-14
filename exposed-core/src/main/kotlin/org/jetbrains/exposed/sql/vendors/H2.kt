@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.intellij.lang.annotations.Language
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -13,6 +14,12 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "UUID"
     override fun dateTimeType(): String = "DATETIME(9)"
+
+    override fun jsonType(): String =
+        throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
+
+    override fun jsonBType(): String = "JSON"
+
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 

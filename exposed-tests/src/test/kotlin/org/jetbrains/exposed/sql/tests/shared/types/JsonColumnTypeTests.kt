@@ -12,48 +12,52 @@ import org.junit.Test
 class JsonColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testInsertAndSelect() {
-        withDb {
-            addLogger(StdOutSqlLogger)
-            println(currentDialectTest.name)
-            try {
-                SchemaUtils.create(JsonTable)
-                val user1 = User("Admin", null)
-                val instance1 = DataHolder(user1, 10, true, null)
-                val id1 = JsonTable.insertAndGetId {
-                    it[jsonColumn] = instance1
-                }
+        withDb { testDb ->
+            excludingH2Version1(testDb) {
+                addLogger(StdOutSqlLogger)
+                println(currentDialectTest.name)
+                try {
+                    SchemaUtils.create(JsonTable)
+                    val user1 = User("Admin", null)
+                    val instance1 = DataHolder(user1, 10, true, null)
+                    val id1 = JsonTable.insertAndGetId {
+                        it[jsonColumn] = instance1
+                    }
 
-                val result = JsonTable.select { JsonTable.id eq id1 }.singleOrNull()
-                assertEquals(instance1, result?.get(JsonTable.jsonColumn))
-            } finally {
-                SchemaUtils.drop(JsonTable)
+                    val result = JsonTable.select { JsonTable.id eq id1 }.singleOrNull()
+                    assertEquals(instance1, result?.get(JsonTable.jsonColumn))
+                } finally {
+                    SchemaUtils.drop(JsonTable)
+                }
             }
         }
     }
 
     @Test
     fun testUpdate() {
-        withDb {
-            addLogger(StdOutSqlLogger)
-            println(currentDialectTest.name)
-            try {
-                SchemaUtils.create(JsonTable)
-                val user1 = User("Admin", null)
-                val instance1 = DataHolder(user1, 10, true, null)
-                JsonTable.insert {
-                    it[jsonColumn] = instance1
+        withDb {testDb ->
+            excludingH2Version1(testDb) {
+                addLogger(StdOutSqlLogger)
+                println(currentDialectTest.name)
+                try {
+                    SchemaUtils.create(JsonTable)
+                    val user1 = User("Admin", null)
+                    val instance1 = DataHolder(user1, 10, true, null)
+                    JsonTable.insert {
+                        it[jsonColumn] = instance1
+                    }
+
+                    assertEquals(instance1, JsonTable.selectAll().single()[JsonTable.jsonColumn])
+
+                    val instance2 = instance1.copy(active = false)
+                    JsonTable.update {
+                        it[jsonColumn] = instance2
+                    }
+
+                    assertEquals(instance2, JsonTable.selectAll().single()[JsonTable.jsonColumn])
+                } finally {
+                    SchemaUtils.drop(JsonTable)
                 }
-
-                assertEquals(instance1, JsonTable.selectAll().single()[JsonTable.jsonColumn])
-
-                val instance2 = instance1.copy(active = false)
-                JsonTable.update {
-                    it[jsonColumn] = instance2
-                }
-
-                assertEquals(instance2, JsonTable.selectAll().single()[JsonTable.jsonColumn])
-            } finally {
-                SchemaUtils.drop(JsonTable)
             }
         }
     }

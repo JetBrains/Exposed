@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -39,7 +40,8 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         error("Unexpected value of type Boolean: $value")
     }
 
-    override fun jsonType(): String = "VARCHAR(32767)"
+    override fun jsonType(): String =
+        throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"

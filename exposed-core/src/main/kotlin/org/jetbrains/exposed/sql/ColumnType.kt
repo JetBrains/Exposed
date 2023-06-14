@@ -922,9 +922,13 @@ open class JsonColumnType<T : Any>(
 
     override fun valueFromDB(value: Any): Any {
         return when (value) {
-            is PGobject -> deserialize(value.value!!)
             is String -> deserialize(value)
+            is PGobject -> deserialize(value.value!!)
             is Iterable<*> -> value
+            is ByteArray -> {
+                // H2 maps JSON to byte[] & escapes all quotes
+                deserialize(value.decodeToString().trim('\"').replace("""\"""", """""""))
+            }
             else -> deserialize(value as String)
         }
     }
@@ -939,6 +943,7 @@ open class JsonColumnType<T : Any>(
             else -> super.valueToString(value)
         }
     }
+
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
             is PostgreSQLDialect -> PGobject().apply {
@@ -957,7 +962,7 @@ open class JsonColumnType<T : Any>(
 class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
     deserialize: (String) -> T
-): JsonColumnType<T>(serialize, deserialize) {
+) : JsonColumnType<T>(serialize, deserialize) {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonBType()
 }
 

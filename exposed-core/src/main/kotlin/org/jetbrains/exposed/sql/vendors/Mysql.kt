@@ -40,6 +40,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun jsonType(): String =
         throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
 
+    override fun jsonBType(): String = "JSON"
+
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
 
         when (sortOrder) {

@@ -113,7 +113,8 @@ abstract class DataTypeProvider {
     open fun jsonType(): String = "JSON"
 
     /** Data type for storing JSON in a decomposed binary format. */
-    open fun jsonBType(): String = "JSON"
+    open fun jsonBType(): String =
+        throw UnsupportedByDialectException("This vendor does not support binary JSONB data type", currentDialect)
 
     // Misc.
 
@@ -435,6 +436,14 @@ abstract class FunctionProvider {
      */
     open fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR_SAMP(", expression, ")")
+    }
+
+    // Json Functions
+
+    open fun <T> jsonExtractText(queryBuilder: QueryBuilder, expression: Expression<T>, vararg paths: String) = queryBuilder {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for JSON_EXTRACT_TEXT. There must be avvendor specific implementation", currentDialect
+        )
     }
 
     // Commands
