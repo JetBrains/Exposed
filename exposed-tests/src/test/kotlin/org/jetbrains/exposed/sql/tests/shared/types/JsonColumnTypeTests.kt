@@ -1,118 +1,82 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class JsonColumnTypeTests : DatabaseTestsBase() {
+    private val notYetSupportedDB = TestDB.allH2TestDB + TestDB.ORACLE
+
     @Test
     fun testInsertAndSelect() {
-        withDb { testDb ->
-            excludingH2Version1(testDb) {
-                addLogger(StdOutSqlLogger)
-                println(currentDialectTest.name)
-                try {
-                    SchemaUtils.create(JsonTable)
-                    val user1 = User("Admin", null)
-                    val instance1 = DataHolder(user1, 10, true, null)
-                    val id1 = JsonTable.insertAndGetId {
-                        it[jsonColumn] = instance1
-                    }
-
-                    val result = JsonTable.select { JsonTable.id eq id1 }.singleOrNull()
-                    assertEquals(instance1, result?.get(JsonTable.jsonColumn))
-                } finally {
-                    SchemaUtils.drop(JsonTable)
-                }
+        withJsonTable(exclude = notYetSupportedDB) { tester, _, _ ->
+            val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
+            val newId = tester.insertAndGetId {
+                it[jsonColumn] = newData
             }
+
+            val newResult = tester.select { tester.id eq newId }.singleOrNull()
+            assertEquals(newData, newResult?.get(tester.jsonColumn))
         }
     }
 
     @Test
     fun testUpdate() {
-        withDb {testDb ->
-            excludingH2Version1(testDb) {
-                addLogger(StdOutSqlLogger)
-                println(currentDialectTest.name)
-                try {
-                    SchemaUtils.create(JsonTable)
-                    val user1 = User("Admin", null)
-                    val instance1 = DataHolder(user1, 10, true, null)
-                    JsonTable.insert {
-                        it[jsonColumn] = instance1
-                    }
+        withJsonTable(exclude = notYetSupportedDB) { tester, _, data1 ->
+            assertEquals(data1, tester.selectAll().single()[tester.jsonColumn])
 
-                    assertEquals(instance1, JsonTable.selectAll().single()[JsonTable.jsonColumn])
-
-                    val instance2 = instance1.copy(active = false)
-                    JsonTable.update {
-                        it[jsonColumn] = instance2
-                    }
-
-                    assertEquals(instance2, JsonTable.selectAll().single()[JsonTable.jsonColumn])
-                } finally {
-                    SchemaUtils.drop(JsonTable)
-                }
+            val updatedData = data1.copy(active = false)
+            tester.update {
+                it[jsonColumn] = updatedData
             }
+
+            assertEquals(updatedData, tester.selectAll().single()[tester.jsonColumn])
         }
     }
 
     @Test
-    fun testSelectWithSlice() {
-        withDb {
-            addLogger(StdOutSqlLogger)
-            println(currentDialectTest.name)
-            try {
-                SchemaUtils.create(JsonTable)
-                val user1 = User("Admin", null)
-                val instance1 = DataHolder(user1, 10, true, null)
-                val id1 = JsonTable.insertAndGetId {
-                    it[jsonColumn] = instance1
-                }
+    fun testSelectWithSliceExtract() {
+        withJsonTable(exclude = notYetSupportedDB) { tester, user1, data1 ->
+            // SQLServer returns null if extracted JSON is not scalar
+            val requiresScalar = currentDialectTest is SQLServerDialect
+            val isActive = tester.jsonColumn.jsonExtract<Boolean>("active", toScalar = requiresScalar)
+            val result1 = tester.slice(isActive).selectAll().singleOrNull()
+            assertEquals(data1.active, result1?.get(isActive))
 
-                //val isActive = JsonTable.jsonColumn.jsonColumnPath<Boolean>("active").alias("is_active")
-                //val result = JsonTable.slice(isActive).selectAll().singleOrNull()
-                //assertEquals(instance1.active, result?.get(isActive))
-            } finally {
-                SchemaUtils.drop(JsonTable)
-            }
+            val storedUser = tester.jsonColumn.jsonExtract<User>("user", toScalar = false)
+            val result2 = tester.slice(storedUser).selectAll().singleOrNull()
+            assertEquals(user1, result2?.get(storedUser))
+
+            val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "name") else arrayOf("user.name")
+            val username = tester.jsonColumn.jsonExtract<String>(*path)
+            val result3 = tester.slice(username).selectAll().singleOrNull()
+            assertEquals(user1.name, result3?.get(username))
         }
     }
 
-    // test containment
     @Test
-    fun testSelectWhereJsonContains() {
-        withDb {
-            addLogger(StdOutSqlLogger)
-            println(currentDialectTest.name)
-            try {
-                SchemaUtils.create(JsonTable)
-                val user1 = User("Admin", null)
-                val instance1 = DataHolder(user1, 10, true, null)
-                val id1 = JsonTable.insertAndGetId {
-                    it[jsonColumn] = instance1
-                }
-                JsonTable.jsonColumn
-
-                //val result = JsonBTable.select { JsonBTable.jsonBColumn regexp "\"active\":true" }.singleOrNull()
-                //assertEquals(id1, result?.get(JsonBTable.id))
-            } finally {
-                SchemaUtils.drop(JsonTable)
+    fun testSelectWhereWithExtract() {
+        withJsonTable(exclude = notYetSupportedDB) { tester, _, data1 ->
+            val newId = tester.insertAndGetId {
+                it[jsonColumn] = data1.copy(logins = 1000)
             }
+
+            // Postgres requires type casting to compare json field as integer value in DB
+            val logins = if (currentDialectTest is PostgreSQLDialect) {
+                tester.jsonColumn.jsonExtract<Int>("logins").castTo(IntegerColumnType())
+            } else {
+                tester.jsonColumn.jsonExtract<Int>("logins")
+            }
+            val tooManyLogins = logins greaterEq 1000
+
+            val result = tester.slice(tester.id).select { tooManyLogins }.singleOrNull()
+            assertEquals(newId, result?.get(tester.id))
         }
     }
-
-    private object JsonTable : IntIdTable("json_table") {
-        val jsonColumn = json("json_column", Json, DataHolder.serializer())
-    }
-
-    @Serializable
-    private data class DataHolder(val user: User, val logins: Int, val active: Boolean, val team: String?)
-    @Serializable
-    private data class User(val name: String, val team: String?)
 }

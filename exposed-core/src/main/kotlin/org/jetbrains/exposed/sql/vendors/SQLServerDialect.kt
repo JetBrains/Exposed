@@ -136,6 +136,18 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("VAR(", expression, ")")
     }
 
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+        append("(", expression, ", ")
+        path.appendTo { +"'$.$it'" }
+        append(")")
+    }
+
     override fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,

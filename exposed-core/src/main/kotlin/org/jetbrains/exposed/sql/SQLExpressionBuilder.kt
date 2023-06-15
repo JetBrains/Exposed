@@ -2,6 +2,8 @@
 
 package org.jetbrains.exposed.sql
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -95,6 +97,32 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
+
+// JSON Functions
+
+/**
+ * Returns the extracted data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
+ *
+ * @param path String(s) representing JSON path/keys that match fields to be extracted.
+ * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+ * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+ */
+inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path: String, toScalar: Boolean = true): JsonExtract<T> {
+    val columnType = when (T::class) {
+        String::class -> TextColumnType()
+        Boolean::class -> BooleanColumnType()
+        Long::class -> LongColumnType()
+        Int::class -> IntegerColumnType()
+        Short::class -> ShortColumnType()
+        Byte::class -> ByteColumnType()
+        Double::class -> DoubleColumnType()
+        Float::class -> FloatColumnType()
+        else -> {
+            JsonColumnType({ Json.Default.encodeToString(serializer<T>(), it) }, { Json.Default.decodeFromString(serializer<T>(), it) })
+        }
+    }
+    return JsonExtract(this, path = path, toScalar, columnType)
+}
 
 // Sequence Manipulation Functions
 

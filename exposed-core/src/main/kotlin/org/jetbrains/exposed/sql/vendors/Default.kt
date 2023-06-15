@@ -440,9 +440,23 @@ abstract class FunctionProvider {
 
     // Json Functions
 
-    open fun <T> jsonExtractText(queryBuilder: QueryBuilder, expression: Expression<T>, vararg paths: String) = queryBuilder {
+    /**
+     * SQL function that extracts data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
+     *
+     * @param expression Expression from which to extract JSON subcomponents matched by [path].
+     * @param path String(s) representing JSON path/key(s) that matches fields to be extracted.
+     * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+     * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) {
         throw UnsupportedByDialectException(
-            "There's no generic SQL for JSON_EXTRACT_TEXT. There must be avvendor specific implementation", currentDialect
+            "There's no generic SQL for JSON_EXTRACT. There must be a vendor specific implementation", currentDialect
         )
     }
 

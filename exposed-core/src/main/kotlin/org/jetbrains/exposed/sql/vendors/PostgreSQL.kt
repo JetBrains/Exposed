@@ -20,7 +20,9 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun ubyteType(): String = "SMALLINT"
+
     override fun jsonBType(): String = "JSONB"
+
     override fun hexToDb(hexString: String): String = """E'\\x$hexString'"""
 }
 
@@ -108,6 +110,19 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(SECOND FROM ")
         append(expr)
+        append(")")
+    }
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append("JSON_EXTRACT_PATH")
+        if (toScalar) append("_TEXT")
+        append("(", expression, ", ")
+        path.appendTo { +"'$it'" }
         append(")")
     }
 

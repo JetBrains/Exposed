@@ -37,9 +37,6 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         else -> value.toBoolean()
     }
 
-    override fun jsonType(): String =
-        throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
-
     override fun jsonBType(): String = "JSON"
 
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
@@ -99,6 +96,18 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         } else {
             queryBuilder { append(expr1, " REGEXP ", pattern) }
         }
+    }
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        if (toScalar) append("JSON_UNQUOTE(")
+        append("JSON_EXTRACT(", expression, ", ")
+        path.appendTo { +"\"$.$it\"" }
+        append(")${if (toScalar) ")" else ""}")
     }
 
     override fun replace(

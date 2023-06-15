@@ -9,12 +9,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.sql.vendors.inProperCase
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
@@ -660,50 +655,61 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Serialization columns
 
     /**
-     * Creates a column, with the specified [name], for storing JSON in text format.
+     * Creates a column, with the specified [name], for storing JSON data.
+     *
+     * **Note**: This column stores JSON either in non-binary text format or, if the vendor only supports 1 format, the default JSON type format.
+     * If JSON must be stored in binary format, and the vendor supports this, please use `jsonb()` instead.
      *
      * @param name Name of the column
-     * @param serialize Function that encodes a data object to a JSON string.
-     * @param deserialize Function that decodes a JSON string into a data object.
+     * @param serialize Function that encodes an object of type [T] to a JSON String
+     * @param deserialize Function that decodes a JSON string to an object of type [T]
      */
     fun <T : Any> json(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T> =
         registerColumn(name, JsonColumnType(serialize, deserialize))
 
     /**
-     * Creates a column, with the specified [name], for storing JSON in text format.
+     * Creates a column, with the specified [name], for storing JSON data.
+     *
+     * **Note**: This column stores JSON either in non-binary text format or, if the vendor only supports 1 format, the default JSON type format.
+     * If JSON must be stored in binary format, and the vendor supports this, please use `jsonb()` instead.
      *
      * @param name Name of the column
-     * @param jsonConfig Instance of the `Json` class. The default `Json` object is used if a configured instance is not provided.
-     * @param kSerializer Serializer responsible for the representation of a serial form of type [T]. Defaults to a generic serializer for type [T].
+     * @param jsonConfig Configured instance of the `Json` class
+     * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
+     * Defaults to a generic serializer for type [T]
      */
     inline fun <reified T : Any> json(
         name: String,
-        jsonConfig: Json = Json,
+        jsonConfig: Json,
         kSerializer: KSerializer<T> = serializer<T>()
     ): Column<T> =
         json(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
 
     /**
-     * Creates a column, with the specified [name], for storing JSON in decomposed binary format.
+     * Creates a column, with the specified [name], for storing JSON data in decomposed binary format.
+     *
+     * **Note**: JSON storage in binary format is not supported by all vendors; please check the documentation.
      *
      * @param name Name of the column
-     * @param serialize Function that encodes a data object to a JSON string.
-     * @param deserialize Function that decodes a JSON string into a data object.
+     * @param serialize Function that encodes an object of type [T] to a JSON String
+     * @param deserialize Function that decodes a JSON string to an object of type [T]
      */
     fun <T : Any> jsonb(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T> =
         registerColumn(name, JsonBColumnType(serialize, deserialize))
 
     /**
-     * Creates a column, with the specified [name], for storing JSON in decomposed binary format.
+     * Creates a column, with the specified [name], for storing JSON data in decomposed binary format.
+     *
+     * **Note**: JSON storage in binary format is not supported by all vendors; please check the documentation.
      *
      * @param name Name of the column
-     * @param jsonConfig Instance of the `Json` class. The default `Json` object is used if a configured instance is not provided.
+     * @param jsonConfig Configured instance of the `Json` class
      * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
-     * Defaults to a generic serializer for type [T].
+     * Defaults to a generic serializer for type [T]
      */
     inline fun <reified T : Any> jsonb(
         name: String,
-        jsonConfig: Json = Json,
+        jsonConfig: Json,
         kSerializer: KSerializer<T> = serializer<T>()
     ): Column<T> =
         jsonb(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })

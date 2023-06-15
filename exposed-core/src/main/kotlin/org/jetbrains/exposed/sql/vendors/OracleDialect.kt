@@ -41,7 +41,10 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun jsonType(): String =
-        throw UnsupportedByDialectException("This vendor does not support non-binary JSON data type", currentDialect)
+        throw UnsupportedByDialectException("This vendor does not support non-binary text JSON data type", currentDialect)
+
+    override fun jsonBType(): String =
+        throw UnsupportedByDialectException("This vendor does not support binary JSONB data type", currentDialect)
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"

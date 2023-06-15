@@ -130,6 +130,17 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
 
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append("JSON_EXTRACT(", expression, ", ")
+        path.appendTo { +"'$.$it'" }
+        append(")")
+    }
+
     override fun insert(
         ignore: Boolean,
         table: Table,

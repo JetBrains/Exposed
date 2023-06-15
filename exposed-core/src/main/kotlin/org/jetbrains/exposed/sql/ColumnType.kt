@@ -912,37 +912,25 @@ class EnumerationNameColumnType<T : Enum<T>>(
 // Serialization columns
 
 /**
- * Column for storing JSON in non-binary text format.
+ * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
  */
 open class JsonColumnType<T : Any>(
+    /** Returns the function that encodes an object of type [T] to a JSON String. */
     val serialize: (T) -> String,
+    /** Returns the function that decodes a JSON String to an object of type [T]. */
     val deserialize: (String) -> T
 ): ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
     override fun valueFromDB(value: Any): Any {
         return when (value) {
-            is String -> deserialize(value)
             is PGobject -> deserialize(value.value!!)
-            is Iterable<*> -> value
-            is ByteArray -> {
-                // H2 maps JSON to byte[] & escapes all quotes
-                deserialize(value.decodeToString().trim('\"').replace("""\"""", """""""))
-            }
             else -> deserialize(value as String)
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        return serialize(value as T)
-    }
-
-    override fun valueToString(value: Any?): String {
-        return when (value) {
-            is Iterable<*> -> nonNullValueToString(value)
-            else -> super.valueToString(value)
-        }
-    }
+    @Suppress("UNCHECKED_CAST")
+    override fun notNullValueToDB(value: Any) = serialize(value as T)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
@@ -957,7 +945,7 @@ open class JsonColumnType<T : Any>(
 }
 
 /**
- * Column for storing JSON in binary format.
+ * Column for storing JSON data in binary format.
  */
 class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
