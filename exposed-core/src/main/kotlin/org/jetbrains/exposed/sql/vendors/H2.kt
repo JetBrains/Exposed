@@ -18,9 +18,6 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     override fun jsonType(): String =
         throw UnsupportedByDialectException("This vendor does not support non-binary text JSON data type", currentDialect)
 
-    override fun jsonBType(): String =
-        throw UnsupportedByDialectException("This vendor does not support binary JSONB data type", currentDialect)
-
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 

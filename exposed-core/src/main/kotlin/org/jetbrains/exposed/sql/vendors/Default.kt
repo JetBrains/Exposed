@@ -107,14 +107,14 @@ abstract class DataTypeProvider {
     /** Returns the boolean value of the specified SQL [value]. */
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
-    // Serialization types
+    // JSON types
 
     /** Data type for storing JSON in a non-binary text format. */
     open fun jsonType(): String = "JSON"
 
     /** Data type for storing JSON in a decomposed binary format. */
     open fun jsonBType(): String =
-        throw UnsupportedByDialectException("This vendor does not support binary JSONB data type", currentDialect)
+        throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
 
     // Misc.
 
@@ -438,7 +438,7 @@ abstract class FunctionProvider {
         append("VAR_SAMP(", expression, ")")
     }
 
-    // Json Functions
+    // JSON Functions
 
     /**
      * SQL function that extracts data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.

@@ -909,7 +909,7 @@ class EnumerationNameColumnType<T : Enum<T>>(
     }
 }
 
-// Serialization columns
+// JSON columns
 
 /**
  * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
@@ -935,7 +935,7 @@ open class JsonColumnType<T : Any>(
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
             is PostgreSQLDialect -> PGobject().apply {
-                type = currentDialect.dataTypeProvider.jsonType()
+                type = sqlType()
                 this.value = value as String?
             }
             else -> value
@@ -948,7 +948,9 @@ open class JsonColumnType<T : Any>(
  * Column for storing JSON data in binary format.
  */
 class JsonBColumnType<T : Any>(
+    /** Returns the function that encodes an object of type [T] to a JSON String. */
     serialize: (T) -> String,
+    /** Returns the function that decodes a JSON String to an object of type [T]. */
     deserialize: (String) -> T
 ) : JsonColumnType<T>(serialize, deserialize) {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonBType()

@@ -652,7 +652,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
     )
 
-    // Serialization columns
+    // JSON columns
 
     /**
      * Creates a column, with the specified [name], for storing JSON data.

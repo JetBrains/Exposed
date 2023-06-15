@@ -17,9 +17,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TEXT"
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
-
     override fun jsonType(): String = "TEXT"
-
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
