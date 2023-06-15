@@ -243,6 +243,10 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         }
     }
 
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
+        return "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+    }
+
     override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
 
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"

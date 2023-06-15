@@ -1097,14 +1097,18 @@ abstract class VendorDialect(
     }
 
     fun filterCondition(index: Index): String? {
-        return if (currentDialect is PostgreSQLDialect) {
-            index.filterCondition?.let {
-                QueryBuilder(false)
-                    .append(" WHERE ").append(it)
-                    .toString()
+        return when (currentDialect) {
+            is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> {
+                index.filterCondition?.let {
+                    QueryBuilder(false)
+                        .append(" WHERE ").append(it)
+                        .toString()
+                }
             }
-        } else {
-            null
+            else -> {
+                exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
+                null
+            }
         }
     }
 
