@@ -117,6 +117,7 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path
         Byte::class -> ByteColumnType()
         Double::class -> DoubleColumnType()
         Float::class -> FloatColumnType()
+        ByteArray::class -> BasicBinaryColumnType()
         else -> {
             JsonColumnType({ Json.Default.encodeToString(serializer<T>(), it) }, { Json.Default.decodeFromString(serializer<T>(), it) })
         }

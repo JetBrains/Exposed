@@ -946,11 +946,12 @@ open class JsonColumnType<T : Any>(
 
 /**
  * Column for storing JSON data in binary format.
+ *
+ * @param serialize Function that encodes an object of type [T] to a JSON String
+ * @param deserialize Function that decodes a JSON String to an object of type [T]
  */
 class JsonBColumnType<T : Any>(
-    /** Returns the function that encodes an object of type [T] to a JSON String. */
     serialize: (T) -> String,
-    /** Returns the function that decodes a JSON String to an object of type [T]. */
     deserialize: (String) -> T
 ) : JsonColumnType<T>(serialize, deserialize) {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonBType()

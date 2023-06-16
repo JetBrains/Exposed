@@ -1,11 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
@@ -77,6 +80,23 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
             val result = tester.slice(tester.id).select { tooManyLogins }.singleOrNull()
             assertEquals(newId, result?.get(tester.id))
+        }
+    }
+
+    @Test
+    fun testWithNonSerializableClass() {
+        data class Fake(val number: Int)
+
+        withDb(excludeSettings = notYetSupportedDB) { testDb ->
+            excludingH2Version1(testDb) {
+                expectException<SerializationException> {
+                    // Throws with message: Serializer for class 'Fake' is not found.
+                    // Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied.
+                    val tester = object : Table("tester") {
+                        val jCol = json<Fake>("j_col", Json)
+                    }
+                }
+            }
         }
     }
 }
