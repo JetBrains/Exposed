@@ -45,16 +45,6 @@ subprojects {
     }
 }
 
-nexusPublishing {
-    repositories {
-        sonatype {
-            username.set(System.getenv("exposed.sonatype.user"))
-            password.set(System.getenv("exposed.sonatype.password"))
-            useStaging.set(true)
-        }
-    }
-}
-
 repositories {
     mavenLocal()
     mavenCentral()
