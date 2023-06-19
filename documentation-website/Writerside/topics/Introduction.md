@@ -1,18 +1,24 @@
 # Introduction
 
-Welcome to the Exposed Documentation!
+Welcome to the Exposed documentation!
 
-Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.  
-Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO)
+Exposed is a lightweight SQL library on top of JDBC driver for <a href="https://github.com/JetBrains/kotlin">Kotlin</a>.
+It has two flavors of database access: type-safe SQL wrapping DSL (Domain-Specific Language) and lightweight DAO (Data Access Object).
 
-Currently, supported database dialects are:
+Exposed supports the following databases:
 
-* PostgreSQL
+* H2
+* MariaDB
 * MySQL
 * Oracle
-* SQLite
-* H2
+* PostgreSQL
 * SQL Server
-* MariaDB
+* SQLite
 
-Read Next [Getting Started](Getting-Started.md)
+Exposed requires Java 6 or later versions. To check the version of Java you have installed, run the following command from the terminal:
+
+```shell
+java -version
+```
+
+Exposed is an open-source project and is available on <a href="https://github.com/JetBrains/Exposed">GitHub</a>.

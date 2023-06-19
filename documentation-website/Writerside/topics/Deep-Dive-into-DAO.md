@@ -1,4 +1,4 @@
-# DAO API
+# Deep Dive into DAO
 
 ## Overview
 The DAO (Data Access Object) API of Exposed, is similar to ORM frameworks like Hibernate with a Kotlin-specific API.  
