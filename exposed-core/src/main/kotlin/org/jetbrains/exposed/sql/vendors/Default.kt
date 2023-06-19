@@ -1096,24 +1096,6 @@ abstract class VendorDialect(
         resetCaches()
     }
 
-    /*fun filterCondition(index: Index): String? {
-        return when (currentDialect) {
-            is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> {
-                index.filterCondition?.let {
-                    QueryBuilder(false)
-                        .append(" WHERE ").append(it)
-                        .toString()
-                } ?: ""
-            }
-            else -> {
-                index.filterCondition?.let {
-                    exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
-                    return null
-                } ?: ""
-            }
-        }
-    }*/
-
     fun filterCondition(index: Index): String? {
         return index.filterCondition?.let {
             when (currentDialect) {
