@@ -91,7 +91,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
 
     @Test
-    fun testPartialIndex01() {
+    fun testCreateAndDropPartialIndexWithPostgres() {
         val partialIndexTable = object : IntIdTable("PartialIndexTableTest") {
             val name = varchar("name", 50)
             val value = integer("value")
@@ -134,7 +134,7 @@ class CreateIndexTests : DatabaseTestsBase() {
                 kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
             }
 
-            fun getIndexes(): List<Index> {
+            fun getIndices(): List<Index> {
                 db.dialect.resetCaches()
                 return currentDialect.existingIndices(partialIndexTable)[partialIndexTable].orEmpty()
             }
@@ -146,13 +146,13 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
-            assertEquals(getIndexes().size, 1)
+            assertEquals(getIndices().size, 1)
             SchemaUtils.drop(partialIndexTable)
         }
     }
 
     @Test
-    fun testPartialIndex02() {
+    fun testCreateAndDropPartialIndex() {
         val tester = object : Table("tester") {
             val name = varchar("name", 32).uniqueIndex()
             val age = integer("age")
@@ -179,19 +179,19 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             assertEquals(2, tester.indices.count { it.filterCondition != null })
 
-            fun getIndexes(): List<Index> {
+            fun getIndices(): List<Index> {
                 db.dialect.resetCaches()
                 return currentDialect.existingIndices(tester)[tester].orEmpty()
             }
 
-            var indices = getIndexes()
+            var indices = getIndices()
             assertEquals(3, indices.size)
 
             val uniqueWithPartial = Index(listOf(tester.team), true, "team_only_index", null, Op.TRUE).dropStatement().first()
             val dropStatements = indices.map { it.dropStatement().first() }
             expect(Unit) { execInBatch(dropStatements + uniqueWithPartial) }
 
-            indices = getIndexes()
+            indices = getIndices()
             assertEquals(0, indices.size)
 
             // test for non-unique partial index with type
@@ -209,6 +209,29 @@ class CreateIndexTests : DatabaseTestsBase() {
             assertTrue(typedPartialIndex.dropStatement().first().startsWith("DROP INDEX "))
 
             SchemaUtils.drop(tester)
+        }
+    }
+
+    @Test
+    fun testPartialIndexNotCreated() {
+        val tester = object : Table("tester") {
+            val age = integer("age")
+
+            init {
+                index("age_index", false, age) { age greaterEq 10 }
+            }
+        }
+
+        withTables(tester) {
+            SchemaUtils.createMissingTablesAndColumns()
+            assertTrue(tester.exists())
+
+            val expectedIndexCount = when (currentDialectTest) {
+                is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> 1
+                else -> 0
+            }
+            val actualIndexCount = currentDialectTest.existingIndices(tester)[tester].orEmpty().size
+            assertEquals(expectedIndexCount, actualIndexCount)
         }
     }
 }

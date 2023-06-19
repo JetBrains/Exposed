@@ -1096,20 +1096,38 @@ abstract class VendorDialect(
         resetCaches()
     }
 
-    fun filterCondition(index: Index): String? {
+    /*fun filterCondition(index: Index): String? {
         return when (currentDialect) {
             is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> {
                 index.filterCondition?.let {
                     QueryBuilder(false)
                         .append(" WHERE ").append(it)
                         .toString()
-                }
+                } ?: ""
             }
             else -> {
-                exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
-                null
+                index.filterCondition?.let {
+                    exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
+                    return null
+                } ?: ""
             }
         }
+    }*/
+
+    fun filterCondition(index: Index): String? {
+        return index.filterCondition?.let {
+            when (currentDialect) {
+                is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> {
+                    QueryBuilder(false)
+                        .append(" WHERE ").append(it)
+                        .toString()
+                }
+                else -> {
+                    exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
+                    return null
+                }
+            }
+        } ?: ""
     }
 
     /**
@@ -1125,7 +1143,7 @@ abstract class VendorDialect(
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
 
-        val maybeFilterCondition = filterCondition(index) ?: ""
+        val maybeFilterCondition = filterCondition(index) ?: return ""
 
         return when {
             // unique and no filter -> constraint, the type is not supported
