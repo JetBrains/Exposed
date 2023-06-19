@@ -1097,15 +1097,19 @@ abstract class VendorDialect(
     }
 
     fun filterCondition(index: Index): String? {
-        return if (currentDialect is PostgreSQLDialect) {
-            index.filterCondition?.let {
-                QueryBuilder(false)
-                    .append(" WHERE ").append(it)
-                    .toString()
+        return index.filterCondition?.let {
+            when (currentDialect) {
+                is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> {
+                    QueryBuilder(false)
+                        .append(" WHERE ").append(it)
+                        .toString()
+                }
+                else -> {
+                    exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
+                    return null
+                }
             }
-        } else {
-            null
-        }
+        } ?: ""
     }
 
     /**
@@ -1121,7 +1125,7 @@ abstract class VendorDialect(
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
 
-        val maybeFilterCondition = filterCondition(index) ?: ""
+        val maybeFilterCondition = filterCondition(index) ?: return ""
 
         return when {
             // unique and no filter -> constraint, the type is not supported

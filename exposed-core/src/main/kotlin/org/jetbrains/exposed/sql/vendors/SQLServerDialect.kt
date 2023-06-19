@@ -257,7 +257,15 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     }
 
     override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
-        return "CREATE $type INDEX $name ON $table $columns"
+        return "CREATE $type INDEX $name ON $table $columns$filterCondition"
+    }
+
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
+        return if (isUnique && !isPartial) {
+            "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        } else {
+            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"
+        }
     }
 
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
