@@ -134,7 +134,7 @@ exposedVersion=0.40.1
 ```
 
 ### JDBC driver and logging
-You also need a JDBC driver for the database system you are using (see [Database and DataSource](Database-and-DataSource.md)) and a logger for `addLogger(StdOutSqlLogger)`. Example (Gradle syntax):
+You also need a JDBC driver for the database system you are using (see [Databases](Databases.md)) and a logger for `addLogger(StdOutSqlLogger)`. Example (Gradle syntax):
 ```kotlin
 dependencies {
     // for H2
