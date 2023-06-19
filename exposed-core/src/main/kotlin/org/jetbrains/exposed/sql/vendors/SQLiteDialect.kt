@@ -17,6 +17,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TEXT"
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
+    override fun jsonType(): String = "TEXT"
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
@@ -126,6 +127,17 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         queryBuilder: QueryBuilder
     ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append("JSON_EXTRACT(", expression, ", ")
+        path.appendTo { +"'$.$it'" }
+        append(")")
+    }
 
     override fun insert(
         ignore: Boolean,

@@ -299,6 +299,25 @@ class VarSamp<T>(
     }
 }
 
+// JSON Functions
+
+/**
+ * Represents an SQL function that returns extracted data from a JSON object at the specified [path],
+ * either as a JSON representation or as a scalar value.
+ */
+class JsonExtract<T>(
+    /** Returns the expression from which to extract JSON subcomponents matched by [path]. */
+    val expression: Expression<*>,
+    /** Returns array of Strings representing JSON path/keys that match fields to be extracted. */
+    vararg val path: String,
+    /** Returns whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
+    val toScalar: Boolean,
+    columnType: IColumnType
+) : Function<T>(columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.jsonExtract(expression, path = path, toScalar, queryBuilder)
+}
+
 // Sequence Manipulation Functions
 
 /**

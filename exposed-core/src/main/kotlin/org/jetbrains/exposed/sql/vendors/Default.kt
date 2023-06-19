@@ -107,6 +107,15 @@ abstract class DataTypeProvider {
     /** Returns the boolean value of the specified SQL [value]. */
     open fun booleanFromStringToBoolean(value: String): Boolean = value.toBoolean()
 
+    // JSON types
+
+    /** Data type for storing JSON in a non-binary text format. */
+    open fun jsonType(): String = "JSON"
+
+    /** Data type for storing JSON in a decomposed binary format. */
+    open fun jsonBType(): String =
+        throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
+
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
@@ -427,6 +436,28 @@ abstract class FunctionProvider {
      */
     open fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR_SAMP(", expression, ")")
+    }
+
+    // JSON Functions
+
+    /**
+     * SQL function that extracts data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
+     *
+     * @param expression Expression from which to extract JSON subcomponents matched by [path].
+     * @param path String(s) representing JSON path/key(s) that matches fields to be extracted.
+     * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+     * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for JSON_EXTRACT. There must be a vendor specific implementation", currentDialect
+        )
     }
 
     // Commands

@@ -27,6 +27,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun textType(): String = "VARCHAR(MAX)"
     override fun mediumTextType(): String = textType()
     override fun largeTextType(): String = textType()
+    override fun jsonType(): String = "NVARCHAR(MAX)"
 
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         when (sortOrder) {
@@ -132,6 +133,18 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun <T> varSamp(expression: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("VAR(", expression, ")")
+    }
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+        append("(", expression, ", ")
+        path.appendTo { +"'$.$it'" }
+        append(")")
     }
 
     override fun update(
