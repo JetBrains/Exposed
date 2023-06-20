@@ -205,14 +205,16 @@ fun <T> transaction(
                 } finally {
                     TransactionManager.resetCurrent(currentManager)
                 }
-            } ?: inTopLevelTransaction(transactionIsolation,
-                                       repetitionAttempts,
-                                       readOnly,
-                                       db,
-                                       null,
-                                       minRepetitionDelay,
-                                       maxRepetitionDelay,
-                                       statement)
+            } ?: inTopLevelTransaction(
+                transactionIsolation,
+                repetitionAttempts,
+                readOnly,
+                db,
+                null,
+                minRepetitionDelay,
+                maxRepetitionDelay,
+                statement
+            )
         }
     }
 
