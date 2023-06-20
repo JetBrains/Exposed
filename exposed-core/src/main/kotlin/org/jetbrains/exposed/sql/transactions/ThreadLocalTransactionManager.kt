@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
+import java.util.concurrent.ThreadLocalRandom
 
 class ThreadLocalTransactionManager(
     private val db: Database,
@@ -18,6 +19,18 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
         @Deprecated("Use DatabaseConfig to define the defaultRepetitionAttempts")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMinRepetitionDelay: Long = db.config.defaultMinRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMinRepetitionDelay")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMaxRepetitionDelay")
         @TestOnly
         set
 
@@ -147,7 +160,10 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
         db.transactionManager.defaultIsolationLevel,
         db.transactionManager.defaultRepetitionAttempts,
         db.transactionManager.defaultReadOnly,
-        db, statement
+        db,
+        db.transactionManager.defaultMinRepetitionDelay,
+        db.transactionManager.defaultMaxRepetitionDelay,
+        statement
     )
 
 fun <T> transaction(
@@ -155,6 +171,8 @@ fun <T> transaction(
     repetitionAttempts: Int,
     readOnly: Boolean = false,
     db: Database? = null,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: Transaction.() -> T
 ): T =
     keepAndRestoreTransactionRefAfterRun(db) {
@@ -187,7 +205,16 @@ fun <T> transaction(
                 } finally {
                     TransactionManager.resetCurrent(currentManager)
                 }
-            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, readOnly, db, null, statement)
+            } ?: inTopLevelTransaction(
+                transactionIsolation,
+                repetitionAttempts,
+                readOnly,
+                db,
+                null,
+                minRepetitionDelay,
+                maxRepetitionDelay,
+                statement
+            )
         }
     }
 
@@ -197,6 +224,8 @@ fun <T> inTopLevelTransaction(
     readOnly: Boolean = false,
     db: Database? = null,
     outerTransaction: Transaction? = null,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: Transaction.() -> T
 ): T {
 
@@ -204,6 +233,11 @@ fun <T> inTopLevelTransaction(
         var repetitions = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
+
+        var intermediateDelay = minRepetitionDelay
+        var retryInterval = if (repetitionAttempts > 0) {
+             maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+        } else 0
 
         while (true) {
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
@@ -220,6 +254,21 @@ fun <T> inTopLevelTransaction(
                 repetitions++
                 if (repetitions >= repetitionAttempts) {
                     throw e
+                }
+                // set delay value with an exponential backoff time period.
+                val delay = when {
+                    minRepetitionDelay < maxRepetitionDelay -> {
+                        intermediateDelay += retryInterval * repetitions
+                        ThreadLocalRandom.current().nextLong(intermediateDelay , intermediateDelay + retryInterval)
+                    }
+                    minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
+                    else -> 0
+                }
+                exposedLogger.warn("Wait $delay milliseconds before retrying")
+                try {
+                    Thread.sleep(delay)
+                } catch (e: InterruptedException) {
+                  // Do nothing
                 }
             } catch (e: Throwable) {
                 val currentStatement = transaction.currentStatement
