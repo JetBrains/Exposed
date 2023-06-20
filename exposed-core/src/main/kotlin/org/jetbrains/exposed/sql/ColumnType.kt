@@ -924,13 +924,22 @@ open class JsonColumnType<T : Any>(
 
     override fun valueFromDB(value: Any): Any {
         return when (value) {
+            is String -> deserialize(value)
             is PGobject -> deserialize(value.value!!)
-            else -> deserialize(value as String)
+            is ByteArray -> deserialize(value.decodeToString())
+            else -> value
         }
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun notNullValueToDB(value: Any) = serialize(value as T)
+
+    override fun nonNullValueToString(value: Any): String {
+        return when (currentDialect) {
+            is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
+            else -> super.nonNullValueToString(value)
+        }
+    }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
@@ -938,6 +947,7 @@ open class JsonColumnType<T : Any>(
                 type = sqlType()
                 this.value = value as String?
             }
+            is H2Dialect -> (value as String).encodeToByteArray()
             else -> value
         }
         super.setParameter(stmt, index, parameterValue)
@@ -954,7 +964,10 @@ class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
     deserialize: (String) -> T
 ) : JsonColumnType<T>(serialize, deserialize) {
-    override fun sqlType(): String = currentDialect.dataTypeProvider.jsonBType()
+    override fun sqlType(): String = when (currentDialect) {
+        is H2Dialect -> H2DataTypeProvider.jsonBType()
+        else -> currentDialect.dataTypeProvider.jsonBType()
+    }
 }
 
 // Date/Time columns

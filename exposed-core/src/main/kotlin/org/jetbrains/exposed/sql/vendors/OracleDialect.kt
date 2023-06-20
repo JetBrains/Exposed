@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -37,11 +36,14 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun booleanFromStringToBoolean(value: String): Boolean = try {
         value.toLong() != 0L
     } catch (ex: NumberFormatException) {
-        error("Unexpected value of type Boolean: $value")
+        try {
+            value.lowercase().toBooleanStrict()
+        } catch (ex: IllegalArgumentException) {
+            error("Unexpected value of type Boolean: $value")
+        }
     }
 
-    override fun jsonType(): String =
-        throw UnsupportedByDialectException("This vendor does not support non-binary text JSON data type", currentDialect)
+    override fun jsonType(): String = "VARCHAR2(4000)"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
@@ -143,6 +145,18 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun <T> second(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(SECOND FROM ")
         append(expr)
+        append(")")
+    }
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+        append("(", expression, ", ")
+        path.appendTo { +"'$.$it'" }
         append(")")
     }
 
