@@ -536,9 +536,11 @@ public final class org/jetbrains/exposed/sql/Database$Companion {
 
 public final class org/jetbrains/exposed/sql/DatabaseConfig {
 	public static final field Companion Lorg/jetbrains/exposed/sql/DatabaseConfig$Companion;
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
+	public final fun getDefaultMaxRepetitionDelay ()J
+	public final fun getDefaultMinRepetitionDelay ()J
 	public final fun getDefaultReadOnly ()Z
 	public final fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
@@ -553,10 +555,12 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig {
 
 public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public fun <init> ()V
-	public fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;I)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;I)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
+	public final fun getDefaultMaxRepetitionDelay ()J
+	public final fun getDefaultMinRepetitionDelay ()J
 	public final fun getDefaultReadOnly ()Z
 	public final fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
@@ -569,6 +573,8 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 	public final fun setDefaultFetchSize (Ljava/lang/Integer;)V
 	public final fun setDefaultIsolationLevel (I)V
+	public final fun setDefaultMaxRepetitionDelay (J)V
+	public final fun setDefaultMinRepetitionDelay (J)V
 	public final fun setDefaultReadOnly (Z)V
 	public final fun setDefaultRepetitionAttempts (I)V
 	public final fun setDefaultSchema (Lorg/jetbrains/exposed/sql/Schema;)V
@@ -2813,21 +2819,25 @@ public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransaction
 	public fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxRepetitionDelay ()J
+	public fun getDefaultMinRepetitionDelay ()J
 	public fun getDefaultReadOnly ()Z
 	public fun getDefaultRepetitionAttempts ()I
 	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public fun setDefaultIsolationLevel (I)V
+	public fun setDefaultMaxRepetitionDelay (J)V
+	public fun setDefaultMinRepetitionDelay (J)V
 	public fun setDefaultReadOnly (Z)V
 	public fun setDefaultRepetitionAttempts (I)V
 }
 
 public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManagerKt {
-	public static final fun inTopLevelTransaction (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun inTopLevelTransaction$default (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun transaction (IIZLorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun inTopLevelTransaction (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;JJLkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelTransaction$default (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;JJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun transaction (IIZLorg/jetbrains/exposed/sql/Database;JJLkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun transaction (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (IIZLorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun transaction$default (IIZLorg/jetbrains/exposed/sql/Database;JJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
@@ -2851,10 +2861,14 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun getDefaultIsolationLevel ()I
+	public abstract fun getDefaultMaxRepetitionDelay ()J
+	public abstract fun getDefaultMinRepetitionDelay ()J
 	public abstract fun getDefaultReadOnly ()Z
 	public abstract fun getDefaultRepetitionAttempts ()I
 	public abstract fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun setDefaultIsolationLevel (I)V
+	public abstract fun setDefaultMaxRepetitionDelay (J)V
+	public abstract fun setDefaultMinRepetitionDelay (J)V
 	public abstract fun setDefaultReadOnly (Z)V
 	public abstract fun setDefaultRepetitionAttempts (I)V
 }

@@ -1,13 +1,17 @@
 public final class org/jetbrains/exposed/spring/SpringTransactionManager : org/springframework/jdbc/datasource/DataSourceTransactionManager, org/jetbrains/exposed/sql/transactions/TransactionManager {
-	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZZI)V
-	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZZIJJ)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZZIJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxRepetitionDelay ()J
+	public fun getDefaultMinRepetitionDelay ()J
 	public fun getDefaultReadOnly ()Z
 	public fun getDefaultRepetitionAttempts ()I
 	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public fun setDefaultIsolationLevel (I)V
+	public fun setDefaultMaxRepetitionDelay (J)V
+	public fun setDefaultMinRepetitionDelay (J)V
 	public fun setDefaultReadOnly (Z)V
 	public fun setDefaultRepetitionAttempts (I)V
 }
