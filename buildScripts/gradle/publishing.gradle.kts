@@ -9,15 +9,33 @@ _java {
     withSourcesJar()
 }
 
+val version: String by rootProject
+
 _publishing {
     publications {
-        create<MavenPublication>("ExposedJars") {
+        create<MavenPublication>("exposed") {
+            groupId = "org.jetbrains.exposed"
             artifactId = project.name
-            from(project.components["java"])
+            version = version
+            from(components["java"])
             pom {
                 configureMavenCentralMetadata(project)
             }
             signPublicationIfKeyPresent(project)
+        }
+    }
+
+    val publishingUsername: String? = System.getenv("PUBLISHING_USERNAME")
+    val publishingPassword: String? = System.getenv("PUBLISHING_PASSWORD")
+
+    repositories {
+        maven {
+            name = "Exposed"
+            url = uri("https://maven.pkg.jetbrains.space/public/p/exposed/release")
+            credentials {
+                username = publishingUsername
+                password = publishingPassword
+            }
         }
     }
 }
