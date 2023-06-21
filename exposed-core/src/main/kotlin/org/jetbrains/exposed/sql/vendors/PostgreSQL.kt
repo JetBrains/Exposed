@@ -276,13 +276,12 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         return "CREATE INDEX $name ON $table USING $type $columns$filterCondition"
     }
 
-    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
-        return if (isUnique && !isPartial) {
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String =
+        if (isUnique && !isPartial) {
             "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
             "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         }
-    }
 
     companion object : DialectNameProvider("postgresql")
 }

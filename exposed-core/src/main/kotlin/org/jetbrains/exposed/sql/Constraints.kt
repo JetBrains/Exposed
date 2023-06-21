@@ -174,9 +174,8 @@ data class ForeignKeyConstraint(
 
     fun targetOf(from: Column<*>): Column<*>? = references[from]
 
-    operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
-        return copy(references = references + other.references)
-    }
+    operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint =
+        copy(references = references + other.references)
 
     override fun toString() = "ForeignKeyConstraint(fkName='$fkName')"
 }
@@ -195,25 +194,23 @@ data class CheckConstraint(
 
     internal val checkPart = "CONSTRAINT $checkName CHECK ($checkOp)"
 
-    override fun createStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
+    override fun createStatement(): List<String> =
+        if (currentDialect is MysqlDialect) {
             exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName ADD $checkPart")
-        }
     }
 
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
-    override fun dropStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
+    override fun dropStatement(): List<String> =
+        if (currentDialect is MysqlDialect) {
             exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
         }
-    }
 
     companion object {
         internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {

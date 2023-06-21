@@ -221,9 +221,7 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getTimestamp(index)
-    }
+    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getTimestamp(index)
 
     override fun notNullValueToDB(value: Any): Any = when {
         value is Instant && currentDialect is SQLiteDialect ->
@@ -260,10 +258,9 @@ class JavaDurationColumnType : ColumnType() {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: ResultSet, index: Int): Any? =
         // ResultSet.getLong returns 0 instead of null
-        return rs.getLong(index).takeIf { rs.getObject(index) != null }
-    }
+        rs.getLong(index).takeIf { rs.getObject(index) != null }
 
     override fun notNullValueToDB(value: Any): Any {
         if (value is Duration) {

@@ -13,20 +13,16 @@ import javax.money.Monetary
  */
 class CurrencyColumnType : VarCharColumnType(3) {
 
-    override fun notNullValueToDB(value: Any): Any {
-        return when (value) {
-            is String -> value
-            is CurrencyUnit -> value.currencyCode
-            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
-        }
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is String -> value
+        is CurrencyUnit -> value.currencyCode
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun valueFromDB(value: Any): Any {
-        return when (value) {
-            is CurrencyUnit -> value
-            is String -> Monetary.getCurrency(value)
-            else -> valueFromDB(value.toString())
-        }
+    override fun valueFromDB(value: Any): Any = when (value) {
+        is CurrencyUnit -> value
+        is String -> Monetary.getCurrency(value)
+        else -> valueFromDB(value.toString())
     }
 }
 

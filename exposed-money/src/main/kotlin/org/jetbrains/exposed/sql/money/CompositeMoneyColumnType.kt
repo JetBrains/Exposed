@@ -12,22 +12,20 @@ fun Table.compositeMoney(precision: Int, scale: Int, amountName: String, currenc
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal>,
     currencyColumn: Column<CurrencyUnit>
-): CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount> {
-    return CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(amountColumn, currencyColumn).also {
+): CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount> =
+    CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(amountColumn, currencyColumn).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
             registerCompositeColumn(it)
         }
     }
-}
 
 @JvmName("compositeMoneyNullable")
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal?>,
     currencyColumn: Column<CurrencyUnit?>
-): CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> {
-    return CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn).also {
+): CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> =
+    CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
             registerCompositeColumn(it)
         }
     }
-}

@@ -134,17 +134,15 @@ class AutoIncColumnType(
 
     override fun sqlType(): String = resolveAutoIncType(delegate)
 
-    override fun equals(other: Any?): Boolean {
-        return when {
-            other == null -> false
-            this === other -> true
-            this::class != other::class -> false
-            other !is AutoIncColumnType -> false
-            delegate != other.delegate -> false
-            _autoincSeq != other._autoincSeq -> false
-            fallbackSeqName != other.fallbackSeqName -> false
-            else -> true
-        }
+    override fun equals(other: Any?): Boolean = when {
+        other == null -> false
+        this === other -> true
+        this::class != other::class -> false
+        other !is AutoIncColumnType -> false
+        delegate != other.delegate -> false
+        _autoincSeq != other._autoincSeq -> false
+        fallbackSeqName != other.fallbackSeqName -> false
+        else -> true
     }
 
     override fun hashCode(): Int {
@@ -244,15 +242,13 @@ class ByteColumnType : ColumnType() {
 class UByteColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
 
-    override fun valueFromDB(value: Any): UByte {
-        return when (value) {
-            is UByte -> value
-            is Byte -> value.takeIf { it >= 0 }?.toUByte()
-            is Number -> value.toByte().takeIf { it >= 0 }?.toUByte()
-            is String -> value.toUByte()
-            else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UByte: $value")
-    }
+    override fun valueFromDB(value: Any): UByte = when (value) {
+        is UByte -> value
+        is Byte -> value.takeIf { it >= 0 }?.toUByte()
+        is Number -> value.toByte().takeIf { it >= 0 }?.toUByte()
+        is String -> value.toUByte()
+        else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
+    } ?: error("negative value but type is UByte: $value")
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val v = if (value is UByte) value.toByte() else value
@@ -283,15 +279,13 @@ class ShortColumnType : ColumnType() {
  */
 class UShortColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
-    override fun valueFromDB(value: Any): UShort {
-        return when (value) {
-            is UShort -> value
-            is Short -> value.takeIf { it >= 0 }?.toUShort()
-            is Number -> value.toShort().takeIf { it >= 0 }?.toUShort()
-            is String -> value.toUShort()
-            else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UShort: $value")
-    }
+    override fun valueFromDB(value: Any): UShort = when (value) {
+        is UShort -> value
+        is Short -> value.takeIf { it >= 0 }?.toUShort()
+        is Number -> value.toShort().takeIf { it >= 0 }?.toUShort()
+        is String -> value.toUShort()
+        else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
+    } ?: error("negative value but type is UShort: $value")
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val v = if (value is UShort) value.toShort() else value
@@ -322,15 +316,13 @@ class IntegerColumnType : ColumnType() {
  */
 class UIntegerColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
-    override fun valueFromDB(value: Any): UInt {
-        return when (value) {
-            is UInt -> value
-            is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
-            is String -> value.toUInt()
-            else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UInt: $value")
-    }
+    override fun valueFromDB(value: Any): UInt = when (value) {
+        is UInt -> value
+        is Int -> value.takeIf { it >= 0 }?.toUInt()
+        is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
+        is String -> value.toUInt()
+        else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
+    } ?: error("negative value but type is UInt: $value")
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val v = if (value is UInt) value.toInt() else value
@@ -361,15 +353,13 @@ class LongColumnType : ColumnType() {
  */
 class ULongColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ulongType()
-    override fun valueFromDB(value: Any): ULong {
-        return when (value) {
-            is ULong -> value
-            is Long -> value.takeIf { it >= 0 }?.toULong()
-            is Number -> value.toLong().takeIf { it >= 0 }?.toULong()
-            is String -> value.toULong()
-            else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is ULong: $value")
-    }
+    override fun valueFromDB(value: Any): ULong = when (value) {
+        is ULong -> value
+        is Long -> value.takeIf { it >= 0 }?.toULong()
+        is Number -> value.toLong().takeIf { it >= 0 }?.toULong()
+        is String -> value.toULong()
+        else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
+    } ?: error("negative value but type is ULong: $value")
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val v = if (value is ULong) value.toLong() else value
@@ -419,9 +409,7 @@ class DecimalColumnType(
 ) : ColumnType() {
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getObject(index)
-    }
+    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getObject(index)
 
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value

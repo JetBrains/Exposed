@@ -6,9 +6,7 @@ class EncryptedVarCharColumnType(
     private val encryptor: Encryptor,
     colLength: Int,
 ) : VarCharColumnType(colLength) {
-    override fun notNullValueToDB(value: Any): Any {
-        return encryptor.encrypt(value.toString())
-    }
+    override fun notNullValueToDB(value: Any): Any = encryptor.encrypt(value.toString())
 
     override fun valueFromDB(value: Any): Any {
         val encryptedStr = super.valueFromDB(value)

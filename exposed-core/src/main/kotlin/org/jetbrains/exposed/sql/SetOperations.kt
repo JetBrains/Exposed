@@ -117,15 +117,14 @@ sealed class SetOperation(
 }
 
 class Union(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("UNION", firstStatement, secondStatement) {
-    override fun withDistinct(value: Boolean): SetOperation {
-        return if (!value) {
+    override fun withDistinct(value: Boolean): SetOperation =
+        if (!value) {
             UnionAll(firstStatement, secondStatement).also {
                 copyTo(it)
             }
         } else {
             this
         }
-    }
 
     override fun copy() = Union(firstStatement, secondStatement).also {
         copyTo(it)
@@ -134,13 +133,12 @@ class Union(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>)
 
 class UnionAll(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("UNION ALL", firstStatement, secondStatement) {
 
-    override fun withDistinct(value: Boolean): SetOperation {
-        return if (value) {
+    override fun withDistinct(value: Boolean): SetOperation =
+        if (value) {
             Union(firstStatement, secondStatement)
         } else {
             this
         }
-    }
 
     override fun copy() = UnionAll(firstStatement, secondStatement).also {
         copyTo(it)

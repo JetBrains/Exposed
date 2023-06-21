@@ -379,26 +379,24 @@ private fun FieldSet.selectBatched(
     }
 
     return object : Iterable<Iterable<ResultRow>> {
-        override fun iterator(): Iterator<Iterable<ResultRow>> {
-            return iterator {
-                var lastOffset = 0L
-                while (true) {
-                    val query =
-                        select { whereOp and (autoIncColumn greater lastOffset) }
-                            .limit(batchSize)
-                            .orderBy(autoIncColumn, SortOrder.ASC)
+        override fun iterator(): Iterator<Iterable<ResultRow>> = iterator {
+            var lastOffset = 0L
+            while (true) {
+                val query =
+                    select { whereOp and (autoIncColumn greater lastOffset) }
+                        .limit(batchSize)
+                        .orderBy(autoIncColumn, SortOrder.ASC)
 
-                    // query.iterator() executes the query
-                    val results = query.iterator().asSequence().toList()
+                // query.iterator() executes the query
+                val results = query.iterator().asSequence().toList()
 
-                    if (results.isNotEmpty()) {
-                        yield(results)
-                    }
-
-                    if (results.size < batchSize) break
-
-                    lastOffset = toLong(results.last()[autoIncColumn]!!)
+                if (results.isNotEmpty()) {
+                    yield(results)
                 }
+
+                if (results.size < batchSize) break
+
+                lastOffset = toLong(results.last()[autoIncColumn]!!)
             }
         }
 

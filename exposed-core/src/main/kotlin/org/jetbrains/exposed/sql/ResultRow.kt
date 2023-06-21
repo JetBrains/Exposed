@@ -83,8 +83,8 @@ class ResultRow(
      * @param expression expression for which to get the index
      * @throws IllegalStateException if expression is not in record set
      */
-    private fun <T> getExpressionIndex(expression: Expression<T>): Int {
-        return fieldIndex[expression]
+    private fun <T> getExpressionIndex(expression: Expression<T>): Int =
+        fieldIndex[expression]
             ?: fieldIndex.keys.firstOrNull { exp ->
                 when (exp) {
                     // exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
@@ -94,7 +94,6 @@ class ResultRow(
                 }
             }?.let { exp -> fieldIndex[exp] }
             ?: error("$expression is not in record set")
-    }
 
     override fun toString(): String =
         fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }

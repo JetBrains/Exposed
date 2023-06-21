@@ -23,9 +23,8 @@ internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
 
 class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
-    override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
-        return userData.filterValues { it is EntityCache }
-    }
+    override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> =
+        userData.filterValues { it is EntityCache }
 
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         when (val statement = context.statement) {

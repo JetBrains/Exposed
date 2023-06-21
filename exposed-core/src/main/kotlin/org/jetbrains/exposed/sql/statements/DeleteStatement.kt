@@ -15,9 +15,7 @@ open class DeleteStatement(
     val offset: Long? = null
 ) : Statement<Int>(StatementType.DELETE, listOf(table)) {
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        return executeUpdate()
-    }
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = executeUpdate()
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
         transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.let { QueryBuilder(prepared).append(it).toString() }, limit, transaction)

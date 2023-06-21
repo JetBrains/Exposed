@@ -200,19 +200,17 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
-    ): String {
+    ): String =
         // SQLSERVER MERGE statement must be terminated by a semi-colon (;)
-        return super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
-    }
+        super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
     }
 
-    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
-        return (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
-    }
+    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String =
+        (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
 }
 
 /**

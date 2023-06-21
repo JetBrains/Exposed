@@ -6,9 +6,8 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
     private val set: MutableSet<T> = Collections.newSetFromMap(IdentityHashMap())
     private val list: MutableList<T> = LinkedList()
 
-    override fun add(element: T): Boolean {
-        return set.add(element).also { if (it) list.add(element) }
-    }
+    override fun add(element: T): Boolean =
+        set.add(element).also { if (it) list.add(element) }
 
     override fun addAll(elements: Collection<T>): Boolean {
         val toAdd = elements.filter { it !in set } // Maintain order
@@ -42,9 +41,8 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
         }
     }
 
-    override fun remove(element: T): Boolean {
-        return set.remove(element).also { if (it) list.remove(element) }
-    }
+    override fun remove(element: T): Boolean =
+        set.remove(element).also { if (it) list.remove(element) }
 
     override fun removeAll(elements: Collection<T>): Boolean {
         val toRemove = set intersect elements
@@ -54,22 +52,15 @@ internal class LinkedIdentityHashSet<T> : MutableSet<T> {
         return true
     }
 
-    override fun retainAll(elements: Collection<T>): Boolean {
-        return removeAll(set subtract elements)
-    }
+    override fun retainAll(elements: Collection<T>): Boolean =
+        removeAll(set subtract elements)
 
     override val size: Int
         get() = set.size
 
-    override fun contains(element: T): Boolean {
-        return set.contains(element)
-    }
+    override fun contains(element: T): Boolean = set.contains(element)
 
-    override fun containsAll(elements: Collection<T>): Boolean {
-        return set.containsAll(elements)
-    }
+    override fun containsAll(elements: Collection<T>): Boolean = set.containsAll(elements)
 
-    override fun isEmpty(): Boolean {
-        return set.isEmpty()
-    }
+    override fun isEmpty(): Boolean = set.isEmpty()
 }

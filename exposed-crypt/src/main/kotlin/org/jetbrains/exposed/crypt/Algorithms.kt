@@ -17,10 +17,10 @@ object Algorithms {
 
     private const val AES_256_GCM_BLOCK_LENGTH = 16
     private const val AES_256_GCM_TAG_LENGTH = 16
-    @Suppress("FunctionNaming")
-    fun AES_256_PBE_GCM(password: CharSequence, salt: CharSequence): Encryptor {
 
-        return AesBytesEncryptor(
+    @Suppress("FunctionNaming")
+    fun AES_256_PBE_GCM(password: CharSequence, salt: CharSequence): Encryptor =
+        AesBytesEncryptor(
             password.toString(),
             salt,
             KeyGenerators.secureRandom(AES_256_GCM_BLOCK_LENGTH),
@@ -30,16 +30,16 @@ object Algorithms {
                 { base64Encoder.encodeToString(encrypt(it.toByteArray())) },
                 { String(decrypt(base64Decoder.decode(it))) },
                 { inputLen ->
-                    base64EncodedLength(AES_256_GCM_BLOCK_LENGTH + inputLen + AES_256_GCM_TAG_LENGTH) }
+                    base64EncodedLength(AES_256_GCM_BLOCK_LENGTH + inputLen + AES_256_GCM_TAG_LENGTH)
+                }
             )
         }
-    }
 
     private const val AES_256_CBC_BLOCK_LENGTH = 16
-    @Suppress("FunctionNaming")
-    fun AES_256_PBE_CBC(password: CharSequence, salt: CharSequence): Encryptor {
 
-        return AesBytesEncryptor(
+    @Suppress("FunctionNaming")
+    fun AES_256_PBE_CBC(password: CharSequence, salt: CharSequence): Encryptor =
+        AesBytesEncryptor(
             password.toString(),
             salt,
             KeyGenerators.secureRandom(AES_256_CBC_BLOCK_LENGTH)
@@ -49,12 +49,13 @@ object Algorithms {
                 { String(decrypt(base64Decoder.decode(it))) },
                 { inputLen ->
                     val paddingSize = (AES_256_CBC_BLOCK_LENGTH - inputLen % AES_256_CBC_BLOCK_LENGTH)
-                    base64EncodedLength(AES_256_CBC_BLOCK_LENGTH + inputLen + paddingSize) }
+                    base64EncodedLength(AES_256_CBC_BLOCK_LENGTH + inputLen + paddingSize)
+                }
             )
         }
-    }
 
     private const val BLOW_FISH_BLOCK_LENGTH = 8
+
     @Suppress("FunctionNaming")
     fun BLOW_FISH(key: CharSequence): Encryptor {
         val ks = SecretKeySpec(key.toString().toByteArray(), "Blowfish")
@@ -80,6 +81,7 @@ object Algorithms {
 
     private const val TRIPLE_DES_KEY_LENGTH = 24
     private const val TRIPLE_DES_BLOCK_LENGTH = 8
+
     @Suppress("FunctionNaming")
     fun TRIPLE_DES(secretKey: CharSequence): Encryptor {
         if (secretKey.toString().toByteArray().size != TRIPLE_DES_KEY_LENGTH) {

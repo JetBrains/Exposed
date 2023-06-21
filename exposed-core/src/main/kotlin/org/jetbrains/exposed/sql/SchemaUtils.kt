@@ -6,8 +6,8 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
 object SchemaUtils {
-    private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
-        return if (withLogs) {
+    private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R =
+        if (withLogs) {
             val start = System.currentTimeMillis()
             val answer = block()
             exposedLogger.info(message + " took " + (System.currentTimeMillis() - start) + "ms")
@@ -15,7 +15,6 @@ object SchemaUtils {
         } else {
             block()
         }
-    }
 
     private class TableDepthGraph(val tables: Iterable<Table>) {
         val graph = fetchAllTables().let { tables ->
@@ -144,8 +143,8 @@ object SchemaUtils {
     fun createIndex(index: Index) = index.createStatement()
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
-    private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
-        return when (exp) {
+    private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String =
+        when (exp) {
             is LiteralOp<*> -> {
                 val dialect = currentDialect
                 when (val value = exp.value) {
@@ -185,7 +184,6 @@ object SchemaUtils {
             }
             else -> processForDefaultValue(exp)
         }
-    }
 
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
