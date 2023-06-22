@@ -704,6 +704,12 @@ public final class org/jetbrains/exposed/sql/Except : org/jetbrains/exposed/sql/
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/SetOperation;
 }
 
+public final class org/jetbrains/exposed/sql/Exists : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/Op$OpBoolean {
+	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;)V
+	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
 public abstract class org/jetbrains/exposed/sql/Expression {
 	public static final field Companion Lorg/jetbrains/exposed/sql/Expression$Companion;
 	public fun <init> ()V
@@ -1301,6 +1307,12 @@ public final class org/jetbrains/exposed/sql/NotEqSubQueryOp : org/jetbrains/exp
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 }
 
+public final class org/jetbrains/exposed/sql/NotExists : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/Op$OpBoolean {
+	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;)V
+	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
 public final class org/jetbrains/exposed/sql/NotInSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 }
@@ -1351,6 +1363,7 @@ public final class org/jetbrains/exposed/sql/OpKt {
 	public static final fun decimalParam (Ljava/math/BigDecimal;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun doubleLiteral (D)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun doubleParam (D)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun exists (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Exists;
 	public static final fun floatLiteral (F)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun floatParam (F)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun idParam (Lorg/jetbrains/exposed/dao/id/EntityID;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Expression;
@@ -1359,6 +1372,7 @@ public final class org/jetbrains/exposed/sql/OpKt {
 	public static final fun longLiteral (J)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun longParam (J)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun not (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun notExists (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotExists;
 	public static final fun or (Lorg/jetbrains/exposed/sql/Expression;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun or (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun orIfNotNull (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
@@ -2335,12 +2349,6 @@ public final class org/jetbrains/exposed/sql/XorBitOp : org/jetbrains/exposed/sq
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/exists : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/Op$OpBoolean {
-	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;)V
-	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
-}
-
 public final class org/jetbrains/exposed/sql/functions/math/ACosFunction : org/jetbrains/exposed/sql/CustomFunction {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)V
 }
@@ -2412,12 +2420,6 @@ public final class org/jetbrains/exposed/sql/functions/math/SqrtFunction : org/j
 
 public final class org/jetbrains/exposed/sql/functions/math/TanFunction : org/jetbrains/exposed/sql/CustomFunction {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)V
-}
-
-public final class org/jetbrains/exposed/sql/notExists : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/Op$OpBoolean {
-	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;)V
-	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
 public abstract class org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression {
