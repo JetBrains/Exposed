@@ -21,7 +21,9 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     @Repeat(5)
     open fun testConnection() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
@@ -29,20 +31,22 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
         SchemaUtils.create(T1)
         T1.insert {
-            it[T1.c1] = "112"
+            it[c1] = "112"
         }
 
         Assert.assertEquals(T1.selectAll().count(), 1)
         SchemaUtils.drop(T1)
     }
 
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     @Repeat(5)
     open fun testConnection2() {
         SchemaUtils.create(T1)
         val rnd = Random().nextInt().toString()
         T1.insert {
-            it[T1.c1] = rnd
+            it[c1] = rnd
         }
 
         Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
@@ -56,7 +60,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             SchemaUtils.create(T1)
             val rnd = Random().nextInt().toString()
             T1.insert {
-                it[T1.c1] = rnd
+                it[c1] = rnd
             }
 
             Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
@@ -65,7 +69,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         transaction {
             val rnd = Random().nextInt().toString()
             T1.insert {
-                it[T1.c1] = rnd
+                it[c1] = rnd
             }
 
             Assert.assertEquals(2, T1.selectAll().count())
