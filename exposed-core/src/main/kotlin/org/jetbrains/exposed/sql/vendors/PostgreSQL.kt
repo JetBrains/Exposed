@@ -115,13 +115,63 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
-        append("JSON_EXTRACT_PATH")
+        append("${jsonType.sqlType()}_EXTRACT_PATH")
         if (toScalar) append("_TEXT")
         append("(", expression, ", ")
-        path.appendTo { +"'$it'" }
+        path.ifEmpty { arrayOf("$") }.appendTo { +"'$it'" }
         append(")")
+    }
+
+    override fun jsonContains(
+        target: Expression<*>,
+        candidate: Expression<*>,
+        path: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        path?.let {
+            TransactionManager.current().throwUnsupportedException(
+                "PostgreSQL containment operator does not support a JSON path argument."
+            )
+        }
+        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        queryBuilder {
+            append(target)
+            if (isNotJsonB) append("::jsonb")
+            append(" @> ", candidate)
+            if (isNotJsonB) append("::jsonb")
+        }
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException(
+                "PostgreSQL does not support multi-argument JSON paths; please check the documentation"
+            )
+        }
+        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        queryBuilder {
+            append("JSONB_PATH_EXISTS(")
+            if (isNotJsonB) {
+                append("CAST(", expression, " as jsonb), ")
+            } else {
+                append(expression, ", ")
+            }
+            append("'$", path.firstOrNull() ?: "", "'")
+            optional?.let {
+                append(", '$it'")
+            }
+            append(")")
+        }
     }
 
     private const val onConflictIgnore = "ON CONFLICT DO NOTHING"

@@ -139,12 +139,20 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
-    ) = queryBuilder {
-        append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
-        append("(", expression, ", ")
-        path.appendTo { +"'$.$it'" }
-        append(")")
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException(
+                "SQLServer does not support multi-argument JSON paths; please check the documentation"
+            )
+        }
+        queryBuilder {
+            append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+            append("(", expression, ", ")
+            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            append(")")
+        }
     }
 
     override fun update(
