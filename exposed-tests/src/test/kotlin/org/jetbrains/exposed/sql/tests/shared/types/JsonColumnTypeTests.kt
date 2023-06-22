@@ -9,16 +9,15 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class JsonColumnTypeTests : DatabaseTestsBase() {
-    private val notYetSupportedDB = TestDB.allH2TestDB + TestDB.ORACLE
-
     @Test
     fun testInsertAndSelect() {
-        withJsonTable(exclude = notYetSupportedDB) { tester, _, _ ->
+        withJsonTable { tester, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = newData
@@ -31,7 +30,7 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdate() {
-        withJsonTable(exclude = notYetSupportedDB) { tester, _, data1 ->
+        withJsonTable { tester, _, data1 ->
             assertEquals(data1, tester.selectAll().single()[tester.jsonColumn])
 
             val updatedData = data1.copy(active = false)
@@ -45,9 +44,9 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonTable(exclude = notYetSupportedDB) { tester, user1, data1 ->
-            // SQLServer returns null if extracted JSON is not scalar
-            val requiresScalar = currentDialectTest is SQLServerDialect
+        withJsonTable(exclude = TestDB.allH2TestDB) { tester, user1, data1 ->
+            // SQLServer & Oracle return null if extracted JSON is not scalar
+            val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
             val isActive = tester.jsonColumn.jsonExtract<Boolean>("active", toScalar = requiresScalar)
             val result1 = tester.slice(isActive).selectAll().singleOrNull()
             assertEquals(data1.active, result1?.get(isActive))
@@ -65,7 +64,7 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonTable(exclude = notYetSupportedDB) { tester, _, data1 ->
+        withJsonTable(exclude = TestDB.allH2TestDB) { tester, _, data1 ->
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = data1.copy(logins = 1000)
             }
@@ -87,7 +86,7 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
     fun testWithNonSerializableClass() {
         data class Fake(val number: Int)
 
-        withDb(excludeSettings = notYetSupportedDB) { testDb ->
+        withDb { testDb ->
             excludingH2Version1(testDb) {
                 expectException<SerializationException> {
                     // Throws with message: Serializer for class 'Fake' is not found.
@@ -96,6 +95,43 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
                         val jCol = json<Fake>("j_col", Json)
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testDAOFunctionsWithJsonColumn() {
+        val dataTable = JsonTestsData.JsonTable
+        val dataEntity = JsonTestsData.JsonEntity
+
+        withDb { testDb ->
+            excludingH2Version1(testDb) {
+                SchemaUtils.create(dataTable)
+
+                val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
+                val newUser = dataEntity.new {
+                    jsonColumn = dataA
+                }
+
+                assertEquals(dataA, dataEntity.findById(newUser.id)?.jsonColumn)
+
+                val updatedUser = dataA.copy(user = User("Lead", "Beta"))
+                dataTable.update {
+                    it[jsonColumn] = updatedUser
+                }
+
+                assertEquals(updatedUser, dataEntity.all().single().jsonColumn)
+
+                if (testDb !in TestDB.allH2TestDB) {
+                    dataEntity.new { jsonColumn = dataA }
+                    val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "team") else arrayOf("user.team")
+                    val userTeam = dataTable.jsonColumn.jsonExtract<String>(*path)
+                    val userInTeamB = dataEntity.find { userTeam like "B%" }.single()
+
+                    assertEquals(updatedUser, userInTeamB.jsonColumn)
+                }
+
+                SchemaUtils.drop(dataTable)
             }
         }
     }
