@@ -427,11 +427,11 @@ class AndBitOp<T, S : T>(
                 when (dialect.isSecondVersion) {
                     false -> append("BITAND(", expr1, ", ", expr2, ")")
                     true -> {
-                        +"BITAND("
+                        + "BITAND("
                         castToExpressionTypeForH2BitWiseIps(expr1, this)
-                        +", "
+                        + ", "
                         castToExpressionTypeForH2BitWiseIps(expr2, this)
-                        +")"
+                        + ")"
                     }
                 }
             }
@@ -459,11 +459,11 @@ class OrBitOp<T, S : T>(
                 when (dialect.isSecondVersion) {
                     false -> append("BITOR(", expr1, ", ", expr2, ")")
                     true -> {
-                        +"BITOR("
+                        + "BITOR("
                         castToExpressionTypeForH2BitWiseIps(expr1, this)
-                        +", "
+                        + ", "
                         castToExpressionTypeForH2BitWiseIps(expr2, this)
-                        +")"
+                        + ")"
                     }
                 }
             }
@@ -494,11 +494,11 @@ class XorBitOp<T, S : T>(
                 when (dialect.isSecondVersion) {
                     false -> append("BITXOR(", expr1, ", ", expr2, ")")
                     true -> {
-                        +"BITXOR("
+                        + "BITXOR("
                         castToExpressionTypeForH2BitWiseIps(expr1, this)
-                        +", "
+                        + ", "
                         castToExpressionTypeForH2BitWiseIps(expr2, this)
-                        +")"
+                        + ")"
                     }
                 }
             }
@@ -518,8 +518,8 @@ class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, va
         super.toQueryBuilder(queryBuilder)
         if (escapeChar != null) {
             with(queryBuilder) {
-                +" ESCAPE "
-                +stringParam(escapeChar.toString())
+                + " ESCAPE "
+                + stringParam(escapeChar.toString())
             }
         }
     }
@@ -593,7 +593,7 @@ sealed class SubQueryOp<T>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         append(expr, " $operator (")
         query.prepareSQL(this)
-        +")"
+        + ")"
     }
 }
 
@@ -627,7 +627,7 @@ class LiteralOp<T>(
     /** Returns the value being used as a literal. */
     val value: T
 ) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +columnType.valueToString(value) }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { + columnType.valueToString(value) }
 }
 
 /** Returns the specified [value] as a boolean literal. */
@@ -684,7 +684,8 @@ class QueryParameter<T>(
 }
 
 /** Returns the specified [value] as a query parameter with the same type as [column]. */
-fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> = QueryParameter(value, EntityIDColumnType(column))
+fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> =
+    QueryParameter(value, EntityIDColumnType(column))
 
 /** Returns the specified [value] as a boolean query parameter. */
 fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType.INSTANCE)
@@ -736,7 +737,7 @@ class NoOpConversion<T, S>(
     val expr: Expression<T>,
     override val columnType: IColumnType
 ) : ExpressionWithColumnType<S>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +expr }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { + expr }
 }
 
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
