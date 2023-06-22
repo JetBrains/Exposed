@@ -20,10 +20,13 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
 
     class DAO(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<DAO>(T1)
+
         var c1 by T1.c1
     }
 
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     open fun test1() {
         SchemaUtils.create(T1)
         T1.insert {
@@ -32,14 +35,18 @@ open class EntityUpdateTest : SpringTransactionTestBase() {
         Assert.assertEquals("new", DAO.findById(1)?.c1)
     }
 
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     open fun test2() {
         val entity = DAO.findById(1) ?: fail()
         entity.c1 = "updated"
         Assert.assertEquals("updated", DAO.findById(1)?.c1)
     }
 
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     open fun test3() {
         val entity = DAO.findById(1) ?: fail()
         Assert.assertEquals("updated", entity.c1)
