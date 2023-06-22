@@ -14,35 +14,35 @@ import kotlin.test.fail
 
 open class EntityUpdateTest : SpringTransactionTestBase() {
 
-    object t1 : IntIdTable() {
+    object T1 : IntIdTable() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
-    class dao(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<dao>(t1)
-        var c1 by t1.c1
+    class DAO(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<DAO>(T1)
+        var c1 by T1.c1
     }
 
     @Test @Transactional @Commit
     open fun test1() {
-        SchemaUtils.create(t1)
-        t1.insert {
+        SchemaUtils.create(T1)
+        T1.insert {
             it[c1] = "new"
         }
-        Assert.assertEquals("new", dao.findById(1)?.c1)
+        Assert.assertEquals("new", DAO.findById(1)?.c1)
     }
 
     @Test @Transactional @Commit
     open fun test2() {
-        val entity = dao.findById(1) ?: fail()
+        val entity = DAO.findById(1) ?: fail()
         entity.c1 = "updated"
-        Assert.assertEquals("updated", dao.findById(1)?.c1)
+        Assert.assertEquals("updated", DAO.findById(1)?.c1)
     }
 
     @Test @Transactional @Commit
     open fun test3() {
-        val entity = dao.findById(1) ?: fail()
+        val entity = DAO.findById(1) ?: fail()
         Assert.assertEquals("updated", entity.c1)
-        SchemaUtils.drop(t1)
+        SchemaUtils.drop(T1)
     }
 }
