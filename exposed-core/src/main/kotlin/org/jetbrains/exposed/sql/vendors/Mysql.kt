@@ -102,12 +102,46 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
         append("JSON_EXTRACT(", expression, ", ")
-        path.appendTo { +"\"$.$it\"" }
+        path.ifEmpty { arrayOf("") }.appendTo { +"\"$$it\"" }
         append(")${if (toScalar) ")" else ""}")
+    }
+
+    override fun jsonContains(
+        target: Expression<*>,
+        candidate: Expression<*>,
+        path: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append("JSON_CONTAINS(", target, ", ", candidate)
+        path?.let {
+            append(", '$$it'")
+        }
+        append(")")
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        val oneOrAll = optional?.lowercase()
+        if (oneOrAll != "one" && oneOrAll != "all") {
+            TransactionManager.current().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
+        }
+        queryBuilder {
+            append("JSON_CONTAINS_PATH(", expression, ", ")
+            append("'$oneOrAll', ")
+            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            append(")")
+        }
     }
 
     override fun replace(

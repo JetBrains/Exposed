@@ -132,11 +132,33 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_EXTRACT(", expression, ", ")
-        path.appendTo { +"'$.$it'" }
+        path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
         append(")")
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        val transaction = TransactionManager.current()
+        if (path.size > 1) {
+            transaction.throwUnsupportedException("SQLite does not support multiple JSON path arguments")
+        }
+        optional?.let {
+            transaction.throwUnsupportedException("SQLite does not support optional arguments other than a path argument")
+        }
+        queryBuilder {
+            append("JSON_TYPE(", expression, ", ")
+            append("'$", path.firstOrNull() ?: "", "'")
+            append(") IS NOT NULL")
+        }
     }
 
     override fun insert(

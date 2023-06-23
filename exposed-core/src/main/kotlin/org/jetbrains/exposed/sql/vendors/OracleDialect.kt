@@ -152,12 +152,38 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
-    ) = queryBuilder {
-        append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
-        append("(", expression, ", ")
-        path.appendTo { +"'$.$it'" }
-        append(")")
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+        }
+        queryBuilder {
+            append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+            append("(", expression, ", ")
+            append("'$", path.firstOrNull() ?: "", "'")
+            append(")")
+        }
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+        }
+        queryBuilder {
+            append("JSON_EXISTS(", expression, ", ")
+            append("'$", path.firstOrNull() ?: "", "'")
+            optional?.let {
+                append(" $it")
+            }
+            append(")")
+        }
     }
 
     override fun update(

@@ -444,19 +444,65 @@ abstract class FunctionProvider {
      * SQL function that extracts data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
      *
      * @param expression Expression from which to extract JSON subcomponents matched by [path].
-     * @param path String(s) representing JSON path/key(s) that matches fields to be extracted.
+     * @param path String(s) representing JSON path/keys that match fields to be extracted.
      * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
      * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+     * @param jsonType Column type of [expression] to check, if casting to JSONB is required.
      * @param queryBuilder Query builder to append the SQL function to.
      */
     open fun <T> jsonExtract(
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
+        jsonType: IColumnType,
         queryBuilder: QueryBuilder
     ) {
         throw UnsupportedByDialectException(
             "There's no generic SQL for JSON_EXTRACT. There must be a vendor specific implementation", currentDialect
+        )
+    }
+
+    /**
+     * SQL function that checks whether a [candidate] expression is contained within a JSON [target].
+     *
+     * @param target JSON expression being searched.
+     * @param candidate Expression to search for in [target].
+     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
+     * **Note:** A [path] argument is not supported by all vendors; please check the documentation.
+     * @param jsonType Column type of [target] to check, if casting to JSONB is required.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun jsonContains(
+        target: Expression<*>,
+        candidate: Expression<*>,
+        path: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for JSON_CONTAINS. There must be a vendor specific implementation", currentDialect
+        )
+    }
+
+    /**
+     * SQL function that checks whether data exists within a JSON [expression] at the specified [path].
+     *
+     * @param expression JSON expression being checked.
+     * @param path String(s) representing JSON path/keys that match fields to check for existing data.
+     * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
+     * @param optional String representing any optional vendor-specific clause or argument.
+     * @param jsonType Column type of [expression] to check, if casting to JSONB is required.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for JSON_EXISTS. There must be a vendor specific implementation", currentDialect
         )
     }
 
