@@ -7,8 +7,8 @@ configure<DetektExtension> {
     ignoreFailures = false
     buildUponDefaultConfig = true
     config = files(
-        rootDir.resolve("detekt.yml").takeIf { it.isFile },
-        projectDir.resolve("detekt.yml").takeIf { it.isFile }
+        rootDir.resolve("detekt/detekt-config.yml").takeIf { it.isFile },
+        projectDir.resolve("detekt/detekt-config.yml").takeIf { it.isFile }
     )
     reports {
         xml.enabled = true
