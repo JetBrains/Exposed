@@ -143,9 +143,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException(
-                "SQLServer does not support multi-argument JSON paths; please check the documentation"
-            )
+            TransactionManager.current().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")

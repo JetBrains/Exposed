@@ -873,6 +873,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotNullOp;
 	public abstract fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNullOp;
+	public abstract fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public abstract fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public abstract fun jsonExists (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonExists;
 	public abstract fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;
@@ -969,7 +970,9 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotNullOp;
 	public static fun isNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNullOp;
+	public static fun jsonContains (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public static fun jsonContains (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
+	public static synthetic fun jsonContains$default (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public static synthetic fun jsonContains$default (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public static fun jsonExists (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonExists;
 	public static synthetic fun jsonExists$default (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/JsonExists;
@@ -1845,6 +1848,7 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotNullOp;
 	public fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNullOp;
+	public fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public fun jsonExists (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonExists;
 	public fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;
@@ -1940,6 +1944,7 @@ public class org/jetbrains/exposed/sql/SqlExpressionBuilderClass : org/jetbrains
 	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotNullOp;
 	public fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNullOp;
+	public fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public fun jsonContains (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonContains;
 	public fun jsonExists (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JsonExists;
 	public fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;

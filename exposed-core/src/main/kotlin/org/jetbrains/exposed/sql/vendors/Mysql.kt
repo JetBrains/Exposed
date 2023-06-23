@@ -134,9 +134,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) {
         val oneOrAll = optional?.lowercase()
         if (oneOrAll != "one" && oneOrAll != "all") {
-            TransactionManager.current().throwUnsupportedException(
-                "MySQL requires a single optional argument: 'one' or 'all'; please check the documentation"
-            )
+            TransactionManager.current().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
         }
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")

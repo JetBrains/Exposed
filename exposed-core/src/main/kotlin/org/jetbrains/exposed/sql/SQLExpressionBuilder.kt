@@ -539,6 +539,16 @@ interface ISqlExpressionBuilder {
         JsonContains(this, candidate, path, columnType)
 
     /**
+     * Checks whether a [candidate] value is contained within [this] JSON expression.
+     *
+     * @param candidate Value to search for in [this] JSON expression.
+     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
+     * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
+     */
+    fun <T> ExpressionWithColumnType<*>.jsonContains(candidate: T, path: String? = null): JsonContains =
+        JsonContains(this, asLiteral(candidate), path, columnType)
+
+    /**
      * Checks whether data exists within [this] JSON expression at the specified [path].
      *
      * @param path String(s) representing JSON path/keys that match fields to check for existing data.

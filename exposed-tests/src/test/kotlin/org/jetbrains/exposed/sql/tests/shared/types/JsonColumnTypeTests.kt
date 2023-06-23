@@ -153,8 +153,9 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
                 it[jsonColumn] = data1.copy(user = alphaTeamUser)
             }
 
-            val userIsInactive = tester.jsonColumn.jsonContains(stringLiteral("{\"active\":false}"))
-            assertEquals(0, tester.select { userIsInactive }.count())
+            val userIsInactive = tester.jsonColumn.jsonContains("{\"active\":false}")
+            val result = tester.select { userIsInactive }.toList()
+            assertEquals(0, result.size)
 
             val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = tester.jsonColumn.jsonContains(stringLiteral(alphaTeamUserAsJson))
@@ -162,7 +163,7 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
             // test target contains candidate at specified path
             if (currentTestDB in TestDB.mySqlRelatedDB) {
-                userIsInAlphaTeam = tester.jsonColumn.jsonContains(stringLiteral("\"Alpha\""), ".user.team")
+                userIsInAlphaTeam = tester.jsonColumn.jsonContains("\"Alpha\"", ".user.team")
                 val alphaTeamUsers = tester.slice(tester.id).select { userIsInAlphaTeam }
                 assertEquals(newId, alphaTeamUsers.single()[tester.id])
             }
@@ -180,7 +181,7 @@ class JsonColumnTypeTests : DatabaseTestsBase() {
 
             val optional = if (currentTestDB in TestDB.mySqlRelatedDB) "one" else null
 
-            // test data at path root '$' exists by providing no path arguments (or an empty string)
+            // test data at path root '$' exists by providing no path arguments
             val hasAnyData = tester.jsonColumn.jsonExists(optional = optional)
             assertEquals(2, tester.select { hasAnyData }.count())
 

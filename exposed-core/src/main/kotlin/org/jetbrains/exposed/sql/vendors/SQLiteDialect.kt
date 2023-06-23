@@ -149,10 +149,10 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     ) {
         val transaction = TransactionManager.current()
         if (path.size > 1) {
-            transaction.throwUnsupportedException("SQLite does not support multi-argument JSON paths; please check the documentation")
+            transaction.throwUnsupportedException("SQLite does not support multiple JSON path arguments")
         }
         optional?.let {
-            transaction.throwUnsupportedException("SQLite only supports an optional path argument; please check the documentation")
+            transaction.throwUnsupportedException("SQLite does not support optional arguments other than a path argument")
         }
         queryBuilder {
             append("JSON_TYPE(", expression, ", ")

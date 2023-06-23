@@ -133,11 +133,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         path?.let {
-            TransactionManager.current().throwUnsupportedException(
-                "PostgreSQL containment operator does not support a JSON path argument."
-            )
+            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
-        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        val isNotJsonB = jsonType !is JsonBColumnType<*>
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
@@ -154,11 +152,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException(
-                "PostgreSQL does not support multi-argument JSON paths; please check the documentation"
-            )
+            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
-        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        val isNotJsonB = jsonType !is JsonBColumnType<*>
         queryBuilder {
             append("JSONB_PATH_EXISTS(")
             if (isNotJsonB) {
