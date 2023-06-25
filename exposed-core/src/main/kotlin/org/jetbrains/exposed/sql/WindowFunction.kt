@@ -439,17 +439,17 @@ class LastValue<T>(
 }
 
 /**
- * Represents an SQL function that returns [expr] evaluated at the row that is the [index] row of the window frame
+ * Represents an SQL function that returns [expr] evaluated at the row that is the [n]'th row of the window frame
  * (counting from 1); null if no such row
  */
 class NthValue<T>(
     /** Returns the expression to evaluate. */
     val expr: ExpressionWithColumnType<T>,
-    /** Returns the row index to find. */
-    val index: ExpressionWithColumnType<Int>
+    /** Returns the row n to find. */
+    val n: ExpressionWithColumnType<Int>
 ) : WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        append("NTH_VALUE(", expr, ", ", index, ")")
+        append("NTH_VALUE(", expr, ", ", n, ")")
     }
 
     override fun over(): WindowFunctionDefinition<T?> {
