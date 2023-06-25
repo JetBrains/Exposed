@@ -183,10 +183,10 @@ fun <T> ExpressionWithColumnType<T>.firstValue(): FirstValue<T> = FirstValue(thi
 fun <T> ExpressionWithColumnType<T>.lastValue(): LastValue<T> = LastValue(this)
 
 /**
- * Returns value evaluated at the row that is the [index] row of the window frame
- * (counting from 1); null if no such row
+ * Returns value evaluated at the row that is the [n]'th row of the window frame
+ * (counting from 1); null if no such row.
  */
-fun <T> ExpressionWithColumnType<T>.nthValue(index: ExpressionWithColumnType<Int>): NthValue<T> = NthValue(this, index)
+fun <T> ExpressionWithColumnType<T>.nthValue(n: ExpressionWithColumnType<Int>): NthValue<T> = NthValue(this, n)
 
 // Sequence Manipulation Functions
 
