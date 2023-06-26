@@ -493,8 +493,6 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
-
-
 abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     table: IdTable<ID>,
     entityType: Class<T>? = null,

@@ -53,7 +53,6 @@ fun Transaction.registerChange(entityClass: EntityClass<*, Entity<*>>, entityId:
     }
 }
 
-
 private var isProcessingEventsLaunched by transactionScope { false }
 fun Transaction.alertSubscribers() {
     if (isProcessingEventsLaunched) return
