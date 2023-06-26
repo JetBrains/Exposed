@@ -129,7 +129,7 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
-@Deprecated("Please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.WARNING)
+@Deprecated("Please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.HIDDEN)
 fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
 
 /** Advances this sequence and returns the new value. */

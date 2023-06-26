@@ -1617,7 +1617,7 @@ public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun min (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Min;
 	public static final fun nextIntVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
 	public static final fun nextLongVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
-	public static final fun nextVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
+	public static final synthetic fun nextVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
 	public static final fun stdDevPop (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/StdDevPop;
 	public static synthetic fun stdDevPop$default (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;IILjava/lang/Object;)Lorg/jetbrains/exposed/sql/StdDevPop;
 	public static final fun stdDevSamp (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/StdDevSamp;
