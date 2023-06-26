@@ -525,10 +525,10 @@ class LikeEscapeOp(expr1: Expression<*>, expr2: Expression<*>, like: Boolean, va
     }
 }
 
-@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, true, null)"), level = DeprecationLevel.WARNING)
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, true, null)"), DeprecationLevel.ERROR)
 class LikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "LIKE")
 
-@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, false, null)"), level = DeprecationLevel.WARNING)
+@Deprecated("Use LikeEscapeOp", replaceWith = ReplaceWith("LikeEscapeOp(expr1, expr2, false, null)"), DeprecationLevel.ERROR)
 class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT LIKE")
 
 /**

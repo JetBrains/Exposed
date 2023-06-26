@@ -162,14 +162,6 @@ val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
 
-@Deprecated(
-    message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
-    replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
-    level = DeprecationLevel.HIDDEN
-)
-val Column<*>.autoIncSeqName: String?
-    get() = autoIncColumnType?.autoincSeq
-
 internal fun IColumnType.rawSqlType(): IColumnType = when {
     this is AutoIncColumnType -> delegate
     this is EntityIDColumnType<*> && idColumn.columnType is AutoIncColumnType -> idColumn.columnType.delegate

@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 internal class DateInternal(val expr: Expression<*>) : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
@@ -47,10 +46,9 @@ object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.I
     }
 
     @Deprecated(
-        message = "This class is now a singleton, no need for its constructor call; " +
-            "this method is provided for backward-compatibility only, and will be removed in future releases",
+        message = "This class is now a singleton, no need for its constructor call",
         replaceWith = ReplaceWith("this"),
-        level = DeprecationLevel.ERROR,
+        level = DeprecationLevel.HIDDEN,
     )
     operator fun invoke() = this
 }

@@ -22,10 +22,9 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     }
 
     @Deprecated(
-        message = "This class is now a singleton, no need for its constructor call; " +
-            "this method is provided for backward-compatibility only, and will be removed in future releases",
+        message = "This class is now a singleton, no need for its constructor call",
         replaceWith = ReplaceWith("this"),
-        level = DeprecationLevel.ERROR,
+        level = DeprecationLevel.HIDDEN,
     )
     operator fun invoke() = this
 }
