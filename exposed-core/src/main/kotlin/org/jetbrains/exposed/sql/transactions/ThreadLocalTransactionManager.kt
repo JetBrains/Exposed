@@ -259,7 +259,7 @@ fun <T> inTopLevelTransaction(
                 val delay = when {
                     minRepetitionDelay < maxRepetitionDelay -> {
                         intermediateDelay += retryInterval * repetitions
-                        ThreadLocalRandom.current().nextLong(intermediateDelay , intermediateDelay + retryInterval)
+                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                     }
                     minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
                     else -> 0
