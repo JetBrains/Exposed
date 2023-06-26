@@ -30,7 +30,8 @@ object Algorithms {
                 { base64Encoder.encodeToString(encrypt(it.toByteArray())) },
                 { String(decrypt(base64Decoder.decode(it))) },
                 { inputLen ->
-                    base64EncodedLength(AES_256_GCM_BLOCK_LENGTH + inputLen + AES_256_GCM_TAG_LENGTH) }
+                    base64EncodedLength(AES_256_GCM_BLOCK_LENGTH + inputLen + AES_256_GCM_TAG_LENGTH)
+                }
             )
         }
     }
@@ -49,7 +50,8 @@ object Algorithms {
                 { String(decrypt(base64Decoder.decode(it))) },
                 { inputLen ->
                     val paddingSize = (AES_256_CBC_BLOCK_LENGTH - inputLen % AES_256_CBC_BLOCK_LENGTH)
-                    base64EncodedLength(AES_256_CBC_BLOCK_LENGTH + inputLen + paddingSize) }
+                    base64EncodedLength(AES_256_CBC_BLOCK_LENGTH + inputLen + paddingSize)
+                }
             )
         }
     }
