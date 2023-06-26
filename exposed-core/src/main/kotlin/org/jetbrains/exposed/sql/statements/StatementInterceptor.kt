@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
 interface StatementInterceptor {
     fun beforeExecution(transaction: Transaction, context: StatementContext) {}
-    fun afterStatementPrepared(transaction : Transaction, preparedStatement: PreparedStatementApi) {}
+    fun afterStatementPrepared(transaction: Transaction, preparedStatement: PreparedStatementApi) {}
     fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {}
 
     fun beforeCommit(transaction: Transaction) {}

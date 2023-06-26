@@ -419,10 +419,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         else -> findQuery
     }.toList()
 
-    internal fun <SID: Comparable<SID>> warmUpLinkedReferences(
+    internal fun <SID : Comparable<SID>> warmUpLinkedReferences(
         references: List<EntityID<SID>>, sourceRefColumn: Column<EntityID<SID>>, targetRefColumn: Column<EntityID<ID>>, linkTable: Table,
         forUpdate: Boolean? = null, optimizedLoad: Boolean = false
-    ) : List<T> {
+    ): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
         val transaction = TransactionManager.current()
@@ -475,7 +475,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * Can be useful when references target the same entities. That will prevent from loading them multiple times (per each reference row) and will require
      * less memory/bandwidth for "heavy" entities (with a lot of columns or columns with huge data in it)
      */
-    fun <SID: Comparable<SID>> warmUpLinkedReferences(references: List<EntityID<SID>>, linkTable: Table, forUpdate: Boolean? = null, optimizedLoad: Boolean = false): List<T> {
+    fun <SID : Comparable<SID>> warmUpLinkedReferences(references: List<EntityID<SID>>, linkTable: Table, forUpdate: Boolean? = null, optimizedLoad: Boolean = false): List<T> {
         if (references.isEmpty()) return emptyList()
 
         val sourceRefColumn = linkTable.columns.singleOrNull { it.referee == references.first().table.id } as? Column<EntityID<SID>>

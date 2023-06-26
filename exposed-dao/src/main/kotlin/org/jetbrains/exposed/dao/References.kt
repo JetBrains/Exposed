@@ -228,7 +228,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     }
 }
 
-fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L: Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
+fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
         if (any { it.isNewEntity() }) {
             TransactionManager.current().flushCache()
