@@ -420,8 +420,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }.toList()
 
     internal fun <SID : Comparable<SID>> warmUpLinkedReferences(
-        references: List<EntityID<SID>>, sourceRefColumn: Column<EntityID<SID>>, targetRefColumn: Column<EntityID<ID>>, linkTable: Table,
-        forUpdate: Boolean? = null, optimizedLoad: Boolean = false
+        references: List<EntityID<SID>>,
+        sourceRefColumn: Column<EntityID<SID>>,
+        targetRefColumn: Column<EntityID<ID>>,
+        linkTable: Table,
+        forUpdate: Boolean? = null,
+        optimizedLoad: Boolean = false
     ): List<T> {
         if (references.isEmpty()) return emptyList()
         val distinctRefIds = references.distinct()
