@@ -448,10 +448,10 @@ public abstract class org/jetbrains/exposed/sql/CompositeColumn : org/jetbrains/
 public final class org/jetbrains/exposed/sql/CompositeSqlLogger : org/jetbrains/exposed/sql/SqlLogger, org/jetbrains/exposed/sql/statements/StatementInterceptor {
 	public fun <init> ()V
 	public final fun addLogger (Lorg/jetbrains/exposed/sql/SqlLogger;)V
-	public fun afterCommit ()V
+	public synthetic fun afterCommit ()V
 	public fun afterCommit (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun afterExecution (Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
-	public fun afterRollback ()V
+	public synthetic fun afterRollback ()V
 	public fun afterRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public fun beforeCommit (Lorg/jetbrains/exposed/sql/Transaction;)V
