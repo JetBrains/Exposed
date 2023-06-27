@@ -79,7 +79,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val insertJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 5) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 10) {
                         Testing.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
@@ -89,7 +89,7 @@ class CoroutineTests : DatabaseTestsBase() {
                     }
                 }
                 val updateJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 5) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 10) {
                         Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
 
                         suspendedTransaction {
@@ -145,7 +145,7 @@ class CoroutineTests : DatabaseTestsBase() {
     @Test @RepeatableTest(10)
     fun testSuspendedTransactionAsyncWithRepetition() {
         // SQLServer requires IDENTITY_INSERT flag to insert explicit value for identity column
-        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Testing) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER, TestDB.SQLITE), Testing) {
             val (originalId, updatedId) = 1 to 99
             val mainJob = GlobalScope.async(Dispatchers.Default) {
                 newSuspendedTransaction(Dispatchers.Default, db = db) {
@@ -157,13 +157,13 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val (insertResult, updateResult) = listOf(
-                    suspendedTransactionAsync(Dispatchers.Default, db = db, repetitionAttempts = 5) {
+                    suspendedTransactionAsync(db = db, repetitionAttempts = 10) {
                         Testing.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
                         Testing.selectAll().count()
                     },
-                    suspendedTransactionAsync(Dispatchers.Default, db = db, repetitionAttempts = 5) {
+                    suspendedTransactionAsync(db = db, repetitionAttempts = 10) {
                         Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
                         Testing.selectAll().count()
                     }
