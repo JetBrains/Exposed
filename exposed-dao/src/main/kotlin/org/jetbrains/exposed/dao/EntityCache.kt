@@ -14,7 +14,7 @@ val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this)
 class EntityCache(private val transaction: Transaction) {
     private var flushingEntities = false
     private var initializingEntities: LinkedIdentityHashSet<Entity<*>> = LinkedIdentityHashSet()
-    internal val pendingInitializationLambdas = IdentityHashMap<Entity<*>, MutableList<(Entity<*>)->Unit>>()
+    internal val pendingInitializationLambdas = IdentityHashMap<Entity<*>, MutableList<(Entity<*>) -> Unit>>()
     val data = LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>()
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
