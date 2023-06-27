@@ -73,6 +73,28 @@ Update a value of a property similar to any property in a Kotlin class:
 movie.name = "Episode VIII – The Last Jedi"
 ```
 * Note: Exposed doesn't make an immediate update when you set a new value for Entity, it just stores it on the inner map. "Flushing" values to the database occurs at the end of the transaction or before next `select *` from the database.
+
+Search for an entity by its id and apply an update:
+```kotlin
+val updatedMovie = StarWarsFilm.findByIdAndUpdate(5) {
+    it.name = "Episode VIII – The Last Jedi"
+}
+```
+
+Search for a single entity by a query and apply an update:
+```kotlin
+val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq "The Last Jedi") {
+    it.name = "Episode VIII – The Last Jedi"
+}
+```
+
+Search for multiple entities by a query and apply an update to all entities:
+```kotlin
+val updatedMovies = StarWarsFilm.findManyByAndUpdate(StarWarsFilms.director eq "George Lucas") {
+    it.director = "Lucas, George"
+}
+```
+
 ### Delete
 ```kotlin
 movie.delete() 

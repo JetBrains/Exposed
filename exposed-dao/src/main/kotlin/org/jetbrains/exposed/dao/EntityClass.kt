@@ -5,7 +5,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -47,6 +46,50 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @return The entity that has this id or null if no entity was found.
      */
     fun findById(id: ID): T? = findById(DaoEntityID(id, table))
+
+    /**
+     * Get an entity by its [id] and update the entity.
+     *
+     * @param id The id of the entity
+     * @param block Lambda that contains entity updates
+     *
+     * @return The updated entity that has this id or null if no entity was found.
+     */
+    fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
+        val result = find(table.id eq id).forUpdate().singleOrNull() ?: return null
+        block(result)
+        invalidateEntityInCache(result)
+        return result
+    }
+
+    /**
+     * Find a single entity that conforms to the [op] statement.
+     *
+     * @param op The statement to select the entity for. The statement must be of boolean type.
+     * @param block Lambda that contains entity updates
+     *
+     * @return The updated entity that conforms to this op or null if no entity was found.
+     */
+    fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
+        val result = find(op).forUpdate().singleOrNull() ?: return null
+        block(result)
+        invalidateEntityInCache(result)
+        return result
+    }
+
+    /**
+     * Find many entities that conform to the [op] statement.
+     *
+     * @param op The statement to select the entities for. The statement must be of boolean type.
+     * @param block Lambda that contains the entity updates
+     *
+     * @return All the updated entities that conform to the [op] statement.
+     */
+    fun findManyByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): SizedIterable<T> {
+        val result = find(op).forUpdate().mapLazy { it.apply { block(this) } }
+        result.mapLazy { entity -> invalidateEntityInCache(entity) }
+        return result
+    }
 
     /**
      * Get an entity by its [id].
