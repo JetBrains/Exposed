@@ -911,7 +911,7 @@ open class JsonColumnType<T : Any>(
     val serialize: (T) -> String,
     /** Returns the function that decodes a JSON String to an object of type [T]. */
     val deserialize: (String) -> T
-): ColumnType() {
+) : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
     override fun valueFromDB(value: Any): Any {

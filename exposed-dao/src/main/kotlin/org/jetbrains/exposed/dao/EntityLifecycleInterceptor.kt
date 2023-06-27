@@ -76,8 +76,9 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
     }
 
     override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
-        if (!isExecutedWithinEntityLifecycle || contexts.first().statement !is InsertStatement<*>)
+        if (!isExecutedWithinEntityLifecycle || contexts.first().statement !is InsertStatement<*>) {
             transaction.alertSubscribers()
+        }
     }
 
     override fun beforeCommit(transaction: Transaction) {
