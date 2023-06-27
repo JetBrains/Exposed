@@ -144,26 +144,6 @@ class Database private constructor(
             )
         }
 
-        @Deprecated(
-            level = DeprecationLevel.HIDDEN,
-            replaceWith = ReplaceWith("connectPool(datasource, setupConnection, manager)"),
-            message = "Use connectPool instead"
-        )
-        fun connect(
-            datasource: ConnectionPoolDataSource,
-            setupConnection: (Connection) -> Unit = {},
-            databaseConfig: DatabaseConfig? = null,
-            manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
-        ): Database {
-            return doConnect(
-                explicitVendor = null,
-                config = databaseConfig,
-                getNewConnection = { datasource.pooledConnection.connection!! },
-                setupConnection = setupConnection,
-                manager = manager
-            )
-        }
-
         fun connectPool(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},

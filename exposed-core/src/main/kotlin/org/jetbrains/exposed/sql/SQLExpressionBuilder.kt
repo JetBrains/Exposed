@@ -129,7 +129,7 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
-@Deprecated("please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.ERROR)
+@Deprecated("Please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.HIDDEN)
 fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
 
 /** Advances this sequence and returns the new value. */
@@ -216,7 +216,7 @@ data class LikePattern(
     }
 }
 
-@Deprecated("Implement interface ISqlExpressionBuilder instead inherit this class", level = DeprecationLevel.ERROR)
+@Deprecated("Implement interface ISqlExpressionBuilder directly instead", level = DeprecationLevel.HIDDEN)
 open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
