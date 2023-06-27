@@ -284,6 +284,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
+    override val supportsWindowFrameGroupsMode: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(

@@ -247,6 +247,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     override val supportsCreateSequence: Boolean = false
     override val supportsMultipleGeneratedKeys: Boolean = false
     override val supportsCreateSchema: Boolean = false
+    override val supportsWindowFrameGroupsMode: Boolean = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
