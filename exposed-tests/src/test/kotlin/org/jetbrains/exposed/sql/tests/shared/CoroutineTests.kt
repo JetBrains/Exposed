@@ -70,7 +70,7 @@ class CoroutineTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLSERVER), Testing) {
             val (originalId, updatedId) = 1 to 99
             val mainJob = GlobalScope.async(Dispatchers.Default) {
-                newSuspendedTransaction(db = db, repetitionAttempts = 5) {
+                newSuspendedTransaction(Dispatchers.Default, db = db) {
                     Testing.insert { it[id] = originalId }
 
                     suspendedTransaction {
@@ -79,7 +79,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val insertJob = launch {
-                    newSuspendedTransaction(db = db, repetitionAttempts = 5) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 5) {
                         Testing.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
@@ -89,7 +89,7 @@ class CoroutineTests : DatabaseTestsBase() {
                     }
                 }
                 val updateJob = launch {
-                    newSuspendedTransaction(db = db) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 5) {
                         Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
 
                         suspendedTransaction {
@@ -100,7 +100,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 insertJob.join()
                 updateJob.join()
 
-                val result = newSuspendedTransaction(db = db) { Testing.selectAll().count() }
+                val result = newSuspendedTransaction(Dispatchers.Default, db = db) { Testing.selectAll().count() }
                 kotlin.test.assertEquals(2, result, "Failing at end of mainJob")
             }
 
@@ -148,7 +148,7 @@ class CoroutineTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLSERVER), Testing) {
             val (originalId, updatedId) = 1 to 99
             val mainJob = GlobalScope.async(Dispatchers.Default) {
-                newSuspendedTransaction(db = db) {
+                newSuspendedTransaction(Dispatchers.Default, db = db) {
                     Testing.insert { it[id] = originalId }
 
                     suspendedTransaction {
@@ -157,13 +157,13 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val (insertResult, updateResult) = listOf(
-                    suspendedTransactionAsync(db = db, repetitionAttempts = 5) {
+                    suspendedTransactionAsync(Dispatchers.Default, db = db, repetitionAttempts = 5) {
                         Testing.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
                         Testing.selectAll().count()
                     },
-                    suspendedTransactionAsync(db = db) {
+                    suspendedTransactionAsync(Dispatchers.Default, db = db, repetitionAttempts = 5) {
                         Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
                         Testing.selectAll().count()
                     }

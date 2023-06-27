@@ -63,9 +63,15 @@ suspend fun <T> newSuspendedTransaction(
         suspendedTransactionAsyncInternal(true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
     }
 
-suspend fun <T> Transaction.suspendedTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
+suspend fun <T> Transaction.suspendedTransaction(
+    context: CoroutineContext? = null,
+    repetitionAttempts: Int = 0,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
+    statement: suspend Transaction.() -> T
+): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
-        suspendedTransactionAsyncInternal(false, 0, 0, 0, statement).await()
+        suspendedTransactionAsyncInternal(false, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
     }
 
 suspend fun <T> suspendedTransactionAsync(

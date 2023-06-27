@@ -3192,8 +3192,8 @@ public final class org/jetbrains/exposed/sql/transactions/TransactionStore : kot
 public final class org/jetbrains/exposed/sql/transactions/experimental/SuspendedKt {
 	public static final fun newSuspendedTransaction (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun newSuspendedTransaction$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun suspendedTransaction (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun suspendedTransaction$default (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendedTransaction (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendedTransaction$default (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun suspendedTransactionAsync (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun suspendedTransactionAsync$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;IJJLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
