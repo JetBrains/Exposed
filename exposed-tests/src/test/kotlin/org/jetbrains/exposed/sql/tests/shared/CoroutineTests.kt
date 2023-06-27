@@ -65,6 +65,52 @@ class CoroutineTests : DatabaseTestsBase() {
     }
 
     @Test @RepeatableTest(10)
+    fun testSuspendedTransactionWithRepetition() {
+        // SQLServer requires IDENTITY_INSERT flag to insert explicit value for identity column
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Testing) {
+            val (originalId, updatedId) = 1 to 99
+            val mainJob = GlobalScope.async(Dispatchers.Default) {
+                newSuspendedTransaction(db = db, repetitionAttempts = 5) {
+                    Testing.insert { it[id] = originalId }
+
+                    suspendedTransaction {
+                        assertEquals(originalId, Testing.selectAll().singleOrNull()?.get(Testing.id)?.value)
+                    }
+                }
+
+                val insertJob = launch {
+                    newSuspendedTransaction(db = db, repetitionAttempts = 5) {
+                        Testing.insert { it[id] = originalId }
+                        // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
+                        // until original row is updated with a new id
+                        suspendedTransaction {
+                            assertEquals(2, Testing.selectAll().count())
+                        }
+                    }
+                }
+                val updateJob = launch {
+                    newSuspendedTransaction(db = db) {
+                        Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
+
+                        suspendedTransaction {
+                            assertEquals(updatedId, Testing.selectAll().singleOrNull()?.get(Testing.id)?.value)
+                        }
+                    }
+                }
+                insertJob.join()
+                updateJob.join()
+
+                val result = newSuspendedTransaction(db = db) { Testing.selectAll().count() }
+                kotlin.test.assertEquals(2, result, "Failing at end of mainJob")
+            }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+            assertEqualCollections(listOf(updatedId, originalId), Testing.selectAll().map { it[Testing.id].value })
+        }
+    }
+
+    @Test @RepeatableTest(10)
     fun suspendTxAsync() {
         withTables(Testing) {
             val job = GlobalScope.async {
@@ -93,6 +139,43 @@ class CoroutineTests : DatabaseTestsBase() {
 
             job.getCompletionExceptionOrNull()?.let { throw it }
             assertEquals(1, Testing.selectAll().count())
+        }
+    }
+
+    @Test @RepeatableTest(10)
+    fun testSuspendedTransactionAsyncWithRepetition() {
+        // SQLServer requires IDENTITY_INSERT flag to insert explicit value for identity column
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), Testing) {
+            val (originalId, updatedId) = 1 to 99
+            val mainJob = GlobalScope.async(Dispatchers.Default) {
+                newSuspendedTransaction(db = db) {
+                    Testing.insert { it[id] = originalId }
+
+                    suspendedTransaction {
+                        assertEquals(originalId, Testing.selectAll().singleOrNull()?.get(Testing.id)?.value)
+                    }
+                }
+
+                val (insertResult, updateResult) = listOf(
+                    suspendedTransactionAsync(db = db, repetitionAttempts = 5) {
+                        Testing.insert { it[id] = originalId }
+                        // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
+                        // until original row is updated with a new id
+                        Testing.selectAll().count()
+                    },
+                    suspendedTransactionAsync(db = db) {
+                        Testing.update({ Testing.id eq originalId }) { it[id] = updatedId }
+                        Testing.selectAll().count()
+                    }
+                ).awaitAll()
+
+                kotlin.test.assertEquals(1, updateResult, "Failing at end of update job")
+                kotlin.test.assertEquals(2, insertResult, "Failing at end of insert job")
+            }
+
+            while (!mainJob.isCompleted) Thread.sleep(100)
+            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+            assertEqualCollections(listOf(updatedId, originalId), Testing.selectAll().map { it[Testing.id].value })
         }
     }
 

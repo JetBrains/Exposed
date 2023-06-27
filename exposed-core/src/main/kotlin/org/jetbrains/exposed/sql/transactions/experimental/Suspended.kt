@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.transactions.handleSQLException
 import org.jetbrains.exposed.sql.transactions.rollbackLoggingException
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.SQLException
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
@@ -53,26 +54,34 @@ suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
+    repetitionAttempts: Int = 0,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: suspend Transaction.() -> T
 ): T =
     withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(true, statement).await()
+        suspendedTransactionAsyncInternal(true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
     }
 
 suspend fun <T> Transaction.suspendedTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
-        suspendedTransactionAsyncInternal(false, statement).await()
+        suspendedTransactionAsyncInternal(false, 0, 0, 0, statement).await()
     }
 
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
+    repetitionAttempts: Int = 0,
+    minRepetitionDelay: Long = 0,
+    maxRepetitionDelay: Long = 0,
     statement: suspend Transaction.() -> T
 ): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
+        suspendedTransactionAsyncInternal(
+            !holdsSameTransaction(currentTransaction), repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement
+        )
     }
 }
 
@@ -121,22 +130,65 @@ private suspend fun <T> withTransactionScope(
 
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
+    repetitionAttempts: Int,
+    minRepetitionDelay: Long,
+    maxRepetitionDelay: Long,
     statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
-    val transaction = tx.value
-    @Suppress("TooGenericExceptionCaught")
-    try {
-        transaction.statement().apply {
-            if (shouldCommit) transaction.commit()
+    var repetitions = 0
+    var intermediateDelay = minRepetitionDelay
+    val retryInterval = if (repetitionAttempts > 0) {
+        maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+    } else 0
+
+    var answer: T
+    while (true) {
+        val transaction = tx.value.run {
+            if (connection.isClosed) {
+                // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
+                // unless the transaction is reset before every attempt (after the 1st failed attempt)
+                val currentManager = db.transactionManager.also { TransactionManager.resetCurrent(it) }
+                currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
+            } else {
+                this
+            }
         }
-    } catch (e: SQLException) {
-        handleSQLException(e, transaction, 1)
-        throw e
-    } catch (e: Throwable) {
-        val currentStatement = transaction.currentStatement
-        transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it) }
-        throw e
-    } finally {
-        if (shouldCommit) transaction.closeAsync()
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            answer = transaction.statement().apply {
+                if (shouldCommit) transaction.commit()
+            }
+            break
+        } catch (e: SQLException) {
+            handleSQLException(e, transaction, repetitions)
+            repetitions++
+            if (repetitions >= repetitionAttempts) {
+                throw e
+            }
+            // set delay value with an exponential backoff time period.
+            val delay = when {
+                minRepetitionDelay < maxRepetitionDelay -> {
+                    intermediateDelay += retryInterval * repetitions
+                    ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
+                }
+                minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
+                else -> 0
+            }
+            exposedLogger.warn("Wait $delay milliseconds before retrying")
+            try {
+                Thread.sleep(delay)
+            } catch (e: InterruptedException) {
+                // Do nothing
+            }
+        } catch (e: Throwable) {
+            val currentStatement = transaction.currentStatement
+            transaction.rollbackLoggingException {
+                exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it)
+            }
+            throw e
+        } finally {
+            if (shouldCommit) transaction.closeAsync()
+        }
     }
+    answer
 }
