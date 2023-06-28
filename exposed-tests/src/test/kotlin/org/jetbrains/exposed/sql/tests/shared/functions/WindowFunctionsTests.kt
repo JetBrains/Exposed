@@ -1,8 +1,19 @@
 package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.cumeDist
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.denseRank
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.firstValue
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lag
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lastValue
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lead
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.nthValue
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.ntile
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.percentRank
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.rank
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB.*
 import org.jetbrains.exposed.sql.tests.TestDB.Companion.allH2TestDB
