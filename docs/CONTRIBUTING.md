@@ -30,6 +30,8 @@ Contributions are made using Github [pull requests](https://help.github.com/en/a
 7. If the contribution requires updates to documentation (be it updating existing contents or creating new one), please
    file a new ticket on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
 8. Make sure any code contributed is covered by tests and no existing tests are broken. We use Docker containers to run tests.
+9. Finally, make sure to run the `apiCheck` Gradle task. If it's not successful, run the `apiDump` Gradle task. Further information can be
+   found [here](https://github.com/Kotlin/binary-compatibility-validator).
 
 #### Style Guides
 
