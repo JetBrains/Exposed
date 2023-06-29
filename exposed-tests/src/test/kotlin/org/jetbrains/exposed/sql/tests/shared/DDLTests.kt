@@ -25,6 +25,8 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
 import org.postgresql.util.PGobject
+import java.io.ByteArrayInputStream
+import java.io.SequenceInputStream
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.assertNotNull
@@ -612,7 +614,12 @@ class DDLTests : DatabaseTestsBase() {
             val shortBytes = "Hello there!".toByteArray()
             val longBytes = Random.nextBytes(1024)
             val shortBlob = ExposedBlob(shortBytes)
-            val longBlob = ExposedBlob(longBytes)
+            val longBlob = ExposedBlob(
+                inputStream = SequenceInputStream(
+                    ByteArrayInputStream(longBytes, 0, 512),
+                    ByteArrayInputStream(longBytes, 512, 512)
+                )
+            )
 
             val id1 = t.insert {
                 it[t.b] = shortBlob

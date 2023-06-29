@@ -5,12 +5,15 @@ import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.SQLFeatureNotSupportedException
 import java.sql.Types
 
 /**
@@ -80,7 +83,25 @@ class JdbcPreparedStatementImpl(
     }
 
     override fun setInputStream(index: Int, inputStream: InputStream) {
-        statement.setBinaryStream(index, inputStream, inputStream.available())
+        try {
+            when {
+                // streams with known length where available matches the actual length
+                inputStream is ByteArrayInputStream ->
+                    statement.setBinaryStream(index, inputStream, inputStream.available())
+
+                // FileInputStream.available() returns returns Int.MAX_VALUE
+                // if the underlying file is larger than 2GB
+                inputStream is FileInputStream && inputStream.available() < Int.MAX_VALUE ->
+                    statement.setBinaryStream(index, inputStream, inputStream.available())
+
+                // default handling for unknown length
+                else -> statement.setBinaryStream(index, inputStream)
+
+            }
+        } catch (e: SQLFeatureNotSupportedException) {
+            // fallback to bytes
+            statement.setBytes(index, inputStream.readBytes())
+        }
     }
 
     override fun setArray(index: Int, type: String, array: Array<*>) {
