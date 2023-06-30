@@ -35,12 +35,12 @@ object JsonTestsData {
     }
 
     object JsonArrays : IntIdTable("j_arrays") {
-        val groups = json<UserGroup>("projects", Json.Default)
+        val groups = json<UserGroup>("groups", Json.Default)
         val numbers = json<IntArray>("numbers", Json.Default)
     }
 
     object JsonBArrays : IntIdTable("j_b_arrays") {
-        val groups = jsonb<UserGroup>("projects", Json.Default)
+        val groups = jsonb<UserGroup>("groups", Json.Default)
         val numbers = jsonb<IntArray>("numbers", Json.Default)
     }
 }
