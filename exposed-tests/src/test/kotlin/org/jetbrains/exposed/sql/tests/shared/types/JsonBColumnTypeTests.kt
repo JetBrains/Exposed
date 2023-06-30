@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.types
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.jsonContains
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.jsonExists
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.currentTestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
@@ -179,6 +181,46 @@ class JsonBColumnTypeTests : DatabaseTestsBase() {
                 val usersOnTeamA = tester.slice(tester.id).select { isOnTeamA }
                 assertEquals(newId, usersOnTeamA.single()[tester.id])
             }
+        }
+    }
+
+    @Test
+    fun testJsonExtractWithArrays() {
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.allH2TestDB) { tester, singleId, _ ->
+            val path1 = if (currentDialectTest is PostgreSQLDialect) arrayOf("users", "0", "team") else arrayOf(".users[0].team")
+            val firstIsOnTeamA = tester.groups.jsonExtract<String>(*path1) eq "Team A"
+            assertEquals(singleId, tester.select { firstIsOnTeamA }.single()[tester.id])
+
+            // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
+            val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
+            val firstNumber = tester.numbers.jsonExtract<Int>(path2, toScalar = !isOldMySql())
+            assertEqualCollections(listOf(100, 3), tester.slice(firstNumber).selectAll().map { it[firstNumber] })
+        }
+    }
+
+    @Test
+    fun testJsonContainsWithArrays() {
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.allH2TestDB) { tester, _, tripleId ->
+            val hasSmallNumbers = tester.numbers.jsonContains("[3, 5]")
+            assertEquals(tripleId, tester.select { hasSmallNumbers }.single()[tester.id])
+
+            if (currentTestDB in TestDB.mySqlRelatedDB) {
+                val hasUserNameB = tester.groups.jsonContains("\"B\"", ".users[0].name")
+                assertEquals(tripleId, tester.select { hasUserNameB }.single()[tester.id])
+            }
+        }
+    }
+
+    @Test
+    fun testJsonExistsWithArrays() {
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.allH2TestDB) { tester, _, tripleId ->
+            val optional = if (currentTestDB in TestDB.mySqlRelatedDB) "one" else null
+
+            val hasMultipleUsers = tester.groups.jsonExists(".users[1]", optional = optional)
+            assertEquals(tripleId, tester.select { hasMultipleUsers }.single()[tester.id])
+
+            val hasAtLeast3Numbers = tester.numbers.jsonExists("[2]", optional = optional)
+            assertEquals(tripleId, tester.select { hasAtLeast3Numbers }.single()[tester.id])
         }
     }
 }

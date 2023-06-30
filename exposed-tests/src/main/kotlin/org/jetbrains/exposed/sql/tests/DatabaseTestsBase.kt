@@ -8,10 +8,12 @@ import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -290,6 +292,8 @@ abstract class DatabaseTestsBase {
             statement(dbSettings)
         }
     }
+
+    fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
 
     protected fun prepareSchemaForTest(schemaName: String) : Schema {
         return Schema(schemaName, defaultTablespace = "USERS", temporaryTablespace = "TEMP ", quota = "20M", on = "USERS")
