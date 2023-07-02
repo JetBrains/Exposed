@@ -38,7 +38,8 @@ class SpringTransactionManager(
         databaseConfig = databaseConfig
     ) { this }
 
-    @Volatile override var defaultIsolationLevel: Int = -1
+    @Volatile
+    override var defaultIsolationLevel: Int = -1
         get() {
             if (field == -1) {
                 field = Database.getDefaultIsolationLevel(db)
@@ -46,29 +47,50 @@ class SpringTransactionManager(
             return field
         }
 
-    private val springTxKey = "SPRING_TX_KEY"
+    private val transactionStackKey = "SPRING_TRANSACTION_STACK_KEY"
+
+    private fun getTransactionStack(): List<TransactionManager> {
+        return TransactionSynchronizationManager.getResource(transactionStackKey)
+            ?.let { it as List<TransactionManager> }
+            ?: listOf()
+    }
+
+    private fun setTransactionStack(list: List<TransactionManager>) {
+        TransactionSynchronizationManager.unbindResourceIfPossible(transactionStackKey)
+        TransactionSynchronizationManager.bindResource(transactionStackKey, list)
+    }
+
+    private fun pushTransactionStack(transaction: TransactionManager) {
+        val transactionList = getTransactionStack()
+        setTransactionStack(transactionList + transaction)
+    }
+
+    private fun popTransactionStack() = setTransactionStack(getTransactionStack().dropLast(1))
+
+    private fun getLastTransactionStack() = getTransactionStack().lastOrNull()
 
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         super.doBegin(transaction, definition)
 
         if (TransactionSynchronizationManager.hasResource(obtainDataSource())) {
-            currentOrNull() ?: initTransaction()
+            currentOrNull() ?: initTransaction(transaction)
         }
-        if (!TransactionSynchronizationManager.hasResource(springTxKey)) {
-            TransactionSynchronizationManager.bindResource(springTxKey, transaction)
-        }
+
+        pushTransactionStack(this@SpringTransactionManager)
     }
 
     override fun doCleanupAfterCompletion(transaction: Any) {
         super.doCleanupAfterCompletion(transaction)
         if (!TransactionSynchronizationManager.hasResource(obtainDataSource())) {
             TransactionSynchronizationManager.unbindResourceIfPossible(this)
-            TransactionSynchronizationManager.unbindResource(springTxKey)
         }
+
+        popTransactionStack()
+        TransactionManager.resetCurrent(getLastTransactionStack())
+
         if (TransactionSynchronizationManager.isSynchronizationActive() && TransactionSynchronizationManager.getSynchronizations().isEmpty()) {
             TransactionSynchronizationManager.clearSynchronization()
         }
-        TransactionManager.resetCurrent(null)
     }
 
     override fun doSuspend(transaction: Any): Any {
@@ -100,21 +122,21 @@ class SpringTransactionManager(
             isolationLevel = isolation
         }
 
-        getTransaction(tDefinition)
-
-        return currentOrNull() ?: initTransaction()
+        val transactionStatus = (getTransaction(tDefinition) as DefaultTransactionStatus)
+        return currentOrNull() ?: initTransaction(transactionStatus.transaction)
     }
 
-    private fun initTransaction(): Transaction {
+    private fun initTransaction(transaction: Any): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
         val transactionImpl = try {
-            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
+            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull(), transaction)
         } catch (e: Exception) {
             exposedLogger.error("Failed to start transaction. Connection will be closed.", e)
             connection.close()
             throw e
         }
+
         TransactionManager.resetCurrent(this)
         return Transaction(transactionImpl).apply {
             TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
@@ -143,7 +165,8 @@ class SpringTransactionManager(
         override val db: Database,
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
-        override val outerTransaction: Transaction?
+        override val outerTransaction: Transaction?,
+        private val currentTransaction: Any,
     ) : TransactionInterface {
 
         override fun commit() {
@@ -156,9 +179,7 @@ class SpringTransactionManager(
 
         override fun close() {
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                TransactionSynchronizationManager.getResource(springTxKey)?.let { springTx ->
-                    this@SpringTransactionManager.doCleanupAfterCompletion(springTx)
-                }
+                this@SpringTransactionManager.doCleanupAfterCompletion(currentTransaction)
             }
         }
     }
