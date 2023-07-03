@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 
@@ -31,6 +32,16 @@ object JsonTestsData {
         companion object : IntEntityClass<JsonBEntity>(JsonBTable)
 
         var jsonBColumn by JsonBTable.jsonBColumn
+    }
+
+    object JsonArrays : IntIdTable("j_arrays") {
+        val groups = json<UserGroup>("groups", Json.Default)
+        val numbers = json<IntArray>("numbers", Json.Default)
+    }
+
+    object JsonBArrays : IntIdTable("j_b_arrays") {
+        val groups = jsonb<UserGroup>("groups", Json.Default)
+        val numbers = jsonb<IntArray>("numbers", Json.Default)
     }
 }
 
@@ -78,8 +89,63 @@ fun DatabaseTestsBase.withJsonBTable(
     }
 }
 
+fun DatabaseTestsBase.withJsonArrays(
+    exclude: List<TestDB> = emptyList(),
+    statement: Transaction.(tester: JsonTestsData.JsonArrays, singleId: EntityID<Int>, tripleId: EntityID<Int>) -> Unit
+) {
+    val tester = JsonTestsData.JsonArrays
+
+    withDb(excludeSettings = exclude) { testDb ->
+        excludingH2Version1(testDb) {
+            SchemaUtils.create(tester)
+
+            val singleId = tester.insertAndGetId {
+                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+                it[tester.numbers] = intArrayOf(100)
+            }
+            val tripleId = tester.insertAndGetId {
+                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+                it[tester.numbers] = intArrayOf(3, 4, 5)
+            }
+
+            statement(tester, singleId, tripleId)
+
+            SchemaUtils.drop(tester)
+        }
+    }
+}
+
+fun DatabaseTestsBase.withJsonBArrays(
+    exclude: List<TestDB> = emptyList(),
+    statement: Transaction.(tester: JsonTestsData.JsonBArrays, singleId: EntityID<Int>, tripleId: EntityID<Int>) -> Unit
+) {
+    val tester = JsonTestsData.JsonBArrays
+
+    withDb(excludeSettings = exclude) { testDb ->
+        excludingH2Version1(testDb) {
+            SchemaUtils.create(tester)
+
+            val singleId = tester.insertAndGetId {
+                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+                it[tester.numbers] = intArrayOf(100)
+            }
+            val tripleId = tester.insertAndGetId {
+                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+                it[tester.numbers] = intArrayOf(3, 4, 5)
+            }
+
+            statement(tester, singleId, tripleId)
+
+            SchemaUtils.drop(tester)
+        }
+    }
+}
+
 @Serializable
 data class DataHolder(val user: User, val logins: Int, val active: Boolean, val team: String?)
 
 @Serializable
 data class User(val name: String, val team: String?)
+
+@Serializable
+data class UserGroup(val users: List<User>)
