@@ -54,7 +54,7 @@ class JsonBColumnTypeTests : DatabaseTestsBase() {
             val result1 = tester.slice(isActive).selectAll().singleOrNull()
             assertEquals(data1.active, result1?.get(isActive))
 
-            val storedUser = tester.jsonBColumn.jsonExtract<User>("${pathPrefix}user", toScalar = false)
+            val storedUser = tester.jsonBColumn.jsonExtractImpl<User>("${pathPrefix}user", toScalar = false)
             val result2 = tester.slice(storedUser).selectAll().singleOrNull()
             assertEquals(user1, result2?.get(storedUser))
 

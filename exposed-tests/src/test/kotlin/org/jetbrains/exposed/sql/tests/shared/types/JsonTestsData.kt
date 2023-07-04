@@ -1,15 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 
@@ -44,6 +43,30 @@ object JsonTestsData {
         val numbers = jsonb<IntArray>("numbers", Json.Default)
     }
 }
+
+inline fun <reified T : Any> Table.json(
+    name: String,
+    jsonConfig: Json,
+    kSerializer: KSerializer<T> = serializer<T>()
+): Column<T> =
+    json(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
+
+inline fun <reified T : Any> Table.jsonb(
+    name: String,
+    jsonConfig: Json,
+    kSerializer: KSerializer<T> = serializer<T>()
+): Column<T> =
+    jsonb(name, { jsonConfig.encodeToString(kSerializer, it) }, { jsonConfig.decodeFromString(kSerializer, it) })
+
+inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtractImpl(
+    vararg path: String,
+    toScalar: Boolean = true
+): JsonExtract<T> = jsonExtract<T>(
+    path = path,
+    toScalar = toScalar,
+    serialize = { Json.Default.encodeToString(serializer<T>(), it) },
+    deserialize = { Json.Default.decodeFromString(serializer<T>(), it) }
+)
 
 fun DatabaseTestsBase.withJsonTable(
     exclude: List<TestDB> = emptyList(),

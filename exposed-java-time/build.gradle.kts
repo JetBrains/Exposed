@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.exposed.gradle.Versions
 
 plugins {
     kotlin("jvm") apply true
@@ -15,6 +16,7 @@ dependencies {
     api(project(":exposed-core"))
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
+    testImplementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", Versions.kotlinxSerialization)
     testImplementation("junit", "junit", "4.12")
     testImplementation(kotlin("test-junit"))
 }

@@ -14,6 +14,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", Versions.kotlinxSerialization)
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))

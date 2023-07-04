@@ -915,10 +915,10 @@ open class JsonColumnType<T : Any>(
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
     override fun valueFromDB(value: Any): Any {
-        return when (value) {
-            is String -> deserialize(value)
-            is PGobject -> deserialize(value.value!!)
-            is ByteArray -> deserialize(value.decodeToString())
+        return when {
+            value is String -> deserialize(value)
+            value is ByteArray -> deserialize(value.decodeToString())
+            currentDialect is PostgreSQLDialect && value is PGobject -> deserialize(value.value!!)
             else -> value
         }
     }

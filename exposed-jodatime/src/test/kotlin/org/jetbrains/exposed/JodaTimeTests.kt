@@ -188,7 +188,11 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
     fun testDateTimeAsJsonB() {
         val tester = object : Table("tester") {
             val created = datetime("created")
-            val modified = jsonb<ModifierData>("modified", Json.Default)
+            val modified = jsonb(
+                "modified",
+                { Json.Default.encodeToString(ModifierData.serializer(), it) },
+                { Json.Default.decodeFromString<ModifierData>(it) }
+            )
         }
 
         withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
@@ -211,9 +215,9 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
-                tester.modified.jsonExtract<DateTime>("${prefix}timestamp").castTo(DateColumnType(true))
+                tester.modified.jsonExtractImpl<DateTime>("${prefix}timestamp").castTo(DateColumnType(true))
             } else {
-                tester.modified.jsonExtract<DateTime>("${prefix}timestamp")
+                tester.modified.jsonExtractImpl<DateTime>("${prefix}timestamp")
             }
             val modifiedBeforeCreation = tester.select { dateModified less tester.created }.single()
             assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
@@ -256,3 +260,13 @@ object DateTimeSerializer : KSerializer<DateTime> {
     override fun serialize(encoder: Encoder, value: DateTime) = encoder.encodeString(value.toString())
     override fun deserialize(decoder: Decoder): DateTime = DateTime.parse(decoder.decodeString())
 }
+
+inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtractImpl(
+    vararg path: String,
+    toScalar: Boolean = true
+): JsonExtract<T> = jsonExtract<T>(
+    path = path,
+    toScalar = toScalar,
+    serialize = { Json.Default.encodeToString(serializer<T>(), it) },
+    deserialize = { Json.Default.decodeFromString(serializer<T>(), it) }
+)

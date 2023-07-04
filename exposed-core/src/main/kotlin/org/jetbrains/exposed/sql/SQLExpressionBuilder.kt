@@ -2,8 +2,6 @@
 
 package org.jetbrains.exposed.sql
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -107,20 +105,30 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
  * If none are provided, the root context item `'$'` will be used by default.
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
  * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+ * @param serialize Optional function that encodes an object of type [T] to a JSON String.
+ * @param deserialize Optional function that decodes a JSON String to an object of type [T].
+ * **Note** If [serialize] is provided, [deserialize] must be provided as well, and vice versa.
  */
-inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path: String, toScalar: Boolean = true): JsonExtract<T> {
-    val columnType = when (T::class) {
-        String::class -> TextColumnType()
-        Boolean::class -> BooleanColumnType()
-        Long::class -> LongColumnType()
-        Int::class -> IntegerColumnType()
-        Short::class -> ShortColumnType()
-        Byte::class -> ByteColumnType()
-        Double::class -> DoubleColumnType()
-        Float::class -> FloatColumnType()
-        ByteArray::class -> BasicBinaryColumnType()
-        else -> {
-            JsonColumnType({ Json.Default.encodeToString(serializer<T>(), it) }, { Json.Default.decodeFromString(serializer<T>(), it) })
+inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(
+    vararg path: String,
+    toScalar: Boolean = true,
+    noinline serialize: ((T) -> String)? = null,
+    noinline deserialize: ((String) -> T)? = null
+): JsonExtract<T> {
+    val columnType = if (serialize != null && deserialize != null) {
+        JsonColumnType(serialize, deserialize)
+    } else {
+        when (T::class) {
+            String::class -> TextColumnType()
+            Boolean::class -> BooleanColumnType()
+            Long::class -> LongColumnType()
+            Int::class -> IntegerColumnType()
+            Short::class -> ShortColumnType()
+            Byte::class -> ByteColumnType()
+            Double::class -> DoubleColumnType()
+            Float::class -> FloatColumnType()
+            ByteArray::class -> BasicBinaryColumnType()
+            else -> error("Unexpected type T: ${T::class.qualifiedName}. This type may require a custom serializer/deserializer.")
         }
     }
     return JsonExtract(this, path = path, toScalar, this.columnType, columnType)
