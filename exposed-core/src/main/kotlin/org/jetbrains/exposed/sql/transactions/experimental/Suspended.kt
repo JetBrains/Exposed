@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
@@ -63,7 +64,7 @@ suspend fun <T> newSuspendedTransaction(
         suspendedTransactionAsyncInternal(true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
     }
 
-suspend fun <T> Transaction.suspendedTransaction(
+suspend fun <T> Transaction.withSuspendTransaction(
     context: CoroutineContext? = null,
     repetitionAttempts: Int = 0,
     minRepetitionDelay: Long = 0,
@@ -113,10 +114,13 @@ private suspend fun <T> withTransactionScope(
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
-    suspend fun newScope(_tx: Transaction?): T {
-        val manager = (_tx?.db ?: db ?: TransactionManager.currentDefaultDatabase.get())?.transactionManager ?: TransactionManager.manager
+    suspend fun newScope(currentTransaction: Transaction?): T {
+        val currentDatabase: Database? = currentTransaction?.db ?: db ?: TransactionManager.currentDefaultDatabase.get()
+        val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
-        val tx = lazy(LazyThreadSafetyMode.NONE) { _tx ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel) }
+        val tx = lazy(LazyThreadSafetyMode.NONE) {
+            currentTransaction ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
+        }
 
         val element = TransactionCoroutineElement(tx, manager)
 
@@ -172,7 +176,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
                 throw e
             }
             // set delay value with an exponential backoff time period.
-            val delay = when {
+            val repetitionDelay = when {
                 minRepetitionDelay < maxRepetitionDelay -> {
                     intermediateDelay += retryInterval * repetitions
                     ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
@@ -180,9 +184,9 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
                 minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
                 else -> 0
             }
-            exposedLogger.warn("Wait $delay milliseconds before retrying")
+            exposedLogger.warn("Wait $repetitionDelay milliseconds before retrying")
             try {
-                Thread.sleep(delay)
+                delay(repetitionDelay)
             } catch (e: InterruptedException) {
                 // Do nothing
             }
