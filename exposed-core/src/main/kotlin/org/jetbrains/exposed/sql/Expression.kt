@@ -79,21 +79,33 @@ class QueryBuilder(
 
     /** Adds the specified sequence of [arguments] as values of the specified [sqlType]. */
     fun <T> registerArguments(sqlType: IColumnType, arguments: Iterable<T>) {
-        fun toString(value: T) = when {
-            prepared && value is String -> value
-            else -> sqlType.valueToString(value)
-        }
-
-        arguments.map { it to toString(it) }
-            .sortedBy { it.second }
-            .appendTo {
+        if (arguments is Collection && arguments.size <= 1) {
+            // avoid potentially expensive valueToString call unless we need to sort values
+            arguments.forEach {
                 if (prepared) {
-                    _args.add(sqlType to it.first)
+                    _args.add(sqlType to it)
                     append("?")
                 } else {
-                    append(it.second)
+                    append(sqlType.valueToString(it))
                 }
             }
+        } else {
+            fun toString(value: T) = when {
+                prepared && value is String -> value
+                else -> sqlType.valueToString(value)
+            }
+
+            arguments.map { it to toString(it) }
+                .sortedBy { it.second }
+                .appendTo {
+                    if (prepared) {
+                        _args.add(sqlType to it.first)
+                        append("?")
+                    } else {
+                        append(it.second)
+                    }
+                }
+        }
     }
 
     override fun toString(): String = internalBuilder.toString()
