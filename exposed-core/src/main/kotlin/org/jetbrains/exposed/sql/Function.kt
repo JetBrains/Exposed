@@ -163,8 +163,12 @@ class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -174,8 +178,12 @@ class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -185,8 +193,12 @@ class Avg<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the average is calculated. */
     val expr: Expression<in S>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("AVG(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -196,8 +208,12 @@ class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
     val expr: Expression<T>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("SUM(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -208,12 +224,16 @@ class Count(
     val expr: Expression<*>,
     /** Returns whether only distinct element should be count. */
     val distinct: Boolean = false
-) : Function<Long>(LongColumnType()) {
+) : Function<Long>(LongColumnType()), WindowFunction<Long> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         +"COUNT("
         if (distinct) +"DISTINCT "
         +expr
         +")"
+    }
+
+    override fun over(): WindowFunctionDefinition<Long> {
+        return WindowFunctionDefinition(LongColumnType(), this)
     }
 }
 
@@ -227,7 +247,7 @@ class StdDevPop<T>(
     /** Returns the expression from which the population standard deviation is calculated. */
     val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             val functionProvider = when (currentDialect.h2Mode) {
@@ -236,6 +256,10 @@ class StdDevPop<T>(
             }
             functionProvider.stdDevPop(expression, this)
         }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
     }
 }
 
@@ -247,7 +271,7 @@ class StdDevSamp<T>(
     /** Returns the expression from which the sample standard deviation is calculated. */
     val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             val functionProvider = when (currentDialect.h2Mode) {
@@ -256,6 +280,10 @@ class StdDevSamp<T>(
             }
             functionProvider.stdDevSamp(expression, this)
         }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
     }
 }
 
@@ -267,7 +295,7 @@ class VarPop<T>(
     /** Returns the expression from which the population variance is calculated. */
     val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             val functionProvider = when (currentDialect.h2Mode) {
@@ -276,6 +304,10 @@ class VarPop<T>(
             }
             functionProvider.varPop(expression, this)
         }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
     }
 }
 
@@ -287,7 +319,7 @@ class VarSamp<T>(
     /** Returns the expression from which the sample variance is calculated. */
     val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
             val functionProvider = when (currentDialect.h2Mode) {
@@ -296,6 +328,10 @@ class VarSamp<T>(
             }
             functionProvider.varSamp(expression, this)
         }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
     }
 }
 
@@ -325,7 +361,7 @@ class JsonExtract<T>(
 /**
  * Represents an SQL function that advances the specified [seq] and returns the new value.
  */
-sealed class NextVal<T> (
+sealed class NextVal<T>(
     /** Returns the sequence from which the next value is obtained. */
     val seq: Sequence,
     columnType: IColumnType

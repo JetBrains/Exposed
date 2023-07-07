@@ -884,6 +884,9 @@ interface DatabaseDialect {
 
     val supportsOrderByNullsFirstLast: Boolean get() = false
 
+    /** Returns `true` if the dialect supports window function definitions with GROUPS mode in frame clause */
+    val supportsWindowFrameGroupsMode: Boolean get() = false
+
     val likePatternSpecialChars: Map<Char, Char?> get() = defaultLikePatternSpecialChars
 
     /** Returns true if autoCommit should be enabled to create/drop database */

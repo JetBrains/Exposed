@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import java.math.BigDecimal
 import java.util.*
 
 object DMLTestsData {
@@ -37,6 +38,13 @@ object DMLTestsData {
         val user_id: Column<String> = reference("user_id", Users.id)
         val comment: Column<String> = varchar("comment", 30)
         val value: Column<Int> = integer("value")
+    }
+
+    object Sales : Table() {
+        val year: Column<Int> = integer("year")
+        val month: Column<Int> = integer("month")
+        val product: Column<String?> = varchar("product", 30).nullable()
+        val amount: Column<BigDecimal> = decimal("amount", 8, 2)
     }
 }
 
@@ -122,6 +130,34 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         }
 
         statement(Cities, Users, UserData)
+    }
+}
+
+fun DatabaseTestsBase.withSales(
+    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
+) {
+    val sales = DMLTestsData.Sales
+
+    withTables(sales) {
+        insertSale(2018, 11, "tea", "550.10")
+        insertSale(2018, 12, "coffee", "1500.25")
+        insertSale(2018, 12, "tea", "900.30")
+        insertSale(2019, 1, "coffee", "1620.10")
+        insertSale(2019, 1, "tea", "650.70")
+        insertSale(2019, 2, "coffee", "1870.90")
+        insertSale(2019, 2, null, "10.20")
+
+        statement(it, sales)
+    }
+}
+
+private fun insertSale(year: Int, month: Int, product: String?, amount: String) {
+    val sales = DMLTestsData.Sales
+    sales.insert {
+        it[sales.year] = year
+        it[sales.month] = month
+        it[sales.product] = product
+        it[sales.amount] = BigDecimal(amount)
     }
 }
 
