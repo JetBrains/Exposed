@@ -119,9 +119,9 @@ class WindowFunctionDefinition<T>(
         +" OVER("
         appendPartitionByClause()
         appendOrderByClause()
-        if (frameClause != null) {
+        frameClause?.let {
             +" "
-            frameClause!!.toQueryBuilder(this)
+            it.toQueryBuilder(this)
         }
         +")"
     }
