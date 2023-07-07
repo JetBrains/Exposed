@@ -51,6 +51,11 @@ internal class TransactionCoroutineElement(
     companion object : CoroutineContext.Key<TransactionCoroutineElement>
 }
 
+/**
+ * Creates a `CoroutineScope` then calls the specified suspending block, suspends until it completes, and returns the result.
+ *
+ * The new `CoroutineScope` is derived from a new `Transaction` and a given coroutine [context], or the current `coroutineContext` if none is provided.
+ */
 suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
     db: Database? = null,
@@ -64,17 +69,22 @@ suspend fun <T> newSuspendedTransaction(
         suspendedTransactionAsyncInternal(true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
     }
 
-suspend fun <T> Transaction.withSuspendTransaction(
-    context: CoroutineContext? = null,
-    repetitionAttempts: Int = 0,
-    minRepetitionDelay: Long = 0,
-    maxRepetitionDelay: Long = 0,
-    statement: suspend Transaction.() -> T
-): T =
+/**
+ * Calls the specified suspending block, suspends until it completes, and returns the result.
+ *
+ * The resulting `CoroutineScope` for the [statement] is derived from the current `coroutineContext` if [this] `Transaction` is already held in it;
+ * otherwise a new scope is created using the given coroutine [context] and [this] `Transaction`.
+ */
+suspend fun <T> Transaction.withSuspendTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
-        suspendedTransactionAsyncInternal(false, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
+        suspendedTransactionAsyncInternal(false, 0, 0, 0, statement).await()
     }
 
+/**
+ * Creates a `CoroutineScope` and returns its future result as an implementation of `Deferred`.
+ *
+ * The new `CoroutineScope` is derived from a new `Transaction` and a given coroutine [context], or the current `coroutineContext` if none is provided.
+ */
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
     db: Database? = null,
@@ -138,6 +148,17 @@ private suspend fun <T> withTransactionScope(
     }
 }
 
+private fun Transaction.resetIfClosedAsync(): Transaction {
+    return if (connection.isClosed) {
+        // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
+        // unless the transaction is reset before every attempt (after the 1st failed attempt)
+        val currentManager = db.transactionManager.also { TransactionManager.resetCurrent(it) }
+        currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
+    } else {
+        this
+    }
+}
+
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
     repetitionAttempts: Int,
@@ -153,16 +174,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
 
     var answer: T
     while (true) {
-        val transaction = tx.value.run {
-            if (connection.isClosed) {
-                // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
-                // unless the transaction is reset before every attempt (after the 1st failed attempt)
-                val currentManager = db.transactionManager.also { TransactionManager.resetCurrent(it) }
-                currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
-            } else {
-                this
-            }
-        }
+        val transaction = tx.value.resetIfClosedAsync()
         @Suppress("TooGenericExceptionCaught")
         try {
             answer = transaction.statement().apply {

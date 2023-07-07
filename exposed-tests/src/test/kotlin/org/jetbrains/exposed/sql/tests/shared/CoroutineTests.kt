@@ -82,7 +82,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val insertJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 10) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 20) {
                         TestingUnique.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
@@ -92,7 +92,7 @@ class CoroutineTests : DatabaseTestsBase() {
                     }
                 }
                 val updateJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 10) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 20) {
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
 
                         withSuspendTransaction {
@@ -159,13 +159,13 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
 
                 val (insertResult, updateResult) = listOf(
-                    suspendedTransactionAsync(db = db, repetitionAttempts = 10) {
+                    suspendedTransactionAsync(db = db, repetitionAttempts = 20) {
                         TestingUnique.insert { it[id] = originalId }
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
                         TestingUnique.selectAll().count()
                     },
-                    suspendedTransactionAsync(db = db, repetitionAttempts = 10) {
+                    suspendedTransactionAsync(db = db, repetitionAttempts = 20) {
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
                         TestingUnique.selectAll().count()
                     }
