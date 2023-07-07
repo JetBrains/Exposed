@@ -18,6 +18,7 @@ import java.sql.Clob
 import java.sql.ResultSet
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 /**
  * Interface common to all column types.
@@ -899,6 +900,30 @@ class EnumerationNameColumnType<T : Enum<T>>(
         result = 31 * result + klass.hashCode()
         return result
     }
+}
+
+/**
+ * Enumeration column for storing enums of type [T] using the custom SQL type [sql].
+ */
+class CustomEnumerationColumnType<T : Enum<T>>(
+    /** Returns the name of this column type instance. */
+    val name: String,
+    /** Returns the SQL definition used for this column type. */
+    val sql: String?,
+    /** Returns the function that converts a value received from a database to an enumeration instance [T]. */
+    val fromDb: (Any) -> T,
+    /** Returns the function that converts an enumeration instance [T] to a value that will be stored to a database. */
+    val toDb: (T) -> Any
+) : StringColumnType() {
+    override fun sqlType(): String = sql ?: error("Column $name should exist in database")
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun notNullValueToDB(value: Any): Any = toDb(value as T)
+
+    override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
 }
 
 // JSON columns
