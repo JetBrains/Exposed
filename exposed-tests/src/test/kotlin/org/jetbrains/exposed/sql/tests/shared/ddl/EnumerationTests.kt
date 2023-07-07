@@ -63,8 +63,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
                 EnumTable.initEnumColumn(sqlType)
                 SchemaUtils.create(EnumTable)
-                // drop shared table object's unique index created in other test
-                exec(EnumTable.indices.first().dropStatement().single())
+                // drop shared table object's unique index if created in other test
+                if (EnumTable.indices.isNotEmpty()) {
+                    exec(EnumTable.indices.first().dropStatement().single())
+                }
                 EnumTable.insert {
                     it[enumColumn] = DDLTests.Foo.Bar
                 }
@@ -110,8 +112,10 @@ class EnumerationTests : DatabaseTestsBase() {
                     enumColumn.default(DDLTests.Foo.Bar)
                 }
                 SchemaUtils.create(EnumTable)
-                // drop shared table object's unique index created in other test
-                exec(EnumTable.indices.first().dropStatement().single())
+                // drop shared table object's unique index if created in other test
+                if (EnumTable.indices.isNotEmpty()) {
+                    exec(EnumTable.indices.first().dropStatement().single())
+                }
 
                 EnumTable.insert { }
                 val default = EnumTable.selectAll().single()[EnumTable.enumColumn]
@@ -148,7 +152,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
                 EnumTable.initEnumColumn(sqlType)
                 with(EnumTable) {
-                    enumColumn.uniqueIndex()
+                    if (indices.isEmpty()) enumColumn.uniqueIndex()
                 }
                 SchemaUtils.create(EnumTable)
 
