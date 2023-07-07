@@ -91,6 +91,9 @@ abstract class DataTypeProvider {
     /** Data type for storing both date and time without a time zone. */
     open fun dateTimeType(): String = "DATETIME"
 
+    /** Data type for storing both date and time with a time zone. */
+    open fun timestampWithTimeZoneType(): String = "TIMESTAMP WITH TIME ZONE"
+
     /** Time type for storing time without a time zone. */
     open fun timeType(): String = "TIME"
 

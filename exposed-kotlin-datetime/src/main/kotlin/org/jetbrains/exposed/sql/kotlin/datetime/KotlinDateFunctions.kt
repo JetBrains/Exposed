@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
+import java.time.OffsetDateTime
 import kotlin.time.Duration
 
 internal class DateInternal(val expr: Expression<*>) : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
@@ -235,6 +236,10 @@ fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, K
 fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, KotlinLocalTimeColumnType.INSTANCE)
 fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParameter(value, KotlinLocalDateTimeColumnType.INSTANCE)
 fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, KotlinInstantColumnType.INSTANCE)
+
+fun timestampWithTimeZoneParam(value: OffsetDateTime): Expression<OffsetDateTime> =
+    QueryParameter(value, KotlinOffsetDateTimeColumnType.INSTANCE)
+
 fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value, KotlinDurationColumnType.INSTANCE)
 
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(KotlinLocalDateColumnType.INSTANCE, value)
@@ -242,6 +247,10 @@ fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(KotlinLocalT
 fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(KotlinLocalDateTimeColumnType.INSTANCE, value)
 
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(KotlinInstantColumnType.INSTANCE, value)
+
+fun timestampWithTimeZoneLiteral(value: OffsetDateTime): LiteralOp<OffsetDateTime> =
+    LiteralOp(KotlinOffsetDateTimeColumnType.INSTANCE, value)
+
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(KotlinDurationColumnType.INSTANCE, value)
 
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDate?> =
@@ -255,6 +264,12 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): 
 
 fun CustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Instant?> =
     CustomFunction(functionName, KotlinInstantColumnType.INSTANCE, *params)
+
+@Suppress("FunctionName")
+fun CustomTimestampWithTimeZoneFunction(
+    functionName: String,
+    vararg params: Expression<*>
+): CustomFunction<OffsetDateTime?> = CustomFunction(functionName, KotlinOffsetDateTimeColumnType.INSTANCE, *params)
 
 fun CustomDurationFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Duration?> =
     CustomFunction(functionName, KotlinDurationColumnType.INSTANCE, *params)

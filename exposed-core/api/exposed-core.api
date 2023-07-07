@@ -3191,6 +3191,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun shortType ()Ljava/lang/String;
 	public fun textType ()Ljava/lang/String;
 	public fun timeType ()Ljava/lang/String;
+	public fun timestampWithTimeZoneType ()Ljava/lang/String;
 	public fun ubyteType ()Ljava/lang/String;
 	public fun uintegerType ()Ljava/lang/String;
 	public fun ulongType ()Ljava/lang/String;
@@ -3497,6 +3498,7 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public final fun isFractionDateTimeSupported ()Z
+	public final fun isTimeZoneOffsetSupported ()Z
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
 

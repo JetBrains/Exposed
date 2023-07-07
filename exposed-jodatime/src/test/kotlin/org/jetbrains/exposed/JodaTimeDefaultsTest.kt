@@ -359,6 +359,61 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         assertEquals("test1", list1?.get(testData.name))
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
     }
+
+    @Test
+    fun testTimestampWithTimeZoneDefaults() {
+        // UTC time zone
+        DateTimeZone.setDefault(DateTimeZone.UTC)
+        assertEquals("UTC", DateTimeZone.getDefault().id)
+
+        val nowWithTimeZone = DateTime.now()
+        val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
+
+        val testTable = object : IntIdTable("t") {
+            val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
+            val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+        }
+
+        fun Expression<*>.itOrNull() = when {
+            currentDialectTest.isAllowedAsColumnDefault(this) ->
+                "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+            else -> "NULL"
+        }
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MARIADB)) {
+            if (!isOldMySql()) {
+                SchemaUtils.create(testTable)
+
+                val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
+
+                val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                    "${"t".inProperCase()} (" +
+                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                    "${"t1".inProperCase()} $timestampWithTimeZoneType ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                    "${"t2".inProperCase()} $timestampWithTimeZoneType ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                    ")"
+
+                val expected = if (currentDialectTest is OracleDialect ||
+                    currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+                ) {
+                    arrayListOf(
+                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                        baseExpression
+                    )
+                } else {
+                    arrayListOf(baseExpression)
+                }
+
+                assertEqualLists(expected, testTable.ddl)
+
+                val id1 = testTable.insertAndGetId { }
+
+                val row1 = testTable.select { testTable.id eq id1 }.single()
+                assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
+                assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            }
+        }
+    }
 }
 
 fun Table.insertAndWait(duration: Long) {

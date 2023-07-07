@@ -17,6 +17,12 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "uniqueidentifier"
     override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME2"
+    override fun timestampWithTimeZoneType(): String =
+        if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+            "TIMESTAMP(9) WITH TIME ZONE"
+        } else {
+            "DATETIMEOFFSET"
+        }
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
 

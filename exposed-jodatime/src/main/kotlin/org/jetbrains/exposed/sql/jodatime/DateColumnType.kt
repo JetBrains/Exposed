@@ -21,6 +21,18 @@ private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 
+private val SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSZZ").withLocale(Locale.ROOT)
+}
+
+private val MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZZ").withLocale(Locale.ROOT)
+}
+
+private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
+    ISODateTimeFormat.dateTime().withLocale(Locale.ROOT)
+}
+
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "YYYY-MM-dd HH:mm:ss"
@@ -129,6 +141,66 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     }
 }
 
+class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
+
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timestampWithTimeZoneType()
+
+    override fun nonNullValueToString(value: Any): String = when (value) {
+        is DateTime -> {
+            when (currentDialect) {
+                is SQLiteDialect -> "'${SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+                is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+                else -> "'${DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun valueFromDB(value: Any): DateTime = when {
+        value.javaClass == offsetDateTimeClass -> DateTime.parse(value.toString())
+        value is String -> {
+            if (currentDialect is SQLiteDialect) {
+                DateTime.parse(value, SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER)
+            } else {
+                DateTime.parse(value)
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+        is SQLiteDialect -> super.readObject(rs, index)
+        else -> {
+            if (offsetDateTimeClass != null) {
+                rs.getObject(index, offsetDateTimeClass)
+            } else {
+                super.readObject(rs, index)
+            }
+        }
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is DateTime -> {
+            when (currentDialect) {
+                is SQLiteDialect -> SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)
+                is MysqlDialect -> MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)
+                else -> java.sql.Timestamp(value.millis)
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    companion object {
+        // https://www.baeldung.com/java-check-class-exists
+        private val offsetDateTimeClass = try {
+            Class.forName("java.time.OffsetDateTime", false, this::class.java.classLoader)
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+}
+
 /**
  * A date column to store a date.
  *
@@ -142,3 +214,13 @@ fun Table.date(name: String): Column<DateTime> = registerColumn(name, DateColumn
  * @param name The column name
  */
 fun Table.datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+
+/**
+ * A timestamp column to store both a date and a time with time zone.
+ *
+ * Note: PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone. To preserve the
+ * original time zone, store the time zone information in a separate column.
+ *
+ * @param name The column name
+ */
+fun Table.timestampWithTimeZone(name: String): Column<DateTime> = registerColumn(name, DateTimeWithTimeZoneColumnType())
