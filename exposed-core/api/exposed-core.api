@@ -482,6 +482,19 @@ public final class org/jetbrains/exposed/sql/Count : org/jetbrains/exposed/sql/F
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
+public final class org/jetbrains/exposed/sql/CustomEnumerationColumnType : org/jetbrains/exposed/sql/StringColumnType {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public final fun getFromDb ()Lkotlin/jvm/functions/Function1;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSql ()Ljava/lang/String;
+	public final fun getToDb ()Lkotlin/jvm/functions/Function1;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Enum;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public class org/jetbrains/exposed/sql/CustomFunction : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/IColumnType;[Lorg/jetbrains/exposed/sql/Expression;)V
 	public final fun getExpr ()[Lorg/jetbrains/exposed/sql/Expression;

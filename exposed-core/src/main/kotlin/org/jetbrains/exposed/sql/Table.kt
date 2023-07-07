@@ -16,7 +16,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -626,31 +625,21 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         enumerationByName(name, length, T::class)
 
     /**
-     * Creates an enumeration column with custom SQL type.
-     * The main usage is to use a database specific type.
+     * Creates an enumeration column, with the custom SQL type [sql], for storing enums of type [T] using this database-specific type.
      *
-     * See [https://github.com/JetBrains/Exposed/wiki/DataTypes#how-to-use-database-enum-types] for more details.
+     * See [Wiki](https://github.com/JetBrains/Exposed/wiki/DataTypes#how-to-use-database-enum-types) for more details.
      *
-     * @param name The column name
-     * @param sql A SQL definition for the column
-     * @param fromDb A lambda to convert a value received from a database to an enumeration instance
-     * @param toDb A lambda to convert an enumeration instance to a value which will be stored to a database
+     * @param name Name of the column
+     * @param sql SQL definition for the column
+     * @param fromDb Function that converts a value received from a database to an enumeration instance [T]
+     * @param toDb Function that converts an enumeration instance [T] to a value that will be stored to a database
      */
-    @Suppress("UNCHECKED_CAST")
     fun <T : Enum<T>> customEnumeration(
         name: String,
         sql: String? = null,
         fromDb: (Any) -> T,
         toDb: (T) -> Any
-    ): Column<T> = registerColumn(
-        name,
-        object : StringColumnType() {
-            override fun sqlType(): String = sql ?: error("Column $name should exists in database ")
-            override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
-            override fun notNullValueToDB(value: Any): Any = toDb(value as T)
-            override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
-        }
-    )
+    ): Column<T> = registerColumn(name, CustomEnumerationColumnType(name, sql, fromDb, toDb))
 
     // JSON columns
 
