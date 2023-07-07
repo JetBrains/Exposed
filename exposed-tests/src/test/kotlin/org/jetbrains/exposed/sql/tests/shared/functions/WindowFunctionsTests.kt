@@ -38,7 +38,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     @Suppress("LongMethod")
     @Test
     fun testWindowFunctions() = withSales { testDb, sales ->
-        if (currentDialect.supportsWindowFunctions) {
+        if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 rowNumber().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOf(1, 1, 2, 1, 1, 1, 2)
@@ -133,7 +133,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     @Suppress("LongMethod")
     @Test
     fun testAggregateFunctionsAsWindowFunctions() = withSales { testDb, sales ->
-        if (currentDialect.supportsWindowFunctions) {
+        if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 sales.amount.min().over().partitionBy(sales.year, sales.product),
                 listOfBigDecimal("550.1", "1500.25", "550.1", "1620.1", "650.7", "10.2", "1620.1")
@@ -185,7 +185,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testPartitionByClause() = withSales { _, sales ->
-        if (currentDialect.supportsWindowFunctions) {
+        if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 sales.amount.sum().over(),
                 listOfBigDecimal("7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55")
@@ -207,7 +207,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testOrderByClause() = withSales { _, sales ->
-        if (currentDialect.supportsWindowFunctions) {
+        if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 sales.amount.sum().over(),
                 listOfBigDecimal("7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55")
@@ -231,7 +231,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     @Suppress("LongMethod")
     @Test
     fun testWindowFrameClause() = withSales { testDb, sales ->
-        if (currentDialect.supportsWindowFunctions) {
+        if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),
                 listOfBigDecimal("550.1", "1500.25", "1450.4", "1620.1", "650.7", "10.2", "3491")

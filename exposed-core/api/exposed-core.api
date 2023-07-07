@@ -3270,7 +3270,6 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun getSupportsSubqueryUnions ()Z
 	public abstract fun getSupportsTernaryAffectedRowValues ()Z
 	public abstract fun getSupportsWindowFrameGroupsMode ()Z
-	public abstract fun getSupportsWindowFunctions ()Z
 	public abstract fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public abstract fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public abstract fun resetCaches ()V
@@ -3309,7 +3308,6 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 	public static fun getSupportsSubqueryUnions (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsTernaryAffectedRowValues (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsWindowFrameGroupsMode (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
-	public static fun getSupportsWindowFunctions (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Expression;)Z
 	public static fun setSchema (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public static fun tableColumns (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
@@ -3532,7 +3530,6 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
-	public fun getSupportsWindowFunctions ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public final fun isFractionDateTimeSupported ()Z
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
@@ -3671,7 +3668,6 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
-	public fun getSupportsWindowFunctions ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	protected final fun quoteIdentifierWhenWrongCaseOrNecessary (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;

@@ -260,8 +260,6 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsOrderByNullsFirstLast: Boolean = false
 
-    override val supportsWindowFunctions: Boolean by lazy { isMysql8 }
-
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
