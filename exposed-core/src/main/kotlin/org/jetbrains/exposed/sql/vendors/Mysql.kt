@@ -330,7 +330,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     override fun createIndex(index: Index): String {
         if (index.functions != null && !isMysql8) {
             exposedLogger.warn(
-                "Functional index on ${index.table.tableName} using ${index.functions.second.joinToString { it.toString() }} can't be created in MySQL prior to 8.0"
+                "Functional index on ${index.table.tableName} using ${index.functions.joinToString { it.toString() }} can't be created in MySQL prior to 8.0"
             )
             return ""
         }

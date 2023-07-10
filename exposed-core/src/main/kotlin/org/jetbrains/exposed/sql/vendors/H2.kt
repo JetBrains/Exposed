@@ -246,7 +246,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
         if (index.functions != null) {
             exposedLogger.warn(
-                "Functional index on ${index.table.tableName} using ${index.functions.second.joinToString { it.toString() }} can't be created in H2"
+                "Functional index on ${index.table.tableName} using ${index.functions.joinToString { it.toString() }} can't be created in H2"
             )
             return ""
         }

@@ -1182,7 +1182,7 @@ abstract class VendorDialect(
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
-        val keyFields = index.columns.plus(index.functions?.second ?: emptyList())
+        val keyFields = index.columns.plus(index.functions ?: emptyList())
         val fieldsList = keyFields.joinToString(prefix = "(", postfix = ")") {
             when (it) {
                 is Column<*> -> t.identity(it)
@@ -1193,7 +1193,7 @@ abstract class VendorDialect(
                 }
             }
         }
-        val includesOnlyColumns = index.functions?.second?.isEmpty() != false
+        val includesOnlyColumns = index.functions?.isEmpty() != false
         val maybeFilterCondition = filterCondition(index) ?: return ""
 
         return when {

@@ -243,8 +243,10 @@ data class Index(
     val indexType: String? = null,
     /** Partial index filter condition */
     val filterCondition: Op<Boolean>? = null,
-    /** Functions that are part of the index and the table where the index is defined. */
-    val functions: Pair<Table, List<ExpressionWithColumnType<*>>>? = null
+    /** Functions that are part of the index. */
+    val functions: List<ExpressionWithColumnType<*>>? = null,
+    /** Table where the functional index should be defined. */
+    val functionsTable: Table? = null
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table
@@ -255,7 +257,7 @@ data class Index(
             append(table.nameInDatabaseCase())
             append('_')
             append(columns.joinToString("_") { it.name }.inProperCase())
-            functions?.let { (_, f) ->
+            functions?.let { f ->
                 if (columns.isNotEmpty()) append('_')
                 append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() }.inProperCase())
             }
@@ -265,15 +267,16 @@ data class Index(
         }
 
     init {
-        require(columns.isNotEmpty() || functions?.second?.isNotEmpty() == true) {
-            "At least one column or function is required to create an index"
-        }
+        require(columns.isNotEmpty() || functions?.isNotEmpty() == true) { "At least one column or function is required to create an index" }
         val columnsTable = if (columns.isNotEmpty()) {
             val table = columns.distinctBy { it.table }.singleOrNull()?.table
             requireNotNull(table) { "Columns from different tables can't persist in one index" }
             table
         } else null
-        this.table = columnsTable ?: functions!!.first
+        if (functions?.isNotEmpty() == true) {
+            requireNotNull(functionsTable) { "functionsTable argument must also be provided if functions are defined to create an index" }
+        }
+        this.table = columnsTable ?: functionsTable!!
     }
 
     override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))

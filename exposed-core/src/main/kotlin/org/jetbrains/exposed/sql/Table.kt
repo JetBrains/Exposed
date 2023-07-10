@@ -989,7 +989,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param isUnique Whether the index is unique or not.
      * @param columns Columns that compose the index.
      */
-    fun index(isUnique: Boolean = false, vararg columns: Column<*>): Unit = index(null, isUnique, *columns)
+    fun index(isUnique: Boolean = false, vararg columns: Column<*>) { index(null, isUnique, *columns) }
 
     /**
      * Creates an index.
@@ -1010,7 +1010,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         filterCondition: FilterCondition = null
     ) {
         _indices.add(
-            Index(columns.toList(), isUnique, customIndexName, indexType, filterCondition?.invoke(SqlExpressionBuilder), functions?.let { this to it })
+            Index(
+                columns.toList(), isUnique, customIndexName, indexType,
+                filterCondition?.invoke(SqlExpressionBuilder),
+                functions, functions?.let { this }
+            )
         )
     }
 
@@ -1037,8 +1041,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param columns Columns that compose the index.
      * @param filterCondition Index filtering conditions (also known as "partial index") declaration.
      */
-    fun uniqueIndex(vararg columns: Column<*>, filterCondition: FilterCondition = null): Unit =
+    fun uniqueIndex(vararg columns: Column<*>, filterCondition: FilterCondition = null) {
         index(null, true, *columns, filterCondition = filterCondition)
+    }
 
     /**
      * Creates a unique index.
@@ -1053,8 +1058,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         vararg columns: Column<*>,
         functions: List<ExpressionWithColumnType<*>>? = null,
         filterCondition: FilterCondition = null
-    ): Unit =
+    ) {
         index(customIndexName, true, *columns, functions = functions, filterCondition = filterCondition)
+    }
 
     /**
      * Creates a composite foreign key.
