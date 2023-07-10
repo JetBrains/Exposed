@@ -242,7 +242,9 @@ data class Index(
     /** Optional custom index type (e.g, BTREE or HASH) */
     val indexType: String? = null,
     /** Partial index filter condition */
-    val filterCondition: Op<Boolean>? = null
+    val filterCondition: Op<Boolean>? = null,
+    /** Functions that are part of the index and the table where the index is defined. */
+    val functions: Pair<Table, List<ExpressionWithColumnType<*>>>? = null
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table
@@ -253,16 +255,25 @@ data class Index(
             append(table.nameInDatabaseCase())
             append('_')
             append(columns.joinToString("_") { it.name }.inProperCase())
+            functions?.let { (_, f) ->
+                if (columns.isNotEmpty()) append('_')
+                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() }.inProperCase())
+            }
             if (unique) {
                 append("_unique".inProperCase())
             }
         }
 
     init {
-        require(columns.isNotEmpty()) { "At least one column is required to create an index" }
-        val table = columns.distinctBy { it.table }.singleOrNull()?.table
-        requireNotNull(table) { "Columns from different tables can't persist in one index" }
-        this.table = table
+        require(columns.isNotEmpty() || functions?.second?.isNotEmpty() == true) {
+            "At least one column or function is required to create an index"
+        }
+        val columnsTable = if (columns.isNotEmpty()) {
+            val table = columns.distinctBy { it.table }.singleOrNull()?.table
+            requireNotNull(table) { "Columns from different tables can't persist in one index" }
+            table
+        } else null
+        this.table = columnsTable ?: functions!!.first
     }
 
     override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))

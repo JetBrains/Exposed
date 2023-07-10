@@ -262,6 +262,16 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         }
     }
 
+    override fun createIndex(index: Index): String {
+        if (index.functions != null) {
+            exposedLogger.warn(
+                "Functional index on ${index.table.tableName} using ${index.functions.second.joinToString { it.toString() }} can't be created in SQLServer"
+            )
+            return ""
+        }
+        return super.createIndex(index)
+    }
+
     override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
         return "CREATE $type INDEX $name ON $table $columns$filterCondition"
     }
