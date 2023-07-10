@@ -111,9 +111,10 @@ data class ForeignKeyConstraint(
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
-            name ?: "fk_${fromTable.tableNameWithoutSchemeSanitized}_${
-                from.joinToString("_") { it.name }
-            }__${target.joinToString("_") { it.name }}"
+            name ?: (
+                "fk_${fromTable.tableNameWithoutSchemeSanitized}_${from.joinToString("_") { it.name }}__" +
+                    target.joinToString("_") { it.name }
+                )
         ).inProperCase()
 
     internal val foreignKeyPart: String
