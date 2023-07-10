@@ -213,7 +213,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val tmConstValue = LocalTime.of(12, 0)
         val tLiteral = timeLiteral(tmConstValue)
 
-        val TestTable = object : IntIdTable("t") {
+        val testTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
             val l = long("l").default(42)
@@ -236,7 +236,7 @@ class DefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(listOf(TestDB.SQLITE), TestTable) {
+        withTables(listOf(TestDB.SQLITE), testTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val timeType = currentDialectTest.dataTypeProvider.timeType()
@@ -267,23 +267,23 @@ class DefaultsTest : DatabaseTestsBase() {
                 arrayListOf(baseExpression)
             }
 
-            assertEqualLists(expected, TestTable.ddl)
+            assertEqualLists(expected, testTable.ddl)
 
-            val id1 = TestTable.insertAndGetId { }
+            val id1 = testTable.insertAndGetId { }
 
-            val row1 = TestTable.select { TestTable.id eq id1 }.single()
-            assertEquals("test", row1[TestTable.s])
-            assertEquals("testNullable", row1[TestTable.sn])
-            assertEquals(42, row1[TestTable.l])
-            assertEquals('X', row1[TestTable.c])
-            assertEqualDateTime(dtConstValue.atStartOfDay(), row1[TestTable.t3])
-            assertEqualDateTime(dtConstValue, row1[TestTable.t4])
-            assertEqualDateTime(tsConstValue, row1[TestTable.t5])
-            assertEqualDateTime(tsConstValue, row1[TestTable.t6])
-            assertEquals(durConstValue, row1[TestTable.t7])
-            assertEquals(durConstValue, row1[TestTable.t8])
-            assertEquals(tmConstValue, row1[TestTable.t9])
-            assertEquals(tmConstValue, row1[TestTable.t10])
+            val row1 = testTable.select { testTable.id eq id1 }.single()
+            assertEquals("test", row1[testTable.s])
+            assertEquals("testNullable", row1[testTable.sn])
+            assertEquals(42, row1[testTable.l])
+            assertEquals('X', row1[testTable.c])
+            assertEqualDateTime(dtConstValue.atStartOfDay(), row1[testTable.t3])
+            assertEqualDateTime(dtConstValue, row1[testTable.t4])
+            assertEqualDateTime(tsConstValue, row1[testTable.t5])
+            assertEqualDateTime(tsConstValue, row1[testTable.t6])
+            assertEquals(durConstValue, row1[testTable.t7])
+            assertEquals(durConstValue, row1[testTable.t8])
+            assertEquals(tmConstValue, row1[testTable.t9])
+            assertEquals(tmConstValue, row1[testTable.t10])
         }
     }
 

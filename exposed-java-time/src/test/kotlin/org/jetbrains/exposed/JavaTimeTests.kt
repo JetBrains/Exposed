@@ -61,21 +61,21 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
     // Checks that old numeric datetime columns works fine with new text representation
     @Test
     fun testSQLiteDateTimeFieldRegression() {
-        val TestDate = object : IntIdTable("TestDate") {
+        val testDate = object : IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withDb(TestDB.SQLITE) {
             try {
                 exec("CREATE TABLE IF NOT EXISTS TestDate (id INTEGER PRIMARY KEY AUTOINCREMENT, \"time\" NUMERIC DEFAULT (CURRENT_TIMESTAMP) NOT NULL);")
-                TestDate.insert { }
-                val year = TestDate.time.year()
-                val month = TestDate.time.month()
-                val day = TestDate.time.day()
-                val hour = TestDate.time.hour()
-                val minute = TestDate.time.minute()
+                testDate.insert { }
+                val year = testDate.time.year()
+                val month = testDate.time.month()
+                val day = testDate.time.day()
+                val hour = testDate.time.hour()
+                val minute = testDate.time.minute()
 
-                val result = TestDate.slice(year, month, day, hour, minute).selectAll().single()
+                val result = testDate.slice(year, month, day, hour, minute).selectAll().single()
 
                 val now = LocalDateTime.now()
                 assertEquals(now.year, result[year])
@@ -84,56 +84,56 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
                 assertEquals(now.hour, result[hour])
                 assertEquals(now.minute, result[minute])
             } finally {
-                SchemaUtils.drop(TestDate)
+                SchemaUtils.drop(testDate)
             }
         }
     }
 
     @Test
     fun `test storing LocalDateTime with nanos`() {
-        val TestDate = object : IntIdTable("TestLocalDateTime") {
+        val testDate = object : IntIdTable("TestLocalDateTime") {
             val time = datetime("time")
         }
-        withTables(TestDate) {
+        withTables(testDate) {
             val dateTimeWithNanos = LocalDateTime.now().withNano(123)
-            TestDate.insert {
+            testDate.insert {
                 it[time] = dateTimeWithNanos
             }
 
-            val dateTimeFromDB = TestDate.selectAll().single()[TestDate.time]
+            val dateTimeFromDB = testDate.selectAll().single()[testDate.time]
             assertEqualDateTime(dateTimeWithNanos, dateTimeFromDB)
         }
     }
 
     @Test
     fun `test selecting Instant using expressions`() {
-        val TestTable = object : Table() {
+        val testTable = object : Table() {
             val ts = timestamp("ts")
             val tsn = timestamp("tsn").nullable()
         }
 
         val now = Instant.now()
 
-        withTables(TestTable) {
-            TestTable.insert {
+        withTables(testTable) {
+            testTable.insert {
                 it[ts] = now
                 it[tsn] = now
             }
 
-            val maxTsExpr = TestTable.ts.max()
-            val maxTimestamp = TestTable.slice(maxTsExpr).selectAll().single()[maxTsExpr]
+            val maxTsExpr = testTable.ts.max()
+            val maxTimestamp = testTable.slice(maxTsExpr).selectAll().single()[maxTsExpr]
             assertEqualDateTime(now, maxTimestamp)
 
-            val minTsExpr = TestTable.ts.min()
-            val minTimestamp = TestTable.slice(minTsExpr).selectAll().single()[minTsExpr]
+            val minTsExpr = testTable.ts.min()
+            val minTimestamp = testTable.slice(minTsExpr).selectAll().single()[minTsExpr]
             assertEqualDateTime(now, minTimestamp)
 
-            val maxTsnExpr = TestTable.tsn.max()
-            val maxNullableTimestamp = TestTable.slice(maxTsnExpr).selectAll().single()[maxTsnExpr]
+            val maxTsnExpr = testTable.tsn.max()
+            val maxNullableTimestamp = testTable.slice(maxTsnExpr).selectAll().single()[maxTsnExpr]
             assertEqualDateTime(now, maxNullableTimestamp)
 
-            val minTsnExpr = TestTable.tsn.min()
-            val minNullableTimestamp = TestTable.slice(minTsnExpr).selectAll().single()[minTsnExpr]
+            val minTsnExpr = testTable.tsn.min()
+            val minNullableTimestamp = testTable.slice(minTsnExpr).selectAll().single()[minTsnExpr]
             assertEqualDateTime(now, minNullableTimestamp)
         }
     }
