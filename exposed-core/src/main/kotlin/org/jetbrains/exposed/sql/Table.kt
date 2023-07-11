@@ -434,7 +434,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         val name: String by lazy { name ?: "pk_$tableNameWithoutSchemeSanitized" }
 
         constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
-            this(arrayOf(firstColumn, *columns), name)
+            this(arrayOf(firstColumn) + columns.asList(), name)
 
         init {
             columns.sortWith(compareBy { !it.columnType.isAutoInc })
