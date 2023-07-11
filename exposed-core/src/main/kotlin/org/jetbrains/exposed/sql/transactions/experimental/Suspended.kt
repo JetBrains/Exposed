@@ -52,9 +52,10 @@ internal class TransactionCoroutineElement(
 }
 
 /**
- * Creates a `CoroutineScope` then calls the specified suspending block, suspends until it completes, and returns the result.
+ * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes, and returns the result.
  *
- * The new `CoroutineScope` is derived from a new `Transaction` and a given coroutine [context], or the current `coroutineContext` if none is provided.
+ * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
+ * or the current `coroutineContext` if no [context] is provided.
  */
 suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
@@ -66,14 +67,16 @@ suspend fun <T> newSuspendedTransaction(
     statement: suspend Transaction.() -> T
 ): T =
     withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement).await()
+        suspendedTransactionAsyncInternal(
+            true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement
+        ).await()
     }
 
 /**
- * Calls the specified suspending block, suspends until it completes, and returns the result.
+ * Calls the specified suspending [statement], suspends until it completes, and returns the result.
  *
- * The resulting `CoroutineScope` for the [statement] is derived from the current `coroutineContext` if [this] `Transaction` is already held in it;
- * otherwise a new scope is created using the given coroutine [context] and [this] `Transaction`.
+ * The resulting `TransactionScope` is derived from the current `coroutineContext` if the latter already holds [this] `Transaction`;
+ * otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
  */
 suspend fun <T> Transaction.withSuspendTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
@@ -81,9 +84,10 @@ suspend fun <T> Transaction.withSuspendTransaction(context: CoroutineContext? = 
     }
 
 /**
- * Creates a `CoroutineScope` and returns its future result as an implementation of `Deferred`.
+ * Creates a new `TransactionScope` and returns its future result as an implementation of `Deferred`.
  *
- * The new `CoroutineScope` is derived from a new `Transaction` and a given coroutine [context], or the current `coroutineContext` if none is provided.
+ * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
+ * or the current `coroutineContext` if no [context] is provided.
  */
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
@@ -148,11 +152,13 @@ private suspend fun <T> withTransactionScope(
     }
 }
 
-private fun Transaction.resetIfClosedAsync(): Transaction {
+private fun Transaction.resetIfClosed(): Transaction {
     return if (connection.isClosed) {
         // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
         // unless the transaction is reset before every attempt (after the 1st failed attempt)
-        val currentManager = db.transactionManager.also { TransactionManager.resetCurrent(it) }
+        val currentManager = db.transactionManager
+        currentManager.bindTransactionToThread(this)
+        TransactionManager.resetCurrent(currentManager)
         currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
     } else {
         this
@@ -174,7 +180,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
 
     var answer: T
     while (true) {
-        val transaction = tx.value.resetIfClosedAsync()
+        val transaction = tx.value.resetIfClosed()
         @Suppress("TooGenericExceptionCaught")
         try {
             answer = transaction.statement().apply {
@@ -187,7 +193,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
             if (repetitions >= repetitionAttempts) {
                 throw e
             }
-            // set delay value with an exponential backoff time period.
+            // set delay value with an exponential backoff time period
             val repetitionDelay = when {
                 minRepetitionDelay < maxRepetitionDelay -> {
                     intermediateDelay += retryInterval * repetitions
