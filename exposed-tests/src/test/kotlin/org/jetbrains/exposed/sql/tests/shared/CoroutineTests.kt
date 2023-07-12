@@ -76,28 +76,27 @@ class CoroutineTests : DatabaseTestsBase() {
                 newSuspendedTransaction(Dispatchers.Default, db = db) {
                     TestingUnique.insert { it[id] = originalId }
 
-                    withSuspendTransaction {
-                        assertEquals(originalId, TestingUnique.selectAll().single()[TestingUnique.id])
-                    }
+                    assertEquals(originalId, TestingUnique.selectAll().single()[TestingUnique.id])
                 }
 
                 val insertJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 20) {
-                        TestingUnique.insert { it[id] = originalId }
+                    newSuspendedTransaction(Dispatchers.Default, db = db) {
+                        repetitionAttempts = 20
+
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
-                        withSuspendTransaction {
-                            assertEquals(2, TestingUnique.selectAll().count())
-                        }
+                        TestingUnique.insert { it[id] = originalId }
+
+                        assertEquals(2, TestingUnique.selectAll().count())
                     }
                 }
                 val updateJob = launch {
-                    newSuspendedTransaction(Dispatchers.Default, db = db, repetitionAttempts = 20) {
+                    newSuspendedTransaction(Dispatchers.Default, db = db) {
+                        repetitionAttempts = 20
+
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
 
-                        withSuspendTransaction {
-                            assertEquals(updatedId, TestingUnique.selectAll().single()[TestingUnique.id])
-                        }
+                        assertEquals(updatedId, TestingUnique.selectAll().single()[TestingUnique.id])
                     }
                 }
                 insertJob.join()
@@ -153,19 +152,22 @@ class CoroutineTests : DatabaseTestsBase() {
                 newSuspendedTransaction(Dispatchers.Default, db = db) {
                     TestingUnique.insert { it[id] = originalId }
 
-                    withSuspendTransaction {
-                        assertEquals(originalId, TestingUnique.selectAll().single()[TestingUnique.id])
-                    }
+                    assertEquals(originalId, TestingUnique.selectAll().single()[TestingUnique.id])
                 }
 
                 val (insertResult, updateResult) = listOf(
-                    suspendedTransactionAsync(db = db, repetitionAttempts = 20) {
-                        TestingUnique.insert { it[id] = originalId }
+                    suspendedTransactionAsync(db = db) {
+                        repetitionAttempts = 20
+
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
+                        TestingUnique.insert { it[id] = originalId }
+
                         TestingUnique.selectAll().count()
                     },
-                    suspendedTransactionAsync(db = db, repetitionAttempts = 20) {
+                    suspendedTransactionAsync(db = db) {
+                        repetitionAttempts = 20
+
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
                         TestingUnique.selectAll().count()
                     }

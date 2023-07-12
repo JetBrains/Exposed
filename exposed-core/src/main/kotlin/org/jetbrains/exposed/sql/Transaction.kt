@@ -39,6 +39,9 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = db.config.warnLongQueriesDuration
     var debug = false
+    var repetitionAttempts: Int = 0
+    var minRepetitionDelay: Long = 0
+    var maxRepetitionDelay: Long = 0
     val id by lazy { UUID.randomUUID().toString() }
 
     // currently executing statement. Used to log error properly

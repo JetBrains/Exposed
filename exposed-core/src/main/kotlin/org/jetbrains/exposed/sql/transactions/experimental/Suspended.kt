@@ -61,15 +61,10 @@ suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
-    repetitionAttempts: Int = 0,
-    minRepetitionDelay: Long = 0,
-    maxRepetitionDelay: Long = 0,
     statement: suspend Transaction.() -> T
 ): T =
     withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(
-            true, repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement
-        ).await()
+        suspendedTransactionAsyncInternal(true, statement).await()
     }
 
 /**
@@ -80,7 +75,7 @@ suspend fun <T> newSuspendedTransaction(
  */
 suspend fun <T> Transaction.withSuspendTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
-        suspendedTransactionAsyncInternal(false, 0, 0, 0, statement).await()
+        suspendedTransactionAsyncInternal(false, statement).await()
     }
 
 /**
@@ -93,16 +88,11 @@ suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
-    repetitionAttempts: Int = 0,
-    minRepetitionDelay: Long = 0,
-    maxRepetitionDelay: Long = 0,
     statement: suspend Transaction.() -> T
 ): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation) {
-        suspendedTransactionAsyncInternal(
-            !holdsSameTransaction(currentTransaction), repetitionAttempts, minRepetitionDelay, maxRepetitionDelay, statement
-        )
+        suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
 
@@ -167,20 +157,18 @@ private fun Transaction.resetIfClosed(): Transaction {
 
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
-    repetitionAttempts: Int,
-    minRepetitionDelay: Long,
-    maxRepetitionDelay: Long,
     statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
+    var transaction = tx.value
     var repetitions = 0
-    var intermediateDelay = minRepetitionDelay
-    val retryInterval = if (repetitionAttempts > 0) {
-        maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+    var intermediateDelay = transaction.minRepetitionDelay
+    val retryInterval = if (transaction.repetitionAttempts > 0) {
+        maxOf((transaction.maxRepetitionDelay - transaction.minRepetitionDelay) / (transaction.repetitionAttempts + 1), 1)
     } else 0
 
     var answer: T
     while (true) {
-        val transaction = tx.value.resetIfClosed()
+        transaction = transaction.resetIfClosed()
         @Suppress("TooGenericExceptionCaught")
         try {
             answer = transaction.statement().apply {
@@ -190,16 +178,16 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
         } catch (e: SQLException) {
             handleSQLException(e, transaction, repetitions)
             repetitions++
-            if (repetitions >= repetitionAttempts) {
+            if (repetitions >= transaction.repetitionAttempts) {
                 throw e
             }
             // set delay value with an exponential backoff time period
             val repetitionDelay = when {
-                minRepetitionDelay < maxRepetitionDelay -> {
+                transaction.minRepetitionDelay < transaction.maxRepetitionDelay -> {
                     intermediateDelay += retryInterval * repetitions
                     ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                 }
-                minRepetitionDelay == maxRepetitionDelay -> minRepetitionDelay
+                transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
                 else -> 0
             }
             exposedLogger.warn("Wait $repetitionDelay milliseconds before retrying")
