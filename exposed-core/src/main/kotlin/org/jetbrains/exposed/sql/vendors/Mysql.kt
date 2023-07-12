@@ -327,6 +327,16 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         }
     }
 
+    override fun createIndex(index: Index): String {
+        if (index.functions != null && !isMysql8) {
+            exposedLogger.warn(
+                "Functional index on ${index.table.tableName} using ${index.functions.joinToString { it.toString() }} can't be created in MySQL prior to 8.0"
+            )
+            return ""
+        }
+        return super.createIndex(index)
+    }
+
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String =
         "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
 

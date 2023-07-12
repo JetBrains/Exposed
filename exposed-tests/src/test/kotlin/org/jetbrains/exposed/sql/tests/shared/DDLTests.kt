@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -392,6 +393,52 @@ class DDLTests : DatabaseTestsBase() {
                 assertEquals("CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
             else
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
+        }
+    }
+
+    @Test
+    fun testIndexWithFunctions() {
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+            val price = integer("price")
+            val item = varchar("item", 32).nullable()
+
+            init {
+                index(customIndexName = "tester_plus_index", isUnique = false, functions = listOf(amount.plus(price)))
+                index(isUnique = false, functions = listOf(item.lowerCase()))
+                uniqueIndex(columns = arrayOf(price), functions = listOf(Coalesce(item, stringLiteral("*"))))
+            }
+        }
+
+        withDb { testDb ->
+            val tableProperName = tester.tableName.inProperCase()
+            val priceColumnName = tester.price.nameInDatabaseCase()
+            val uniqueIndexName =  "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
+            val (p1, p2) = if (testDb == TestDB.MYSQL) "(" to ")" else "" to ""
+            val functionStrings = when (testDb) {
+                TestDB.SQLITE, TestDB.ORACLE -> listOf("(amount + price)", "LOWER(item)", "COALESCE(item, '*')").map(String::inProperCase)
+                else -> listOf(
+                    tester.amount.plus(tester.price).toString(),
+                    "$p1${tester.item.lowerCase()}$p2",
+                    "$p1${Coalesce(tester.item, stringLiteral("*"))}$p2"
+                )
+            }
+
+            val functionsNotSupported = testDb in (TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.MARIADB) || isOldMySql()
+            val expectedStatements = if (functionsNotSupported) {
+                List(3) { "" }
+            } else {
+                listOf(
+                    "CREATE INDEX tester_plus_index ON $tableProperName (${functionStrings[0]})",
+                    "CREATE INDEX ${"tester_lower".inProperCase()} ON $tableProperName (${functionStrings[1]})",
+                    "CREATE UNIQUE INDEX $uniqueIndexName ON $tableProperName ($priceColumnName, ${functionStrings[2]})"
+                )
+            }
+
+            repeat(3) { i ->
+                val actualStatement = SchemaUtils.createIndex(tester.indices[i])
+                assertEquals(expectedStatements[i], actualStatement)
+            }
         }
     }
 

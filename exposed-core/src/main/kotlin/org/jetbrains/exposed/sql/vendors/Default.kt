@@ -1161,6 +1161,16 @@ abstract class VendorDialect(
         } ?: ""
     }
 
+    private fun indexFunctionToString(function: Function<*>): String {
+        val baseString = function.toString()
+        return when (currentDialect) {
+            // SQLite & Oracle do not support "." operator (with table prefix) in index expressions
+            is SQLiteDialect, is OracleDialect -> baseString.replace(Regex("""^*[^( ]*\."""), "")
+            is MysqlDialect -> if (baseString.first() != '(') "($baseString)" else baseString
+            else -> baseString
+        }
+    }
+
     /**
      * Uniqueness might be required for foreign key constraints.
      *
@@ -1172,29 +1182,38 @@ abstract class VendorDialect(
         val t = TransactionManager.current()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
-        val columnsList = index.columns.joinToString(prefix = "(", postfix = ")") { t.identity(it) }
-
+        val keyFields = index.columns.plus(index.functions ?: emptyList())
+        val fieldsList = keyFields.joinToString(prefix = "(", postfix = ")") {
+            when (it) {
+                is Column<*> -> t.identity(it)
+                is Function<*> -> indexFunctionToString(it)
+                else -> {
+                    exposedLogger.warn("Unexpected defining key field will be passed as String: $it")
+                    it.toString()
+                }
+            }
+        }
+        val includesOnlyColumns = index.functions?.isEmpty() != false
         val maybeFilterCondition = filterCondition(index) ?: return ""
 
         return when {
             // unique and no filter -> constraint, the type is not supported
-            index.unique && maybeFilterCondition.isEmpty() -> {
-                "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $columnsList"
+            index.unique && maybeFilterCondition.isEmpty() && includesOnlyColumns -> {
+                "ALTER TABLE $quotedTableName ADD CONSTRAINT $quotedIndexName UNIQUE $fieldsList"
             }
             // unique and filter -> index only, the type is not supported
             index.unique -> {
-                "CREATE UNIQUE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
+                "CREATE UNIQUE INDEX $quotedIndexName ON $quotedTableName $fieldsList$maybeFilterCondition"
             }
             // type -> can't be unique or constraint
             index.indexType != null -> {
                 createIndexWithType(
                     name = quotedIndexName, table = quotedTableName,
-                    columns = columnsList, type = index.indexType, filterCondition = maybeFilterCondition
+                    columns = fieldsList, type = index.indexType, filterCondition = maybeFilterCondition
                 )
             }
-            // any other indexes. May be can be merged with `createIndexWithType`
             else -> {
-                "CREATE INDEX $quotedIndexName ON $quotedTableName $columnsList$maybeFilterCondition"
+                "CREATE INDEX $quotedIndexName ON $quotedTableName $fieldsList$maybeFilterCondition"
             }
         }
     }

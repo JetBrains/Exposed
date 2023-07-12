@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -232,6 +233,33 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
             val actualIndexCount = currentDialectTest.existingIndices(tester)[tester].orEmpty().size
             assertEquals(expectedIndexCount, actualIndexCount)
+        }
+    }
+
+    @Test
+    fun testCreateAndDropFunctionalIndex() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+            val price = integer("price")
+            val item = varchar("item", 32).nullable()
+
+            init {
+                index(customIndexName = "tester_plus_index", isUnique = false, functions = listOf(amount.plus(price)))
+                index(isUnique = false, functions = listOf(item.lowerCase()))
+                uniqueIndex(columns = arrayOf(price), functions = listOf(Coalesce(item, stringLiteral("*"))))
+            }
+        }
+
+        val functionsNotSupported = TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.MARIADB
+        withTables(excludeSettings = functionsNotSupported, tester) {
+            if (!isOldMySql()) {
+                SchemaUtils.createMissingTablesAndColumns()
+                assertTrue(tester.exists())
+                assertEquals(3, tester.indices.size)
+
+                val dropStatements = tester.indices.map { it.dropStatement().first() }
+                expect(Unit) { execInBatch(dropStatements) }
+            }
         }
     }
 }

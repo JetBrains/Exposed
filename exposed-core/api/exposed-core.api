@@ -1106,21 +1106,25 @@ public final class org/jetbrains/exposed/sql/InSubQueryOp : org/jetbrains/expose
 }
 
 public final class org/jetbrains/exposed/sql/Index : org/jetbrains/exposed/sql/DdlAware {
-	public fun <init> (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;)V
-	public synthetic fun <init> (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;Ljava/util/List;Lorg/jetbrains/exposed/sql/Table;)V
+	public synthetic fun <init> (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;Ljava/util/List;Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/List;
 	public final fun component2 ()Z
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Lorg/jetbrains/exposed/sql/Op;
-	public final fun copy (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Index;
-	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/Index;Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Index;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Lorg/jetbrains/exposed/sql/Table;
+	public final fun copy (Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;Ljava/util/List;Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Index;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/Index;Ljava/util/List;ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Op;Ljava/util/List;Lorg/jetbrains/exposed/sql/Table;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Index;
 	public fun createStatement ()Ljava/util/List;
 	public fun dropStatement ()Ljava/util/List;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getColumns ()Ljava/util/List;
 	public final fun getCustomName ()Ljava/lang/String;
 	public final fun getFilterCondition ()Lorg/jetbrains/exposed/sql/Op;
+	public final fun getFunctions ()Ljava/util/List;
+	public final fun getFunctionsTable ()Lorg/jetbrains/exposed/sql/Table;
 	public final fun getIndexName ()Ljava/lang/String;
 	public final fun getIndexType ()Ljava/lang/String;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
@@ -2291,10 +2295,10 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
 	public fun getTableName ()Ljava/lang/String;
 	public fun hashCode ()I
-	public final fun index (Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun index (Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public final fun index (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public final fun index (Z[Lorg/jetbrains/exposed/sql/Column;)V
-	public static synthetic fun index$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun index$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public static synthetic fun index$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun index$default (Lorg/jetbrains/exposed/sql/Table;Z[Lorg/jetbrains/exposed/sql/Column;ILjava/lang/Object;)V
 	public fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
@@ -2339,10 +2343,10 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun ubyte (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun uinteger (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun ulong (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
-	public final fun uniqueIndex (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;)V
+	public final fun uniqueIndex (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public final fun uniqueIndex (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun uniqueIndex ([Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun uniqueIndex$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun uniqueIndex$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public static synthetic fun uniqueIndex$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun uniqueIndex$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun ushort (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
@@ -3524,6 +3528,7 @@ public final class org/jetbrains/exposed/sql/vendors/KeywordsKt {
 public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbrains/exposed/sql/vendors/MysqlDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion;
 	public fun <init> ()V
+	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;
 	public fun getName ()Ljava/lang/String;
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
@@ -3535,6 +3540,7 @@ public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion : 
 public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/exposed/sql/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/MysqlDialect$Companion;
 	public fun <init> ()V
+	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
@@ -3557,6 +3563,7 @@ public class org/jetbrains/exposed/sql/vendors/OracleDialect : org/jetbrains/exp
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
+	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
@@ -3605,6 +3612,7 @@ public class org/jetbrains/exposed/sql/vendors/SQLServerDialect : org/jetbrains/
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/SQLServerDialect$Companion;
 	public fun <init> ()V
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
+	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	protected fun createIndexWithType (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;

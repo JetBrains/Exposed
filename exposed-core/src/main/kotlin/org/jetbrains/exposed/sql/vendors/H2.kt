@@ -244,6 +244,12 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             )
             return ""
         }
+        if (index.functions != null) {
+            exposedLogger.warn(
+                "Functional index on ${index.table.tableName} using ${index.functions.joinToString { it.toString() }} can't be created in H2"
+            )
+            return ""
+        }
         return super.createIndex(index)
     }
 
