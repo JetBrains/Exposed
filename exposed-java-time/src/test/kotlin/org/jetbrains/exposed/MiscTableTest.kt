@@ -1,3 +1,5 @@
+@file:Suppress("MaximumLineLength")
+
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
@@ -1240,7 +1242,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 exec("INSERT IGNORE INTO `zerodatetimetable` (dt1,dt2,ts1,ts2) VALUES ('0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00');")
                 val row = ZeroDateTimeTable.selectAll().first()
 
-                for (c in listOf(ZeroDateTimeTable.dt1, ZeroDateTimeTable.dt2, ZeroDateTimeTable.ts1, ZeroDateTimeTable.ts2)) {
+                listOf(ZeroDateTimeTable.dt1, ZeroDateTimeTable.dt2, ZeroDateTimeTable.ts1, ZeroDateTimeTable.ts2).forEach { c ->
                     val actual = row[c]
                     assertNull(actual, "$c expected null but was $actual")
                 }
