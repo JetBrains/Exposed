@@ -338,7 +338,8 @@ private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
         // accurate to 100 nanoseconds
         is SQLServerDialect -> assertEquals(roundTo100Nanos(nano1), roundTo100Nanos(nano2), "Failed on 1/10th microseconds ${currentDialectTest.name}")
         // microseconds
-        is H2Dialect, is MariaDBDialect, is PostgreSQLDialect, is PostgreSQLNGDialect -> assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds ${currentDialectTest.name}")
+        is H2Dialect, is MariaDBDialect, is PostgreSQLDialect, is PostgreSQLNGDialect ->
+            assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds ${currentDialectTest.name}")
         is MysqlDialect ->
             if ((currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == true) {
                 // this should be uncommented, but mysql has different microseconds between save & read
