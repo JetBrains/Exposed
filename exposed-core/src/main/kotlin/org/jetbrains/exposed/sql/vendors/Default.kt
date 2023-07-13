@@ -936,7 +936,7 @@ interface DatabaseDialect {
     fun createIndex(index: Index): String
 
     /** Returns the SQL command that drops the specified [indexName] from the specified [tableName]. */
-    fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String
+    fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String
 
     /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
@@ -1187,6 +1187,8 @@ abstract class VendorDialect(
             when (it) {
                 is Column<*> -> t.identity(it)
                 is Function<*> -> indexFunctionToString(it)
+                // returned by existingIndices() mapping String metadata to stringLiteral()
+                is LiteralOp<*> -> it.value.toString().trim('"')
                 else -> {
                     exposedLogger.warn("Unexpected defining key field will be passed as String: $it")
                     it.toString()
@@ -1222,7 +1224,7 @@ abstract class VendorDialect(
         return "CREATE INDEX $name ON $table $columns USING $type$filterCondition"
     }
 
-    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
         return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
     }
 

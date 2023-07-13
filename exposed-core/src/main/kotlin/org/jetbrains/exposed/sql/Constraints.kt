@@ -281,7 +281,9 @@ data class Index(
 
     override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
-    override fun dropStatement(): List<String> = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName, unique, filterCondition != null))
+    override fun dropStatement(): List<String> = listOf(
+        currentDialect.dropIndex(table.nameInDatabaseCase(), indexName, unique, filterCondition != null || functions != null)
+    )
 
     /** Returns `true` if the [other] index has the same columns and uniqueness as this index, but a different name, `false` otherwise */
     fun onlyNameDiffer(other: Index): Boolean = indexName != other.indexName && columns == other.columns && unique == other.unique

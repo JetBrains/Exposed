@@ -204,19 +204,35 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
 
                 while (rs.next()) {
-                    rs.getString("INDEX_NAME")?.let {
-                        val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(rs.getString("COLUMN_NAME")!!)
-                        val isUnique = !rs.getBoolean("NON_UNIQUE")
-                        val isPartial = if (rs.getString("FILTER_CONDITION").isNullOrEmpty()) null else Op.TRUE
-                        tmpIndices.getOrPut(Triple(it, isUnique, isPartial)) { arrayListOf() }.add(column)
+                    rs.getString("INDEX_NAME")?.let { indexName ->
+                        // if index is function-based, SQLite & MySQL return null column_name metadata
+                        val columnNameMetadata = rs.getString("COLUMN_NAME") ?: when (currentDialect) {
+                            is MysqlDialect, is SQLiteDialect -> "\"\""
+                            else -> null
+                        }
+                        columnNameMetadata?.let { columnName ->
+                            val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(columnName)
+                            val isUnique = !rs.getBoolean("NON_UNIQUE")
+                            val isPartial = if (rs.getString("FILTER_CONDITION").isNullOrEmpty()) null else Op.TRUE
+                            tmpIndices.getOrPut(Triple(indexName, isUnique, isPartial)) { arrayListOf() }.add(column)
+                        }
                     }
                 }
                 rs.close()
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
                 tmpIndices.filterNot { it.key.first in pkNames }
                     .mapNotNull { (index, columns) ->
-                        columns.distinct().mapNotNull { cn -> tColumns[cn] }.takeIf { c -> c.size == columns.size }
-                            ?.let { c -> Index(c, index.second, index.first, filterCondition = index.third) }
+                        val (functionBased, columnBased) = columns.distinct().partition { cn -> tColumns[cn] == null }
+                        columnBased.map { cn -> tColumns[cn]!! }
+                            .takeIf { c -> c.size + functionBased.size == columns.size }
+                            ?.let { c ->
+                                Index(
+                                    c, index.second, index.first,
+                                    filterCondition = index.third,
+                                    functions = functionBased.map { stringLiteral(it) }.ifEmpty { null },
+                                    functionsTable = if (functionBased.isNotEmpty()) table else null
+                                )
+                            }
                     }
             }
         }

@@ -276,8 +276,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return "CREATE $type INDEX $name ON $table $columns$filterCondition"
     }
 
-    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
-        return if (isUnique && !isPartial) {
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
+        return if (isUnique && !isPartialOrFunctional) {
             "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
             "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"

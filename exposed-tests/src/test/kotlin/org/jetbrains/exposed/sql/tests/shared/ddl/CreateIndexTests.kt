@@ -135,11 +135,6 @@ class CreateIndexTests : DatabaseTestsBase() {
                 kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
             }
 
-            fun getIndices(): List<Index> {
-                db.dialect.resetCaches()
-                return currentDialect.existingIndices(partialIndexTable)[partialIndexTable].orEmpty()
-            }
-
             val dropIndex = Index(columns = listOf(partialIndexTable.value, partialIndexTable.name), unique = false).dropStatement().first()
             kotlin.test.assertTrue(dropIndex.startsWith("DROP INDEX "), "Unique partial index must be created and dropped as index")
             val dropUniqueConstraint = Index(columns = listOf(partialIndexTable.anotherValue), unique = true).dropStatement().first()
@@ -147,7 +142,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
-            assertEquals(getIndices().size, 1)
+            assertEquals(getIndices(partialIndexTable).size, 1)
             SchemaUtils.drop(partialIndexTable)
         }
     }
@@ -180,19 +175,14 @@ class CreateIndexTests : DatabaseTestsBase() {
 
             assertEquals(2, tester.indices.count { it.filterCondition != null })
 
-            fun getIndices(): List<Index> {
-                db.dialect.resetCaches()
-                return currentDialect.existingIndices(tester)[tester].orEmpty()
-            }
-
-            var indices = getIndices()
+            var indices = getIndices(tester)
             assertEquals(3, indices.size)
 
             val uniqueWithPartial = Index(listOf(tester.team), true, "team_only_index", null, Op.TRUE).dropStatement().first()
             val dropStatements = indices.map { it.dropStatement().first() }
             expect(Unit) { execInBatch(dropStatements + uniqueWithPartial) }
 
-            indices = getIndices()
+            indices = getIndices(tester)
             assertEquals(0, indices.size)
 
             // test for non-unique partial index with type
@@ -255,11 +245,21 @@ class CreateIndexTests : DatabaseTestsBase() {
             if (!isOldMySql()) {
                 SchemaUtils.createMissingTablesAndColumns()
                 assertTrue(tester.exists())
-                assertEquals(3, tester.indices.size)
 
-                val dropStatements = tester.indices.map { it.dropStatement().first() }
+                var indices = getIndices(tester)
+                assertEquals(3, indices.size)
+
+                val dropStatements = indices.map { it.dropStatement().first() }
                 expect(Unit) { execInBatch(dropStatements) }
+
+                indices = getIndices(tester)
+                assertEquals(0, indices.size)
             }
         }
+    }
+
+    private fun Transaction.getIndices(table: Table): List<Index> {
+        db.dialect.resetCaches()
+        return currentDialect.existingIndices(table)[table].orEmpty()
     }
 }

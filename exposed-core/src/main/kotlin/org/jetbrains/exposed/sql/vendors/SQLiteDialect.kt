@@ -266,7 +266,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
         }
     }
 
-    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartial: Boolean): String {
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
         return "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
     }
 
