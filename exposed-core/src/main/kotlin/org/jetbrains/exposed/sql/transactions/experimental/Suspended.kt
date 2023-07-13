@@ -159,27 +159,30 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
     statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
-    var transaction = tx.value
     var repetitions = 0
-    var intermediateDelay = transaction.minRepetitionDelay
-    val retryInterval = if (transaction.repetitionAttempts > 0) {
-        maxOf((transaction.maxRepetitionDelay - transaction.minRepetitionDelay) / (transaction.repetitionAttempts + 1), 1)
-    } else 0
+    var intermediateDelay: Long = 0
+    var retryInterval: Long? = null
 
     var answer: T
     while (true) {
-        transaction = transaction.resetIfClosed()
+        val transaction = tx.value.resetIfClosed()
+
         @Suppress("TooGenericExceptionCaught")
         try {
             answer = transaction.statement().apply {
                 if (shouldCommit) transaction.commit()
             }
             break
-        } catch (e: SQLException) {
-            handleSQLException(e, transaction, repetitions)
+        } catch (cause: SQLException) {
+            handleSQLException(cause, transaction, repetitions)
             repetitions++
             if (repetitions >= transaction.repetitionAttempts) {
-                throw e
+                throw cause
+            }
+
+            if (retryInterval == null) {
+                retryInterval = transaction.getRetryInterval()
+                intermediateDelay = transaction.minRepetitionDelay
             }
             // set delay value with an exponential backoff time period
             val repetitionDelay = when {
@@ -193,15 +196,15 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
             exposedLogger.warn("Wait $repetitionDelay milliseconds before retrying")
             try {
                 delay(repetitionDelay)
-            } catch (e: InterruptedException) {
+            } catch (cause: InterruptedException) {
                 // Do nothing
             }
-        } catch (e: Throwable) {
+        } catch (cause: Throwable) {
             val currentStatement = transaction.currentStatement
             transaction.rollbackLoggingException {
                 exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it)
             }
-            throw e
+            throw cause
         } finally {
             if (shouldCommit) transaction.closeAsync()
         }
