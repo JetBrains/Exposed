@@ -8,9 +8,13 @@
     </component>
 
     <component name="DetektPluginSettings">
-        <enableDetekt>true</enableDetekt>
-        <enableFormatting>true</enableFormatting>
-        <buildUponDefaultConfig>true</buildUponDefaultConfig>
-        <configPaths>$PROJECT_DIR$/detekt.yml</configPaths>
+        <option name="enableDetekt" value="true"/>
+        <option name="enableFormatting" value="true"/>
+        <option name="buildUponDefaultConfig" value="true"/>
+        <option name="configurationFiles">
+            <list>
+                <option value="$PROJECT_DIR$/detekt.yml"/>
+            </list>
+        </option>
     </component>
 </project>
