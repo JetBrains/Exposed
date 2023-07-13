@@ -1,3 +1,5 @@
+@file:Suppress("PackageNaming", "InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.`jdbc-template`
 
 import org.jetbrains.exposed.sql.SchemaUtils
