@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
@@ -761,6 +762,9 @@ fun stringParam(value: String): Expression<String> = QueryParameter(value, TextC
 
 /** Returns the specified [value] as a decimal query parameter. */
 fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
+
+/** Returns the specified [value] as a blob query parameter. */
+fun blobParam(value: ExposedBlob): Expression<ExposedBlob> = QueryParameter(value, BlobColumnType())
 
 // Misc.
 
