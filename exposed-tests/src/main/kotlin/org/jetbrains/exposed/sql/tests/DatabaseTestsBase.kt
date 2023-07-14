@@ -84,7 +84,8 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
-            transaction(Connection.TRANSACTION_READ_COMMITTED, 1, db  = tmp) {
+            transaction(Connection.TRANSACTION_READ_COMMITTED, db  = tmp) {
+                repetitionAttempts = 1
                 try {
                     exec("DROP USER ExposedTest CASCADE")
                 } catch (e: Exception) { // ignore
@@ -205,7 +206,8 @@ abstract class DatabaseTestsBase {
 
         val database = dbSettings.db!!
         try {
-            transaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+            transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                repetitionAttempts = 1
                 registerInterceptor(CurrentTestDBInterceptor)
                 currentTestDB = dbSettings
                 statement(dbSettings)
@@ -246,7 +248,8 @@ abstract class DatabaseTestsBase {
                         commit()
                     } catch (_: Exception) {
                         val database = testDB.db!!
-                        inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, 1, db = database) {
+                        inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                            repetitionAttempts = 1
                             SchemaUtils.drop(*tables)
                         }
                     }

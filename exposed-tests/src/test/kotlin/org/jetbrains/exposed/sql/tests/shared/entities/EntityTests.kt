@@ -622,16 +622,18 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-        inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, false, null, null, 0, 0, statement)
+        inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, false, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
             val human1 = newTransaction {
+                repetitionAttempts = 1
                 Human.new {
                     this.h = "foo"
                 }
             }
             newTransaction {
+                repetitionAttempts = 1
                 assertEquals(null, Human.testCache(human1.id))
                 assertEquals("foo", Humans.selectAll().single()[Humans.h])
                 human1.h = "bar"
@@ -640,6 +642,7 @@ class EntityTests : DatabaseTestsBase() {
             }
 
             newTransaction {
+                repetitionAttempts = 1
                 assertEquals("bar", Humans.selectAll().single()[Humans.h])
             }
         }
@@ -779,7 +782,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 School.all().with(School::region)
                 assertNotNull(School.testCache(school1.id))
                 assertNotNull(School.testCache(school2.id))
@@ -807,7 +810,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.find {
                     Schools.id eq school1.id
                 }.first().load(School::region)
@@ -848,7 +852,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::region, School::secondaryRegion)
                 assertNotNull(School.testCache(school1.id))
                 assertNotNull(School.testCache(school2.id))
@@ -879,7 +884,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val school2 = School.find {
                     Schools.id eq school1.id
                 }.first().load(School::secondaryRegion)
@@ -939,7 +945,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
                 School.all().with(School::students)
@@ -980,7 +987,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
                 School.find { Schools.id eq school1.id }.first().load(School::students)
@@ -1025,7 +1033,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::students, Student::detentions)
                 val cache = TransactionManager.current().entityCache
 
@@ -1088,7 +1097,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::holidays)
                 val cache = TransactionManager.current().entityCache
 
@@ -1236,7 +1246,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 Student.all().with(Student::bio)
                 val cache = TransactionManager.current().entityCache
 
@@ -1280,7 +1291,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 Student.all().first().load(Student::bio)
                 val cache = TransactionManager.current().entityCache
 

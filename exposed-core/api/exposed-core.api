@@ -2417,8 +2417,11 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getDebug ()Z
 	public final fun getDuration ()J
 	public final fun getId ()Ljava/lang/String;
+	public final fun getMaxRepetitionDelay ()J
+	public final fun getMinRepetitionDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun getReadOnly ()Z
+	public final fun getRepetitionAttempts ()I
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
 	public final fun getStatements ()Ljava/lang/StringBuilder;
@@ -2431,6 +2434,9 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setCurrentStatement (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public final fun setDebug (Z)V
 	public final fun setDuration (J)V
+	public final fun setMaxRepetitionDelay (J)V
+	public final fun setMinRepetitionDelay (J)V
+	public final fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
 	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;)Z
@@ -3117,11 +3123,11 @@ public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransaction
 }
 
 public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManagerKt {
-	public static final fun inTopLevelTransaction (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;JJLkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun inTopLevelTransaction$default (IIZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;JJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun transaction (IIZLorg/jetbrains/exposed/sql/Database;JJLkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun inTopLevelTransaction (IZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun inTopLevelTransaction$default (IZLorg/jetbrains/exposed/sql/Database;Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun transaction (IZLorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun transaction (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static synthetic fun transaction$default (IIZLorg/jetbrains/exposed/sql/Database;JJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun transaction$default (IZLorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun transaction$default (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
@@ -3192,10 +3198,10 @@ public final class org/jetbrains/exposed/sql/transactions/TransactionStore : kot
 public final class org/jetbrains/exposed/sql/transactions/experimental/SuspendedKt {
 	public static final fun newSuspendedTransaction (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun newSuspendedTransaction$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun suspendedTransaction (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun suspendedTransaction$default (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun suspendedTransactionAsync (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun suspendedTransactionAsync$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/sql/Database;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun withSuspendTransaction (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun withSuspendTransaction$default (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ColumnMetadata {

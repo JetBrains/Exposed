@@ -56,7 +56,8 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         val db = Database.connect(datasource = datasource)
 
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 42, db = db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                repetitionAttempts = 42
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -64,6 +65,37 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         } catch (e: ExposedSQLException) {
             assertTrue(e.cause is GetConnectException)
             assertEquals(42, datasource.connectCount)
+        }
+    }
+
+    @Test
+    fun testTransactionRepetitionWithDefaults() {
+        val datasource = ExceptionOnGetConnectionDataSource()
+        val db = Database.connect(datasource = datasource, databaseConfig = DatabaseConfig {
+            defaultRepetitionAttempts = 10
+        })
+
+        try {
+            // transaction block should use default DatabaseConfig values when no property is set
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                exec("SELECT 1;")
+            }
+            fail("Should have thrown ${GetConnectException::class.simpleName}")
+        } catch (cause: ExposedSQLException) {
+            assertEquals(10, datasource.connectCount)
+        }
+
+        datasource.connectCount = 0  // reset connection count
+
+        try {
+            // property set in transaction block should override default DatabaseConfig
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                repetitionAttempts = 25
+                exec("SELECT 1;")
+            }
+            fail("Should have thrown ${GetConnectException::class.simpleName}")
+        } catch (cause: ExposedSQLException) {
+            assertEquals(25, datasource.connectCount)
         }
     }
 }
@@ -116,10 +148,11 @@ class ConnectionExceptions {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         Class.forName(TestDB.H2.driver).newInstance()
 
-        val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
+        val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                repetitionAttempts = 5
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -153,7 +186,8 @@ class ConnectionExceptions {
         val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                repetitionAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -174,10 +208,11 @@ class ConnectionExceptions {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
         Class.forName(TestDB.H2.driver).newInstance()
 
-        val wrappingDataSource = ConnectionExceptions.WrappingDataSource(TestDB.H2, connectionDecorator)
+        val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
-            transaction(Connection.TRANSACTION_SERIALIZABLE, 5, db = db) {
+            transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
+                repetitionAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -268,7 +303,8 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         )
         withTables(excludeSettings = excludeSettings, RollbackTable) {
             assertFails {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1, true) {
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, true) {
+                    repetitionAttempts = 1
                     RollbackTable.insert { it[value] = "random-something" }
                 }
             }.message?.run { assertTrue(contains("read-only")) } ?: fail("message should not be null")
@@ -285,7 +321,8 @@ class RollbackTransactionTest : DatabaseTestsBase() {
     @Test
     fun testRollbackWithoutSavepoints() {
         withTables(RollbackTable) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+                repetitionAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
                 transaction {
                     assertEquals(1L, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
@@ -308,7 +345,8 @@ class RollbackTransactionTest : DatabaseTestsBase() {
         withTables(RollbackTable) {
             try {
                 db.useNestedTransactions = true
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, 1) {
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+                    repetitionAttempts = 1
                     RollbackTable.insert { it[value] = "before-dummy" }
                     transaction {
                         assertEquals(1L, RollbackTable.select { RollbackTable.value eq "before-dummy" }.count())
@@ -335,7 +373,8 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun `test what transaction isolation was applied`() {
         withDb {
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 assertEquals(Connection.TRANSACTION_SERIALIZABLE, this.connection.transactionIsolation)
             }
         }

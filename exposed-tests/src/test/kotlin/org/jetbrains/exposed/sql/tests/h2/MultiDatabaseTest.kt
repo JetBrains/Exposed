@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.After
@@ -192,7 +192,7 @@ class MultiDatabaseTest {
                 assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
 
-                tr1.suspendedTransaction {
+                tr1.withSuspendTransaction {
                     assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
                         it[DMLTestsData.Cities.name] = "city4"
