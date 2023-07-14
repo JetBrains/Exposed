@@ -162,4 +162,5 @@ internal inline fun TransactionInterface.closeLoggingException(log: (Exception) 
 }
 
 val Database?.transactionManager: TransactionManager
-    get() = TransactionManager.managerFor(this) ?: throw RuntimeException("database $this don't have any transaction manager")
+    get() = TransactionManager.managerFor(this)
+        ?: throw RuntimeException("database $this don't have any transaction manager")

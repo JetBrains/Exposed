@@ -102,9 +102,7 @@ class ThreadLocalTransactionManager(
             get() = connectionLazy.value
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
-        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
-            connection.setSavepoint(savepointName)
-        } else null
+        private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
 
         override fun commit() {
             if (connectionLazy.isInitialized()) {
@@ -216,7 +214,6 @@ fun <T> inTopLevelTransaction(
     outerTransaction: Transaction? = null,
     statement: Transaction.() -> T
 ): T {
-
     fun run(): T {
         var repetitions = 0
 
@@ -259,7 +256,7 @@ fun <T> inTopLevelTransaction(
                 try {
                     Thread.sleep(delay)
                 } catch (cause: InterruptedException) {
-                  // Do nothing
+                    // Do nothing
                 }
             } catch (cause: Throwable) {
                 val currentStatement = transaction.currentStatement
@@ -302,7 +299,9 @@ internal fun handleSQLException(cause: SQLException, transaction: Transaction, r
         }
     }
     exposedLogger.warn(message, cause)
-    transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
+    transaction.rollbackLoggingException {
+        exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+    }
 }
 
 internal fun closeStatementsAndConnection(transaction: Transaction) {
@@ -317,5 +316,7 @@ internal fun closeStatementsAndConnection(transaction: Transaction) {
     } catch (cause: Exception) {
         exposedLogger.warn("Statements close failed", cause)
     }
-    transaction.closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
+    transaction.closeLoggingException {
+        exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
+    }
 }

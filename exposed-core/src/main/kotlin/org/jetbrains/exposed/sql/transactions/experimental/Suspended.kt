@@ -20,12 +20,16 @@ import kotlin.coroutines.coroutineContext
 
 internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
 
-internal class TransactionScope(internal val tx: Lazy<Transaction>, parent: CoroutineContext) : CoroutineScope, CoroutineContext.Element {
+internal class TransactionScope(
+    internal val tx: Lazy<Transaction>,
+    parent: CoroutineContext
+) : CoroutineScope, CoroutineContext.Element {
     private val baseScope = CoroutineScope(parent)
     override val coroutineContext get() = baseScope.coroutineContext + this
     override val key = Companion
 
-    internal fun holdsSameTransaction(transaction: Transaction?) = transaction != null && tx.isInitialized() && tx.value == transaction
+    internal fun holdsSameTransaction(transaction: Transaction?) =
+        transaction != null && tx.isInitialized() && tx.value == transaction
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
@@ -73,7 +77,10 @@ suspend fun <T> newSuspendedTransaction(
  * The resulting `TransactionScope` is derived from the current `coroutineContext` if the latter already holds [this] `Transaction`;
  * otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
  */
-suspend fun <T> Transaction.withSuspendTransaction(context: CoroutineContext? = null, statement: suspend Transaction.() -> T): T =
+suspend fun <T> Transaction.withSuspendTransaction(
+    context: CoroutineContext? = null,
+    statement: suspend Transaction.() -> T
+): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null) {
         suspendedTransactionAsyncInternal(false, statement).await()
     }
