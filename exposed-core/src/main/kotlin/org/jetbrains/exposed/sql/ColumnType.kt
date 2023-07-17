@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.*
-import org.postgresql.util.PGobject
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -924,67 +923,6 @@ class CustomEnumerationColumnType<T : Enum<T>>(
     override fun notNullValueToDB(value: Any): Any = toDb(value as T)
 
     override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
-}
-
-// JSON columns
-
-/**
- * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
- */
-open class JsonColumnType<T : Any>(
-    /** Returns the function that encodes an object of type [T] to a JSON String. */
-    val serialize: (T) -> String,
-    /** Returns the function that decodes a JSON String to an object of type [T]. */
-    val deserialize: (String) -> T
-) : ColumnType() {
-    override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
-
-    override fun valueFromDB(value: Any): Any {
-        return when (value) {
-            is String -> deserialize(value)
-            is PGobject -> deserialize(value.value!!)
-            is ByteArray -> deserialize(value.decodeToString())
-            else -> value
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun notNullValueToDB(value: Any) = serialize(value as T)
-
-    override fun nonNullValueToString(value: Any): String {
-        return when (currentDialect) {
-            is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
-            else -> super.nonNullValueToString(value)
-        }
-    }
-
-    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val parameterValue = when (currentDialect) {
-            is PostgreSQLDialect -> PGobject().apply {
-                type = sqlType()
-                this.value = value as String?
-            }
-            is H2Dialect -> (value as String).encodeToByteArray()
-            else -> value
-        }
-        super.setParameter(stmt, index, parameterValue)
-    }
-}
-
-/**
- * Column for storing JSON data in binary format.
- *
- * @param serialize Function that encodes an object of type [T] to a JSON String
- * @param deserialize Function that decodes a JSON String to an object of type [T]
- */
-class JsonBColumnType<T : Any>(
-    serialize: (T) -> String,
-    deserialize: (String) -> T
-) : JsonColumnType<T>(serialize, deserialize) {
-    override fun sqlType(): String = when (currentDialect) {
-        is H2Dialect -> H2DataTypeProvider.jsonBType()
-        else -> currentDialect.dataTypeProvider.jsonBType()
-    }
 }
 
 // Date/Time columns

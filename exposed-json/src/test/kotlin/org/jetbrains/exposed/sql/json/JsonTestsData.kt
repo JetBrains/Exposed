@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared.types
+package org.jetbrains.exposed.sql.json
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -47,7 +47,7 @@ object JsonTestsData {
 
 fun DatabaseTestsBase.withJsonTable(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder) -> Unit
+    statement: Transaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonTable
 
@@ -60,7 +60,7 @@ fun DatabaseTestsBase.withJsonTable(
 
             tester.insert { it[jsonColumn] = data1 }
 
-            statement(tester, user1, data1)
+            statement(tester, user1, data1, testDb)
 
             SchemaUtils.drop(tester)
         }
@@ -69,7 +69,7 @@ fun DatabaseTestsBase.withJsonTable(
 
 fun DatabaseTestsBase.withJsonBTable(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonBTable, user1: User, data1: DataHolder) -> Unit
+    statement: Transaction.(tester: JsonTestsData.JsonBTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonBTable
 
@@ -82,7 +82,7 @@ fun DatabaseTestsBase.withJsonBTable(
 
             tester.insert { it[jsonBColumn] = data1 }
 
-            statement(tester, user1, data1)
+            statement(tester, user1, data1, testDb)
 
             SchemaUtils.drop(tester)
         }
@@ -91,7 +91,12 @@ fun DatabaseTestsBase.withJsonBTable(
 
 fun DatabaseTestsBase.withJsonArrays(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonArrays, singleId: EntityID<Int>, tripleId: EntityID<Int>) -> Unit
+    statement: Transaction.(
+        tester: JsonTestsData.JsonArrays,
+        singleId: EntityID<Int>,
+        tripleId: EntityID<Int>,
+        testDb: TestDB
+    ) -> Unit
 ) {
     val tester = JsonTestsData.JsonArrays
 
@@ -108,7 +113,7 @@ fun DatabaseTestsBase.withJsonArrays(
                 it[tester.numbers] = intArrayOf(3, 4, 5)
             }
 
-            statement(tester, singleId, tripleId)
+            statement(tester, singleId, tripleId, testDb)
 
             SchemaUtils.drop(tester)
         }
@@ -117,7 +122,12 @@ fun DatabaseTestsBase.withJsonArrays(
 
 fun DatabaseTestsBase.withJsonBArrays(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonBArrays, singleId: EntityID<Int>, tripleId: EntityID<Int>) -> Unit
+    statement: Transaction.(
+        tester: JsonTestsData.JsonBArrays,
+        singleId: EntityID<Int>,
+        tripleId: EntityID<Int>,
+        testDb: TestDB
+    ) -> Unit
 ) {
     val tester = JsonTestsData.JsonBArrays
 
@@ -134,7 +144,7 @@ fun DatabaseTestsBase.withJsonBArrays(
                 it[tester.numbers] = intArrayOf(3, 4, 5)
             }
 
-            statement(tester, singleId, tripleId)
+            statement(tester, singleId, tripleId, testDb)
 
             SchemaUtils.drop(tester)
         }

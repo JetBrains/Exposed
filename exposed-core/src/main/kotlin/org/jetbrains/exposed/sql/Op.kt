@@ -548,42 +548,6 @@ class RegexpOp<T : String?>(
     }
 }
 
-// JSON Conditions
-
-/**
- * Represents an SQL operator that checks whether a [candidate] expression is contained within a JSON [target].
- */
-class JsonContains(
-    /** Returns the JSON expression being searched. */
-    val target: Expression<*>,
-    /** Returns the expression being searched for in [target]. */
-    val candidate: Expression<*>,
-    /** Returns an optional String representing JSON path/keys that match specific fields to search for [candidate]. */
-    val path: String?,
-    /** Returns the column type of [target] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
-) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
-        currentDialect.functionProvider.jsonContains(target, candidate, path, jsonType, queryBuilder)
-}
-
-/**
- * Represents an SQL operator that checks whether data exists within a JSON [expression] at the specified [path].
- */
-class JsonExists(
-    /** Returns the JSON expression being checked. */
-    val expression: Expression<*>,
-    /** Returns the array of Strings representing JSON path/keys that match fields to check for existing data. */
-    vararg val path: String,
-    /** Returns an optional String representing any vendor-specific clause or argument. */
-    val optional: String?,
-    /** Returns the column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
-) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
-        currentDialect.functionProvider.jsonExists(expression, path = path, optional, jsonType, queryBuilder)
-}
-
 // Subquery Expressions
 
 /**
