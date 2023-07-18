@@ -40,6 +40,7 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
         }
     )
 
+@Suppress("FunctionNaming")
 fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
     CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
         amount = Column(table, amountName, DecimalColumnType(precision, scale)),

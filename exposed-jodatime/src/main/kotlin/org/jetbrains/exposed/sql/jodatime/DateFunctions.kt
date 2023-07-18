@@ -120,8 +120,10 @@ fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value,
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
+@Suppress("FunctionNaming")
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
 
+@Suppress("FunctionNaming")
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
