@@ -52,7 +52,7 @@ open class SpringMultiContainerTransactionTest {
 
     @Test
     open fun test3() {
-        orders.databaseTemplate {
+        orders.transaction {
             payments.create()
             orders.create()
             payments.create()
@@ -64,7 +64,7 @@ open class SpringMultiContainerTransactionTest {
     @Test
     open fun test4() {
         kotlin.runCatching {
-            orders.databaseTemplate {
+            orders.transaction {
                 orders.create()
                 payments.create()
                 throw Error()
@@ -77,7 +77,7 @@ open class SpringMultiContainerTransactionTest {
     @Test
     open fun test5() {
         kotlin.runCatching {
-            orders.databaseTemplate {
+            orders.transaction {
                 orders.create()
                 payments.databaseTemplate {
                     payments.create()
@@ -105,7 +105,7 @@ open class SpringMultiContainerTransactionTest {
 
     @Test
     open fun test8() {
-        orders.databaseTemplate {
+        orders.transaction {
             payments.createWithExposedTrxBlock()
             orders.createWithExposedTrxBlock()
             payments.createWithExposedTrxBlock()
@@ -117,7 +117,7 @@ open class SpringMultiContainerTransactionTest {
     @Test
     open fun test9() {
         kotlin.runCatching {
-            orders.databaseTemplate {
+            orders.transaction {
                 orders.createWithExposedTrxBlock()
                 payments.createWithExposedTrxBlock()
                 throw Error()
@@ -130,7 +130,7 @@ open class SpringMultiContainerTransactionTest {
     @Test
     open fun test10() {
         kotlin.runCatching {
-            orders.databaseTemplate {
+            orders.transaction {
                 orders.createWithExposedTrxBlock()
                 payments.databaseTemplate {
                     payments.createWithExposedTrxBlock()
@@ -162,20 +162,20 @@ open class Orders {
 
     open fun findAll() = Order.selectAll().map { it }
 
-    open fun findAllWithExposedTrxBlock() = transaction { findAll() }
+    open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.sql.transactions.transaction { findAll() }
 
     open fun create() = Order.insertAndGetId {
         it[buyer] = 123
     }.value
 
-    open fun createWithExposedTrxBlock() = transaction { create() }
+    open fun createWithExposedTrxBlock() = org.jetbrains.exposed.sql.transactions.transaction { create() }
 
     open fun init() {
         SchemaUtils.create(Order)
         Order.deleteAll()
     }
 
-    open fun databaseTemplate(block: () -> Unit) {
+    open fun transaction(block: () -> Unit) {
         block()
     }
 }
