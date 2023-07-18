@@ -6,5 +6,5 @@ import org.gradle.kotlin.dsl.getByName
 
 private inline fun <reified T : Any> Project.extByName(name: String): T = extensions.getByName<T>(name)
 
-val Project._dockerCompose
+val Project.dockerCompose
     get() = extByName<ComposeExtension>("dockerCompose")
