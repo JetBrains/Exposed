@@ -1,5 +1,3 @@
-@file:Suppress("UnstableApiUsage")
-
 package org.jetbrains.exposed.gradle
 
 import org.gradle.api.Project

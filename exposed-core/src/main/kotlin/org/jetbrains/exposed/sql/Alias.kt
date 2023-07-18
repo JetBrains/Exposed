@@ -75,7 +75,6 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         query.set.source.columns.find { it == original }?.clone() as? Column<T>
             ?: error("Column not found in original table")
 
-    @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
         val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
         return aliases.find { it == original }?.let {

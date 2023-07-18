@@ -178,7 +178,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         return this.restoreValueFromParts(values)
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun <T, R : Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
         if (_readValues?.hasValue(this) == true) {
             found(readValues[this])

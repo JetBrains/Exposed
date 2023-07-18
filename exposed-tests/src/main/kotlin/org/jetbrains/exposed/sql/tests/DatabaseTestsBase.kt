@@ -172,7 +172,6 @@ private fun runTestContainersMySQL(): Boolean =
 
 internal var currentTestDB by nullableTransactionScope<TestDB>()
 
-@Suppress("UnnecessaryAbstractClass")
 abstract class DatabaseTestsBase {
     init {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))

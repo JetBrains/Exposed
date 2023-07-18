@@ -45,7 +45,6 @@ class ConnectionTests : DatabaseTestsBase() {
 
     // GitHub issue #838
     @Test
-    @Suppress("unused")
     fun testTableConstraints() {
         val parent = object : LongIdTable("parent") {
             val scale = integer("scale").uniqueIndex()

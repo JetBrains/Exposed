@@ -356,7 +356,6 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
-    @Suppress("CAST_NEVER_SUCCEEDS")
     fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T> =
         warmUpReferences(references, refColumn as Column<SID>, forUpdate)
 

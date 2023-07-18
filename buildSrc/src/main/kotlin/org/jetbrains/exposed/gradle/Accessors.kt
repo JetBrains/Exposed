@@ -1,5 +1,3 @@
-@file:Suppress("FunctionName")
-
 package org.jetbrains.exposed.gradle
 
 import com.avast.gradle.dockercompose.ComposeExtension

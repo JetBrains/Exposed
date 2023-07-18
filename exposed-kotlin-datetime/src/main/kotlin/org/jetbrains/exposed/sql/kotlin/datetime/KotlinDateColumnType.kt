@@ -1,5 +1,3 @@
-@file:Suppress("PrivatePropertyName")
-
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*

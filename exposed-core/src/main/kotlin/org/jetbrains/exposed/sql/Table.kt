@@ -866,7 +866,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @see ReferenceOption
      */
-    @Suppress("UNCHECKED_CAST")
     @JvmName("optReferenceByIdColumn")
     fun <T : Comparable<T>, E : EntityID<T>> optReference(
         name: String,
