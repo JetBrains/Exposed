@@ -1,3 +1,5 @@
+@file:Suppress("VariableNaming", "MagicNumber", "UnusedPrivateMember")
+
 package org.jetbrains.exposed.gradle
 
 import org.gradle.api.Plugin
@@ -104,7 +106,7 @@ fun Test.delegatedTo(vararg tasks: TaskProvider<out AbstractTestTask>): Test {
         isFailOnNoMatchingTests = false
     }
     finalizedBy(tasks)
-    //Pass --tests CLI option value into delegates
+    // Pass --tests CLI option value into delegates
     doFirst {
         val testsFilter = (filter as DefaultTestFilter).commandLineIncludePatterns.toList()
         tasks.forEach {

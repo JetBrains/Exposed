@@ -45,4 +45,3 @@ open class DBTest @Inject constructor(@get:Input val dialect: String) : Test() {
             }
         }
 }
-
