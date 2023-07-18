@@ -27,7 +27,7 @@ jobs:
       - name: "changed-files"
         run: |
           git fetch origin main:refs/remotes/origin/main
-          CHANGED_FILES=$(git --no-pager diff --name-only origin/main HEAD -- . ':!exposed-tests' | grep '\(.*.kt\|.*.kts\)$' | tr '\n' , | rev | cut -c 2- | rev)
+          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/main HEAD -- . ':!exposed-tests' | grep '\(.*.kt\|.*.kts\)$' | tr '\n' , | rev | cut -c 2- | rev)
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> "$GITHUB_ENV"
       # Resolves and installs a specific version of detekt on to a GitHub Actions Runner if not already present in the tool cache
