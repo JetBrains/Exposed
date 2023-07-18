@@ -83,7 +83,7 @@ object Algorithms {
 
     private const val TRIPLE_DES_KEY_LENGTH = 24
     private const val TRIPLE_DES_BLOCK_LENGTH = 8
-    @Suppress("FunctionNaming")
+    @Suppress("FunctionNaming", "UseRequire")
     fun TRIPLE_DES(secretKey: CharSequence): Encryptor {
         if (secretKey.toString().toByteArray().size != TRIPLE_DES_KEY_LENGTH) {
             throw IllegalArgumentException("secretKey must have 24 bytes")
