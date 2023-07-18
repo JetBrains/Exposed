@@ -132,7 +132,7 @@ private fun <SRC : Entity<*>> filterRelationsForEntity(
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "NestedBlockDepth")
 private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     vararg relations: KProperty1<out Entity<*>, Any?>,
     nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf()
