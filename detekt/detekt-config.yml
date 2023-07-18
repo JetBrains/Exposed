@@ -43,6 +43,8 @@ complexity:
         thresholdInObjects: 26
     ComplexMethod:
         threshold: 26
+    LongMethod:
+        threshold: 90
 
 naming:
     ConstructorParameterNaming:

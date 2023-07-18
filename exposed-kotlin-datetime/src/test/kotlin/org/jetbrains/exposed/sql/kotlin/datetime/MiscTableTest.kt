@@ -1,5 +1,5 @@
 @file:OptIn(ExperimentalTime::class)
-@file:Suppress("MaximumLineLength")
+@file:Suppress("MaximumLineLength", "LongMethod")
 
 package org.jetbrains.exposed.sql.kotlin.datetime
 
