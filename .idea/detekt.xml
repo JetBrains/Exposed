@@ -4,7 +4,7 @@
         <enableDetekt>true</enableDetekt>
         <enableFormatting>true</enableFormatting>
         <buildUponDefaultConfig>true</buildUponDefaultConfig>
-        <configPaths>$PROJECT_DIR$/detekt.yml</configPaths>
+        <configPaths>$PROJECT_DIR$/detekt/detekt-config.yml</configPaths>
     </component>
 
     <component name="DetektPluginSettings">
@@ -13,7 +13,7 @@
         <option name="buildUponDefaultConfig" value="true"/>
         <option name="configurationFiles">
             <list>
-                <option value="$PROJECT_DIR$/detekt.yml"/>
+                <option value="$PROJECT_DIR$/detekt/detekt-config.yml"/>
             </list>
         </option>
     </component>
