@@ -1,3 +1,5 @@
+@file: Suppress("MatchingDeclarationName")
+
 package org.jetbrains.exposed.sql.json
 
 import kotlinx.serialization.json.Json
