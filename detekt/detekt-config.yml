@@ -30,6 +30,8 @@ style:
     MagicNumber:
         ignoreNamedArgument: true
         ignoreRanges: true
+    ThrowsCount:
+        active: false
 
 complexity:
     LongParameterList:

@@ -1,3 +1,5 @@
+@file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.ktor
 
 import io.ktor.server.application.*
