@@ -1043,6 +1043,7 @@ abstract class VendorDialect(
     protected val identifierManager
         get() = TransactionManager.current().db.identifierManager
 
+    @Suppress("UnnecessaryAbstractClass")
     abstract class DialectNameProvider(val dialectName: String)
 
     /* Cached values */
