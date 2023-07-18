@@ -81,6 +81,7 @@ class Column<T>(
     internal fun isOneColumnPK(): Boolean = this == table.primaryKey?.columns?.singleOrNull()
 
     /** Returns the SQL representation of this column. */
+    @Suppress("ComplexMethod")
     fun descriptionDdl(modify: Boolean = false): String = buildString {
         val tr = TransactionManager.current()
         val column = this@Column

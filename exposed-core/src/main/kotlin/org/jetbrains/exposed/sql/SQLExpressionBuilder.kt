@@ -663,7 +663,7 @@ interface ISqlExpressionBuilder {
     } as QueryParameter<T>
 
     /** Returns the specified [value] as a literal of type [T]. */
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "ComplexMethod")
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)

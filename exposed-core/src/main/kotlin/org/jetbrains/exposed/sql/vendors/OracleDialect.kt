@@ -323,6 +323,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun createSchema(schema: Schema): String = buildString {
         if ((schema.quota == null) xor (schema.on == null)) {
+            @Suppress("UseRequire")
             throw IllegalArgumentException("You must either provide both <quota> and <on> options or non of them")
         }
 
