@@ -12,6 +12,8 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.javatime.*
+import org.jetbrains.exposed.sql.json.extract
+import org.jetbrains.exposed.sql.json.jsonb
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -290,15 +292,15 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
             val prefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
 
             // value extracted in same manner it is stored, a json string
-            val modifiedAsString = tester.modified.jsonExtract<String>("${prefix}timestamp")
+            val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.slice(modifiedAsString).selectAll()
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
-                tester.modified.jsonExtract<LocalDateTime>("${prefix}timestamp").castTo(JavaLocalDateTimeColumnType())
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp").castTo(JavaLocalDateTimeColumnType())
             } else {
-                tester.modified.jsonExtract<LocalDateTime>("${prefix}timestamp")
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
             val modifiedBeforeCreation = tester.select { dateModified less tester.created }.single()
             assertEquals(2, modifiedBeforeCreation[tester.modified].userId)

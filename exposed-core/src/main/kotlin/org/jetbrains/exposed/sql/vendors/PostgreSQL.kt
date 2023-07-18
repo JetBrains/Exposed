@@ -135,7 +135,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         path?.let {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
-        val isNotJsonB = jsonType !is JsonBColumnType<*>
+        val isNotJsonB = jsonType.sqlType() != "JSONB"
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
@@ -154,7 +154,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
-        val isNotJsonB = jsonType !is JsonBColumnType<*>
+        val isNotJsonB = jsonType.sqlType() != "JSONB"
         queryBuilder {
             append("JSONB_PATH_EXISTS(")
             if (isNotJsonB) {

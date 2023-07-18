@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.json.extract
+import org.jetbrains.exposed.sql.json.jsonb
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -281,19 +283,19 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val prefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
 
             // value extracted in same manner it is stored, a json string
-            val modifiedAsString = tester.modified.jsonExtract<String>("${prefix}timestamp")
+            val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.slice(modifiedAsString).selectAll()
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
             // value extracted as json, with implicit LocalDateTime serializer() performing conversions
-            val modifiedAsJson = tester.modified.jsonExtract<LocalDateTime>("${prefix}timestamp", toScalar = false)
+            val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
             val allModifiedAsJson = tester.slice(modifiedAsJson).selectAll()
             assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
-                tester.modified.jsonExtract<LocalDateTime>("${prefix}timestamp").castTo(KotlinLocalDateTimeColumnType())
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp").castTo(KotlinLocalDateTimeColumnType())
             } else {
-                tester.modified.jsonExtract<LocalDateTime>("${prefix}timestamp")
+                tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
             val modifiedBeforeCreation = tester.select { dateModified less tester.created }.single()
             assertEquals(2, modifiedBeforeCreation[tester.modified].userId)

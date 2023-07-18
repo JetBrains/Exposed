@@ -2,8 +2,6 @@
 
 package org.jetbrains.exposed.sql
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -97,34 +95,6 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
-
-// JSON Functions
-
-/**
- * Returns the extracted data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
- *
- * @param path String(s) representing JSON path/keys that match fields to be extracted.
- * If none are provided, the root context item `'$'` will be used by default.
- * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
- * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
- */
-inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path: String, toScalar: Boolean = true): JsonExtract<T> {
-    val columnType = when (T::class) {
-        String::class -> TextColumnType()
-        Boolean::class -> BooleanColumnType()
-        Long::class -> LongColumnType()
-        Int::class -> IntegerColumnType()
-        Short::class -> ShortColumnType()
-        Byte::class -> ByteColumnType()
-        Double::class -> DoubleColumnType()
-        Float::class -> FloatColumnType()
-        ByteArray::class -> BasicBinaryColumnType()
-        else -> {
-            JsonColumnType({ Json.Default.encodeToString(serializer<T>(), it) }, { Json.Default.decodeFromString(serializer<T>(), it) })
-        }
-    }
-    return JsonExtract(this, path = path, toScalar, this.columnType, columnType)
-}
 
 // Sequence Manipulation Functions
 
@@ -587,40 +557,6 @@ interface ISqlExpressionBuilder {
      * (counting from 1); null if no such row.
      */
     fun <T> ExpressionWithColumnType<T>.nthValue(n: ExpressionWithColumnType<Int>): NthValue<T> = NthValue(this, n)
-
-    // JSON Conditions
-
-    /**
-     * Checks whether a [candidate] expression is contained within [this] JSON expression.
-     *
-     * @param candidate Expression to search for in [this] JSON expression.
-     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
-     * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
-     */
-    fun ExpressionWithColumnType<*>.jsonContains(candidate: Expression<*>, path: String? = null): JsonContains =
-        JsonContains(this, candidate, path, columnType)
-
-    /**
-     * Checks whether a [candidate] value is contained within [this] JSON expression.
-     *
-     * @param candidate Value to search for in [this] JSON expression.
-     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
-     * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
-     */
-    fun <T> ExpressionWithColumnType<*>.jsonContains(candidate: T, path: String? = null): JsonContains =
-        JsonContains(this, asLiteral(candidate), path, columnType)
-
-    /**
-     * Checks whether data exists within [this] JSON expression at the specified [path].
-     *
-     * @param path String(s) representing JSON path/keys that match fields to check for existing data.
-     * If none are provided, the root context item `'$'` will be used by default.
-     * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
-     * @param optional String representing any optional vendor-specific clause or argument.
-     * **Note:** [optional] function arguments are not supported by all vendors; please check the documentation.
-     */
-    fun ExpressionWithColumnType<*>.jsonExists(vararg path: String, optional: String? = null): JsonExists =
-        JsonExists(this, path = path, optional, columnType)
 
     // Conditional Expressions
 
