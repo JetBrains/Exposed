@@ -22,7 +22,10 @@ class AbsFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Custom
  * Returns the smallest integer value that is >= a number
  */
 class CeilingFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : CustomFunction<Long?>(
-    functionName = if (currentDialectIfAvailable is SQLiteDialect || currentDialectIfAvailable is OracleDialect || currentDialectIfAvailable?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "CEIL" else "CEILING",
+    functionName = if (
+        currentDialectIfAvailable is SQLiteDialect || currentDialectIfAvailable is OracleDialect ||
+        currentDialectIfAvailable?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+    ) "CEIL" else "CEILING",
     columnType = LongColumnType(),
     expr = arrayOf(expression)
 )

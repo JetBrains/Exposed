@@ -78,6 +78,24 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testNullableCompositeColumnInsertAndSelect() {
+        val table = object : IntIdTable("Table") {
+            val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money").nullable()
+        }
+
+        withTables(table) {
+            val id = table.insertAndGetId {
+                it[composite_money] = null
+            }
+
+            val resultRow = table.select { table.id.eq(id) }.single()
+            val result = resultRow[table.composite_money]
+
+            assertEquals(null, result)
+        }
+    }
+
     private fun testInsertedAndSelect(toInsert: Money?) {
         withTables(Account) {
             val accountID = Account.insertAndGetId {

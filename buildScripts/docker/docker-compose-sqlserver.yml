@@ -1,12 +1,11 @@
 version: '3.1'
 
 services:
-  sqlserver:
-    container_name: SQLServer
-    image: mcr.microsoft.com/mssql/server:2017-latest
-    ports:
-      - "1433"
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "yourStrong(!)Password"
-      MSSQL_PID: "Express"
+    sqlserver:
+        container_name: SQLServer
+        image: mcr.microsoft.com/azure-sql-edge:1.0.7
+        ports:
+            - "1433:1433"
+        environment:
+            ACCEPT_EULA: "1"
+            SA_PASSWORD: "yourStrong(!)Password"

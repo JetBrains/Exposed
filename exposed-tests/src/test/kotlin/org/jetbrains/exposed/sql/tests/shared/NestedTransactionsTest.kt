@@ -58,7 +58,8 @@ class NestedTransactionsTest : DatabaseTestsBase() {
             assertNotNull(TransactionManager.currentOrNull())
 
             try {
-                inTopLevelTransaction(this.transactionIsolation, 1) {
+                inTopLevelTransaction(this.transactionIsolation) {
+                    repetitionAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
             } catch (e: Exception) {

@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalTime::class)
+
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
@@ -210,7 +211,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val tmConstValue = LocalTime(12, 0)
         val tLiteral = timeLiteral(tmConstValue)
 
-        val TestTable = object : IntIdTable("t") {
+        val testTable = object : IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
             val l = long("l").default(42)
@@ -230,10 +231,11 @@ class DefaultsTest : DatabaseTestsBase() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
-        withTables(listOf(TestDB.SQLITE), TestTable) {
+        withTables(listOf(TestDB.SQLITE), testTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val timeType = currentDialectTest.dataTypeProvider.timeType()
@@ -264,23 +266,23 @@ class DefaultsTest : DatabaseTestsBase() {
                 arrayListOf(baseExpression)
             }
 
-            assertEqualLists(expected, TestTable.ddl)
+            assertEqualLists(expected, testTable.ddl)
 
-            val id1 = TestTable.insertAndGetId { }
+            val id1 = testTable.insertAndGetId { }
 
-            val row1 = TestTable.select { TestTable.id eq id1 }.single()
-            assertEquals("test", row1[TestTable.s])
-            assertEquals("testNullable", row1[TestTable.sn])
-            assertEquals(42, row1[TestTable.l])
-            assertEquals('X', row1[TestTable.c])
-            assertEquals(dateTimeConstValue, row1[TestTable.t3])
-            assertEquals(dateConstValue, row1[TestTable.t4])
-            assertEquals(tsConstValue, row1[TestTable.t5])
-            assertEquals(tsConstValue, row1[TestTable.t6])
-            assertEquals(durConstValue, row1[TestTable.t7])
-            assertEquals(durConstValue, row1[TestTable.t8])
-            assertEquals(tmConstValue, row1[TestTable.t9])
-            assertEquals(tmConstValue, row1[TestTable.t10])
+            val row1 = testTable.select { testTable.id eq id1 }.single()
+            assertEquals("test", row1[testTable.s])
+            assertEquals("testNullable", row1[testTable.sn])
+            assertEquals(42, row1[testTable.l])
+            assertEquals('X', row1[testTable.c])
+            assertEquals(dateTimeConstValue, row1[testTable.t3])
+            assertEquals(dateConstValue, row1[testTable.t4])
+            assertEquals(tsConstValue, row1[testTable.t5])
+            assertEquals(tsConstValue, row1[testTable.t6])
+            assertEquals(durConstValue, row1[testTable.t7])
+            assertEquals(durConstValue, row1[testTable.t8])
+            assertEquals(tmConstValue, row1[testTable.t9])
+            assertEquals(tmConstValue, row1[testTable.t10])
         }
     }
 
@@ -352,15 +354,34 @@ class DefaultsTest : DatabaseTestsBase() {
 
         withTables(foo) {
             val d2020 = LocalDate(2020, 1, 1)
-            val dt2020 = d2020.atTime(0,0,0)
-            val dt2020m1w = d2020.minus(DateTimeUnit.WEEK).atTime(0,0,0)
-            val dt2020p1w = d2020.plus(DateTimeUnit.WEEK).atTime(0,0,0)
+            val dt2020 = d2020.atTime(0, 0, 0)
+            val dt2020m1w = d2020.minus(DateTimeUnit.WEEK).atTime(0, 0, 0)
+            val dt2020p1w = d2020.plus(DateTimeUnit.WEEK).atTime(0, 0, 0)
 
             foo.insert { it[dt] = LocalDateTime(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
             foo.insert { it[dt] = LocalDateTime(2021, 1, 1, 1, 1) }
             val count = foo.select { foo.dt.between(dt2020m1w, dt2020p1w) }.count()
             assertEquals(1, count)
+        }
+    }
+
+    @Test
+    fun testConsistentSchemeWithFunctionAsDefaultExpression() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(foo)
+
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+                assertTrue(actual.isEmpty())
+            } finally {
+                SchemaUtils.drop(foo)
+            }
         }
     }
 }

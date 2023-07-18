@@ -1,8 +1,13 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
 
@@ -29,7 +34,8 @@ enum class ReferenceOption {
     CASCADE,
     SET_NULL,
     RESTRICT,
-    NO_ACTION;
+    NO_ACTION,
+    SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
 
@@ -40,6 +46,7 @@ enum class ReferenceOption {
             DatabaseMetaData.importedKeySetNull -> SET_NULL
             DatabaseMetaData.importedKeyRestrict -> RESTRICT
             DatabaseMetaData.importedKeyNoAction -> NO_ACTION
+            DatabaseMetaData.importedKeySetDefault -> SET_DEFAULT
             else -> currentDialect.defaultReferenceOption
         }
     }
@@ -104,10 +111,12 @@ data class ForeignKeyConstraint(
     /** Name of this constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
-            name ?: "fk_${fromTable.tableNameWithoutSchemeSanitized}_${
-                from.joinToString("_") { it.name }
-            }__${target.joinToString("_") { it.name }}"
+            name ?: (
+                "fk_${fromTable.tableNameWithoutSchemeSanitized}_${from.joinToString("_") { it.name }}__" +
+                    target.joinToString("_") { it.name }
+                )
         ).inProperCase()
+
     internal val foreignKeyPart: String
         get() = buildString {
             if (fkName.isNotBlank()) {
@@ -115,11 +124,37 @@ data class ForeignKeyConstraint(
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                append(" ON DELETE $deleteRule")
+                if (deleteRule == ReferenceOption.SET_DEFAULT) {
+                    when (currentDialect) {
+                        is MariaDBDialect -> exposedLogger.warn(
+                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        is MysqlDialect -> exposedLogger.warn(
+                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        else -> append(" ON DELETE $deleteRule")
+                    }
+                } else {
+                    append(" ON DELETE $deleteRule")
+                }
             }
             if (updateRule != ReferenceOption.NO_ACTION) {
                 if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (updateRule == ReferenceOption.SET_DEFAULT) {
+                    when (currentDialect) {
+                        is MariaDBDialect -> exposedLogger.warn(
+                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        is MysqlDialect -> exposedLogger.warn(
+                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                                "Please check your $fromTableName table."
+                        )
+                        else -> append(" ON UPDATE $updateRule")
+                    }
                 } else {
                     append(" ON UPDATE $updateRule")
                 }
@@ -193,6 +228,8 @@ data class CheckConstraint(
     }
 }
 
+typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
+
 /**
  * Represents an index.
  */
@@ -204,7 +241,13 @@ data class Index(
     /** Optional custom name for the index. */
     val customName: String? = null,
     /** Optional custom index type (e.g, BTREE or HASH) */
-    val indexType: String? = null
+    val indexType: String? = null,
+    /** Partial index filter condition */
+    val filterCondition: Op<Boolean>? = null,
+    /** Functions that are part of the index. */
+    val functions: List<ExpressionWithColumnType<*>>? = null,
+    /** Table where the functional index should be defined. */
+    val functionsTable: Table? = null
 ) : DdlAware {
     /** Table where the index is defined. */
     val table: Table
@@ -215,21 +258,33 @@ data class Index(
             append(table.nameInDatabaseCase())
             append('_')
             append(columns.joinToString("_") { it.name }.inProperCase())
+            functions?.let { f ->
+                if (columns.isNotEmpty()) append('_')
+                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() }.inProperCase())
+            }
             if (unique) {
                 append("_unique".inProperCase())
             }
         }
 
     init {
-        require(columns.isNotEmpty()) { "At least one column is required to create an index" }
-        val table = columns.distinctBy { it.table }.singleOrNull()?.table
-        requireNotNull(table) { "Columns from different tables can't persist in one index" }
-        this.table = table
+        require(columns.isNotEmpty() || functions?.isNotEmpty() == true) { "At least one column or function is required to create an index" }
+        val columnsTable = if (columns.isNotEmpty()) {
+            val table = columns.distinctBy { it.table }.singleOrNull()?.table
+            requireNotNull(table) { "Columns from different tables can't persist in one index" }
+            table
+        } else null
+        if (functions?.isNotEmpty() == true) {
+            requireNotNull(functionsTable) { "functionsTable argument must also be provided if functions are defined to create an index" }
+        }
+        this.table = columnsTable ?: functionsTable!!
     }
 
     override fun createStatement(): List<String> = listOf(currentDialect.createIndex(this))
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
-    override fun dropStatement(): List<String> = listOf(currentDialect.dropIndex(table.nameInDatabaseCase(), indexName))
+    override fun dropStatement(): List<String> = listOf(
+        currentDialect.dropIndex(table.nameInDatabaseCase(), indexName, unique, filterCondition != null || functions != null)
+    )
 
     /** Returns `true` if the [other] index has the same columns and uniqueness as this index, but a different name, `false` otherwise */
     fun onlyNameDiffer(other: Index): Boolean = indexName != other.indexName && columns == other.columns && unique == other.unique

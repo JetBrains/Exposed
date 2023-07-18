@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.ResultSet
 import java.util.*
@@ -32,13 +33,25 @@ open class UserDataHolder {
     fun <T : Any> getOrCreate(key: Key<T>, init: () -> T): T = userdata.getOrPut(key, init) as T
 }
 
-open class Transaction(private val transactionImpl: TransactionInterface) : UserDataHolder(), TransactionInterface by transactionImpl {
+open class Transaction(
+    private val transactionImpl: TransactionInterface
+) : UserDataHolder(), TransactionInterface by transactionImpl {
     final override val db: Database = transactionImpl.db
 
     var statementCount: Int = 0
     var duration: Long = 0
     var warnLongQueriesDuration: Long? = db.config.warnLongQueriesDuration
     var debug = false
+
+    /** The number of retries that will be made inside this `transaction` block if SQLException happens */
+    var repetitionAttempts: Int = db.transactionManager.defaultRepetitionAttempts
+
+    /** The minimum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
+    var minRepetitionDelay: Long = db.transactionManager.defaultMinRepetitionDelay
+
+    /** The maximum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
+    var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
+
     val id by lazy { UUID.randomUUID().toString() }
 
     // currently executing statement. Used to log error properly
@@ -91,7 +104,11 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
     @Suppress("MagicNumber")
     private fun describeStatement(delta: Long, stmt: String): String = "[${delta}ms] ${stmt.take(1024)}\n\n"
 
-    fun exec(@Language("sql") stmt: String, args: Iterable<Pair<IColumnType, Any?>> = emptyList(), explicitStatementType: StatementType? = null) =
+    fun exec(
+        @Language("sql") stmt: String,
+        args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
+        explicitStatementType: StatementType? = null
+    ) =
         exec(stmt, args, explicitStatementType) { }
 
     fun <T : Any> exec(
@@ -118,7 +135,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
                 return result?.use { transform(it) }
             }
 
-            override fun prepareSQL(transaction: Transaction): String = stmt
+            override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
 
             override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
         })
@@ -149,7 +166,7 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
 
         if (debug) {
             statements.append(describeStatement(delta, lazySQL.value))
-            statementStats.getOrPut(lazySQL.value, { 0 to 0L }).let { (count, time) ->
+            statementStats.getOrPut(lazySQL.value) { 0 to 0L }.let { (count, time) ->
                 statementStats[lazySQL.value] = (count + 1) to (time + delta)
             }
         }
@@ -189,11 +206,20 @@ open class Transaction(private val transactionImpl: TransactionInterface) : User
         executedStatements.clear()
     }
 
+    internal fun getRetryInterval(): Long = if (repetitionAttempts > 0) {
+        maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+    } else {
+        0
+    }
+
     companion object {
         internal val globalInterceptors = arrayListOf<GlobalStatementInterceptor>()
 
         init {
-            ServiceLoader.load(GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader).forEach {
+            ServiceLoader.load(
+                GlobalStatementInterceptor::class.java,
+                GlobalStatementInterceptor::class.java.classLoader
+            ).forEach {
                 globalInterceptors.add(it)
             }
         }

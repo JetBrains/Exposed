@@ -55,7 +55,7 @@ open class CustomOperator<T>(
 class Random(
     /** Returns the seed. */
     val seed: Int? = null
-) : Function<BigDecimal>(DecimalColumnType(38, 20)) {
+) : Function<BigDecimal>(DecimalColumnType(precision = 38, scale = 20)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         val functionProvider = when (currentDialect.h2Mode) {
             H2Dialect.H2CompatibilityMode.Oracle, H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
@@ -66,6 +66,15 @@ class Random(
 }
 
 // String Functions
+
+/**
+ * Represents an SQL function that returns the length of [expr], measured in characters, or `null` if [expr] is null.
+ */
+class CharLength<T : String?>(
+    val expr: Expression<T>
+) : Function<Int?>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.charLength(expr, queryBuilder)
+}
 
 /**
  * Represents an SQL function that converts [expr] to lower case.
@@ -137,6 +146,14 @@ class Trim<T : String?>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
+/**
+ * Represents an SQL function that returns the index of the first occurrence of [substring] in [expr] or 0
+ */
+class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Function<Int>(IntegerColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.locate(queryBuilder, expr, substring)
+}
+
 // General-Purpose Aggregate Functions
 
 /**
@@ -146,8 +163,12 @@ class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -157,8 +178,12 @@ class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -168,8 +193,12 @@ class Avg<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the average is calculated. */
     val expr: Expression<in S>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("AVG(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -179,8 +208,12 @@ class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
     val expr: Expression<T>,
     columnType: IColumnType
-) : Function<T?>(columnType) {
+) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("SUM(", expr, ")") }
+
+    override fun over(): WindowFunctionDefinition<T?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -191,12 +224,16 @@ class Count(
     val expr: Expression<*>,
     /** Returns whether only distinct element should be count. */
     val distinct: Boolean = false
-) : Function<Long>(LongColumnType()) {
+) : Function<Long>(LongColumnType()), WindowFunction<Long> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         +"COUNT("
         if (distinct) +"DISTINCT "
         +expr
         +")"
+    }
+
+    override fun over(): WindowFunctionDefinition<Long> {
+        return WindowFunctionDefinition(LongColumnType(), this)
     }
 }
 
@@ -208,10 +245,22 @@ class Count(
  */
 class StdDevPop<T>(
     /** Returns the expression from which the population standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_POP(", expr, ")") }
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevPop(expression, this)
+        }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -220,10 +269,22 @@ class StdDevPop<T>(
  */
 class StdDevSamp<T>(
     /** Returns the expression from which the sample standard deviation is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("STDDEV_SAMP(", expr, ")") }
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.stdDevSamp(expression, this)
+        }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -232,10 +293,22 @@ class StdDevSamp<T>(
  */
 class VarPop<T>(
     /** Returns the expression from which the population variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_POP(", expr, ")") }
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varPop(expression, this)
+        }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
 }
 
 /**
@@ -244,10 +317,43 @@ class VarPop<T>(
  */
 class VarSamp<T>(
     /** Returns the expression from which the sample variance is calculated. */
-    val expr: Expression<T>,
+    val expression: Expression<T>,
     scale: Int
-) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("VAR_SAMP(", expr, ")") }
+) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            val functionProvider = when (currentDialect.h2Mode) {
+                H2Dialect.H2CompatibilityMode.SQLServer -> H2FunctionProvider
+                else -> currentDialect.functionProvider
+            }
+            functionProvider.varSamp(expression, this)
+        }
+    }
+
+    override fun over(): WindowFunctionDefinition<BigDecimal?> {
+        return WindowFunctionDefinition(columnType, this)
+    }
+}
+
+// JSON Functions
+
+/**
+ * Represents an SQL function that returns extracted data from a JSON object at the specified [path],
+ * either as a JSON representation or as a scalar value.
+ */
+class JsonExtract<T>(
+    /** Returns the expression from which to extract JSON subcomponents matched by [path]. */
+    val expression: Expression<*>,
+    /** Returns array of Strings representing JSON path/keys that match fields to be extracted. */
+    vararg val path: String,
+    /** Returns whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
+    val toScalar: Boolean,
+    /** Returns the column type of [expression] to check, if casting to JSONB is required. */
+    val jsonType: IColumnType,
+    columnType: IColumnType
+) : Function<T>(columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
+        currentDialect.functionProvider.jsonExtract(expression, path = path, toScalar, jsonType, queryBuilder)
 }
 
 // Sequence Manipulation Functions
@@ -255,7 +361,7 @@ class VarSamp<T>(
 /**
  * Represents an SQL function that advances the specified [seq] and returns the new value.
  */
-sealed class NextVal<T> (
+sealed class NextVal<T>(
     /** Returns the sequence from which the next value is obtained. */
     val seq: Sequence,
     columnType: IColumnType

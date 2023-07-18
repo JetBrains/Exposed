@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
@@ -120,7 +121,7 @@ object SchemaUtils {
     @Deprecated(
         "Will be removed in upcoming releases. Please use overloaded version instead",
         ReplaceWith("createFKey(checkNotNull(reference.foreignKey) { \"${"$"}reference does not reference anything\" })"),
-        DeprecationLevel.ERROR
+        DeprecationLevel.HIDDEN
     )
     fun createFKey(reference: Column<*>): List<String> {
         val foreignKey = reference.foreignKey
@@ -155,9 +156,9 @@ object SchemaUtils {
                     }
                     is String -> when {
                         dialect is PostgreSQLDialect ->
-                            when(column.columnType) {
-                                is VarCharColumnType -> "'${value}'::character varying"
-                                is TextColumnType -> "'${value}'::text"
+                            when (column.columnType) {
+                                is VarCharColumnType -> "'$value'::character varying"
+                                is TextColumnType -> "'$value'::text"
                                 else -> processForDefaultValue(exp)
                             }
                         dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
@@ -281,11 +282,25 @@ object SchemaUtils {
      *
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
+     *
+     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
+     * and followed by connection.autoCommit = false.
+     * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
-            val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
-            execStatements(inBatch, createStatements)
+        val transaction = TransactionManager.current()
+        try {
+            with(transaction) {
+                val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
+                execStatements(inBatch, createStatements)
+            }
+        } catch (exception: ExposedSQLException) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
+                throw IllegalStateException(
+                    "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
+                    exception
+                )
+            } else throw exception
         }
     }
 
@@ -294,11 +309,25 @@ object SchemaUtils {
      *
      * @param databases the names of the databases
      * @param inBatch flag to perform database creation in a single batch
+     *
+     * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
+     * and followed by connection.autoCommit = false.
+     * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
-            val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
-            execStatements(inBatch, createStatements)
+        val transaction = TransactionManager.current()
+        try {
+            with(transaction) {
+                val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
+                execStatements(inBatch, createStatements)
+            }
+        } catch (exception: ExposedSQLException) {
+            if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.autoCommit) {
+                throw IllegalStateException(
+                    "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
+                    exception
+                )
+            } else throw exception
         }
     }
 

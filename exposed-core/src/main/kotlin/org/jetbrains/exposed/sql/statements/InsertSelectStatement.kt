@@ -20,6 +20,6 @@ open class InsertSelectStatement(val columns: List<Column<*>>, val selectQuery: 
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = selectQuery.arguments()
 
-    override fun prepareSQL(transaction: Transaction): String =
-        transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction), transaction)
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
+        transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction, prepared), transaction)
 }

@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
@@ -36,6 +37,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         else -> value.toBoolean()
     }
 
+    override fun jsonBType(): String = "JSON"
+
     override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
 
         when (sortOrder) {
@@ -49,6 +52,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             }
         }
     }
+
+    override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
@@ -72,6 +77,14 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun <T : String?> Expression<T>.match(pattern: String, mode: MatchMode?): Op<Boolean> =
         MATCH(this, pattern, mode ?: MysqlMatchMode.STRICT)
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
     override fun <T : String?> regexp(
         expr1: Expression<T>,
         pattern: Expression<String>,
@@ -85,11 +98,61 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun replace(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction): String {
-        val builder = QueryBuilder(true)
-        val columns = data.joinToString { transaction.identity(it.first) }
-        val values = builder.apply { data.appendTo { registerArgument(it.first, it.second) } }.toString()
-        return "REPLACE INTO ${transaction.identity(table)} ($columns) VALUES ($values)"
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        if (toScalar) append("JSON_UNQUOTE(")
+        append("JSON_EXTRACT(", expression, ", ")
+        path.ifEmpty { arrayOf("") }.appendTo { +"\"$$it\"" }
+        append(")${if (toScalar) ")" else ""}")
+    }
+
+    override fun jsonContains(
+        target: Expression<*>,
+        candidate: Expression<*>,
+        path: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) = queryBuilder {
+        append("JSON_CONTAINS(", target, ", ", candidate)
+        path?.let {
+            append(", '$$it'")
+        }
+        append(")")
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        val oneOrAll = optional?.lowercase()
+        if (oneOrAll != "one" && oneOrAll != "all") {
+            TransactionManager.current().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
+        }
+        queryBuilder {
+            append("JSON_CONTAINS_PATH(", expression, ", ")
+            append("'$oneOrAll', ")
+            path.ifEmpty { arrayOf("") }.appendTo { +"'$$it'" }
+            append(")")
+        }
+    }
+
+    override fun replace(
+        table: Table,
+        columns: List<Column<*>>,
+        expression: String,
+        transaction: Transaction,
+        prepared: Boolean
+    ): String {
+        val insertStatement = super.insert(false, table, columns, expression, transaction)
+        return insertStatement.replace("INSERT", "REPLACE")
     }
 
     private object CharColumnType : StringColumnType() {
@@ -135,6 +198,49 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         limit?.let { +" LIMIT $it" }
         toString()
     }
+
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        if (keys.isNotEmpty()) {
+            transaction.throwUnsupportedException("MySQL doesn't support specifying conflict keys in UPSERT clause")
+        }
+        if (where != null) {
+            transaction.throwUnsupportedException("MySQL doesn't support WHERE in UPSERT clause")
+        }
+
+        val isAliasSupported = when (val dialect = transaction.db.dialect) {
+            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            else -> false // H2_MySQL mode also uses this function provider & requires older version
+        }
+
+        return with(QueryBuilder(true)) {
+            appendInsertToUpsertClause(table, data, transaction)
+            if (isAliasSupported) {
+                +" AS NEW"
+            }
+
+            +" ON DUPLICATE KEY UPDATE "
+            onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
+                append("${transaction.identity(columnToUpdate)}=$updateExpression")
+            } ?: run {
+                data.unzip().first.appendTo { column ->
+                    val columnName = transaction.identity(column)
+                    if (isAliasSupported) {
+                        append("$columnName=NEW.$columnName")
+                    } else {
+                        append("$columnName=VALUES($columnName)")
+                    }
+                }
+            }
+            toString()
+        }
+    }
 }
 
 /**
@@ -147,6 +253,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override val supportsCreateSequence: Boolean = false
+
+    override val supportsTernaryAffectedRowValues: Boolean = true
 
     override val supportsSubqueryUnions: Boolean = true
 
@@ -219,7 +327,18 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         }
     }
 
-    override fun dropIndex(tableName: String, indexName: String): String = "ALTER TABLE $tableName DROP INDEX $indexName"
+    override fun createIndex(index: Index): String {
+        if (index.functions != null && !isMysql8) {
+            exposedLogger.warn(
+                "Functional index on ${index.table.tableName} using ${index.functions.joinToString { it.toString() }} can't be created in MySQL prior to 8.0"
+            )
+            return ""
+        }
+        return super.createIndex(index)
+    }
+
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String =
+        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
 
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
 

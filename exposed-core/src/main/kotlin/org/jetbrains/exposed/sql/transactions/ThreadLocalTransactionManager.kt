@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
+import java.util.concurrent.ThreadLocalRandom
 
 class ThreadLocalTransactionManager(
     private val db: Database,
@@ -18,6 +19,18 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
         @Deprecated("Use DatabaseConfig to define the defaultRepetitionAttempts")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMinRepetitionDelay: Long = db.config.defaultMinRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMinRepetitionDelay")
+        @TestOnly
+        set
+
+    @Volatile
+    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMaxRepetitionDelay")
         @TestOnly
         set
 
@@ -89,9 +102,7 @@ class ThreadLocalTransactionManager(
             get() = connectionLazy.value
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
-        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
-            connection.setSavepoint(savepointName)
-        } else null
+        private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
 
         override fun commit() {
             if (connectionLazy.isInitialized()) {
@@ -145,14 +156,13 @@ class ThreadLocalTransactionManager(
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(
         db.transactionManager.defaultIsolationLevel,
-        db.transactionManager.defaultRepetitionAttempts,
         db.transactionManager.defaultReadOnly,
-        db, statement
+        db,
+        statement
     )
 
 fun <T> transaction(
     transactionIsolation: Int,
-    repetitionAttempts: Int,
     readOnly: Boolean = false,
     db: Database? = null,
     statement: Transaction.() -> T
@@ -187,23 +197,31 @@ fun <T> transaction(
                 } finally {
                     TransactionManager.resetCurrent(currentManager)
                 }
-            } ?: inTopLevelTransaction(transactionIsolation, repetitionAttempts, readOnly, db, null, statement)
+            } ?: inTopLevelTransaction(
+                transactionIsolation,
+                readOnly,
+                db,
+                null,
+                statement
+            )
         }
     }
 
+@Suppress("LongParameterList")
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
-    repetitionAttempts: Int,
     readOnly: Boolean = false,
     db: Database? = null,
     outerTransaction: Transaction? = null,
     statement: Transaction.() -> T
 ): T {
-
     fun run(): T {
         var repetitions = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
+
+        var intermediateDelay: Long = 0
+        var retryInterval: Long? = null
 
         while (true) {
             db?.let { db.transactionManager.let { m -> TransactionManager.resetCurrent(m) } }
@@ -215,13 +233,33 @@ fun <T> inTopLevelTransaction(
                 val answer = transaction.statement()
                 transaction.commit()
                 return answer
-            } catch (e: SQLException) {
-                handleSQLException(e, transaction, repetitions)
+            } catch (cause: SQLException) {
+                handleSQLException(cause, transaction, repetitions)
                 repetitions++
-                if (repetitions >= repetitionAttempts) {
-                    throw e
+                if (repetitions >= transaction.repetitionAttempts) {
+                    throw cause
                 }
-            } catch (e: Throwable) {
+
+                if (retryInterval == null) {
+                    retryInterval = transaction.getRetryInterval()
+                    intermediateDelay = transaction.minRepetitionDelay
+                }
+                // set delay value with an exponential backoff time period.
+                val delay = when {
+                    transaction.minRepetitionDelay < transaction.maxRepetitionDelay -> {
+                        intermediateDelay += retryInterval * repetitions
+                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
+                    }
+                    transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
+                    else -> 0
+                }
+                exposedLogger.warn("Wait $delay milliseconds before retrying")
+                try {
+                    Thread.sleep(delay)
+                } catch (cause: InterruptedException) {
+                    // Do nothing
+                }
+            } catch (cause: Throwable) {
                 val currentStatement = transaction.currentStatement
                 transaction.rollbackLoggingException {
                     exposedLogger.warn(
@@ -229,7 +267,7 @@ fun <T> inTopLevelTransaction(
                         it
                     )
                 }
-                throw e
+                throw cause
             } finally {
                 TransactionManager.resetCurrent(outerManager)
                 closeStatementsAndConnection(transaction)
@@ -252,17 +290,19 @@ private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block
     }
 }
 
-internal fun handleSQLException(e: SQLException, transaction: Transaction, repetitions: Int) {
-    val exposedSQLException = e as? ExposedSQLException
+internal fun handleSQLException(cause: SQLException, transaction: Transaction, repetitions: Int) {
+    val exposedSQLException = cause as? ExposedSQLException
     val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
-    val message = "Transaction attempt #$repetitions failed: ${e.message}. Statement(s): $queriesToLog"
+    val message = "Transaction attempt #$repetitions failed: ${cause.message}. Statement(s): $queriesToLog"
     exposedSQLException?.contexts?.forEach {
         transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
             logger.log(it, transaction)
         }
     }
-    exposedLogger.warn(message, e)
-    transaction.rollbackLoggingException { exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it) }
+    exposedLogger.warn(message, cause)
+    transaction.rollbackLoggingException {
+        exposedLogger.warn("Transaction rollback failed: ${it.message}. See previous log line for statement", it)
+    }
 }
 
 internal fun closeStatementsAndConnection(transaction: Transaction) {
@@ -274,8 +314,10 @@ internal fun closeStatementsAndConnection(transaction: Transaction) {
             transaction.currentStatement = null
         }
         transaction.closeExecutedStatements()
-    } catch (e: Exception) {
-        exposedLogger.warn("Statements close failed", e)
+    } catch (cause: Exception) {
+        exposedLogger.warn("Statements close failed", cause)
     }
-    transaction.closeLoggingException { exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it) }
+    transaction.closeLoggingException {
+        exposedLogger.warn("Transaction close failed: ${it.message}. Statement: $currentStatement", it)
+    }
 }

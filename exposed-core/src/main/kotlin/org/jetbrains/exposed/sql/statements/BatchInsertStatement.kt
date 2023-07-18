@@ -27,7 +27,7 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
 
     private val columnToReturnValue = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val values = arguments!!
         val sql = if (values.isEmpty()) ""
         else {
@@ -35,7 +35,7 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
                 " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
             }.orEmpty()
 
-            QueryBuilder(true).apply {
+            QueryBuilder(prepared).apply {
                 values.appendTo(prefix = "$output VALUES") {
                     it.appendTo(prefix = "(", postfix = ")") { (col, value) ->
                         registerArgument(col, value)

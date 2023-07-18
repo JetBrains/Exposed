@@ -17,7 +17,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         return executeUpdate()
     }
 
-    override fun prepareSQL(transaction: Transaction): String {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }
 
         val dialect = transaction.db.dialect

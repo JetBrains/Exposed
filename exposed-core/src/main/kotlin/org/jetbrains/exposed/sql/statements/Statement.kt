@@ -16,7 +16,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     abstract fun PreparedStatementApi.executeInternal(transaction: Transaction): T?
 
-    abstract fun prepareSQL(transaction: Transaction): String
+    abstract fun prepareSQL(transaction: Transaction, prepared: Boolean = true): String
 
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
@@ -58,6 +58,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
         }
 
         transaction.currentStatement = statement
+        transaction.interceptors.forEach { it.afterStatementPrepared(transaction, statement) }
         val result = try {
             statement.executeInternal(transaction)
         } catch (e: SQLException) {

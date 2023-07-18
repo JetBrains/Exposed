@@ -6,12 +6,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.DefaultValueMarker
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
+import org.postgresql.util.PGobject
 import java.io.InputStream
 import java.math.BigDecimal
 import java.math.MathContext
@@ -22,6 +18,7 @@ import java.sql.Clob
 import java.sql.ResultSet
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 /**
  * Interface common to all column types.
@@ -161,16 +158,10 @@ class AutoIncColumnType(
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
 val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
     get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
-@Deprecated(
-    message = "Will be removed in upcoming releases. Please use [autoIncColumnType.autoincSeq] instead",
-    replaceWith = ReplaceWith("this.autoIncColumnType.autoincSeq"),
-    level = DeprecationLevel.HIDDEN
-)
-val Column<*>.autoIncSeqName: String?
-    get() = autoIncColumnType?.autoincSeq
 
 internal fun IColumnType.rawSqlType(): IColumnType = when {
     this is AutoIncColumnType -> delegate
@@ -213,13 +204,12 @@ class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnTyp
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as EntityIDColumnType<*>
-
-        if (idColumn != other.idColumn) return false
-
-        return true
+        return when (other) {
+            is EntityIDColumnType<*> -> idColumn == other.idColumn
+            is IColumnType -> idColumn.columnType == other
+            else -> false
+        }
     }
 
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
@@ -329,7 +319,7 @@ class UIntegerColumnType : ColumnType() {
         return when (value) {
             is UInt -> value
             is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toInt().takeIf { it >= 0 }?.toUInt()
+            is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
             is String -> value.toUInt()
             else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
         } ?: error("negative value but type is UInt: $value")
@@ -423,7 +413,7 @@ class DecimalColumnType(
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getBigDecimal(index)
+        return rs.getObject(index)
     }
 
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
@@ -557,8 +547,9 @@ open class CharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -602,8 +593,9 @@ open class VarCharColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is String) {
-            require(value.codePointCount(0, value.length) <= colLength) {
-                "Value '$value' can't be stored to database column because exceeds length ($colLength)"
+            val valueLength = value.codePointCount(0, value.length)
+            require(valueLength <= colLength) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
             }
         }
     }
@@ -692,8 +684,9 @@ open class BinaryColumnType(
 
     override fun validateValueBeforeUpdate(value: Any?) {
         if (value is ByteArray) {
-            require(value.size <= length) {
-                "Value '$value' can't be stored to database column because exceeds length ($length)"
+            val valueLength = value.size
+            require(valueLength <= length) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $length)"
             }
         }
     }
@@ -739,7 +732,13 @@ class BlobColumnType : ColumnType() {
         }
     }
 
-    override fun nonNullValueToString(value: Any): String = "?"
+    override fun nonNullValueToString(value: Any): String {
+        if (value !is ExposedBlob) {
+            error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
+        }
+
+        return currentDialect.dataTypeProvider.hexToDb(value.hexString())
+    }
 
     override fun readObject(rs: ResultSet, index: Int) = when {
         currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
@@ -900,6 +899,91 @@ class EnumerationNameColumnType<T : Enum<T>>(
         var result = super.hashCode()
         result = 31 * result + klass.hashCode()
         return result
+    }
+}
+
+/**
+ * Enumeration column for storing enums of type [T] using the custom SQL type [sql].
+ */
+class CustomEnumerationColumnType<T : Enum<T>>(
+    /** Returns the name of this column type instance. */
+    val name: String,
+    /** Returns the SQL definition used for this column type. */
+    val sql: String?,
+    /** Returns the function that converts a value received from a database to an enumeration instance [T]. */
+    val fromDb: (Any) -> T,
+    /** Returns the function that converts an enumeration instance [T] to a value that will be stored to a database. */
+    val toDb: (T) -> Any
+) : StringColumnType() {
+    override fun sqlType(): String = sql ?: error("Column $name should exist in database")
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): T = if (value::class.isSubclassOf(Enum::class)) value as T else fromDb(value)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun notNullValueToDB(value: Any): Any = toDb(value as T)
+
+    override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
+}
+
+// JSON columns
+
+/**
+ * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
+ */
+open class JsonColumnType<T : Any>(
+    /** Returns the function that encodes an object of type [T] to a JSON String. */
+    val serialize: (T) -> String,
+    /** Returns the function that decodes a JSON String to an object of type [T]. */
+    val deserialize: (String) -> T
+) : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
+
+    override fun valueFromDB(value: Any): Any {
+        return when (value) {
+            is String -> deserialize(value)
+            is PGobject -> deserialize(value.value!!)
+            is ByteArray -> deserialize(value.decodeToString())
+            else -> value
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun notNullValueToDB(value: Any) = serialize(value as T)
+
+    override fun nonNullValueToString(value: Any): String {
+        return when (currentDialect) {
+            is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
+            else -> super.nonNullValueToString(value)
+        }
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue = when (currentDialect) {
+            is PostgreSQLDialect -> PGobject().apply {
+                type = sqlType()
+                this.value = value as String?
+            }
+            is H2Dialect -> (value as String).encodeToByteArray()
+            else -> value
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+}
+
+/**
+ * Column for storing JSON data in binary format.
+ *
+ * @param serialize Function that encodes an object of type [T] to a JSON String
+ * @param deserialize Function that decodes a JSON String to an object of type [T]
+ */
+class JsonBColumnType<T : Any>(
+    serialize: (T) -> String,
+    deserialize: (String) -> T
+) : JsonColumnType<T>(serialize, deserialize) {
+    override fun sqlType(): String = when (currentDialect) {
+        is H2Dialect -> H2DataTypeProvider.jsonBType()
+        else -> currentDialect.dataTypeProvider.jsonBType()
     }
 }
 

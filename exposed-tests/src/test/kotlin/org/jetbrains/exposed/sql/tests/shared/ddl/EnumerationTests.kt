@@ -16,6 +16,8 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 
 class EnumerationTests : DatabaseTestsBase() {
+    private val supportsCustomEnumerationDB = TestDB.mySqlRelatedDB + listOf(TestDB.H2, TestDB.H2_PSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+
     object EnumTable : IntIdTable("EnumTable") {
         internal var enumColumn: Column<DDLTests.Foo> = enumeration("enumColumn")
 
@@ -41,7 +43,7 @@ class EnumerationTests : DatabaseTestsBase() {
 
     @Test
     fun testCustomEnumeration01() {
-        withDb(listOf(TestDB.H2, TestDB.H2_PSQL, TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(supportsCustomEnumerationDB) {
             val sqlType = when (currentDialectTest) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect -> "FooEnum"
@@ -61,6 +63,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
                 EnumTable.initEnumColumn(sqlType)
                 SchemaUtils.create(EnumTable)
+                // drop shared table object's unique index if created in other test
+                if (EnumTable.indices.isNotEmpty()) {
+                    exec(EnumTable.indices.first().dropStatement().single())
+                }
                 EnumTable.insert {
                     it[enumColumn] = DDLTests.Foo.Bar
                 }
@@ -90,7 +96,7 @@ class EnumerationTests : DatabaseTestsBase() {
 
     @Test
     fun testCustomEnumerationWithDefaultValue() {
-        withDb(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.H2_PSQL, TestDB.MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(supportsCustomEnumerationDB) {
             val sqlType = when (currentDialectTest) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect -> "FooEnum2"
@@ -103,9 +109,13 @@ class EnumerationTests : DatabaseTestsBase() {
                 }
                 EnumTable.initEnumColumn(sqlType)
                 with(EnumTable) {
-                    EnumTable.enumColumn.default(DDLTests.Foo.Bar)
+                    enumColumn.default(DDLTests.Foo.Bar)
                 }
                 SchemaUtils.create(EnumTable)
+                // drop shared table object's unique index if created in other test
+                if (EnumTable.indices.isNotEmpty()) {
+                    exec(EnumTable.indices.first().dropStatement().single())
+                }
 
                 EnumTable.insert { }
                 val default = EnumTable.selectAll().single()[EnumTable.enumColumn]
@@ -115,6 +125,86 @@ class EnumerationTests : DatabaseTestsBase() {
                     SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
+        }
+    }
+
+    @Test
+    fun testCustomEnumerationWithReference() {
+        val referenceTable = object : Table("ref_table") {
+            var referenceColumn: Column<DDLTests.Foo> = enumeration("ref_column")
+
+            fun initRefColumn() {
+                (columns as MutableList<Column<*>>).remove(referenceColumn)
+                referenceColumn = reference("ref_column", EnumTable.enumColumn)
+            }
+        }
+
+        withDb(supportsCustomEnumerationDB) {
+            val sqlType = when (currentDialectTest) {
+                is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                is PostgreSQLDialect -> "RefEnum"
+                else -> error("Unsupported case")
+            }
+            try {
+                if (currentDialectTest is PostgreSQLDialect) {
+                    exec("DROP TYPE IF EXISTS $sqlType;")
+                    exec("CREATE TYPE $sqlType AS ENUM ('Bar', 'Baz');")
+                }
+                EnumTable.initEnumColumn(sqlType)
+                with(EnumTable) {
+                    if (indices.isEmpty()) enumColumn.uniqueIndex()
+                }
+                SchemaUtils.create(EnumTable)
+
+                referenceTable.initRefColumn()
+                SchemaUtils.create(referenceTable)
+
+                val fooBar = DDLTests.Foo.Bar
+                val id1 = EnumTable.insert {
+                    it[enumColumn] = fooBar
+                } get EnumTable.enumColumn
+                referenceTable.insert {
+                    it[referenceColumn] = id1
+                }
+
+                assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
+                assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
+            } finally {
+                SchemaUtils.drop(referenceTable)
+                exec(EnumTable.indices.first().dropStatement().single())
+                SchemaUtils.drop(EnumTable)
+            }
+        }
+    }
+
+    @Test
+    fun testEnumerationColumnsWithReference() {
+        val tester = object : Table("tester") {
+            val enumColumn = enumeration<DDLTests.Foo>("enum_column").uniqueIndex()
+            val enumNameColumn = enumerationByName<DDLTests.Foo>("enum_name_column", 32).uniqueIndex()
+        }
+        val referenceTable = object : Table("ref_table") {
+            val referenceColumn = reference("ref_column", tester.enumColumn)
+            val referenceNameColumn = reference("ref_name_column", tester.enumNameColumn)
+        }
+
+        withTables(tester, referenceTable) {
+            val fooBar = DDLTests.Foo.Bar
+            val fooBaz = DDLTests.Foo.Baz
+            val entry = tester.insert {
+                it[enumColumn] = fooBar
+                it[enumNameColumn] = fooBaz
+            }
+            referenceTable.insert {
+                it[referenceColumn] = entry[tester.enumColumn]
+                it[referenceNameColumn] = entry[tester.enumNameColumn]
+            }
+
+            assertEquals(fooBar, tester.selectAll().single()[tester.enumColumn])
+            assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
+
+            assertEquals(fooBaz, tester.selectAll().single()[tester.enumNameColumn])
+            assertEquals(fooBaz, referenceTable.selectAll().single()[referenceTable.referenceNameColumn])
         }
     }
 }

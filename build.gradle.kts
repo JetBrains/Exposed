@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") apply true
     id("io.github.gradle-nexus.publish-plugin") apply true
     id("io.gitlab.arturbosch.detekt")
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
 }
 
 allprojects {
@@ -14,6 +15,10 @@ allprojects {
     if (this.name != "exposed-tests" && this.name != "exposed-bom" && this != rootProject) {
         apply(from = rootProject.file("buildScripts/gradle/publishing.gradle.kts"))
     }
+}
+
+apiValidation {
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom"))
 }
 
 val reportMerge by tasks.registering(ReportMergeTask::class) {
@@ -36,16 +41,6 @@ subprojects {
             jvmTarget = "1.8"
             apiVersion = "1.6"
             languageVersion = "1.6"
-        }
-    }
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            username.set(System.getenv("exposed.sonatype.user"))
-            password.set(System.getenv("exposed.sonatype.password"))
-            useStaging.set(true)
         }
     }
 }

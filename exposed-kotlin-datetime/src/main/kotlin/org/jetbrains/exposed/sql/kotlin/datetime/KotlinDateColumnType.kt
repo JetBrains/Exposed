@@ -66,7 +66,7 @@ private val LocalDate.millis get() = this.atStartOfDayIn(TimeZone.currentSystemD
 class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
-    override fun sqlType(): String = "DATE"
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateType()
 
     override fun nonNullValueToString(value: Any): String {
         val instant = when (value) {
@@ -93,8 +93,9 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
         else -> LocalDate.parse(value.toString())
     }
 
-    override fun notNullValueToDB(value: Any) = when (value) {
-        is LocalDate -> java.sql.Date(value.millis)
+    override fun notNullValueToDB(value: Any) = when {
+        value is LocalDate && currentDialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.format(value.toJavaLocalDate())
+        value is LocalDate -> java.sql.Date(value.millis)
         else -> value
     }
 

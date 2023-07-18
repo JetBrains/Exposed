@@ -14,6 +14,7 @@ include("exposed-crypt")
 
 pluginManagement {
     plugins {
-        id("org.jetbrains.kotlin.jvm") version "1.7.21"
+        id("org.jetbrains.kotlin.jvm") version "1.9.0"
+        id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
     }
 }

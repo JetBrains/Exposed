@@ -24,7 +24,9 @@ class SpringTransactionManager(
     databaseConfig: DatabaseConfig = DatabaseConfig { },
     private val showSql: Boolean = false,
     @Volatile override var defaultReadOnly: Boolean = databaseConfig.defaultReadOnly,
-    @Volatile override var defaultRepetitionAttempts: Int = databaseConfig.defaultRepetitionAttempts
+    @Volatile override var defaultRepetitionAttempts: Int = databaseConfig.defaultRepetitionAttempts,
+    @Volatile override var defaultMinRepetitionDelay: Long = databaseConfig.defaultMinRepetitionDelay,
+    @Volatile override var defaultMaxRepetitionDelay: Long = databaseConfig.defaultMaxRepetitionDelay
 ) : DataSourceTransactionManager(dataSource), TransactionManager {
 
     init {

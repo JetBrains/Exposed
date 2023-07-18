@@ -35,6 +35,8 @@ class Column<T>(
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
 
+    fun defaultValueInDb() = dbDefaultValue
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 
@@ -43,7 +45,8 @@ class Column<T>(
 
     fun nameInDatabaseCase(): String = name.inProperCase()
 
-    private val isLastColumnInPK: Boolean get() = table.primaryKey?.columns?.last() == this
+    private val isLastColumnInPK: Boolean
+        get() = this == table.primaryKey?.columns?.last()
 
     internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
         currentDialect is SQLiteDialect && columnType.isAutoInc -> false
@@ -75,7 +78,7 @@ class Column<T>(
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
 
-    internal fun isOneColumnPK(): Boolean = table.primaryKey?.columns?.singleOrNull() == this
+    internal fun isOneColumnPK(): Boolean = this == table.primaryKey?.columns?.singleOrNull()
 
     /** Returns the SQL representation of this column. */
     fun descriptionDdl(modify: Boolean = false): String = buildString {

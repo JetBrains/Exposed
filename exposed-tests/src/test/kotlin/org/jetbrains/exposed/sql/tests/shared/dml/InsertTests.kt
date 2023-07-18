@@ -8,9 +8,9 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
@@ -18,10 +18,8 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
 import org.junit.Test
-import java.math.BigDecimal
 import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertEquals
@@ -380,8 +378,7 @@ class InsertTests : DatabaseTestsBase() {
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
         withTables(TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.ORACLE, table) {
-            val isOldMySQL = currentDialectTest is MysqlDialect && db.isVersionCovers(BigDecimal("5.5"))
-            if (isOldMySQL) {
+            if (isOldMySql()) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
             table.insert {
@@ -573,5 +570,36 @@ class InsertTests : DatabaseTestsBase() {
             }
         }
 
+    }
+
+    class BatchInsertOnConflictDoNothing(
+        table: Table,
+    ) : BatchInsertStatement(table) {
+        override fun prepareSQL(transaction: Transaction, prepared: Boolean) = buildString {
+            append(super.prepareSQL(transaction, prepared))
+            append(" ON CONFLICT (id) DO NOTHING")
+        }
+    }
+
+    @Test fun `batch insert number of inserted rows is accurate`() {
+        val tab = object : Table("tab") {
+            val id = varchar("id", 10).uniqueIndex()
+        }
+
+        withTables(TestDB.allH2TestDB + listOf(TestDB.MYSQL), tab) {
+            tab.insert { it[id] = "foo" }
+
+            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
+                addBatch()
+                this[tab.id] = "foo"
+
+                addBatch()
+                this[tab.id] = "bar"
+
+                execute(this@withTables)
+            }
+
+            assertEquals(1, numInserted)
+        }
     }
 }

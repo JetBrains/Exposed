@@ -36,14 +36,22 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun booleanFromStringToBoolean(value: String): Boolean = try {
         value.toLong() != 0L
     } catch (ex: NumberFormatException) {
-        error("Unexpected value of type Boolean: $value")
+        try {
+            value.lowercase().toBooleanStrict()
+        } catch (ex: IllegalArgumentException) {
+            error("Unexpected value of type Boolean: $value")
+        }
     }
+
+    override fun jsonType(): String = "VARCHAR2(4000)"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
         e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
         else -> super.processForDefaultValue(e)
     }
+
+    override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 
 internal object OracleFunctionProvider : FunctionProvider() {
@@ -54,6 +62,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
      * **Note:** Oracle ignores the [seed]. You have to use the `dbms_random.seed` function manually.
      */
     override fun random(seed: Int?): String = "dbms_random.value"
+
+    override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("LENGTH(", expr, ")")
+    }
 
     override fun <T : String?> substring(
         expr: Expression<T>,
@@ -92,6 +104,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append(col, " ", order.name, ")")
     }
 
+    override fun <T : String?> locate(
+        queryBuilder: QueryBuilder,
+        expr: Expression<T>,
+        substring: String
+    ) = queryBuilder {
+        append("INSTR(", expr, ",\'", substring, "\')")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(YEAR FROM ")
         append(expr)
@@ -126,6 +146,44 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("Extract(SECOND FROM ")
         append(expr)
         append(")")
+    }
+
+    override fun <T> jsonExtract(
+        expression: Expression<T>,
+        vararg path: String,
+        toScalar: Boolean,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+        }
+        queryBuilder {
+            append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
+            append("(", expression, ", ")
+            append("'$", path.firstOrNull() ?: "", "'")
+            append(")")
+        }
+    }
+
+    override fun jsonExists(
+        expression: Expression<*>,
+        vararg path: String,
+        optional: String?,
+        jsonType: IColumnType,
+        queryBuilder: QueryBuilder
+    ) {
+        if (path.size > 1) {
+            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+        }
+        queryBuilder {
+            append("JSON_EXISTS(", expression, ", ")
+            append("'$", path.firstOrNull() ?: "", "'")
+            optional?.let {
+                append(" $it")
+            }
+            append(")")
+        }
     }
 
     override fun update(
@@ -183,6 +241,28 @@ internal object OracleFunctionProvider : FunctionProvider() {
         toString()
     }
 
+    override fun upsert(
+        table: Table,
+        data: List<Pair<Column<*>, Any?>>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        where: Op<Boolean>?,
+        transaction: Transaction,
+        vararg keys: Column<*>
+    ): String {
+        val statement = super.upsert(table, data, onUpdate, where, transaction, *keys)
+
+        val dualTable = data.appendTo(QueryBuilder(true), prefix = "(SELECT ", postfix = " FROM DUAL) S") { (column, value) ->
+            registerArgument(column, value)
+            +" AS "
+            append(transaction.identity(column))
+        }.toString()
+
+        val (leftReserved, rightReserved) = " USING " to " ON "
+        val leftBoundary = statement.indexOf(leftReserved) + leftReserved.length
+        val rightBoundary = statement.indexOf(rightReserved)
+        return statement.replaceRange(leftBoundary, rightBoundary, dualTable)
+    }
+
     override fun delete(
         ignore: Boolean,
         table: Table,
@@ -215,6 +295,10 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsOrderByNullsFirstLast: Boolean = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
+
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
+        return "DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
+    }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
         val result = super.modifyColumn(column, columnDiff).map {

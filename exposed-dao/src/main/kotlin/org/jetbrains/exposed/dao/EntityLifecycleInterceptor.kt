@@ -41,6 +41,16 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
                 }
             }
 
+            is UpsertStatement<*>, is BatchUpsertStatement -> {
+                transaction.flushCache()
+                transaction.entityCache.removeTablesReferrers(statement.targets, true)
+                if (!isExecutedWithinEntityLifecycle) {
+                    statement.targets.filterIsInstance<IdTable<*>>().forEach {
+                        transaction.entityCache.data[it]?.clear()
+                    }
+                }
+            }
+
             is InsertStatement<*> -> {
                 transaction.flushCache()
                 transaction.entityCache.removeTablesReferrers(listOf(statement.table), true)
@@ -66,8 +76,9 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
     }
 
     override fun afterExecution(transaction: Transaction, contexts: List<StatementContext>, executedStatement: PreparedStatementApi) {
-        if (!isExecutedWithinEntityLifecycle || contexts.first().statement !is InsertStatement<*>)
+        if (!isExecutedWithinEntityLifecycle || contexts.first().statement !is InsertStatement<*>) {
             transaction.alertSubscribers()
+        }
     }
 
     override fun beforeCommit(transaction: Transaction) {

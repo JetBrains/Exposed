@@ -52,9 +52,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb { dbSetting ->
-            val tooOldMysql = dbSetting == TestDB.MYSQL && !db.isVersionCovers(BigDecimal("5.6"))
-            if (!tooOldMysql) {
+        withDb {
+            if (!isOldMySql()) {
                 SchemaUtils.createMissingTablesAndColumns(TestTable)
                 assertTrue(TestTable.exists())
                 try {

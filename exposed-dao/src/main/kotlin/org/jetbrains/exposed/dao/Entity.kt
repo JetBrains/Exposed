@@ -105,7 +105,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 else -> {
                     // @formatter:off
                     factory.findWithCacheCondition({
-                       reference.referee!!.getValue(this, desc) == refValue
+                        reference.referee!!.getValue(this, desc) == refValue
                     }) {
                         reference.referee<REF>()!! eq refValue
                     }.singleOrNull()?.also {
@@ -146,13 +146,13 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 }
                 else -> {
                     // @formatter:off
-                   factory.findWithCacheCondition({
-                       reference.referee!!.getValue(this, desc) == refValue
-                   }) {
-                       reference.referee<REF>()!! eq refValue
-                   }.singleOrNull().also {
-                       storeReferenceInCache(reference, it)
-                   }
+                    factory.findWithCacheCondition(
+                        { reference.referee !!.getValue(this, desc) == refValue }
+                    ) {
+                        reference.referee<REF>() !! eq refValue
+                    }.singleOrNull().also {
+                        storeReferenceInCache(reference, it)
+                    }
                     // @formatter:on
                 }
             }
@@ -273,7 +273,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     }
                 }
             } else {
-                batch.addBatch(id)
+                batch.addBatch(this)
                 for ((c, v) in writeValues) {
                     batch[c] = v
                 }

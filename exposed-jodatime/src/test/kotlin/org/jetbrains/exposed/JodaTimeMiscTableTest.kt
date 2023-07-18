@@ -1,3 +1,5 @@
+@file:Suppress("MaximumLineLength")
+
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*

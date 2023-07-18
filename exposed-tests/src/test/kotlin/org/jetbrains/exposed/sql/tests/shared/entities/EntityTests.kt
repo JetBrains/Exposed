@@ -2,10 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -17,10 +14,7 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 object EntityTestsData {
 
@@ -374,6 +368,58 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
+    object Items : IntIdTable("items") {
+        val name = varchar("name", 255).uniqueIndex()
+        val price = double("price")
+    }
+
+    class Item(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Item>(Items)
+        var name by Items.name
+        var price by Items.price
+    }
+
+    @Test
+    fun testCacheInvalidatedOnDSLUpsert() {
+        withTables(Items) { testDb ->
+            excludingH2Version1(testDb) {
+                val oldPrice = 20.0
+                val itemA = Item.new {
+                    name = "Item A"
+                    price = oldPrice
+                }
+                assertEquals(oldPrice, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+
+                val newPrice = 50.0
+                val conflictKeys = if (testDb in TestDB.mySqlRelatedDB) emptyArray<Column<*>>() else arrayOf(Items.name)
+                Items.upsert(*conflictKeys) {
+                    it[name] = itemA.name
+                    it[price] = newPrice
+                }
+                assertEquals(oldPrice, itemA.price)
+                assertNull(Item.testCache(itemA.id))
+
+                itemA.refresh(flush = false)
+                assertEquals(newPrice, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+
+                val newPricePlusExtra = 100.0
+                val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
+                Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
+                    this[Items.name] = name
+                    this[Items.price] = price
+                }
+                assertEquals(newPrice, itemA.price)
+                assertNull(Item.testCache(itemA.id))
+
+                itemA.refresh(flush = false)
+                assertEquals(newPricePlusExtra, itemA.price)
+                assertNotNull(Item.testCache(itemA.id))
+            }
+        }
+    }
+
     object Humans : IntIdTable("human") {
         val h = text("h", eagerLoading = true)
     }
@@ -576,16 +622,18 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T) =
-        inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, 1, false, null, null, statement)
+        inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, false, null, null, statement)
 
     @Test fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
             val human1 = newTransaction {
+                repetitionAttempts = 1
                 Human.new {
                     this.h = "foo"
                 }
             }
             newTransaction {
+                repetitionAttempts = 1
                 assertEquals(null, Human.testCache(human1.id))
                 assertEquals("foo", Humans.selectAll().single()[Humans.h])
                 human1.h = "bar"
@@ -594,6 +642,7 @@ class EntityTests : DatabaseTestsBase() {
             }
 
             newTransaction {
+                repetitionAttempts = 1
                 assertEquals("bar", Humans.selectAll().single()[Humans.h])
             }
         }
@@ -733,7 +782,7 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 School.all().with(School::region)
                 assertNotNull(School.testCache(school1.id))
                 assertNotNull(School.testCache(school2.id))
@@ -761,7 +810,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.find {
                     Schools.id eq school1.id
                 }.first().load(School::region)
@@ -802,7 +852,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::region, School::secondaryRegion)
                 assertNotNull(School.testCache(school1.id))
                 assertNotNull(School.testCache(school2.id))
@@ -833,7 +884,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val school2 = School.find {
                     Schools.id eq school1.id
                 }.first().load(School::secondaryRegion)
@@ -893,7 +945,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
                 School.all().with(School::students)
@@ -934,7 +987,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
                 School.find { Schools.id eq school1.id }.first().load(School::students)
@@ -979,7 +1033,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::students, Student::detentions)
                 val cache = TransactionManager.current().entityCache
 
@@ -1042,7 +1097,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 School.all().with(School::holidays)
                 val cache = TransactionManager.current().entityCache
 
@@ -1190,7 +1246,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 Student.all().with(Student::bio)
                 val cache = TransactionManager.current().entityCache
 
@@ -1234,7 +1291,8 @@ class EntityTests : DatabaseTestsBase() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE, 1) {
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                repetitionAttempts = 1
                 Student.all().first().load(Student::bio)
                 val cache = TransactionManager.current().entityCache
 
@@ -1317,6 +1375,30 @@ class EntityTests : DatabaseTestsBase() {
                 createBoardCalled,
                 "Expected createBoardCalled to be called"
             )
+        }
+    }
+
+    object RequestsTable : IdTable<String>() {
+        val requestId: Column<String> = varchar("requestId", 256)
+        override val primaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+    }
+
+    @Test
+    fun testSelectFromStringIdTableWithPrimaryKeyByColumn() {
+        withTables(RequestsTable) {
+            Request.new {
+                requestId = "123"
+            }
+
+            val count = Request.all().count()
+            assertEquals(1, count)
         }
     }
 }
