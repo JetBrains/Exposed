@@ -418,6 +418,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         else -> findQuery
     }.toList()
 
+    @Suppress("ComplexMethod")
     internal fun <SID : Comparable<SID>> warmUpLinkedReferences(
         references: List<EntityID<SID>>,
         sourceRefColumn: Column<EntityID<SID>>,
