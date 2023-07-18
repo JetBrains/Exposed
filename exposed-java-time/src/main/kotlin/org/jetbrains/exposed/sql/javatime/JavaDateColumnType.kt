@@ -49,8 +49,10 @@ internal fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
+@Suppress("MagicNumber")
 internal val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
+@Suppress("MagicNumber")
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
@@ -94,6 +96,7 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+@Suppress("MagicNumber")
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()

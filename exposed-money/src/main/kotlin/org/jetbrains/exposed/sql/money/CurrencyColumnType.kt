@@ -11,6 +11,7 @@ import javax.money.Monetary
  *
  * @author Vladislav Kisel
  */
+@Suppress("MagicNumber")
 class CurrencyColumnType : VarCharColumnType(3) {
 
     override fun notNullValueToDB(value: Any): Any {
