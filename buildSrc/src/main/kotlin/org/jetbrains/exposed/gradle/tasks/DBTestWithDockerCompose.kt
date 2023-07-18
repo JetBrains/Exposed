@@ -23,6 +23,8 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
         )
         captureContainersOutput.set(true)
         removeVolumes.set(true)
+
+        @Suppress("MagicNumber")
         waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
     }
 
