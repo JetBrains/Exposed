@@ -5,10 +5,13 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption.PostgreSQL
 import org.junit.Rule
 import org.junit.Test
+import java.sql.ResultSet
 import kotlin.test.assertEquals
 
 class PostgresqlTests : DatabaseTestsBase() {
@@ -58,6 +61,59 @@ class PostgresqlTests : DatabaseTestsBase() {
                 assertEquals(name, forNoKeyUpdateRes)
                 assertEquals(name, notForUpdateRes)
             }
+        }
+    }
+
+    @Test
+    fun testPrimaryKeyCreatedInPostgresql() {
+        val tableName = "tester"
+        val tester1 = object : Table(tableName) {
+            val age = integer("age")
+        }
+
+        val tester2 = object : Table(tableName) {
+            val age = integer("age")
+
+            override val primaryKey = PrimaryKey(age)
+        }
+
+        val tester3 = object : IntIdTable(tableName) {
+            val age = integer("age")
+        }
+
+        fun <T : Any> Transaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
+            return exec(
+                """
+                SELECT ct.relname as TABLE_NAME, ci.relname AS PK_NAME
+                FROM pg_catalog.pg_class ct
+                JOIN pg_index i ON (ct.oid = i.indrelid AND indisprimary)
+                JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid)
+                WHERE ct.relname IN ('$tableName')
+                """.trimIndent()
+            ) { rs ->
+                transform(rs)
+            }
+        }
+        withDb(listOf(TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+            val defaultPKName = "tester_pkey"
+            SchemaUtils.createMissingTablesAndColumns(tester1)
+            assertPrimaryKey {
+                assertFalse(it.next())
+            }
+
+            SchemaUtils.createMissingTablesAndColumns(tester2)
+            assertPrimaryKey {
+                assertTrue(it.next())
+                assertEquals(defaultPKName, it.getString("PK_NAME"))
+            }
+
+            SchemaUtils.createMissingTablesAndColumns(tester3)
+            assertPrimaryKey {
+                assertTrue(it.next())
+                assertEquals(defaultPKName, it.getString("PK_NAME"))
+            }
+
+            SchemaUtils.drop(tester1)
         }
     }
 

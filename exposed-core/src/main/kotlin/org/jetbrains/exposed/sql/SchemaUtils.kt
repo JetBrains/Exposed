@@ -196,6 +196,10 @@ object SchemaUtils {
             currentDialect.tableColumns(*tables)
         }
 
+        val existingPrimaryKeys = logTimeSpent("Extracting primary keys", withLogs) {
+            currentDialect.existingPrimaryKeys(*tables)
+        }
+
         val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
 
         for (table in tables) {
@@ -206,6 +210,32 @@ object SchemaUtils {
                 if (existingColumn != null) column to existingColumn else null
             }.toMap()
             val missingTableColumns = table.columns.filter { it !in existingTableColumns }
+
+            if (dbSupportsAlterTableWithAddColumn) {
+                // modify primary key before missing columns added in case old PK must be dropped first
+                val thisTableExistingPK = existingPrimaryKeys[table].orEmpty()
+                val thisTableExistingPKName = thisTableExistingPK.keys.firstOrNull()
+
+                table.primaryKey?.let { newPK ->
+                    val missingPK = newPK.takeIf { pk -> pk.columns.none { it in missingTableColumns } }
+                    val missingPKName = missingPK?.name?.takeIf { table.isCustomPKNameDefined() }
+                    thisTableExistingPKName?.let { existingPKName ->
+                        val thisTableExistingPKColumns = thisTableExistingPK.values.firstOrNull()?.map(String::lowercase)
+                        val pkDiffers = missingPKName?.let { it != thisTableExistingPKName } == true ||
+                            newPK.columns.map { it.name.lowercase() } != thisTableExistingPKColumns
+                        if (pkDiffers) {
+                            statements.add(currentDialect.dropPrimaryKey(table.tableName, existingPKName))
+                            missingPK?.let {
+                                statements.add(currentDialect.addPrimaryKey(table.tableName, missingPKName, *missingPK.columns))
+                            }
+                        }
+                    } ?: missingPK?.let {
+                        statements.add(currentDialect.addPrimaryKey(table.tableName, missingPKName, *missingPK.columns))
+                    }
+                } ?: thisTableExistingPKName?.let {
+                    statements.add(currentDialect.dropPrimaryKey(table.tableName, it))
+                }
+            }
 
             missingTableColumns.flatMapTo(statements) { it.ddl }
 
@@ -235,24 +265,32 @@ object SchemaUtils {
         }
 
         if (dbSupportsAlterTableWithAddColumn) {
-            val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
-                currentDialect.columnConstraints(*tables)
-            }
+            statements.addAll(addMissingColumnConstraints(*tables, withLogs = withLogs))
+        }
 
-            val foreignKeyConstraints = tables.flatMap { table ->
-                table.foreignKeys.map { it to existingColumnConstraint[table to it.from]?.firstOrNull() }
-            }
+        return statements
+    }
 
-            for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
-                if (existingConstraint == null) {
-                    statements.addAll(createFKey(foreignKey))
-                } else if (existingConstraint.targetTable != foreignKey.targetTable ||
-                    foreignKey.deleteRule != existingConstraint.deleteRule ||
-                    foreignKey.updateRule != existingConstraint.updateRule
-                ) {
-                    statements.addAll(existingConstraint.dropStatement())
-                    statements.addAll(createFKey(foreignKey))
-                }
+    private fun addMissingColumnConstraints(vararg tables: Table, withLogs: Boolean): List<String> {
+        val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
+            currentDialect.columnConstraints(*tables)
+        }
+
+        val foreignKeyConstraints = tables.flatMap { table ->
+            table.foreignKeys.map { it to existingColumnConstraint[table to it.from]?.firstOrNull() }
+        }
+
+        val statements = ArrayList<String>()
+
+        for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
+            if (existingConstraint == null) {
+                statements.addAll(createFKey(foreignKey))
+            } else if (existingConstraint.targetTable != foreignKey.targetTable ||
+                foreignKey.deleteRule != existingConstraint.deleteRule ||
+                foreignKey.updateRule != existingConstraint.updateRule
+            ) {
+                statements.addAll(existingConstraint.dropStatement())
+                statements.addAll(createFKey(foreignKey))
             }
         }
 

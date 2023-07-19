@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
@@ -184,7 +185,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-//        withDb(db = listOf(TestDB.H2)) {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
@@ -210,7 +210,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-//        withDb(db = listOf(TestDB.H2)) {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
@@ -240,7 +239,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun addAutoPrimaryKey() {
+    @Test
+    fun addAutoPrimaryKey() {
         val tableName = "Foo"
         val initialTable = object : Table(tableName) {
             val bar = text("bar")
@@ -252,6 +252,127 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+        }
+    }
+
+    @Test
+    fun testAddNewPrimaryKey() {
+        val tableName = "tester"
+        val noPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+        }
+
+        val singlePKTable = object : Table(tableName) {
+            val bar = integer("bar")
+
+            override val primaryKey = PrimaryKey(bar)
+        }
+
+        val multiPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+            val baz = integer("baz")
+
+            override val primaryKey = PrimaryKey(bar, baz)
+        }
+
+        // new primary key on existing column should trigger alter
+        withDb(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.ORACLE + TestDB.SQLSERVER) {
+            SchemaUtils.createMissingTablesAndColumns(noPKTable)
+
+            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
+            assertEquals(expected, statements.single())
+
+            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+
+            SchemaUtils.drop(noPKTable)
+        }
+        // new primary key using an existing column + a new column should trigger alter
+        withDb(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.ORACLE) {
+            SchemaUtils.createMissingTablesAndColumns(noPKTable)
+
+            val expectedColumn = multiPKTable.baz.descriptionDdl(modify = true)
+            val constraint = when (currentDialectTest) {
+                is SQLServerDialect -> " CONSTRAINT pk_tester"
+                else -> ", ADD CONSTRAINT pk_tester"
+            }
+            val columns = multiPKTable.columns.joinToString(prefix = "(", postfix = ")") { it.nameInDatabaseCase() }
+            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD $expectedColumn$constraint PRIMARY KEY $columns"
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(multiPKTable)
+            assertEquals(expected, statements.single())
+
+            SchemaUtils.createMissingTablesAndColumns(multiPKTable)
+
+            SchemaUtils.drop(noPKTable)
+        }
+        // change to existing primary key columns should trigger alter
+        withDb(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.ORACLE) {
+            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            val defaultPKName = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]?.keys?.firstOrNull()
+
+            val dropConstraint = if (currentDialectTest is MysqlDialect) "PRIMARY KEY" else "CONSTRAINT ${defaultPKName?.inProperCase()}"
+            val expectedDrop = "ALTER TABLE ${tableName.inProperCase()} DROP $dropConstraint"
+            val expectedColumn = multiPKTable.baz.descriptionDdl()
+            val columns = multiPKTable.columns.joinToString(prefix = "(", postfix = ")") { it.nameInDatabaseCase() }
+            val constraint = when (currentDialectTest) {
+                is SQLServerDialect -> " CONSTRAINT pk_tester"
+                else -> ", ADD CONSTRAINT pk_tester"
+            }
+            val expectedAdd = "ALTER TABLE ${tableName.inProperCase()} ADD $expectedColumn$constraint PRIMARY KEY $columns"
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(multiPKTable)
+            assertEquals(expectedDrop, statements.first())
+            assertEquals(expectedAdd, statements.last())
+
+            SchemaUtils.createMissingTablesAndColumns(multiPKTable)
+
+            SchemaUtils.drop(singlePKTable)
+        }
+    }
+
+    @Test
+    fun testModifyNewPrimaryKey() {
+        val tableName = "tester"
+        val updatedPKName = "custom_bar_pk"
+        val singlePKTable = object : Table(tableName) {
+            val bar = integer("bar")
+
+            override val primaryKey = PrimaryKey(bar)
+        }
+
+        val namedPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+
+            override val primaryKey = PrimaryKey(bar, name = updatedPKName)
+        }
+
+        val noPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+        }
+
+        withDb(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.ORACLE) {
+            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            val defaultPKName = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]?.keys?.firstOrNull()
+
+            // changed primary key name should trigger alter
+            var dropConstraint = if (currentDialectTest is MysqlDialect) "PRIMARY KEY" else "CONSTRAINT ${defaultPKName?.inProperCase()}"
+            var expectedDrop = "ALTER TABLE ${tableName.inProperCase()} DROP $dropConstraint"
+            val expectedConstraint = "CONSTRAINT ${updatedPKName.inProperCase()} PRIMARY KEY"
+            val expectedAdd = "ALTER TABLE ${tableName.inProperCase()} ADD $expectedConstraint (${singlePKTable.bar.nameInDatabaseCase()})"
+            var statements = SchemaUtils.statementsRequiredToActualizeScheme(namedPKTable)
+            assertEquals(expectedDrop, statements.first())
+            assertEquals(expectedAdd, statements.last())
+
+            SchemaUtils.createMissingTablesAndColumns(namedPKTable)
+
+            // change to no primary key should trigger alter
+            dropConstraint = if (currentDialectTest is MysqlDialect) "PRIMARY KEY" else "CONSTRAINT ${updatedPKName.inProperCase()}"
+            expectedDrop = "ALTER TABLE ${tableName.inProperCase()} DROP $dropConstraint"
+            statements = SchemaUtils.statementsRequiredToActualizeScheme(noPKTable)
+            assertEquals(expectedDrop, statements.single())
+
+            SchemaUtils.createMissingTablesAndColumns(noPKTable)
+
+            SchemaUtils.drop(singlePKTable)
         }
     }
 

@@ -37,6 +37,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun getCurrentScheme ()Ljava/lang/String;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
 	public fun getDatabaseProductVersion ()Ljava/lang/String;

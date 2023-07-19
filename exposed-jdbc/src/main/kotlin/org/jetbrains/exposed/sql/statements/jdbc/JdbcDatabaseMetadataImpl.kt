@@ -239,6 +239,23 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return HashMap(existingIndicesCache)
     }
 
+    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, Map<String, List<String>>> {
+        return tables.associateWith { table ->
+            metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCase()).let { rs ->
+                val columnNames = arrayListOf<String>()
+                var pkName = ""
+                while (rs.next()) {
+                    rs.getString("PK_NAME")?.let {
+                        pkName = it
+                        columnNames += rs.getString("COLUMN_NAME")
+                    }
+                }
+                rs.close()
+                if (pkName.isEmpty()) emptyMap() else mapOf(pkName to columnNames)
+            }
+        }
+    }
+
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }

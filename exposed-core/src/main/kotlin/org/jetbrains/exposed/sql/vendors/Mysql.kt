@@ -340,6 +340,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String =
         "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
 
+    override fun dropPrimaryKey(tableName: String, pkName: String): String {
+        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP PRIMARY KEY"
+    }
+
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
 
     override fun createSchema(schema: Schema): String = buildString {
