@@ -49,10 +49,10 @@ class SpringTransactionManager(
     private val springTxKey = "SPRING_TX_KEY"
 
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
+        val fetchedIsolationLevel = defaultIsolationLevel
         super.doBegin(transaction, definition)
-
         if (TransactionSynchronizationManager.hasResource(obtainDataSource())) {
-            currentOrNull() ?: initTransaction()
+            currentOrNull() ?: initTransaction(fetchedIsolationLevel)
         }
         if (!TransactionSynchronizationManager.hasResource(springTxKey)) {
             TransactionSynchronizationManager.bindResource(springTxKey, transaction)
@@ -95,22 +95,22 @@ class SpringTransactionManager(
     }
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
+        val fetchedIsolationLevel = defaultIsolationLevel
         val tDefinition = DefaultTransactionDefinition().apply {
             isReadOnly = readOnly
             isolationLevel = isolation
         }
-
         getTransaction(tDefinition)
 
-        return currentOrNull() ?: initTransaction()
+        return currentOrNull() ?: initTransaction(fetchedIsolationLevel)
     }
 
-    private fun initTransaction(): Transaction {
+    private fun initTransaction(dbDefaultIsolationLevel: Int): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
         @Suppress("TooGenericExceptionCaught")
         val transactionImpl = try {
-            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
+            SpringTransaction(JdbcConnectionImpl(connection), db, dbDefaultIsolationLevel, defaultReadOnly, currentOrNull())
         } catch (e: Exception) {
             exposedLogger.error("Failed to start transaction. Connection will be closed.", e)
             connection.close()
