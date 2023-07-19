@@ -38,6 +38,7 @@ open class TestConfig : TransactionManagementConfigurer {
 @RunWith(SpringJUnit4ClassRunner::class)
 @ContextConfiguration(classes = [TestConfig::class])
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Suppress("UnnecessaryAbstractClass")
 abstract class SpringTransactionTestBase {
 
     @Autowired

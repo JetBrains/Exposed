@@ -1,4 +1,4 @@
-@file:Suppress("MaximumLineLength")
+@file:Suppress("MaximumLineLength", "LongMethod")
 
 package org.jetbrains.exposed
 

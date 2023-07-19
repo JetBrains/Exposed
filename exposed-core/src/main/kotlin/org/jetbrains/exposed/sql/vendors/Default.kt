@@ -82,6 +82,7 @@ abstract class DataTypeProvider {
     /** Binary type for storing [UUID]. */
     open fun uuidType(): String = "BINARY(16)"
 
+    @Suppress("MagicNumber")
     open fun uuidToDB(value: UUID): Any =
         ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
 
@@ -1042,6 +1043,7 @@ abstract class VendorDialect(
     protected val identifierManager
         get() = TransactionManager.current().db.identifierManager
 
+    @Suppress("UnnecessaryAbstractClass")
     abstract class DialectNameProvider(val dialectName: String)
 
     /* Cached values */

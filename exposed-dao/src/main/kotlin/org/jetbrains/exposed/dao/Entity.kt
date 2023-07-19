@@ -38,7 +38,10 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         internal set
 
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
+
+    @Suppress("VariableNaming")
     var _readValues: ResultRow? = null
+
     val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
@@ -178,7 +181,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         return this.restoreValueFromParts(values)
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun <T, R : Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
         if (_readValues?.hasValue(this) == true) {
             found(readValues[this])
@@ -261,6 +263,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
             if (batch == null) {
                 val table = klass.table
                 // Store values before update to prevent flush inside UpdateStatement
+                @Suppress("VariableNaming")
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
                 // In case of batch all changes will be registered after all entities flushed

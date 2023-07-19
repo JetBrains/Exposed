@@ -27,6 +27,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
         return userData.filterValues { it is EntityCache }
     }
 
+    @Suppress("ComplexMethod")
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         when (val statement = context.statement) {
             is Query -> transaction.flushEntities(statement)

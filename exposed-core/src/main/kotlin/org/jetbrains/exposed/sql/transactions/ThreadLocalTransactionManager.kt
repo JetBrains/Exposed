@@ -207,7 +207,6 @@ fun <T> transaction(
         }
     }
 
-@Suppress("LongParameterList")
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,

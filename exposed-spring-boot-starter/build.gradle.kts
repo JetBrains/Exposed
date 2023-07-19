@@ -19,13 +19,15 @@ dependencies {
     compileOnly("org.springframework.boot", "spring-boot-configuration-processor", Versions.springBoot)
 
     testImplementation("org.springframework.boot", "spring-boot-starter-test", Versions.springBoot)
-    testImplementation("org.springframework.boot", "spring-boot-starter-webflux", Versions.springBoot) // put in testImplementation so no hard dependency for those using the starter
+    // put in testImplementation so no hard dependency for those using the starter
+    testImplementation("org.springframework.boot", "spring-boot-starter-webflux", Versions.springBoot)
     testImplementation("com.h2database", "h2", Versions.h2)
 }
 
 tasks.withType<Test>().configureEach {
-    if (JavaVersion.VERSION_1_8 > JavaVersion.current())
+    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
+    }
 
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))

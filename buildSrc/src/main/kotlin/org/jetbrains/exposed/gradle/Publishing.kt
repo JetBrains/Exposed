@@ -1,14 +1,12 @@
-@file:Suppress("UnstableApiUsage")
-
 package org.jetbrains.exposed.gradle
 
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.plugins.signing.SigningExtension
-import org.gradle.api.plugins.JavaPluginExtension
 
 infix fun <T> Property<T>.by(value: T) {
     set(value)
@@ -55,10 +53,12 @@ fun MavenPublication.signPublicationIfKeyPresent(project: Project) {
     }
 }
 
+@Suppress("FunctionNaming")
 fun Project._publishing(configure: PublishingExtension.() -> Unit) {
     extensions.configure("publishing", configure)
 }
 
+@Suppress("FunctionNaming")
 fun Project._java(configure: JavaPluginExtension.() -> Unit) {
     extensions.configure("java", configure)
 }

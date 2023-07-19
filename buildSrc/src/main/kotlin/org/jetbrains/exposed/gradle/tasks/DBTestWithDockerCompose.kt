@@ -2,7 +2,7 @@ package org.jetbrains.exposed.gradle.tasks
 
 import com.avast.gradle.dockercompose.ComposeSettings
 import org.gradle.api.tasks.Input
-import org.jetbrains.exposed.gradle._dockerCompose
+import org.jetbrains.exposed.gradle.dockerCompose
 import java.io.File
 import java.time.Duration
 import javax.inject.Inject
@@ -16,13 +16,15 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
     @Inject
     constructor(parameters: Parameters) : this(parameters.dialect, parameters.port, parameters.dockerComposeServiceName)
 
-    private val dockerCompose: ComposeSettings = project._dockerCompose.nested(dockerComposeServiceName).apply {
+    private val dockerCompose: ComposeSettings = project.dockerCompose.nested(dockerComposeServiceName).apply {
         environment.put("COMPOSE_CONVERT_WINDOWS_PATHS", true)
         useComposeFiles.add(
             File(project.rootProject.projectDir, "buildScripts/docker/docker-compose-$dockerComposeServiceName.yml").absolutePath
         )
         captureContainersOutput.set(true)
         removeVolumes.set(true)
+
+        @Suppress("MagicNumber")
         waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
     }
 

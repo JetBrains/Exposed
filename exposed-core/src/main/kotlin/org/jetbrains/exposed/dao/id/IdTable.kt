@@ -19,7 +19,6 @@ object EntityIDFunctionProvider {
             }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>) = factory.createEntityID(value, table)
 }
 

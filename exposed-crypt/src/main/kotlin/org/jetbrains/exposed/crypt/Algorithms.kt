@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.math.ceil
 
 object Algorithms {
+    @Suppress("MagicNumber")
     private fun base64EncodedLength(byteSize: Int): Int = ceil(byteSize.toDouble() / 3).toInt() * 4
     private fun paddingLen(len: Int, blockSize: Int): Int = if (len % blockSize == 0) 0 else blockSize - len % blockSize
     private val base64Decoder = Base64.getDecoder()
@@ -82,7 +83,7 @@ object Algorithms {
 
     private const val TRIPLE_DES_KEY_LENGTH = 24
     private const val TRIPLE_DES_BLOCK_LENGTH = 8
-    @Suppress("FunctionNaming")
+    @Suppress("FunctionNaming", "UseRequire")
     fun TRIPLE_DES(secretKey: CharSequence): Encryptor {
         if (secretKey.toString().toByteArray().size != TRIPLE_DES_KEY_LENGTH) {
             throw IllegalArgumentException("secretKey must have 24 bytes")

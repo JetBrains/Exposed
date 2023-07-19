@@ -20,7 +20,7 @@ dependencies {
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx","kotlinx-coroutines-debug", Versions.kotlinCoroutines)
+    testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", Versions.kotlinCoroutines)
     testImplementation("org.springframework", "spring-test", Versions.springFramework)
     testImplementation("org.slf4j", "slf4j-api", Versions.slf4j)
     testImplementation("org.apache.logging.log4j", "log4j-slf4j-impl", Versions.log4j2)
@@ -32,8 +32,9 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-    if (JavaVersion.VERSION_1_8 > JavaVersion.current())
+    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
+    }
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
         showStandardStreams = true

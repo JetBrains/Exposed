@@ -108,6 +108,7 @@ class SpringTransactionManager(
     private fun initTransaction(): Transaction {
         val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
 
+        @Suppress("TooGenericExceptionCaught")
         val transactionImpl = try {
             SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull())
         } catch (e: Exception) {

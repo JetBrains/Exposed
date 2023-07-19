@@ -24,7 +24,6 @@ class EntityCache(private val transaction: Transaction) {
      * Amount of entities to keep in a cache per an Entity class.
      * On setting a new value all data stored in cache will be adjusted to a new size
      */
-    @Suppress("MemberVisibilityCanBePrivate")
     var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
         set(value) {
             val diff = value - field

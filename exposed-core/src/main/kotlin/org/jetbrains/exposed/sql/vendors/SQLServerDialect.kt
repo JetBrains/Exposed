@@ -238,8 +238,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    // TODO: Fix changing default value on column as it requires to drop/create constraint
-    // https://stackoverflow.com/questions/15547210/modify-default-value-in-sql-server
+    // EXPOSED-85 Fix changing default value on column in SQL Server as it requires to drop/create constraint
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
