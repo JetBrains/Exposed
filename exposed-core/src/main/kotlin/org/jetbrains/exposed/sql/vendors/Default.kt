@@ -928,7 +928,7 @@ interface DatabaseDialect {
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
 
-    /** Returns a map with the primary key name and defining columns in each of the specified [tables]. */
+    /** Returns a map with the primary key metadata in each of the specified [tables]. */
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
@@ -957,7 +957,7 @@ interface DatabaseDialect {
     /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
 
-    /** Returns the SQL command that adds a primary key to an existing table specified [tableName]. */
+    /** Returns the SQL command that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
