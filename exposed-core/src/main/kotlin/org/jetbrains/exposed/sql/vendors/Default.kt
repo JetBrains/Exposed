@@ -921,7 +921,9 @@ interface DatabaseDialect {
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
     /** Returns a map with the foreign key constraints of all the defined columns sets in each of the specified [tables]. */
-    fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
+    fun columnConstraints(
+        vararg tables: Table
+    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
@@ -1010,7 +1012,11 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             NO_WAIT("NOWAIT"), SKIP_LOCKED("SKIP LOCKED")
         }
 
-        abstract class ForUpdateBase(querySuffix: String, private val mode: MODE? = null, private vararg val ofTables: Table) : ForUpdateOption("") {
+        abstract class ForUpdateBase(
+            querySuffix: String,
+            private val mode: MODE? = null,
+            private vararg val ofTables: Table
+        ) : ForUpdateOption("") {
             private val preparedQuerySuffix = buildString {
                 append(querySuffix)
                 ofTables.takeIf { it.isNotEmpty() }?.let { tables ->
@@ -1024,17 +1030,29 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             final override val querySuffix: String = preparedQuerySuffix
         }
 
-        class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
+        class ForUpdate(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
 
-        open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, ofTables = ofTables) {
+        open class ForNoKeyUpdate(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR NO KEY UPDATE", mode, ofTables = ofTables) {
             companion object : ForNoKeyUpdate()
         }
 
-        open class ForShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
+        open class ForShare(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
             companion object : ForShare()
         }
 
-        open class ForKeyShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR KEY SHARE", mode, ofTables = ofTables) {
+        open class ForKeyShare(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR KEY SHARE", mode, ofTables = ofTables) {
             companion object : ForKeyShare()
         }
     }
@@ -1123,7 +1141,9 @@ abstract class VendorDialect(
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
+    override fun columnConstraints(
+        vararg tables: Table
+    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<Table, LinkedHashSet<Column<*>>>, MutableList<ForeignKeyConstraint>>()
 
         val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
@@ -1143,7 +1163,9 @@ abstract class VendorDialect(
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
         TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
 
-    private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
+    private val supportsSelectForUpdate: Boolean by lazy {
+        TransactionManager.current().db.metadata { supportsSelectForUpdate }
+    }
 
     override fun supportsSelectForUpdate(): Boolean = supportsSelectForUpdate
 

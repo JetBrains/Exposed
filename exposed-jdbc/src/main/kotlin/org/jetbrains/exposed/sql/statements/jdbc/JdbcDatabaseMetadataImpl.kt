@@ -80,7 +80,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         _currentScheme = null
     }
 
-    private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
+    private inner class CachableMapWithDefault<K, V>(
+        private val map: MutableMap<K, V> = mutableMapOf(),
+        val default: (K) -> V
+    ) : Map<K, V> by map {
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
