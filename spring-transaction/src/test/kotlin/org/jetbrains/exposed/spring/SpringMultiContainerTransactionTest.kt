@@ -222,4 +222,4 @@ object Payment : LongIdTable("payments") {
     val state = varchar("state", 50)
 }
 
-private class SpringTransactionTestException() : Error()
+private class SpringTransactionTestException : Error()

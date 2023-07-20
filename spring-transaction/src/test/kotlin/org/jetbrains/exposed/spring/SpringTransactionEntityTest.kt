@@ -5,11 +5,8 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
