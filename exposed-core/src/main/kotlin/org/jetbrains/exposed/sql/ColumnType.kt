@@ -113,7 +113,8 @@ class AutoIncColumnType(
 
     /** Returns the name of the sequence used to generate new values for this auto-increment column. */
     val autoincSeq: String?
-        get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence } ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
+        get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence }
+            ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
 
     val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
 
@@ -156,11 +157,13 @@ class AutoIncColumnType(
 }
 
 /** Returns `true` if this is an auto-increment column, `false` otherwise. */
-val IColumnType.isAutoInc: Boolean get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
+val IColumnType.isAutoInc: Boolean
+    get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
 
 /** Returns the name of the auto-increment sequence of this column. */
 val Column<*>.autoIncColumnType: AutoIncColumnType?
-    get() = (columnType as? AutoIncColumnType) ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
+    get() = (columnType as? AutoIncColumnType)
+        ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
 
 internal fun IColumnType.rawSqlType(): IColumnType = when {
     this is AutoIncColumnType -> delegate
@@ -240,19 +243,27 @@ class UByteColumnType : ColumnType() {
         return when (value) {
             is UByte -> value
             is Byte -> value.takeIf { it >= 0 }?.toUByte()
-            is Number -> value.toByte().takeIf { it >= 0 }?.toUByte()
+            is Number -> value.toShort().takeIf { it >= 0 && it <= UByte.MAX_VALUE.toShort() }?.toUByte()
             is String -> value.toUByte()
             else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UByte: $value")
+        } ?: error("Negative value but type is UByte: $value")
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = if (value is UByte) value.toByte() else value
+        val v = when {
+            value is UByte && currentDialect is MysqlDialect -> value.toShort()
+            value is UByte -> value.toByte()
+            else -> value
+        }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = if (value is UByte) value.toByte() else value
+        val v = when {
+            value is UByte && currentDialect is MysqlDialect -> value.toShort()
+            value is UByte -> value.toByte()
+            else -> value
+        }
         return super.notNullValueToDB(v)
     }
 }
@@ -279,19 +290,27 @@ class UShortColumnType : ColumnType() {
         return when (value) {
             is UShort -> value
             is Short -> value.takeIf { it >= 0 }?.toUShort()
-            is Number -> value.toShort().takeIf { it >= 0 }?.toUShort()
+            is Number -> value.toInt().takeIf { it >= 0 && it <= UShort.MAX_VALUE.toInt() }?.toUShort()
             is String -> value.toUShort()
             else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UShort: $value")
+        } ?: error("Negative value but type is UShort: $value")
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = if (value is UShort) value.toShort() else value
+        val v = when {
+            value is UShort && currentDialect is MysqlDialect -> value.toInt()
+            value is UShort -> value.toShort()
+            else -> value
+        }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = if (value is UShort) value.toShort() else value
+        val v = when {
+            value is UShort && currentDialect is MysqlDialect -> value.toInt()
+            value is UShort -> value.toShort()
+            else -> value
+        }
         return super.notNullValueToDB(v)
     }
 }
@@ -318,19 +337,27 @@ class UIntegerColumnType : ColumnType() {
         return when (value) {
             is UInt -> value
             is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toLong().takeIf { it >= 0 && it < UInt.MAX_VALUE.toLong() }?.toUInt()
+            is Number -> value.toLong().takeIf { it >= 0 && it <= UInt.MAX_VALUE.toLong() }?.toUInt()
             is String -> value.toUInt()
             else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is UInt: $value")
+        } ?: error("Negative value but type is UInt: $value")
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = if (value is UInt) value.toInt() else value
+        val v = when {
+            value is UInt && currentDialect is MysqlDialect -> value.toLong()
+            value is UInt -> value.toInt()
+            else -> value
+        }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = if (value is UInt) value.toInt() else value
+        val v = when {
+            value is UInt && currentDialect is MysqlDialect -> value.toLong()
+            value is UInt -> value.toInt()
+            else -> value
+        }
         return super.notNullValueToDB(v)
     }
 }
@@ -357,19 +384,35 @@ class ULongColumnType : ColumnType() {
         return when (value) {
             is ULong -> value
             is Long -> value.takeIf { it >= 0 }?.toULong()
-            is Number -> value.toLong().takeIf { it >= 0 }?.toULong()
+            is Number -> {
+                if (currentDialect is MysqlDialect) {
+                    value.toString().toBigInteger().takeIf {
+                        it >= "0".toBigInteger() && it <= ULong.MAX_VALUE.toString().toBigInteger()
+                    }?.toString()?.toULong()
+                } else {
+                    value.toLong().takeIf { it >= 0 }?.toULong()
+                }
+            }
             is String -> value.toULong()
             else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
-        } ?: error("negative value but type is ULong: $value")
+        } ?: error("Negative value but type is ULong: $value")
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = if (value is ULong) value.toLong() else value
+        val v = when {
+            value is ULong && currentDialect is MysqlDialect -> value.toString()
+            value is ULong -> value.toLong()
+            else -> value
+        }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = if (value is ULong) value.toLong() else value
+        val v = when {
+            value is ULong && currentDialect is MysqlDialect -> value.toString()
+            value is ULong -> value.toLong()
+            else -> value
+        }
         return super.notNullValueToDB(v)
     }
 }
@@ -642,11 +685,17 @@ open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = f
     }
 }
 
-open class MediumTextColumnType(collate: String? = null, eagerLoading: Boolean = false) : TextColumnType(collate, eagerLoading) {
+open class MediumTextColumnType(
+    collate: String? = null,
+    eagerLoading: Boolean = false
+) : TextColumnType(collate, eagerLoading) {
     override fun preciseType(): String = currentDialect.dataTypeProvider.mediumTextType()
 }
 
-open class LargeTextColumnType(collate: String? = null, eagerLoading: Boolean = false) : TextColumnType(collate, eagerLoading) {
+open class LargeTextColumnType(
+    collate: String? = null,
+    eagerLoading: Boolean = false
+) : TextColumnType(collate, eagerLoading) {
     override fun preciseType(): String = currentDialect.dataTypeProvider.largeTextType()
 }
 
@@ -784,7 +833,8 @@ class UUIDColumnType : ColumnType() {
     }
 
     companion object {
-        private val uuidRegexp = Regex("[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", RegexOption.IGNORE_CASE)
+        private val uuidRegexp =
+            Regex("[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", RegexOption.IGNORE_CASE)
     }
 }
 
@@ -802,10 +852,12 @@ class BooleanColumnType : ColumnType() {
         else -> value.toString().toBoolean()
     }
 
-    override fun nonNullValueToString(value: Any): String = currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
+    override fun nonNullValueToString(value: Any): String =
+        currentDialect.dataTypeProvider.booleanToStatementString(value as Boolean)
 
     override fun notNullValueToDB(value: Any): Any = when {
-        value is Boolean && (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) ->
+        value is Boolean &&
+            (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) ->
             nonNullValueToString(value)
         else -> value
     }
@@ -871,7 +923,9 @@ class EnumerationNameColumnType<T : Enum<T>>(
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): T = when (value) {
-        is String -> enumConstants[value] ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
+        is String -> {
+            enumConstants[value] ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
+        }
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
