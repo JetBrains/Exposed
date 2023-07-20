@@ -83,9 +83,6 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
     @Autowired
     lateinit var service: Service
 
-    @Autowired
-    lateinit var ds: EmbeddedDatabase
-
     @BeforeTest
     open fun beforeTest() {
         service.init()
