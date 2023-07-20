@@ -239,19 +239,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return HashMap(existingIndicesCache)
     }
 
-    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, Map<String, List<String>>> {
+    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
         return tables.associateWith { table ->
             metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCase()).let { rs ->
-                val columnNames = arrayListOf<String>()
+                val columnNames = mutableListOf<String>()
                 var pkName = ""
                 while (rs.next()) {
-                    rs.getString("PK_NAME")?.let {
-                        pkName = it
-                        columnNames += rs.getString("COLUMN_NAME")
-                    }
+                    rs.getString("PK_NAME")?.let { pkName = it }
+                    columnNames += rs.getString("COLUMN_NAME")
                 }
                 rs.close()
-                if (pkName.isEmpty()) emptyMap() else mapOf(pkName to columnNames)
+                if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
             }
         }
     }

@@ -3203,7 +3203,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 
 public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect$Companion;
-	public abstract fun addPrimaryKey (Ljava/lang/String;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
+	public abstract fun addPrimaryKey (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
 	public abstract fun allTablesNames ()Ljava/util/List;
 	public abstract fun catalog (Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public abstract fun checkTableMapping (Lorg/jetbrains/exposed/sql/Table;)Z
@@ -3213,7 +3213,6 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public abstract fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
-	public abstract fun dropPrimaryKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
@@ -3494,7 +3493,6 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
-	public fun dropPrimaryKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	protected fun fillConstraintCacheForTables (Ljava/util/List;)V
 	public fun getSupportsCreateSequence ()Z
@@ -3560,6 +3558,19 @@ public class org/jetbrains/exposed/sql/vendors/PostgreSQLNGDialect : org/jetbrai
 public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
 }
 
+public final class org/jetbrains/exposed/sql/vendors/PrimaryKeyMetadata {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/sql/vendors/PrimaryKeyMetadata;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/PrimaryKeyMetadata;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/PrimaryKeyMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getColumnNames ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/jetbrains/exposed/sql/vendors/SQLServerDialect : org/jetbrains/exposed/sql/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/SQLServerDialect$Companion;
 	public fun <init> ()V
@@ -3604,7 +3615,7 @@ public final class org/jetbrains/exposed/sql/vendors/SQLiteDialect$Companion : o
 
 public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetbrains/exposed/sql/vendors/DatabaseDialect {
 	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;)V
-	public fun addPrimaryKey (Ljava/lang/String;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
+	public fun addPrimaryKey (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
 	public fun allTablesNames ()Ljava/util/List;
 	public fun catalog (Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun checkTableMapping (Lorg/jetbrains/exposed/sql/Table;)Z
@@ -3615,7 +3626,6 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun createSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
-	public fun dropPrimaryKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;

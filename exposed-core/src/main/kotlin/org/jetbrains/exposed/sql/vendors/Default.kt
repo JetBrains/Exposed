@@ -837,6 +837,16 @@ data class ColumnMetadata(
 )
 
 /**
+ * Represents metadata information about a specific table's primary key.
+ */
+data class PrimaryKeyMetadata(
+    /** Name of the primary key. */
+    val name: String,
+    /** Names of the primary key's columns. */
+    val columnNames: List<String>
+)
+
+/**
  * Common interface for all database dialects.
  */
 @Suppress("TooManyFunctions")
@@ -917,7 +927,7 @@ interface DatabaseDialect {
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
 
     /** Returns a map with the primary key name and defining columns in each of the specified [tables]. */
-    fun existingPrimaryKeys(vararg tables: Table): Map<Table, Map<String, List<String>>> = emptyMap()
+    fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean
@@ -946,10 +956,7 @@ interface DatabaseDialect {
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
 
     /** Returns the SQL command that adds a primary key to an existing table specified [tableName]. */
-    fun addPrimaryKey(tableName: String, pkName: String?, vararg pkColumns: Column<*>): String
-
-    /** Returns the SQL command that drops the primary key [pkName] from the specified [tableName]. */
-    fun dropPrimaryKey(tableName: String, pkName: String): String
+    fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
@@ -1133,7 +1140,7 @@ abstract class VendorDialect(
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
         TransactionManager.current().db.metadata { existingIndices(*tables) }
 
-    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, Map<String, List<String>>> =
+    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
         TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
 
     private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
@@ -1245,16 +1252,11 @@ abstract class VendorDialect(
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         listOf("ALTER TABLE ${TransactionManager.current().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
 
-    override fun addPrimaryKey(tableName: String, pkName: String?, vararg pkColumns: Column<*>): String {
+    override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
         val transaction = TransactionManager.current()
         val columns = pkColumns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) }
         val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "
-        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} ADD${constraint}PRIMARY KEY $columns"
-    }
-
-    override fun dropPrimaryKey(tableName: String, pkName: String): String {
-        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP " +
-            "CONSTRAINT ${identifierManager.quoteIfNecessary(pkName)}"
+        return "ALTER TABLE ${transaction.identity(table)} ADD${constraint}PRIMARY KEY $columns"
     }
 }
 

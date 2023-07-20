@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
@@ -107,10 +108,8 @@ class PostgresqlTests : DatabaseTestsBase() {
                 assertEquals(defaultPKName, it.getString("PK_NAME"))
             }
 
-            SchemaUtils.createMissingTablesAndColumns(tester3)
-            assertPrimaryKey {
-                assertTrue(it.next())
-                assertEquals(defaultPKName, it.getString("PK_NAME"))
+            assertFailAndRollback("Multiple primary keys are not allowed") {
+                SchemaUtils.createMissingTablesAndColumns(tester3)
             }
 
             SchemaUtils.drop(tester1)
