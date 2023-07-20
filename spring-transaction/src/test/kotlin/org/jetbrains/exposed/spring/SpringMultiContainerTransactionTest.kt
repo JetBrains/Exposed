@@ -19,9 +19,6 @@ import org.springframework.transaction.annotation.Transactional
 import javax.sql.DataSource
 import kotlin.test.BeforeTest
 
-/**
- * @author ivan@daangn.com
- */
 open class SpringMultiContainerTransactionTest {
 
     val orderContainer = AnnotationConfigApplicationContext(OrderConfig::class.java)
@@ -67,7 +64,7 @@ open class SpringMultiContainerTransactionTest {
             orders.transaction {
                 orders.create()
                 payments.create()
-                throw Error()
+                throw SpringTransactionTestException()
             }
         }
         Assert.assertEquals(0, orders.findAll().size)
@@ -81,7 +78,7 @@ open class SpringMultiContainerTransactionTest {
                 orders.create()
                 payments.databaseTemplate {
                     payments.create()
-                    throw Error()
+                    throw SpringTransactionTestException()
                 }
             }
         }
@@ -120,7 +117,7 @@ open class SpringMultiContainerTransactionTest {
             orders.transaction {
                 orders.createWithExposedTrxBlock()
                 payments.createWithExposedTrxBlock()
-                throw Error()
+                throw SpringTransactionTestException()
             }
         }
         Assert.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
@@ -134,7 +131,7 @@ open class SpringMultiContainerTransactionTest {
                 orders.createWithExposedTrxBlock()
                 payments.databaseTemplate {
                     payments.createWithExposedTrxBlock()
-                    throw Error()
+                    throw SpringTransactionTestException()
                 }
             }
         }
@@ -224,3 +221,5 @@ open class Payments {
 object Payment : LongIdTable("payments") {
     val state = varchar("state", 50)
 }
+
+private class SpringTransactionTestException() : Error()
