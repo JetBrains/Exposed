@@ -45,7 +45,7 @@ For more information visit the links below:
 
 ## Filing issues
 
-Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). 
+Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). You must be logged in to view and log issues, otherwise you will be met with a 404.
 
 ## Community
 
