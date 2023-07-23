@@ -283,32 +283,33 @@ class ShortColumnType : ColumnType() {
 
 /**
  * Numeric column for storing unsigned 2-byte integers.
+ *
+ * **Note:** If the database being used is not MySQL or MariaDB, this column will represent the database's 4-byte
+ * integer type with a check constraint that ensures storage of only values between 0 and 65535 inclusive.
  */
 class UShortColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()
     override fun valueFromDB(value: Any): UShort {
         return when (value) {
             is UShort -> value
-            is Short -> value.takeIf { it >= 0 }?.toUShort()
-            is Number -> value.toInt().takeIf { it >= 0 && it <= UShort.MAX_VALUE.toInt() }?.toUShort()
+            is Short -> value.toUShort()
+            is Number -> value.toInt().toUShort()
             is String -> value.toUShort()
             else -> error("Unexpected value of type Short: $value of ${value::class.qualifiedName}")
-        } ?: error("Negative value but type is UShort: $value")
+        }
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = when {
-            value is UShort && currentDialect is MysqlDialect -> value.toInt()
-            value is UShort -> value.toShort()
+        val v = when (value) {
+            is UShort -> value.toInt()
             else -> value
         }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = when {
-            value is UShort && currentDialect is MysqlDialect -> value.toInt()
-            value is UShort -> value.toShort()
+        val v = when (value) {
+            is UShort -> value.toInt()
             else -> value
         }
         return super.notNullValueToDB(v)
