@@ -10,71 +10,75 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
-object TransformTables {
-    object Transformations : IntIdTable() {
-        val value = varchar("value", 50)
-    }
-    object NullableTransformations: IntIdTable() {
-        val value = varchar("nullable", 50).nullable()
-    }
-    class Transformation(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<Transformation>(Transformations)
-        var value by Transformations.value.transform(
-            toColumn = { "transformed-$it" },
-            toReal = { it.replace("transformed-", "") }
-        )
-    }
-    class NullableTransformation(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<NullableTransformation>(NullableTransformations)
-        var value by NullableTransformations.value.transform(
-            toColumn = { "transformed-$it" },
-            toReal = { it?.replace("transformed-", "") }
-        )
-    }
+object TransformationsTable : IntIdTable() {
+    val value = varchar("value", 50)
+}
+
+object NullableTransformationsTable: IntIdTable() {
+    val value = varchar("nullable", 50).nullable()
+}
+
+class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<TransformationEntity>(TransformationsTable)
+    var value by TransformationsTable.value.transform(
+        toColumn = { "transformed-$it" },
+        toReal = { it.replace("transformed-", "") }
+    )
+}
+
+class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<NullableTransformationEntity>(NullableTransformationsTable)
+    var value by NullableTransformationsTable.value.transform(
+        toColumn = { "transformed-$it" },
+        toReal = { it?.replace("transformed-", "") }
+    )
 }
 
 class ColumnWithTransformTest: DatabaseTestsBase() {
 
-    @Test fun `set and get value`() {
-        withTables(TransformTables.Transformations) {
-            val entity = TransformTables.Transformation.new {
+    @Test
+    fun `set and get value`() {
+        withTables(TransformationsTable) {
+            val entity = TransformationEntity.new {
                 value = "stuff"
             }
 
             assertEquals("stuff", entity.value)
 
-            val row = TransformTables.Transformations.select(Op.TRUE)
+            val row = TransformationsTable.select(Op.TRUE)
                 .first()
 
-            assertEquals("transformed-stuff", row[TransformTables.Transformations.value])
+            assertEquals("transformed-stuff", row[TransformationsTable.value])
         }
     }
 
-    @Test fun `set and get nullable value - while present`() {
-        withTables(TransformTables.NullableTransformations) {
-            val entity = TransformTables.NullableTransformation.new {
+    @Test
+    fun `set and get nullable value - while present`() {
+        withTables(NullableTransformationsTable) {
+            val entity = NullableTransformationEntity.new {
                 value = "stuff"
             }
 
             assertEquals("stuff", entity.value)
 
-            val row = TransformTables.NullableTransformations.select(Op.TRUE)
+            val row = NullableTransformationsTable.select(Op.TRUE)
                 .first()
 
-            assertEquals("transformed-stuff", row[TransformTables.NullableTransformations.value])
+            assertEquals("transformed-stuff", row[NullableTransformationsTable.value])
         }
     }
 
-    @Test fun `set and get nullable value - while absent`() {
-        withTables(TransformTables.NullableTransformations) {
-            val entity = TransformTables.NullableTransformation.new {}
+    @Test
+    fun `set and get nullable value - while absent`() {
+        withTables(NullableTransformationsTable) {
+            val entity = NullableTransformationEntity.new {}
 
             assertEquals(null, entity.value)
 
-            val row = TransformTables.NullableTransformations.select(Op.TRUE)
+            val row = NullableTransformationsTable.select(Op.TRUE)
                 .first()
 
-            assertEquals(null, row[TransformTables.NullableTransformations.value])
+            assertEquals(null, row[NullableTransformationsTable.value])
         }
     }
 }
