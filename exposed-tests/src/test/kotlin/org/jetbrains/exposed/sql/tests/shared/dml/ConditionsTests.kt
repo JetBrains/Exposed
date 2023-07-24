@@ -178,7 +178,6 @@ class ConditionsTests : DatabaseTestsBase() {
     @Test
     fun testCaseWhenElseAsArgument() {
         withCitiesAndUsers { cities, _, _ ->
-            addLogger(StdOutSqlLogger)
             val original = "ORIGINAL"
             val copy = "COPY"
             val condition = Op.build { cities.id eq 1 }
