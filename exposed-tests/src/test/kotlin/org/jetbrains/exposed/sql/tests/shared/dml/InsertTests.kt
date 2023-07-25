@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
@@ -55,7 +56,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreSupportedDB = TestDB.values().toList() -
+    private val insertIgnoreUnsupportedDB = TestDB.values().toList() -
         listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
     @Test
@@ -64,7 +65,7 @@ class InsertTests : DatabaseTestsBase() {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        withTables(insertIgnoreSupportedDB, idTable) {
+        withTables(excludeSettings = insertIgnoreUnsupportedDB, idTable) {
             idTable.insertIgnoreAndGetId {
                 it[idTable.name] = "1"
             }
@@ -139,10 +140,7 @@ class InsertTests : DatabaseTestsBase() {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        val insertIgnoreSupportedDB = TestDB.values().toList() -
-            listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
-
-        withTables(insertIgnoreSupportedDB, idTable) {
+        withTables(excludeSettings = insertIgnoreUnsupportedDB, idTable) {
             val insertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
@@ -278,7 +276,6 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test fun testInsertWithExpression() {
-
         val tbl = object : IntIdTable("testInsert") {
             val nullableInt = integer("nullableIntCol").nullable()
             val string = varchar("stringCol", 20)
@@ -315,7 +312,6 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test fun testInsertWithColumnExpression() {
-
         val tbl1 = object : IntIdTable("testInsert1") {
             val string1 = varchar("stringCol", 20)
         }
@@ -357,7 +353,6 @@ class InsertTests : DatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/192
     @Test fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
-
             val foo = OrderedData.new {
                 name = "foo"
                 order = 20
@@ -569,24 +564,34 @@ class InsertTests : DatabaseTestsBase() {
                 it[board] = nullableBoardId
             }
         }
-
     }
 
     class BatchInsertOnConflictDoNothing(
         table: Table,
     ) : BatchInsertStatement(table) {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean) = buildString {
-            append(super.prepareSQL(transaction, prepared))
-            append(" ON CONFLICT (id) DO NOTHING")
+            val insertStatement = super.prepareSQL(transaction, prepared)
+            when (val db = currentTestDB) {
+                in TestDB.mySqlRelatedDB -> {
+                    append("INSERT IGNORE ")
+                    append(insertStatement.substringAfter("INSERT "))
+                }
+                else -> {
+                    append(insertStatement)
+                    val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
+                    append(" ON CONFLICT ${identifier}DO NOTHING")
+                }
+            }
         }
     }
 
-    @Test fun `batch insert number of inserted rows is accurate`() {
+    @Test
+    fun testBatchInsertNumberOfInsertedRows() {
         val tab = object : Table("tab") {
             val id = varchar("id", 10).uniqueIndex()
         }
 
-        withTables(TestDB.allH2TestDB + listOf(TestDB.MYSQL), tab) {
+        withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
             val numInserted = BatchInsertOnConflictDoNothing(tab).run {
