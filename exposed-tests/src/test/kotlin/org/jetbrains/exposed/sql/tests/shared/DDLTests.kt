@@ -922,7 +922,7 @@ class DDLTests : DatabaseTestsBase() {
         withSchemas(two, one) {
             SchemaUtils.create(TableFromSchemeOne)
             if (currentDialectTest is OracleDialect) {
-                exec("GRANT SELECT ON ${TableFromSchemeOne.tableName} to TWO;")
+                exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
             SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
@@ -1114,8 +1114,6 @@ class DDLTests : DatabaseTestsBase() {
             if (currentDialectTest is SQLServerDialect) {
                 SchemaUtils.drop(tableA, tableB)
             }
-
         }
     }
-
 }
