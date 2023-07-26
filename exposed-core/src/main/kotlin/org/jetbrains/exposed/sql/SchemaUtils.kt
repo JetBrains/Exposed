@@ -187,6 +187,19 @@ object SchemaUtils {
                     else -> processForDefaultValue(exp)
                 }
             }
+            is Function<*> -> {
+                var processed = processForDefaultValue(exp)
+                if (
+                    exp.columnType is IDateColumnType &&
+                    (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()")
+                ) {
+                    when (currentDialect) {
+                        is SQLServerDialect -> processed = "getdate"
+                        is MariaDBDialect -> processed = processed.lowercase()
+                    }
+                }
+                processed
+            }
             else -> processForDefaultValue(exp)
         }
     }
