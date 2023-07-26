@@ -837,6 +837,16 @@ data class ColumnMetadata(
 )
 
 /**
+ * Represents metadata information about a specific table's primary key.
+ */
+data class PrimaryKeyMetadata(
+    /** Name of the primary key. */
+    val name: String,
+    /** Names of the primary key's columns. */
+    val columnNames: List<String>
+)
+
+/**
  * Common interface for all database dialects.
  */
 @Suppress("TooManyFunctions")
@@ -911,10 +921,15 @@ interface DatabaseDialect {
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
 
     /** Returns a map with the foreign key constraints of all the defined columns sets in each of the specified [tables]. */
-    fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
+    fun columnConstraints(
+        vararg tables: Table
+    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
+
+    /** Returns a map with the primary key metadata in each of the specified [tables]. */
+    fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean
@@ -941,6 +956,9 @@ interface DatabaseDialect {
 
     /** Returns the SQL command that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
+
+    /** Returns the SQL command that adds a primary key specified [pkName] to an existing [table]. */
+    fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
@@ -994,7 +1012,11 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             NO_WAIT("NOWAIT"), SKIP_LOCKED("SKIP LOCKED")
         }
 
-        abstract class ForUpdateBase(querySuffix: String, private val mode: MODE? = null, private vararg val ofTables: Table) : ForUpdateOption("") {
+        abstract class ForUpdateBase(
+            querySuffix: String,
+            private val mode: MODE? = null,
+            private vararg val ofTables: Table
+        ) : ForUpdateOption("") {
             private val preparedQuerySuffix = buildString {
                 append(querySuffix)
                 ofTables.takeIf { it.isNotEmpty() }?.let { tables ->
@@ -1008,17 +1030,29 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             final override val querySuffix: String = preparedQuerySuffix
         }
 
-        class ForUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
+        class ForUpdate(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
 
-        open class ForNoKeyUpdate(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR NO KEY UPDATE", mode, ofTables = ofTables) {
+        open class ForNoKeyUpdate(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR NO KEY UPDATE", mode, ofTables = ofTables) {
             companion object : ForNoKeyUpdate()
         }
 
-        open class ForShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
+        open class ForShare(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
             companion object : ForShare()
         }
 
-        open class ForKeyShare(mode: MODE? = null, vararg ofTables: Table) : ForUpdateBase("FOR KEY SHARE", mode, ofTables = ofTables) {
+        open class ForKeyShare(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR KEY SHARE", mode, ofTables = ofTables) {
             companion object : ForKeyShare()
         }
     }
@@ -1107,7 +1141,9 @@ abstract class VendorDialect(
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
-    override fun columnConstraints(vararg tables: Table): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
+    override fun columnConstraints(
+        vararg tables: Table
+    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<Table, LinkedHashSet<Column<*>>>, MutableList<ForeignKeyConstraint>>()
 
         val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
@@ -1124,7 +1160,12 @@ abstract class VendorDialect(
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
         TransactionManager.current().db.metadata { existingIndices(*tables) }
 
-    private val supportsSelectForUpdate: Boolean by lazy { TransactionManager.current().db.metadata { supportsSelectForUpdate } }
+    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
+        TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
+
+    private val supportsSelectForUpdate: Boolean by lazy {
+        TransactionManager.current().db.metadata { supportsSelectForUpdate }
+    }
 
     override fun supportsSelectForUpdate(): Boolean = supportsSelectForUpdate
 
@@ -1232,6 +1273,13 @@ abstract class VendorDialect(
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         listOf("ALTER TABLE ${TransactionManager.current().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
+
+    override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
+        val transaction = TransactionManager.current()
+        val columns = pkColumns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) }
+        val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "
+        return "ALTER TABLE ${transaction.identity(table)} ADD${constraint}PRIMARY KEY $columns"
+    }
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialect?>()

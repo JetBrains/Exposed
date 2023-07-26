@@ -16,10 +16,13 @@ import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
@@ -184,7 +187,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-//        withDb(db = listOf(TestDB.H2)) {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
@@ -210,7 +212,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-//        withDb(db = listOf(TestDB.H2)) {
             SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
@@ -240,7 +241,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun addAutoPrimaryKey() {
+    @Test
+    fun addAutoPrimaryKey() {
         val tableName = "Foo"
         val initialTable = object : Table(tableName) {
             val bar = text("bar")
@@ -252,6 +254,37 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+        }
+    }
+
+    @Test
+    fun testAddNewPrimaryKeyOnExistingColumn() {
+        val tableName = "tester"
+        val noPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+        }
+
+        val singlePKTable = object : Table(tableName) {
+            val bar = integer("bar")
+
+            override val primaryKey = PrimaryKey(bar)
+        }
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            SchemaUtils.createMissingTablesAndColumns(noPKTable)
+            var primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            assertNull(primaryKey)
+
+            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
+            assertEquals(expected, statements.single())
+
+            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            primaryKey = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            assertNotNull(primaryKey)
+            assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
+
+            SchemaUtils.drop(noPKTable)
         }
     }
 

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
+import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import java.math.BigDecimal
 
 abstract class ExposedDatabaseMetadata(val database: String) {
@@ -32,6 +33,8 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>
 
     abstract fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
+
+    abstract fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?>
 
     abstract fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
 

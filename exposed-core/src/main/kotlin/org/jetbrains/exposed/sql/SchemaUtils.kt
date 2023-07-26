@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
+@Suppress("TooManyFunctions")
 object SchemaUtils {
     private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
@@ -19,8 +20,9 @@ object SchemaUtils {
 
     private class TableDepthGraph(val tables: Iterable<Table>) {
         val graph = fetchAllTables().let { tables ->
-            if (tables.isEmpty()) emptyMap()
-            else {
+            if (tables.isEmpty()) {
+                emptyMap()
+            } else {
                 tables.associateWith { t ->
                     t.columns.mapNotNull { c ->
                         c.referee?.let { it.table to c.columnType.nullable }
@@ -125,7 +127,9 @@ object SchemaUtils {
     )
     fun createFKey(reference: Column<*>): List<String> {
         val foreignKey = reference.foreignKey
-        require(foreignKey != null && (foreignKey.deleteRule != null || foreignKey.updateRule != null)) { "$reference does not reference anything" }
+        require(foreignKey != null && (foreignKey.deleteRule != null || foreignKey.updateRule != null)) {
+            "$reference does not reference anything"
+        }
         return createFKey(foreignKey)
     }
 
@@ -196,6 +200,10 @@ object SchemaUtils {
             currentDialect.tableColumns(*tables)
         }
 
+        val existingPrimaryKeys = logTimeSpent("Extracting primary keys", withLogs) {
+            currentDialect.existingPrimaryKeys(*tables)
+        }
+
         val dbSupportsAlterTableWithAddColumn = TransactionManager.current().db.supportsAlterTableWithAddColumn
 
         for (table in tables) {
@@ -222,37 +230,56 @@ object SchemaUtils {
                         val columnType = col.columnType
                         val incorrectNullability = existingCol.nullable != columnType.nullable
                         // Exposed doesn't support changing sequences on columns
-                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
-                        val incorrectDefaults =
-                            existingCol.defaultDbValue != col.dbDefaultValue?.let { dataTypeProvider.dbDefaultToString(col, it) }
+                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc &&
+                            col.autoIncColumnType?.autoincSeq == null
+                        val incorrectDefaults = existingCol.defaultDbValue != col.dbDefaultValue?.let {
+                            dataTypeProvider.dbDefaultToString(col, it)
+                        }
                         val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()
                         ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                     }
                     .filterValues { it.hasDifferences() }
 
                 redoColumns.flatMapTo(statements) { (col, changedState) -> col.modifyStatements(changedState) }
+
+                // add missing primary key
+                val missingPK = table.primaryKey?.takeIf { pk -> pk.columns.none { it in missingTableColumns } }
+                if (missingPK != null && existingPrimaryKeys[table] == null) {
+                    val missingPKName = missingPK.name.takeIf { table.isCustomPKNameDefined() }
+                    statements.add(
+                        currentDialect.addPrimaryKey(table, missingPKName, pkColumns = missingPK.columns)
+                    )
+                }
             }
         }
 
         if (dbSupportsAlterTableWithAddColumn) {
-            val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
-                currentDialect.columnConstraints(*tables)
-            }
+            statements.addAll(addMissingColumnConstraints(*tables, withLogs = withLogs))
+        }
 
-            val foreignKeyConstraints = tables.flatMap { table ->
-                table.foreignKeys.map { it to existingColumnConstraint[table to it.from]?.firstOrNull() }
-            }
+        return statements
+    }
 
-            for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
-                if (existingConstraint == null) {
-                    statements.addAll(createFKey(foreignKey))
-                } else if (existingConstraint.targetTable != foreignKey.targetTable ||
-                    foreignKey.deleteRule != existingConstraint.deleteRule ||
-                    foreignKey.updateRule != existingConstraint.updateRule
-                ) {
-                    statements.addAll(existingConstraint.dropStatement())
-                    statements.addAll(createFKey(foreignKey))
-                }
+    private fun addMissingColumnConstraints(vararg tables: Table, withLogs: Boolean): List<String> {
+        val existingColumnConstraint = logTimeSpent("Extracting column constraints", withLogs) {
+            currentDialect.columnConstraints(*tables)
+        }
+
+        val foreignKeyConstraints = tables.flatMap { table ->
+            table.foreignKeys.map { it to existingColumnConstraint[table to it.from]?.firstOrNull() }
+        }
+
+        val statements = ArrayList<String>()
+
+        for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
+            if (existingConstraint == null) {
+                statements.addAll(createFKey(foreignKey))
+            } else if (existingConstraint.targetTable != foreignKey.targetTable ||
+                foreignKey.deleteRule != existingConstraint.deleteRule ||
+                foreignKey.updateRule != existingConstraint.updateRule
+            ) {
+                statements.addAll(existingConstraint.dropStatement())
+                statements.addAll(createFKey(foreignKey))
             }
         }
 
@@ -300,7 +327,9 @@ object SchemaUtils {
                     "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
                     exception
                 )
-            } else throw exception
+            } else {
+                throw exception
+            }
         }
     }
 
@@ -327,7 +356,9 @@ object SchemaUtils {
                     "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",
                     exception
                 )
-            } else throw exception
+            } else {
+                throw exception
+            }
         }
     }
 
@@ -367,7 +398,8 @@ object SchemaUtils {
             }
             val executedStatements = createStatements + alterStatements
             logTimeSpent("Checking mapping consistence", withLogs) {
-                val modifyTablesStatements = checkMappingConsistence(tables = tables, withLogs).filter { it !in executedStatements }
+                val modifyTablesStatements = checkMappingConsistence(tables = tables, withLogs)
+                    .filter { it !in executedStatements }
                 execStatements(inBatch, modifyTablesStatements)
                 commit()
             }
@@ -389,7 +421,8 @@ object SchemaUtils {
         }
         val executedStatements = createStatements + alterStatements
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
-            checkMappingConsistence(tables = tablesToAlter.toTypedArray(), withLogs).filter { it !in executedStatements }
+            checkMappingConsistence(tables = tablesToAlter.toTypedArray(), withLogs)
+                .filter { it !in executedStatements }
         }
         return executedStatements + modifyTablesStatements
     }
@@ -426,7 +459,9 @@ object SchemaUtils {
         }
 
         val excessiveIndices =
-            currentDialect.existingIndices(*tables).flatMap { it.value }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
+            currentDialect.existingIndices(*tables)
+                .flatMap { it.value }
+                .groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
                 .filter { it.value.size > 1 }
         if (excessiveIndices.isNotEmpty()) {
             exposedLogger.warn("List of excessive indices:")
@@ -486,7 +521,8 @@ object SchemaUtils {
                 nameDiffers.add(mappedIndex)
             }
 
-            notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }.addAll(existingTableIndices.subtract(mappedIndices))
+            notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }
+                .addAll(existingTableIndices.subtract(mappedIndices))
 
             missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
         }
@@ -601,7 +637,11 @@ object SchemaUtils {
     fun dropSchema(vararg schemas: Schema, cascade: Boolean = false, inBatch: Boolean = false) {
         if (schemas.isEmpty()) return
         with(TransactionManager.current()) {
-            val schemasForDeletion = if (currentDialect.supportsIfNotExists) schemas.distinct() else schemas.distinct().filter { it.exists() }
+            val schemasForDeletion = if (currentDialect.supportsIfNotExists) {
+                schemas.distinct()
+            } else {
+                schemas.distinct().filter { it.exists() }
+            }
             val dropStatements = schemasForDeletion.flatMap { it.dropStatement(cascade) }
 
             execStatements(inBatch, dropStatements)

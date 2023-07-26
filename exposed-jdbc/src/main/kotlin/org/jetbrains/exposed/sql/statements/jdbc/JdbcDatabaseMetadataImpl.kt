@@ -80,7 +80,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         _currentScheme = null
     }
 
-    private inner class CachableMapWithDefault<K, V>(private val map: MutableMap<K, V> = mutableMapOf(), val default: (K) -> V) : Map<K, V> by map {
+    private inner class CachableMapWithDefault<K, V>(
+        private val map: MutableMap<K, V> = mutableMapOf(),
+        val default: (K) -> V
+    ) : Map<K, V> by map {
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
@@ -237,6 +240,21 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             }
         }
         return HashMap(existingIndicesCache)
+    }
+
+    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
+        return tables.associateWith { table ->
+            metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCase()).let { rs ->
+                val columnNames = mutableListOf<String>()
+                var pkName = ""
+                while (rs.next()) {
+                    rs.getString("PK_NAME")?.let { pkName = it }
+                    columnNames += rs.getString("COLUMN_NAME")
+                }
+                rs.close()
+                if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
+            }
+        }
     }
 
     @Synchronized
