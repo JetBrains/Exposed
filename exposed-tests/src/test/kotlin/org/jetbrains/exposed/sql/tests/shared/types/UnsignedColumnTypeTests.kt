@@ -101,7 +101,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     val number2 = (Short.MAX_VALUE + 1).toUShort()
                     assertFailAndRollback("Out-of-range (OoR) error") {
                         UShortTable.insert { it[unsignedShort] = number2 }
-                        assertEquals(0, UShortTable.select { UShortTable.unsignedShort less 0u })
+                        assertEquals(0, UShortTable.select { UShortTable.unsignedShort less 0u }.count())
                     }
 
                     // modify column to now have INT type

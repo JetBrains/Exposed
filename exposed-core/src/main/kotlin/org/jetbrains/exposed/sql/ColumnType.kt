@@ -285,7 +285,7 @@ class ShortColumnType : ColumnType() {
  * Numeric column for storing unsigned 2-byte integers.
  *
  * **Note:** If the database being used is not MySQL or MariaDB, this column will represent the database's 4-byte
- * integer type with a check constraint that ensures storage of only values between 0 and 65535 inclusive.
+ * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
  */
 class UShortColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ushortType()

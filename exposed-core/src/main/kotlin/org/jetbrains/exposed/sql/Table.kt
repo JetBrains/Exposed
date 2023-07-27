@@ -488,7 +488,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers.
      *
      * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's 4-byte
-     * integer type with a check constraint that ensures storage of only values between 0 and 65535 inclusive.
+     * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
      */
     fun ushort(name: String): Column<UShort> = registerColumn<UShort>(name, UShortColumnType()).apply {
         check("$generatedCheckPrefix$name") { it.between(0u, UShort.MAX_VALUE) }
