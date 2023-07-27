@@ -87,18 +87,27 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test storing LocalDateTime with nanos`() {
+    fun testStoringLocalDateTimeWithNanos() {
         val testDate = object : IntIdTable("TestLocalDateTime") {
             val time = datetime("time")
         }
+
         withTables(testDate) {
-            val dateTimeWithNanos = Clock.System.now().plus(DateTimeUnit.NANOSECOND * 123).toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTime = Instant.parse("2023-05-04T05:04:00.000Z") // has 0 nanoseconds
+            val nanos = DateTimeUnit.NANOSECOND * 111111
+            // insert 2 separate constants to ensure test's rounding mode matches DB precision
+            val dateTimeWithFewNanos = dateTime.plus(nanos).toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTimeWithManyNanos = dateTime.plus(nanos * 7).toLocalDateTime(TimeZone.currentSystemDefault())
             testDate.insert {
-                it[testDate.time] = dateTimeWithNanos
+                it[testDate.time] = dateTimeWithFewNanos
+            }
+            testDate.insert {
+                it[testDate.time] = dateTimeWithManyNanos
             }
 
-            val dateTimeFromDB = testDate.selectAll().single()[testDate.time]
-            assertEqualDateTime(dateTimeWithNanos, dateTimeFromDB)
+            val dateTimesFromDB = testDate.selectAll().map { it[testDate.time] }
+            assertEqualDateTime(dateTimeWithFewNanos, dateTimesFromDB[0])
+            assertEqualDateTime(dateTimeWithManyNanos, dateTimesFromDB[1])
         }
     }
 
@@ -437,25 +446,30 @@ fun <T> assertEqualDateTime(d1: T?, d2: T?) {
 }
 
 private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
-    when (currentDialectTest) {
-        // nanoseconds (H2, Oracle & Sqlite could be here)
-        // assertEquals(nano1, nano2, "Failed on nano ${currentDialectTest.name}")
+    val dialect = currentDialectTest
+    val db = dialect.name
+    when (dialect) {
         // accurate to 100 nanoseconds
-        is SQLServerDialect -> assertEquals(roundTo100Nanos(nano1), roundTo100Nanos(nano2), "Failed on 1/10th microseconds ${currentDialectTest.name}")
+        is SQLServerDialect ->
+            assertEquals(roundTo100Nanos(nano1), roundTo100Nanos(nano2), "Failed on 1/10th microseconds $db")
         // microseconds
-        is H2Dialect, is MariaDBDialect, is PostgreSQLDialect, is PostgreSQLNGDialect ->
-            assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds ${currentDialectTest.name}")
+        is H2Dialect, is PostgreSQLDialect ->
+            assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds $db")
+        is MariaDBDialect ->
+            assertEquals(floorToMicro(nano1), floorToMicro(nano2), "Failed on microseconds $db")
         is MysqlDialect ->
-            if ((currentDialectTest as? MysqlDialect)?.isFractionDateTimeSupported() == true) {
+            if ((dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) {
                 // this should be uncommented, but mysql has different microseconds between save & read
 //                assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds ${currentDialectTest.name}")
             } else {
                 // don't compare fractional part
             }
         // milliseconds
-        is OracleDialect -> assertEquals(roundToMilli(nano1), roundToMilli(nano2), "Failed on milliseconds ${currentDialectTest.name}")
-        is SQLiteDialect -> assertEquals(floorToMilli(nano1), floorToMilli(nano2), "Failed on milliseconds ${currentDialectTest.name}")
-        else -> fail("Unknown dialect ${currentDialectTest.name}")
+        is OracleDialect ->
+            assertEquals(roundToMilli(nano1), roundToMilli(nano2), "Failed on milliseconds $db")
+        is SQLiteDialect ->
+            assertEquals(floorToMilli(nano1), floorToMilli(nano2), "Failed on milliseconds $db")
+        else -> fail("Unknown dialect $db")
     }
 }
 
@@ -466,6 +480,8 @@ private fun roundTo100Nanos(nanos: Int): Int {
 private fun roundToMicro(nanos: Int): Int {
     return BigDecimal(nanos).divide(BigDecimal(1_000), RoundingMode.HALF_UP).toInt()
 }
+
+private fun floorToMicro(nanos: Int): Int = nanos / 1_000
 
 private fun roundToMilli(nanos: Int): Int {
     return BigDecimal(nanos).divide(BigDecimal(1_000_000), RoundingMode.HALF_UP).toInt()
