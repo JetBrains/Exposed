@@ -14,9 +14,9 @@ class ConditionsTests : DatabaseTestsBase() {
     @Test
     fun testTRUEandFALSEOps() {
         withCitiesAndUsers { cities, _, _ ->
-            val allSities = cities.selectAll().toCityNameList()
+            val allCities = cities.selectAll().toCityNameList()
             assertEquals(0L, cities.select { Op.FALSE }.count())
-            assertEquals(allSities.size.toLong(), cities.select { Op.TRUE }.count())
+            assertEquals(allCities.size.toLong(), cities.select { Op.TRUE }.count())
         }
     }
 
@@ -159,9 +159,9 @@ class ConditionsTests : DatabaseTestsBase() {
     @Test
     fun nullOpInCaseTest() {
         withCitiesAndUsers { cities, _, _ ->
-            val caseCondition = Case().
-                When(Op.build { cities.id eq 1 }, Op.nullOp<String>()).
-                Else(cities.name)
+            val caseCondition = Case()
+                .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
+                .Else(cities.name)
             var nullBranchWasExecuted = false
             cities.slice(cities.id, cities.name, caseCondition).selectAll().forEach {
                 val result = it[caseCondition]
@@ -173,6 +173,41 @@ class ConditionsTests : DatabaseTestsBase() {
                 }
             }
             assertEquals(true, nullBranchWasExecuted)
+        }
+    }
+
+    @Test
+    fun testCaseWhenElseAsArgument() {
+        withCitiesAndUsers { cities, _, _ ->
+            val original = "ORIGINAL"
+            val copy = "COPY"
+            val condition = Op.build { cities.id eq 1 }
+
+            val caseCondition1 = Case()
+                .When(condition, stringLiteral(original))
+                .Else(Op.nullOp())
+            // Case().When().Else() invokes CaseWhenElse() so the 2 formats should be interchangeable as arguments
+            val caseCondition2 = CaseWhenElse(
+                Case().When(condition, stringLiteral(original)),
+                Op.nullOp()
+            )
+            val function1 = Coalesce(caseCondition1, stringLiteral(copy))
+            val function2 = Coalesce(caseCondition2, stringLiteral(copy))
+
+            // confirm both formats produce identical SQL
+            val query1 = cities.slice(cities.id, function1).selectAll().prepareSQL(this, prepared = false)
+            val query2 = cities.slice(cities.id, function2).selectAll().prepareSQL(this, prepared = false)
+            assertEquals(query1, query2)
+
+            val results1 = cities.slice(cities.id, function1).selectAll().toList()
+            cities.slice(cities.id, function2).selectAll().forEachIndexed { i, row ->
+                val currentId = row[cities.id]
+                val functionResult = row[function2]
+
+                assertEquals(if (currentId == 1) original else copy, functionResult)
+                assertEquals(currentId, results1[i][cities.id])
+                assertEquals(functionResult, results1[i][function1])
+            }
         }
     }
 }

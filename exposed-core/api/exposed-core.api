@@ -259,7 +259,7 @@ public final class org/jetbrains/exposed/sql/Case {
 
 public final class org/jetbrains/exposed/sql/CaseWhen {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
-	public final fun Else (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Expression;
+	public final fun Else (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public final fun When (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CaseWhen;
 	public final fun getCases ()Ljava/util/List;
 	public final fun getValue ()Lorg/jetbrains/exposed/sql/Expression;
