@@ -15,6 +15,17 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun dateTimeType(): String = if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) "DATETIME(6)" else "DATETIME"
 
+    override fun timestampWithTimeZoneType(): String =
+        if ((currentDialect as? MysqlDialect)?.isTimeZoneOffsetSupported() == true) {
+            "TIMESTAMP(6)"
+        } else {
+            throw UnsupportedByDialectException(
+                "This vendor does not support timestamp with time zone data type" +
+                    ((currentDialect as? MariaDBDialect)?.let { "" } ?: " for this version"),
+                currentDialect
+            )
+        }
+
     override fun ubyteType(): String = "TINYINT UNSIGNED"
 
     override fun ushortType(): String = "SMALLINT UNSIGNED"
@@ -261,6 +272,9 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     override val supportsOrderByNullsFirstLast: Boolean = false
 
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
+
+    // Available from MySQL 8.0.19
+    fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true

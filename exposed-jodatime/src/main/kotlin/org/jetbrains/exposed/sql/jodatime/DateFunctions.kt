@@ -116,9 +116,13 @@ fun <T : DateTime?> Expression<T>.second() = Second(this)
 
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(true))
+fun timestampWithTimeZoneParam(value: DateTime): Expression<DateTime> =
+    QueryParameter(value, DateTimeWithTimeZoneColumnType())
 
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
+fun timestampWithTimeZoneLiteral(value: DateTime): LiteralOp<DateTime> =
+    LiteralOp(DateTimeWithTimeZoneColumnType(), value)
 
 @Suppress("FunctionNaming")
 fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
@@ -127,3 +131,7 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
 @Suppress("FunctionNaming")
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
+
+@Suppress("FunctionNaming")
+fun CustomTimestampWithTimeZoneFunction(functionName: String, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateTimeWithTimeZoneColumnType(), *params)

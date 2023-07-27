@@ -12,6 +12,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.time.temporal.Temporal
 
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
@@ -138,6 +139,10 @@ fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> =
     QueryParameter(value, JavaLocalDateTimeColumnType.INSTANCE)
 
 fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, JavaInstantColumnType.INSTANCE)
+
+fun timestampWithTimeZoneParam(value: OffsetDateTime): Expression<OffsetDateTime> =
+    QueryParameter(value, JavaOffsetDateTimeColumnType.INSTANCE)
+
 fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value, JavaDurationColumnType.INSTANCE)
 
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(JavaLocalDateColumnType.INSTANCE, value)
@@ -145,6 +150,8 @@ fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(JavaLocalTim
 fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(JavaLocalDateTimeColumnType.INSTANCE, value)
 
 fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(JavaInstantColumnType.INSTANCE, value)
+fun timestampWithTimeZoneLiteral(value: OffsetDateTime): LiteralOp<OffsetDateTime> =
+    LiteralOp(JavaOffsetDateTimeColumnType.INSTANCE, value)
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(JavaDurationColumnType.INSTANCE, value)
 
 @Suppress("FunctionName")
@@ -162,6 +169,12 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): 
 @Suppress("FunctionName")
 fun CustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Instant?> =
     CustomFunction(functionName, JavaInstantColumnType.INSTANCE, *params)
+
+@Suppress("FunctionName")
+fun CustomTimestampWithTimeZoneFunction(
+    functionName: String,
+    vararg params: Expression<*>
+): CustomFunction<OffsetDateTime?> = CustomFunction(functionName, JavaOffsetDateTimeColumnType.INSTANCE, *params)
 
 @Suppress("FunctionName")
 fun CustomDurationFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Duration?> =

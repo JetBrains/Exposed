@@ -15,6 +15,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun floatType(): String = "SINGLE"
     override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"
+    override fun timestampWithTimeZoneType(): String = "TEXT"
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
