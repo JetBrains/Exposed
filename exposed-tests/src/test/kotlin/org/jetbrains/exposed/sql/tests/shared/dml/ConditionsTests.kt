@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -25,8 +26,8 @@ class ConditionsTests : DatabaseTestsBase() {
             val number1 = integer("number_1").nullable()
             val number2 = integer("number_2").nullable()
         }
-
-        withTables(table) {
+        // remove SQL Server exclusion once test container supports SQL Server 2022
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), table) {
             val sameNumberId = table.insert {
                 it[number1] = 0
                 it[number2] = 0
