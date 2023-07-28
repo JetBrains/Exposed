@@ -6,6 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
+    override fun ubyteType(): String {
+        return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+            "SMALLINT"
+        } else {
+            "TINYINT"
+        }
+    }
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
     override fun longAutoincType(): String = "BIGINT IDENTITY(1,1)"
     override fun binaryType(): String {
