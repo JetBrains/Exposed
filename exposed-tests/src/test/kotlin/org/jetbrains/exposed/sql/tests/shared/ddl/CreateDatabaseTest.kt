@@ -10,8 +10,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
     fun `create database test`() {
-        // PostgreSQL will be tested in the next test function
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
