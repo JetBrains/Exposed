@@ -360,6 +360,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
+    private val generatedCheckPrefix = "chk_unsigned_"
+
     /**
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
@@ -483,8 +485,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
 
-    /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers. */
-    fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType())
+    /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers.
+     *
+     * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's 4-byte
+     * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
+     */
+    fun ushort(name: String): Column<UShort> = registerColumn<UShort>(name, UShortColumnType()).apply {
+        check("$generatedCheckPrefix$name") { it.between(0u, UShort.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
@@ -1043,29 +1051,33 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a check constraint in this column.
-     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
-     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table,
+     * otherwise, the constraint will not be created. All names are [trimmed][String.trim], blank names are ignored and
+     * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
     fun <T> Column<T>.check(name: String = "", op: SqlExpressionBuilder.(Column<T>) -> Op<Boolean>): Column<T> = apply {
         if (name.isEmpty() || table.checkConstraints.none { it.first.equals(name, true) }) {
             table.checkConstraints.add(name to SqlExpressionBuilder.op(this))
         } else {
-            exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
+            exposedLogger
+                .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
         }
     }
 
     /**
      * Creates a check constraint in this table.
-     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table, otherwise, the constraint will
-     * not be created. All names are [trimmed][String.trim], blank names are ignored and the database engine decides the default name.
+     * @param name The name to identify the constraint, optional. Must be **unique** (case-insensitive) to this table,
+     * otherwise, the constraint will not be created. All names are [trimmed][String.trim], blank names are ignored and
+     * the database engine decides the default name.
      * @param op The expression against which the newly inserted values will be compared.
      */
     fun check(name: String = "", op: SqlExpressionBuilder.() -> Op<Boolean>) {
         if (name.isEmpty() || checkConstraints.none { it.first.equals(name, true) }) {
             checkConstraints.add(name to SqlExpressionBuilder.op())
         } else {
-            exposedLogger.warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
+            exposedLogger
+                .warn("A CHECK constraint with name '$name' was ignored because there is already one with that name")
         }
     }
 
@@ -1104,7 +1116,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return primaryKey?.let { primaryKey ->
             val tr = TransactionManager.current()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
-            return primaryKey.columns.joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
+            return primaryKey.columns
+                .joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
         }
     }
 
@@ -1140,10 +1153,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 if (checkConstraints.isNotEmpty()) {
-                    checkConstraints.mapIndexed { index, (name, op) ->
+                    val filteredChecks = if (currentDialect is MysqlDialect) {
+                        checkConstraints
+                            .filterNot { (name, _) -> name.startsWith(generatedCheckPrefix) }
+                            .ifEmpty { null }
+                    } else {
+                        checkConstraints
+                    }
+                    filteredChecks?.mapIndexed { index, (name, op) ->
                         val resolvedName = name.ifBlank { "check_${tableName}_$index" }
                         CheckConstraint.from(this@Table, resolvedName, op).checkPart
-                    }.joinTo(this, prefix = ", ")
+                    }?.joinTo(this, prefix = ", ")
                 }
 
                 append(")")
@@ -1159,7 +1179,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return createSequence + createTable + createConstraint
     }
 
-    override fun modifyStatement(): List<String> = throw UnsupportedOperationException("Use modify on columns and indices")
+    override fun modifyStatement(): List<String> =
+        throw UnsupportedOperationException("Use modify on columns and indices")
 
     override fun dropStatement(): List<String> {
         val dropTable = buildString {

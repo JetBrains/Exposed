@@ -26,8 +26,11 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 2-byte integers. */
     open fun shortType(): String = "SMALLINT"
 
-    /** Numeric type for storing 2-byte unsigned integers. */
-    open fun ushortType(): String = "SMALLINT"
+    /** Numeric type for storing 2-byte unsigned integers.
+     *
+     * **Note:** If the database being used is not MySQL or MariaDB, this will represent the 4-byte integer type.
+     */
+    open fun ushortType(): String = "INT"
 
     /** Numeric type for storing 4-byte integers. */
     open fun integerType(): String = "INT"
