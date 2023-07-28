@@ -28,6 +28,7 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
@@ -214,7 +215,6 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
     @Test
     fun testDefaultExpressions01() {
-
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
@@ -411,6 +411,25 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 val row1 = testTable.select { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            }
+        }
+    }
+
+    @Test
+    fun testConsistentSchemeWithFunctionAsDefaultExpression() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(foo)
+
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+                assertTrue(actual.isEmpty())
+            } finally {
+                SchemaUtils.drop(foo)
             }
         }
     }

@@ -291,7 +291,6 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaultExpressions01() {
-
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
