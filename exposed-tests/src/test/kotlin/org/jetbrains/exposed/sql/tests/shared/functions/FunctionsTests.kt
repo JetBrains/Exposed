@@ -12,12 +12,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -356,16 +351,14 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testLocate03() {
         withCitiesAndUsers { cities, _, _ ->
-            val isCaseSensitiveDialect = currentDialectTest is SQLiteDialect ||
-                currentDialectTest is PostgreSQLDialect ||
-                currentDialectTest is H2Dialect
+            val isNotCaseSensitiveDialect = currentDialectTest is MysqlDialect || currentDialectTest is SQLServerDialect
 
             val locate = cities.name.locate("p")
             val results = cities.slice(locate).selectAll().toList()
 
-            assertEquals(if (isCaseSensitiveDialect) 0 else 5, results[0][locate]) // St. Petersburg
+            assertEquals(if (isNotCaseSensitiveDialect) 5 else 0, results[0][locate]) // St. Petersburg
             assertEquals(0, results[1][locate]) // Munich
-            assertEquals(if (isCaseSensitiveDialect) 0 else 1, results[2][locate]) // Prague
+            assertEquals(if (isNotCaseSensitiveDialect) 1 else 0, results[2][locate]) // Prague
         }
     }
 
