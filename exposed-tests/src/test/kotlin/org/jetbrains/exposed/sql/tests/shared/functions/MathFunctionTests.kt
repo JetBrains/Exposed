@@ -105,7 +105,7 @@ class MathFunctionTests : FunctionsTestBase() {
             assertExpressionEqual(BigDecimal("11.2"), SqrtFunction(decimalLiteral(BigDecimal("125.44"))))
 
             when (testDb) {
-                TestDB.MYSQL, TestDB.MARIADB -> {
+                TestDB.MYSQL, TestDB.MARIADB, TestDB.SQLITE -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
                 TestDB.SQLSERVER -> {
@@ -114,8 +114,8 @@ class MathFunctionTests : FunctionsTestBase() {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }
                 }
-                TestDB.SQLITE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE -> {
-                    // SQLite, PSQL, Oracle fail to execute sqrt with negative value
+                TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE -> {
+                    // PostgreSQL and Oracle fail to execute sqrt with negative value
                     expectException<ExposedSQLException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }
