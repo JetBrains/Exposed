@@ -83,11 +83,12 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUShortTypeRegression() {
+    fun testPreviousUShortColumnTypeWorksWithNewIntType() {
         withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) { testDb ->
             try {
                 val tableName = UShortTable.nameInDatabaseCase()
                 val columnName = UShortTable.unsignedShort.nameInDatabaseCase()
+                // create table using previous column type SMALLINT
                 exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName SMALLINT NOT NULL)""")
 
                 val number1 = Short.MAX_VALUE.toUShort()
