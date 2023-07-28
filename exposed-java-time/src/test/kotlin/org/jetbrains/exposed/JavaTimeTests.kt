@@ -458,17 +458,16 @@ private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
         is SQLServerDialect ->
             assertEquals(roundTo100Nanos(nano1), roundTo100Nanos(nano2), "Failed on 1/10th microseconds $db")
         // microseconds
-        is H2Dialect, is PostgreSQLDialect ->
-            assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds $db")
         is MariaDBDialect ->
             assertEquals(floorToMicro(nano1), floorToMicro(nano2), "Failed on microseconds $db")
-        is MysqlDialect ->
-            if ((dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) {
-                // this should be uncommented, but mysql has different microseconds between save & read
-//                assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds ${currentDialectTest.name}")
-            } else {
-                // don't compare fractional part
+        is H2Dialect, is PostgreSQLDialect, is MysqlDialect -> {
+            when ((dialect as? MysqlDialect)?.isFractionDateTimeSupported()) {
+                null, true -> {
+                    assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds $db")
+                }
+                else -> {} // don't compare fractional part
             }
+        }
         // milliseconds
         is OracleDialect ->
             assertEquals(roundToMilli(nano1), roundToMilli(nano2), "Failed on milliseconds $db")
