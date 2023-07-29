@@ -497,8 +497,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
     fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType())
 
-    /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers. */
-    fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType())
+    /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers.
+     *
+     * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's
+     * 8-byte integer type with a check constraint that ensures storage of only values
+     * between 0 and [UInt.MAX_VALUE] inclusive.
+     */
+    fun uinteger(name: String): Column<UInt> = registerColumn<UInt>(name, UIntegerColumnType()).apply {
+        check("$generatedCheckPrefix$name") { it.between(0u, UInt.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())

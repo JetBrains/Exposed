@@ -331,32 +331,34 @@ class IntegerColumnType : ColumnType() {
 
 /**
  * Numeric column for storing unsigned 4-byte integers.
+ *
+ * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's
+ * 8-byte integer type with a check constraint that ensures storage of only values
+ * between 0 and [UInt.MAX_VALUE] inclusive.
  */
 class UIntegerColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.uintegerType()
     override fun valueFromDB(value: Any): UInt {
         return when (value) {
             is UInt -> value
-            is Int -> value.takeIf { it >= 0 }?.toUInt()
-            is Number -> value.toLong().takeIf { it >= 0 && it <= UInt.MAX_VALUE.toLong() }?.toUInt()
+            is Int -> value.toUInt()
+            is Number -> value.toLong().toUInt()
             is String -> value.toUInt()
             else -> error("Unexpected value of type Int: $value of ${value::class.qualifiedName}")
-        } ?: error("Negative value but type is UInt: $value")
+        }
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = when {
-            value is UInt && currentDialect is MysqlDialect -> value.toLong()
-            value is UInt -> value.toInt()
+        val v = when (value) {
+            is UInt -> value.toLong()
             else -> value
         }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = when {
-            value is UInt && currentDialect is MysqlDialect -> value.toLong()
-            value is UInt -> value.toInt()
+        val v = when (value) {
+            is UInt -> value.toLong()
             else -> value
         }
         return super.notNullValueToDB(v)
