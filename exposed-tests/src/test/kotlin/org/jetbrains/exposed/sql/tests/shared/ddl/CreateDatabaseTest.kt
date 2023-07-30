@@ -9,13 +9,13 @@ import java.sql.SQLException
 class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
-    fun `create database test`() {
+    fun testCreateAndDropDatabase() {
         withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
-            } catch (e: SQLException) {
-                //ignore
+            } catch (cause: SQLException) {
+                // ignore
             }
             SchemaUtils.createDatabase(dbName)
             SchemaUtils.dropDatabase(dbName)
@@ -23,7 +23,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `create database test in postgreSQL`() {
+    fun testCreateAndDropDatabaseInPostgresql() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
         withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             connection.autoCommit = true
