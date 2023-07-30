@@ -77,6 +77,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
+                // create table using previous column type TINYINT
                 exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName TINYINT NOT NULL)""")
 
                 val number1 = Byte.MAX_VALUE.toUByte()
