@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class UnsignedColumnTypeTests : DatabaseTestsBase() {
@@ -38,6 +39,71 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             val result = UByteTable.selectAll().toList()
             assertEquals(1, result.size)
             assertEquals(123u, result.single()[UByteTable.unsignedByte])
+        }
+    }
+
+    @Test
+    fun testUByteWithCheckConstraint() {
+        withTables(UByteTable) {
+            val ddlEnding = when (currentDialectTest) {
+                is MysqlDialect -> "(ubyte TINYINT UNSIGNED NOT NULL)"
+                is SQLServerDialect -> "(ubyte TINYINT NOT NULL)"
+                else -> "CHECK (ubyte BETWEEN 0 and ${UByte.MAX_VALUE}))"
+            }
+            assertTrue(UByteTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            val number = 191.toUByte()
+            assertTrue(number in Byte.MAX_VALUE.toUByte()..UByte.MAX_VALUE)
+
+            UByteTable.insert { it[unsignedByte] = number }
+
+            val result = UByteTable.selectAll()
+            assertEquals(number, result.single()[UByteTable.unsignedByte])
+
+            // test that column itself blocks same out-of-range value that compiler blocks
+            assertFailAndRollback("Check constraint violation (or out-of-range error in MySQL/MariaDB/SQL Server)") {
+                val tableName = UByteTable.nameInDatabaseCase()
+                val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
+                val outOfRangeValue = UByte.MAX_VALUE + 1u
+                exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
+            }
+        }
+    }
+
+    @Test
+    fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
+        // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
+        withDb(TestDB.allH2TestDB - TestDB.H2_PSQL + TestDB.SQLITE) { testDb ->
+            try {
+                val tableName = UByteTable.nameInDatabaseCase()
+                val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
+                // create table using previous column type TINYINT
+                exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName TINYINT NOT NULL)""")
+
+                val number1 = Byte.MAX_VALUE.toUByte()
+                UByteTable.insert { it[unsignedByte] = number1 }
+
+                val result1 = UByteTable.select { UByteTable.unsignedByte eq number1 }.count()
+                assertEquals(1, result1)
+
+                // TINYINT maps to INTEGER in SQLite, so it will not throw OoR error
+                if (testDb != TestDB.SQLITE) {
+                    val number2 = (Byte.MAX_VALUE + 1).toUByte()
+                    assertFailAndRollback("Out-of-range (OoR) error") {
+                        UByteTable.insert { it[unsignedByte] = number2 }
+                        assertEquals(0, UByteTable.select { UByteTable.unsignedByte less 0u }.count())
+                    }
+
+                    // modify column to now have SMALLINT type
+                    exec(UByteTable.unsignedByte.modifyStatement().first())
+                    UByteTable.insert { it[unsignedByte] = number2 }
+
+                    val result2 = UByteTable.selectAll().map { it[UByteTable.unsignedByte] }
+                    assertEqualCollections(listOf(number1, number2), result2)
+                }
+            } finally {
+                SchemaUtils.drop(UByteTable)
+            }
         }
     }
 

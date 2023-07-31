@@ -479,8 +479,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 1-byte integers. */
     fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
 
-    /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers. */
-    fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType())
+    /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers.
+     *
+     * **Note:** If the database being used is not MySQL, MariaDB, or SQL Server, this column will use the
+     * database's 2-byte integer type with a check constraint that ensures storage of only values
+     * between 0 and [UByte.MAX_VALUE] inclusive.
+     */
+    fun ubyte(name: String): Column<UByte> = registerColumn<UByte>(name, UByteColumnType()).apply {
+        check("${generatedCheckPrefix}byte_$name") { it.between(0u, UByte.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
     fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
@@ -1153,13 +1160,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 if (checkConstraints.isNotEmpty()) {
-                    val filteredChecks = if (currentDialect is MysqlDialect) {
-                        checkConstraints
-                            .filterNot { (name, _) -> name.startsWith(generatedCheckPrefix) }
-                            .ifEmpty { null }
-                    } else {
-                        checkConstraints
-                    }
+                    val filteredChecks = when (currentDialect) {
+                        is MysqlDialect -> checkConstraints.filterNot { (name, _) ->
+                            name.startsWith(generatedCheckPrefix)
+                        }
+                        is SQLServerDialect -> checkConstraints.filterNot { (name, _) ->
+                            name.startsWith("${generatedCheckPrefix}byte_")
+                        }
+                        else -> checkConstraints
+                    }.ifEmpty { null }
                     filteredChecks?.mapIndexed { index, (name, op) ->
                         val resolvedName = name.ifBlank { "check_${tableName}_$index" }
                         CheckConstraint.from(this@Table, resolvedName, op).checkPart

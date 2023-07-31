@@ -235,6 +235,10 @@ class ByteColumnType : ColumnType() {
 
 /**
  * Numeric column for storing unsigned 1-byte integers.
+ *
+ * **Note:** If the database being used is not MySQL, MariaDB, or SQL Server, this column will represent the
+ * database's 2-byte integer type with a check constraint that ensures storage of only values
+ * between 0 and [UByte.MAX_VALUE] inclusive.
  */
 class UByteColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.ubyteType()
@@ -242,26 +246,24 @@ class UByteColumnType : ColumnType() {
     override fun valueFromDB(value: Any): UByte {
         return when (value) {
             is UByte -> value
-            is Byte -> value.takeIf { it >= 0 }?.toUByte()
-            is Number -> value.toShort().takeIf { it >= 0 && it <= UByte.MAX_VALUE.toShort() }?.toUByte()
+            is Byte -> value.toUByte()
+            is Number -> value.toShort().toUByte()
             is String -> value.toUByte()
             else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
-        } ?: error("Negative value but type is UByte: $value")
+        }
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = when {
-            value is UByte && currentDialect is MysqlDialect -> value.toShort()
-            value is UByte -> value.toByte()
+        val v = when (value) {
+            is UByte -> value.toShort()
             else -> value
         }
         super.setParameter(stmt, index, v)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        val v = when {
-            value is UByte && currentDialect is MysqlDialect -> value.toShort()
-            value is UByte -> value.toByte()
+        val v = when (value) {
+            is UByte -> value.toShort()
             else -> value
         }
         return super.notNullValueToDB(v)

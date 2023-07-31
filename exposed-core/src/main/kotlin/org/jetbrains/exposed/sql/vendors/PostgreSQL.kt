@@ -19,7 +19,6 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
-    override fun ubyteType(): String = "SMALLINT"
     override fun jsonBType(): String = "JSONB"
     override fun hexToDb(hexString: String): String = """E'\\x$hexString'"""
 }

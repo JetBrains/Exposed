@@ -20,8 +20,12 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 1-byte integers. */
     open fun byteType(): String = "TINYINT"
 
-    /** Numeric type for storing 1-byte unsigned integers. */
-    open fun ubyteType(): String = "TINYINT"
+    /** Numeric type for storing 1-byte unsigned integers.
+     *
+     * **Note:** If the database being used is not MySQL, MariaDB, or SQL Server, this will represent the 2-byte
+     * integer type.
+     */
+    open fun ubyteType(): String = "SMALLINT"
 
     /** Numeric type for storing 2-byte integers. */
     open fun shortType(): String = "SMALLINT"
