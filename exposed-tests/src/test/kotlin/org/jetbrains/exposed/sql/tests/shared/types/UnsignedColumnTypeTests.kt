@@ -198,6 +198,71 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testUIntWithCheckConstraint() {
+        withTables(UIntTable) {
+            val ddlEnding = if (currentDialectTest is MysqlDialect) {
+                "(uint INT UNSIGNED NOT NULL)"
+            } else {
+                "CHECK (uint BETWEEN 0 and ${UInt.MAX_VALUE}))"
+            }
+            assertTrue(UIntTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            val number = 3_221_225_471u
+            assertTrue(number in Int.MAX_VALUE.toUInt()..UInt.MAX_VALUE)
+
+            UIntTable.insert { it[unsignedInt] = number }
+
+            val result = UIntTable.selectAll()
+            assertEquals(number, result.single()[UIntTable.unsignedInt])
+
+            // test that column itself blocks same out-of-range value that compiler blocks
+            assertFailAndRollback("Check constraint violation (or out-of-range error in MySQL/MariaDB)") {
+                val tableName = UIntTable.nameInDatabaseCase()
+                val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
+                val outOfRangeValue = UInt.MAX_VALUE.toLong() + 1L
+                exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
+            }
+        }
+    }
+
+    @Test
+    fun testPreviousUIntColumnTypeWorksWithNewBigIntType() {
+        // Oracle was already previously constrained to NUMBER(13)
+        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.ORACLE)) { testDb ->
+            try {
+                val tableName = UIntTable.nameInDatabaseCase()
+                val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
+                // create table using previous column type INT
+                exec("""CREATE TABLE ${addIfNotExistsIfSupported()}$tableName ($columnName INT NOT NULL)""")
+
+                val number1 = Int.MAX_VALUE.toUInt()
+                UIntTable.insert { it[unsignedInt] = number1 }
+
+                val result1 = UIntTable.select { UIntTable.unsignedInt eq number1 }.count()
+                assertEquals(1, result1)
+
+                // INT maps to INTEGER in SQLite, so it will not throw OoR error
+                if (testDb != TestDB.SQLITE) {
+                    val number2 = Int.MAX_VALUE.toUInt() + 1u
+                    assertFailAndRollback("Out-of-range (OoR) error") {
+                        UIntTable.insert { it[unsignedInt] = number2 }
+                        assertEquals(0, UIntTable.select { UIntTable.unsignedInt less 0u }.count())
+                    }
+
+                    // modify column to now have BIGINT type
+                    exec(UIntTable.unsignedInt.modifyStatement().first())
+                    UIntTable.insert { it[unsignedInt] = number2 }
+
+                    val result2 = UIntTable.selectAll().map { it[UIntTable.unsignedInt] }
+                    assertEqualCollections(listOf(number1, number2), result2)
+                }
+            } finally {
+                SchemaUtils.drop(UIntTable)
+            }
+        }
+    }
+
+    @Test
     fun testULongColumnType() {
         withTables(ULongTable) {
             ULongTable.insert {
