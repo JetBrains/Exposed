@@ -285,6 +285,42 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testLocalDateTimeComparison() {
+        val testTableDT = object : IntIdTable("test_table_dt") {
+            val created = datetime("created")
+            val modified = datetime("modified")
+        }
+
+        withTables(testTableDT) { testDb ->
+            val mayTheFourthDT = LocalDateTime.of(2011, 5, 4, 13, 0, 21, 871130789)
+            val nowDT = LocalDateTime.now()
+            val id1 = testTableDT.insertAndGetId {
+                it[created] = mayTheFourthDT
+                it[modified] = mayTheFourthDT
+            }
+            val id2 = testTableDT.insertAndGetId {
+                it[created] = mayTheFourthDT
+                it[modified] = nowDT
+            }
+
+            // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
+            val requiresExplicitCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+            val dateTime = when (testDb) {
+                in requiresExplicitCast -> Cast(dateTimeParam(mayTheFourthDT), JavaLocalDateTimeColumnType())
+                else -> dateTimeParam(mayTheFourthDT)
+            }
+            val createdMayFourth = testTableDT.select { testTableDT.created eq dateTime }.count()
+            assertEquals(2, createdMayFourth)
+
+            val modifiedAtSameDT = testTableDT.select { testTableDT.modified eq testTableDT.created }.single()
+            assertEquals(id1, modifiedAtSameDT[testTableDT.id])
+
+            val modifiedAtLaterDT = testTableDT.select { testTableDT.modified greater testTableDT.created }.single()
+            assertEquals(id2, modifiedAtLaterDT[testTableDT.id])
+        }
+    }
+
+    @Test
     fun testDateTimeAsJsonB() {
         val tester = object : Table("tester") {
             val created = datetime("created")

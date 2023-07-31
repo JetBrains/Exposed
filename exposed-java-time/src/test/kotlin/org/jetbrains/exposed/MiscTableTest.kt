@@ -3,11 +3,7 @@
 package org.jetbrains.exposed
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.javatime.duration
-import org.jetbrains.exposed.sql.javatime.time
-import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
@@ -252,10 +248,14 @@ class MiscTableTest : DatabaseTestsBase() {
         }
     }
 
+    // these DB take the datetime nanosecond value and round up to default precision
+    // which causes flaky comparison failures if not cast to TIMESTAMP first
+    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+
     @Test
     fun testSelect01() {
         val tbl = Misc
-        withTables(tbl) {
+        withTables(tbl) { testDb ->
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
@@ -436,8 +436,12 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
 
+            val dtValue = when (testDb) {
+                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), JavaLocalDateTimeColumnType())
+                else -> dateTimeParam(dateTime)
+            }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -692,7 +696,7 @@ class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testSelect02() {
         val tbl = Misc
-        withTables(tbl) {
+        withTables(tbl) { testDb ->
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
@@ -858,8 +862,12 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
 
+            val dtValue = when (testDb) {
+                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), JavaLocalDateTimeColumnType())
+                else -> dateTimeParam(dateTime)
+            }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
