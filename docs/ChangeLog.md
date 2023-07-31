@@ -1,3 +1,68 @@
+# 0.42.0
+Infrastructure:
+* Kotlin 1.9.0
+
+Deprecations:
+* deprecate: EXPOSED-84 Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/1771
+
+Breaking changes:
+* [Breaking changes](BREAKING_CHANGES.md)
+
+Features:
+* Add CHARINDEX function for sqlserver by @eukleshnin in https://github.com/JetBrains/Exposed/pull/1675
+* feat: EXPOSED-32 Support string function CHAR_LENGTH by @bog-walk in https://github.com/JetBrains/Exposed/pull/1737
+* feat: EXPOSED-37 Support null-safe equality comparison by @bog-walk in https://github.com/JetBrains/Exposed/pull/1739
+* feat: EXPOSED-45 Support single statement UPSERT by @bog-walk in https://github.com/JetBrains/Exposed/pull/1743
+* feat: EXPOSED-52 Support batch UPSERT by @bog-walk in https://github.com/JetBrains/Exposed/pull/1749
+* feat: EXPOSED-47 Add support for SET DEFAULT reference option by @joc-a in https://github.com/JetBrains/Exposed/pull/1744
+* control whether arguments should be inlined or passed in. by @lure in https://github.com/JetBrains/Exposed/pull/1621
+* feat: Add partial index support (Postgres only) by @lure in https://github.com/JetBrains/Exposed/pull/1748
+* add afterStatementPrepared method to StatementInterceptor by @lure in https://github.com/JetBrains/Exposed/pull/1622
+* feat: EXPOSED-60 Support json/json(b) column types by @bog-walk in https://github.com/JetBrains/Exposed/pull/1762
+* feat: EXPOSED-66 Extend partial index to SQLServer and SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/1763
+* [EXPOSED-46] Add a possibility to set a delay for the repetition attempts by @mgrati in https://github.com/JetBrains/Exposed/pull/1742
+* feat: EXPOSED-69 Extend json support to H2, Oracle (text) and DAO by @bog-walk in https://github.com/JetBrains/Exposed/pull/1766
+* feat: EXPOSED-68 Add more json/json(b) column functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1770
+* #623 Add support of window functions in Exposed DSL by @Legohuman in https://github.com/JetBrains/Exposed/pull/1651
+* feat: EXPOSED-89 Support functions in Create Index by @bog-walk in https://github.com/JetBrains/Exposed/pull/1788
+* feat: Add spring mutli container support by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1781
+* feat: EXPOSED-43 Add support for timestamp with time zone by @joc-a in https://github.com/JetBrains/Exposed/pull/1787
+
+Bug fixes:
+* Fix an error when updating an entity with a foreign key id (issue 880) by @forketyfork in https://github.com/JetBrains/Exposed/pull/1668
+* EXPOSED-15 Fix running mysql tests on M1 by @e5l in https://github.com/JetBrains/Exposed/pull/1719
+* Fix grammar in error message by @micheljung in https://github.com/JetBrains/Exposed/pull/1717
+* Fix: PostgreSQLDialect.modifyColumn is not able to drop default values by @michael-markl in https://github.com/JetBrains/Exposed/pull/1716
+* Fix UInt value out of bounds by @keta1 in https://github.com/JetBrains/Exposed/pull/1709
+* fix: EXPOSED-16 Failed tests in KotlinTimeTests by @joc-a in https://github.com/JetBrains/Exposed/pull/1724
+* EXPOSED-21 Primary key constraint not created by @bog-walk in https://github.com/JetBrains/Exposed/pull/1728
+* EXPOSED-19 Max timestamp in SQLite not working by @joc-a in https://github.com/JetBrains/Exposed/pull/1725
+* fix: EXPOSED-27 Id is not in record set by @joc-a in https://github.com/JetBrains/Exposed/pull/1731
+* fix: EXPOSED-28 Update with join fails on H2 in MySql mode by @bog-walk in https://github.com/JetBrains/Exposed/pull/1732
+* fix: EXPOSED-29 Cannot set nullable composite column in InsertStatement by @joc-a in https://github.com/JetBrains/Exposed/pull/1733
+* fix: EXPOSED-23 H2 unsupported indexing behavior by @bog-walk in https://github.com/JetBrains/Exposed/pull/1734
+* fix: EXPOSED-31 Landing Readme links and demo code by @bog-walk in https://github.com/JetBrains/Exposed/pull/1736
+* fix: EXPOSED-36 LocalDate comparison in SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/1741
+* fix: EXPOSED-42 Can't create BLOB column with default value by @joc-a in https://github.com/JetBrains/Exposed/pull/1740
+* fix: EXPOSED-49 Replace statement defined as upsert statement by @bog-walk in https://github.com/JetBrains/Exposed/pull/1747
+* fix: EXPOSED-48 Incorrect statistics aggregate functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1745
+* Sum batch results for inserts by @johnzeringue in https://github.com/JetBrains/Exposed/pull/1641
+* fix: EXPOSED-57 BatchInsertStatement can't be used with MySQL upsert by @bog-walk in https://github.com/JetBrains/Exposed/pull/1754
+* fix: EXPOSED-50 customEnumeration reference column error by @bog-walk in https://github.com/JetBrains/Exposed/pull/1785
+* fix: EXPOSED-91 NPE in existingIndices() with function index by @bog-walk in https://github.com/JetBrains/Exposed/pull/1791
+* fix: SQLServerException: The port number -1 is not valid. by @joc-a in https://github.com/JetBrains/Exposed/pull/1789
+* fix: EXPOSED-80 Set repetition policy for suspended transactions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1774
+* fix: Exclude deleted and renamed files from detekt GitHub Action by @joc-a in https://github.com/JetBrains/Exposed/pull/1795
+* fix: EXPOSED-97 Unsigned column types truncate MySQL values by @bog-walk in https://github.com/JetBrains/Exposed/pull/1796
+* fix: EXPOSED-98: Add instructions to log-in to see and log issues by @jasonjmcghee in https://github.com/JetBrains/Exposed/pull/1798
+* fix: EXPOSED-83 createMissingTablesAndColumns not detecting missing PK by @bog-walk in https://github.com/JetBrains/Exposed/pull/1797
+* test: Fix failing exposed-tests in SQL Server by @bog-walk in https://github.com/JetBrains/Exposed/pull/1801
+* fix: EXPOSED-54 CaseWhen.Else returns narrow Expression<R> by @bog-walk in https://github.com/JetBrains/Exposed/pull/1800
+* fix: EXPOSED-99 SchemaUtils incorrectly compares datetime defaults by @bog-walk in https://github.com/JetBrains/Exposed/pull/1802
+* test: Fix failing exposed-tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1803
+* fix: EXPOSED-82 Inaccurate UShort column type mapping by @bog-walk in https://github.com/JetBrains/Exposed/pull/1799
+* test: Fix failing datetime tests in MariaDB by @bog-walk in https://github.com/JetBrains/Exposed/pull/1805
+
 # 0.41.1
 Infrastructure:
 * Kotlin 1.7.21 
