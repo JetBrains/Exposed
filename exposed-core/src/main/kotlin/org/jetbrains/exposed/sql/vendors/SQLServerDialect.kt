@@ -251,9 +251,29 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    // EXPOSED-85 Fix changing default value on column in SQL Server as it requires to drop/create constraint
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
+        super.modifyColumn(column, columnDiff).map { statement ->
+            if (columnDiff.defaults) {
+                val transaction = TransactionManager.current()
+                val tableName = transaction.identity(column.table)
+                val colName = transaction.identity(column)
+
+                val dropConstraint = "DROP CONSTRAINT IF EXISTS DF_${tableName}_$colName"
+
+                column.dbDefaultValue?.let {
+                    buildString {
+                        append(statement.substringBefore("MODIFY COLUMN") + dropConstraint)
+                        append("; ")
+                        append(
+                            statement.substringBefore("MODIFY COLUMN") +
+                                "ADD CONSTRAINT DF_${tableName}_$colName DEFAULT ${SQLServerDataTypeProvider.processForDefaultValue(it)} for $colName"
+                        )
+                    }
+                } ?: (statement.substringBefore("MODIFY COLUMN") + dropConstraint)
+            } else {
+                statement.replace("MODIFY COLUMN", "ALTER COLUMN")
+            }
+        }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
@@ -284,7 +304,13 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return super.createIndex(index)
     }
 
-    override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
+    override fun createIndexWithType(
+        name: String,
+        table: String,
+        columns: String,
+        type: String,
+        filterCondition: String
+    ): String {
         return "CREATE $type INDEX $name ON $table $columns$filterCondition"
     }
 

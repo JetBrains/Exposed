@@ -172,6 +172,10 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             else -> "NULL"
         }
 
+        fun constraintNamePart(columnName: String) = (currentDialect as? SQLServerDialect)?.let {
+            " CONSTRAINT DF_t_$columnName"
+        } ?: ""
+
         withTables(listOf(TestDB.SQLITE), testTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(100)
@@ -179,14 +183,14 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                "${"s".inProperCase()} $varCharType DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} $varCharType DEFAULT 'testNullable' NULL, " +
-                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
+                "${"s".inProperCase()} $varCharType${constraintNamePart("s")} DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} $varCharType${constraintNamePart("sn")} DEFAULT 'testNullable' NULL, " +
+                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${constraintNamePart("l")} DEFAULT 42 NOT NULL, " +
+                "$q${"c".inProperCase()}$q CHAR${constraintNamePart("c")} DEFAULT 'X' NOT NULL, " +
+                "${"t1".inProperCase()} $dtType${constraintNamePart("t1")} ${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType${constraintNamePart("t2")} ${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType${constraintNamePart("t3")} ${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE${constraintNamePart("t4")} ${dtLiteral.itOrNull()}" +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
