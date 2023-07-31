@@ -274,6 +274,51 @@ val cities = Cities
   .orderBy(expression, SortOrder.DESC)
   .toList()
 ```
+
+### Add computed fields to entity class
+Imagine that you want to use a window function to rank films with each entity fetch.
+The companion object of the entity class can override any open function in `EntityClass`, but to achieve this functionality only `searchQuery()` needs to 
+be overriden. The results of the function can then be accessed using a property of the entity class:
+```kotlin
+object StarWarsFilms : IntIdTable() {
+    val sequelId = integer("sequel_id").uniqueIndex()
+    val name = varchar("name", 50)
+    val rating = double("rating")
+
+    val rank = Rank().over().orderBy(rating, SortOrder.DESC)
+}
+
+class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
+    var sequelId by StarWarsFilms.sequelId
+    var name by StarWarsFilms.name
+    var rating by StarWarsFilms.rating
+
+    val rank: Long
+        get() = readValues[StarWarsFilms.rank]
+
+    companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms) {
+        override fun searchQuery(op: Op<Boolean>): Query {
+            return super.searchQuery(op).adjustSlice {
+                slice(columns + StarWarsFilms.rank)
+            }
+        }
+    }
+}
+
+transaction {
+    StarWarsFilm.new {
+        sequelId = 8
+        name = "The Last Jedi"
+        rating = 4.2
+    }
+    // more insertions ...
+    entityCache.clear()
+
+    // fetch entities with value (or store entities then read value)
+    StarWarsFilm.find { StarWarsFilms.name like "The%" }.map { it.name to it.rank }
+}
+```
+
 ## Entities mapping
 ### Fields transformation
 As databases could store only basic types like integers and strings it's not always conveniently to keep the same simplicity on DAO level.

@@ -164,7 +164,9 @@ notRegexp
 inList
 notInList
 between
-match (MySQL MATCH AGAINST) 
+match (MySQL MATCH AGAINST)
+isDistinctFrom (null-safe equality comparison)
+isNotDistinctFrom (null-safe equality comparison)
 ```
 
 Allowed logical conditions are:
@@ -173,12 +175,16 @@ Allowed logical conditions are:
 not
 and
 or
+andIfNotNull
+orIfNotNull
+compoundAnd()
+compoundOr()
 ```
 
 ## Conditional where
 
-It rather common case when your query's `where` condition depends on some other code conditions. Moreover, it could be independent or nested conditions what make it
-more complicated to prepare such `where`.
+It is a rather common case to have a query with a `where` clause that depends on some other code's conditions. Moreover, independent or nested conditions could 
+make it more complicated to prepare such where clauses.
 Let's imagine that we have a form on a website where a user can optionally filter "Star Wars" films by a director and/or a sequel.
 In Exposed version before 0.8.1 you had to code it like:
 
@@ -513,3 +519,63 @@ order, provide list of columns as second parameter:
 val userCount = users.selectAll().count()
 users.insert(users.slice(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)).selectAll(), columns = listOf(users.name, users.id))
 ```
+
+## Insert Or Ignore
+
+If supported by your specific database, `insertIgnore()` allows insert statements to be executed without throwing any 
+ignorable errors. This may be useful, for example, when insertion conflicts are possible:
+```kotlin
+StarWarsFilms.insert {
+    it[sequelId] = 8  // column pre-defined with a unique index
+    it[name] = "The Last Jedi"
+    it[director] = "Rian Johnson"
+}
+// If insert() was used, this would throw a constraint violation exception
+// Instead, this new row is ignored and discarded
+StarWarsFilms.insertIgnore {
+    it[sequelId] = 8
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+```
+
+## Insert Or Update
+
+Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if a duplicate 
+constraint already exists. The supported functionality of `upsert()` is dependent on the specific database being used.
+For example, MySQL's `INSERT ... ON DUPLICATE KEY UPDATE` statement automatically assesses the primary key and unique indices 
+for a duplicate value, so using the function in Exposed would look like this:
+```kotlin
+// inserts a new row
+StarWarsFilms.upsert {
+    it[sequelId] = 9  // column pre-defined with a unique index
+    it[name] = "The Rise of Skywalker"
+    it[director] = "Rian Johnson"
+}
+// updates existing row with the correct [director]
+StarWarsFilms.upsert {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+```
+Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different 
+values should be used for an update, and whether the update statement should have a `WHERE` clause:
+```kotlin
+val incrementSequelId = listOf(StarWarsFilms.sequelId to StarWarsFilms.sequelId.plus(1))
+StarWarsFilms.upsert(
+    StarWarsFilms.sequelId,
+    onUpdate = incrementSequelId,
+    where = { StarWarsFilms.director like stringLiteral("JJ%") }
+) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+```
+If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there 
+is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case 
+differently, so it is strongly advised that keys are defined to avoid unexpected results.
+
+**Note:** Databases that do not support a specific upsert command implement the standard `MERGE USING` statement with aliases 
+and a derived table. These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
