@@ -29,3 +29,14 @@ transaction(Connection.TRANSACTION_READ_COMMITTED) {
     // statements
 }
 ```
+* In all databases except MySQL and MariaDB, the `ushort()` column now maps to data type `INT` instead of `SMALLINT`, which allows the full range of `UShort` 
+values to be inserted without any overflow.
+Registering the column on a table also creates a check constraint that restricts inserted data to the range between 0 and `UShort.MAX_VALUE`.
+If a column that only uses 2 bytes of storage is needed, but without allowing any non-negative values to be inserted, please use a signed `short()` column 
+instead with a manually created check constraint:
+```kt
+short("number").check { it.between(0, Short.MAX_VALUE) }
+// OR
+short("number").check { (it greaterEq 0) and (it lessEq Short.MAX_VALUE) }
+```
+
