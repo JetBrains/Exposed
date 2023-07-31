@@ -39,6 +39,7 @@ For more information visit the links below:
 -   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
 -   [Roadmap](docs/ROADMAP.md) to see what's coming next
 -   [Change log](docs/ChangeLog.md) of improvements and bug fixes
+-   [Breaking changes](docs/BREAKING_CHANGES.md) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
