@@ -296,9 +296,9 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             }
 
             // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
-            val requiresExplicitCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+            val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
             val dateTime = when (testDb) {
-                in requiresExplicitCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
+                in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
                 else -> dateTimeParam(mayTheFourthDT)
             }
             val createdMayFourth = testTableDT.select { testTableDT.created eq dateTime }.count()
