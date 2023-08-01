@@ -276,8 +276,7 @@ val cities = Cities
 ```
 
 ### Add computed fields to entity class
-Imagine that you want to use a window function to rank films with each entity fetch.
-The companion object of the entity class can override any open function in `EntityClass`, but to achieve this functionality only `searchQuery()` needs to 
+Imagine that you want to use a window function to rank films with each entity fetch. The companion object of the entity class can override any open function in `EntityClass`, but to achieve this functionality only `searchQuery()` needs to 
 be overriden. The results of the function can then be accessed using a property of the entity class:
 ```kotlin
 object StarWarsFilms : IntIdTable() {

@@ -26,7 +26,9 @@ The `exposed-java-time` extension (`org.jetbrains.exposed:exposed-java-time:$exp
 * `timestamp` - `TIMESTAMP`
 * `duration` - `DURATION`
 
-**Note**: some types are different for specific DB dialect.
+<note>
+Some types are different for specific DB dialect.
+</note>
 
 The `exposed-json` extension (`org.jetbrains.exposed:exposed-json:$exposed_version`) provides additional types 
 (see [how to use](#how-to-use-json-and-jsonb-types)):
@@ -34,16 +36,19 @@ The `exposed-json` extension (`org.jetbrains.exposed:exposed-json:$exposed_versi
 * `json` - `JSON`
 * `jsonb` - `JSONB`
 
-**Note**: Databases store JSON values either in text or binary format, so Exposed provides two types to account for any potential 
+<note>
+Databases store JSON values either in text or binary format, so Exposed provides two types to account for any potential 
 differences, if they exist, for example:
+
 - **PostgreSQL**: `json()` maps to `JSON`, while `jsonb()` maps to `JSONB`.
-- **SQLite**: No native JSON type so `json()` maps to TEXT, while `jsonb()` throws.
+- **SQLite**: No native JSON type, so `json()` maps to TEXT, while `jsonb()` throws.
 - **MySQL**: JSON type only supports binary format, so `json()` and `jsonb()` both map to JSON.
 - **Oracle**: Exposed does not currently support the JSON binary format of Oracle 21c; only text format `json()` can be used.
+</note>
 
-## How to use database Enum types
-Some of the databases (e.g. MySQL, PostgreSQL, H2) supports explicit ENUM types. Because keeping such columns in sync with 
-kotlin enumerations using only jdbc metadata could be a huge challenge, Exposed doesn't provide a possibility to manage 
+## How to use database ENUM types
+Some of the databases (e.g. MySQL, PostgreSQL, H2) support explicit ENUM types. Because keeping such columns in sync with 
+Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't provide a possibility to manage 
 such columns in an automatic way, but that doesn't mean that you can't use such column types.
 You have two options to work with ENUM database types:
 1. Use existing ENUM column from your tables
@@ -53,7 +58,7 @@ You have two options to work with ENUM database types:
 As a jdbc-driver can provide/expect specific classes for Enum type, you must provide from/to transformation functions for 
 them when defining a `customEnumeration`.
 
-For such enum `private enum class Foo { Bar, Baz }` you can use provided code for your database:
+For such enum `private enum class Foo { Bar, Baz }`, you can use the provided code for your database:
 
 **H2**
 ```Kotlin
@@ -70,7 +75,7 @@ val newEnumColumn = customEnumeration("enumColumn", "ENUM('Bar', 'Baz')", { valu
 **PostgreSQL**
 
 PostgreSQL requires that ENUM is defined as a separate type, so you have to create it before creating your table. 
-Also postgresql jdbc driver returns PGobject instances for such values. The full working sample is provided below:
+Also, PostgreSQL JDBC driver returns PGobject instances for such values. The full working sample is provided below:
 ```Kotlin
 class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
     init {
@@ -143,9 +148,12 @@ val projectName = Team.project.extract<String>("name")
 val languageIsKotlin = Team.project.extract<String>("language").lowerCase() eq "kotlin"
 Team.slice(projectName).select { languageIsKotlin }.map { it[projectName] }
 ```
-**Note:** Databases that support a path context root `$` will have this value appended to the generated SQL path expression 
+
+<note>
+Databases that support a path context root `$` will have this value appended to the generated SQL path expression 
 by default, so it is not necessary to include it in the provided argument String. In the above example, if MySQL is being 
 used, the provided path arguments should be `.name` and `.language` respectively.
+</note>
 
 The JSON functions `exists()` and `contains()` are currently supported as well:
 ```kotlin

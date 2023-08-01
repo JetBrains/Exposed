@@ -23,7 +23,7 @@ object Cities : Table(name = "citiesTable") {
 ```
 Also, Exposed provides `IdTable` class which is inherited by `IntIdTable()`, `LongIdTable()`, and `UUIDTable(`) classes from 
 **org.jetbrains.exposed.dao.id** package of **exposed-core** module. These tables could be declared without the `id` attribute. 
-IDs of appropriate type will be generated automatically with any operations create new table rows. To configure a custom name 
+IDs of appropriate type will be generated automatically when creating new table rows. To configure a custom name 
 for the `id` attribute, pass it to the `columnName` parameter of the appropriate table constructor.
 
 Depending on what DBMS you use, types of columns could be different in actual SQL queries. We use H2 database in our examples.
@@ -32,7 +32,7 @@ Depending on what DBMS you use, types of columns could be different in actual SQ
 
 ### Nullable
 
-The `NOT NULL` SQL constraint restricts the column to accept the `null` value. By default, Exposed apply this constraint to 
+The `NOT NULL` SQL constraint restricts the column to accept the `null` value. By default, Exposed applies this constraint to 
 all the columns. To allow the column to be nullable, apply the `nullable()` method to a definition of an appropriate column.
 
 For example, to make the population column `nullable`, use the following code:
@@ -115,10 +115,13 @@ are represented by the data class `Index`, so its properties can be checked in t
 ```kotlin
 Table.indices.map { it.indexName to it.createStatement().first() }
 ```
-**Note:** An instance of the `Index` data class can be created directly using its public constructor, for the purpose of 
+
+<note>
+An instance of the `Index` data class can be created directly using its public constructor, for the purpose of 
 evaluating or using  create/modify/drop statements, for example. Doing so will not add the instance to an existing table's 
 list of indices in the way that using `index()` would. Also, if an instance is created with arguments provided to the 
 `functions` parameter, a `functionsTable` argument must also be provided.
+</note>
 
 ### Unique
 
@@ -161,10 +164,11 @@ method. The second one let the foreign key accept the `null` value.
 
 Enum class `ReferenceOption` has four values:
 
-* `RESTRICT` is an option restricts changes on referenced column, and the default option for MySQL dialect.
+* `RESTRICT` is an option that restricts changes on a referenced column, and the default option for MySQL dialect.
 * `NO_ACTION` is the same as RESTRICT, and the default option for Oracle and SQL Server dialects.
-* `CASCADE` is an option allows updating or deleting the referring rows.
-* `SET_NULL` is an option sets null to the referring column values.
+* `CASCADE` is an option that allows updating or deleting the referring rows.
+* `SET_NULL` is an option that sets the referring column values to null.
+* `SET_DEFAULT` is an option that sets the referring column values to the default value.
 
 Consider the following `Citizens` table. This table has the `name` and `city` columns. Since the `Cities` table has 
 configured `name` primary key, the `Citizens` table can refer to it by its `city` column, which is a foreign key. To 
@@ -180,13 +184,13 @@ If any `Cities` row will be deleted, the appropriate `Citizens` row will be dele
 
 ### Check
 
-The `CHECK` SQL constraint checks that all values in a column match the condition. Exposed supports the `check()` method. 
+The `CHECK` SQL constraint checks that all values in a column match some condition. Exposed supports the `check()` method. 
 You apply this method to a column and pass the appropriate condition to it.
 
-For example, to check that the `name` column contains strings that begins with capital letter, use the following code:
+For example, to check that the `name` column contains strings that begin with a capital letter, use the following code:
 ```kotlin
 // SQL: CONSTRAINT check_Cities_0 CHECK (REGEXP_LIKE("NAME", '^[A-Z].*', 'c')))
 val name = varchar("name", 50).check { it regexp "^[A-Z].*" }
 ```
 
-Some DBMS could not support any condition. For more information, see its documentations.
+Some databases, like older MySQL versions, may not support `CHECK` constraints. For more information, consult the relevant documentation.

@@ -69,7 +69,7 @@ val (min, max, avg) = FooTable.slice(minId, maxId, averageId).selecAll().map {
 ```
 
 ## Custom functions
-If you can't find your most loved function used in your database (as Exposed provides only basic support for classic SQL functions) you can define your own functions.
+If you can't find your most loved function used in your database (as Exposed provides only basic support for classic SQL functions), you can define your own functions.
 
 Since Exposed 0.15.1 there multiple options to define custom functions:
 1. Function without parameters:
@@ -83,7 +83,7 @@ In SQL representation it will be `SQRT(FooTable.id)`
 val replacedName = CustomFunction<String?>("REPLACE", VarCharColumnType(), FooTable.name, stringParam("foo"), stringParam("bar"))
 
 ``` 
-`CustomFunction` class accepts function name as a first parameter and resulting column type as second, after that you can provide any amount of parameters separated by a comma.
+`CustomFunction` class accepts a function name as a first parameter and the resulting column type as second. After that, you can provide any amount of parameters separated by a comma.
 
 There are also shortcuts for string, long, and datetime functions:
 * `CustomStringFunction`
@@ -186,4 +186,7 @@ FooTable.amount.sum().over()
     .orderBy(FooTable.amount)
     .range(WindowFrameBound.offsetPreceding(2), WindowFrameBound.currentRow())
 ```
-**Note**: If multiple frame clause functions are chained together, only the last one will be used.
+
+<note>
+If multiple frame clause functions are chained together, only the last one will be used.
+</note>

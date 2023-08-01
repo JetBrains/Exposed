@@ -184,7 +184,7 @@ compoundOr()
 ## Conditional where
 
 It is a rather common case to have a query with a `where` clause that depends on some other code's conditions. Moreover, independent or nested conditions could 
-make it more complicated to prepare such where clauses.
+make it more complicated to prepare such `where` clauses.
 Let's imagine that we have a form on a website where a user can optionally filter "Star Wars" films by a director and/or a sequel.
 In Exposed version before 0.8.1 you had to code it like:
 
@@ -577,5 +577,7 @@ If a specific database supports user-defined key columns and none are provided, 
 is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case 
 differently, so it is strongly advised that keys are defined to avoid unexpected results.
 
-**Note:** Databases that do not support a specific upsert command implement the standard `MERGE USING` statement with aliases 
+<note>
+Databases that do not support a specific upsert command implement the standard `MERGE USING` statement with aliases 
 and a derived table. These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
+</note>
