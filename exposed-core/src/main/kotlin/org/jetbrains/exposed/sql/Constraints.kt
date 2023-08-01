@@ -1,13 +1,8 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
 
@@ -196,9 +191,12 @@ data class CheckConstraint(
 
     internal val checkPart = "CONSTRAINT $checkName CHECK ($checkOp)"
 
+    private val DatabaseDialect.cannotAlterCheckConstraint: Boolean
+        get() = this is SQLiteDialect || (this as? MysqlDialect)?.isMysql8 == false
+
     override fun createStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
-            exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
+        return if (currentDialect.cannotAlterCheckConstraint) {
+            exposedLogger.warn("Creation of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName ADD $checkPart")
@@ -208,8 +206,8 @@ data class CheckConstraint(
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
     override fun dropStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
-            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
+        return if (currentDialect.cannotAlterCheckConstraint) {
+            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")

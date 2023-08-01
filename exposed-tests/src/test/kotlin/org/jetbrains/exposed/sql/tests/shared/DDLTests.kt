@@ -787,25 +787,27 @@ class DDLTests : DatabaseTestsBase() {
             val negative = integer("negative").check("subZero") { it less 0 }
         }
 
-        withTables(listOf(TestDB.MYSQL), checkTable) {
-            checkTable.insert {
-                it[positive] = 42
-                it[negative] = -14
-            }
-
-            assertEquals(1L, checkTable.selectAll().count())
-
-            assertFailAndRollback("Check constraint 1") {
+        withTables(checkTable) {
+            if (!isOldMySql()) {
                 checkTable.insert {
-                    it[positive] = -472
-                    it[negative] = -354
+                    it[positive] = 42
+                    it[negative] = -14
                 }
-            }
 
-            assertFailAndRollback("Check constraint 2") {
-                checkTable.insert {
-                    it[positive] = 538
-                    it[negative] = 915
+                assertEquals(1L, checkTable.selectAll().count())
+
+                assertFailAndRollback("Check constraint 1") {
+                    checkTable.insert {
+                        it[positive] = -472
+                        it[negative] = -354
+                    }
+                }
+
+                assertFailAndRollback("Check constraint 2") {
+                    checkTable.insert {
+                        it[positive] = 538
+                        it[negative] = 915
+                    }
                 }
             }
         }
@@ -821,32 +823,73 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(listOf(TestDB.MYSQL), checkTable) {
-            checkTable.insert {
-                it[positive] = 57
-                it[negative] = -32
-            }
-
-            assertEquals(1L, checkTable.selectAll().count())
-
-            assertFailAndRollback("Check constraint 1") {
+        withTables(checkTable) {
+            if (!isOldMySql()) {
                 checkTable.insert {
-                    it[positive] = -47
-                    it[negative] = -35
+                    it[positive] = 57
+                    it[negative] = -32
                 }
-            }
 
-            assertFailAndRollback("Check constraint 2") {
-                checkTable.insert {
-                    it[positive] = 53
-                    it[negative] = 91
+                assertEquals(1L, checkTable.selectAll().count())
+
+                assertFailAndRollback("Check constraint 1") {
+                    checkTable.insert {
+                        it[positive] = -47
+                        it[negative] = -35
+                    }
+                }
+
+                assertFailAndRollback("Check constraint 2") {
+                    checkTable.insert {
+                        it[positive] = 53
+                        it[negative] = 91
+                    }
                 }
             }
         }
     }
 
     @Test
-    fun testCheckConstraint03() {
+    fun testCreateAndDropCheckConstraint() {
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+        }
+
+        withTables(tester) { testDb ->
+            val constraintName = "check_tester_positive"
+            val constraintOp = "${"amount".inProperCase()} > 0"
+            val (createConstraint, dropConstraint) = CheckConstraint("tester", constraintName, constraintOp).run {
+                createStatement() to dropStatement()
+            }
+
+            if (testDb == TestDB.SQLITE || isOldMySql()) { // cannot alter existing check constraint
+                assertTrue(createConstraint.isEmpty() && dropConstraint.isEmpty())
+            } else {
+                val negative = -9
+                tester.insert { it[amount] = negative }
+
+                // fails to create check constraint because negative values already stored
+                assertFailAndRollback("Check constraint violation") {
+                    exec(createConstraint.single())
+                }
+
+                tester.deleteAll()
+                exec(createConstraint.single())
+
+                assertFailAndRollback("Check constraint violation") {
+                    tester.insert { it[amount] = negative }
+                }
+
+                exec(dropConstraint.single())
+
+                tester.insert { it[amount] = negative }
+                assertEquals(negative, tester.selectAll().single()[tester.amount])
+            }
+        }
+    }
+
+    @Test
+    fun testEqOperatorWithoutDBConnection() {
         object : Table("test") {
             val testColumn: Column<Int?> = integer("test_column").nullable()
 
@@ -859,7 +902,7 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCheckConstraint04() {
+    fun testNeqOperatorWithoutDBConnection() {
         object : Table("test") {
             val testColumn: Column<Int?> = integer("test_column").nullable()
 
