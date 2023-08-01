@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") apply true
     kotlin("plugin.serialization") apply true
     id("testWithDBs")
+    id("org.jetbrains.exposed.gradle.conventions.dokka")
 }
 
 repositories {

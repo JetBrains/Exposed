@@ -2,6 +2,7 @@ import org.jetbrains.exposed.gradle.Versions
 
 plugins {
     kotlin("jvm") apply true
+    id("org.jetbrains.exposed.gradle.conventions.dokka")
 }
 
 repositories {

@@ -7,6 +7,7 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") apply true
     id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
+    id("org.jetbrains.exposed.gradle.conventions.dokka")
 }
 
 allprojects {
@@ -43,6 +44,11 @@ subprojects {
             languageVersion = "1.6"
         }
     }
+}
+
+tasks.dokkaHtmlMultiModule {
+    // sets the project name in the header, otherwise it's lowercase `exposed`
+    moduleName.set("Exposed")
 }
 
 repositories {
