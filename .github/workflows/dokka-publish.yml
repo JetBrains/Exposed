@@ -29,5 +29,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/dokka/htmlMultiModule
-          desination_dir: api
+          destination_dir: api
           full_commit_message: Publish API reference documentation
