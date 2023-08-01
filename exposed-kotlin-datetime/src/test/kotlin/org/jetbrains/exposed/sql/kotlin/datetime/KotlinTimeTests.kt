@@ -276,6 +276,43 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testLocalDateTimeComparison() {
+        val testTableDT = object : IntIdTable("test_table_dt") {
+            val created = datetime("created")
+            val modified = datetime("modified")
+        }
+
+        withTables(testTableDT) { testDb ->
+            val mayTheFourth = "2011-05-04T13:00:21.871130789Z"
+            val mayTheFourthDT = Instant.parse(mayTheFourth).toLocalDateTime(TimeZone.currentSystemDefault())
+            val nowDT = now()
+            val id1 = testTableDT.insertAndGetId {
+                it[created] = mayTheFourthDT
+                it[modified] = mayTheFourthDT
+            }
+            val id2 = testTableDT.insertAndGetId {
+                it[created] = mayTheFourthDT
+                it[modified] = nowDT
+            }
+
+            // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
+            val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+            val dateTime = when (testDb) {
+                in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
+                else -> dateTimeParam(mayTheFourthDT)
+            }
+            val createdMayFourth = testTableDT.select { testTableDT.created eq dateTime }.count()
+            assertEquals(2, createdMayFourth)
+
+            val modifiedAtSameDT = testTableDT.select { testTableDT.modified eq testTableDT.created }.single()
+            assertEquals(id1, modifiedAtSameDT[testTableDT.id])
+
+            val modifiedAtLaterDT = testTableDT.select { testTableDT.modified greater testTableDT.created }.single()
+            assertEquals(id2, modifiedAtLaterDT[testTableDT.id])
+        }
+    }
+
+    @Test
     fun testDateTimeAsJsonB() {
         val tester = object : Table("tester") {
             val created = datetime("created")

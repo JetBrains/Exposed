@@ -252,10 +252,14 @@ class MiscTableTest : DatabaseTestsBase() {
         }
     }
 
+    // these DB take the datetime nanosecond value and round up to default precision
+    // which causes flaky comparison failures if not cast to TIMESTAMP first
+    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+
     @Test
     fun testSelect01() {
         val tbl = Misc
-        withTables(tbl) {
+        withTables(tbl) { testDb ->
             val date = today
             val dateTime = now()
             val time = dateTime.time
@@ -436,8 +440,12 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
 
+            val dtValue = when (testDb) {
+                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), KotlinLocalDateTimeColumnType())
+                else -> dateTimeParam(dateTime)
+            }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -692,7 +700,7 @@ class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testSelect02() {
         val tbl = Misc
-        withTables(tbl) {
+        withTables(tbl) { testDb ->
             val date = today
             val dateTime = now()
             val time = dateTime.time
@@ -858,8 +866,12 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
 
+            val dtValue = when (testDb) {
+                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), KotlinLocalDateTimeColumnType())
+                else -> dateTimeParam(dateTime)
+            }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dateTime) }.single(),
+                tbl.select { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
