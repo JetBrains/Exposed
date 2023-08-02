@@ -129,43 +129,37 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(
-        tables: Array<out Table>,
-        extract: (ResultSet) -> Pair<String, ColumnMetadata>
-    ): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCase() }
-        val result = HashMap<Table, MutableList<ColumnMetadata>>()
+    private fun ResultSet.extractColumns(): List<ColumnMetadata> {
+        val result: MutableList<ColumnMetadata> = mutableListOf()
 
         while (next()) {
-            val (tableName, columnMetadata) = extract(this)
-            mapping[tableName]?.let { t ->
-                result.getOrPut(t) { arrayListOf() } += columnMetadata
-            }
+            val columnMetadata = extractColumnMetadata()
+            result.add(columnMetadata)
         }
         return result
     }
 
+    private fun ResultSet.extractColumnMetadata(): ColumnMetadata {
+        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
+        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
+        return ColumnMetadata(
+            getString("COLUMN_NAME"),
+            getInt("DATA_TYPE"),
+            getBoolean("NULLABLE"),
+            getInt("COLUMN_SIZE").takeIf { it != 0 },
+            autoIncrement,
+            // Not sure this filters enough but I dont think we ever want to have sequences here
+            defaultDbValue?.takeIf { !autoIncrement },
+        )
+    }
+
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val rs = metadata.getColumns(databaseName, currentScheme, "%", "%")
-        val result = rs.extractColumns(tables) {
-            // @see java.sql.DatabaseMetaData.getColumns
-            // That read should go first as Oracle driver closes connection after that
-            val defaultDbValue = it.getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-            val autoIncrement = it.getString("IS_AUTOINCREMENT") == "YES"
-            val type = it.getInt("DATA_TYPE")
-            val columnMetadata = ColumnMetadata(
-                it.getString("COLUMN_NAME"),
-                type,
-                it.getBoolean("NULLABLE"),
-                it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                autoIncrement,
-                // Not sure this filters enough but I dont think we ever want to have sequences here
-                defaultDbValue?.takeIf { !autoIncrement },
-            )
-            it.getString("TABLE_NAME") to columnMetadata
+        return tables.associateWith { table ->
+            val rs = metadata.getColumns(databaseName, currentScheme, table.nameInDatabaseCase(), "%")
+            val columnMetadataList = rs.extractColumns()
+            rs.close()
+            columnMetadataList
         }
-        rs.close()
-        return result
     }
 
     private fun sanitizedDefault(defaultValue: String): String {
