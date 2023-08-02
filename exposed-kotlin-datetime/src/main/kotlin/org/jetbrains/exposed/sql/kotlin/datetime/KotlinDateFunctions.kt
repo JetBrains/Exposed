@@ -64,7 +64,7 @@ object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
     }
 }
 
-class CurrentTimestamp<T> : Expression<T>() {
+class CurrentTimestamp<T> : Function<T>(KotlinInstantColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"

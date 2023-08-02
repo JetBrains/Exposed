@@ -15,9 +15,11 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.Category.defaultExpression
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -372,7 +374,10 @@ class DefaultsTest : DatabaseTestsBase() {
     fun testConsistentSchemeWithFunctionAsDefaultExpression() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+            val defaultDate = date("default_date").defaultExpression(CurrentDate)
+            val defaultDateTime = datetime("default_date_time").defaultExpression(CurrentDateTime)
+            val defaultTimeStamp1 = timestamp("default_time_stamp_1").defaultExpression(CurrentTimestamp())
+            val defaultTimeStamp2 = datetime("default_time_stamp_2").defaultExpression(CurrentTimestamp())
         }
 
         withDb {
@@ -380,7 +385,17 @@ class DefaultsTest : DatabaseTestsBase() {
                 SchemaUtils.create(foo)
 
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
-                assertTrue(actual.isEmpty())
+
+                if (currentDialectTest is MysqlDialect) {
+                    // MySQL and MariaDB do not support CURRENT_DATE as default
+                    // so the column is created with a NULL marker, which correctly triggers 1 alter statement
+                    val tableName = foo.nameInDatabaseCase()
+                    val dateColumnName = foo.defaultDate.nameInDatabaseCase()
+                    val alter = "ALTER TABLE $tableName MODIFY COLUMN $dateColumnName DATE NULL"
+                    assertEquals(alter, actual.single())
+                } else {
+                    assertTrue(actual.isEmpty())
+                }
             } finally {
                 SchemaUtils.drop(foo)
             }

@@ -9,7 +9,7 @@ public final class org/jetbrains/exposed/sql/javatime/CurrentDateTime : org/jetb
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/javatime/CurrentTimestamp : org/jetbrains/exposed/sql/Expression {
+public final class org/jetbrains/exposed/sql/javatime/CurrentTimestamp : org/jetbrains/exposed/sql/Function {
 	public fun <init> ()V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
