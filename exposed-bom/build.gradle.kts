@@ -31,13 +31,32 @@ dependencies {
 }
 
 publishing {
+    val version: String by rootProject
+
     publications {
         create<MavenPublication>("bom") {
+            groupId = "org.jetbrains.exposed"
+            artifactId = project.name
+            this.version = version
             from(components.getByName("javaPlatform"))
             pom {
                 configureMavenCentralMetadata(project)
             }
             signPublicationIfKeyPresent(project)
+        }
+    }
+
+    val publishingUsername: String? = System.getenv("PUBLISHING_USERNAME")
+    val publishingPassword: String? = System.getenv("PUBLISHING_PASSWORD")
+
+    repositories {
+        maven {
+            name = "Exposed"
+            url = uri("https://maven.pkg.jetbrains.space/public/p/exposed/release")
+            credentials {
+                username = publishingUsername
+                password = publishingPassword
+            }
         }
     }
 }
