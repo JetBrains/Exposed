@@ -15,12 +15,11 @@ The complete list of supported data types can be found here: [[Data Types|DataTy
 
 ### Q: Is `upsert` supported?
 
-A: Upsert is an instruction to the Database to insert a new row or update existing row based on a table key. It is not supported as part of the library but it is possible to implement on top of it. See this issue: https://github.com/JetBrains/Exposed/issues/167 and example here: https://medium.com/@OhadShai/first-steps-with-kotlin-exposed-cb361a9bf5ac
+A: Yes. See [[Insert Or Update|DSL#insert-or-update]]
 
 ### Q: Is `json` type supported?
 
-A: Not at the moment. Here is the issue: https://github.com/JetBrains/Exposed/issues/127  
-The complete list of supported data types can be found here: [[Data Types|DataTypes]].
+A: Yes. See [[How to use Json and JsonB types|DataTypes#how-to-use-json-and-jsonb-types]]
 
 ### Q: How to get a plain SQL query which will be executed?
 
