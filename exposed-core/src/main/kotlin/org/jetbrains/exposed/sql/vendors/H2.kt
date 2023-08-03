@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -12,6 +13,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     }
 
     override fun uuidType(): String = "UUID"
+    override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME(9)"
 
     override fun timestampWithTimeZoneType(): String = "TIMESTAMP(9) WITH TIME ZONE"

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.util.*
 
 internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
@@ -26,11 +27,25 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun binaryType(length: Int): String {
         @Suppress("MagicNumber")
-        return if (length < 2000) "RAW ($length)"
-        else binaryType()
+        return if (length < 2000) "RAW ($length)" else binaryType()
     }
 
-    override fun uuidType(): String = "RAW(16)"
+    override fun uuidType(): String {
+        return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            "UUID"
+        } else {
+            return "RAW(16)"
+        }
+    }
+
+    override fun uuidToDB(value: UUID): Any {
+        return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            H2DataTypeProvider.uuidToDB(value)
+        } else {
+            super.uuidToDB(value)
+        }
+    }
+
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun booleanType(): String = "CHAR(1)"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
