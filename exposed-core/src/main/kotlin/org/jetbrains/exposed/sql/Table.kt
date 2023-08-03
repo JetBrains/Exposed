@@ -759,7 +759,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBlob
      */
-    fun blob(name: String): Column<ExposedBlob> = registerColumn(name, BlobColumnType())
+    fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
+        registerColumn(name, BlobColumnType(useObjectIdentifier))
 
     /** Creates a binary column, with the specified [name], for storing UUIDs. */
     fun uuid(name: String): Column<UUID> = registerColumn(name, UUIDColumnType())

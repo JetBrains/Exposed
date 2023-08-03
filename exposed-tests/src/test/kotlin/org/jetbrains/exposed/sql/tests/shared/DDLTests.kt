@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
@@ -28,6 +29,7 @@ import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.random.Random
+import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
@@ -677,6 +679,46 @@ class DDLTests : DatabaseTestsBase() {
 
                     SchemaUtils.drop(testTable)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testBlobAsOid() {
+        val defaultBytes = "test".toByteArray()
+        val defaultBlob = ExposedBlob(defaultBytes)
+        val tester = object : Table("blob_tester") {
+            val blobCol = blob("blob_col", useObjectIdentifier = true).default(defaultBlob)
+        }
+
+        withDb {
+            if (currentDialectTest !is PostgreSQLDialect) {
+                expectException<IllegalStateException> {
+                    SchemaUtils.create(tester)
+                }
+            } else {
+                assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
+                SchemaUtils.create(tester)
+
+                tester.insert {}
+
+                val result1 = tester.selectAll().single()[tester.blobCol]
+                assertContentEquals(defaultBytes, result1.bytes)
+
+                tester.insert {
+                    defaultBlob.inputStream.reset()
+                    it[blobCol] = defaultBlob
+                }
+                tester.insert {
+                    defaultBlob.inputStream.reset()
+                    it[blobCol] = blobParam(defaultBlob, useObjectIdentifier = true)
+                }
+
+                val result2 = tester.selectAll()
+                assertEquals(3, result2.count())
+                assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
+
+                SchemaUtils.drop(tester)
             }
         }
     }
