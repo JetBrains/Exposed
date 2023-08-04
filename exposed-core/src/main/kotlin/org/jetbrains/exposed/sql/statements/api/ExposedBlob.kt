@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.statements.api
 
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+import java.io.IOException
 import java.io.InputStream
 
 class ExposedBlob(inputStream: InputStream) {
@@ -8,13 +11,20 @@ class ExposedBlob(inputStream: InputStream) {
     var inputStream = inputStream
         private set
 
-    val bytes get() = inputStream.readBytes().also {
-        if (inputStream.markSupported()) {
-            inputStream.reset()
-        } else {
-            inputStream = it.inputStream()
+    val bytes: ByteArray
+        get() = inputStream.readBytes().also {
+            if (inputStream.markSupported()) {
+                try {
+                    inputStream.reset()
+                } catch (_: IOException) {
+                    if (currentDialectIfAvailable is OracleDialect) {
+                        inputStream = it.inputStream()
+                    }
+                }
+            } else {
+                inputStream = it.inputStream()
+            }
         }
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

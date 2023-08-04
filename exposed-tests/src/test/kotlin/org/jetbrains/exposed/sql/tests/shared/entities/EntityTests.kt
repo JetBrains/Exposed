@@ -111,7 +111,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testBlobField() {
+    @Test
+    fun testBlobField() {
         withTables(EntityTestsData.YTable) {
             val y1 = EntityTestsData.YEntity.new {
                 x = false
