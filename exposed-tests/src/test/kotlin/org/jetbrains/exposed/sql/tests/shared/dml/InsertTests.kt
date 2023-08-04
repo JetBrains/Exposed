@@ -461,8 +461,9 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `rollback on constraint exception normal transactions`() {
-        val TestTable = object : IntIdTable("TestRollback") {
+    @Test
+    fun testRollbackOnConstraintExceptionWithNormalTransactions() {
+        val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
         val dbToTest = TestDB.enabledInTests() - setOfNotNull(
@@ -474,16 +475,16 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        SchemaUtils.create(TestTable)
-                        TestTable.insert { it[foo] = 1 }
-                        TestTable.insert { it[foo] = 0 }
+                        SchemaUtils.create(testTable)
+                        testTable.insert { it[foo] = 1 }
+                        testTable.insert { it[foo] = 0 }
                     }
                     fail("Should fail on constraint > 0 with $db")
                 } catch (_: SQLException) {
                     // expected
                 }
                 withDb(db) {
-                    assertTrue(TestTable.selectAll().empty())
+                    assertTrue(testTable.selectAll().empty())
                 }
             } finally {
                 withDb(db) {
@@ -493,8 +494,9 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `rollback on constraint exception normal suspended transactions`() {
-        val TestTable = object : IntIdTable("TestRollback") {
+    @Test
+    fun testRollbackOnConstraintExceptionWithSuspendTransactions() {
+        val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
         val dbToTest = TestDB.enabledInTests() - setOfNotNull(
@@ -506,12 +508,12 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        SchemaUtils.create(TestTable)
+                        SchemaUtils.create(testTable)
                     }
                     runBlocking {
                         newSuspendedTransaction(db = db.db) {
-                            TestTable.insert { it[foo] = 1 }
-                            TestTable.insert { it[foo] = 0 }
+                            testTable.insert { it[foo] = 1 }
+                            testTable.insert { it[foo] = 0 }
                         }
                     }
                     fail("Should fail on constraint > 0")
@@ -520,7 +522,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
 
                 withDb(db) {
-                    assertTrue(TestTable.selectAll().empty())
+                    assertTrue(testTable.selectAll().empty())
                 }
             } finally {
                 withDb(db) {
