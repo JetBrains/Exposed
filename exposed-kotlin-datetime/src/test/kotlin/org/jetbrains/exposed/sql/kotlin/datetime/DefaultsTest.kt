@@ -375,9 +375,9 @@ class DefaultsTest : DatabaseTestsBase() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDate = date("default_date").defaultExpression(CurrentDate)
-            val defaultDateTime = datetime("default_date_time").defaultExpression(CurrentDateTime)
-            val defaultTimeStamp1 = timestamp("default_time_stamp_1").defaultExpression(CurrentTimestamp())
-            val defaultTimeStamp2 = datetime("default_time_stamp_2").defaultExpression(CurrentTimestamp())
+            val defaultDateTime1 = datetime("default_date_time_1").defaultExpression(CurrentDateTime)
+            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentTimestamp())
+            val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp())
         }
 
         withDb {
