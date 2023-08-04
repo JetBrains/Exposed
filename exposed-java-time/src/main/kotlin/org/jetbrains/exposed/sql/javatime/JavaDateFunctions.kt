@@ -49,7 +49,7 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     }
 }
 
-class CurrentTimestamp<T : Temporal> : Expression<T>() {
+class CurrentTimestamp<T : Temporal> : Function<T>(JavaInstantColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
