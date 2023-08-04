@@ -63,17 +63,17 @@ class UpsertTests : DatabaseTestsBase() {
                     it[name] = "A"
                 }
 
-                tester.upsert {  // insert because only 1 constraint is equal
+                tester.upsert { // insert because only 1 constraint is equal
                     it[idA] = 7
                     it[idB] = insertStmt get tester.idB
                     it[name] = "B"
                 }
-                tester.upsert {  // insert because both constraints differ
+                tester.upsert { // insert because both constraints differ
                     it[idA] = 99
                     it[idB] = 99
                     it[name] = "C"
                 }
-                tester.upsert {  // update because both constraints match
+                tester.upsert { // update because both constraints match
                     it[idA] = insertStmt get tester.idA
                     it[idB] = insertStmt get tester.idB
                     it[name] = "D"
@@ -153,6 +153,32 @@ class UpsertTests : DatabaseTestsBase() {
                     assertEquals(newIdB, result[tester.idB])
                     assertEquals("D", result[tester.name])
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testUpsertWithUUIDKeyConflict() {
+        val tester = object : Table("tester") {
+            val id = uuid("id").autoGenerate()
+            val title = text("title")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val uuid1 = tester.upsert {
+                    it[title] = "A"
+                } get tester.id
+                tester.upsert {
+                    it[id] = uuid1
+                    it[title] = "B"
+                }
+
+                val result = tester.selectAll().single()
+                assertEquals(uuid1, result[tester.id])
+                assertEquals("B", result[tester.title])
             }
         }
     }
@@ -254,18 +280,18 @@ class UpsertTests : DatabaseTestsBase() {
         withTables(tester) { testDb ->
             excludingH2Version1(testDb) {
                 val testWord = "Test"
-                tester.upsert {  // default expression in insert
+                tester.upsert { // default expression in insert
                     it[word] = testWord
                 }
                 assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
                 val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
-                tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) {  // expression in update
+                tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) { // expression in update
                     it[word] = testWord
                 }
                 assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
-                tester.upsert {  // provided expression in insert
+                tester.upsert { // provided expression in insert
                     it[word] = "$testWord 2"
                     it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
                 }
