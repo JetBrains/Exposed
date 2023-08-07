@@ -442,7 +442,8 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testBlob() {
+    @Test
+    fun testBlob() {
         val t = object : Table("t1") {
             val id = integer("id").autoIncrement()
             val b = blob("blob")
@@ -455,11 +456,6 @@ class DDLTests : DatabaseTestsBase() {
             val longBytes = Random.nextBytes(1024)
             val shortBlob = ExposedBlob(shortBytes)
             val longBlob = ExposedBlob(longBytes)
-//            if (currentDialectTest.dataTypeProvider.blobAsStream) {
-//                    SerialBlob(bytes)
-//                } else connection.createBlob().apply {
-//                    setBytes(1, bytes)
-//                }
 
             val id1 = t.insert {
                 it[t.b] = shortBlob
@@ -497,7 +493,7 @@ class DDLTests : DatabaseTestsBase() {
         val defaultBlobStr = "test"
         val defaultBlob = ExposedBlob(defaultBlobStr.encodeToByteArray())
 
-        val TestTable = object : Table("TestTable") {
+        val testTable = object : Table("TestTable") {
             val number = integer("number")
             val blobWithDefault = blob("blobWithDefault").default(defaultBlob)
         }
@@ -506,18 +502,18 @@ class DDLTests : DatabaseTestsBase() {
             when (testDb) {
                 TestDB.MYSQL -> {
                     expectException<ExposedSQLException> {
-                        SchemaUtils.create(TestTable)
+                        SchemaUtils.create(testTable)
                     }
                 }
                 else -> {
-                    SchemaUtils.create(TestTable)
+                    SchemaUtils.create(testTable)
 
-                    TestTable.insert {
+                    testTable.insert {
                         it[number] = 1
                     }
-                    assertEquals(defaultBlobStr, String(TestTable.selectAll().first()[TestTable.blobWithDefault].bytes))
+                    assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
 
-                    SchemaUtils.drop(TestTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
