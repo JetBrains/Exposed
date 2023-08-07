@@ -252,7 +252,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
 
         limit?.let {
-            "WHERE ROWNUM <= $it"
+            +" WHERE ROWNUM <= $it"
         }
 
         toString()

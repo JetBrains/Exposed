@@ -85,6 +85,7 @@ class UpdateTests : DatabaseTestsBase() {
             }
         }
     }
+
     @Test
     fun testUpdateWithJoin02() {
         withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->

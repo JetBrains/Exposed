@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
 open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where: Op<Boolean>? = null) :
@@ -35,10 +37,17 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     }
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
-        values.forEach {
-            registerArgument(it.key, it.value)
+        if (targetsSet is Join && currentDialect is OracleDialect) {
+            where?.toQueryBuilder(this)
+            values.forEach {
+                registerArgument(it.key, it.value)
+            }
+        } else {
+            values.forEach {
+                registerArgument(it.key, it.value)
+            }
+            where?.toQueryBuilder(this)
         }
-        where?.toQueryBuilder(this)
         if (args.isNotEmpty()) listOf(args) else emptyList()
     }
 }
