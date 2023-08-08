@@ -992,3 +992,12 @@ class CustomEnumerationColumnType<T : Enum<T>>(
 interface IDateColumnType {
     val hasTimePart: Boolean
 }
+
+// JSON/JSONB columns
+
+/**
+ * Marker interface for json/jsonb related column types.
+ */
+interface IJsonColumnType {
+    val usesBinaryFormat: Boolean
+}

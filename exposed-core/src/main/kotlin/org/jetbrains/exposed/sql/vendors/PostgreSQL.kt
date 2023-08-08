@@ -20,6 +20,15 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
+
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> && e.columnType is IJsonColumnType && (currentDialect as? H2Dialect) == null -> {
+            val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
+            "${super.processForDefaultValue(e)}$cast"
+        }
+        else -> super.processForDefaultValue(e)
+    }
+
     override fun hexToDb(hexString: String): String = """E'\\x$hexString'"""
 }
 
@@ -134,7 +143,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         path?.let {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
-        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        val isNotJsonB = !(jsonType as IJsonColumnType).usesBinaryFormat
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
@@ -153,7 +162,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
-        val isNotJsonB = jsonType.sqlType() != "JSONB"
+        val isNotJsonB = !(jsonType as IJsonColumnType).usesBinaryFormat
         queryBuilder {
             append("JSONB_PATH_EXISTS(")
             if (isNotJsonB) {

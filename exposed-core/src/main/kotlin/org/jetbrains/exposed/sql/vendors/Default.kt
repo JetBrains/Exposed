@@ -134,6 +134,11 @@ abstract class DataTypeProvider {
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
     open fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> && e.columnType is IJsonColumnType -> if (currentDialect is H2Dialect) {
+            "$e".substringAfter("JSON ")
+        } else {
+            "'$e'"
+        }
         e is LiteralOp<*> -> "$e"
         e is Function<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"

@@ -18,6 +18,8 @@ class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
     deserialize: (String) -> T
 ) : JsonColumnType<T>(serialize, deserialize) {
+    override val usesBinaryFormat: Boolean = true
+
     override fun sqlType(): String = when (currentDialect) {
         is H2Dialect -> (currentDialect as H2Dialect).originalDataTypeProvider.jsonBType()
         else -> currentDialect.dataTypeProvider.jsonBType()

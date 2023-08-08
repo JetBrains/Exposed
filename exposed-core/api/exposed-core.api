@@ -881,6 +881,10 @@ public abstract interface class org/jetbrains/exposed/sql/IDateColumnType {
 	public abstract fun getHasTimePart ()Z
 }
 
+public abstract interface class org/jetbrains/exposed/sql/IJsonColumnType {
+	public abstract fun getUsesBinaryFormat ()Z
+}
+
 public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder {
 	public abstract fun asLiteral (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public abstract fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
