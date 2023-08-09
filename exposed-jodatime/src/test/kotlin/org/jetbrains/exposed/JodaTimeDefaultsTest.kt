@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -172,10 +173,6 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             else -> "NULL"
         }
 
-        fun constraintNamePart(columnName: String) = (currentDialect as? SQLServerDialect)?.let {
-            " CONSTRAINT DF_t_$columnName"
-        } ?: ""
-
         withTables(listOf(TestDB.SQLITE), testTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(100)
@@ -183,14 +180,14 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                "${"s".inProperCase()} $varCharType${constraintNamePart("s")} DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} $varCharType${constraintNamePart("sn")} DEFAULT 'testNullable' NULL, " +
-                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${constraintNamePart("l")} DEFAULT 42 NOT NULL, " +
-                "$q${"c".inProperCase()}$q CHAR${constraintNamePart("c")} DEFAULT 'X' NOT NULL, " +
-                "${"t1".inProperCase()} $dtType${constraintNamePart("t1")} ${currentDT.itOrNull()}, " +
-                "${"t2".inProperCase()} $dtType${constraintNamePart("t2")} ${nowExpression.itOrNull()}, " +
-                "${"t3".inProperCase()} $dtType${constraintNamePart("t3")} ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE${constraintNamePart("t4")} ${dtLiteral.itOrNull()}" +
+                "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
+                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${testTable.l.constraintNamePart()} DEFAULT 42 NOT NULL, " +
+                "$q${"c".inProperCase()}$q CHAR${testTable.c.constraintNamePart()} DEFAULT 'X' NOT NULL, " +
+                "${"t1".inProperCase()} $dtType${testTable.t1.constraintNamePart()} ${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE${testTable.t4.constraintNamePart()} ${dtLiteral.itOrNull()}" +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
@@ -393,8 +390,8 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"t1".inProperCase()} $timestampWithTimeZoneType ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                    "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
                     ")"
 
                 val expected = if (currentDialectTest is OracleDialect ||

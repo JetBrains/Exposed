@@ -251,29 +251,55 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        super.modifyColumn(column, columnDiff).map { statement ->
-            if (columnDiff.defaults) {
-                val transaction = TransactionManager.current()
-                val tableName = transaction.identity(column.table)
-                val colName = transaction.identity(column)
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val transaction = TransactionManager.current()
 
-                val dropConstraint = "DROP CONSTRAINT IF EXISTS DF_${tableName}_$colName"
+        val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "
 
-                column.dbDefaultValue?.let {
-                    buildString {
-                        append(statement.substringBefore("MODIFY COLUMN") + dropConstraint)
+        val statements = mutableListOf<String>()
+
+        statements.add(
+            buildString {
+                append(alterTablePart + "ALTER COLUMN ${transaction.identity(column)} ${column.columnType.sqlType()}")
+
+                if (columnDiff.nullability) {
+                    val defaultValue = column.dbDefaultValue
+                    val isPKColumn = column.table.primaryKey?.columns?.contains(column) == true
+
+                    if (column.columnType.nullable ||
+                        (defaultValue != null && column.defaultValueFun == null && ! currentDialect.isAllowedAsColumnDefault(defaultValue))
+                    ) {
+                        append(" NULL")
+                    } else if (!isPKColumn) {
+                        append(" NOT NULL")
+                    }
+                }
+            }
+        )
+
+        if (columnDiff.defaults) {
+            val tableName = column.table.tableName
+            val columnName = column.name
+            val constraintName = "DF_${tableName}_$columnName"
+
+            val dropConstraint = "DROP CONSTRAINT IF EXISTS $constraintName"
+
+            statements.add(
+                buildString {
+                    column.dbDefaultValue?.let {
+                        append(alterTablePart + dropConstraint)
                         append("; ")
                         append(
-                            statement.substringBefore("MODIFY COLUMN") +
-                                "ADD CONSTRAINT DF_${tableName}_$colName DEFAULT ${SQLServerDataTypeProvider.processForDefaultValue(it)} for $colName"
+                            alterTablePart +
+                                "ADD CONSTRAINT $constraintName DEFAULT ${SQLServerDataTypeProvider.processForDefaultValue(it)} for ${transaction.identity(column)}"
                         )
-                    }
-                } ?: (statement.substringBefore("MODIFY COLUMN") + dropConstraint)
-            } else {
-                statement.replace("MODIFY COLUMN", "ALTER COLUMN")
-            }
+                    } ?: append(alterTablePart + dropConstraint)
+                }
+            )
         }
+
+        return statements
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 

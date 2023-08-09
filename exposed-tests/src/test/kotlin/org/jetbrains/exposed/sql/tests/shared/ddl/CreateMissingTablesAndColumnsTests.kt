@@ -353,7 +353,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
-                    assertEquals(1, actual.size)
+                    val expected = if (testDb == TestDB.SQLSERVER) 2 else 1
+                    assertEquals(expected, actual.size)
 
                     // Oracle treat '' as NULL column and can't alter from NULL to NULL
                     if (testDb != TestDB.ORACLE) {
