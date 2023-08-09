@@ -64,7 +64,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 field = try {
                     when (databaseDialectName) {
                         MysqlDialect.dialectName, MariaDBDialect.dialectName -> metadata.connection.catalog.orEmpty()
-                        OracleDialect.dialectName -> databaseName
+                        OracleDialect.dialectName -> metadata.connection.schema ?: databaseName
                         else -> metadata.connection.schema.orEmpty()
                     }
                 } catch (_: Throwable) {
