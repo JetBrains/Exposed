@@ -56,6 +56,10 @@ class DBTestingPlugin : Plugin<Project> {
                 testRuntimeOnly("org.postgresql", "postgresql", Versions.postgre)
                 testRuntimeOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
             }
+            val postgresAll = register<Test>("postgresAllTest") {
+                group = "verification"
+                delegatedTo(postgres, postgresNG)
+            }
 
             val oracle = register<DBTestWithDockerCompose>("oracleTest", Parameters("ORACLE", 1521)) {
                 testRuntimeOnly("com.oracle.database.jdbc", "ojdbc8", Versions.oracle12)
@@ -68,23 +72,35 @@ class DBTestingPlugin : Plugin<Project> {
             val mariadb_v2 = register<DBTestWithDockerCompose>("mariadb_v2Test", Parameters("MARIADB", 3306)) {
                 testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB_v2)
             }
-
             val mariadb_v3 = register<DBTestWithDockerCompose>("mariadb_v3Test", Parameters("MARIADB", 3306)) {
                 testRuntimeOnly("org.mariadb.jdbc", "mariadb-java-client", Versions.mariaDB_v3)
             }
-
             val mariadb = register<Test>("mariadbTest") {
                 group = "verification"
                 delegatedTo(mariadb_v2, mariadb_v3)
+            }
+
+            val testPartial = register<Test>("testPartial") {
+                group = "verification"
+                delegatedTo(
+                    h2_v2,
+                    sqlite,
+                    mysql80,
+                    postgres,
+                    mariadb_v3,
+                    sqlServer
+                )
             }
 
             named<Test>("test") {
                 delegatedTo(
                     h2,
                     sqlite,
-                    mysql51,
-                    postgres,
-                    postgresNG
+                    mysql,
+                    postgresAll,
+                    oracle,
+                    sqlServer,
+                    mariadb
                 )
             }
         }
