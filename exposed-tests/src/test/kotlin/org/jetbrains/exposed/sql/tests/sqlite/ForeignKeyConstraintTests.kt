@@ -21,7 +21,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE SET DEFAULT for databases that support it without SQLite`() {
-        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.SQLITE)) {
+        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.SQLITE, TestDB.ORACLE)) {
             testOnDeleteSetDefault()
         }
     }
