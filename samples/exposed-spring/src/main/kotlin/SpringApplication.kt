@@ -12,5 +12,5 @@ import org.springframework.boot.runApplication
 class SpringApplication
 
 fun main(args: Array<String>) {
-    runApplication<SpringApplication>(*args)
+    runApplication<SpringApplication>(args)
 }

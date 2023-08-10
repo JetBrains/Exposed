@@ -2,8 +2,8 @@
 
 package org.jetbrains.exposed.samples.spring.service
 
-import org.jetbrains.exposed.samples.spring.domain.UserEntity
 import org.jetbrains.exposed.samples.spring.domain.User
+import org.jetbrains.exposed.samples.spring.domain.UserEntity
 import org.jetbrains.exposed.samples.spring.domain.UserId
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
