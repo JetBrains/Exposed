@@ -520,7 +520,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val traceNumber = reference("traceNumber", ordersTable.traceNumber)
         }
 
-        withDb {
+        // Oracle metadata only returns foreign keys that reference primary keys
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) {
             SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
             assertTrue(ordersTable.exists())
             assertTrue(receiptsTable.exists())
