@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -27,6 +28,10 @@ private val SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
 
 private val MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZZ").withLocale(Locale.ROOT)
+}
+
+private val ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS ZZ").withLocale(Locale.ROOT)
 }
 
 private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
@@ -151,6 +156,7 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
             when (currentDialect) {
                 is SQLiteDialect -> "'${SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
                 is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+                is OracleDialect -> "'${ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
                 else -> "'${DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
             }
         }
@@ -166,11 +172,13 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
                 DateTime.parse(value)
             }
         }
+        value is java.sql.Timestamp -> DateTime(value.time)
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
+        is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
         else -> {
             if (offsetDateTimeClass != null) {
                 rs.getObject(index, offsetDateTimeClass)

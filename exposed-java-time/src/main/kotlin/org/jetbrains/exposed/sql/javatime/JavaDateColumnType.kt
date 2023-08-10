@@ -55,6 +55,14 @@ internal val MYSQL_OFFSET_DATE_TIME_FORMATTER by lazy {
     )
 }
 
+// Example result: 2023-07-07 14:42:29.343789 +02:00
+internal val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS [xxx]",
+        Locale.ROOT
+    )
+}
+
 internal val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
     DateTimeFormatter.ISO_OFFSET_DATE_TIME.withLocale(Locale.ROOT)
 }
@@ -272,6 +280,7 @@ class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
             when (currentDialect) {
                 is SQLiteDialect -> "'${value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
                 is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)}'"
+                is OracleDialect -> "'${value.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}'"
                 else -> "'${value.format(DEFAULT_OFFSET_DATE_TIME_FORMATTER)}'"
             }
         }
