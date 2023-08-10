@@ -1,3 +1,5 @@
+@file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.spring.support
 
 import org.jetbrains.exposed.sql.SchemaUtils

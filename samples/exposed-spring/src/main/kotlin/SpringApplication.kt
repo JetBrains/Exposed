@@ -1,3 +1,5 @@
+@file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.spring
 
 import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration

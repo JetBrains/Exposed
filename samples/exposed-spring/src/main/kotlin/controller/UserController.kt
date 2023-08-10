@@ -1,3 +1,5 @@
+@file:Suppress("InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.samples.spring.controller
 
 import org.jetbrains.exposed.samples.spring.domain.UserId
