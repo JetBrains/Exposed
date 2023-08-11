@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
@@ -112,7 +113,15 @@ class Column<T>(
                 }
                 exposedLogger.error("${currentDialect.name} ${tr.db.version} doesn't support expression '$expressionSQL' as default value.$clientDefault")
             } else {
-                append(" DEFAULT $expressionSQL")
+                if (currentDialect is SQLServerDialect) {
+                    // Create a DEFAULT constraint with an explicit name to facilitate removing it later if needed
+                    val tableName = column.table.tableName
+                    val columnName = column.name
+                    val constraintName = "DF_${tableName}_$columnName"
+                    append(" CONSTRAINT $constraintName DEFAULT $expressionSQL")
+                } else {
+                    append(" DEFAULT $expressionSQL")
+                }
             }
         }
 
