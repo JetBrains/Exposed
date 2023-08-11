@@ -80,18 +80,6 @@ class DBTestingPlugin : Plugin<Project> {
                 delegatedTo(mariadb_v2, mariadb_v3)
             }
 
-            val testPartial = register<Test>("testPartial") {
-                group = "verification"
-                delegatedTo(
-                    h2_v2,
-                    sqlite,
-                    mysql80,
-                    postgres,
-                    mariadb_v3,
-                    sqlServer
-                )
-            }
-
             named<Test>("test") {
                 delegatedTo(
                     h2,
