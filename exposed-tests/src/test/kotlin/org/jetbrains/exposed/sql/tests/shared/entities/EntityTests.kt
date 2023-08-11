@@ -8,9 +8,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -754,10 +756,9 @@ class EntityTests : DatabaseTestsBase() {
         var holidays by Holiday via SchoolHolidays
     }
 
-    @Test fun preloadReferencesOnASizedIterable() {
-
+    @Test
+    fun preloadReferencesOnASizedIterable() {
         withTables(Regions, Schools) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -796,10 +797,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadReferencesOnAnEntity() {
-
+    @Test
+    fun preloadReferencesOnAnEntity() {
         withTables(Regions, Schools) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -829,9 +829,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadOptionalReferencesOnASizedIterable() {
+    @Test
+    fun preloadOptionalReferencesOnASizedIterable() {
         withTables(Regions, Schools) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -844,6 +844,9 @@ class EntityTests : DatabaseTestsBase() {
                 name = "Eton"
                 region = region1
                 secondaryRegion = region2
+            }.apply {
+                // otherwise Oracle provides school1.id = 0 to testCache(), which returns null
+                if (currentDialectTest is OracleDialect) flush()
             }
 
             val school2 = School.new {
@@ -866,10 +869,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadOptionalReferencesOnAnEntity() {
-
+    @Test
+    fun preloadOptionalReferencesOnAnEntity() {
         withTables(Regions, Schools) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -897,10 +899,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadReferrersOnASizedIterable() {
-
+    @Test
+    fun preloadReferrersOnASizedIterable() {
         withTables(Regions, Schools, Students) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -959,9 +960,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadReferrersOnAnEntity() {
+    @Test
+    fun preloadReferrersOnAnEntity() {
         withTables(Regions, Schools, Students) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -999,10 +1000,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadOptionalReferrersOnASizedIterable() {
-
+    @Test
+    fun preloadOptionalReferrersOnASizedIterable() {
         withTables(Regions, Schools, Students, Detentions) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -1048,10 +1048,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadInnerTableLinkOnASizedIterable() {
-
+    @Test
+    fun preloadInnerTableLinkOnASizedIterable() {
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
-
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1110,9 +1109,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadInnerTableLinkOnAnEntity() {
+    @Test
+    fun preloadInnerTableLinkOnAnEntity() {
         withTables(Regions, Schools, Holidays, SchoolHolidays) {
-
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1169,10 +1168,9 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadRelationAtDepth() {
-
+    @Test
+    fun preloadRelationAtDepth() {
         withTables(Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
-
             val region1 = Region.new {
                 name = "United Kingdom"
             }
@@ -1213,8 +1211,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadBackReferrenceOnASizedIterable() {
-
+    @Test
+    fun preloadBackReferrenceOnASizedIterable() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
                 name = "United States"
@@ -1258,8 +1256,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun preloadBackReferrenceOnAnEntity() {
-
+    @Test
+    fun preloadBackReferrenceOnAnEntity() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
                 name = "United States"
