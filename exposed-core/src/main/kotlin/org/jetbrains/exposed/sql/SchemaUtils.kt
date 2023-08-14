@@ -185,7 +185,7 @@ object SchemaUtils {
                         else -> processForDefaultValue(exp)
                     }
                     else -> {
-                        if (column.columnType is IJsonColumnType) {
+                        if (column.columnType is JsonColumnMarker) {
                             val processed = processForDefaultValue(exp)
                             when (dialect) {
                                 is PostgreSQLDialect -> {

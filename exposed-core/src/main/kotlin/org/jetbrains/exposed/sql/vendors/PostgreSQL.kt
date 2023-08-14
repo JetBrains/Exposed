@@ -22,7 +22,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun jsonBType(): String = "JSONB"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is IJsonColumnType && (currentDialect as? H2Dialect) == null -> {
+        e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
@@ -143,7 +143,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         path?.let {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
-        val isNotJsonB = !(jsonType as IJsonColumnType).usesBinaryFormat
+        val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
@@ -162,7 +162,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
-        val isNotJsonB = !(jsonType as IJsonColumnType).usesBinaryFormat
+        val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
             append("JSONB_PATH_EXISTS(")
             if (isNotJsonB) {

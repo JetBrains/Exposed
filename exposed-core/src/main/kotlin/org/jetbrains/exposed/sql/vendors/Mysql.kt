@@ -51,7 +51,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun jsonBType(): String = "JSON"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && e.columnType is IJsonColumnType -> when {
+        e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
             currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
             (currentDialect as? MysqlDialect)?.isMysql8 == true -> "(${super.processForDefaultValue(e)})"
             else -> throw UnsupportedByDialectException(

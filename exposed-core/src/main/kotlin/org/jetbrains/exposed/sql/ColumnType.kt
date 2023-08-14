@@ -998,6 +998,6 @@ interface IDateColumnType {
 /**
  * Marker interface for json/jsonb related column types.
  */
-interface IJsonColumnType {
+interface JsonColumnMarker {
     val usesBinaryFormat: Boolean
 }

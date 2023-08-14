@@ -35,7 +35,7 @@ public final class org/jetbrains/exposed/sql/json/JsonBColumnTypeKt {
 	public static final fun jsonb (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
 }
 
-public class org/jetbrains/exposed/sql/json/JsonColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IJsonColumnType {
+public class org/jetbrains/exposed/sql/json/JsonColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/JsonColumnMarker {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getDeserialize ()Lkotlin/jvm/functions/Function1;
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;
