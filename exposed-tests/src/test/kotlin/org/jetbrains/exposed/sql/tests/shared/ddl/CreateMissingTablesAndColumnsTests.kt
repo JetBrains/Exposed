@@ -353,11 +353,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
-                    assertEquals(1, actual.size)
+                    val expected = if (testDb == TestDB.SQLSERVER) 2 else 1
+                    assertEquals(expected, actual.size)
 
-                    // SQL Server requires drop/create constraint to change defaults, unsupported for now
                     // Oracle treat '' as NULL column and can't alter from NULL to NULL
-                    if (testDb !in listOf(TestDB.SQLSERVER, TestDB.ORACLE)) {
+                    if (testDb != TestDB.ORACLE) {
                         // Apply changes
                         actual.forEach { exec(it) }
                     } else {
@@ -399,8 +399,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        val excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)
-        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_PSQL)
+        val excludeSettings = listOf(TestDB.SQLITE)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_PSQL, TestDB.SQLSERVER)
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)
@@ -520,7 +520,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val traceNumber = reference("traceNumber", ordersTable.traceNumber)
         }
 
-        withDb {
+        // Oracle metadata only returns foreign keys that reference primary keys
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) {
             SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
             assertTrue(ordersTable.exists())
             assertTrue(receiptsTable.exists())

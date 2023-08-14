@@ -69,8 +69,8 @@ class CreateIndexTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test possibility to create indexes when table exists in different schemas`() {
-        val TestTable = object : Table("test_table") {
+    fun testCreateIndexWithTableInDifferentSchemas() {
+        val testTable = object : Table("test_table") {
             val id = integer("id").uniqueIndex()
             val name = varchar("name", length = 42).index("test_index")
             init {
@@ -81,15 +81,14 @@ class CreateIndexTests : DatabaseTestsBase() {
         val schema2 = Schema("Schema2")
         withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
             SchemaUtils.setSchema(schema1)
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertEquals(true, TestTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertEquals(true, testTable.exists())
             SchemaUtils.setSchema(schema2)
-            assertEquals(false, TestTable.exists())
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertEquals(true, TestTable.exists())
+            assertEquals(false, testTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertEquals(true, testTable.exists())
         }
     }
-
 
     @Test
     fun testCreateAndDropPartialIndexWithPostgres() {

@@ -251,9 +251,55 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    // EXPOSED-85 Fix changing default value on column in SQL Server as it requires to drop/create constraint
-    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val transaction = TransactionManager.current()
+
+        val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "
+
+        val statements = mutableListOf<String>()
+
+        statements.add(
+            buildString {
+                append(alterTablePart + "ALTER COLUMN ${transaction.identity(column)} ${column.columnType.sqlType()}")
+
+                if (columnDiff.nullability) {
+                    val defaultValue = column.dbDefaultValue
+                    val isPKColumn = column.table.primaryKey?.columns?.contains(column) == true
+
+                    if (column.columnType.nullable ||
+                        (defaultValue != null && column.defaultValueFun == null && ! currentDialect.isAllowedAsColumnDefault(defaultValue))
+                    ) {
+                        append(" NULL")
+                    } else if (!isPKColumn) {
+                        append(" NOT NULL")
+                    }
+                }
+            }
+        )
+
+        if (columnDiff.defaults) {
+            val tableName = column.table.tableName
+            val columnName = column.name
+            val constraintName = "DF_${tableName}_$columnName"
+
+            val dropConstraint = "DROP CONSTRAINT IF EXISTS $constraintName"
+
+            statements.add(
+                buildString {
+                    column.dbDefaultValue?.let {
+                        append(alterTablePart + dropConstraint)
+                        append("; ")
+                        append(
+                            alterTablePart +
+                                "ADD CONSTRAINT $constraintName DEFAULT ${SQLServerDataTypeProvider.processForDefaultValue(it)} for ${transaction.identity(column)}"
+                        )
+                    } ?: append(alterTablePart + dropConstraint)
+                }
+            )
+        }
+
+        return statements
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
@@ -284,7 +330,13 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return super.createIndex(index)
     }
 
-    override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
+    override fun createIndexWithType(
+        name: String,
+        table: String,
+        columns: String,
+        type: String,
+        filterCondition: String
+    ): String {
         return "CREATE $type INDEX $name ON $table $columns$filterCondition"
     }
 

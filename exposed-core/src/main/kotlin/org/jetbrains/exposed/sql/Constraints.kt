@@ -129,6 +129,10 @@ data class ForeignKeyConstraint(
                             "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
                                 "Please check your $fromTableName table."
                         )
+                        is OracleDialect -> exposedLogger.warn(
+                            "Oracle doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                "Please check your $fromTableName table."
+                        )
                         else -> append(" ON DELETE $deleteRule")
                     }
                 } else {
