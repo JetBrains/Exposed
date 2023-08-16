@@ -38,6 +38,11 @@ open class JsonColumnType<T : Any>(
     @Suppress("UNCHECKED_CAST")
     override fun notNullValueToDB(value: Any) = serialize(value as T)
 
+    override fun valueToString(value: Any?): String = when (value) {
+        is Iterable<*> -> nonNullValueToString(value)
+        else -> super.valueToString(value)
+    }
+
     override fun nonNullValueToString(value: Any): String {
         return when (currentDialect) {
             is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
