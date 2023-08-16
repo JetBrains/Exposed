@@ -46,6 +46,7 @@ public class org/jetbrains/exposed/sql/json/JsonColumnType : org/jetbrains/expos
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/json/JsonColumnTypeKt {
