@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.json
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -10,6 +11,8 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 
@@ -222,6 +225,43 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
             val hasAtLeast3Numbers = tester.numbers.exists("[2]", optional = optional)
             assertEquals(tripleId, tester.select { hasAtLeast3Numbers }.single()[tester.id])
+        }
+    }
+
+    @Test
+    fun testJsonBWithDefaults() {
+        val defaultUser = User("UNKNOWN", "UNASSIGNED")
+        val defaultTester = object : Table("default_tester") {
+            val user1 = jsonb<User>("user_1", Json.Default).default(defaultUser)
+            val user2 = jsonb<User>("user_2", Json.Default).clientDefault { defaultUser }
+        }
+
+        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
+            excludingH2Version1(testDb) {
+                if (isOldMySql()) {
+                    expectException<UnsupportedByDialectException> {
+                        SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                    }
+                } else {
+                    SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                    assertTrue(defaultTester.exists())
+                    // ensure defaults match returned metadata defaults
+                    val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                    assertTrue(alters.isEmpty())
+
+                    defaultTester.insert {}
+
+                    defaultTester.selectAll().single().also {
+                        assertEquals(defaultUser.name, it[defaultTester.user1].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user1].team)
+
+                        assertEquals(defaultUser.name, it[defaultTester.user2].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user2].team)
+                    }
+
+                    SchemaUtils.drop(defaultTester)
+                }
+            }
         }
     }
 }
