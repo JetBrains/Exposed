@@ -55,16 +55,46 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    object KeyWordTable : IntIdTable(name = "keywords") {
-        val bool = bool("bool")
-    }
+    @Test
+    fun testCreateTableWithKeywordIdentifiers() {
+        val keywords = listOf("key", "public", "data", "constraint")
+        val keywordTable = object : Table(keywords[0]) {
+            val public = bool(keywords[1])
+            val data = integer(keywords[2])
+            val constraint = varchar(keywords[3], 32)
+        }
 
-    @Test fun tableExistsWithKeyword() {
-        withTables(KeyWordTable) {
-            assertEquals(true, KeyWordTable.exists())
-            KeyWordTable.insert {
-                it[bool] = true
+        withDb { testDb ->
+            SchemaUtils.create(keywordTable)
+            assertTrue(keywordTable.exists())
+
+            val (tableName, publicName, dataName, constraintName) = keywords.map { name ->
+                if (testDb in listOf(TestDB.MYSQL, TestDB.MARIADB)) "`$name`" else "\"$name\""
             }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$publicName ${keywordTable.public.columnType.sqlType()} NOT NULL, " +
+                "$dataName ${keywordTable.data.columnType.sqlType()} NOT NULL, " +
+                "$constraintName ${keywordTable.constraint.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, keywordTable.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            keywordTable.insert {
+                it[public] = false
+                it[data] = 999
+                it[constraint] = "unique"
+            }
+
+            val expectedSelect = "SELECT $tableName.$publicName, $tableName.$dataName, $tableName.$constraintName FROM $tableName"
+            keywordTable.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }.single()
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(keywordTable)
         }
     }
 
@@ -925,8 +955,13 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    object KeyWordTable : IntIdTable(name = "keywords") {
+        val bool = bool("bool")
+    }
+
     // https://github.com/JetBrains/Exposed/issues/112
-    @Test fun testDropTableFlushesCache() {
+    @Test
+    fun testDropTableFlushesCache() {
         withDb {
             class Keyword(id: EntityID<Int>) : IntEntity(id) {
                 var bool by KeyWordTable.bool

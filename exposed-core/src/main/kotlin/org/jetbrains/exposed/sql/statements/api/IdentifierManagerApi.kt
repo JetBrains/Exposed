@@ -66,7 +66,7 @@ abstract class IdentifierManagerApi {
             alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
             alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.uppercase()
             alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.lowercase()
-            supportsMixedIdentifiers -> identity
+            supportsMixedIdentifiers || keywords.any { identity.equals(it, true) } -> identity
             oracleVersion != OracleVersion.NonOracle -> identity.uppercase()
             isUpperCaseIdentifiers -> identity.uppercase()
             isLowerCaseIdentifiers -> identity.lowercase()
