@@ -645,4 +645,20 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyInVariousOrder() {
+        withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+        }
+        withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
+        }
+        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+        }
+        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
+        }
+    }
 }
