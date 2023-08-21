@@ -100,8 +100,11 @@ class DBTestingPlugin : Plugin<Project> {
  *
  * @see [TaskContainer.register]
  */
-inline fun <reified T : Task> TaskContainer.register(name: String, vararg arguments: Any, noinline configuration: T.() -> Unit): TaskProvider<T> =
-    register(name, T::class.java, *arguments).apply { configure { configuration() } }
+inline fun <reified T : Task> TaskContainer.register(
+    name: String,
+    vararg arguments: Any,
+    noinline configuration: T.() -> Unit
+): TaskProvider<T> = register(name, T::class.java, *arguments).apply { configure { configuration() } }
 
 fun Test.delegatedTo(vararg tasks: TaskProvider<out AbstractTestTask>): Test {
     // don't run tests directly, delegate to other tasks

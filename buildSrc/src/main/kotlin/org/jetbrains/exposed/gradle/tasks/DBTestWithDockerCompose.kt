@@ -17,6 +17,7 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
     constructor(parameters: Parameters) : this(parameters.dialect, parameters.port, parameters.dockerComposeServiceName)
 
     private val dockerCompose: ComposeSettings = project.dockerCompose.nested(dockerComposeServiceName).apply {
+        environment.put("SERVICES_HOST", "127.0.0.1")
         environment.put("COMPOSE_CONVERT_WINDOWS_PATHS", true)
         useComposeFiles.add(
             File(project.rootProject.projectDir, "buildScripts/docker/docker-compose-$dockerComposeServiceName.yml").absolutePath
@@ -24,7 +25,6 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
         captureContainersOutput.set(true)
         removeVolumes.set(true)
 
-        @Suppress("MagicNumber")
         waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
     }
 
