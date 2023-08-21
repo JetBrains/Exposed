@@ -31,7 +31,7 @@ dependencies {
     implementation("org.testcontainers", "postgresql", Versions.testContainers)
     testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
     testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
-    implementation("com.h2database", "h2", Versions.h2)
+    compileOnly("com.h2database", "h2", Versions.h2)
     testCompileOnly("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
 }
 
