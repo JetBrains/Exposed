@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
-import org.junit.AssumptionViolatedException
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import java.math.BigDecimal
@@ -36,17 +35,25 @@ enum class TestDB(
         defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }),
     H2_MYSQL(
-        { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver",
+        { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" },
+        "org.h2.Driver",
         beforeConnection = {
             Mode::class.declaredMemberProperties.firstOrNull { it.name == "convertInsertNullToZero" }?.let { field ->
                 val mode = Mode.getInstance("MySQL")
+                @Suppress("UNCHECKED_CAST")
                 (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
             }
         }
     ),
     H2_MARIADB({ "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
-    H2_PSQL({ "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
-    H2_ORACLE({ "jdbc:h2:mem:oracle;MODE=Oracle;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_PSQL(
+        { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
+        "org.h2.Driver"
+    ),
+    H2_ORACLE(
+        { "jdbc:h2:mem:oracle;MODE=Oracle;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
+        "org.h2.Driver"
+    ),
     H2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
@@ -68,22 +75,34 @@ enum class TestDB(
         afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
     ),
     POSTGRESQL(
-        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" }, "org.postgresql.Driver",
-        beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" },
+        "org.postgresql.Driver",
+        beforeConnection = { postgresSQLProcess },
+        afterTestFinished = { postgresSQLProcess.close() }
     ),
     POSTGRESQLNG(
-        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" }, "com.impossibl.postgres.jdbc.PGDriver",
-        user = "postgres", beforeConnection = { postgresSQLProcess }, afterTestFinished = { postgresSQLProcess.close() }
+        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" },
+        "com.impossibl.postgres.jdbc.PGDriver",
+        user = "postgres",
+        beforeConnection = { postgresSQLProcess },
+        afterTestFinished = { postgresSQLProcess.close() }
     ),
     ORACLE(
-        driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345",
+        driver = "oracle.jdbc.OracleDriver",
+        user = "ExposedTest",
+        pass = "12345",
         connection = {
             "jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
                 ":${System.getProperty("exposed.test.oracle.port", "1521")}/XEPDB1"
         },
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
-            val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
+            val tmp = Database.connect(
+                ORACLE.connection(),
+                user = "sys as sysdba",
+                password = "Oracle18",
+                driver = ORACLE.driver
+            )
             transaction(Connection.TRANSACTION_READ_COMMITTED, db  = tmp) {
                 repetitionAttempts = 1
                 try {
@@ -103,7 +122,9 @@ enum class TestDB(
             "jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
                 ":${System.getProperty("exposed.test.sqlserver.port", "32781")}"
         },
-        "com.microsoft.sqlserver.jdbc.SQLServerDriver", "SA", "yourStrong(!)Password"
+        "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+        "SA",
+        "yourStrong(!)Password"
     ),
 
     MARIADB(
@@ -151,7 +172,7 @@ private val postgresSQLProcess by lazy {
                 "synchronous_commit=off",
                 "max_connections=300",
                 "fsync=off"
-            ).forEach{
+            ).forEach {
                 setCommand("postgres", "-c", it)
             }
             start()
@@ -184,12 +205,7 @@ abstract class DatabaseTestsBase {
     }
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        try {
-            Assume.assumeTrue(dbSettings in TestDB.enabledInTests())
-        } catch (e: AssumptionViolatedException) {
-            exposedLogger.warn("$dbSettings is not enabled for being used in tests", e)
-            throw e
-        }
+        Assume.assumeTrue(dbSettings in TestDB.enabledInTests())
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
@@ -297,7 +313,11 @@ abstract class DatabaseTestsBase {
 
     fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
 
-    protected fun prepareSchemaForTest(schemaName: String) : Schema {
-        return Schema(schemaName, defaultTablespace = "USERS", temporaryTablespace = "TEMP ", quota = "20M", on = "USERS")
-    }
+    protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
+        schemaName,
+        defaultTablespace = "USERS",
+        temporaryTablespace = "TEMP ",
+        quota = "20M",
+        on = "USERS"
+    )
 }
