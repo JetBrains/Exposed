@@ -31,7 +31,7 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
     override fun executeTests() {
         with(dockerCompose) {
             try {
-                upTask.get().up()
+                tasksConfigurator.upTask.get().up()
                 exposeAsEnvironment(this@DBTestWithDockerCompose)
                 exposeAsSystemProperties(this@DBTestWithDockerCompose)
                 val containerInfo = servicesInfos[dockerComposeServiceName]!!
@@ -42,7 +42,7 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
                     super.executeTests()
                 }
             } finally {
-                downTask.get().down()
+                tasksConfigurator.downTask.get().down()
             }
         }
     }
