@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.sql.json
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ArraySerializer
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -11,11 +15,13 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
+import kotlin.test.assertContentEquals
 
 class JsonColumnTests : DatabaseTestsBase() {
     @Test
@@ -258,6 +264,81 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             val hasAtLeast3Numbers = tester.numbers.exists("[2]", optional = optional)
             assertEquals(tripleId, tester.select { hasAtLeast3Numbers }.single()[tester.id])
+        }
+    }
+
+    @Test
+    fun testJsonWithDefaults() {
+        val defaultUser = User("UNKNOWN", "UNASSIGNED")
+        val defaultTester = object : Table("default_tester") {
+            val user1 = json<User>("user_1", Json.Default).default(defaultUser)
+            val user2 = json<User>("user_2", Json.Default).clientDefault { defaultUser }
+        }
+
+        withDb { testDb ->
+            excludingH2Version1(testDb) {
+                if (isOldMySql()) {
+                    expectException<UnsupportedByDialectException> {
+                        SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                    }
+                } else {
+                    SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                    assertTrue(defaultTester.exists())
+                    // ensure defaults match returned metadata defaults
+                    val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                    assertTrue(alters.isEmpty())
+
+                    defaultTester.insert {}
+
+                    defaultTester.selectAll().single().also {
+                        assertEquals(defaultUser.name, it[defaultTester.user1].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user1].team)
+
+                        assertEquals(defaultUser.name, it[defaultTester.user2].name)
+                        assertEquals(defaultUser.team, it[defaultTester.user2].team)
+                    }
+
+                    SchemaUtils.drop(defaultTester)
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
+    fun testLoggerWithJsonCollections() {
+        val iterables = object : Table("iterables_tester") {
+            val userList = json("user_list", Json.Default, ListSerializer(User.serializer()))
+            val intList = json<List<Int>>("int_list", Json.Default)
+            val userArray = json("user_array", Json.Default, ArraySerializer(User.serializer()))
+            val intArray = json<IntArray>("int_array", Json.Default)
+        }
+
+        withDb { testDb ->
+            excludingH2Version1(testDb) {
+                // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
+                addLogger(StdOutSqlLogger)
+                SchemaUtils.create(iterables)
+
+                val user1 = User("A", "Team A")
+                val user2 = User("B", "Team B")
+                val integerList = listOf(1, 2, 3)
+                val integerArray = intArrayOf(1, 2, 3)
+                iterables.insert {
+                    it[userList] = listOf(user1, user2)
+                    it[intList] = integerList
+                    it[userArray] = arrayOf(user1, user2)
+                    it[intArray] = integerArray
+                }
+
+                val result = iterables.selectAll().single()
+                assertEqualCollections(listOf(user1, user2), result[iterables.userList])
+                assertEqualCollections(integerList, result[iterables.intList])
+                assertContentEquals(arrayOf(user1, user2), result[iterables.userArray])
+                assertContentEquals(integerArray, result[iterables.intArray])
+
+                SchemaUtils.drop(iterables)
+            }
         }
     }
 }

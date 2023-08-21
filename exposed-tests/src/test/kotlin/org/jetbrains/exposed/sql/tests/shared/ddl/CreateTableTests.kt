@@ -335,16 +335,14 @@ class CreateTableTests : DatabaseTestsBase() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withTables(excludeSettings = listOf(TestDB.H2_ORACLE, TestDB.ORACLE), parent, child) {
-            val expected = listOf(
-                "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
-                    "${child.columns.joinToString { it.descriptionDdl(false) }}," +
-                    " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
-                    " FOREIGN KEY (${this.identity(child.parentId)})" +
-                    " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
-                    ")"
-            )
-            assertEqualCollections(child.ddl, expected)
+        withTables(parent, child) {
+            val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
+                "${child.columns.joinToString { it.descriptionDdl(false) }}," +
+                " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
+                " FOREIGN KEY (${this.identity(child.parentId)})" +
+                " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                ")"
+            assertEquals(child.ddl.last(), expected)
         }
     }
 

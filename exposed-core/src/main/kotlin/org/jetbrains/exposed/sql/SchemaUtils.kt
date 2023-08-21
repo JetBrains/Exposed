@@ -184,7 +184,25 @@ object SchemaUtils {
                         is MysqlDialect -> value.setScale((exp.columnType as DecimalColumnType).scale).toString()
                         else -> processForDefaultValue(exp)
                     }
-                    else -> processForDefaultValue(exp)
+                    else -> {
+                        if (column.columnType is JsonColumnMarker) {
+                            val processed = processForDefaultValue(exp)
+                            when (dialect) {
+                                is PostgreSQLDialect -> {
+                                    if (column.columnType.usesBinaryFormat) {
+                                        processed.replace(Regex("(\"|})(:|,)(\\[|\\{|\")"), "$1$2 $3")
+                                    } else {
+                                        processed
+                                    }
+                                }
+                                is MariaDBDialect -> processed.trim('\'')
+                                is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
+                                else -> processed.trim('\'')
+                            }
+                        } else {
+                            processForDefaultValue(exp)
+                        }
+                    }
                 }
             }
             is Function<*> -> {

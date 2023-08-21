@@ -50,8 +50,19 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun jsonBType(): String = "JSON"
 
-    override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
+            currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
+            (currentDialect as? MysqlDialect)?.isMysql8 == true -> "(${super.processForDefaultValue(e)})"
+            else -> throw UnsupportedByDialectException(
+                "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
+                currentDialect
+            )
+        }
+        else -> super.processForDefaultValue(e)
+    }
 
+    override fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         when (sortOrder) {
             SortOrder.ASC, SortOrder.DESC -> super.precessOrderByClause(queryBuilder, expression, sortOrder)
             SortOrder.ASC_NULLS_FIRST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.ASC)

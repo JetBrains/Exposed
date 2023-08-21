@@ -2,24 +2,8 @@
 Infrastructure:
 * Kotlin 1.9.0
 
-Features:
-* feat: EXPOSED-85 Add support for changing default value in SQL Server by @joc-a in https://github.com/JetBrains/Exposed/pull/1812
-
 Bug fixes:
-* fix: EXPOSED-107 Inaccurate UByte column type mapping by @bog-walk in https://github.com/JetBrains/Exposed/pull/1808
-* fix: EXPOSED-108 Incorrect mapping for UInt data type by @bog-walk in https://github.com/JetBrains/Exposed/pull/1809
-* fix: Inaccurate drop database statement in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1807
-* test: Fix failing datetime comparison tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1813
 * fix: exposed-bom module missing when publishing by @joc-a in https://github.com/JetBrains/Exposed/pull/1818
-* fix: EXPOSED-111 Allow check constraint statements in MySQL8 by @bog-walk in https://github.com/JetBrains/Exposed/pull/1817
-* fix: EXPOSED-116 UUID conversion error with upsert in H2 by @bog-walk in https://github.com/JetBrains/Exposed/pull/1823
-* fix: EXPOSED-112 SchemaUtils fails to compare default CURRENT_TIMESTAMP by @bog-walk in https://github.com/JetBrains/Exposed/pull/1819
-* fix: EXPOSED-123 ExposedBlob.getBytes() fails on Oracle with IOException by @bog-walk in https://github.com/JetBrains/Exposed/pull/1824
-* fix: EXPOSED-128 Update with Join and Where clause fails in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1825
-* fix: EXPOSED-135 Oracle does not use setSchema value as currentScheme by @bog-walk in https://github.com/JetBrains/Exposed/pull/1828
-* fix: EXPOSED-122 Fix timestampWithTimeZone tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1829
-* fix: EXPOSED-137 SET DEFAULT reference option should not be supported in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1830
-* test: Fix failing Oracle tests in exposed-tests by @bog-walk in https://github.com/JetBrains/Exposed/pull/1831
 
 # 0.42.0
 Infrastructure:

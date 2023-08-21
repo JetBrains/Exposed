@@ -1198,6 +1198,10 @@ public final class org/jetbrains/exposed/sql/JoinType : java/lang/Enum {
 	public static fun values ()[Lorg/jetbrains/exposed/sql/JoinType;
 }
 
+public abstract interface class org/jetbrains/exposed/sql/JsonColumnMarker {
+	public abstract fun getUsesBinaryFormat ()Z
+}
+
 public final class org/jetbrains/exposed/sql/Key {
 	public fun <init> ()V
 }

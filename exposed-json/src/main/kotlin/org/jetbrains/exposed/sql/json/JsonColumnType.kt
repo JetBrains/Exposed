@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.JsonColumnMarker
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -20,7 +21,9 @@ open class JsonColumnType<T : Any>(
     val serialize: (T) -> String,
     /** Returns the function that decodes a JSON String to an object of type [T]. */
     val deserialize: (String) -> T
-) : ColumnType() {
+) : ColumnType(), JsonColumnMarker {
+    override val usesBinaryFormat: Boolean = false
+
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
     override fun valueFromDB(value: Any): Any {
@@ -34,6 +37,11 @@ open class JsonColumnType<T : Any>(
 
     @Suppress("UNCHECKED_CAST")
     override fun notNullValueToDB(value: Any) = serialize(value as T)
+
+    override fun valueToString(value: Any?): String = when (value) {
+        is Iterable<*> -> nonNullValueToString(value)
+        else -> super.valueToString(value)
+    }
 
     override fun nonNullValueToString(value: Any): String {
         return when (currentDialect) {
