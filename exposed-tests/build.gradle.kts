@@ -24,6 +24,7 @@ dependencies {
     implementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
     implementation("junit", "junit", "4.12")
     implementation("org.hamcrest", "hamcrest-library", "1.3")
+    implementation("com.zaxxer", "HikariCP", "5.0.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", Versions.kotlinCoroutines)
 
     implementation("org.testcontainers", "mysql", Versions.testContainers)

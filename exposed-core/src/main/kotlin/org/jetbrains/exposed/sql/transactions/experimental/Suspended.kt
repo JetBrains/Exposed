@@ -162,6 +162,7 @@ private fun Transaction.resetIfClosed(): Transaction {
     }
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
     statement: suspend Transaction.() -> T
@@ -172,7 +173,7 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
 
     var answer: T
     while (true) {
-        val transaction = tx.value.resetIfClosed()
+        val transaction = if (repetitions == 0) tx.value else tx.value.resetIfClosed()
 
         @Suppress("TooGenericExceptionCaught")
         try {
