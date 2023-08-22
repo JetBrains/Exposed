@@ -2215,6 +2215,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public fun crossJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public final fun customEnumeration (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun customEnumeration$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun dbGenerated (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun decimal (Ljava/lang/String;II)Lorg/jetbrains/exposed/sql/Column;
 	public final fun default (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun default (Lorg/jetbrains/exposed/sql/CompositeColumn;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/CompositeColumn;

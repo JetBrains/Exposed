@@ -39,6 +39,8 @@ class Column<T>(
 
     fun defaultValueInDb() = dbDefaultValue
 
+    internal var isGeneratedInDb: Boolean = false
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 

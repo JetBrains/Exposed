@@ -725,6 +725,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         defaultValueFun = defaultValue
     }
 
+    // Potential names: readOnly, generatable, dbGeneratable, dbGenerated, generated, generatedDefault, generatedInDb
+    fun <T> Column<T>.dbGenerated(): Column<T> = apply {
+        isGeneratedInDb = true
+    }
+
     /** UUID column will auto generate its value on a client side just before an insert. */
     fun Column<UUID>.autoGenerate(): Column<UUID> = clientDefault { UUID.randomUUID() }
 

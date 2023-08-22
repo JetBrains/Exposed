@@ -1400,4 +1400,76 @@ class EntityTests : DatabaseTestsBase() {
             assertEquals(1, count)
         }
     }
+
+    object CreditCards : IntIdTable("CreditCards") {
+        val number = varchar("number", 16)
+        val spendingLimit = ulong("spendingLimit").dbGenerated()
+    }
+
+    class CreditCard(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<CreditCard>(CreditCards)
+
+        var number by CreditCards.number
+        var spendingLimit by CreditCards.spendingLimit
+    }
+
+    @Test
+    fun testDbGeneratedDefault() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), CreditCards) { testDb ->
+            addLogger(StdOutSqlLogger)
+            when (testDb) {
+                TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
+                    // The value can also be set using a SQL trigger
+                    exec(
+                        """
+                        CREATE OR REPLACE FUNCTION set_spending_limit()
+                          RETURNS TRIGGER
+                          LANGUAGE PLPGSQL
+                          AS
+                        $$
+                        BEGIN
+                            NEW."spendingLimit" := 10000;
+                            RETURN NEW;
+                        END;
+                        $$;
+                        """.trimIndent()
+                    )
+                    exec(
+                        """
+                        CREATE TRIGGER set_spending_limit
+                        BEFORE INSERT
+                        ON CreditCards
+                        FOR EACH ROW
+                        EXECUTE PROCEDURE set_spending_limit();
+                        """.trimIndent()
+                    )
+                }
+                else -> {
+                    // This table is only used to get the statement that adds the DEFAULT value, and use it with exec
+                    val CreditCards2 = object : IntIdTable("CreditCards") {
+                        val spendingLimit = ulong("spendingLimit").default(10000uL)
+                    }
+                    val missingStatements = SchemaUtils.addMissingColumnsStatements(CreditCards2)
+                    missingStatements.forEach {
+                        exec(it)
+                    }
+                }
+            }
+
+            val creditCardId = CreditCards.insertAndGetId {
+                it[number] = "0000111122223333"
+            }.value
+            assertEquals(
+                10000uL,
+                CreditCards.select { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
+            )
+
+            val creditCard = CreditCard.new {
+                number = "0000111122223333"
+            }.apply {
+                flush()
+            }
+            assertEquals(10000uL, creditCard.spendingLimit)
+        }
+    }
 }
