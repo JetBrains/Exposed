@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -148,7 +149,10 @@ open class OrderConfig {
     open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
+    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(
+        dataSource = dataSource,
+        databaseConfig = DatabaseConfig {}
+    )
 
     @Bean
     open fun orders() = Orders()
@@ -189,7 +193,10 @@ open class PaymentConfig {
     open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
+    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(
+        dataSource = dataSource,
+        databaseConfig = DatabaseConfig {}
+    )
 
     @Bean
     open fun payments() = Payments()

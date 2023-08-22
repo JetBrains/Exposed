@@ -2,185 +2,105 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
-import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.springframework.jdbc.datasource.ConnectionHolder
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
-import org.springframework.transaction.support.DefaultTransactionDefinition
+import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
-import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource
 
 class SpringTransactionManager(
-    dataSource: DataSource,
-    databaseConfig: DatabaseConfig = DatabaseConfig { },
-    private val showSql: Boolean = false,
-    @Volatile override var defaultReadOnly: Boolean = databaseConfig.defaultReadOnly,
-    @Volatile override var defaultRepetitionAttempts: Int = databaseConfig.defaultRepetitionAttempts,
-    @Volatile override var defaultMinRepetitionDelay: Long = databaseConfig.defaultMinRepetitionDelay,
-    @Volatile override var defaultMaxRepetitionDelay: Long = databaseConfig.defaultMaxRepetitionDelay
-) : DataSourceTransactionManager(dataSource), TransactionManager {
+    private val dataSource: DataSource,
+    databaseConfig: DatabaseConfig,
+) : AbstractPlatformTransactionManager() {
 
-    init {
-        this.isRollbackOnCommitFailure = true
-    }
+    private var _transactionManager: TransactionManager?
+
+    @Suppress("TooGenericExceptionCaught")
+    private val threadLocalTransactionManager: TransactionManager
+        get() = _transactionManager ?: throw Error()
 
     private val db = Database.connect(
         datasource = dataSource,
         databaseConfig = databaseConfig
-    ) { this }
-
-    @Volatile
-    override var defaultIsolationLevel: Int = -1
-        get() {
-            if (field == -1) {
-                field = Database.getDefaultIsolationLevel(db)
-            }
-            return field
-        }
-
-    private val transactionStackKey = "SPRING_TRANSACTION_STACK_KEY"
-
-    private fun getTransactionStack(): List<TransactionManager> {
-        return TransactionSynchronizationManager.getResource(transactionStackKey)
-            ?.let { it as List<TransactionManager> }
-            ?: listOf()
+    ).apply {
+        _transactionManager = this.transactionManager
     }
 
-    private fun setTransactionStack(list: List<TransactionManager>) {
-        TransactionSynchronizationManager.unbindResourceIfPossible(transactionStackKey)
-        TransactionSynchronizationManager.bindResource(transactionStackKey, list)
+    override fun doGetTransaction(): Any {
+        val outer = threadLocalTransactionManager.currentOrNull()
+
+        return ExposedTransactionObject(
+            manager = threadLocalTransactionManager,
+            outerTransaction = outer
+        )
     }
-
-    private fun pushTransactionStack(transaction: TransactionManager) {
-        val transactionList = getTransactionStack()
-        setTransactionStack(transactionList + transaction)
-    }
-
-    private fun popTransactionStack() = setTransactionStack(getTransactionStack().dropLast(1))
-
-    private fun getLastTransactionStack() = getTransactionStack().lastOrNull()
 
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
-        super.doBegin(transaction, definition)
+        val trxObject = transaction as ExposedTransactionObject
 
-        if (TransactionSynchronizationManager.hasResource(obtainDataSource())) {
-            currentOrNull() ?: initTransaction(transaction)
-        }
+        val currentTransactionManager = trxObject.manager
+        TransactionManager.resetCurrent(currentTransactionManager)
 
-        pushTransactionStack(this@SpringTransactionManager)
-    }
-
-    override fun doCleanupAfterCompletion(transaction: Any) {
-        super.doCleanupAfterCompletion(transaction)
-        if (!TransactionSynchronizationManager.hasResource(obtainDataSource())) {
-            TransactionSynchronizationManager.unbindResourceIfPossible(this)
-        }
-
-        popTransactionStack()
-        TransactionManager.resetCurrent(getLastTransactionStack())
-
-        if (TransactionSynchronizationManager.isSynchronizationActive() && TransactionSynchronizationManager.getSynchronizations().isEmpty()) {
-            TransactionSynchronizationManager.clearSynchronization()
-        }
-    }
-
-    override fun doSuspend(transaction: Any): Any {
-        TransactionSynchronizationManager.unbindResourceIfPossible(this)
-        return super.doSuspend(transaction)
+        currentTransactionManager.currentOrNull()
+            ?: currentTransactionManager.newTransaction(
+                isolation = definition.isolationLevel,
+                readOnly = definition.isReadOnly,
+            )
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            currentOrNull()?.commit()
-        } catch (e: Exception) {
-            throw TransactionSystemException(e.message.orEmpty(), e)
-        }
+        val trxObject = status.transaction as ExposedTransactionObject
+        TransactionManager.resetCurrent(trxObject.manager)
+        trxObject.commit()
     }
 
     override fun doRollback(status: DefaultTransactionStatus) {
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            currentOrNull()?.rollback()
-        } catch (e: Exception) {
-            throw TransactionSystemException(e.message.orEmpty(), e)
-        }
+        val trxObject = status.transaction as ExposedTransactionObject
+        TransactionManager.resetCurrent(trxObject.manager)
+        trxObject.rollback()
     }
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
-        val tDefinition = DefaultTransactionDefinition().apply {
-            isReadOnly = readOnly
-            isolationLevel = isolation
-        }
-
-        val transactionStatus = (getTransaction(tDefinition) as DefaultTransactionStatus)
-        return currentOrNull() ?: initTransaction(transactionStatus.transaction)
+    override fun doCleanupAfterCompletion(transaction: Any) {
+        val trxObject = transaction as ExposedTransactionObject
+        trxObject.setCurrentToOuter()
+        TransactionManager.resetCurrent(null)
     }
 
-    private fun initTransaction(transaction: Any): Transaction {
-        val connection = (TransactionSynchronizationManager.getResource(obtainDataSource()) as ConnectionHolder).connection
+    private data class ExposedTransactionObject(
+        val manager: TransactionManager,
+        private val outerTransaction: Transaction?,
+    ) {
 
-        @Suppress("TooGenericExceptionCaught")
-        val transactionImpl = try {
-            SpringTransaction(JdbcConnectionImpl(connection), db, defaultIsolationLevel, defaultReadOnly, currentOrNull(), transaction)
-        } catch (e: Exception) {
-            exposedLogger.error("Failed to start transaction. Connection will be closed.", e)
-            connection.close()
-            throw e
+        fun setCurrentToOuter() {
+            manager.bindTransactionToThread(outerTransaction)
         }
 
-        TransactionManager.resetCurrent(this)
-        return Transaction(transactionImpl).apply {
-            TransactionSynchronizationManager.bindResource(this@SpringTransactionManager, this)
-            if (showSql) {
-                addLogger(StdOutSqlLogger)
+        private fun hasOuterTransaction(): Boolean {
+            return outerTransaction != null
+        }
+
+        @Suppress("TooGenericExceptionCaught")
+        fun commit() {
+            try {
+                if (hasOuterTransaction().not()) {
+                    manager.currentOrNull()?.commit()
+                }
+            } catch (e: Exception) {
+                throw TransactionSystemException(e.message.orEmpty(), e)
             }
         }
-    }
 
-    override fun currentOrNull(): Transaction? = TransactionSynchronizationManager.getResource(this) as Transaction?
-    override fun bindTransactionToThread(transaction: Transaction?) {
-        if (transaction != null) {
-            bindResourceForSure(this, transaction)
-        } else {
-            TransactionSynchronizationManager.unbindResourceIfPossible(this)
-        }
-    }
-
-    private fun bindResourceForSure(key: Any, value: Any) {
-        TransactionSynchronizationManager.unbindResourceIfPossible(key)
-        TransactionSynchronizationManager.bindResource(key, value)
-    }
-
-    private inner class SpringTransaction(
-        override val connection: ExposedConnection<*>,
-        override val db: Database,
-        override val transactionIsolation: Int,
-        override val readOnly: Boolean,
-        override val outerTransaction: Transaction?,
-        private val currentTransaction: Any,
-    ) : TransactionInterface {
-
-        override fun commit() {
-            connection.commit()
-        }
-
-        override fun rollback() {
-            connection.rollback()
-        }
-
-        override fun close() {
-            if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                this@SpringTransactionManager.doCleanupAfterCompletion(currentTransaction)
+        @Suppress("TooGenericExceptionCaught")
+        fun rollback() {
+            try {
+                if (hasOuterTransaction().not()) {
+                    manager.currentOrNull()?.rollback()
+                }
+            } catch (e: Exception) {
+                throw TransactionSystemException(e.message.orEmpty(), e)
             }
         }
     }
