@@ -80,7 +80,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
 
     @Test
     fun testNullableCompositeColumnInsertAndSelect() {
-        val table = object : IntIdTable("Table") {
+        val table = object : IntIdTable("CompositeTable") {
             val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money").nullable()
         }
 

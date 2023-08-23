@@ -246,8 +246,8 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun `test select on nullable reference column`() {
-        val firstTable = object : IntIdTable("first") {}
-        val secondTable = object : IntIdTable("second") {
+        val firstTable = object : IntIdTable("firstTable") {}
+        val secondTable = object : IntIdTable("secondTable") {
             val firstOpt = optReference("first", firstTable)
         }
 

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
 class CharColumnType : DatabaseTestsBase() {
-    object CharTable : IntIdTable() {
+    object CharTable : IntIdTable("charTable") {
         val charColumn = char("charColumn")
     }
 
