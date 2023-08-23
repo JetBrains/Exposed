@@ -65,6 +65,6 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     }
 }
 
-object RollbackTable : IntIdTable() {
+object RollbackTable : IntIdTable("rollbackTable") {
     val value = varchar("value", 20)
 }
