@@ -16,11 +16,11 @@ class SpringTransactionManager(
     databaseConfig: DatabaseConfig,
 ) : AbstractPlatformTransactionManager() {
 
-    private var _transactionManager: TransactionManager?
+    private var _transactionManager: TransactionManager
 
     @Suppress("TooGenericExceptionCaught")
     private val threadLocalTransactionManager: TransactionManager
-        get() = _transactionManager ?: throw Error()
+        get() = _transactionManager
 
     init {
         Database.connect(
