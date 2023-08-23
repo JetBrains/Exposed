@@ -22,11 +22,13 @@ class SpringTransactionManager(
     private val threadLocalTransactionManager: TransactionManager
         get() = _transactionManager ?: throw Error()
 
-    private val db = Database.connect(
-        datasource = dataSource,
-        databaseConfig = databaseConfig
-    ).apply {
-        _transactionManager = this.transactionManager
+    init {
+        Database.connect(
+            datasource = dataSource,
+            databaseConfig = databaseConfig
+        ).apply {
+            _transactionManager = this.transactionManager
+        }
     }
 
     override fun doGetTransaction(): Any {
