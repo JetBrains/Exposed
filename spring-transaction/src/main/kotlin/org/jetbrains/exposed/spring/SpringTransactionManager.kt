@@ -2,7 +2,9 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.springframework.transaction.TransactionDefinition
@@ -14,6 +16,7 @@ import javax.sql.DataSource
 class SpringTransactionManager(
     private val dataSource: DataSource,
     databaseConfig: DatabaseConfig,
+    private val showSql: Boolean,
 ) : AbstractPlatformTransactionManager() {
 
     private var _transactionManager: TransactionManager
@@ -50,7 +53,11 @@ class SpringTransactionManager(
             ?: currentTransactionManager.newTransaction(
                 isolation = definition.isolationLevel,
                 readOnly = definition.isReadOnly,
-            )
+            ).apply {
+                if (showSql) {
+                    addLogger(StdOutSqlLogger)
+                }
+            }
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
