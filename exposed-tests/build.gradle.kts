@@ -33,6 +33,7 @@ dependencies {
     testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
     compileOnly("com.h2database", "h2", Versions.h2)
     testCompileOnly("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
+    testImplementation("io.github.hakky54:logcaptor:2.9.0")
 }
 
 tasks.withType<Test>().configureEach {

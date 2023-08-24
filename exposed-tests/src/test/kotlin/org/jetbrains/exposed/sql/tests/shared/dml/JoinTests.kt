@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -190,7 +191,10 @@ class JoinTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testNoWarningsOnLeftJoinRegression() {
+    @Test
+    fun testNoWarningsOnLeftJoinRegression() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
         val MainTable = object : Table("maintable") {
             val id = integer("idCol")
         }
@@ -208,7 +212,9 @@ class JoinTests : DatabaseTestsBase() {
                 .single()
                 .getOrNull(JoinTable.data)
 
-            // Assert no logging took place. No idea how to.
+            // Assert no logging took place
+            assertTrue(logCaptor.warnLogs.isEmpty())
+            assertTrue(logCaptor.errorLogs.isEmpty())
         }
     }
 }
