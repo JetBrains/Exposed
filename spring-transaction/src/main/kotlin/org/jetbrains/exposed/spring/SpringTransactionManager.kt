@@ -14,7 +14,7 @@ import org.springframework.transaction.support.DefaultTransactionStatus
 import javax.sql.DataSource
 
 class SpringTransactionManager(
-    private val dataSource: DataSource,
+    dataSource: DataSource,
     databaseConfig: DatabaseConfig,
     private val showSql: Boolean,
 ) : AbstractPlatformTransactionManager() {
