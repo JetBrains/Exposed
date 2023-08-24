@@ -1,4 +1,5 @@
 public final class org/jetbrains/exposed/spring/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
 	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;Z)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
