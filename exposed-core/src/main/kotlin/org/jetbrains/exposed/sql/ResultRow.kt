@@ -12,34 +12,21 @@ class ResultRow(
     private val lookUpCache = HashMap<Expression<*>, Any?>()
 
     /**
-     * Retrieves value of a given expression on this row.
+     * Retrieves the value of a given expression on this row.
      *
      * @param expression expression to evaluate
      * @throws IllegalStateException if expression is not in record set or if result value is uninitialized
      *
      * @see [getOrNull] to get null in the cases an exception would be thrown
      */
-    operator fun <T> get(expression: Expression<T>): T {
-        if (expression in lookUpCache) return lookUpCache[expression] as T
+    operator fun <T> get(expression: Expression<T>): T = getInternal(expression, checkNullability = true)
 
-        val d = getRaw(expression)
-
-        if (d == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
-            exposedLogger.warn(
-                "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
-                    "has default db value, but returns null. Possible have to re-read it from DB."
-            )
-        }
-
-        val result = database?.dialect?.let {
-            withDialect(it) {
-                rawToColumnValue(d, expression)
-            }
-        } ?: rawToColumnValue(d, expression)
-        lookUpCache[expression] = result
-        return result
-    }
-
+    /**
+     * Sets the value of a given expression on this row.
+     *
+     * @param expression expression for which to set the value
+     * @param value value to be set for the given expression
+     */
     operator fun <T> set(expression: Expression<out T>, value: T) {
         setInternal(expression, value)
         lookUpCache.remove(expression)
@@ -52,7 +39,36 @@ class ResultRow(
 
     fun <T> hasValue(expression: Expression<T>): Boolean = fieldIndex[expression]?.let { data[it] != NotInitializedValue } ?: false
 
-    fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) get(expression) else null
+    /**
+     * Retrieves the value of a given expression on this row.
+     * Returns null in the cases an exception would be thrown in [get].
+     *
+     * @param expression expression to evaluate
+     */
+    fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) getInternal(expression, checkNullability = false) else null
+
+    private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T {
+        if (expression in lookUpCache) return lookUpCache[expression] as T
+
+        val d = getRaw(expression)
+
+        if (checkNullability) {
+            if (d == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
+                exposedLogger.warn(
+                    "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
+                        "has default db value, but returns null. Possible have to re-read it from DB."
+                )
+            }
+        }
+
+        val result = database?.dialect?.let {
+            withDialect(it) {
+                rawToColumnValue(d, expression)
+            }
+        } ?: rawToColumnValue(d, expression)
+        lookUpCache[expression] = result
+        return result
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> rawToColumnValue(raw: T?, expression: Expression<T>): T {
