@@ -24,6 +24,7 @@ open class DBTestWithDockerCompose(dialect: String, @get:Input val port: Int, @g
         )
         captureContainersOutput.set(true)
         removeVolumes.set(true)
+        stopContainers.set(false)
 
         waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
     }

@@ -6,7 +6,7 @@ services:
     image: mysql:5.7
     restart: always
     ports:
-      - "3306"
+      - "3306:3306"
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ROOT_PASSWORD: 'root'
       MYSQL_DATABASE: 'testdb'

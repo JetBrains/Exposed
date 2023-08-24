@@ -24,7 +24,4 @@ object Versions {
     /** Spring **/
     const val springFramework = "5.3.29"
     const val springBoot = "2.7.14"
-
-    /** Test Dependencies **/
-    const val testContainers = "1.18.3"
 }

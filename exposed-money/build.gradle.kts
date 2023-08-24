@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm") apply true
-    id("testWithDBs")
 }
 
 repositories {

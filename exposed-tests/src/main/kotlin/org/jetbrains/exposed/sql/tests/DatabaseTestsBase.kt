@@ -10,16 +10,16 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
-import org.testcontainers.containers.MySQLContainer
-import org.testcontainers.containers.PostgreSQLContainer
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.SQLException
-import java.time.Duration
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.declaredMemberProperties
+
+val DB_HOST = "127.0.0.1" // System.getProperty("exposed.test.db.host") ?: error("No exposed.test.db.host specified")
+val DB_PORT = System.getProperty("exposed.test.db.port") ?: error("No exposed.test.db.port specified")
 
 enum class TestDB(
     val connection: () -> String,
@@ -45,7 +45,7 @@ enum class TestDB(
             }
         }
     ),
-    H2_MARIADB({ "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_MARIADB({ "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", user = "root", pass = "root"),
     H2_PSQL(
         { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver"
@@ -58,42 +58,29 @@ enum class TestDB(
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
     MYSQL(
         connection = {
-            if (runTestContainersMySQL()) {
-                "${mySQLProcess.jdbcUrl}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&useSSL=false&zeroDateTimeBehavior=convertToNull"
-            } else {
-                val host = System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")
-                val port = System.getProperty("exposed.test.mysql.port") ?: System.getProperty("exposed.test.mysql8.port")
-                host.let { dockerHost ->
-                    "jdbc:mysql://$dockerHost:$port/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
-                }
-            }
+            "jdbc:mysql://$DB_HOST:$DB_PORT/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
         },
         user = "root",
-        pass = if (runTestContainersMySQL()) "test" else "",
-        driver = "com.mysql.jdbc.Driver",
-        beforeConnection = { if (runTestContainersMySQL()) mySQLProcess },
-        afterTestFinished = { if (runTestContainersMySQL()) mySQLProcess.close() }
+        pass = "root",
+        driver = "com.mysql.jdbc.Driver"
     ),
     POSTGRESQL(
-        { "${postgresSQLProcess.jdbcUrl}&user=postgres&password=&lc_messages=en_US.UTF-8" },
+        { "jdbc:postgresql://$DB_HOST:$DB_PORT/&user=postgres&password=&lc_messages=en_US.UTF-8" },
         "org.postgresql.Driver",
-        beforeConnection = { postgresSQLProcess },
-        afterTestFinished = { postgresSQLProcess.close() }
+        beforeConnection = { },
+        afterTestFinished = { }
     ),
     POSTGRESQLNG(
-        { "${postgresSQLProcess.jdbcUrl.replaceFirst(":postgresql:", ":pgsql:")}&user=postgres&password=" },
+        { "jdbc:pgsql://$DB_HOST:$DB_PORT/&user=postgres&password=&lc_messages=en_US.UTF-8" },
         "com.impossibl.postgres.jdbc.PGDriver",
         user = "postgres",
-        beforeConnection = { postgresSQLProcess },
-        afterTestFinished = { postgresSQLProcess.close() }
     ),
     ORACLE(
         driver = "oracle.jdbc.OracleDriver",
         user = "ExposedTest",
         pass = "12345",
         connection = {
-            "jdbc:oracle:thin:@//${System.getProperty("exposed.test.oracle.host", "localhost")}" +
-                ":${System.getProperty("exposed.test.oracle.port", "1521")}/XEPDB1"
+            "jdbc:oracle:thin:@//$DB_HOST:$DB_PORT/XEPDB1"
         },
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
@@ -103,12 +90,12 @@ enum class TestDB(
                 password = "Oracle18",
                 driver = ORACLE.driver
             )
-            transaction(Connection.TRANSACTION_READ_COMMITTED, db  = tmp) {
+            transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
                 repetitionAttempts = 1
                 try {
                     exec("DROP USER ExposedTest CASCADE")
-                } catch (e: Exception) { // ignore
-                    exposedLogger.warn("Exception on deleting ExposedTest user")
+                } catch (cause: Throwable) { // ignore
+                    exposedLogger.warn("Exception on deleting ExposedTest user: $cause")
                 }
                 exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
                 exec("grant all privileges to ExposedTest")
@@ -116,7 +103,6 @@ enum class TestDB(
             Unit
         }
     ),
-
     SQLSERVER(
         {
             "jdbc:sqlserver://${System.getProperty("exposed.test.sqlserver.host", "192.168.99.100")}" +
@@ -126,7 +112,6 @@ enum class TestDB(
         "SA",
         "yourStrong(!)Password"
     ),
-
     MARIADB(
         {
             "jdbc:mariadb://${System.getProperty("exposed.test.mariadb.host", "192.168.99.100")}" +
@@ -159,37 +144,37 @@ enum class TestDB(
 
 private val registeredOnShutdown = HashSet<TestDB>()
 
-private val postgresSQLProcess by lazy {
-    PostgreSQLContainer("postgres:13.8-alpine")
-        .withUsername("postgres")
-        .withPassword("")
-        .withDatabaseName("template1")
-        .withStartupTimeout(Duration.ofSeconds(60))
-        .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
-        .apply {
-            listOf(
-                "timezone=UTC",
-                "synchronous_commit=off",
-                "max_connections=300",
-                "fsync=off"
-            ).forEach {
-                setCommand("postgres", "-c", it)
-            }
-            start()
-        }
-}
+//private val postgresSQLProcess by lazy {
+//    PostgreSQLContainer("postgres:13.8-alpine")
+//        .withUsername("postgres")
+//        .withPassword("")
+//        .withDatabaseName("template1")
+//        .withStartupTimeout(Duration.ofSeconds(60))
+//        .withEnv("POSTGRES_HOST_AUTH_METHOD", "trust")
+//        .apply {
+//            listOf(
+//                "timezone=UTC",
+//                "synchronous_commit=off",
+//                "max_connections=300",
+//                "fsync=off"
+//            ).forEach {
+//                setCommand("postgres", "-c", it)
+//            }
+//            start()
+//        }
+//}
 
-private val mySQLProcess by lazy {
-    MySQLContainer("mysql:5")
-        .withDatabaseName("testdb")
-        .withEnv("MYSQL_ROOT_PASSWORD", "test")
-        .withExposedPorts().apply {
-            start()
-        }
-}
+//private val mySQLProcess by lazy {
+//    MySQLContainer("mysql:5")
+//        .withDatabaseName("testdb")
+//        .withEnv("MYSQL_ROOT_PASSWORD", "test")
+//        .withExposedPorts().apply {
+//            start()
+//        }
+//}
 
-private fun runTestContainersMySQL(): Boolean =
-    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
+//private fun runTestContainersMySQL(): Boolean =
+//    (System.getProperty("exposed.test.mysql.host") ?: System.getProperty("exposed.test.mysql8.host")).isNullOrBlank()
 
 internal var currentTestDB by nullableTransactionScope<TestDB>()
 
@@ -229,8 +214,8 @@ abstract class DatabaseTestsBase {
             }
         } catch (e: SQLException) {
             throw e
-        } catch (e: Exception) {
-            throw Exception("Failed on ${dbSettings.name}", e)
+        } catch (cause: Throwable) {
+            throw Exception("Failed on ${dbSettings.name}", cause)
         }
     }
 
