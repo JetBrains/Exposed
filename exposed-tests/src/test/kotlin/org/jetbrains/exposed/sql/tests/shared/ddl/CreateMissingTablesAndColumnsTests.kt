@@ -625,4 +625,24 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
     }
+
+    @Test
+    fun testCreateTableWithQuotedIdentifiers() {
+        val identifiers = listOf("\"IdentifierTable\"", "\"IDentiFierCoLUmn\"")
+        val quotedTable = object : Table(identifiers[0]) {
+            val column1 = varchar(identifiers[1], 32)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.createMissingTablesAndColumns(quotedTable)
+                assertTrue(quotedTable.exists())
+
+                val statements = SchemaUtils.statementsRequiredToActualizeScheme(quotedTable)
+                assertTrue(statements.isEmpty())
+            } finally {
+                SchemaUtils.drop(quotedTable)
+            }
+        }
+    }
 }

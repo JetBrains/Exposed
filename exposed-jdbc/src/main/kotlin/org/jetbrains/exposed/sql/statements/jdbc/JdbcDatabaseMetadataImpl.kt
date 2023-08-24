@@ -133,7 +133,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         tables: Array<out Table>,
         extract: (ResultSet) -> Pair<String, ColumnMetadata>
     ): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCase() }
+        val mapping = tables.associateBy { it.nameInDatabaseCaseUnquoted() }
         val result = HashMap<Table, MutableList<ColumnMetadata>>()
 
         while (next()) {
@@ -190,11 +190,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
         for (table in tables) {
-            val tableName = table.nameInDatabaseCase()
             val transaction = TransactionManager.current()
 
             existingIndicesCache.getOrPut(table) {
-                val pkNames = metadata.getPrimaryKeys(databaseName, currentScheme, tableName).let { rs ->
+                val pkNames = metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCaseUnquoted()).let { rs ->
                     val names = arrayListOf<String>()
                     while (rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
@@ -202,7 +201,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     rs.close()
                     names
                 }
-                val rs = metadata.getIndexInfo(databaseName, currentScheme, tableName, false, false)
+                val rs = metadata.getIndexInfo(databaseName, currentScheme, table.nameInDatabaseCase(), false, false)
 
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
 
@@ -244,7 +243,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
         return tables.associateWith { table ->
-            metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCase()).let { rs ->
+            metadata.getPrimaryKeys(databaseName, currentScheme, table.nameInDatabaseCaseUnquoted()).let { rs ->
                 val columnNames = mutableListOf<String>()
                 var pkName = ""
                 while (rs.next()) {

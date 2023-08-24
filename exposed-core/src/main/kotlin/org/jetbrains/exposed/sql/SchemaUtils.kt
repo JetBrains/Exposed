@@ -241,7 +241,7 @@ object SchemaUtils {
             // create columns
             val thisTableExistingColumns = existingTablesColumns[table].orEmpty()
             val existingTableColumns = table.columns.mapNotNull { column ->
-                val existingColumn = thisTableExistingColumns.find { column.name.equals(it.name, true) }
+                val existingColumn = thisTableExistingColumns.find { column.nameUnquoted().equals(it.name, true) }
                 if (existingColumn != null) column to existingColumn else null
             }.toMap()
             val missingTableColumns = table.columns.filter { it !in existingTableColumns }
@@ -266,7 +266,7 @@ object SchemaUtils {
                         val incorrectDefaults = existingCol.defaultDbValue != col.dbDefaultValue?.let {
                             dataTypeProvider.dbDefaultToString(col, it)
                         }
-                        val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameInDatabaseCase()
+                        val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
                         ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                     }
                     .filterValues { it.hasDifferences() }
