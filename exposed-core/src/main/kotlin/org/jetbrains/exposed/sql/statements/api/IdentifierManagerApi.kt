@@ -30,6 +30,7 @@ abstract class IdentifierManagerApi {
     }
 
     private val checkedIdentitiesCache = IdentifiersCache<Boolean>()
+    private val checkedKeywordsCache = IdentifiersCache<Boolean>()
     private val shouldQuoteIdentifiersCache = IdentifiersCache<Boolean>()
     private val identifiersInProperCaseCache = IdentifiersCache<String>()
     private val quotedIdentifiersCache = IdentifiersCache<String>()
@@ -37,9 +38,13 @@ abstract class IdentifierManagerApi {
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
+    private fun String.isAKeyword(): Boolean = checkedKeywordsCache.getOrPut(lowercase()) {
+        keywords.any { this.equals(it, true) }
+    }
+
     fun needQuotes(identity: String): Boolean {
         return checkedIdentitiesCache.getOrPut(identity.lowercase()) {
-            !identity.isAlreadyQuoted() && (keywords.any { identity.equals(it, true) } || !identity.isIdentifier())
+            !identity.isAlreadyQuoted() && (identity.isAKeyword() || !identity.isIdentifier())
         }
     }
 
@@ -51,6 +56,7 @@ abstract class IdentifierManagerApi {
         val alreadyUpper = identity == identity.uppercase()
         when {
             alreadyQuoted -> false
+            identity.isAKeyword() -> true
             supportsMixedIdentifiers -> false
             alreadyLower && isLowerCaseIdentifiers -> false
             alreadyUpper && isUpperCaseIdentifiers -> false
@@ -66,7 +72,7 @@ abstract class IdentifierManagerApi {
             alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
             alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.uppercase()
             alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.lowercase()
-            supportsMixedIdentifiers || keywords.any { identity.equals(it, true) } -> identity
+            supportsMixedIdentifiers || identity.isAKeyword() -> identity
             oracleVersion != OracleVersion.NonOracle -> identity.uppercase()
             isUpperCaseIdentifiers -> identity.uppercase()
             isLowerCaseIdentifiers -> identity.lowercase()

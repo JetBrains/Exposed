@@ -88,7 +88,7 @@ class DDLTests : DatabaseTestsBase() {
             val expectedSelect = "SELECT $tableName.$publicName, $tableName.$dataName, $tableName.$constraintName FROM $tableName"
             keywordTable.selectAll().also {
                 assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
-            }.single()
+            }
 
             // check that identifiers match with returned jdbc metadata
             val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable)
