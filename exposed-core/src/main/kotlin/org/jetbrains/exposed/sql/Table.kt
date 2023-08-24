@@ -368,6 +368,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun nameInDatabaseCase(): String = tableName.inProperCase()
 
+    /**
+     * Returns the table name, in proper case, with wrapping single- and double-quotation characters removed.
+     *
+     * **Note** If used with MySQL or MariaDB, the column name is returned unchanged, since these databases use a
+     * backtick character as the identifier quotation.
+     */
+    fun nameInDatabaseCaseUnquoted(): String = if (currentDialect is MysqlDialect) {
+        nameInDatabaseCase()
+    } else {
+        nameInDatabaseCase().trim('\"', '\'')
+    }
+
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
 
     // Join operations

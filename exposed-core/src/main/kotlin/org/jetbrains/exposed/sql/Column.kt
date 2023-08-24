@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -44,7 +45,16 @@ class Column<T>(
     /** Returns the list of DDL statements that create this column. */
     val ddl: List<String> get() = createStatement()
 
+    /** Returns the column name in proper case. */
     fun nameInDatabaseCase(): String = name.inProperCase()
+
+    /**
+     * Returns the column name with wrapping double-quotation characters removed.
+     *
+     * **Note** If used with MySQL or MariaDB, the column name is returned unchanged, since these databases use a
+     * backtick character as the identifier quotation.
+     */
+    fun nameUnquoted(): String = if (currentDialect is MysqlDialect) name else name.trim('\"')
 
     private val isLastColumnInPK: Boolean
         get() = this == table.primaryKey?.columns?.last()
