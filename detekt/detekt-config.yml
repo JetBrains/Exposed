@@ -18,6 +18,9 @@ formatting:
     NoMultipleSpaces:
         active: true
         autoCorrect: false
+    SpacingAroundUnaryOperator:
+        active: true
+        autoCorrect: true
 
 style:
     MaxLineLength:
