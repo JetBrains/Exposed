@@ -15,7 +15,7 @@ import javax.sql.DataSource
 
 class SpringTransactionManager(
     dataSource: DataSource,
-    databaseConfig: DatabaseConfig,
+    databaseConfig: DatabaseConfig = DatabaseConfig {},
     private val showSql: Boolean = false,
 ) : AbstractPlatformTransactionManager() {
 
