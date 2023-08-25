@@ -353,6 +353,7 @@ public final class org/jetbrains/exposed/sql/Column : org/jetbrains/exposed/sql/
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun modifyStatements (Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
+	public final fun nameUnquoted ()Ljava/lang/String;
 	public final fun referee ()Lorg/jetbrains/exposed/sql/Column;
 	public final fun setDefaultValueFun (Lkotlin/jvm/functions/Function0;)V
 	public final fun setForeignKey (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)V
@@ -2258,6 +2259,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public static synthetic fun mediumText$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
+	public final fun nameInDatabaseCaseUnquoted ()Ljava/lang/String;
 	public final fun nullable (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/sql/CompositeColumn;)Lorg/jetbrains/exposed/sql/CompositeColumn;
 	public final fun optReference (Ljava/lang/String;Lorg/jetbrains/exposed/dao/id/IdTable;Lorg/jetbrains/exposed/sql/ReferenceOption;Lorg/jetbrains/exposed/sql/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;

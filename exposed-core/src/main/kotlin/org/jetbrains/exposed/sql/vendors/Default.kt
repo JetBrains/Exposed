@@ -1145,8 +1145,15 @@ abstract class VendorDialect(
         return allTables.any {
             when {
                 tableScheme != null -> it == table.nameInDatabaseCase()
-                scheme.isEmpty() -> it == table.nameInDatabaseCase()
-                else -> it == "$scheme.${table.tableNameWithoutScheme}".inProperCase()
+                scheme.isEmpty() -> it == table.nameInDatabaseCaseUnquoted()
+                else -> {
+                    val sanitizedTableName = if (currentDialect is MysqlDialect) {
+                        table.tableNameWithoutScheme
+                    } else {
+                        table.tableNameWithoutSchemeSanitized
+                    }
+                    it == "$scheme.$sanitizedTableName".inProperCase()
+                }
             }
         }
     }
