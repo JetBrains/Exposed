@@ -52,10 +52,6 @@ class SpringTransactionManager(
         TransactionManager.resetCurrent(currentTransactionManager)
 
         currentTransactionManager.currentOrNull()
-
-        currentTransactionManager.currentOrNull().apply {
-
-        }
             ?: currentTransactionManager.newTransaction(
                 isolation = definition.isolationLevel,
                 readOnly = definition.isReadOnly,
@@ -102,6 +98,7 @@ class SpringTransactionManager(
             exposedLogger.warn("Statements close failed", cause)
         }
 
+        @Suppress("TooGenericExceptionCaught")
         try {
             transaction.close()
         } catch (error: Exception) {
@@ -123,12 +120,11 @@ class SpringTransactionManager(
         private var isCurrentTransactionEnded: Boolean = false
 
         fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
-            if (isCurrentTransactionEnded) {
-                block(getCurrentTransaction())
+            val currentTransaction = getCurrentTransaction()
+            if (isCurrentTransactionEnded && currentTransaction != null) {
+                block(currentTransaction)
             }
         }
-
-        fun isPossibleToCleanupTransaction(): Boolean = isCurrentTransactionEnded
 
         fun setCurrentToOuter() {
             manager.bindTransactionToThread(outerTransaction)
@@ -162,9 +158,7 @@ class SpringTransactionManager(
             }
         }
 
-        fun getCurrentTransaction(): Transaction {
-            return manager.currentOrNull() ?: throw Exception()
-        }
+        fun getCurrentTransaction(): Transaction? = manager.currentOrNull()
 
         fun setRollbackOnly() {
             isRollback = true
@@ -172,6 +166,8 @@ class SpringTransactionManager(
 
         override fun isRollbackOnly() = isRollback
 
-        override fun flush() {} // Do noting
+        override fun flush() {
+            // Do noting
+        }
     }
 }
