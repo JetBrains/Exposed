@@ -267,7 +267,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
                     val isPKColumn = column.table.primaryKey?.columns?.contains(column) == true
 
                     if (column.columnType.nullable ||
-                        (defaultValue != null && column.defaultValueFun == null && ! currentDialect.isAllowedAsColumnDefault(defaultValue))
+                        (defaultValue != null && column.defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))
                     ) {
                         append(" NULL")
                     } else if (!isPKColumn) {
