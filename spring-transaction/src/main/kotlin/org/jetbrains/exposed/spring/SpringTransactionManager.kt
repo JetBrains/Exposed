@@ -37,11 +37,13 @@ class SpringTransactionManager(
     }
 
     override fun doGetTransaction(): Any {
+        val outerManager = TransactionManager.manager
         val outer = threadLocalTransactionManager.currentOrNull()
 
         return ExposedTransactionObject(
             manager = threadLocalTransactionManager,
-            outerTransaction = outer
+            outerManager = outerManager,
+            outerTransaction = outer,
         )
     }
 
@@ -82,7 +84,7 @@ class SpringTransactionManager(
         }
 
         trxObject.setCurrentToOuter()
-        TransactionManager.resetCurrent(null)
+        TransactionManager.resetCurrent(trxObject.outerManager)
     }
 
     private fun closeStatementsAndConnections(transaction: Transaction) {
@@ -113,6 +115,7 @@ class SpringTransactionManager(
 
     private data class ExposedTransactionObject(
         val manager: TransactionManager,
+        val outerManager: TransactionManager,
         private val outerTransaction: Transaction?,
     ) : SmartTransactionObject {
 
