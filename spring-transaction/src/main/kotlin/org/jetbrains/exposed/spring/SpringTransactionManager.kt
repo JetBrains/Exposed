@@ -52,6 +52,10 @@ class SpringTransactionManager(
         TransactionManager.resetCurrent(currentTransactionManager)
 
         currentTransactionManager.currentOrNull()
+
+        currentTransactionManager.currentOrNull().apply {
+
+        }
             ?: currentTransactionManager.newTransaction(
                 isolation = definition.isolationLevel,
                 readOnly = definition.isReadOnly,
@@ -76,8 +80,33 @@ class SpringTransactionManager(
 
     override fun doCleanupAfterCompletion(transaction: Any) {
         val trxObject = transaction as ExposedTransactionObject
+
+        trxObject.cleanUpTransactionIfIsPossible {
+            closeStatementsAndConnections(it)
+        }
+
         trxObject.setCurrentToOuter()
         TransactionManager.resetCurrent(null)
+    }
+
+    private fun closeStatementsAndConnections(transaction: Transaction) {
+        val currentStatement = transaction.currentStatement
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            currentStatement?.let {
+                it.closeIfPossible()
+                transaction.currentStatement = null
+            }
+            transaction.closeExecutedStatements()
+        } catch (cause: Exception) {
+            exposedLogger.warn("Statements close failed", cause)
+        }
+
+        try {
+            transaction.close()
+        } catch (error: Exception) {
+            exposedLogger.warn("Transaction close failed: ${error.message}. Statement: $currentStatement", error)
+        }
     }
 
     override fun doSetRollbackOnly(status: DefaultTransactionStatus) {
@@ -90,7 +119,16 @@ class SpringTransactionManager(
         private val outerTransaction: Transaction?,
     ) : SmartTransactionObject {
 
-        var isRollback: Boolean = false
+        private var isRollback: Boolean = false
+        private var isCurrentTransactionEnded: Boolean = false
+
+        fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
+            if (isCurrentTransactionEnded) {
+                block(getCurrentTransaction())
+            }
+        }
+
+        fun isPossibleToCleanupTransaction(): Boolean = isCurrentTransactionEnded
 
         fun setCurrentToOuter() {
             manager.bindTransactionToThread(outerTransaction)
@@ -105,6 +143,7 @@ class SpringTransactionManager(
             try {
                 if (hasOuterTransaction().not()) {
                     manager.currentOrNull()?.commit()
+                    isCurrentTransactionEnded = true
                 }
             } catch (e: Exception) {
                 throw TransactionSystemException(e.message.orEmpty(), e)
@@ -116,6 +155,7 @@ class SpringTransactionManager(
             try {
                 if (hasOuterTransaction().not()) {
                     manager.currentOrNull()?.rollback()
+                    isCurrentTransactionEnded = true
                 }
             } catch (e: Exception) {
                 throw TransactionSystemException(e.message.orEmpty(), e)
