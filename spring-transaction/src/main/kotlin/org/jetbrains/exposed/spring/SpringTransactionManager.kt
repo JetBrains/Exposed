@@ -5,12 +5,14 @@ import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
+import org.springframework.transaction.support.SmartTransactionObject
 import javax.sql.DataSource
 
 class SpringTransactionManager(
@@ -78,10 +80,17 @@ class SpringTransactionManager(
         TransactionManager.resetCurrent(null)
     }
 
+    override fun doSetRollbackOnly(status: DefaultTransactionStatus) {
+        val trxObject = status.transaction as ExposedTransactionObject
+        trxObject.setRollbackOnly()
+    }
+
     private data class ExposedTransactionObject(
         val manager: TransactionManager,
         private val outerTransaction: Transaction?,
-    ) {
+    ) : SmartTransactionObject {
+
+        var isRollback: Boolean = false
 
         fun setCurrentToOuter() {
             manager.bindTransactionToThread(outerTransaction)
@@ -112,5 +121,17 @@ class SpringTransactionManager(
                 throw TransactionSystemException(e.message.orEmpty(), e)
             }
         }
+
+        fun getCurrentTransaction(): Transaction {
+            return manager.currentOrNull() ?: throw Exception()
+        }
+
+        fun setRollbackOnly() {
+            isRollback = true
+        }
+
+        override fun isRollbackOnly() = isRollback
+
+        override fun flush() {} // Do noting
     }
 }
