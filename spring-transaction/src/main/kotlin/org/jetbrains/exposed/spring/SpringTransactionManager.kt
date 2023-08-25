@@ -84,7 +84,6 @@ class SpringTransactionManager(
         }
 
         trxObject.setCurrentToOuter()
-        TransactionManager.resetCurrent(trxObject.outerManager)
     }
 
     private fun closeStatementsAndConnections(transaction: Transaction) {
@@ -131,6 +130,7 @@ class SpringTransactionManager(
 
         fun setCurrentToOuter() {
             manager.bindTransactionToThread(outerTransaction)
+            TransactionManager.resetCurrent(outerManager)
         }
 
         private fun hasOuterTransaction(): Boolean {

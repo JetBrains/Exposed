@@ -52,8 +52,9 @@ open class SpringMultiContainerTransactionTest {
     open fun test3() {
         orders.transaction {
             payments.create()
-            orders.create()
+            orders.findAll()
             payments.create()
+            orders.create()
         }
         Assert.assertEquals(1, orders.findAll().size)
         Assert.assertEquals(2, payments.findAll().size)
@@ -161,7 +162,11 @@ open class OrderConfig {
 @Transactional
 open class Orders {
 
-    open fun findAll() = Order.selectAll().map { it }
+    open fun findAll(): List<ResultRow> {
+        val list = Order.selectAll().toList()
+        list.forEach { it[Order.id] }
+        return list
+    }
 
     open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.sql.transactions.transaction { findAll() }
 
@@ -178,6 +183,7 @@ open class Orders {
 
     open fun transaction(block: () -> Unit) {
         block()
+        Order.selectAll().forEach { it[Order.id] }
     }
 }
 
@@ -205,7 +211,11 @@ open class PaymentConfig {
 @Transactional
 open class Payments {
 
-    open fun findAll() = Payment.selectAll().map { it }
+    open fun findAll(): List<ResultRow> {
+        val list = Payment.selectAll().toList()
+        list.forEach { it[Payment.id] }
+        return list
+    }
 
     open fun findAllWithExposedTrxBlock() = transaction { findAll() }
 
@@ -222,6 +232,7 @@ open class Payments {
 
     open fun databaseTemplate(block: () -> Unit) {
         block()
+        Payment.selectAll().forEach { it[Payment.id] }
     }
 }
 
