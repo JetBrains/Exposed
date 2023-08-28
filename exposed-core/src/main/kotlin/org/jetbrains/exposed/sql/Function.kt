@@ -393,14 +393,14 @@ class CaseWhenElse<T, R : T>(
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
-            append("CASE ")
+            append("CASE")
             if (caseWhen.value != null) {
-                +caseWhen.value
                 +" "
+                +caseWhen.value
             }
 
             for ((first, second) in caseWhen.cases) {
-                append("WHEN ", first, " THEN ", second)
+                append(" WHEN ", first, " THEN ", second)
             }
 
             append(" ELSE ", elseResult, " END")
