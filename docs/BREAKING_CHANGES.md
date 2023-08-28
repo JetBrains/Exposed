@@ -7,7 +7,7 @@
 Registering the column on a table also creates a check constraint that restricts inserted data to the range between 0 and `UByte.MAX_VALUE`.
 If a column that only uses 1 byte of storage is needed, but without allowing any non-negative values to be inserted, please use a signed `byte()` column
 instead with a manually created check constraint:
-```kt
+```kotlin
 byte("number").check { it.between(0, Byte.MAX_VALUE) }
 // OR
 byte("number").check { (it greaterEq 0) and (it lessEq Byte.MAX_VALUE) }
@@ -17,7 +17,7 @@ be inserted without any overflow.
 Registering the column on a table also creates a check constraint that restricts inserted data to the range between 0 and `UInt.MAX_VALUE`.
 If a column that only uses 4 bytes of storage is needed, but without allowing any non-negative values to be inserted, please use a signed `integer()` column
 instead with a manually created check constraint:
-```kt
+```kotlin
 integer("number").check { it.between(0, Int.MAX_VALUE) }
 // OR
 integer("number").check { (it greaterEq 0) and (it lessEq Int.MAX_VALUE) }
@@ -40,7 +40,7 @@ Please run `Edit -> Find -> Replace in files...` twice with `suspendedTransactio
 to ensure that both variants are replaced without affecting `suspendedTransactionAsync()` (if used in code).
 * The `repetitionAttempts` parameter in `transaction()` has been removed and replaced with a mutable property in the `Transaction` class. 
 Please remove any arguments for this parameter and assign values to the property directly:
-```kt
+```kotlin
 // before
 transaction(Connection.TRANSACTION_READ_COMMITTED, repetitionAttempts = 10) {
     // statements
@@ -57,7 +57,7 @@ values to be inserted without any overflow.
 Registering the column on a table also creates a check constraint that restricts inserted data to the range between 0 and `UShort.MAX_VALUE`.
 If a column that only uses 2 bytes of storage is needed, but without allowing any non-negative values to be inserted, please use a signed `short()` column 
 instead with a manually created check constraint:
-```kt
+```kotlin
 short("number").check { it.between(0, Short.MAX_VALUE) }
 // OR
 short("number").check { (it greaterEq 0) and (it lessEq Short.MAX_VALUE) }
