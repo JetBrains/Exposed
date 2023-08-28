@@ -1,6 +1,6 @@
 # Breaking Changes
 
-## 0.42.1
+## 0.43.0
 
 * In all databases except MySQL, MariaDB, and SQL Server, the `ubyte()` column now maps to data type `SMALLINT` instead of `TINYINT`, which allows the full range of 
 `UByte` values to be inserted without any overflow.
