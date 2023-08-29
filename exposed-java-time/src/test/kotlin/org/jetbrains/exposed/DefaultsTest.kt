@@ -26,7 +26,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
-import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -401,7 +400,7 @@ class DefaultsTest : DatabaseTestsBase() {
         java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
         assertEquals("UTC", ZoneId.systemDefault().id)
 
-        val nowWithTimeZone = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+        val nowWithTimeZone = OffsetDateTime.now()
         val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
 
         val testTable = object : IntIdTable("t") {
