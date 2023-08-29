@@ -81,33 +81,33 @@ movie.delete()
 ### many-to-one reference
 Let's say you have this table:
 ```kotlin
-object Users: IntIdTable() {
+object Users : IntIdTable() {
     val name = varchar("name", 50)
 }
-class User(id: EntityID<Int>): IntEntity(id) {
+class User(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<User>(Users)
     var name by Users.name
 }
 ```
 And now you want to add a table referencing this table (and other tables!):
 ```kotlin
-object UserRatings: IntIdTable() {
+object UserRatings : IntIdTable() {
     val value = long("value")
     val film = reference("film", StarWarsFilms)
     val user = reference("user", Users)
 }
-class UserRating(id: EntityID<Int>): IntEntity(id) {
+class UserRating(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserRating>(UserRatings)
     var value by UserRatings.value
     var film by StarWarsFilm referencedOn UserRatings.film // use referencedOn for normal references
     var user by User referencedOn UserRatings.user
 }
 ```
-Now you can get the film for a rating in the same way you would get any other field:
+Now you can get the film for a `UserRating` object, `filmRating`, in the same way you would get any other field:
 ```kotlin
 filmRating.film // returns a StarWarsFilm object
 ```
-Now if you wanted to get all the ratings for a film, you could do that by using the `FilmRating.find` function, but what is much easier is to just add a `referrersOn` field to the StarWarsFilm class:
+Now if you wanted to get all the ratings for a film, you could do that by using the `filmRating.find` function, but it is much easier to just add a `referrersOn` field to the `StarWarsFilm` class:
 ```kotlin
 class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
@@ -116,9 +116,21 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
     ...
 }
 ```
-You can call:
+You can then access this field on a `StarWarsFilm` object, `movie`:
 ```kotlin
 movie.ratings // returns all UserRating objects with this movie as film
+```
+Now imagine a scenario where a user only ever rates a single film. If you want to get the single rating for that user, you can add a `backReferencedOn` field to the `User` class to access the `UserRating` table data:
+```kotlin
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
+    ...
+    val rating by UserRating backReferencedOn UserRatings.user // make sure to use val and backReferencedOn
+}
+```
+You can then access this field on a `User` object, `user1`:
+```kotlin
+user1.rating // returns a UserRating object
 ```
 ### Optional reference
 You can also add an optional reference:
@@ -135,7 +147,7 @@ class UserRating(id: EntityID<Int>): IntEntity(id) {
     ...
 }
 ```
-Now `secondUser` will be a nullable field, and you should use `optionalReferrersOn` instead of `referrersOn` to get all the ratings for a `secondUser`.
+Now `secondUser` will be a nullable field, and `optionalReferrersOn` should be used instead of `referrersOn` to get all the ratings for a `secondUser`.
 
 ```kotlin
 class User(id: EntityID<Int>): IntEntity(id) {

@@ -294,46 +294,138 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     private inline fun <reified R : Any> registerRefRule(column: Column<*>, ref: () -> R): R =
         refDefinitions.getOrPut(column to R::class, ref) as R
 
+    /**
+     * Registers a reference as a field of the child entity class, which returns a parent object of this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Child
+     */
     infix fun <REF : Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 
+    /**
+     * Registers an optional reference as a field of the child entity class, which returns a parent object of
+     * this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * `reference().nullable()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Post
+     */
     infix fun <REF : Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
 
+    /**
+     * Registers a reference as an immutable field of the parent entity class, which returns a child object of
+     * this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YEntity
+     */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
     ):
         ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
+    /**
+     * Registers a reference as an immutable field of the parent entity class, which returns a child object of
+     * this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YEntity
+     */
     @JvmName("backReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF?>
     ):
         ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
+     * this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * `reference().nullable()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF>
     ) =
         registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column as Column<REF?>, this) }
 
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
+     * this `EntityClass`.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * `reference().nullable()` on the child table.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     */
     @JvmName("optionalBackReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF?>
     ) =
         registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
 
+    /**
+     * Registers a reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
+     *
+     * By default, this also stores the loaded entities to a cache.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.Country
+     */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
+    /**
+     * Registers a reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.School
+     */
     fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(
         column: Column<REF>,
         cache: Boolean
     ) =
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * reference().nullable()` on the child table.
+     *
+     * By default, this also stores the loaded entities to a cache.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Category
+     */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>
     ) =
         registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * `reference().nullable()` on the child table.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     */
     fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>,
         cache: Boolean = false
