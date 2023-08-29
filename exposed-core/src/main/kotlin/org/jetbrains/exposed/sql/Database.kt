@@ -175,8 +175,8 @@ class Database private constructor(
         fun connect(
             url: String,
             driver: String = getDriver(url),
-            user: String = "",
-            password: String = "",
+            user: String = "root",
+            password: String = "Exposed_password_1!",
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }

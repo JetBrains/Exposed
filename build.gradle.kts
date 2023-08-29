@@ -1,9 +1,6 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
-import org.gradle.configurationcache.extensions.capitalized
-import org.jetbrains.exposed.gradle.Versions
-import org.jetbrains.exposed.gradle.configureDetekt
-import org.jetbrains.exposed.gradle.configurePublishing
+import org.jetbrains.exposed.gradle.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -57,46 +54,110 @@ subprojects {
     }
 }
 
-class DB(val name: String, val port: Int, val dependency: String)
-
-val dbs = listOf(
-    DB("mysql", 3306, "mysql:mysql-connector-java:${Versions.mysql51}"),
-    DB("mariadb", 3306, "org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
-)
-
-dockerCompose {
-    dbs.forEach {
-        nested(it.name).apply {
-            useComposeFiles.set(listOf("buildScripts/docker/docker-compose-${it.name}.yml"))
-            stopContainers.set(false)
-        }
-    }
-}
-
 subprojects {
     if (name == "exposed-bom") return@subprojects
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
-    val testTasks = dbs.map {
-        tasks.register<Test>("test${it.name.capitalized()}") {
+    testDb("h2") {
+        withContainer = false
+        dialects("H2", "H2_MYSQL", "H2_PSQL", "H2_MARIADB", "H2_ORACLE", "H2_SQLSERVER")
 
-            dependsOn(rootProject.tasks.getByName("${it.name}ComposeUp"))
-            finalizedBy(rootProject.tasks.getByName("${it.name}ComposeDown"))
-            systemProperties["exposed.test.dialects"] = it.name
-            systemProperties["exposed.test.db.port"] = it.port.toString()
-
-            description = "Runs tests using $it database"
-            group = "verification"
+        dependencies {
+            dependency("com.h2database:h2:${Versions.h2_v2}")
         }
     }
 
-    dependencies {
-        dbs.forEach {
-            testRuntimeOnly(it.dependency)
+    testDb("h2_v1") {
+        withContainer = false
+        dialects("H2", "H2_MYSQL")
+
+        dependencies {
+            dependency("com.h2database:h2:${Versions.h2}")
         }
     }
 
-    val test by tasks
-    test.dependsOn(testTasks)
+    testDb("sqlite") {
+        withContainer = false
+        dialects("sqlite")
+
+        dependencies {
+            dependency("org.xerial:sqlite-jdbc:${Versions.sqlLite3}")
+        }
+    }
+
+    testDb("mysql") {
+        port = 3001
+        dialects("mysql")
+        dependencies {
+            dependency("mysql:mysql-connector-java:${Versions.mysql51}")
+        }
+    }
+
+    testDb("mysql8") {
+        port = 3002
+        dialects("mysql")
+        dependencies {
+            dependency("mysql:mysql-connector-java:${Versions.mysql80}")
+        }
+    }
+
+    testDb("mariadb") {
+        port = 3000
+        dialects("mariadb")
+        dependencies {
+            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
+        }
+    }
+
+    testDb("mariadb_v3") {
+        dialects("mariadb")
+        container = "mariadb"
+        port = 3000
+        dependencies {
+            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v3}")
+        }
+    }
+
+    testDb("mariadb_v2") {
+        dialects("mariadb")
+        container = "mariadb"
+        port = 3000
+        dependencies {
+            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
+        }
+    }
+
+    testDb("oracle") {
+        port = 3003
+        dialects("oracle")
+        dependencies {
+            dependency("com.oracle.database.jdbc:ojdbc8:${Versions.oracle12}")
+        }
+    }
+
+    testDb("postgres") {
+        port = 3004
+        dialects("postgresql")
+        dependencies {
+            dependency("org.postgresql:postgresql:${Versions.postgre}")
+        }
+    }
+
+    testDb("postgresNG") {
+        port = 3004
+        dialects("postgresqlng")
+        container = "postgres"
+        dependencies {
+            dependency("org.postgresql:postgresql:${Versions.postgre}")
+            dependency("com.impossibl.pgjdbc-ng:pgjdbc-ng:${Versions.postgreNG}")
+        }
+    }
+
+    testDb("sqlserver") {
+        port = 3005
+        dependencies {
+            dependency("com.microsoft.sqlserver:mssql-jdbc:${Versions.sqlserver}")
+        }
+    }
 }
