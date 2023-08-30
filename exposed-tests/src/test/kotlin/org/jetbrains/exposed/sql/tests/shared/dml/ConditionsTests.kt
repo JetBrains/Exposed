@@ -210,4 +210,30 @@ class ConditionsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testChainedAndNestedCaseWhenElseSyntax() {
+        withCitiesAndUsers { cities, _, _ ->
+            val nestedCondition = Case()
+                .When(Op.build { cities.id eq 1 }, intLiteral(1))
+                .Else(intLiteral(-1))
+            val chainedCondition = Case()
+                .When(Op.build { cities.name like "M%" }, intLiteral(0))
+                .When(Op.build { cities.name like "St. %" }, nestedCondition)
+                .When(Op.build { cities.name like "P%" }, intLiteral(2))
+                .Else(intLiteral(-1))
+
+            val results = cities.slice(cities.name, chainedCondition).selectAll()
+            results.forEach {
+                val cityName = it[cities.name]
+                val expectedNumber = when {
+                    cityName.startsWith("M") -> 0
+                    cityName.startsWith("St. ") -> 1
+                    cityName.startsWith("P") -> 2
+                    else -> -1
+                }
+                assertEquals(expectedNumber, it[chainedCondition])
+            }
+        }
+    }
 }
