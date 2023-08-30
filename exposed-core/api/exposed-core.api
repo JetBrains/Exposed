@@ -2240,6 +2240,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun getForeignKeys ()Ljava/util/List;
 	public final fun getIndices ()Ljava/util/List;
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
+	public final fun getSchemaName ()Ljava/lang/String;
 	public fun getTableName ()Ljava/lang/String;
 	public fun hashCode ()I
 	public final fun index (Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
@@ -3289,6 +3290,7 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 
 public final class org/jetbrains/exposed/sql/vendors/DefaultKt {
 	public static final fun getCurrentDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
+	public static final fun inProperCase (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption {
