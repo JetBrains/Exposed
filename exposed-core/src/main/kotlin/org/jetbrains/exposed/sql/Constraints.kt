@@ -257,17 +257,17 @@ data class Index(
     /** Name of the index. */
     val indexName: String
         get() = customName ?: buildString {
-            append(table.nameInDatabaseCase())
+            append(table.nameInDatabaseCaseUnquoted())
             append('_')
-            append(columns.joinToString("_") { it.name }.inProperCase())
+            append(columns.joinToString("_") { it.name })
             functions?.let { f ->
                 if (columns.isNotEmpty()) append('_')
-                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() }.inProperCase())
+                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() })
             }
             if (unique) {
-                append("_unique".inProperCase())
+                append("_unique")
             }
-        }
+        }.inProperCase()
 
     init {
         require(columns.isNotEmpty() || functions?.isNotEmpty() == true) { "At least one column or function is required to create an index" }

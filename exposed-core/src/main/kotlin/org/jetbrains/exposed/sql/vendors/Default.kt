@@ -1139,7 +1139,7 @@ abstract class VendorDialect(
     }
 
     override fun tableExists(table: Table): Boolean {
-        val tableScheme = table.tableName.substringBefore('.', "").takeIf { it.isNotEmpty() }
+        val tableScheme = table.schemaName
         val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
         val allTables = getAllTableNamesCache().getValue(scheme)
         return allTables.any {
@@ -1171,11 +1171,11 @@ abstract class VendorDialect(
     ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
         val constraints = HashMap<Pair<Table, LinkedHashSet<Column<*>>>, MutableList<ForeignKeyConstraint>>()
 
-        val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCase()) }
+        val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCaseUnquoted()) }
 
         fillConstraintCacheForTables(tablesToLoad)
         tables.forEach { table ->
-            columnConstraintsCache[table.nameInDatabaseCase()].orEmpty().forEach {
+            columnConstraintsCache[table.nameInDatabaseCaseUnquoted()].orEmpty().forEach {
                 constraints.getOrPut(table to it.from) { arrayListOf() }.add(it)
             }
         }

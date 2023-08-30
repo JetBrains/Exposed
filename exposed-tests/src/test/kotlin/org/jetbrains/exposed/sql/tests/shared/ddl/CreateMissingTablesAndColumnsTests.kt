@@ -651,4 +651,36 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testCreateTableWithSchemaPrefix() {
+        val schemaName = "my_schema"
+        val schema = Schema(schemaName)
+        // index and foreign key both use table name to auto-generate their own names & to compare metadata
+        val parentTable = object : IntIdTable("$schemaName.parent_table") {
+            val secondId = integer("second_id").uniqueIndex()
+        }
+        val childTable = object : LongIdTable("$schemaName.child_table") {
+            val parent = reference("my_parent", parentTable)
+        }
+
+        // SQLite does not recognize creation of schema other than the attached database
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            SchemaUtils.createSchema(schema)
+            SchemaUtils.create(parentTable, childTable)
+
+            try {
+                SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                assertTrue(parentTable.exists())
+                assertTrue(childTable.exists())
+            } finally {
+                if (testDb == TestDB.SQLSERVER) {
+                    SchemaUtils.drop(childTable, parentTable)
+                    SchemaUtils.dropSchema(schema)
+                } else {
+                    SchemaUtils.dropSchema(schema, cascade = true)
+                }
+            }
+        }
+    }
 }
