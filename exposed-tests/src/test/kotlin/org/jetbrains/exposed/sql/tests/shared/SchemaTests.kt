@@ -57,6 +57,20 @@ class SchemaTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testDropSchemaWithCascade() {
+        withDb {
+            if (currentDialect.supportsCreateSchema) {
+                val schema = Schema("TEST_SCHEMA")
+                SchemaUtils.createSchema(schema)
+                assertTrue(schema.exists())
+
+                SchemaUtils.dropSchema(schema, cascade = true)
+                assertFalse(schema.exists())
+            }
+        }
+    }
+
+    @Test
     fun `table references table with same name in other database in mysql`() {
         withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
