@@ -145,9 +145,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    /**
-     * For each table, returns metadata for each of its columns
-     */
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val result = mutableMapOf<Table, List<ColumnMetadata>>()
         val useSchemaInsteadOfDatabase = currentDialect is MysqlDialect
@@ -306,6 +303,15 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    /**
+     * Returns the name of the database in which a [table] is found, as well as it's schema name.
+     *
+     * If the table name does not include a schema prefix, the metadata value `currentScheme` is used instead.
+     *
+     * MySQL/MariaDB are special cases in that a schema definition is treated like a separate database. This means that
+     * a connection to 'testDb' with a table defined as 'my_schema.my_table' will only successfully find the table's
+     * metadata if 'my_schema' is used as the database name.
+     */
     private fun tableCatalogAndSchema(table: Table): Pair<String, String> {
         val tableSchema = identifierManager.inProperCase(table.schemaName ?: currentScheme)
         return if (currentDialect is MysqlDialect && tableSchema != currentScheme) {
