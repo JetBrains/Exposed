@@ -218,6 +218,11 @@ class JoinTests : DatabaseTestsBase() {
                 .getOrNull(JoinTable.data)
 
             // Assert no logging took place
+            println("Printing ${testAppender.getLog().size} logevents")
+            testAppender.getLog().forEachIndexed { index, logEvent ->
+                println("LogEvent $index: level ${logEvent.level}, message ${logEvent.message}, $logEvent")
+            }
+            println("End of logevents")
             assertTrue(testAppender.getLog().none { it.level == Level.WARN })
         }
     }
