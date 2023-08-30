@@ -1,9 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import nl.altindag.log.LogCaptor
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.LoggerContext
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestAppender
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
@@ -193,7 +196,9 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testNoWarningsOnLeftJoinRegression() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        val loggerContext = LogManager.getContext(false) as LoggerContext
+        val appenders = loggerContext.configuration.appenders
+        val testAppender = appenders["TestAppender"] as TestAppender
 
         val MainTable = object : Table("maintable") {
             val id = integer("idCol")
@@ -213,8 +218,7 @@ class JoinTests : DatabaseTestsBase() {
                 .getOrNull(JoinTable.data)
 
             // Assert no logging took place
-            assertTrue(logCaptor.warnLogs.isEmpty())
-            assertTrue(logCaptor.errorLogs.isEmpty())
+            assertTrue(testAppender.getLog().none { it.level == Level.WARN })
         }
     }
 }
