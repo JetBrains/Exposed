@@ -83,12 +83,14 @@ object EntityTestsData {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
         var content by YTable.blob
+
         companion object : EntityClass<String, YEntity>(YTable)
     }
 }
 
 class EntityTests : DatabaseTestsBase() {
-    @Test fun testDefaults01() {
+    @Test
+    fun testDefaults01() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val x = EntityTestsData.XEntity.new { }
             assertEquals(x.b1, true, "b1 mismatched")
@@ -96,7 +98,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testDefaults02() {
+    @Test
+    fun testDefaults02() {
         withTables(EntityTestsData.YTable, EntityTestsData.XTable) {
             val a: EntityTestsData.AEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.A)
             val b: EntityTestsData.BEntity = EntityTestsData.AEntity.create(false, EntityTestsData.XType.B) as EntityTestsData.BEntity
@@ -135,7 +138,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testTextFieldOutsideTheTransaction() {
+    @Test
+    fun testTextFieldOutsideTheTransaction() {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
         withTables(Humans) { testDb ->
             val y1 = Human.new {
@@ -152,7 +156,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testNewWithIdAndRefresh() {
+    @Test
+    fun testNewWithIdAndRefresh() {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
         withTables(listOf(TestDB.SQLSERVER), Humans) { testDb ->
             val x = Human.new(2) {
@@ -362,7 +367,7 @@ class EntityTests : DatabaseTestsBase() {
             val board2 = Board.new { name = "irrelevant2" }
             assertNotNull(Board.testCache(board2.id))
             Boards.update({ Boards.id eq board2.id }) {
-                it[Boards.name] = "relevant2"
+                it[name] = "relevant2"
             }
             assertNull(Board.testCache(board2.id))
             board2.refresh(flush = false)
@@ -378,6 +383,7 @@ class EntityTests : DatabaseTestsBase() {
 
     class Item(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Item>(Items)
+
         var name by Items.name
         var price by Items.price
     }
@@ -434,6 +440,7 @@ class EntityTests : DatabaseTestsBase() {
 
     open class Human(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Human>(Humans)
+
         var h by Humans.h
     }
 
@@ -505,7 +512,8 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/439
-    @Test fun callLimitOnRelationDoesntMutateTheCachedValue() {
+    @Test
+    fun callLimitOnRelationDoesntMutateTheCachedValue() {
         withTables(Posts) {
             val category1 = Category.new {
                 title = "cat1"
@@ -530,7 +538,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testOrderByOnEntities() {
+    @Test
+    fun testOrderByOnEntities() {
         withTables(Categories) {
             Categories.deleteAll()
             val category1 = Category.new { title = "Test1" }
@@ -543,7 +552,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test what update of inserted entities goes before an insert`() {
+    @Test
+    fun `test what update of inserted entities goes before an insert`() {
         withTables(Categories, Posts) {
             val category1 = Category.new {
                 title = "category1"
@@ -581,6 +591,7 @@ class EntityTests : DatabaseTestsBase() {
 
     class Parent(id: EntityID<Long>) : LongEntity(id) {
         companion object : LongEntityClass<Parent>(Parents)
+
         var name by Parents.name
     }
 
@@ -591,11 +602,13 @@ class EntityTests : DatabaseTestsBase() {
 
     class Child(id: EntityID<Long>) : LongEntity(id) {
         companion object : LongEntityClass<Child>(Children)
+
         var parent by Parent referencedOn Children.companyId
         var name by Children.name
     }
 
-    @Test fun `test new(id) with get`() {
+    @Test
+    fun `test new(id) with get`() {
         // SQL Server doesn't support an explicit id for auto-increment table
         withTables(listOf(TestDB.SQLSERVER), Parents, Children) {
             val parentId = Parent.new {
@@ -614,7 +627,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `newly created entity flushed successfully`() {
+    @Test
+    fun `newly created entity flushed successfully`() {
         withTables(Boards) {
             val board = Board.new { name = "Board1" }.apply {
                 assertEquals(true, flush())
@@ -627,7 +641,8 @@ class EntityTests : DatabaseTestsBase() {
     private fun <T> newTransaction(statement: Transaction.() -> T) =
         inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, false, null, null, statement)
 
-    @Test fun sharingEntityBetweenTransactions() {
+    @Test
+    fun sharingEntityBetweenTransactions() {
         withTables(Humans) {
             val human1 = newTransaction {
                 repetitionAttempts = 1
@@ -712,8 +727,10 @@ class EntityTests : DatabaseTestsBase() {
 
         override fun hashCode(): Int = id.hashCode()
     }
+
     class Student(id: EntityID<Long>) : ComparableLongEntity<Student>(id) {
         companion object : LongEntityClass<Student>(Students)
+
         var name by Students.name
         var school by School referencedOn Students.school
         val notes by Note.referrersOn(Notes.student, true)
@@ -723,18 +740,21 @@ class EntityTests : DatabaseTestsBase() {
 
     class StudentBio(id: EntityID<Long>) : ComparableLongEntity<StudentBio>(id) {
         companion object : LongEntityClass<StudentBio>(StudentBios)
+
         var student by Student.referencedOn(StudentBios.student)
         var dateOfBirth by StudentBios.dateOfBirth
     }
 
     class Note(id: EntityID<Long>) : ComparableLongEntity<Note>(id) {
         companion object : LongEntityClass<Note>(Notes)
+
         var text by Notes.text
         var student by Student referencedOn Notes.student
     }
 
     class Detention(id: EntityID<Long>) : ComparableLongEntity<Detention>(id) {
         companion object : LongEntityClass<Detention>(Detentions)
+
         var reason by Detentions.reason
         var student by Student optionalReferencedOn Detentions.student
     }
@@ -1300,7 +1320,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test reference cache doesn't fully invalidated on set entity reference`() {
+    @Test
+    fun `test reference cache doesn't fully invalidated on set entity reference`() {
         withTables(Regions, Schools, Students, StudentBios) {
             val region1 = Region.new {
                 name = "United States"
@@ -1331,7 +1352,8 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test nested entity initialization`() {
+    @Test
+    fun `test nested entity initialization`() {
         withTables(Posts, Categories, Boards) {
             val post = Post.new {
                 parent = Post.new {
@@ -1356,13 +1378,15 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test explicit entity constructor`() {
+    @Test
+    fun `test explicit entity constructor`() {
         var createBoardCalled = false
         fun createBoard(id: EntityID<Int>): Board {
             createBoardCalled = true
             return Board(id)
         }
-        val boardEntityClass = object : IntEntityClass<Board>(Boards, entityCtor = ::createBoard) { }
+
+        val boardEntityClass = object : IntEntityClass<Board>(Boards, entityCtor = ::createBoard) {}
 
         withTables(Boards) {
             val board = boardEntityClass.new {
@@ -1371,8 +1395,7 @@ class EntityTests : DatabaseTestsBase() {
 
             assertEquals("Test Board", board.name)
             assertTrue(
-                createBoardCalled,
-                "Expected createBoardCalled to be called"
+                createBoardCalled, "Expected createBoardCalled to be called"
             )
         }
     }

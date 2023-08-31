@@ -3,6 +3,8 @@ package org.jetbrains.exposed.sql.tests
 import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.KMutableProperty1
@@ -50,10 +52,22 @@ enum class TestDB(
         { POSTGRESQL.connection().replace(":postgresql:", ":pgsql:") },
         "com.impossibl.postgres.jdbc.PGDriver",
     ),
-    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "sys as sysdba", pass = "Oracle18", connection = {
-        "jdbc:oracle:thin:@127.0.0.1:3003:XE"
+    ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345", connection = {
+        "jdbc:oracle:thin:@127.0.0.1:3003/XEPDB1"
     }, beforeConnection = {
         Locale.setDefault(Locale.ENGLISH)
+        val tmp = Database.connect(ORACLE.connection(), user = "sys as sysdba", password = "Oracle18", driver = ORACLE.driver)
+        transaction(Connection.TRANSACTION_READ_COMMITTED, db  = tmp) {
+            repetitionAttempts = 1
+            try {
+                exec("DROP USER ExposedTest CASCADE")
+            } catch (e: Exception) { // ignore
+                exposedLogger.warn("Exception on deleting ExposedTest user")
+            }
+            exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
+            exec("grant all privileges to ExposedTest")
+        }
+        Unit
     }),
     SQLSERVER(
         {
