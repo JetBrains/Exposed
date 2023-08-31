@@ -17,9 +17,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {
-            "MySQL-AB JDBC Driver",
-            "MySQL Connector/J",
-            "MySQL Connector Java" -> MysqlDialect.dialectName
+            "MySQL-AB JDBC Driver", "MySQL Connector/J", "MySQL Connector Java" -> MysqlDialect.dialectName
 
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
@@ -90,11 +88,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     override val tableNames: Map<String, List<String>>
-        get() = CachableMapWithDefault(
-            default = { schemeName ->
-                tableNamesFor(schemeName)
-            }
-        )
+        get() = CachableMapWithDefault(default = { schemeName ->
+            tableNamesFor(schemeName)
+        })
 
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
@@ -129,18 +125,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    private fun ResultSet.extractColumns(
-        tables: Array<out Table>,
-        extract: (ResultSet) -> Pair<String, ColumnMetadata>
-    ): Map<Table, List<ColumnMetadata>> {
-        val mapping = tables.associateBy { it.nameInDatabaseCaseUnquoted() }
-        val result = HashMap<Table, MutableList<ColumnMetadata>>()
-
+    private fun ResultSet.extractColumns(): List<ColumnMetadata> {
+        val result = mutableListOf<ColumnMetadata>()
         while (next()) {
-            val (tableName, columnMetadata) = extract(this)
-            mapping[tableName]?.let { t ->
-                result.getOrPut(t) { arrayListOf() } += columnMetadata
-            }
+            result.add(asColumnMetadata())
         }
         return result
     }
@@ -148,31 +136,36 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val result = mutableMapOf<Table, List<ColumnMetadata>>()
         val useSchemaInsteadOfDatabase = currentDialect is MysqlDialect
-
         val tablesBySchema = tables.groupBy { identifierManager.inProperCase(it.schemaName ?: currentScheme) }
-        tablesBySchema.forEach { (schema, schemaTables) ->
-            val catalog = if (!useSchemaInsteadOfDatabase || schema == currentScheme) databaseName else schema
-            val rs = metadata.getColumns(catalog, schema, "%", "%")
-            result += rs.extractColumns(schemaTables.toTypedArray()) {
-                // @see java.sql.DatabaseMetaData.getColumns
-                // That read should go first as Oracle driver closes connection after that
-                val defaultDbValue = it.getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-                val autoIncrement = it.getString("IS_AUTOINCREMENT") == "YES"
-                val type = it.getInt("DATA_TYPE")
-                val columnMetadata = ColumnMetadata(
-                    it.getString("COLUMN_NAME"),
-                    type,
-                    it.getBoolean("NULLABLE"),
-                    it.getInt("COLUMN_SIZE").takeIf { it != 0 },
-                    autoIncrement,
-                    // Not sure this filters enough but I dont think we ever want to have sequences here
-                    defaultDbValue?.takeIf { !autoIncrement },
-                )
-                it.getString("TABLE_NAME") to columnMetadata
+
+        for ((schema, schemaTables) in tablesBySchema.entries) {
+            for (table in schemaTables) {
+                val catalog = if (!useSchemaInsteadOfDatabase || schema == currentScheme) databaseName else schema
+                val rs = metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
+                val columns = rs.extractColumns()
+                check(columns.isNotEmpty())
+                result[table] = columns
+                rs.close()
             }
-            rs.close()
         }
+
         return result
+    }
+
+    private fun ResultSet.asColumnMetadata(): ColumnMetadata {
+        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
+        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
+        val type = getInt("DATA_TYPE")
+
+        return ColumnMetadata(
+            getString("COLUMN_NAME"),
+            type,
+            getBoolean("NULLABLE"),
+            getInt("COLUMN_SIZE").takeIf { it != 0 },
+            autoIncrement,
+            // Not sure this filters enough but I dont think we ever want to have sequences here
+            defaultDbValue?.takeIf { !autoIncrement },
+        )
     }
 
     private fun sanitizedDefault(defaultValue: String): String {
@@ -181,8 +174,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return when {
             dialect is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
             dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().trim('\'')
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB ->
-                defaultValue.substringAfter("b'").trim('\'')
+            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB -> defaultValue.substringAfter(
+                "b'"
+            ).trim('\'')
 
             dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> when {
                 defaultValue.startsWith('\'') && defaultValue.endsWith('\'') -> defaultValue.trim('\'')
@@ -202,7 +196,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val (catalog, tableSchema) = tableCatalogAndSchema(table)
 
             existingIndicesCache.getOrPut(table) {
-                val pkNames = metadata.getPrimaryKeys(catalog, tableSchema, table.nameInDatabaseCaseUnquoted()).let { rs ->
+                val pkNames = metadata.getPrimaryKeys(
+                    catalog,
+                    tableSchema,
+                    table.nameInDatabaseCaseUnquoted()
+                ).let { rs ->
                     val names = arrayListOf<String>()
                     while (rs.next()) {
                         rs.getString("PK_NAME")?.let { names += it }
@@ -223,7 +221,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                             else -> null
                         }
                         columnNameMetadata?.let { columnName ->
-                            val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(columnName)
+                            val column = transaction.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                                columnName
+                            )
                             val isUnique = !rs.getBoolean("NON_UNIQUE")
                             val isPartial = if (rs.getString("FILTER_CONDITION").isNullOrEmpty()) null else Op.TRUE
                             tmpIndices.getOrPut(Triple(indexName, isUnique, isPartial)) { arrayListOf() }.add(column)
@@ -232,20 +232,19 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 }
                 rs.close()
                 val tColumns = table.columns.associateBy { transaction.identity(it) }
-                tmpIndices.filterNot { it.key.first in pkNames }
-                    .mapNotNull { (index, columns) ->
-                        val (functionBased, columnBased) = columns.distinct().partition { cn -> tColumns[cn] == null }
-                        columnBased.map { cn -> tColumns[cn]!! }
-                            .takeIf { c -> c.size + functionBased.size == columns.size }
-                            ?.let { c ->
-                                Index(
-                                    c, index.second, index.first,
-                                    filterCondition = index.third,
-                                    functions = functionBased.map { stringLiteral(it) }.ifEmpty { null },
-                                    functionsTable = if (functionBased.isNotEmpty()) table else null
-                                )
-                            }
+                tmpIndices.filterNot { it.key.first in pkNames }.mapNotNull { (index, columns) ->
+                    val (functionBased, columnBased) = columns.distinct().partition { cn -> tColumns[cn] == null }
+                    columnBased.map { cn -> tColumns[cn]!! }.takeIf { c -> c.size + functionBased.size == columns.size }?.let { c ->
+                        Index(
+                            c,
+                            index.second,
+                            index.first,
+                            filterCondition = index.third,
+                            functions = functionBased.map { stringLiteral(it) }.ifEmpty { null },
+                            functionsTable = if (functionBased.isNotEmpty()) table else null
+                        )
                     }
+                }
             }
         }
         return HashMap(existingIndicesCache)
@@ -274,7 +273,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
             metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
                 val fromTableName = getString("FKTABLE_NAME")!!
-                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(getString("FKCOLUMN_NAME")!!)
+                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                    getString("FKCOLUMN_NAME")!!
+                )
                 val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
@@ -295,11 +296,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     onDelete = constraintDeleteRule,
                     name = constraintName
                 )
-            }
-                .filterNotNull()
-                .groupBy { it.fkName }
-                .values
-                .map { it.reduce(ForeignKeyConstraint::plus) }
+            }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
         }
     }
 
