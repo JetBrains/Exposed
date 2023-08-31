@@ -44,7 +44,8 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
     val testTask = tasks.register<Test>("test${db.name.capitalized()}") {
         description = "Runs tests using ${db.name} database"
         group = "verification"
-        systemProperties["exposed.test.container"] = db.container
+        systemProperties["exposed.test.name"] = db.name
+        systemProperties["exposed.test.container"] = if (db.withContainer) db.container else "none"
         systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.toUpperCase() }
         outputs.cacheIf { false }
         ignoreFailures = true
