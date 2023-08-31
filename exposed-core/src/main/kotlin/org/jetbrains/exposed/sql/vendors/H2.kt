@@ -122,6 +122,9 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+
+    override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
+
     internal enum class H2MajorVersion {
         One, Two
     }

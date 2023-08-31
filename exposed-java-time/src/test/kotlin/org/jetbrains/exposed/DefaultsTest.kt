@@ -194,9 +194,11 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaults01() {
+        println("Start test")
         val currentDT = CurrentDateTime
         val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+                println("currentDialectTest = $currentDialectTest")
                 +when (val dialect = currentDialectTest) {
                     is OracleDialect -> "SYSDATE"
                     is SQLServerDialect -> "GETDATE()"

@@ -3459,6 +3459,7 @@ public class org/jetbrains/exposed/sql/vendors/H2Dialect : org/jetbrains/exposed
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public final fun isSecondVersion ()Z
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/H2Dialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {

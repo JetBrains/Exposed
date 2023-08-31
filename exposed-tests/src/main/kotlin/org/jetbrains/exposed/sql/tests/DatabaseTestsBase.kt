@@ -113,6 +113,11 @@ abstract class DatabaseTestsBase {
         Assume.assumeFalse(testDB in excludeSettings)
 
         withDb(testDB) {
+            try {
+                SchemaUtils.drop(*tables)
+            } catch (_: Throwable) {
+            }
+
             SchemaUtils.create(*tables)
             try {
                 statement(testDB)
