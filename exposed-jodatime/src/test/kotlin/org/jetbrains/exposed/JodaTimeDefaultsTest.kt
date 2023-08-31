@@ -282,7 +282,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         }
 
         withTables(testDate) {
-            val duration: Long = 2_000
+            val duration: Long = 2_00
 
             val before = currentDateTime()
             Thread.sleep(duration)

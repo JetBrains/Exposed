@@ -103,24 +103,29 @@ abstract class DatabaseTestsBase {
     }
 
     fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
-        val toTest = TestDB.enabledDialects() - excludeSettings
-        Assume.assumeTrue(toTest.isNotEmpty())
-        toTest.forEach { testDB ->
-            withDb(testDB) {
-                SchemaUtils.create(*tables)
+        val testDB: TestDB? = dialect as? TestDB
+
+        if (testDB == null) {
+            Assume.assumeFalse(false)
+            return
+        }
+
+        Assume.assumeFalse(testDB in excludeSettings)
+
+        withDb(testDB) {
+            SchemaUtils.create(*tables)
+            try {
+                statement(testDB)
+                commit() // Need commit to persist data before drop tables
+            } finally {
                 try {
-                    statement(testDB)
-                    commit() // Need commit to persist data before drop tables
-                } finally {
-                    try {
+                    SchemaUtils.drop(*tables)
+                    commit()
+                } catch (_: Exception) {
+                    val database = testDB.db!!
+                    inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                        repetitionAttempts = 1
                         SchemaUtils.drop(*tables)
-                        commit()
-                    } catch (_: Exception) {
-                        val database = testDB.db!!
-                        inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
-                            repetitionAttempts = 1
-                            SchemaUtils.drop(*tables)
-                        }
                     }
                 }
             }
