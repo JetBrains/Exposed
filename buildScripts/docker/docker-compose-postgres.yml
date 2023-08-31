@@ -6,4 +6,5 @@ services:
         ports:
             - "3004:5432"
         environment:
+            POSTGRES_USER: "root"
             POSTGRES_PASSWORD: "Exposed_password_1!"

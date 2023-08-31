@@ -132,7 +132,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2.connect()
 

@@ -34,7 +34,7 @@ class ConnectionPoolTests {
 
     @Test
     fun testSuspendTransactionsExceedingPoolSize() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         transaction(db = hikariDB1) {
             SchemaUtils.create(TestTable)
         }
