@@ -1,11 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.core.Appender
-import org.apache.logging.log4j.core.Filter
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.core.LoggerContext
-import org.apache.logging.log4j.core.config.Configuration
-import org.apache.logging.log4j.core.layout.PatternLayout
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -13,7 +10,6 @@ import org.jetbrains.exposed.sql.tests.TestAppender
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class JoinTests : DatabaseTestsBase() {
@@ -200,7 +196,9 @@ class JoinTests : DatabaseTestsBase() {
 
     @Test
     fun testNoWarningsOnLeftJoinRegression() {
-        val testAppender = addAppender(Level.WARN)
+        val loggerContext = LogManager.getContext(false) as LoggerContext
+        val appenders = loggerContext.configuration.appenders
+        val testAppender = appenders["TestAppender"] as TestAppender
 
         val MainTable = object : Table("maintable") {
             val id = integer("idCol")
@@ -219,45 +217,13 @@ class JoinTests : DatabaseTestsBase() {
                 .single()
                 .getOrNull(JoinTable.data)
 
-            // Assert no logging took place whose source is the ResultRow.getInternal method because that is where the
-            // warning comes from
-            assertFalse(testAppender.getLog().any { it.source.methodName == "getInternal" })
-        }
-
-        removeAppender(testAppender)
-    }
-
-    private fun addAppender(level: Level): TestAppender {
-        val context = LoggerContext.getContext(false)
-        val config = context.configuration
-        val layout = PatternLayout.createDefaultLayout(config)
-        val testAppender = TestAppender.createAppender(layout, level)
-        testAppender.start()
-        config.addAppender(testAppender)
-        updateLoggers(testAppender, config, level)
-        return testAppender
-    }
-
-    private fun updateLoggers(appender: Appender, config: Configuration, level: Level, remove: Boolean = false) {
-        val filter: Filter? = null
-        for (loggerConfig in config.loggers.values) {
-            if (remove) {
-                loggerConfig.removeAppender(appender.name)
-            } else {
-                loggerConfig.addAppender(appender, level, filter)
+            // Assert no logging took place
+            println("Printing ${testAppender.getLog().size} logevents")
+            testAppender.getLog().forEachIndexed { index, logEvent ->
+                println("LogEvent $index: level ${logEvent.level}, message ${logEvent.message}, $logEvent")
             }
+            println("End of logevents")
+            assertTrue(testAppender.getLog().none { it.level == Level.WARN })
         }
-        if (remove) {
-            config.rootLogger.removeAppender(appender.name)
-        } else {
-            config.rootLogger.addAppender(appender, level, filter)
-        }
-    }
-
-    private fun removeAppender(testAppender: TestAppender) {
-        val context = LoggerContext.getContext(false)
-        val config = context.configuration
-        testAppender.stop()
-        updateLoggers(testAppender, config, testAppender.level, remove = true)
     }
 }

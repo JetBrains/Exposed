@@ -7,13 +7,18 @@
         <Async name="ASYNC" includeLocation="true">
             <AppenderRef ref="CONSOLE"/>
         </Async>
+        <TestAppender name="TestAppender">
+            <PatternLayout pattern="%d{ABSOLUTE} %5p %t %c{1}:%M:%L - %m%n"/>
+        </TestAppender>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="ASYNC"/>
+            <AppenderRef ref="TestAppender"/>
         </Root>
         <Logger name="Exposed" level="info" additivity="false">
             <AppenderRef ref="ASYNC"/>
+            <AppenderRef ref="TestAppender"/>
         </Logger>
     </Loggers>
 </Configuration>
