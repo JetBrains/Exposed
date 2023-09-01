@@ -9,9 +9,9 @@
         <appender-ref ref="CONSOLE"/>
     </appender>
 
-    <logger name="root" level="INFO">
-        <appender-ref ref="ASYNC"/>
-    </logger>
+    <root level="INFO">
+        <appender-ref ref="ASYNC" />
+    </root>
     <logger name="Exposed" level="INFO" additivity="false">
         <appender-ref ref="ASYNC"/>
     </logger>
