@@ -8,7 +8,6 @@ import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
-import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
 import java.sql.Connection
