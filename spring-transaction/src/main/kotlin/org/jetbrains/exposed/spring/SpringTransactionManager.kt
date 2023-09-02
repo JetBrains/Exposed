@@ -144,8 +144,8 @@ class SpringTransactionManager(
         fun commit() {
             try {
                 if (hasOuterTransaction().not()) {
-                    manager.currentOrNull()?.commit()
                     isCurrentTransactionEnded = true
+                    manager.currentOrNull()?.commit()
                 }
             } catch (e: Exception) {
                 throw TransactionSystemException(e.message.orEmpty(), e)
@@ -156,8 +156,8 @@ class SpringTransactionManager(
         fun rollback() {
             try {
                 if (hasOuterTransaction().not()) {
-                    manager.currentOrNull()?.rollback()
                     isCurrentTransactionEnded = true
+                    manager.currentOrNull()?.rollback()
                 }
             } catch (e: Exception) {
                 throw TransactionSystemException(e.message.orEmpty(), e)
