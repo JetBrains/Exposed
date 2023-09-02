@@ -27,6 +27,7 @@ dependencies {
     testImplementation("org.apache.logging.log4j", "log4j-api", Versions.log4j2)
     testImplementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
     testImplementation("junit", "junit", "4.12")
+    testImplementation("io.mockk", "mockk", "1.13.7")
     testImplementation("org.hamcrest", "hamcrest-library", "1.3")
     testImplementation("com.h2database", "h2", Versions.h2)
 }

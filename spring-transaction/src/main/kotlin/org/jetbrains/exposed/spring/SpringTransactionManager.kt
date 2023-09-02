@@ -21,6 +21,7 @@ class SpringTransactionManager(
     private val showSql: Boolean = false,
 ) : AbstractPlatformTransactionManager() {
 
+    private var _database: Database
     private var _transactionManager: TransactionManager
 
     @Suppress("TooGenericExceptionCaught")
@@ -28,7 +29,7 @@ class SpringTransactionManager(
         get() = _transactionManager
 
     init {
-        Database.connect(
+        _database = Database.connect(
             datasource = dataSource,
             databaseConfig = databaseConfig
         ).apply {
@@ -112,7 +113,9 @@ class SpringTransactionManager(
         trxObject.setRollbackOnly()
     }
 
-    private data class ExposedTransactionObject(
+    fun getDatabase() = _database
+
+    data class ExposedTransactionObject(
         val manager: TransactionManager,
         val outerManager: TransactionManager,
         private val outerTransaction: Transaction?,
