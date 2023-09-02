@@ -1,5 +1,27 @@
 public final class org/jetbrains/exposed/spring/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
 	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;Z)V
 	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDatabase ()Lorg/jetbrains/exposed/sql/Database;
+}
+
+public final class org/jetbrains/exposed/spring/SpringTransactionManager$ExposedTransactionObject : org/springframework/transaction/support/SmartTransactionObject {
+	public fun <init> (Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/Transaction;)V
+	public final fun cleanUpTransactionIfIsPossible (Lkotlin/jvm/functions/Function1;)V
+	public final fun commit ()V
+	public final fun component1 ()Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
+	public final fun component2 ()Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
+	public final fun copy (Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/spring/SpringTransactionManager$ExposedTransactionObject;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/spring/SpringTransactionManager$ExposedTransactionObject;Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/transactions/TransactionManager;Lorg/jetbrains/exposed/sql/Transaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/spring/SpringTransactionManager$ExposedTransactionObject;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flush ()V
+	public final fun getCurrentTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun getManager ()Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
+	public final fun getOuterManager ()Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
+	public fun hashCode ()I
+	public fun isRollbackOnly ()Z
+	public final fun rollback ()V
+	public final fun setCurrentToOuter ()V
+	public final fun setRollbackOnly ()V
+	public fun toString ()Ljava/lang/String;
 }
 
