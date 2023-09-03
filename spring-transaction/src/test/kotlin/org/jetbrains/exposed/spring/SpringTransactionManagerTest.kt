@@ -8,6 +8,7 @@ import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
 import java.sql.Connection
@@ -330,6 +331,74 @@ class SpringTransactionManagerTest {
             assertEquals(ex, e)
         }
         verify(exactly = 1) { con.close() }
+    }
+
+    @Test
+    fun `transaction commit with transaction aware data source proxy`() {
+        val ds: DataSource = mockk()
+        val con: Connection = mockk()
+        every { ds.connection } returns con
+        every { con.isClosed } returns false
+        every { con.autoCommit } returns false
+        every { con.isReadOnly = false } returns Unit
+        every { con.autoCommit = false } returns Unit
+        every { con.transactionIsolation } returns Connection.TRANSACTION_READ_COMMITTED
+        every { con.commit() } returns Unit
+        every { con.close() } returns Unit
+
+        val transactionAwareDs = TransactionAwareDataSourceProxy(ds)
+        val tm = SpringTransactionManager(transactionAwareDs)
+        val tt = TransactionTemplate(tm)
+
+        val database = tm.getDatabase()
+        val transactionManager = TransactionManager.managerFor(database)
+
+        tt.executeWithoutResult {
+            assertEquals(transactionManager, TransactionManager.manager)
+            // for initialize connection
+            TransactionManager.current().connection
+        }
+        verifyOrder {
+            con.commit()
+            con.close()
+        }
+    }
+
+    @Test
+    fun `transaction rollback with transaction aware data source proxy`() {
+        val ds: DataSource = mockk()
+        val con: Connection = mockk()
+        every { ds.connection } returns con
+        every { con.isClosed } returns false
+        every { con.autoCommit } returns false
+        every { con.isReadOnly = false } returns Unit
+        every { con.autoCommit = false } returns Unit
+        every { con.transactionIsolation } returns Connection.TRANSACTION_READ_COMMITTED
+        every { con.rollback() } returns Unit
+        every { con.close() } returns Unit
+
+        val transactionAwareDs = TransactionAwareDataSourceProxy(ds)
+        val tm = SpringTransactionManager(transactionAwareDs)
+        val tt = TransactionTemplate(tm)
+
+        val database = tm.getDatabase()
+        val transactionManager = TransactionManager.managerFor(database)
+
+        val ex = RuntimeException("Application exception")
+        try {
+            tt.executeWithoutResult {
+                assertEquals(transactionManager, TransactionManager.manager)
+                // for initialize connection
+                TransactionManager.current().connection
+                throw ex
+            }
+        } catch (e: Exception) {
+            assertEquals(ex, e)
+        }
+        verifyOrder {
+            con.rollback()
+            con.close()
+        }
     }
 
     @Test
