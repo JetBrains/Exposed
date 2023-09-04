@@ -17,12 +17,12 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.math.BigDecimal
-import java.sql.SQLException
 import java.util.*
 import kotlin.concurrent.thread
 
 val TEST_DIALECTS: HashSet<String> = System.getProperty(
-    "exposed.test.dialects", ""
+    "exposed.test.dialects",
+    ""
 ).split(",").mapTo(HashSet()) { it.trim().uppercase() }
 
 private val registeredOnShutdown = HashSet<TestDB>()
@@ -51,12 +51,11 @@ abstract class DatabaseTestsBase {
         }
     }
 
-
     @Parameterized.Parameter(0)
     lateinit var container: String
 
     @Parameterized.Parameter(1)
-    lateinit var dialect: Any
+    lateinit var dialect: TestDB
 
     @Parameterized.Parameter(2)
     lateinit var testName: String
@@ -66,40 +65,42 @@ abstract class DatabaseTestsBase {
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
-            Runtime.getRuntime().addShutdownHook(thread(false) {
-                dbSettings.afterTestFinished()
-                registeredOnShutdown.remove(dbSettings)
-            })
+            Runtime.getRuntime().addShutdownHook(
+                thread(false) {
+                    dbSettings.afterTestFinished()
+                    registeredOnShutdown.remove(dbSettings)
+                }
+            )
             registeredOnShutdown += dbSettings
             dbSettings.db = dbSettings.connect()
         }
 
         val database = dbSettings.db!!
-        try {
-            transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-                repetitionAttempts = 1
-                registerInterceptor(CurrentTestDBInterceptor)
-                currentTestDB = dbSettings
-                statement(dbSettings)
-            }
-        } catch (cause: SQLException) {
-            throw cause
-        } catch (cause: Throwable) {
-            throw IllegalStateException("Failed on ${dbSettings.name}", cause)
+        transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+            repetitionAttempts = 1
+            registerInterceptor(CurrentTestDBInterceptor)
+            currentTestDB = dbSettings
+            statement(dbSettings)
         }
     }
 
     fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
-        val enabledInTests = TestDB.enabledDialects()
-        val toTest = db?.intersect(enabledInTests) ?: (enabledInTests - excludeSettings)
-        Assume.assumeTrue(toTest.isNotEmpty())
-        toTest.forEach { dbSettings ->
-            @Suppress("TooGenericExceptionCaught") try {
-                withDb(dbSettings, statement)
-            } catch (cause: Throwable) {
-                throw AssertionError("Failed on ${dbSettings.name}", cause)
-            }
+        if (db != null && dialect !in db) {
+            Assume.assumeFalse(true)
+            return
         }
+
+        if (dialect in excludeSettings) {
+            Assume.assumeFalse(true)
+            return
+        }
+
+        if (dialect !in TestDB.enabledDialects()) {
+            Assume.assumeFalse(true)
+            return
+        }
+
+        withDb(dialect, statement)
     }
 
     fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
@@ -138,20 +139,26 @@ abstract class DatabaseTestsBase {
     }
 
     fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
-        val toTest = TestDB.enabledDialects() - excludeSettings
-        Assume.assumeTrue(toTest.isNotEmpty())
-        toTest.forEach { testDB ->
-            withDb(testDB) {
-                if (currentDialectTest.supportsCreateSchema) {
-                    SchemaUtils.createSchema(*schemas)
-                    try {
-                        statement()
-                        commit() // Need commit to persist data before drop schemas
-                    } finally {
-                        val cascade = it != TestDB.SQLSERVER
-                        SchemaUtils.dropSchema(*schemas, cascade = cascade)
-                        commit()
-                    }
+        if (dialect !in TestDB.enabledDialects()) {
+            Assume.assumeFalse(true)
+            return
+        }
+
+        if (dialect in excludeSettings) {
+            Assume.assumeFalse(true)
+            return
+        }
+
+        withDb(dialect) {
+            if (currentDialectTest.supportsCreateSchema) {
+                SchemaUtils.createSchema(*schemas)
+                try {
+                    statement()
+                    commit() // Need commit to persist data before drop schemas
+                } finally {
+                    val cascade = it != TestDB.SQLSERVER
+                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                    commit()
                 }
             }
         }
@@ -180,6 +187,10 @@ abstract class DatabaseTestsBase {
     fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
 
     protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
-        schemaName, defaultTablespace = "USERS", temporaryTablespace = "TEMP ", quota = "20M", on = "USERS"
+        schemaName,
+        defaultTablespace = "USERS",
+        temporaryTablespace = "TEMP ",
+        quota = "20M",
+        on = "USERS"
     )
 }

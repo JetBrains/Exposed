@@ -1814,6 +1814,7 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZILjava/lang/Object;)V
 	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
 	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
+	public final fun listDatabases ()Ljava/util/List;
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
@@ -2889,7 +2890,9 @@ public final class org/jetbrains/exposed/sql/statements/StatementType : java/lan
 	public static final field GRANT Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field INSERT Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field OTHER Lorg/jetbrains/exposed/sql/statements/StatementType;
+	public static final field PRAGMA Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field SELECT Lorg/jetbrains/exposed/sql/statements/StatementType;
+	public static final field SHOW Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field TRUNCATE Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field UPDATE Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public final fun getGroup ()Lorg/jetbrains/exposed/sql/statements/StatementGroup;
@@ -3245,6 +3248,7 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun getSupportsTernaryAffectedRowValues ()Z
 	public abstract fun getSupportsWindowFrameGroupsMode ()Z
 	public abstract fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public abstract fun listDatabases ()Ljava/lang/String;
 	public abstract fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public abstract fun resetCaches ()V
 	public abstract fun resetSchemaCaches ()V
@@ -3284,6 +3288,7 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 	public static fun getSupportsTernaryAffectedRowValues (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsWindowFrameGroupsMode (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Expression;)Z
+	public static fun listDatabases (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Ljava/lang/String;
 	public static fun setSchema (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 	public static fun tableColumns (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 }
@@ -3458,6 +3463,7 @@ public class org/jetbrains/exposed/sql/vendors/H2Dialect : org/jetbrains/exposed
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public final fun isSecondVersion ()Z
+	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public fun toString ()Ljava/lang/String;
 }
@@ -3534,6 +3540,7 @@ public class org/jetbrains/exposed/sql/vendors/OracleDialect : org/jetbrains/exp
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
@@ -3552,6 +3559,7 @@ public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect : org/jetbrains
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
@@ -3617,6 +3625,7 @@ public class org/jetbrains/exposed/sql/vendors/SQLiteDialect : org/jetbrains/exp
 	public fun getSupportsMultipleGeneratedKeys ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public fun listDatabases ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/SQLiteDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
@@ -3665,6 +3674,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	protected final fun quoteIdentifierWhenWrongCaseOrNecessary (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun resetCaches ()V

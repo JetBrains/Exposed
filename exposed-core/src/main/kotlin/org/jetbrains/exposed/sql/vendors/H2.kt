@@ -262,6 +262,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SHOW SCHEMAS"
+
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 

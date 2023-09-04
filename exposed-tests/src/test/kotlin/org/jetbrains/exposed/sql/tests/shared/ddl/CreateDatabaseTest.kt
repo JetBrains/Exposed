@@ -3,8 +3,10 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.sql.SQLException
+import kotlin.test.assertFailsWith
 
 class CreateDatabaseTest : DatabaseTestsBase() {
 
@@ -19,6 +21,53 @@ class CreateDatabaseTest : DatabaseTestsBase() {
             }
             SchemaUtils.createDatabase(dbName)
             SchemaUtils.dropDatabase(dbName)
+        }
+    }
+
+    @Test
+    fun testListDatabasesOracle() {
+        withDb(TestDB.ORACLE) {
+            assertFailsWith<IllegalStateException> {
+                SchemaUtils.listDatabases()
+            }
+        }
+    }
+
+    @Test
+    fun testListDatabasesPostgres() {
+        withDb(TestDB.POSTGRESQL) {
+            connection.autoCommit = true
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            val created = SchemaUtils.listDatabases()
+            assertTrue(dbName in created)
+            SchemaUtils.dropDatabase(dbName)
+            val deleted = SchemaUtils.listDatabases()
+            assertTrue(dbName !in deleted)
+            connection.autoCommit = false
+        }
+    }
+
+    @Test
+    fun testListDatabases() {
+        withDb(excludeSettings = listOf(TestDB.ORACLE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            val created = SchemaUtils.listDatabases()
+            assertTrue(dbName in created)
+            SchemaUtils.dropDatabase(dbName)
+            val deleted = SchemaUtils.listDatabases()
+            assertTrue(dbName !in deleted)
         }
     }
 

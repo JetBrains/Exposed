@@ -8,9 +8,9 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.register
-import java.io.File
 import java.time.Duration
 
+const val HEALTH_TIMEOUT: Long = 60
 
 class TestDb(val name: String) {
     internal val dialects = mutableListOf<String>()
@@ -76,7 +76,7 @@ private fun Project.configureCompose(db: TestDb) {
             removeVolumes.set(true)
             stopContainers.set(false)
 
-            waitForHealthyStateTimeout.set(Duration.ofMinutes(60))
+            waitForHealthyStateTimeout.set(Duration.ofMinutes(HEALTH_TIMEOUT))
         }
     }
 

@@ -78,8 +78,10 @@ class SchemaTests : DatabaseTestsBase() {
 
                 val firstCatalogName = connection.catalog
 
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
                 val catalogName = connection.catalog

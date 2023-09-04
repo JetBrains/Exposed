@@ -139,6 +139,7 @@ abstract class DataTypeProvider {
         } else {
             "'$e'"
         }
+
         e is LiteralOp<*> -> "$e"
         e is Function<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
@@ -980,6 +981,8 @@ interface DatabaseDialect {
 
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
+    fun listDatabases(): String = "SHOW DATABASES"
+
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
@@ -1221,6 +1224,7 @@ abstract class VendorDialect(
                         .append(" WHERE ").append(it)
                         .toString()
                 }
+
                 else -> {
                     exposedLogger.warn("Index creation with a filter condition is not supported in ${currentDialect.name}")
                     return null
@@ -1282,6 +1286,7 @@ abstract class VendorDialect(
                     columns = fieldsList, type = index.indexType, filterCondition = maybeFilterCondition
                 )
             }
+
             else -> {
                 "CREATE INDEX $quotedIndexName ON $quotedTableName $fieldsList$maybeFilterCondition"
             }

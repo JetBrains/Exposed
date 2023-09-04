@@ -36,6 +36,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.testOnDeleteSetDefault() {
+        SchemaUtils.drop(Category, Item)
         SchemaUtils.create(Category, Item)
 
         Category.insert {

@@ -6,7 +6,6 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 
-
 fun Project.configureDetekt() {
     apply<DetektPlugin>()
 
@@ -14,7 +13,9 @@ fun Project.configureDetekt() {
         ignoreFailures = false
         buildUponDefaultConfig = true
         config = files(
-            rootDir.resolve("detekt/detekt-config.yml").takeIf { it.isFile },
+            rootDir.resolve("detekt/detekt-config.yml").takeIf {
+                it.isFile
+            },
             projectDir.resolve("detekt/detekt-config.yml").takeIf { it.isFile }
         )
         reports {
