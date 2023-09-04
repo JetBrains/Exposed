@@ -294,11 +294,11 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override fun fillConstraintCacheForTables(tables: List<Table>) {
-        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCase() }
+        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
         val allTableNames = allTables.keys
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
         val tr = TransactionManager.current()
-        val schemaName = "'${getDatabase()}'"
+        val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: getDatabase()}'"
         val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
         tr.exec(
             """SELECT
@@ -312,9 +312,9 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
                 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
                   INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
                     ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
-                WHERE ku.TABLE_SCHEMA = $schemaName
-                  AND ku.CONSTRAINT_SCHEMA = $schemaName
-                  AND rc.CONSTRAINT_SCHEMA = $schemaName
+                WHERE ku.TABLE_SCHEMA = $tableSchema
+                  AND ku.CONSTRAINT_SCHEMA = $tableSchema
+                  AND rc.CONSTRAINT_SCHEMA = $tableSchema
                   AND $inTableList
                 ORDER BY ku.ORDINAL_POSITION
             """.trimIndent()
