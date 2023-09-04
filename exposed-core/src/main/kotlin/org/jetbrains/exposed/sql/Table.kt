@@ -335,7 +335,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
-    internal val tableNameWithoutScheme: String get() = tableName.substringAfter(".")
+    /** Returns the schema name, or null if one does not exist for this table. */
+    val schemaName: String? = if (name.contains(".")) name.substringBeforeLast(".") else null
+
+    internal val tableNameWithoutScheme: String get() = tableName.substringAfterLast(".")
 
     // Table name may contain quotes, remove those before appending
     internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
@@ -369,15 +372,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun nameInDatabaseCase(): String = tableName.inProperCase()
 
     /**
-     * Returns the table name, in proper case, with wrapping single- and double-quotation characters removed.
+     * Returns the table name, without schema and in proper case, with wrapping single- and double-quotation characters removed.
      *
-     * **Note** If used with MySQL or MariaDB, the column name is returned unchanged, since these databases use a
+     * **Note** If used with MySQL or MariaDB, the table name is returned unchanged, since these databases use a
      * backtick character as the identifier quotation.
      */
     fun nameInDatabaseCaseUnquoted(): String = if (currentDialect is MysqlDialect) {
-        nameInDatabaseCase()
+        tableNameWithoutScheme.inProperCase()
     } else {
-        nameInDatabaseCase().trim('\"', '\'')
+        tableNameWithoutScheme.inProperCase().trim('\"', '\'')
     }
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
