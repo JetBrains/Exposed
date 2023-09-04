@@ -20,7 +20,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 import kotlin.properties.Delegates
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -539,7 +539,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             uniqueIndex("index2", value2, value1)
         }
     }
-
+    
     @Test
     fun testCreateTableWithReferenceMultipleTimes() {
         withTables(PlayerTable, SessionsTable) {
@@ -649,6 +649,22 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(quotedTable)
             }
+        }
+    }
+
+    @Test
+    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyInVariousOrder() {
+        withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+        }
+        withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
+        }
+        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+        }
+        withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
         }
     }
 

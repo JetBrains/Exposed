@@ -24,9 +24,7 @@ object SchemaUtils {
                 emptyMap()
             } else {
                 tables.associateWith { t ->
-                    t.columns.mapNotNull { c ->
-                        c.referee?.let { it.table to c.columnType.nullable }
-                    }.toMap()
+                    t.foreignKeys.map { it.targetTable }
                 }
             }
         }
@@ -36,9 +34,7 @@ object SchemaUtils {
 
             fun parseTable(table: Table) {
                 if (result.add(table)) {
-                    table.columns.forEach {
-                        it.referee?.table?.let(::parseTable)
-                    }
+                    table.foreignKeys.map { it.targetTable }.forEach(::parseTable)
                 }
             }
             tables.forEach(::parseTable)
@@ -54,7 +50,7 @@ object SchemaUtils {
             fun traverse(table: Table) {
                 if (table !in visited) {
                     visited += table
-                    graph.getValue(table).forEach { (t, _) ->
+                    graph.getValue(table).forEach { t ->
                         if (t !in visited) {
                             traverse(t)
                         }
@@ -79,7 +75,7 @@ object SchemaUtils {
                 if (table in visited) return false
                 recursion += table
                 visited += table
-                return if (graph[table]!!.any { traverse(it.key) }) {
+                return if (graph[table]!!.any { traverse(it) }) {
                     true
                 } else {
                     recursion -= table
