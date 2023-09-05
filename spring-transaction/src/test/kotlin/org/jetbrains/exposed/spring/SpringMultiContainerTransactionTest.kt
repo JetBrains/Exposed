@@ -151,10 +151,7 @@ open class OrderConfig {
     open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(
-        dataSource = dataSource,
-        databaseConfig = DatabaseConfig {}
-    )
+    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
 
     @Bean
     open fun orders() = Orders()
@@ -200,10 +197,7 @@ open class PaymentConfig {
     open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(
-        dataSource = dataSource,
-        databaseConfig = DatabaseConfig {}
-    )
+    open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
 
     @Bean
     open fun payments() = Payments()

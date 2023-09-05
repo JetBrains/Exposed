@@ -26,7 +26,7 @@ open class TestConfig : TransactionManagementConfigurer {
     open fun ds(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds(), DatabaseConfig {})
+    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds())
 
     @Bean
     open fun service(): Service = Service()
