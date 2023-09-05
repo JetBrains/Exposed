@@ -44,7 +44,7 @@ class SpringTransactionManagerTest {
         val tt = TransactionTemplate(tm)
 
         tt.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
         }
     }
 
@@ -54,14 +54,14 @@ class SpringTransactionManagerTest {
         val tt = TransactionTemplate(tm)
 
         tt.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
         }
 
         val tm2 = SpringTransactionManager(ds2)
         val tt2 = TransactionTemplate(tm2)
 
         tt2.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm2.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm2.database), TransactionManager.manager)
         }
     }
 
@@ -69,11 +69,11 @@ class SpringTransactionManagerTest {
     fun `set right transaction manager when two transaction manager with nested transaction template`() {
         val tm = SpringTransactionManager(ds1)
         val tt = TransactionTemplate(tm)
-        val transactionManager = TransactionManager.managerFor(tm.getDatabase())
+        val transactionManager = TransactionManager.managerFor(tm.database)
 
         val tm2 = SpringTransactionManager(ds2)
         val tt2 = TransactionTemplate(tm2)
-        val transactionManager2 = TransactionManager.managerFor(tm2.getDatabase())
+        val transactionManager2 = TransactionManager.managerFor(tm2.database)
 
         tt2.executeWithoutResult {
             assertEquals(transactionManager2, TransactionManager.manager)
@@ -96,7 +96,7 @@ class SpringTransactionManagerTest {
         val tt = TransactionTemplate(tm)
 
         tt.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
             // for initialize connection
             TransactionManager.current().connection
         }
@@ -116,7 +116,7 @@ class SpringTransactionManagerTest {
         val ex = RuntimeException("Application exception")
         try {
             tt.executeWithoutResult {
-                assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+                assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
                 // for initialize connection
                 TransactionManager.current().connection
                 throw ex
@@ -136,7 +136,7 @@ class SpringTransactionManagerTest {
 
         val tm = SpringTransactionManager(ds1)
         val tt = TransactionTemplate(tm)
-        val transactionManager = TransactionManager.managerFor(tm.getDatabase())
+        val transactionManager = TransactionManager.managerFor(tm.database)
 
         tt.executeWithoutResult {
             assertEquals(transactionManager, TransactionManager.manager)
@@ -160,7 +160,7 @@ class SpringTransactionManagerTest {
 
         val tm1 = SpringTransactionManager(ds1)
         val tt1 = TransactionTemplate(tm1)
-        val transactionManager1 = TransactionManager.managerFor(tm1.getDatabase())
+        val transactionManager1 = TransactionManager.managerFor(tm1.database)
 
         every { con2.isReadOnly = false } returns Unit
         every { con2.autoCommit = false } returns Unit
@@ -168,7 +168,7 @@ class SpringTransactionManagerTest {
 
         val tm2 = SpringTransactionManager(ds2)
         val tt2 = TransactionTemplate(tm2)
-        val transactionManager2 = TransactionManager.managerFor(tm2.getDatabase())
+        val transactionManager2 = TransactionManager.managerFor(tm2.database)
 
         tt1.executeWithoutResult {
             assertEquals(transactionManager1, TransactionManager.manager)
@@ -195,7 +195,7 @@ class SpringTransactionManagerTest {
 
         val tm1 = SpringTransactionManager(ds1)
         val tt1 = TransactionTemplate(tm1)
-        val transactionManager1 = TransactionManager.managerFor(tm1.getDatabase())
+        val transactionManager1 = TransactionManager.managerFor(tm1.database)
 
         every { con2.isReadOnly = false } returns Unit
         every { con2.autoCommit = false } returns Unit
@@ -203,7 +203,7 @@ class SpringTransactionManagerTest {
 
         val tm2 = SpringTransactionManager(ds2)
         val tt2 = TransactionTemplate(tm2)
-        val transactionManager2 = TransactionManager.managerFor(tm2.getDatabase())
+        val transactionManager2 = TransactionManager.managerFor(tm2.database)
 
         val ex = RuntimeException("Application exception")
         try {
@@ -242,7 +242,7 @@ class SpringTransactionManagerTest {
         val tt = TransactionTemplate(tm)
 
         tt.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
             // for initialize connection
             TransactionManager.current().connection
         }
@@ -262,7 +262,7 @@ class SpringTransactionManagerTest {
         val ex = RuntimeException("Application exception")
         try {
             tt.executeWithoutResult {
-                assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+                assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
                 // for initialize connection
                 TransactionManager.current().connection
                 throw ex
@@ -286,7 +286,7 @@ class SpringTransactionManagerTest {
         val tt = TransactionTemplate(tm)
 
         tt.executeWithoutResult {
-            assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+            assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
             // for initialize connection
             TransactionManager.current().connection
         }
@@ -311,7 +311,7 @@ class SpringTransactionManagerTest {
         val ex = RuntimeException("Application exception")
         try {
             tt.executeWithoutResult {
-                assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+                assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
                 // for initialize connection
                 TransactionManager.current().connection
                 throw ex
@@ -339,7 +339,7 @@ class SpringTransactionManagerTest {
 
         assertFailsWith<TransactionSystemException> {
             tt.executeWithoutResult {
-                assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+                assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
                 // for initialize connection
                 TransactionManager.current().connection
             }
@@ -364,7 +364,7 @@ class SpringTransactionManagerTest {
 
         assertFailsWith<TransactionSystemException> {
             tt.executeWithoutResult {
-                assertEquals(TransactionManager.managerFor(tm.getDatabase()), TransactionManager.manager)
+                assertEquals(TransactionManager.managerFor(tm.database), TransactionManager.manager)
                 // for initialize connection
                 TransactionManager.current().connection
                 assertEquals(false, it.isRollbackOnly)

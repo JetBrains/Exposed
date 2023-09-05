@@ -21,15 +21,16 @@ class SpringTransactionManager(
     private val showSql: Boolean = false,
 ) : AbstractPlatformTransactionManager() {
 
-    private var _database: Database
+    var database: Database
+        private set
+
     private var _transactionManager: TransactionManager
 
-    @Suppress("TooGenericExceptionCaught")
     private val threadLocalTransactionManager: TransactionManager
         get() = _transactionManager
 
     init {
-        _database = Database.connect(
+        database = Database.connect(
             datasource = dataSource,
             databaseConfig = databaseConfig
         ).apply {
@@ -96,8 +97,8 @@ class SpringTransactionManager(
                 transaction.currentStatement = null
             }
             transaction.closeExecutedStatements()
-        } catch (cause: Exception) {
-            exposedLogger.warn("Statements close failed", cause)
+        } catch (error: Exception) {
+            exposedLogger.warn("Statements close failed", error)
         }
 
         @Suppress("TooGenericExceptionCaught")
@@ -112,8 +113,6 @@ class SpringTransactionManager(
         val trxObject = status.transaction as ExposedTransactionObject
         trxObject.setRollbackOnly()
     }
-
-    fun getDatabase() = _database
 
     data class ExposedTransactionObject(
         val manager: TransactionManager,
@@ -147,8 +146,8 @@ class SpringTransactionManager(
                     isCurrentTransactionEnded = true
                     manager.currentOrNull()?.commit()
                 }
-            } catch (e: Exception) {
-                throw TransactionSystemException(e.message.orEmpty(), e)
+            } catch (error: Exception) {
+                throw TransactionSystemException(error.message.orEmpty(), error)
             }
         }
 
@@ -159,8 +158,8 @@ class SpringTransactionManager(
                     isCurrentTransactionEnded = true
                     manager.currentOrNull()?.rollback()
                 }
-            } catch (e: Exception) {
-                throw TransactionSystemException(e.message.orEmpty(), e)
+            } catch (error: Exception) {
+                throw TransactionSystemException(error.message.orEmpty(), error)
             }
         }
 
