@@ -2,7 +2,7 @@
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date{HH:mm:ss.SSS} [%thread] %level %logger{0}:%method:%line - %message %n</pattern>
+            <pattern>%date{HH:mm:ss.SSS} %level %thread %logger{0}:%method:%line - %message %n</pattern>
         </encoder>
     </appender>
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
@@ -18,4 +18,4 @@
     </logger>
 </configuration>
 
-<!-- 19:57:29.845 [Test worker] DEBUG Exposed - DROP TABLE jointable -->
+<!-- 19:57:29.845 DEBUG Test worker Exposed - DROP TABLE jointable -->
