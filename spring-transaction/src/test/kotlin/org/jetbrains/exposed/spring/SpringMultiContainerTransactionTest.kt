@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
@@ -147,7 +146,9 @@ open class SpringMultiContainerTransactionTest {
 open class OrderConfig {
 
     @Bean
-    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(EmbeddedDatabaseType.H2).build()
+    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(
+        EmbeddedDatabaseType.H2
+    ).build()
 
     @Bean
     open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
@@ -188,7 +189,9 @@ object Order : LongIdTable("orders") {
 open class PaymentConfig {
 
     @Bean
-    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(EmbeddedDatabaseType.H2).build()
+    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(
+        EmbeddedDatabaseType.H2
+    ).build()
 
     @Bean
     open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
