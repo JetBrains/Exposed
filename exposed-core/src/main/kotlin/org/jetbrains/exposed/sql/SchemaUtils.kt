@@ -653,12 +653,12 @@ object SchemaUtils {
      * **Note** that when you are using Mysql or MariaDB, this will fail if you try to drop a schema that
      * contains a table that is referenced by a table in another schema.
      *
-     * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
+     * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests.testDropSchemaWithCascade
      *
      * @param schemas the names of the schema
      * @param cascade flag to drop schema and all of its objects and all objects that depend on those objects.
-     * You don't have to specify this option when you are using Mysql or MariaDB
-     * because whether you specify it or not, all objects in the schema will be dropped.
+     * **Note** This option is not supported by MySQL, MariaDB, or SQL Server, so all objects in the schema will be
+     * dropped regardless of the flag's value.
      * @param inBatch flag to perform schema creation in a single batch
      */
     fun dropSchema(vararg schemas: Schema, cascade: Boolean = false, inBatch: Boolean = false) {

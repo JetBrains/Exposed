@@ -312,13 +312,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         appendIfNotNull(" AUTHORIZATION ", schema.authorization)
     }
 
-    override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
-        append("DROP SCHEMA ", schema.identifier)
-
-        if (cascade) {
-            append(" CASCADE")
-        }
-    }
+    override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA ${schema.identifier}"
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {

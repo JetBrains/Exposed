@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Assume
@@ -52,6 +51,20 @@ class SchemaTests : DatabaseTestsBase() {
                 } finally {
                     SchemaUtils.dropSchema(schema)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testDropSchemaWithCascade() {
+        withDb {
+            if (currentDialect.supportsCreateSchema) {
+                val schema = Schema("TEST_SCHEMA")
+                SchemaUtils.createSchema(schema)
+                assertTrue(schema.exists())
+
+                SchemaUtils.dropSchema(schema, cascade = true)
+                assertFalse(schema.exists())
             }
         }
     }
