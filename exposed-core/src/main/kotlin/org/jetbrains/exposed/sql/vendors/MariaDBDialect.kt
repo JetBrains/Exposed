@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.append
 import org.jetbrains.exposed.sql.exposedLogger
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
+    override val vendor = "MariaDB"
+
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXTVAL(", seq.identifier, ")")
     }

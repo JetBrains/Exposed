@@ -24,7 +24,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
 
         val dialect = transaction.db.dialect
         return when (targetsSet) {
-            is Table -> dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, transaction)
+            is Table -> dialect.functionProvider.update(targetsSet, firstDataSet, limit, where, null, transaction)
             is Join -> {
                 val functionProvider = when (dialect.h2Mode) {
                     H2CompatibilityMode.PostgreSQL, H2CompatibilityMode.Oracle, H2CompatibilityMode.SQLServer -> H2FunctionProvider

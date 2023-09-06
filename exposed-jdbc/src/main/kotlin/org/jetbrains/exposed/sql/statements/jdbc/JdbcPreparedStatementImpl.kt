@@ -24,6 +24,7 @@ class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGenerat
     override fun executeQuery(): ResultSet = statement.executeQuery()
 
     override fun executeUpdate(): Int = statement.executeUpdate()
+    override fun executeUpdateReturning(): ResultSet = statement.executeQuery()
 
     override fun set(index: Int, value: Any) {
         statement.setObject(index, value)

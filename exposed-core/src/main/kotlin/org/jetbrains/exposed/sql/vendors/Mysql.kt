@@ -81,6 +81,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 internal open class MysqlFunctionProvider : FunctionProvider() {
     internal object INSTANCE : MysqlFunctionProvider()
 
+    open val vendor: String = "MySql"
+
     override fun random(seed: Int?): String = "RAND(${seed?.toString().orEmpty()})"
 
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
@@ -196,6 +198,20 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(false, table, where, limit, transaction)
         return if (ignore) def.replaceFirst("DELETE", "DELETE IGNORE") else def
+    }
+
+    override fun update(
+        target: Table,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        returning: FieldSet?,
+        transaction: Transaction
+    ): String {
+        if (returning != null) {
+            transaction.throwUnsupportedException("$vendor doesn't support RETURNING in UPDATE clause.")
+        }
+        return super.update(target, columnsAndValues, limit, where, returning, transaction)
     }
 
     override fun update(
