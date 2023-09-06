@@ -17,7 +17,7 @@ object Versions {
     const val oracle12 = "12.2.0.1"
     const val postgre = "42.6.0"
     const val postgreNG = "0.8.9"
-    const val sqlLite3 = "3.42.0.0"
+    const val sqlLite3 = "3.43.0.0"
     const val sqlserver = "9.4.1.jre8"
 
     /** Spring **/

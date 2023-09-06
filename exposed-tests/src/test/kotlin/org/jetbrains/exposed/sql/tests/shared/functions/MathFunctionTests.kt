@@ -103,12 +103,17 @@ class MathFunctionTests : FunctionsTestBase() {
 
     @Test
     fun testRoundFunction() {
-        withTable {
+        withTable { testDb ->
             assertExpressionEqual(BigDecimal(10), RoundFunction(intLiteral(10), 0))
             assertExpressionEqual(BigDecimal("10.00"), RoundFunction(intLiteral(10), 2))
             assertExpressionEqual(BigDecimal(10), RoundFunction(doubleLiteral(10.455), 0))
             assertExpressionEqual(BigDecimal(11), RoundFunction(doubleLiteral(10.555), 0))
-            assertExpressionEqual(BigDecimal("10.56"), RoundFunction(doubleLiteral(10.555), 2))
+            if (testDb == TestDB.SQLITE) {
+                // Change this when this issue is resolved https://www.sqlite.org/forum/forumpost/2801f84063
+                assertExpressionEqual(BigDecimal("10.55"), RoundFunction(doubleLiteral(10.555), 2))
+            } else {
+                assertExpressionEqual(BigDecimal("10.56"), RoundFunction(doubleLiteral(10.555), 2))
+            }
         }
     }
 
