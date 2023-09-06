@@ -68,18 +68,36 @@ class MathFunctionTests : FunctionsTestBase() {
             assertExpressionEqual(BigDecimal(100), PowerFunction(intLiteral(10), doubleLiteral(2.0)))
             if (testDb != TestDB.SQLSERVER) {
                 assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), intLiteral(2)))
-                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2)))
+                assertExpressionEqual(
+                    BigDecimal("102.01"),
+                    PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2))
+                )
                 assertExpressionEqual(BigDecimal("102.01"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.0)))
-                assertExpressionEqual(BigDecimal("102.01"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0)))
-                assertExpressionEqual(BigDecimal("324.1928515714"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.5)))
-                assertExpressionEqual(BigDecimal("324.1928515714"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5)))
+                assertExpressionEqual(
+                    BigDecimal("102.01"),
+                    PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0))
+                )
+                assertExpressionEqual(
+                    BigDecimal("324.1928515714"),
+                    PowerFunction(doubleLiteral(10.1), doubleLiteral(2.5))
+                )
+                assertExpressionEqual(
+                    BigDecimal("324.1928515714"),
+                    PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5))
+                )
             } else {
                 assertExpressionEqual(BigDecimal(102), PowerFunction(doubleLiteral(10.1), intLiteral(2)))
                 assertExpressionEqual(BigDecimal(102), PowerFunction(decimalLiteral(BigDecimal("10.1")), intLiteral(2)))
                 assertExpressionEqual(BigDecimal(102), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.0)))
-                assertExpressionEqual(BigDecimal(102), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0)))
+                assertExpressionEqual(
+                    BigDecimal(102),
+                    PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.0))
+                )
                 assertExpressionEqual(BigDecimal("324.2"), PowerFunction(doubleLiteral(10.1), doubleLiteral(2.5)))
-                assertExpressionEqual(BigDecimal("324.2"), PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5)))
+                assertExpressionEqual(
+                    BigDecimal("324.2"),
+                    PowerFunction(decimalLiteral(BigDecimal("10.1")), doubleLiteral(2.5))
+                )
             }
         }
     }
@@ -115,7 +133,7 @@ class MathFunctionTests : FunctionsTestBase() {
                     }
                 }
                 TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE -> {
-                    // SQLite, PSQL, Oracle fail to execute sqrt with negative value
+                    // PSQL, Oracle fail to execute sqrt with negative value
                     expectException<ExposedSQLException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }

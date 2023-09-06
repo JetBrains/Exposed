@@ -1815,6 +1815,7 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
 	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
 	public final fun listDatabases ()Ljava/util/List;
+	public final fun listTables ()Ljava/util/List;
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
@@ -3606,6 +3607,7 @@ public class org/jetbrains/exposed/sql/vendors/SQLServerDialect : org/jetbrains/
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
+	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }

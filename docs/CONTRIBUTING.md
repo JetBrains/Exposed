@@ -18,7 +18,7 @@ Independently of how you'd like to contribute, please make sure you read and com
 ### Testing on Apple Silicon 
 To run Oracle XE tests, you need to install [Colima](https://github.com/abiosoft/colima) container runtime. It will work in pair with your docker installation.
 ```shell
-brew install
+brew install colima
 ```
 
 After installing, you need to start the colima daemon in arch x86_64 mode:
@@ -26,14 +26,15 @@ After installing, you need to start the colima daemon in arch x86_64 mode:
 colima start --arch x86_64 --memory 4 --network-address
 ```
 
-Make sure that colima is used as default docker context:
+The test task can automatically use colima context when needed, and it's better to use default context for other tasks.
+To switch the context to default, run:
 ```shell
-docker context list
+docker context use default
 ```
 
-If not, set it as default:
+Make sure that default is used as default docker context:
 ```shell
-docker context use colima
+docker context list
 ```
 
 ### Code

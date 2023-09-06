@@ -148,7 +148,7 @@ object SchemaUtils {
         return createStatement()
     }
 
-    fun createIndex(index: Index) = index.createStatement()
+    fun createIndex(index: Index): List<String> = index.createStatement()
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
     private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
@@ -623,6 +623,13 @@ object SchemaUtils {
             }
         }
     }
+
+    /**
+     * Retrieves a list of all table names in the current database.
+     *
+     * @return A list of table names as strings.
+     */
+    fun listTables(): List<String> = currentDialect.allTablesNames()
 
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return

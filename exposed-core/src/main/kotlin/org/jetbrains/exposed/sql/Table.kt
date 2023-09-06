@@ -39,7 +39,9 @@ interface FieldSet {
             fields.forEach {
                 if (it is CompositeColumn<*>) {
                     unrolled.addAll(it.getRealColumns())
-                } else unrolled.add(it)
+                } else {
+                    unrolled.add(it)
+                }
             }
 
             return unrolled
@@ -174,7 +176,9 @@ class Join(
     val table: ColumnSet
 ) : ColumnSet() {
 
-    override val columns: List<Column<*>> get() = joinParts.flatMapTo(table.columns.toMutableList()) { it.joinPart.columns }
+    override val columns: List<Column<*>> get() = joinParts.flatMapTo(
+        table.columns.toMutableList()
+    ) { it.joinPart.columns }
 
     internal val joinParts: MutableList<JoinPart> = mutableListOf()
 
@@ -245,12 +249,16 @@ class Join(
         val fkKeys = findKeys(this, otherTable) ?: findKeys(otherTable, this) ?: emptyList()
         return when {
             joinType != JoinType.CROSS && fkKeys.isEmpty() -> {
-                error("Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing")
+                error(
+                    "Cannot join with $otherTable as there is no matching primary key/foreign key pair and constraint missing"
+                )
             }
 
             fkKeys.any { it.second.size > 1 } -> {
                 val references = fkKeys.joinToString(" & ") { "${it.first} -> ${it.second.joinToString()}" }
-                error("Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references")
+                error(
+                    "Cannot join with $otherTable as there is multiple primary key <-> foreign key references.\n$references"
+                )
             }
 
             else -> {
@@ -286,7 +294,9 @@ class Join(
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
         init {
-            require(joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null) { "Missing join condition on $${this.joinPart}" }
+            require(
+                joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null
+            ) { "Missing join condition on $${this.joinPart}" }
         }
 
         fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
@@ -341,7 +351,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     internal val tableNameWithoutScheme: String get() = tableName.substringAfterLast(".")
 
     // Table name may contain quotes, remove those before appending
-    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme.replace("\"", "").replace("'", "")
+    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme
+        .replace("\"", "")
+        .replace("'", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -383,7 +395,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         tableNameWithoutScheme.inProperCase().trim('\"', '\'')
     }
 
-    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder { append(s.identity(this@Table)) }
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append(
+            s.identity(this@Table)
+        )
+    }
 
     // Join operations
 
@@ -408,9 +424,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Column registration
 
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
-    fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(this, name, type).also { _columns.addColumn(it) }
+    fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(
+        this,
+        name,
+        type
+    ).also { _columns.addColumn(it) }
 
-    fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T): T = column.apply { getRealColumns().forEach { _columns.addColumn(it) } }
+    fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T): T = column.apply {
+        getRealColumns().forEach {
+            _columns.addColumn(
+                it
+            )
+        }
+    }
 
     /**
      * Replaces the specified [oldColumn] with the specified [newColumn] in the table.
@@ -431,7 +457,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Primary keys
 
-    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let { it.name != "pk_$tableNameWithoutSchemeSanitized" } == true
+    internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let {
+        it.name != "pk_$tableNameWithoutSchemeSanitized"
+    } == true
 
     /**
      * Represents a primary key composed by the specified [columns], and with the specified [name].
@@ -477,7 +505,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates an [EntityID] column, with the specified [name], for storing the same objects as the specified [originalColumn]. */
     fun <ID : Comparable<ID>> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
-        val answer = Column<EntityID<ID>>(this, name, EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy)))
+        val answer = Column<EntityID<ID>>(
+            this,
+            name,
+            EntityIDColumnType(Column<ID>(originalColumn.table, name, columnTypeCopy))
+        )
         _columns.addColumn(answer)
         return answer
     }
@@ -551,7 +583,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param precision Total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
      * @param scale Count of decimal digits in the fractional part.
      */
-    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = registerColumn(name, DecimalColumnType(precision, scale))
+    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = registerColumn(
+        name,
+        DecimalColumnType(precision, scale)
+    )
 
     // Character columns
 
@@ -562,13 +597,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Creates a character column, with the specified [name], for storing strings with the specified [length] using the specified text [collate] type.
      * If no collate type is specified then the database default is used.
      */
-    fun char(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, CharColumnType(length, collate))
+    fun char(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(
+        name,
+        CharColumnType(length, collate)
+    )
 
     /**
      * Creates a character column, with the specified [name], for storing strings with the specified maximum [length] using the specified text [collate] type.
      * If no collate type is specified then the database default is used.
      */
-    fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(name, VarCharColumnType(length, collate))
+    fun varchar(name: String, length: Int, collate: String? = null): Column<String> = registerColumn(
+        name,
+        VarCharColumnType(length, collate)
+    )
 
     /**
      * Creates a character column, with the specified [name], for storing strings of arbitrary length using the specified [collate] type.
@@ -639,7 +680,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Enumeration columns
 
     /** Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their ordinal. */
-    fun <T : Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(name, EnumerationColumnType(klass))
+    fun <T : Enum<T>> enumeration(name: String, klass: KClass<T>): Column<T> = registerColumn(
+        name,
+        EnumerationColumnType(klass)
+    )
 
     /** Creates an enumeration column, with the specified [name], for storing enums of type [T] by their ordinal. */
     inline fun <reified T : Enum<T>> enumeration(name: String) = enumeration(name, T::class)
@@ -742,7 +786,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param ref A column from another table which will be used as a "parent".
      * @see [references]
      */
-    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(ref, null, null, null)
+    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
+        ref,
+        null,
+        null,
+        null
+    )
 
     /**
      * Create reference from a @receiver column to [ref] column with [onDelete], [onUpdate], and [fkName] options.
@@ -817,7 +866,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
     ): Column<T> {
-        val column = Column<T>(this, name, refColumn.columnType.cloneAsBaseType()).references(refColumn, onDelete, onUpdate, fkName)
+        val column = Column<T>(
+            this,
+            name,
+            refColumn.columnType.cloneAsBaseType()
+        ).references(refColumn, onDelete, onUpdate, fkName)
         _columns.addColumn(column)
         return column
     }
@@ -982,9 +1035,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ) {
         _indices.add(
             Index(
-                columns.toList(), isUnique, customIndexName, indexType,
+                columns.toList(),
+                isUnique,
+                customIndexName,
+                indexType,
                 filterCondition?.invoke(SqlExpressionBuilder),
-                functions, functions?.let { this }
+                functions,
+                functions?.let { this }
             )
         )
     }

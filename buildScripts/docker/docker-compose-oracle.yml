@@ -7,8 +7,4 @@ services:
         ports:
             - "3003:1521"
         environment:
-#            WEB_CONSOLE: "true"
-#            DBCA_TOTAL_MEMORY: 1024
-#            PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-#            USE_UTF8_IF_CHARSET_EMPTY: "true"
             ORACLE_PASSWORD: "Oracle18"

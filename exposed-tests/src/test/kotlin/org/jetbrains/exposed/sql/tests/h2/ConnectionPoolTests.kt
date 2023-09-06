@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.tests.LogDbInTestName
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -18,7 +19,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 
-class ConnectionPoolTests {
+class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSource1 by lazy {
         HikariDataSource(
             HikariConfig().apply {

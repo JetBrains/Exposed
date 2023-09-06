@@ -47,7 +47,10 @@ open class ExposedAutoConfigurationTest {
     fun `database config can be overrode by custom one`() {
         val expectedConfig = CustomDatabaseConfigConfiguration.expectedConfig
         assertSame(databaseConfig, expectedConfig)
-        assertEquals(expectedConfig.maxEntitiesToStoreInCachePerEntity, databaseConfig!!.maxEntitiesToStoreInCachePerEntity)
+        assertEquals(
+            expectedConfig.maxEntitiesToStoreInCachePerEntity,
+            databaseConfig!!.maxEntitiesToStoreInCachePerEntity
+        )
     }
 
     @TestConfiguration
@@ -120,5 +123,7 @@ open class AsyncExposedService {
     open fun allTestData() = TestTable.selectAll().toList()
 
     // you need to put open otherwise @Transactional is not applied since spring plugin not applied (similar to maven kotlin plugin)
-    open fun allTestDataAsync(): CompletableFuture<List<ResultRow>> = CompletableFuture.completedFuture(TestTable.selectAll().toList())
+    open fun allTestDataAsync(): CompletableFuture<List<ResultRow>> = CompletableFuture.completedFuture(
+        TestTable.selectAll().toList()
+    )
 }

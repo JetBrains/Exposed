@@ -102,9 +102,10 @@ subprojects {
         }
     }
 
-    testDb("mariadb") {
-        port = 3000
+    testDb("mariadb_v2") {
         dialects("mariadb")
+        container = "mariadb"
+        port = 3000
         dependencies {
             dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
         }
@@ -119,17 +120,9 @@ subprojects {
         }
     }
 
-    testDb("mariadb_v2") {
-        dialects("mariadb")
-        container = "mariadb"
-        port = 3000
-        dependencies {
-            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
-        }
-    }
-
     testDb("oracle") {
         port = 3003
+        colima = true
         dialects("oracle")
         dependencies {
             dependency("com.oracle.database.jdbc:ojdbc8:${Versions.oracle12}")
@@ -156,6 +149,7 @@ subprojects {
 
     testDb("sqlserver") {
         port = 3005
+        dialects("sqlserver")
         dependencies {
             dependency("com.microsoft.sqlserver:mssql-jdbc:${Versions.sqlserver}")
         }

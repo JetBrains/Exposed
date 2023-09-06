@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.LogDbInTestName
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -381,7 +382,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     }
 }
 
-class TransactionManagerResetTest {
+class TransactionManagerResetTest : LogDbInTestName() {
     @Test
     fun `test closeAndUnregister with next Database-connect works fine`() {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())

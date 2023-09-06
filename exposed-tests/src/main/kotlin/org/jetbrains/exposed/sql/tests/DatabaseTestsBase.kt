@@ -61,7 +61,7 @@ abstract class DatabaseTestsBase {
     lateinit var testName: String
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        Assume.assumeTrue(dbSettings in TestDB.enabledDialects())
+        Assume.assumeTrue(dialect == dbSettings)
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()
@@ -104,16 +104,9 @@ abstract class DatabaseTestsBase {
     }
 
     fun withTables(excludeSettings: List<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
-        val testDB: TestDB? = dialect as? TestDB
+        Assume.assumeFalse(dialect in excludeSettings)
 
-        if (testDB == null) {
-            Assume.assumeFalse(false)
-            return
-        }
-
-        Assume.assumeFalse(testDB in excludeSettings)
-
-        withDb(testDB) {
+        withDb(dialect) {
             try {
                 SchemaUtils.drop(*tables)
             } catch (_: Throwable) {
@@ -121,14 +114,14 @@ abstract class DatabaseTestsBase {
 
             SchemaUtils.create(*tables)
             try {
-                statement(testDB)
+                statement(dialect)
                 commit() // Need commit to persist data before drop tables
             } finally {
                 try {
                     SchemaUtils.drop(*tables)
                     commit()
                 } catch (_: Exception) {
-                    val database = testDB.db!!
+                    val database = dialect.db!!
                     inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
                         repetitionAttempts = 1
                         SchemaUtils.drop(*tables)
