@@ -14,6 +14,7 @@ import java.util.*
 import java.util.concurrent.Executor
 import java.util.logging.Logger
 import javax.sql.DataSource
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -26,13 +27,20 @@ class SpringTransactionManagerTest {
     private val con2 = ConnectionSpy()
 
     @BeforeTest
-    fun setup() {
+    fun beforeTest() {
         ds1.clearMock()
         ds2.clearMock()
         ds1.mockConnection(con1)
         ds2.mockConnection(con2)
         con1.clearMock()
         con2.clearMock()
+    }
+
+    @AfterTest
+    fun afterTest() {
+        while (TransactionManager.defaultDatabase == null) {
+            TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
+        }
     }
 
     @Test
