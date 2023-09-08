@@ -21,8 +21,7 @@ class SpringTransactionManager(
     private val showSql: Boolean = false,
 ) : AbstractPlatformTransactionManager() {
 
-    var database: Database
-        private set
+    private var _database: Database
 
     private var _transactionManager: TransactionManager
 
@@ -30,7 +29,7 @@ class SpringTransactionManager(
         get() = _transactionManager
 
     init {
-        database = Database.connect(
+        _database = Database.connect(
             datasource = dataSource, databaseConfig = databaseConfig
         ).apply {
             _transactionManager = this.transactionManager
