@@ -146,7 +146,7 @@ open class SpringMultiContainerTransactionTest {
         @JvmStatic
         @AfterClass
         fun afterTest() {
-            while (TransactionManager.defaultDatabase == null) {
+            while (TransactionManager.defaultDatabase != null) {
                 TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
             }
         }

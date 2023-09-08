@@ -38,7 +38,7 @@ class SpringTransactionManagerTest {
 
     @AfterTest
     fun afterTest() {
-        while (TransactionManager.defaultDatabase == null) {
+        while (TransactionManager.defaultDatabase != null) {
             TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
         }
     }
