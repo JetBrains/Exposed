@@ -31,8 +31,7 @@ class SpringTransactionManager(
 
     init {
         database = Database.connect(
-            datasource = dataSource,
-            databaseConfig = databaseConfig
+            datasource = dataSource, databaseConfig = databaseConfig
         ).apply {
             _transactionManager = this.transactionManager
         }
@@ -55,15 +54,14 @@ class SpringTransactionManager(
         val currentTransactionManager = trxObject.manager
         TransactionManager.resetCurrent(currentTransactionManager)
 
-        currentTransactionManager.currentOrNull()
-            ?: currentTransactionManager.newTransaction(
-                isolation = definition.isolationLevel,
-                readOnly = definition.isReadOnly,
-            ).apply {
-                if (showSql) {
-                    addLogger(StdOutSqlLogger)
-                }
+        currentTransactionManager.currentOrNull() ?: currentTransactionManager.newTransaction(
+            isolation = definition.isolationLevel,
+            readOnly = definition.isReadOnly,
+        ).apply {
+            if (showSql) {
+                addLogger(StdOutSqlLogger)
             }
+        }
     }
 
     override fun doCommit(status: DefaultTransactionStatus) {
@@ -114,7 +112,7 @@ class SpringTransactionManager(
         trxObject.setRollbackOnly()
     }
 
-    data class ExposedTransactionObject(
+    private data class ExposedTransactionObject(
         val manager: TransactionManager,
         val outerManager: TransactionManager,
         private val outerTransaction: Transaction?,
