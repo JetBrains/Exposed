@@ -59,6 +59,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
                 currentDialect
             )
         }
+
         else -> super.processForDefaultValue(e)
     }
 
@@ -380,6 +381,24 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     }
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
+
+    override fun tableExists(table: Table): Boolean {
+        val tableScheme = table.schemaName
+        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
+        val allTables = getAllTableNamesCache().getValue(scheme)
+
+        return allTables.any {
+            when {
+                tableScheme != null -> it == table.nameInDatabaseCase()
+                scheme.isEmpty() -> it == table.nameInDatabaseCaseUnquoted()
+                else -> {
+                    val sanitizedTableName = table.tableNameWithoutScheme
+                    val nameInDb = "$scheme.$sanitizedTableName".inProperCase()
+                    it == nameInDb
+                }
+            }
+        }
+    }
 
     companion object : DialectNameProvider("mysql")
 }

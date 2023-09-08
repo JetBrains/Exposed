@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.gradle
 
 object Versions {
-    const val kotlin = "1.9.0"
     const val kotlinCoroutines = "1.7.3"
     const val kotlinxSerialization = "1.5.1"
 

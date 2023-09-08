@@ -51,11 +51,9 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         systemProperties["exposed.test.container"] = if (db.withContainer) db.container else "none"
         systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.toUpperCase() }
         outputs.cacheIf { false }
-        ignoreFailures = true
 
         if (!db.withContainer) return@register
         dependsOn(rootProject.tasks.getByName("${db.container}ComposeUp"))
-        finalizedBy(rootProject.tasks.getByName("${db.container}ComposeDown"))
     }
 
     dependencies {

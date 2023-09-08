@@ -25,6 +25,9 @@ class Database private constructor(
         @TestOnly
         set
 
+    override fun toString(): String =
+        "ExposedDatabase[${hashCode()}]($resolvedVendor${config.explicitDialect?.let { ", dialect=$it" } ?: ""})"
+
     internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
@@ -52,7 +55,9 @@ class Database private constructor(
 
     fun isVersionCovers(version: BigDecimal) = this.version >= version
 
-    val supportsAlterTableWithAddColumn by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsAlterTableWithAddColumn } }
+    val supportsAlterTableWithAddColumn by lazy(
+        LazyThreadSafetyMode.NONE
+    ) { metadata { supportsAlterTableWithAddColumn } }
     val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsMultipleResultSets } }
 
     val identifierManager by lazy { metadata { identifierManager } }
@@ -183,7 +188,15 @@ class Database private constructor(
         ): Database {
             Class.forName(driver).getDeclaredConstructor().newInstance()
             val dialectName = getDialectName(url) ?: error("Can't resolve dialect for connection: $url")
-            return doConnect(dialectName, databaseConfig, { DriverManager.getConnection(url, user, password) }, setupConnection, manager)
+            return doConnect(
+                dialectName,
+                databaseConfig,
+                {
+                    DriverManager.getConnection(url, user, password)
+                },
+                setupConnection,
+                manager
+            )
         }
 
         fun getDefaultIsolationLevel(db: Database): Int =

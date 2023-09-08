@@ -42,6 +42,7 @@ class ThreadLocalTransactionManager(
             }
             return field
         }
+
         @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
         @TestOnly
         set
@@ -50,6 +51,10 @@ class ThreadLocalTransactionManager(
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     val threadLocal = ThreadLocal<Transaction>()
+
+    override fun toString(): String {
+        return "ThreadLocalTransactionManager[${hashCode()}](db=$db)"
+    }
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(

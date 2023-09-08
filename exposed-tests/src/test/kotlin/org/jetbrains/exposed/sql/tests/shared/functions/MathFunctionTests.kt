@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared.functions
 
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.functions.math.*
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -126,20 +125,8 @@ class MathFunctionTests : FunctionsTestBase() {
                 TestDB.MYSQL, TestDB.MARIADB, TestDB.SQLITE -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
-                TestDB.SQLSERVER -> {
-                    // SQLServer fails with SQLServerException to execute sqrt with negative value
-                    expectException<SQLException> {
-                        assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
-                    }
-                }
-                TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE -> {
-                    // PSQL, Oracle fail to execute sqrt with negative value
-                    expectException<ExposedSQLException> {
-                        assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
-                    }
-                }
                 else -> {
-                    expectException<IllegalStateException> {
+                    expectException<SQLException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }
                 }
