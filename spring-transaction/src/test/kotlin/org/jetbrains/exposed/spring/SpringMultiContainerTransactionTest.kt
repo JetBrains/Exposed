@@ -6,9 +6,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -140,16 +138,6 @@ open class SpringMultiContainerTransactionTest {
         }
         Assert.assertEquals(0, orders.findAllWithExposedTrxBlock().size)
         Assert.assertEquals(0, payments.findAllWithExposedTrxBlock().size)
-    }
-
-    companion object {
-        @JvmStatic
-        @AfterClass
-        fun afterTest() {
-            while (TransactionManager.defaultDatabase != null) {
-                TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
-            }
-        }
     }
 }
 
