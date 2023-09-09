@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 @Transactional
 class SchemaInitialize : ApplicationRunner {
-    
+
     override fun run(args: ApplicationArguments?) {
         SchemaUtils.create(UserEntity)
     }

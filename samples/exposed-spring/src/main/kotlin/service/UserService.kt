@@ -59,6 +59,6 @@ data class UserCreateRequest(
 )
 
 data class UserUpdateRequest(
-        val name: String? = null,
-        val age: Int? = null,
+    val name: String? = null,
+    val age: Int? = null,
 )

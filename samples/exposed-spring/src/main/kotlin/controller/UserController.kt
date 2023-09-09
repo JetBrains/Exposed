@@ -25,7 +25,7 @@ class UserController(
     // Read User
     @GetMapping("/{id}")
     fun findUserById(
-            @PathVariable id: Long
+        @PathVariable id: Long
     ): ResponseEntity<UserResponse> {
         val user = userService.findUserById(UserId(id))
 
@@ -51,7 +51,7 @@ class UserController(
     // Create User
     @PostMapping
     fun create(
-            @RequestBody form: UserCreateRequestForm
+        @RequestBody form: UserCreateRequestForm
     ): ResponseEntity<UserCreateResponse> {
         val userId = userService.create(
             UserCreateRequest(
@@ -77,7 +77,7 @@ class UserController(
     // Update User
     @PutMapping("/{id}")
     fun update(
-            @PathVariable id: Long, @RequestBody form: UserUpdateRequestForm
+        @PathVariable id: Long, @RequestBody form: UserUpdateRequestForm
     ): ResponseEntity<Unit> {
         userService.update(
             id = id, request = UserUpdateRequest(
@@ -90,14 +90,14 @@ class UserController(
     }
 
     data class UserUpdateRequestForm(
-            val name: String? = null,
-            val age: Int? = null,
+        val name: String? = null,
+        val age: Int? = null,
     )
 
     // Delete User
     @DeleteMapping("/{id}")
     fun delete(
-            @PathVariable id: Long
+        @PathVariable id: Long
     ): ResponseEntity<Unit> {
         userService.delete(UserId(id))
 
