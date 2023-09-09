@@ -77,10 +77,12 @@ class UserController(
     // Update User
     @PutMapping("/{id}")
     fun update(
-        @PathVariable id: Long, @RequestBody form: UserUpdateRequestForm
+        @PathVariable id: Long,
+        @RequestBody form: UserUpdateRequestForm
     ): ResponseEntity<Unit> {
         userService.update(
-            id = id, request = UserUpdateRequest(
+            id = id,
+            request = UserUpdateRequest(
                 name = form.name,
                 age = form.age,
             )
