@@ -4,7 +4,7 @@ package org.jetbrains.exposed.samples.spring.controller
 
 import org.jetbrains.exposed.samples.spring.domain.UserId
 import org.jetbrains.exposed.samples.spring.service.UserCreateRequest
-import org.jetbrains.exposed.samples.spring.service.UserModifyRequest
+import org.jetbrains.exposed.samples.spring.service.UserUpdateRequest
 import org.jetbrains.exposed.samples.spring.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -22,9 +22,10 @@ class UserController(
     private val userService: UserService,
 ) {
 
+    // Read User
     @GetMapping("/{id}")
     fun findUserById(
-        @PathVariable id: Long
+            @PathVariable id: Long
     ): ResponseEntity<UserResponse> {
         val user = userService.findUserById(UserId(id))
 
@@ -47,9 +48,10 @@ class UserController(
         val age: Int,
     )
 
+    // Create User
     @PostMapping
     fun create(
-        @RequestBody form: UserCreateRequestForm
+            @RequestBody form: UserCreateRequestForm
     ): ResponseEntity<UserCreateResponse> {
         val userId = userService.create(
             UserCreateRequest(
@@ -72,14 +74,13 @@ class UserController(
 
     data class UserCreateResponse(val id: Long)
 
+    // Update User
     @PutMapping("/{id}")
-    fun modify(
-        @PathVariable id: Long,
-        @RequestBody form: UserModifyRequestForm
+    fun update(
+            @PathVariable id: Long, @RequestBody form: UserUpdateRequestForm
     ): ResponseEntity<Unit> {
-        userService.modify(
-            id = id,
-            request = UserModifyRequest(
+        userService.update(
+            id = id, request = UserUpdateRequest(
                 name = form.name,
                 age = form.age,
             )
@@ -88,14 +89,15 @@ class UserController(
         return ResponseEntity.ok().build()
     }
 
-    data class UserModifyRequestForm(
-        val name: String? = null,
-        val age: Int? = null,
+    data class UserUpdateRequestForm(
+            val name: String? = null,
+            val age: Int? = null,
     )
 
+    // Delete User
     @DeleteMapping("/{id}")
     fun delete(
-        @PathVariable id: Long
+            @PathVariable id: Long
     ): ResponseEntity<Unit> {
         userService.delete(UserId(id))
 

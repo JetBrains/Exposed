@@ -8,9 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
+// ExposedAutoConfiguration is a Spring Boot auto-configuration class that configures Exposed.
 @ImportAutoConfiguration(ExposedAutoConfiguration::class)
 class SpringApplication
 
 fun main(args: Array<String>) {
-    runApplication<SpringApplication>(args)
+    runApplication<SpringApplication>(*args)
 }
