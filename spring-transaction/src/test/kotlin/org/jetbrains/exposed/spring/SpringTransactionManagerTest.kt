@@ -9,9 +9,10 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
 import java.io.PrintWriter
-import java.sql.*
-import java.util.*
-import java.util.concurrent.Executor
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.sql.Savepoint
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.test.AfterTest
@@ -21,17 +22,13 @@ import kotlin.test.assertTrue
 
 class SpringTransactionManagerTest {
 
-    private val ds1 = DataSourceSpy()
-    private val con1 = ConnectionSpy()
-    private val ds2 = DataSourceSpy()
-    private val con2 = ConnectionSpy()
+    private val ds1 = DataSourceSpy(::ConnectionSpy)
+    private val con1 = ds1.con as ConnectionSpy
+    private val ds2 = DataSourceSpy(::ConnectionSpy)
+    private val con2 = ds2.con as ConnectionSpy
 
     @BeforeTest
     fun beforeTest() {
-        ds1.clearMock()
-        ds2.clearMock()
-        ds1.mockConnection(con1)
-        ds2.mockConnection(con2)
         con1.clearMock()
         con2.clearMock()
     }
@@ -255,56 +252,21 @@ class SpringTransactionManagerTest {
         }
     }
 
-    class DataSourceSpy : DataSource {
+    private open class DataSourceSpy(private val connectionSpy: (Connection) -> Connection) : DataSource {
+        var con: Connection = connectionSpy(DriverManager.getConnection("jdbc:h2:mem:test"))
 
-        private var connection: Connection? = null
-            set(value) {
-                field = value
-            }
-
-        fun clearMock() {
-            connection = null
-        }
-
-        fun mockConnection(connection: Connection) {
-            this.connection = connection
-        }
-
-        override fun getLogWriter(): PrintWriter {
-            throw NotImplementedError()
-        }
-
-        override fun setLogWriter(out: PrintWriter?) {
-            throw NotImplementedError()
-        }
-
-        override fun setLoginTimeout(seconds: Int) {
-            throw NotImplementedError()
-        }
-
-        override fun getLoginTimeout(): Int {
-            throw NotImplementedError()
-        }
-
-        override fun getParentLogger(): Logger {
-            throw NotImplementedError()
-        }
-
-        override fun <T : Any?> unwrap(iface: Class<T>?): T {
-            throw NotImplementedError()
-        }
-
-        override fun isWrapperFor(iface: Class<*>?): Boolean {
-            throw NotImplementedError()
-        }
-
-        override fun getConnection() = if (connection != null) connection!! else throw NotImplementedError()
-        override fun getConnection(username: String?, password: String?): Connection {
-            throw NotImplementedError()
-        }
+        override fun getConnection() = con
+        override fun getLogWriter(): PrintWriter = throw NotImplementedError()
+        override fun setLogWriter(out: PrintWriter?) = throw NotImplementedError()
+        override fun setLoginTimeout(seconds: Int) = throw NotImplementedError()
+        override fun getLoginTimeout(): Int = throw NotImplementedError()
+        override fun getParentLogger(): Logger = throw NotImplementedError()
+        override fun <T : Any?> unwrap(iface: Class<T>?): T = throw NotImplementedError()
+        override fun isWrapperFor(iface: Class<*>?): Boolean = throw NotImplementedError()
+        override fun getConnection(username: String?, password: String?): Connection = throw NotImplementedError()
     }
 
-    class ConnectionSpy : Connection {
+    private open class ConnectionSpy(private val connection: Connection) : Connection by connection {
 
         var commitCallCount: Int = 0
         var rollbackCallCount: Int = 0
@@ -335,65 +297,11 @@ class SpringTransactionManagerTest {
             callOrder.clear()
         }
 
-        override fun <T : Any?> unwrap(iface: Class<T>?): T = throw NotImplementedError()
-        override fun isWrapperFor(iface: Class<*>?): Boolean = throw NotImplementedError()
         override fun close() {
             callOrder.add("close")
             closeCallCount++
         }
 
-        override fun createStatement(): Statement = throw NotImplementedError()
-        override fun createStatement(
-            resultSetType: Int,
-            resultSetConcurrency: Int
-        ): Statement = throw NotImplementedError()
-
-        override fun createStatement(
-            resultSetType: Int,
-            resultSetConcurrency: Int,
-            resultSetHoldability: Int
-        ): Statement = throw NotImplementedError()
-
-        override fun prepareStatement(sql: String?): PreparedStatement = throw NotImplementedError()
-        override fun prepareStatement(
-            sql: String?,
-            resultSetType: Int,
-            resultSetConcurrency: Int
-        ): PreparedStatement = throw NotImplementedError()
-
-        override fun prepareStatement(
-            sql: String?,
-            resultSetType: Int,
-            resultSetConcurrency: Int,
-            resultSetHoldability: Int
-        ): PreparedStatement = throw NotImplementedError()
-
-        override fun prepareStatement(
-            sql: String?,
-            autoGeneratedKeys: Int
-        ): PreparedStatement = throw NotImplementedError()
-
-        override fun prepareStatement(
-            sql: String?,
-            columnIndexes: IntArray?
-        ): PreparedStatement = throw NotImplementedError()
-
-        override fun prepareStatement(sql: String?, columnNames: Array<out String>?): PreparedStatement = throw NotImplementedError()
-        override fun prepareCall(sql: String?): CallableStatement = throw NotImplementedError()
-        override fun prepareCall(
-            sql: String?,
-            resultSetType: Int,
-            resultSetConcurrency: Int
-        ): CallableStatement = throw NotImplementedError()
-
-        override fun prepareCall(
-            sql: String?,
-            resultSetType: Int,
-            resultSetConcurrency: Int,
-            resultSetHoldability: Int
-        ): CallableStatement = throw NotImplementedError()
-
-        override fun nativeSQL(sql: String?): String = throw NotImplementedError()
         override fun setAutoCommit(autoCommit: Boolean) {
             callOrder.add("setAutoCommit")
             mockAutoCommit = autoCommit
@@ -418,7 +326,6 @@ class SpringTransactionManagerTest {
             return mockIsClosed
         }
 
-        override fun getMetaData(): DatabaseMetaData = throw NotImplementedError()
         override fun setReadOnly(readOnly: Boolean) {
             callOrder.add("setReadOnly")
             mockReadOnly = readOnly
@@ -429,38 +336,6 @@ class SpringTransactionManagerTest {
             return mockReadOnly
         }
 
-        override fun setCatalog(catalog: String?) = throw NotImplementedError()
-        override fun getCatalog(): String = throw NotImplementedError()
-        override fun setTransactionIsolation(level: Int) = throw NotImplementedError()
         override fun getTransactionIsolation() = mockTransactionIsolation
-        override fun getWarnings(): SQLWarning = throw NotImplementedError()
-        override fun clearWarnings() = throw NotImplementedError()
-        override fun getTypeMap(): MutableMap<String, Class<*>> = throw NotImplementedError()
-        override fun setTypeMap(map: MutableMap<String, Class<*>>?) = throw NotImplementedError()
-        override fun setHoldability(holdability: Int) = throw NotImplementedError()
-        override fun getHoldability(): Int = throw NotImplementedError()
-        override fun setSavepoint(): Savepoint = throw NotImplementedError()
-        override fun setSavepoint(name: String?): Savepoint = throw NotImplementedError()
-        override fun releaseSavepoint(savepoint: Savepoint?) = throw NotImplementedError()
-        override fun createClob(): Clob = throw NotImplementedError()
-        override fun createBlob(): Blob = throw NotImplementedError()
-        override fun createNClob(): NClob = throw NotImplementedError()
-        override fun createSQLXML(): SQLXML = throw NotImplementedError()
-        override fun isValid(timeout: Int): Boolean = throw NotImplementedError()
-        override fun setClientInfo(name: String?, value: String?) = throw NotImplementedError()
-        override fun setClientInfo(properties: Properties?) = throw NotImplementedError()
-        override fun getClientInfo(name: String?): String = throw NotImplementedError()
-        override fun getClientInfo(): Properties = throw NotImplementedError()
-        override fun createArrayOf(
-            typeName: String?,
-            elements: Array<out Any>?
-        ): java.sql.Array = throw NotImplementedError()
-
-        override fun createStruct(typeName: String?, attributes: Array<out Any>?): Struct = throw NotImplementedError()
-        override fun setSchema(schema: String?) = throw NotImplementedError()
-        override fun getSchema(): String = throw NotImplementedError()
-        override fun abort(executor: Executor?) = throw NotImplementedError()
-        override fun setNetworkTimeout(executor: Executor?, milliseconds: Int) = throw NotImplementedError()
-        override fun getNetworkTimeout(): Int = throw NotImplementedError()
     }
 }
