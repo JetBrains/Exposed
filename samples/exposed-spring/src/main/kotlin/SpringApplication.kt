@@ -13,5 +13,6 @@ import org.springframework.boot.runApplication
 class SpringApplication
 
 fun main(args: Array<String>) {
+    @Suppress("SpreadOperator")
     runApplication<SpringApplication>(*args)
 }
