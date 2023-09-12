@@ -7,6 +7,10 @@ repositories {
     mavenCentral()
 }
 
+kotlin {
+    jvmToolchain(8)
+}
+
 dependencies {
     api(project(":exposed-core"))
     api("joda-time", "joda-time", "2.10.13")
