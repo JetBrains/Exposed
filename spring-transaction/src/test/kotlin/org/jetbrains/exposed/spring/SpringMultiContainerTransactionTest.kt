@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -145,7 +146,9 @@ open class SpringMultiContainerTransactionTest {
 open class OrderConfig {
 
     @Bean
-    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(EmbeddedDatabaseType.H2).build()
+    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest1").setType(
+        EmbeddedDatabaseType.H2
+    ).build()
 
     @Bean
     open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
@@ -157,7 +160,7 @@ open class OrderConfig {
 @Transactional
 open class Orders {
 
-    open fun findAll() = Order.selectAll().map { it }
+    open fun findAll(): List<ResultRow> = Order.selectAll().toList()
 
     open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.sql.transactions.transaction { findAll() }
 
@@ -186,7 +189,9 @@ object Order : LongIdTable("orders") {
 open class PaymentConfig {
 
     @Bean
-    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(EmbeddedDatabaseType.H2).build()
+    open fun dataSource(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest2").setType(
+        EmbeddedDatabaseType.H2
+    ).build()
 
     @Bean
     open fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)
@@ -198,7 +203,7 @@ open class PaymentConfig {
 @Transactional
 open class Payments {
 
-    open fun findAll() = Payment.selectAll().map { it }
+    open fun findAll(): List<ResultRow> = Payment.selectAll().toList()
 
     open fun findAllWithExposedTrxBlock() = transaction { findAll() }
 

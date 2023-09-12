@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.spring
 
-import org.jetbrains.exposed.sql.DatabaseConfig
 import org.junit.FixMethodOrder
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
@@ -26,7 +25,7 @@ open class TestConfig : TransactionManagementConfigurer {
     open fun ds(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest").setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds(), DatabaseConfig {})
+    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds())
 
     @Bean
     open fun service(): Service = Service()
