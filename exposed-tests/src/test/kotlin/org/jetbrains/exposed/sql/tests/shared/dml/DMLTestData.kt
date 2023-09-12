@@ -51,7 +51,11 @@ object DMLTestsData {
 @Suppress("LongMethod")
 fun DatabaseTestsBase.withCitiesAndUsers(
     exclude: List<TestDB> = emptyList(),
-    statement: Transaction.(cities: DMLTestsData.Cities, users: DMLTestsData.Users, userData: DMLTestsData.UserData) -> Unit
+    statement: Transaction.(
+        cities: DMLTestsData.Cities,
+        users: DMLTestsData.Users,
+        userData: DMLTestsData.UserData
+    ) -> Unit
 ) {
     val Users = DMLTestsData.Users
     val UserFlags = DMLTestsData.Users.Flags

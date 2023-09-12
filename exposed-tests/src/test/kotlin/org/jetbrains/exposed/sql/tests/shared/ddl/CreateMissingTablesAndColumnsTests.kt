@@ -539,7 +539,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             uniqueIndex("index2", value2, value1)
         }
     }
-    
+
     @Test
     fun testCreateTableWithReferenceMultipleTimes() {
         withTables(PlayerTable, SessionsTable) {

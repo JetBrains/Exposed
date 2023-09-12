@@ -15,7 +15,6 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaultExpressionsForTemporalTable() {
-
         fun databaseGeneratedTimestamp() = object : ExpressionWithColumnType<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { +"DEFAULT" }
             override val columnType: IColumnType = JavaLocalDateTimeColumnType()

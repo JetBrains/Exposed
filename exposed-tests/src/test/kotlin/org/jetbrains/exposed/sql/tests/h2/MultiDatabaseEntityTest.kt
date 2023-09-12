@@ -37,7 +37,7 @@ class MultiDatabaseEntityTest {
 
     @Before
     fun before() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         if (TransactionManager.isInitialized()) {
             currentDB = TransactionManager.currentOrNull()?.db
         }
@@ -51,7 +51,7 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        if (TestDB.H2 in TestDB.enabledInTests()) {
+        if (TestDB.H2 in TestDB.enabledDialects()) {
             TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
                 SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)

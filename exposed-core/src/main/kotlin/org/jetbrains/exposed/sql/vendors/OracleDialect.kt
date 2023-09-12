@@ -333,6 +333,8 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
+    override fun listDatabases(): String = error("This operation is not supported by Oracle dialect")
+
     override fun dropDatabase(name: String): String = "DROP DATABASE"
 
     override fun setSchema(schema: Schema): String = "ALTER SESSION SET CURRENT_SCHEMA = ${schema.identifier}"

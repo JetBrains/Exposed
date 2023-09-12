@@ -87,6 +87,7 @@ object SchemaUtils {
     }
 
     fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables).sorted()
+
     fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
 
     fun createStatements(vararg tables: Table): List<String> {
@@ -118,7 +119,9 @@ object SchemaUtils {
 
     @Deprecated(
         "Will be removed in upcoming releases. Please use overloaded version instead",
-        ReplaceWith("createFKey(checkNotNull(reference.foreignKey) { \"${"$"}reference does not reference anything\" })"),
+        ReplaceWith(
+            "createFKey(checkNotNull(reference.foreignKey) { \"${"$"}reference does not reference anything\" })"
+        ),
         DeprecationLevel.HIDDEN
     )
     fun createFKey(reference: Column<*>): List<String> {
@@ -131,9 +134,13 @@ object SchemaUtils {
 
     fun createFKey(foreignKey: ForeignKeyConstraint): List<String> = with(foreignKey) {
         val allFromColumnsBelongsToTheSameTable = from.all { it.table == fromTable }
-        require(allFromColumnsBelongsToTheSameTable) { "not all referencing columns of $foreignKey belong to the same table" }
+        require(
+            allFromColumnsBelongsToTheSameTable
+        ) { "not all referencing columns of $foreignKey belong to the same table" }
         val allTargetColumnsBelongToTheSameTable = target.all { it.table == targetTable }
-        require(allTargetColumnsBelongToTheSameTable) { "not all referenced columns of $foreignKey belong to the same table" }
+        require(
+            allTargetColumnsBelongToTheSameTable
+        ) { "not all referenced columns of $foreignKey belong to the same table" }
         require(from.size == target.size) { "$foreignKey referencing columns are not in accordance with referenced" }
         require(deleteRule != null || updateRule != null) { "$foreignKey has no reference constraint actions" }
         require(target.toHashSet().size == target.size) { "not all referenced columns of $foreignKey are unique" }
@@ -141,7 +148,7 @@ object SchemaUtils {
         return createStatement()
     }
 
-    fun createIndex(index: Index) = index.createStatement()
+    fun createIndex(index: Index): List<String> = index.createStatement()
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
     private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
@@ -154,32 +161,37 @@ object SchemaUtils {
                         is PostgreSQLDialect -> value.toString()
                         else -> booleanToStatementString(value)
                     }
+
                     is String -> when {
-                        dialect is PostgreSQLDialect ->
-                            when (column.columnType) {
-                                is VarCharColumnType -> "'$value'::character varying"
-                                is TextColumnType -> "'$value'::text"
-                                else -> processForDefaultValue(exp)
-                            }
-                        dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                            when {
-                                column.columnType is VarCharColumnType && value == "" -> "NULL"
-                                column.columnType is TextColumnType && value == "" -> "NULL"
-                                else -> value
-                            }
+                        dialect is PostgreSQLDialect -> when (column.columnType) {
+                            is VarCharColumnType -> "'$value'::character varying"
+                            is TextColumnType -> "'$value'::text"
+                            else -> processForDefaultValue(exp)
+                        }
+
+                        dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> when {
+                            column.columnType is VarCharColumnType && value == "" -> "NULL"
+                            column.columnType is TextColumnType && value == "" -> "NULL"
+                            else -> value
+                        }
+
                         else -> value
                     }
+
                     is Enum<*> -> when (exp.columnType) {
                         is EnumerationNameColumnType<*> -> when (dialect) {
                             is PostgreSQLDialect -> "'${value.name}'::character varying"
                             else -> value.name
                         }
+
                         else -> processForDefaultValue(exp)
                     }
+
                     is BigDecimal -> when (dialect) {
                         is MysqlDialect -> value.setScale((exp.columnType as DecimalColumnType).scale).toString()
                         else -> processForDefaultValue(exp)
                     }
+
                     else -> {
                         if (column.columnType is JsonColumnMarker) {
                             val processed = processForDefaultValue(exp)
@@ -191,6 +203,7 @@ object SchemaUtils {
                                         processed
                                     }
                                 }
+
                                 is MariaDBDialect -> processed.trim('\'')
                                 is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
                                 else -> processed.trim('\'')
@@ -201,12 +214,10 @@ object SchemaUtils {
                     }
                 }
             }
+
             is Function<*> -> {
                 var processed = processForDefaultValue(exp)
-                if (
-                    exp.columnType is IDateColumnType &&
-                    (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()")
-                ) {
+                if (exp.columnType is IDateColumnType && (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()")) {
                     when (currentDialect) {
                         is SQLServerDialect -> processed = "getdate"
                         is MariaDBDialect -> processed = processed.lowercase()
@@ -214,6 +225,7 @@ object SchemaUtils {
                 }
                 processed
             }
+
             else -> processForDefaultValue(exp)
         }
     }
@@ -246,26 +258,25 @@ object SchemaUtils {
 
             if (dbSupportsAlterTableWithAddColumn) {
                 // create indexes with new columns
-                table.indices
-                    .filter { index -> index.columns.any { missingTableColumns.contains(it) } }
-                    .forEach { statements.addAll(createIndex(it)) }
+                table.indices.filter { index ->
+                    index.columns.any {
+                        missingTableColumns.contains(it)
+                    }
+                }.forEach { statements.addAll(createIndex(it)) }
 
                 // sync existing columns
                 val dataTypeProvider = currentDialect.dataTypeProvider
-                val redoColumns = existingTableColumns
-                    .mapValues { (col, existingCol) ->
-                        val columnType = col.columnType
-                        val incorrectNullability = existingCol.nullable != columnType.nullable
-                        // Exposed doesn't support changing sequences on columns
-                        val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc &&
-                            col.autoIncColumnType?.autoincSeq == null
-                        val incorrectDefaults = existingCol.defaultDbValue != col.dbDefaultValue?.let {
-                            dataTypeProvider.dbDefaultToString(col, it)
-                        }
-                        val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
-                        ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
+                val redoColumns = existingTableColumns.mapValues { (col, existingCol) ->
+                    val columnType = col.columnType
+                    val incorrectNullability = existingCol.nullable != columnType.nullable
+                    // Exposed doesn't support changing sequences on columns
+                    val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
+                    val incorrectDefaults = existingCol.defaultDbValue != col.dbDefaultValue?.let {
+                        dataTypeProvider.dbDefaultToString(col, it)
                     }
-                    .filterValues { it.hasDifferences() }
+                    val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
+                    ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
+                }.filterValues { it.hasDifferences() }
 
                 redoColumns.flatMapTo(statements) { (col, changedState) -> col.modifyStatements(changedState) }
 
@@ -301,10 +312,14 @@ object SchemaUtils {
         for ((foreignKey, existingConstraint) in foreignKeyConstraints) {
             if (existingConstraint == null) {
                 statements.addAll(createFKey(foreignKey))
-            } else if (existingConstraint.targetTable != foreignKey.targetTable ||
-                foreignKey.deleteRule != existingConstraint.deleteRule ||
-                foreignKey.updateRule != existingConstraint.updateRule
-            ) {
+                continue
+            }
+
+            val noForeignKey = existingConstraint.targetTable != foreignKey.targetTable
+            val deleteRuleMismatch = foreignKey.deleteRule != existingConstraint.deleteRule
+            val updateRuleMismatch = foreignKey.updateRule != existingConstraint.updateRule
+
+            if (noForeignKey || deleteRuleMismatch || updateRuleMismatch) {
                 statements.addAll(existingConstraint.dropStatement())
                 statements.addAll(createFKey(foreignKey))
             }
@@ -357,6 +372,24 @@ object SchemaUtils {
             } else {
                 throw exception
             }
+        }
+    }
+
+    /**
+     * Returns a list of all databases.
+     *
+     * @return A list of strings representing the names of all databases.
+     */
+    fun listDatabases(): List<String> {
+        val transaction = TransactionManager.current()
+        return with(transaction) {
+            exec(currentDialect.listDatabases()) {
+                val result = mutableListOf<String>()
+                while (it.next()) {
+                    result.add(it.getString(1).lowercase())
+                }
+                result
+            } ?: emptyList()
         }
     }
 
@@ -425,8 +458,10 @@ object SchemaUtils {
             }
             val executedStatements = createStatements + alterStatements
             logTimeSpent("Checking mapping consistence", withLogs) {
-                val modifyTablesStatements = checkMappingConsistence(tables = tables, withLogs)
-                    .filter { it !in executedStatements }
+                val modifyTablesStatements = checkMappingConsistence(
+                    tables = tables,
+                    withLogs
+                ).filter { it !in executedStatements }
                 execStatements(inBatch, modifyTablesStatements)
                 commit()
             }
@@ -448,8 +483,10 @@ object SchemaUtils {
         }
         val executedStatements = createStatements + alterStatements
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
-            checkMappingConsistence(tables = tablesToAlter.toTypedArray(), withLogs)
-                .filter { it !in executedStatements }
+            checkMappingConsistence(
+                tables = tablesToAlter.toTypedArray(),
+                withLogs
+            ).filter { it !in executedStatements }
         }
         return executedStatements + modifyTablesStatements
     }
@@ -486,14 +523,15 @@ object SchemaUtils {
         }
 
         val excessiveIndices =
-            currentDialect.existingIndices(*tables)
-                .flatMap { it.value }
-                .groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
+            currentDialect.existingIndices(*tables).flatMap {
+                it.value
+            }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
                 .filter { it.value.size > 1 }
         if (excessiveIndices.isNotEmpty()) {
             exposedLogger.warn("List of excessive indices:")
             excessiveIndices.forEach { (triple, indices) ->
-                exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> ${indices.joinToString(", ") { it.indexName }}")
+                val indexNames = indices.joinToString(", ") { it.indexName }
+                exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> $indexNames")
             }
             exposedLogger.info("SQL Queries to remove excessive indices:")
             excessiveIndices.forEach {
@@ -548,8 +586,9 @@ object SchemaUtils {
                 nameDiffers.add(mappedIndex)
             }
 
-            notMappedIndices.getOrPut(table.nameInDatabaseCase()) { hashSetOf() }
-                .addAll(existingTableIndices.subtract(mappedIndices))
+            notMappedIndices.getOrPut(table.nameInDatabaseCase()) {
+                hashSetOf()
+            }.addAll(existingTableIndices.subtract(mappedIndices))
 
             missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
         }
@@ -585,13 +624,17 @@ object SchemaUtils {
         }
     }
 
+    /**
+     * Retrieves a list of all table names in the current database.
+     *
+     * @return A list of table names as strings.
+     */
+    fun listTables(): List<String> = currentDialect.allTablesNames()
+
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
-            var tablesForDeletion =
-                sortTablesByReferences(tables.toList())
-                    .reversed()
-                    .filter { it in tables }
+            var tablesForDeletion = sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() }
             }
@@ -619,6 +662,7 @@ object SchemaUtils {
                 is MysqlDialect -> {
                     connection.catalog = schema.identifier
                 }
+
                 is H2Dialect -> {
                     connection.schema = schema.identifier
                 }

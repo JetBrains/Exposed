@@ -108,8 +108,7 @@ open class Transaction(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null
-    ) =
-        exec(stmt, args, explicitStatementType) { }
+    ) = exec(stmt, args, explicitStatementType) { }
 
     fun <T : Any> exec(
         @Language("sql") stmt: String,
@@ -126,7 +125,7 @@ open class Transaction(
         return exec(object : Statement<T>(type, emptyList()) {
             override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
-                    StatementType.SELECT, StatementType.EXEC -> executeQuery()
+                    StatementType.SELECT, StatementType.EXEC, StatementType.SHOW, StatementType.PRAGMA -> executeQuery()
                     else -> {
                         executeUpdate()
                         resultSet

@@ -78,8 +78,10 @@ class SchemaTests : DatabaseTestsBase() {
 
                 val firstCatalogName = connection.catalog
 
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
                 val catalogName = connection.catalog
@@ -132,7 +134,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2.connect()
 

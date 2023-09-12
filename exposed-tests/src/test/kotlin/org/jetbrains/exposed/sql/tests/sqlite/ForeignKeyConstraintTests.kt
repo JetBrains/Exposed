@@ -28,7 +28,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE SET DEFAULT for SQLite`() {
-        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
             testOnDeleteSetDefault()
@@ -36,6 +36,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.testOnDeleteSetDefault() {
+        SchemaUtils.drop(Category, Item)
         SchemaUtils.create(Category, Item)
 
         Category.insert {

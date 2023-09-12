@@ -324,6 +324,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SELECT datname FROM pg_database"
+
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"

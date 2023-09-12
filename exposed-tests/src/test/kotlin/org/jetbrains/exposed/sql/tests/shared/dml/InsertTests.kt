@@ -466,7 +466,7 @@ class InsertTests : DatabaseTestsBase() {
         val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
-        val dbToTest = TestDB.enabledInTests() - setOfNotNull(
+        val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
@@ -499,7 +499,7 @@ class InsertTests : DatabaseTestsBase() {
         val testTable = object : IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
-        val dbToTest = TestDB.enabledInTests() - setOfNotNull(
+        val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
             TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )

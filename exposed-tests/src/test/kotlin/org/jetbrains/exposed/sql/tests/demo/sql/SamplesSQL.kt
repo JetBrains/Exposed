@@ -24,7 +24,7 @@ object Cities : Table() {
 }
 
 fun main() {
-    Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+    Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
@@ -114,20 +114,21 @@ fun main() {
 
         println("Functions and group by:")
 
-        ((Cities innerJoin Users)
-            .slice(Cities.name, Users.id.count())
-            .selectAll()
-            .groupBy(Cities.name)
+        (
+            (Cities innerJoin Users)
+                .slice(Cities.name, Users.id.count())
+                .selectAll()
+                .groupBy(Cities.name)
             ).forEach {
-                val cityName = it[Cities.name]
-                val userCount = it[Users.id.count()]
+            val cityName = it[Cities.name]
+            val userCount = it[Users.id.count()]
 
-                if (userCount > 0) {
-                    println("$userCount user(s) live(s) in $cityName")
-                } else {
-                    println("Nobody lives in $cityName")
-                }
+            if (userCount > 0) {
+                println("$userCount user(s) live(s) in $cityName")
+            } else {
+                println("Nobody lives in $cityName")
             }
+        }
 
         SchemaUtils.drop(Users, Cities)
     }

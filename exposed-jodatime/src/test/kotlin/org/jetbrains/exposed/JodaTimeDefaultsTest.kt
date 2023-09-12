@@ -47,7 +47,9 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) && equalDateTime(t2, it.t2) } ?: false
+            return (other as? DBDefault)?.let {
+                id == it.id && field == it.field && equalDateTime(t1, it.t1) && equalDateTime(t2, it.t2)
+            } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -170,6 +172,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
@@ -191,7 +194,10 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+                arrayListOf(
+                    "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                    baseExpression
+                )
             } else {
                 arrayListOf(baseExpression)
             }
@@ -276,13 +282,13 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }
 
     @Test
-    fun defaultCurrentDateTimeTest() {
+    fun testDefaultCurrentDateTime() {
         val testDate = object : IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         withTables(testDate) {
-            val duration: Long = 2_000
+            val duration: Long = 2000
 
             val before = currentDateTime()
             Thread.sleep(duration)
@@ -378,6 +384,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 

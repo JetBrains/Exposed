@@ -108,6 +108,10 @@ interface TransactionManager {
         private class TransactionManagerThreadLocal : ThreadLocal<TransactionManager>() {
             var isInitialized = false
 
+            override fun get(): TransactionManager {
+                return super.get()
+            }
+
             override fun initialValue(): TransactionManager {
                 isInitialized = true
                 return defaultDatabase?.let { registeredDatabases.getValue(it) } ?: NotInitializedManager

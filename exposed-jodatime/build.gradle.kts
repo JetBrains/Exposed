@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm") apply true
     kotlin("plugin.serialization") apply true
-    id("testWithDBs")
 }
 
 repositories {

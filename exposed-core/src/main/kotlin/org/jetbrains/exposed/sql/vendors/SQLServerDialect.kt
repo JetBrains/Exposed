@@ -303,6 +303,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SELECT name FROM sys.databases"
+
     override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "ALTER USER ${schema.authorization} WITH DEFAULT_SCHEMA = ${schema.identifier}"

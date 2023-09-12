@@ -42,6 +42,7 @@ class ThreadLocalTransactionManager(
             }
             return field
         }
+
         @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
         @TestOnly
         set
@@ -50,6 +51,10 @@ class ThreadLocalTransactionManager(
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     val threadLocal = ThreadLocal<Transaction>()
+
+    override fun toString(): String {
+        return "ThreadLocalTransactionManager[${hashCode()}](db=$db)"
+    }
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
@@ -166,46 +171,45 @@ fun <T> transaction(
     readOnly: Boolean = false,
     db: Database? = null,
     statement: Transaction.() -> T
-): T =
-    keepAndRestoreTransactionRefAfterRun(db) {
-        val outer = TransactionManager.currentOrNull()
+): T = keepAndRestoreTransactionRefAfterRun(db) {
+    val outer = TransactionManager.currentOrNull()
 
-        if (outer != null && (db == null || outer.db == db)) {
-            val outerManager = outer.db.transactionManager
+    if (outer != null && (db == null || outer.db == db)) {
+        val outerManager = outer.db.transactionManager
 
-            val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        try {
+            transaction.statement().also {
+                if (outer.db.useNestedTransactions) {
+                    transaction.commit()
+                }
+            }
+        } finally {
+            TransactionManager.resetCurrent(outerManager)
+        }
+    } else {
+        val existingForDb = db?.transactionManager
+        existingForDb?.currentOrNull()?.let { transaction ->
+            val currentManager = outer?.db.transactionManager
             try {
+                TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    if (outer.db.useNestedTransactions) {
+                    if (db.useNestedTransactions) {
                         transaction.commit()
                     }
                 }
             } finally {
-                TransactionManager.resetCurrent(outerManager)
+                TransactionManager.resetCurrent(currentManager)
             }
-        } else {
-            val existingForDb = db?.transactionManager
-            existingForDb?.currentOrNull()?.let { transaction ->
-                val currentManager = outer?.db.transactionManager
-                try {
-                    TransactionManager.resetCurrent(existingForDb)
-                    transaction.statement().also {
-                        if (db.useNestedTransactions) {
-                            transaction.commit()
-                        }
-                    }
-                } finally {
-                    TransactionManager.resetCurrent(currentManager)
-                }
-            } ?: inTopLevelTransaction(
-                transactionIsolation,
-                readOnly,
-                db,
-                null,
-                statement
-            )
-        }
+        } ?: inTopLevelTransaction(
+            transactionIsolation,
+            readOnly,
+            db,
+            null,
+            statement
+        )
     }
+}
 
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
@@ -249,6 +253,7 @@ fun <T> inTopLevelTransaction(
                         intermediateDelay += retryInterval * repetitions
                         ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                     }
+
                     transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
                     else -> 0
                 }
