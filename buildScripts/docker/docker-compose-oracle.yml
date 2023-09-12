@@ -3,6 +3,7 @@ version: '3.1'
 services:
     oracle:
         container_name: oracleDB
+        restart: always
         image: gvenzl/oracle-xe:18-slim-faststart
         ports:
             - "3003:1521"
