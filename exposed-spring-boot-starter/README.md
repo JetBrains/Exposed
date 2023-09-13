@@ -64,8 +64,18 @@ When using this starter, you can customize the default Exposed configuration by 
 Example:
 
 ```kotlin
+import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
+import org.jetbrains.exposed.sql.DatabaseConfig
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
 @Configuration
-@EnableAutoConfiguration(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
+@ImportAutoConfiguration(
+    value = [ExposedAutoConfiguration::class],
+    exclude = [DataSourceTransactionManagerAutoConfiguration::class]
+)
 class ExposedConfig {
     @Bean
     fun databaseConfig() = DatabaseConfig {
@@ -73,13 +83,28 @@ class ExposedConfig {
     }
 }
 ```
-It is recommended that the `DataSourceTransactionManagerAutoConfiguration` class be excluded from auto-configuration, which can be done in a custom configuration, as shown above.
+In addition to applying the `ExposedAutoConfiguration` class, it is recommended that the `DataSourceTransactionManagerAutoConfiguration` class be excluded from auto-configuration.
+This can be done as part of a custom configuration, as shown above.
 
-Alternatively, the class can be disabled using the `exclude` attribute of `@SpringBootApplication`:
+Alternatively, auto-configuration can be detailed directly on the Spring configuration class that is annotated using `@SpringBootApplication`:
 
 ```kotlin
-@SpringBootApplication(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
+import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.runApplication
+
+@SpringBootApplication
+@ImportAutoConfiguration(
+    value = [ExposedAutoConfiguration::class],
+    exclude = [DataSourceTransactionManagerAutoConfiguration::class]
+)
 class MyApplication
+
+fun main(args: Array<String>) {
+    runApplication<MyApplication>(*args)
+}
 ```
 
 See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.auto-configuration.disabling-specific) for more options to exclude auto-configuration classes.
