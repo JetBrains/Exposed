@@ -49,6 +49,8 @@ Releases of Exposed are available in the Maven Central repository. You can decla
 
 #### Gradle Groovy and Kotlin DSL
 
+**Warning:** You might need to set your Kotlin JVM target to 11 in order for it to work properly
+
 ```kotlin
 repositories {
     // Versions after 0.30.1
