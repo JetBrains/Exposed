@@ -17,7 +17,8 @@ class DatabaseConfig private constructor(
     val keepLoadedReferencesOutOfTransaction: Boolean,
     val explicitDialect: DatabaseDialect?,
     val defaultSchema: Schema?,
-    val logTooMuchResultSetsThreshold: Int
+    val logTooMuchResultSetsThreshold: Int,
+    val preserveKeywordCasing: Boolean,
 ) {
 
     class Builder(
@@ -85,19 +86,16 @@ class DatabaseConfig private constructor(
          * Useful when [eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) is used.
          */
         var keepLoadedReferencesOutOfTransaction: Boolean = false,
-
         /**
          * Set the explicit dialect for a database.
          * This can be useful when working with unsupported dialects which have the same behavior as the one that
          * Exposed supports.
          */
         var explicitDialect: DatabaseDialect? = null,
-
         /**
          * Set the default schema for a database.
          */
         var defaultSchema: Schema? = null,
-
         /**
          * Log too much result sets opened in parallel.
          * The error log will contain the stacktrace of the place in the code where a new result set occurs, and it
@@ -105,6 +103,11 @@ class DatabaseConfig private constructor(
          * 0 value means no log needed.
          */
         var logTooMuchResultSetsThreshold: Int = 0,
+        /**
+         * Toggle whether table and column identifiers that are also keywords should retain their case sensitivity.
+         * Keeping user-defined case sensitivity (value set to `true`) will become the default in future releases.
+         */
+        var preserveKeywordCasing: Boolean = true,
     )
 
     companion object {
@@ -124,7 +127,8 @@ class DatabaseConfig private constructor(
                 keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction,
                 explicitDialect = builder.explicitDialect,
                 defaultSchema = builder.defaultSchema,
-                logTooMuchResultSetsThreshold = builder.logTooMuchResultSetsThreshold
+                logTooMuchResultSetsThreshold = builder.logTooMuchResultSetsThreshold,
+                preserveKeywordCasing = builder.preserveKeywordCasing,
             )
         }
     }

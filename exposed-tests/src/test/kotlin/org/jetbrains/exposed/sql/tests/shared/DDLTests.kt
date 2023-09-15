@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -57,7 +58,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateTableWithKeywordIdentifiers() {
-        val keywords = listOf("key", "public", "data", "constraint")
+        val keywords = listOf("data", "public", "key", "constraint")
         val keywordTable = object : Table(keywords[0]) {
             val public = bool(keywords[1])
             val data = integer(keywords[2])
@@ -95,6 +96,27 @@ class DDLTests : DatabaseTestsBase() {
             assertTrue(statements.isEmpty())
 
             SchemaUtils.drop(keywordTable)
+        }
+    }
+
+    // TODO: Remove test when preserveKeywordCasing flag is deprecated
+    @Test
+    fun testKeywordIdentifiersLogWarningOnCreate() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        val tester = object : Table("BooLean") {
+            val name = varchar("name", 32)
+        }
+
+        withDb {
+            SchemaUtils.create(tester)
+            assertEquals(2, logCaptor.warnLogs.size)
+            logCaptor.clearLogs()
+
+            tester.insert { it[name] = "A" }
+            tester.selectAll().toList()
+            SchemaUtils.drop(tester)
+            assertEquals(0, logCaptor.warnLogs.size)
+            logCaptor.clearLogs()
         }
     }
 

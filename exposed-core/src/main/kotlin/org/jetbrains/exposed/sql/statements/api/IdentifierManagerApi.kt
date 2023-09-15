@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.api
 
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.ANSI_SQL_2003_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.VENDORS_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -38,13 +39,25 @@ abstract class IdentifierManagerApi {
     private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
-    private fun String.isAKeyword(): Boolean = checkedKeywordsCache.getOrPut(lowercase()) {
-        keywords.any { this.equals(it, true) }
+    @Deprecated(
+        message = "This will become private in future releases when the check becomes default in IdentifierManagerApi",
+        level = DeprecationLevel.WARNING
+    )
+    internal fun isAKeyword(identity: String): Boolean = checkedKeywordsCache.getOrPut(identity.lowercase()) {
+        keywords.any { identity.equals(it, true) }
+    }
+
+    @Deprecated(
+        message = "This will be removed in future releases when the behavior becomes default in IdentifierManagerApi",
+        level = DeprecationLevel.WARNING
+    )
+    private val shouldPreserveKeywordCasing by lazy {
+        TransactionManager.currentOrNull()?.db?.config?.preserveKeywordCasing == true
     }
 
     fun needQuotes(identity: String): Boolean {
         return checkedIdentitiesCache.getOrPut(identity.lowercase()) {
-            !identity.isAlreadyQuoted() && (identity.isAKeyword() || !identity.isIdentifier())
+            !identity.isAlreadyQuoted() && (isAKeyword(identity) || !identity.isIdentifier())
         }
     }
 
@@ -56,7 +69,7 @@ abstract class IdentifierManagerApi {
         val alreadyUpper = identity == identity.uppercase()
         when {
             alreadyQuoted -> false
-            identity.isAKeyword() -> true
+            isAKeyword(identity) && shouldPreserveKeywordCasing -> true
             supportsMixedIdentifiers -> false
             alreadyLower && isLowerCaseIdentifiers -> false
             alreadyUpper && isUpperCaseIdentifiers -> false
@@ -72,7 +85,8 @@ abstract class IdentifierManagerApi {
             alreadyQuoted && supportsMixedQuotedIdentifiers -> identity
             alreadyQuoted && isUpperCaseQuotedIdentifiers -> identity.uppercase()
             alreadyQuoted && isLowerCaseQuotedIdentifiers -> identity.lowercase()
-            supportsMixedIdentifiers || identity.isAKeyword() -> identity
+            supportsMixedIdentifiers -> identity
+            isAKeyword(identity) && shouldPreserveKeywordCasing -> identity
             oracleVersion != OracleVersion.NonOracle -> identity.uppercase()
             isUpperCaseIdentifiers -> identity.uppercase()
             isLowerCaseIdentifiers -> identity.lowercase()
