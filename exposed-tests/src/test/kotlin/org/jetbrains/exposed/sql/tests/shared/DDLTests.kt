@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -117,6 +118,53 @@ class DDLTests : DatabaseTestsBase() {
             SchemaUtils.drop(tester)
             assertEquals(0, logCaptor.warnLogs.size)
             logCaptor.clearLogs()
+        }
+    }
+
+    // TODO: Remove test when preserveKeywordCasing flag is deprecated
+    @Test
+    fun testKeywordIdentifiersWithOptOutFlag() {
+        val keywords = listOf("Integer", "name")
+        val tester = object : Table(keywords[0]) {
+            val name = varchar(keywords[1], 32)
+        }
+
+        val testDb = TestDB.enabledDialects().singleOrNull() ?: TestDB.H2
+        if (testDb == TestDB.ORACLE) testDb.beforeConnection.invoke()
+        val db = testDb.connect { preserveKeywordCasing = false }
+
+        transaction(db) {
+            assertFalse(db.config.preserveKeywordCasing)
+
+            SchemaUtils.create(tester)
+            assertTrue(tester.exists())
+
+            val (tableName, columnName) = keywords.map { name ->
+                when (testDb) {
+                    TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> "\"${name.lowercase()}\""
+                    TestDB.H2, TestDB.ORACLE -> "\"${name.uppercase()}\""
+                    TestDB.MYSQL, TestDB.MARIADB -> "`$name`"
+                    else -> "\"$name\""
+                }
+            }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, tester.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            tester.insert { it[name] = "A" }
+
+            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
+            tester.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(tester)
         }
     }
 
