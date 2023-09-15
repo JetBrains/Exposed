@@ -6,6 +6,10 @@ plugins {
     kotlin("jvm") apply true
 }
 
+kotlin {
+    jvmToolchain(8)
+}
+
 repositories {
     mavenCentral()
 }
@@ -28,7 +32,7 @@ dependencies {
     implementation("org.apache.logging.log4j", "log4j-api", Versions.log4j2)
     implementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
 
-    implementation("com.zaxxer", "HikariCP", "5.0.1")
+    implementation("com.zaxxer", "HikariCP", "4.0.3")
     testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
     testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
     compileOnly("com.h2database", "h2", Versions.h2)

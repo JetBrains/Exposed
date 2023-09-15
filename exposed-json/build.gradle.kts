@@ -9,6 +9,10 @@ repositories {
     mavenCentral()
 }
 
+kotlin {
+    jvmToolchain(8)
+}
+
 dependencies {
     api(project(":exposed-core"))
     api("org.jetbrains.kotlinx", "kotlinx-serialization-json", Versions.kotlinxSerialization)
