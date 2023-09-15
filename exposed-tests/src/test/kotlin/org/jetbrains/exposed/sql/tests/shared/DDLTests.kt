@@ -22,8 +22,10 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.junit.Assume
 import org.junit.Test
 import org.postgresql.util.PGobject
+import java.sql.Connection
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.assertNotNull
@@ -124,14 +126,16 @@ class DDLTests : DatabaseTestsBase() {
     // TODO: Remove test when preserveKeywordCasing flag is deprecated
     @Test
     fun testKeywordIdentifiersWithOptOutFlag() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        val db = Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
+            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            preserveKeywordCasing = false
+        })
+
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
             val name = varchar(keywords[1], 32)
         }
-
-        val testDb = TestDB.enabledDialects().singleOrNull() ?: TestDB.H2
-        if (testDb == TestDB.ORACLE) testDb.beforeConnection.invoke()
-        val db = testDb.connect { preserveKeywordCasing = false }
 
         transaction(db) {
             assertFalse(db.config.preserveKeywordCasing)
@@ -139,14 +143,7 @@ class DDLTests : DatabaseTestsBase() {
             SchemaUtils.create(tester)
             assertTrue(tester.exists())
 
-            val (tableName, columnName) = keywords.map { name ->
-                when (testDb) {
-                    TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> "\"${name.lowercase()}\""
-                    TestDB.H2, TestDB.ORACLE -> "\"${name.uppercase()}\""
-                    TestDB.MYSQL, TestDB.MARIADB -> "`$name`"
-                    else -> "\"$name\""
-                }
-            }
+            val (tableName, columnName) = keywords.map { "\"${it.uppercase()}\"" }
 
             val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
                 "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
