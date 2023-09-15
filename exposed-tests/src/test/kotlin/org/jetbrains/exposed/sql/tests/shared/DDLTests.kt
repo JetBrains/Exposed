@@ -25,7 +25,6 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
 import org.postgresql.util.PGobject
-import java.sql.Connection
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.assertNotNull
@@ -127,10 +126,13 @@ class DDLTests : DatabaseTestsBase() {
     @Test
     fun testKeywordIdentifiersWithOptOutFlag() {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
-        val db = Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
-            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-            preserveKeywordCasing = false
-        })
+        val db = Database.connect(
+            url = "jdbc:h2:mem:flagtest;DB_CLOSE_DELAY=-1;",
+            driver = "org.h2.Driver",
+            user = "root",
+            password = "",
+            databaseConfig = DatabaseConfig { preserveKeywordCasing = false }
+        )
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
