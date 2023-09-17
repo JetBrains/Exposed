@@ -11,6 +11,7 @@ import org.junit.Test
 import org.springframework.test.annotation.Commit
 import org.springframework.test.annotation.Repeat
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.*
@@ -128,5 +129,20 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             Assert.assertEquals(2, T1.selectAll().count())
             SchemaUtils.drop(T1)
         }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NESTED)
+    open fun testConnectionWithNestedTransaction() {
+        val pm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
+
+        SchemaUtils.create(T1)
+        T1.insert {
+            it[c1] = "112"
+        }
+
+        Assert.assertEquals(T1.selectAll().count(), 1)
+        SchemaUtils.drop(T1)
     }
 }

@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.spring
 
 import junit.framework.TestCase.assertEquals
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
@@ -57,8 +59,7 @@ class SpringTransactionManagerTest {
         tm2.executeAssert(false) {
             tm.executeAssert(false)
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
             )
         }
     }
@@ -107,8 +108,7 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
             )
         }
 
@@ -129,8 +129,7 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                    TransactionManager.manager
+                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
                 )
             }
         } catch (e: Exception) {
@@ -233,16 +232,61 @@ class SpringTransactionManagerTest {
     }
 
     private fun SpringTransactionManager.executeAssert(
-        initializeConnection: Boolean = true,
-        body: (TransactionStatus) -> Unit = {}
+        initializeConnection: Boolean = true, body: (TransactionStatus) -> Unit = {}
     ) {
         TransactionTemplate(this).executeWithoutResult {
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
             )
             if (initializeConnection) TransactionManager.current().connection
             body(it)
         }
+    }
+
+    @Test
+    fun `nested transaction with commit`() {
+        val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
+        val tt = TransactionTemplate(tm)
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
+
+        tt.execute {
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+
+            tt.execute {
+                TransactionManager.current().connection
+            }
+
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `nested transaction with rollback`() {
+        val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
+        val tt = TransactionTemplate(tm)
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
+
+        tt.execute {
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+
+            tt.execute { status ->
+                TransactionManager.current().connection
+                status.setRollbackOnly()
+            }
+
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.rollbackCallCount)
+        assertEquals(1, con1.releaseSavepointCallCount)
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
     }
 }

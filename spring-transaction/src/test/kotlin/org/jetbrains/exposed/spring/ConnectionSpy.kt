@@ -8,6 +8,7 @@ internal class ConnectionSpy(private val connection: Connection) : Connection by
     var commitCallCount: Int = 0
     var rollbackCallCount: Int = 0
     var closeCallCount: Int = 0
+    var releaseSavepointCallCount: Int = 0
     var mockReadOnly: Boolean = false
     var mockIsClosed: Boolean = false
     var mockAutoCommit: Boolean = false
@@ -25,6 +26,7 @@ internal class ConnectionSpy(private val connection: Connection) : Connection by
         commitCallCount = 0
         rollbackCallCount = 0
         closeCallCount = 0
+        releaseSavepointCallCount = 0
         mockAutoCommit = false
         mockReadOnly = false
         mockIsClosed = false
@@ -57,7 +59,17 @@ internal class ConnectionSpy(private val connection: Connection) : Connection by
         mockRollback()
     }
 
-    override fun rollback(savepoint: Savepoint?) = Unit
+    override fun rollback(savepoint: Savepoint?) {
+        callOrder.add("rollback")
+        rollbackCallCount++
+        mockRollback()
+    }
+
+    override fun releaseSavepoint(savepoint: Savepoint?) {
+        callOrder.add("releaseSavepoint")
+        releaseSavepointCallCount++
+    }
+
     override fun isClosed(): Boolean {
         callOrder.add("isClosed")
         return mockIsClosed
