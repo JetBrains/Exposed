@@ -34,7 +34,17 @@ class SpringTransactionManager(
         ).apply {
             _transactionManager = this.transactionManager
         }
+
+        isNestedTransactionAllowed = databaseConfig.useNestedTransactions
     }
+
+    /**
+     * ExposedConnection implements savepoint by itself
+     * `useSavepointForNestedTransaction` is use `SavepointManager` for nested transaction
+     *
+     * So we don't need to use savepoint for nested transaction
+     */
+    override fun useSavepointForNestedTransaction() = false
 
     override fun doGetTransaction(): Any {
         val outerManager = TransactionManager.manager
@@ -47,15 +57,20 @@ class SpringTransactionManager(
         )
     }
 
+    override fun isExistingTransaction(transaction: Any): Boolean {
+        val trxObject = transaction as ExposedTransactionObject
+        return trxObject.getCurrentTransaction() != null
+    }
+
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         val trxObject = transaction as ExposedTransactionObject
 
         val currentTransactionManager = trxObject.manager
         TransactionManager.resetCurrent(currentTransactionManager)
 
-        currentTransactionManager.currentOrNull() ?: currentTransactionManager.newTransaction(
+        currentTransactionManager.newTransaction(
             isolation = definition.isolationLevel,
-            readOnly = definition.isReadOnly,
+            readOnly = definition.isReadOnly, outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
             if (showSql) {
                 addLogger(StdOutSqlLogger)
@@ -118,11 +133,10 @@ class SpringTransactionManager(
     ) : SmartTransactionObject {
 
         private var isRollback: Boolean = false
-        private var isCurrentTransactionEnded: Boolean = false
 
         fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
             val currentTransaction = getCurrentTransaction()
-            if (isCurrentTransactionEnded && currentTransaction != null) {
+            if (currentTransaction != null) {
                 block(currentTransaction)
             }
         }
@@ -132,17 +146,10 @@ class SpringTransactionManager(
             TransactionManager.resetCurrent(outerManager)
         }
 
-        private fun hasOuterTransaction(): Boolean {
-            return outerTransaction != null
-        }
-
         @Suppress("TooGenericExceptionCaught")
         fun commit() {
             try {
-                if (hasOuterTransaction().not()) {
-                    isCurrentTransactionEnded = true
-                    manager.currentOrNull()?.commit()
-                }
+                manager.currentOrNull()?.commit()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
@@ -151,10 +158,7 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun rollback() {
             try {
-                if (hasOuterTransaction().not()) {
-                    isCurrentTransactionEnded = true
-                    manager.currentOrNull()?.rollback()
-                }
+                manager.currentOrNull()?.rollback()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
@@ -162,6 +166,9 @@ class SpringTransactionManager(
 
         fun getCurrentTransaction(): Transaction? = manager.currentOrNull()
 
+        /**
+         * implementation of @SmartTransactionObject
+         */
         fun setRollbackOnly() {
             isRollback = true
         }
