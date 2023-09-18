@@ -19,3 +19,17 @@ pluginManagement {
         id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
     }
 }
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver") version "0.7.0"
+}
+
+toolchainManagement {
+    jvm {
+        javaRepositories {
+            repository("foojay") {
+                resolverClass.set(org.gradle.toolchains.foojay.FoojayToolchainResolver::class.java)
+            }
+        }
+    }
+}
