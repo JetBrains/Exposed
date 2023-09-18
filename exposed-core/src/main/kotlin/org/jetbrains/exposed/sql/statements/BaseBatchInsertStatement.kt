@@ -18,7 +18,7 @@ abstract class BaseBatchInsertStatement(
 
     internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
-    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isGeneratedInDb
+    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {

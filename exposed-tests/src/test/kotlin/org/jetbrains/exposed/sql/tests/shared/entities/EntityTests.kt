@@ -1403,7 +1403,7 @@ class EntityTests : DatabaseTestsBase() {
 
     object CreditCards : IntIdTable("CreditCards") {
         val number = varchar("number", 16)
-        val spendingLimit = ulong("spendingLimit").dbGenerated()
+        val spendingLimit = ulong("spendingLimit").databaseGenerated()
     }
 
     class CreditCard(id: EntityID<Int>) : IntEntity(id) {
@@ -1414,9 +1414,8 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testDbGeneratedDefault() {
+    fun testDatabaseGeneratedValues() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), CreditCards) { testDb ->
-            addLogger(StdOutSqlLogger)
             when (testDb) {
                 TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                     // The value can also be set using a SQL trigger
@@ -1446,10 +1445,10 @@ class EntityTests : DatabaseTestsBase() {
                 }
                 else -> {
                     // This table is only used to get the statement that adds the DEFAULT value, and use it with exec
-                    val CreditCards2 = object : IntIdTable("CreditCards") {
+                    val creditCards2 = object : IntIdTable("CreditCards") {
                         val spendingLimit = ulong("spendingLimit").default(10000uL)
                     }
-                    val missingStatements = SchemaUtils.addMissingColumnsStatements(CreditCards2)
+                    val missingStatements = SchemaUtils.addMissingColumnsStatements(creditCards2)
                     missingStatements.forEach {
                         exec(it)
                     }
