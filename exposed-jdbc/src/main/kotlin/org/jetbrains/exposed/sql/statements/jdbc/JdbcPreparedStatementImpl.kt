@@ -4,18 +4,33 @@ import org.jetbrains.exposed.sql.BinaryColumnType
 import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 
-class JdbcPreparedStatementImpl(val statement: PreparedStatement, val wasGeneratedKeysRequested: Boolean) : PreparedStatementApi {
+class JdbcPreparedStatementImpl(
+    val statement: PreparedStatement,
+    val wasGeneratedKeysRequested: Boolean,
+    private val supportsGetGeneratedKeys: Boolean
+) : PreparedStatementApi {
     override val resultSet: ResultSet?
-        get() = if (wasGeneratedKeysRequested) statement.generatedKeys else statement.resultSet
+        get() = when {
+            !wasGeneratedKeysRequested -> statement.resultSet
+            supportsGetGeneratedKeys -> statement.generatedKeys
+            currentDialect is SQLiteDialect -> {
+                statement.connection.prepareStatement("select last_insert_rowid();").executeQuery()
+            }
+            else -> statement.resultSet
+        }
 
     override var fetchSize: Int?
         get() = statement.fetchSize
-        set(value) { value?.let { statement.fetchSize = value } }
+        set(value) {
+            value?.let { statement.fetchSize = value }
+        }
 
     override fun addBatch() {
         statement.addBatch()
