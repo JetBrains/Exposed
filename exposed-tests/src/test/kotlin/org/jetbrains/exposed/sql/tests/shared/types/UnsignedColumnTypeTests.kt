@@ -309,22 +309,25 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             val unsigned2 = ushort(col2)
             val unsigned3 = uinteger(col3)
         }
+
         withDb {
-            SchemaUtils.create(tester1, tester2)
+            try {
+                SchemaUtils.create(tester1, tester2)
 
-            val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
-            tester1.insert {
-                it[unsigned1] = byte
-                it[unsigned2] = short
-                it[unsigned3] = integer
+                val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
+                tester1.insert {
+                    it[unsigned1] = byte
+                    it[unsigned2] = short
+                    it[unsigned3] = integer
+                }
+                tester2.insert {
+                    it[unsigned1] = byte
+                    it[unsigned2] = short
+                    it[unsigned3] = integer
+                }
+            } finally {
+                SchemaUtils.drop(tester1, tester2)
             }
-            tester2.insert {
-                it[unsigned1] = byte
-                it[unsigned2] = short
-                it[unsigned3] = integer
-            }
-
-            SchemaUtils.drop(tester1, tester2)
         }
     }
 }
