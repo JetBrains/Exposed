@@ -375,7 +375,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
-    private val generatedCheckPrefix = "chk_unsigned_"
+    private val generatedCheckPrefix = "chk_${tableName}_unsigned_"
 
     /**
      * Returns the table name in proper case.
