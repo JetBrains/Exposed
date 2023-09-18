@@ -6,9 +6,5 @@
 
 ### Running tests locally with Docker
 
-* Run SQL Server locally, e.g. with Docker image with command like
-  `docker run -e 'ACCEPT_EULA=1' -e 'SA_PASSWORD=Exposed_password_1!' -p 3005:1433 -d mcr.microsoft.com/azure-sql-edge:1.0.7`
-  or use `docker-compose -f docker-compose-sqlserver.yml up`
-
-* Run tests with `-Dexposed.test.dialects=sqlserver`,
-  (optionally you may need to provide `-Dexposed.test.sqlserver.host=_YOUR_DOCKER_HOST_ -exposed.test.sqlserver.port=_SQLSERVER_EXPOSED_PORT_`)
+* Run SQL Server locally with gradle task `sqlserverComposeUp`
+* Run tests with `testSqlserver` gradle task
