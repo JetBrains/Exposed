@@ -127,7 +127,7 @@ class Column<T>(
             } else {
                 if (currentDialect is SQLServerDialect) {
                     // Create a DEFAULT constraint with an explicit name to facilitate removing it later if needed
-                    val tableName = column.table.tableName
+                    val tableName = column.table.tableNameWithoutScheme
                     val columnName = column.name
                     val constraintName = "DF_${tableName}_$columnName"
                     append(" CONSTRAINT $constraintName DEFAULT $expressionSQL")
