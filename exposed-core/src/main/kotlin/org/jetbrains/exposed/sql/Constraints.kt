@@ -119,7 +119,12 @@ data class ForeignKeyConstraint(
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (deleteRule == ReferenceOption.SET_DEFAULT) {
+                if (currentDialect is SQLServerDialect && deleteRule == ReferenceOption.RESTRICT) {
+                    exposedLogger.warn(
+                        "SQLServer doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                            "Please check your $fromTableName table."
+                    )
+                } else if (deleteRule == ReferenceOption.SET_DEFAULT) {
                     when (currentDialect) {
                         is MariaDBDialect -> exposedLogger.warn(
                             "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
@@ -142,6 +147,11 @@ data class ForeignKeyConstraint(
             if (updateRule != ReferenceOption.NO_ACTION) {
                 if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (currentDialect is SQLServerDialect && updateRule == ReferenceOption.RESTRICT) {
+                    exposedLogger.warn(
+                        "SQLServer doesn't support FOREIGN KEY with RESTRICT reference option with ON UPDATE clause. " +
+                            "Please check your $fromTableName table."
+                    )
                 } else if (updateRule == ReferenceOption.SET_DEFAULT) {
                     when (currentDialect) {
                         is MariaDBDialect -> exposedLogger.warn(
