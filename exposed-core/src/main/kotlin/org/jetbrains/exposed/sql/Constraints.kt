@@ -118,32 +118,48 @@ data class ForeignKeyConstraint(
                 append("CONSTRAINT $fkName ")
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
+
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is SQLServerDialect && deleteRule == ReferenceOption.RESTRICT) {
-                    exposedLogger.warn(
-                        "SQLServer doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
-                            "Please check your $fromTableName table."
-                    )
-                } else if (deleteRule == ReferenceOption.SET_DEFAULT) {
-                    when (currentDialect) {
-                        is MariaDBDialect -> exposedLogger.warn(
-                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is OracleDialect -> exposedLogger.warn(
-                            "Oracle doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        else -> append(" ON DELETE $deleteRule")
+                when (deleteRule) {
+                    ReferenceOption.RESTRICT -> {
+                        when (currentDialect) {
+                            is SQLServerDialect -> {
+                                exposedLogger.warn(
+                                    "SQLServer doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                                        "Please check your $fromTableName table."
+                                )
+                            }
+                            is OracleDialect -> {
+                                exposedLogger.warn(
+                                    "Oracle doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                                        "Preventing the deletion of a parent row if a child row references it is the default behaviour." +
+                                        "Please check your $fromTableName table."
+                                )
+                            }
+                            else -> append(" ON DELETE $deleteRule")
+                        }
                     }
-                } else {
-                    append(" ON DELETE $deleteRule")
+                    ReferenceOption.SET_DEFAULT -> {
+                        when (currentDialect) {
+                            is MariaDBDialect -> exposedLogger.warn(
+                                "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                    "Please check your $fromTableName table."
+                            )
+                            is MysqlDialect -> exposedLogger.warn(
+                                "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                    "Please check your $fromTableName table."
+                            )
+                            is OracleDialect -> exposedLogger.warn(
+                                "Oracle doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                                    "Please check your $fromTableName table."
+                            )
+                            else -> append(" ON DELETE $deleteRule")
+                        }
+                    }
+                    else -> append(" ON DELETE $deleteRule")
                 }
             }
+
             if (updateRule != ReferenceOption.NO_ACTION) {
                 if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
