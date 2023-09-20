@@ -161,7 +161,7 @@ data class ForeignKeyConstraint(
             }
 
             if (updateRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+                if (currentDialect is OracleDialect) {
                     exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
                 } else if (currentDialect is SQLServerDialect && updateRule == ReferenceOption.RESTRICT) {
                     exposedLogger.warn(

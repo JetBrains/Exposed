@@ -502,7 +502,7 @@ class CreateTableTests : DatabaseTestsBase() {
         }
         withTables(parent, child) { testDb ->
             val t = TransactionManager.current()
-            val updateCascadePart = if (testDb !in listOf(TestDB.ORACLE, TestDB.H2_ORACLE)) " ON UPDATE CASCADE" else ""
+            val updateCascadePart = if (testDb != TestDB.ORACLE) " ON UPDATE CASCADE" else ""
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
                     Sequence(
