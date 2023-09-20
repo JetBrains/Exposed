@@ -42,7 +42,7 @@ class SpringTransactionManager(
      * ExposedConnection implements savepoint by itself
      * `useSavepointForNestedTransaction` is use `SavepointManager` for nested transaction
      *
-     * So we don't need to use savepoint for nested transaction
+     * So we don't need to use java savepoint for nested transaction
      */
     override fun useSavepointForNestedTransaction() = false
 
@@ -57,6 +57,19 @@ class SpringTransactionManager(
         )
     }
 
+    override fun doSuspend(transaction: Any): Any {
+        val trxObject = transaction as ExposedTransactionObject
+        val currentManager = trxObject.manager
+
+        return (currentManager.currentOrNull() as Any).run {
+            currentManager.bindTransactionToThread(null)
+        }
+    }
+
+    override fun doResume(transaction: Any?, suspendedResources: Any) {
+        threadLocalTransactionManager.bindTransactionToThread(suspendedResources as Transaction?)
+    }
+
     override fun isExistingTransaction(transaction: Any): Boolean {
         val trxObject = transaction as ExposedTransactionObject
         return trxObject.getCurrentTransaction() != null
@@ -69,8 +82,7 @@ class SpringTransactionManager(
         TransactionManager.resetCurrent(currentTransactionManager)
 
         currentTransactionManager.newTransaction(
-            isolation = definition.isolationLevel,
-            readOnly = definition.isReadOnly, outerTransaction = currentTransactionManager.currentOrNull()
+            isolation = definition.isolationLevel, readOnly = definition.isReadOnly, outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
             if (showSql) {
                 addLogger(StdOutSqlLogger)

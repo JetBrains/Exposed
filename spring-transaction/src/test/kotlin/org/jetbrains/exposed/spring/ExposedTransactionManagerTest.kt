@@ -4,23 +4,35 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.test.annotation.Commit
 import org.springframework.test.annotation.Repeat
+import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.*
-import kotlin.test.assertNull
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.assertFailsWith
 
 open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     object T1 : Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
+    }
+
+    @BeforeTest
+    open fun beforeTest() {
+        val pm = ctx.getBean(PlatformTransactionManager::class.java)
+        TransactionTemplate(pm).apply {
+            execute {
+                SchemaUtils.create(T1)
+            }
+        }
     }
 
     @Test
@@ -31,13 +43,11 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         val pm = ctx.getBean(PlatformTransactionManager::class.java)
         if (pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
 
-        SchemaUtils.create(T1)
         T1.insert {
             it[c1] = "112"
         }
 
         Assert.assertEquals(T1.selectAll().count(), 1)
-        SchemaUtils.drop(T1)
     }
 
     @Test
@@ -45,14 +55,12 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Commit
     @Repeat(5)
     open fun testConnection2() {
-        SchemaUtils.create(T1)
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
         }
 
         Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
-        SchemaUtils.drop(T1)
     }
 
     @Test
@@ -63,7 +71,6 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         val tt = TransactionTemplate(pm)
 
         transaction {
-            SchemaUtils.create(T1)
             val rnd = Random().nextInt().toString()
             T1.insert {
                 it[c1] = rnd
@@ -72,14 +79,12 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
 
             tt.executeWithoutResult {
-                val rnd = Random().nextInt().toString()
                 T1.insert {
-                    it[c1] = rnd
+                    it[c1] = Random().nextInt().toString()
                 }
 
                 Assert.assertEquals(2, T1.selectAll().count())
             }
-            SchemaUtils.drop(T1)
         }
     }
 
@@ -88,7 +93,6 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Commit
     @Transactional
     open fun testConnectionCombineWithExposedTransaction2() {
-        SchemaUtils.create(T1)
         val rnd = Random().nextInt().toString()
         T1.insert {
             it[c1] = rnd
@@ -97,52 +101,201 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
 
         transaction {
-            val rnd = Random().nextInt().toString()
             T1.insert {
-                it[c1] = rnd
+                it[c1] = Random().nextInt().toString()
             }
 
             Assert.assertEquals(2, T1.selectAll().count())
         }
-        SchemaUtils.drop(T1)
     }
 
     @Test
     @Repeat(5)
-    fun testConnectionWithoutAnnotation() {
-        transaction {
-            SchemaUtils.create(T1)
-            val rnd = Random().nextInt().toString()
-            T1.insert {
-                it[c1] = rnd
-            }
+    fun testConnectionWithNestedTransactionCommit() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
 
-            Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
-        }
-        assertNull(TransactionManager.currentOrNull())
-        transaction {
-            val rnd = Random().nextInt().toString()
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
+
+        tt.execute {
             T1.insert {
-                it[c1] = rnd
+                it[c1] = Random().nextInt().toString()
+            }
+            Assert.assertEquals(1, T1.selectAll().count())
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                Assert.assertEquals(2, T1.selectAll().count())
             }
 
             Assert.assertEquals(2, T1.selectAll().count())
-            SchemaUtils.drop(T1)
         }
     }
 
     @Test
-    @Transactional(propagation = Propagation.NESTED)
-    open fun testConnectionWithNestedTransaction() {
-        val pm = ctx.getBean(PlatformTransactionManager::class.java)
-        if (pm !is SpringTransactionManager) error("Wrong txManager instance: ${pm.javaClass.name}")
+    @Repeat(5)
+    fun testConnectionWithNestedTransactionInnerRollback() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
 
-        SchemaUtils.create(T1)
-        T1.insert {
-            it[c1] = "112"
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
+
+        tt.execute {
+            T1.insert {
+                it[c1] = Random().nextInt().toString()
+            }
+            Assert.assertEquals(1, T1.selectAll().count())
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                Assert.assertEquals(2, T1.selectAll().count())
+                it.setRollbackOnly()
+            }
+
+            Assert.assertEquals(1, T1.selectAll().count())
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    fun testConnectionWithNestedTransactionOuterRollback() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
+
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
+
+        tt.execute {
+            T1.insert {
+                it[c1] = Random().nextInt().toString()
+            }
+            Assert.assertEquals(T1.selectAll().count(), 1)
+            it.setRollbackOnly()
+
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                Assert.assertEquals(T1.selectAll().count(), 2)
+            }
+            Assert.assertEquals(T1.selectAll().count(), 2)
         }
 
-        Assert.assertEquals(T1.selectAll().count(), 1)
-        SchemaUtils.drop(T1)
+        tt.execute {
+            Assert.assertEquals(T1.selectAll().count(), 0)
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    fun testConnectionWithRequiresNew() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
+
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+
+        tt.execute {
+            T1.insert {
+                it[c1] = Random().nextInt().toString()
+            }
+            Assert.assertEquals(T1.selectAll().count(), 1)
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                Assert.assertEquals(T1.selectAll().count(), 1)
+            }
+            Assert.assertEquals(T1.selectAll().count(), 2)
+        }
+
+        tt.execute {
+            Assert.assertEquals(T1.selectAll().count(), 2)
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
+
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+
+        tt.execute {
+            T1.insert {
+                it[c1] = Random().nextInt().toString()
+            }
+            Assert.assertEquals(T1.selectAll().count(), 1)
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                Assert.assertEquals(T1.selectAll().count(), 1)
+                it.setRollbackOnly()
+            }
+            Assert.assertEquals(T1.selectAll().count(), 1)
+        }
+
+        tt.execute {
+            Assert.assertEquals(T1.selectAll().count(), 1)
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    fun testPropagationNever() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
+
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NEVER
+
+        tt.execute {
+            assertFailsWith<IllegalStateException> {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+            }
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    fun testPropagationNeverWithExistingTransaction() {
+        val tm = ctx.getBean(PlatformTransactionManager::class.java)
+        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
+        val tt = TransactionTemplate(tm)
+
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+
+        assertFailsWith<IllegalTransactionStateException> {
+            tt.execute {
+                T1.insert {
+                    it[c1] = Random().nextInt().toString()
+                }
+                tt.propagationBehavior = TransactionDefinition.PROPAGATION_NEVER
+                tt.execute {
+                    T1.insert {
+                        it[c1] = Random().nextInt().toString()
+                    }
+                }
+            }
+        }
+    }
+
+    @AfterTest
+    open fun afterTest() {
+        val pm = ctx.getBean(PlatformTransactionManager::class.java)
+        TransactionTemplate(pm).apply {
+            execute {
+                SchemaUtils.drop(T1)
+            }
+        }
     }
 }

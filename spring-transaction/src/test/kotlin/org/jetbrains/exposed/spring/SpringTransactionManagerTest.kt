@@ -59,7 +59,8 @@ class SpringTransactionManagerTest {
         tm2.executeAssert(false) {
             tm.executeAssert(false)
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
+                TransactionManager.manager
             )
         }
     }
@@ -108,7 +109,8 @@ class SpringTransactionManagerTest {
         tm1.executeAssert {
             tm2.executeAssert()
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
+                TransactionManager.manager
             )
         }
 
@@ -129,7 +131,8 @@ class SpringTransactionManagerTest {
                     throw ex
                 }
                 assertEquals(
-                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
+                    TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
+                    TransactionManager.manager
                 )
             }
         } catch (e: Exception) {
@@ -232,11 +235,13 @@ class SpringTransactionManagerTest {
     }
 
     private fun SpringTransactionManager.executeAssert(
-        initializeConnection: Boolean = true, body: (TransactionStatus) -> Unit = {}
+        initializeConnection: Boolean = true,
+        body: (TransactionStatus) -> Unit = {}
     ) {
         TransactionTemplate(this).executeWithoutResult {
             assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db), TransactionManager.manager
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
+                TransactionManager.manager
             )
             if (initializeConnection) TransactionManager.current().connection
             body(it)
@@ -288,5 +293,53 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.releaseSavepointCallCount)
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `requires new with commit`() {
+        val tm = SpringTransactionManager(ds1)
+        val tt = TransactionTemplate(tm)
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+
+        tt.execute {
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+
+            tt.execute { status ->
+                TransactionManager.current().connection
+                assertTrue(it.isNewTransaction)
+            }
+
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(2, con1.commitCallCount)
+        assertEquals(2, con1.closeCallCount)
+    }
+
+    @Test
+    fun `requires new with inner rollback`() {
+        val tm = SpringTransactionManager(ds1)
+        val tt = TransactionTemplate(tm)
+        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+
+        tt.execute {
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+
+            tt.execute { status ->
+                TransactionManager.current().connection
+                assertTrue(it.isNewTransaction)
+                status.setRollbackOnly()
+            }
+
+            TransactionManager.current().connection
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.rollbackCallCount)
+        assertEquals(2, con1.closeCallCount)
     }
 }
