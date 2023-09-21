@@ -295,4 +295,39 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             SchemaUtils.drop(UByteTable, UShortTable, UIntTable, ULongTable)
         }
     }
+
+    @Test
+    fun testCheckConstraintNameAcrossMultipleTables() {
+        val (col1, col2, col3) = listOf("num1", "num2", "num3")
+        val tester1 = object : Table("tester_1") {
+            val unsigned1 = ubyte(col1)
+            val unsigned2 = ushort(col2)
+            val unsigned3 = uinteger(col3)
+        }
+        val tester2 = object : Table("tester_2") {
+            val unsigned1 = ubyte(col1)
+            val unsigned2 = ushort(col2)
+            val unsigned3 = uinteger(col3)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(tester1, tester2)
+
+                val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
+                tester1.insert {
+                    it[unsigned1] = byte
+                    it[unsigned2] = short
+                    it[unsigned3] = integer
+                }
+                tester2.insert {
+                    it[unsigned1] = byte
+                    it[unsigned2] = short
+                    it[unsigned3] = integer
+                }
+            } finally {
+                SchemaUtils.drop(tester1, tester2)
+            }
+        }
+    }
 }
