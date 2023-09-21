@@ -21,6 +21,10 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
         val unsignedShort = ushort("ushort")
     }
 
+    object UShortTable2 : Table("ushort_table2") {
+        val unsignedShort = ushort("ushort")
+    }
+
     object UIntTable : Table("uint_table") {
         val unsignedInt = uinteger("uint")
     }
@@ -146,6 +150,11 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                 exec("""INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)""")
             }
         }
+    }
+
+    @Test
+    fun testCheckConstraintsCanCoexist() {
+        withTables(UShortTable, UShortTable2) {}
     }
 
     @Test
