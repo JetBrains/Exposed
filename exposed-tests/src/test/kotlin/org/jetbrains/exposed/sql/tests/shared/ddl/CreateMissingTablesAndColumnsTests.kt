@@ -673,8 +673,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val schemaName = "my_schema"
         val schema = Schema(schemaName)
         // index and foreign key both use table name to auto-generate their own names & to compare metadata
+        // default columns in SQL Server requires a named constraint that uses table name
         val parentTable = object : IntIdTable("$schemaName.parent_table") {
             val secondId = integer("second_id").uniqueIndex()
+            val column1 = varchar("column_1", 32).default("TEST")
         }
         val childTable = object : LongIdTable("$schemaName.child_table") {
             val parent = reference("my_parent", parentTable)
