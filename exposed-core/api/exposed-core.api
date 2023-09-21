@@ -3556,10 +3556,13 @@ public final class org/jetbrains/exposed/sql/vendors/OracleDialect$Companion : o
 public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect : org/jetbrains/exposed/sql/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/PostgreSQLDialect$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	protected fun createIndexWithType (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z

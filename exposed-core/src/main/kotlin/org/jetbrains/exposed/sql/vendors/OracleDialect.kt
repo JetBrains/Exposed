@@ -361,5 +361,5 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    companion object : DialectNameProvider("oracle")
+    companion object : DialectNameProvider("Oracle")
 }

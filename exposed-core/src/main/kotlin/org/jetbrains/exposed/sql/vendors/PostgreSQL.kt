@@ -287,7 +287,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 /**
  * PostgreSQL dialect implementation.
  */
-open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+open class PostgreSQLDialect(override val name: String = dialectName) : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override val supportsOrderByNullsFirstLast: Boolean = true
 
     override val requiresAutoCommitOnCreateDrop: Boolean = true
@@ -342,7 +342,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         }
     }
 
-    companion object : DialectNameProvider("postgresql")
+    companion object : DialectNameProvider("PostgreSQL")
 }
 
 /**
@@ -350,8 +350,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
  *
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
-open class PostgreSQLNGDialect : PostgreSQLDialect() {
+open class PostgreSQLNGDialect : PostgreSQLDialect(dialectName) {
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
-    companion object : DialectNameProvider("pgsql")
+    companion object : DialectNameProvider("PostgreSQLNG")
 }

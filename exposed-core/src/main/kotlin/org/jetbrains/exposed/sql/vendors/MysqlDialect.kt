@@ -400,5 +400,5 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         }
     }
 
-    companion object : DialectNameProvider("mysql")
+    companion object : DialectNameProvider("MySQL")
 }

@@ -163,7 +163,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     private var delegatedDialect: DatabaseDialect? = null
 
     private fun resolveDelegatedDialect(): DatabaseDialect? {
-        return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.let {
+        return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.lowercase()?.let {
             val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
             dialect
@@ -269,7 +269,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
-    companion object : DialectNameProvider("h2")
+    companion object : DialectNameProvider("H2")
 }
 
 val DatabaseDialect.h2Mode: H2Dialect.H2CompatibilityMode? get() = (this as? H2Dialect)?.h2Mode

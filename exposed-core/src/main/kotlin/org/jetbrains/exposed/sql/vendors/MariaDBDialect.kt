@@ -48,5 +48,5 @@ class MariaDBDialect : MysqlDialect() {
         return super.createIndex(index)
     }
 
-    companion object : DialectNameProvider("mariadb")
+    companion object : DialectNameProvider("MariaDB")
 }
