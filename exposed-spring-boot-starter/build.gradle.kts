@@ -11,7 +11,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -25,7 +25,7 @@ dependencies {
     testImplementation("org.springframework.boot", "spring-boot-starter-test", Versions.springBoot)
     // put in testImplementation so no hard dependency for those using the starter
     testImplementation("org.springframework.boot", "spring-boot-starter-webflux", Versions.springBoot)
-    testImplementation("com.h2database", "h2", Versions.h2)
+    testImplementation("com.h2database", "h2", Versions.h2_v2)
 }
 
 tasks.withType<Test>().configureEach {

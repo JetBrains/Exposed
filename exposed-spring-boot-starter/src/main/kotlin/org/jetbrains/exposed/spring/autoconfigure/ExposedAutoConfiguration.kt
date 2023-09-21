@@ -4,18 +4,16 @@ import org.jetbrains.exposed.spring.DatabaseInitializer
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
-@Configuration
-@AutoConfigureAfter(DataSourceAutoConfiguration::class)
+@AutoConfiguration(after = [DataSourceAutoConfiguration::class])
 @EnableTransactionManagement
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
 
