@@ -17,9 +17,12 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
@@ -58,8 +61,94 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
     @Test
-    fun testCreateTableWithKeywordIdentifiers() {
+    fun testKeywordIdentifiersWithoutOptIn() {
+        val keywords = listOf("Integer", "name")
+        val tester = object : Table(keywords[0]) {
+            val name = varchar(keywords[1], 32)
+        }
+
+        withDb(excludeSettings = TestDB.allH2TestDB - TestDB.H2) {
+            assertFalse(db.config.preserveKeywordCasing)
+
+            SchemaUtils.create(tester)
+            assertTrue(tester.exists())
+
+            val (tableName, columnName) = keywords.map {
+                when (currentDialectTest) {
+                    is MysqlDialect -> "`$it`"
+                    is PostgreSQLDialect -> "\"${it.lowercase()}\""
+                    is OracleDialect, is H2Dialect -> "\"${it.uppercase()}\""
+                    else -> "\"$it\""
+                }
+            }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, tester.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            tester.insert { it[name] = "A" }
+
+            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
+            tester.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(tester)
+        }
+    }
+
+    private object FlagTestTable : Table("BooLean") {
+        val name = varchar("name", 32)
+    }
+
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersLogWarningWithoutOptIn() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withDb(excludeSettings = TestDB.allH2TestDB - TestDB.H2) { testDb ->
+            SchemaUtils.create(FlagTestTable)
+            val expectedLogs = when (testDb) {
+                TestDB.H2, TestDB.ORACLE -> 2
+                TestDB.POSTGRESQL -> 1 // column name is already lower case, so only table name changes case
+                else -> 0
+            }
+            assertEquals(expectedLogs, logCaptor.warnLogs.size)
+            logCaptor.clearLogs()
+
+            FlagTestTable.insert { it[name] = "A" }
+            FlagTestTable.selectAll().toList()
+            SchemaUtils.drop(FlagTestTable)
+            assertEquals(0, logCaptor.warnLogs.size)
+            logCaptor.clearLogs()
+        }
+    }
+
+    private val keywordFlagDB by lazy {
+        Database.connect(
+            url = "jdbc:h2:mem:flagtest;DB_CLOSE_DELAY=-1;",
+            driver = "org.h2.Driver",
+            user = "root",
+            password = "",
+            databaseConfig = DatabaseConfig {
+                @OptIn(ExperimentalKeywordApi::class)
+                preserveKeywordCasing = true
+            }
+        )
+    }
+
+    // TODO: Refactor test to cover all DB when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersWithOptIn() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+
         val keywords = listOf("data", "public", "key", "constraint")
         val keywordTable = object : Table(keywords[0]) {
             val public = bool(keywords[1])
@@ -67,13 +156,13 @@ class DDLTests : DatabaseTestsBase() {
             val constraint = varchar(keywords[3], 32)
         }
 
-        withDb { testDb ->
+        transaction(keywordFlagDB) {
+            assertTrue(db.config.preserveKeywordCasing)
+
             SchemaUtils.create(keywordTable)
             assertTrue(keywordTable.exists())
 
-            val (tableName, publicName, dataName, constraintName) = keywords.map { name ->
-                if (testDb in listOf(TestDB.MYSQL, TestDB.MARIADB)) "`$name`" else "\"$name\""
-            }
+            val (tableName, publicName, dataName, constraintName) = keywords.map { "\"$it\"" }
 
             val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
                 "$publicName ${keywordTable.public.columnType.sqlType()} NOT NULL, " +
@@ -99,72 +188,26 @@ class DDLTests : DatabaseTestsBase() {
 
             SchemaUtils.drop(keywordTable)
         }
+        TransactionManager.closeAndUnregister(keywordFlagDB)
     }
 
-    // TODO: Remove test when preserveKeywordCasing flag is deprecated
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
     @Test
-    fun testKeywordIdentifiersLogWarningOnCreate() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
-        val tester = object : Table("BooLean") {
-            val name = varchar("name", 32)
-        }
+    fun testKeywordIdentifiersLogNoWarningWithOptIn() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
 
-        withDb {
-            SchemaUtils.create(tester)
-            assertEquals(2, logCaptor.warnLogs.size)
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        transaction(keywordFlagDB) {
+            SchemaUtils.create(FlagTestTable)
+            assertEquals(0, logCaptor.warnLogs.size)
             logCaptor.clearLogs()
 
-            tester.insert { it[name] = "A" }
-            tester.selectAll().toList()
-            SchemaUtils.drop(tester)
+            SchemaUtils.drop(FlagTestTable)
             assertEquals(0, logCaptor.warnLogs.size)
             logCaptor.clearLogs()
         }
-    }
-
-    // TODO: Remove test when preserveKeywordCasing flag is deprecated
-    @Test
-    fun testKeywordIdentifiersWithOptOutFlag() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
-        val db = Database.connect(
-            url = "jdbc:h2:mem:flagtest;DB_CLOSE_DELAY=-1;",
-            driver = "org.h2.Driver",
-            user = "root",
-            password = "",
-            databaseConfig = DatabaseConfig { preserveKeywordCasing = false }
-        )
-
-        val keywords = listOf("Integer", "name")
-        val tester = object : Table(keywords[0]) {
-            val name = varchar(keywords[1], 32)
-        }
-
-        transaction(db) {
-            assertFalse(db.config.preserveKeywordCasing)
-
-            SchemaUtils.create(tester)
-            assertTrue(tester.exists())
-
-            val (tableName, columnName) = keywords.map { "\"${it.uppercase()}\"" }
-
-            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
-                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
-            assertEquals(expectedCreate, tester.ddl.single())
-
-            // check that insert and select statement identifiers also match in DB without throwing SQLException
-            tester.insert { it[name] = "A" }
-
-            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
-            tester.selectAll().also {
-                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
-            }
-
-            // check that identifiers match with returned jdbc metadata
-            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester)
-            assertTrue(statements.isEmpty())
-
-            SchemaUtils.drop(tester)
-        }
+        TransactionManager.closeAndUnregister(keywordFlagDB)
     }
 
     // Placed outside test function to shorten generated name

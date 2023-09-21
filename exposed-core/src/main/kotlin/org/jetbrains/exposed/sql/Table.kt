@@ -1218,13 +1218,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         message = "This will be removed in future releases when the check becomes default in IdentifierManagerApi",
         level = DeprecationLevel.WARNING
     )
-    private fun String.warnIfAKeyword() {
-        val isAKeyword = TransactionManager.currentOrNull()?.db?.identifierManager?.isAKeyword(this) == true
-        if (isAKeyword) {
-            exposedLogger.warn(
-                "Keyword identifier used: '$this'. Case sensitivity will be kept when quoted by default. " +
-                    "To temporarily opt-out, set 'preserveKeywordCasing' to false in DatabaseConfig block."
-            )
+    private fun String.warnIfUnflaggedKeyword() {
+        val warn = TransactionManager.currentOrNull()?.db?.identifierManager?.isUnflaggedKeyword(this) == true
+        if (warn) {
+            val actual = inProperCase()
+            if (this != actual) {
+                exposedLogger.warn(
+                    "Keyword identifier used: '$this'. Case sensitivity is not kept when quoted by default: '$actual'. " +
+                        "To keep case sensitivity, opt-in and set 'preserveKeywordCasing' to true in DatabaseConfig block."
+                )
+            }
         }
     }
 
@@ -1248,10 +1251,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table).also { tableName.warnIfAKeyword() })
+            append(TransactionManager.current().identity(this@Table).also { tableName.warnIfUnflaggedKeyword() })
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
-                    column.descriptionDdl(false).also { column.name.warnIfAKeyword() }
+                    column.descriptionDdl(false).also { column.name.warnIfUnflaggedKeyword() }
                 }
 
                 if (columns.any { it.isPrimaryConstraintWillBeDefined }) {

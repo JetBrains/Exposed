@@ -105,14 +105,16 @@ class DatabaseConfig private constructor(
         var logTooMuchResultSetsThreshold: Int = 0,
         /**
          * Toggle whether table and column identifiers that are also keywords should retain their case sensitivity.
-         * Keeping user-defined case sensitivity (value set to `true`) will become the default in future releases.
+         * Keeping user-defined case sensitivity (value set to `true`) may become the default in future releases.
          */
-        var preserveKeywordCasing: Boolean = true,
+        @ExperimentalKeywordApi
+        var preserveKeywordCasing: Boolean = false,
     )
 
     companion object {
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
+            @OptIn(ExperimentalKeywordApi::class)
             return DatabaseConfig(
                 sqlLogger = builder.sqlLogger ?: Slf4jSqlDebugLogger,
                 useNestedTransactions = builder.useNestedTransactions,
@@ -133,3 +135,11 @@ class DatabaseConfig private constructor(
         }
     }
 }
+
+@RequiresOptIn(
+    message = "This API is experimental and the behavior defined by setting this value to 'true' may become the default " +
+        "in future releases. Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalKeywordApi::class)' " +
+        "or '@org.jetbrains.exposed.sql.ExperimentalKeywordApi'."
+)
+@Target(AnnotationTarget.PROPERTY)
+annotation class ExperimentalKeywordApi
