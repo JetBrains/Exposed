@@ -72,7 +72,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     @Test
     fun `test ON DELETE RESTRICT for databases that support it without SQLite`() {
         withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)) {
-            testOnDeleteRestrict()
+            testRestrict(isTestingOnDelete = true)
         }
     }
 
@@ -81,55 +81,14 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
-            testOnDeleteRestrict()
-        }
-    }
-
-    private fun testOnDeleteRestrict() {
-        val country = object : Table("Country") {
-            val id = integer("id")
-            val name = varchar(name = "name", length = 20)
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        val city = object : Table("City") {
-            val id = integer("id")
-            val name = varchar(name = "name", length = 20)
-            val countryId = integer("countryId")
-                .references(
-                    country.id,
-                    onDelete = ReferenceOption.RESTRICT
-                )
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        SchemaUtils.drop(country, city)
-        SchemaUtils.create(country, city)
-
-        val lebanonId = 0
-        country.insert {
-            it[id] = lebanonId
-            it[name] = "Lebanon"
-        }
-
-        val beirutId = 0
-        city.insert {
-            it[id] = beirutId
-            it[name] = "Beirut"
-            it[countryId] = 0
-        }
-
-        expectException<ExposedSQLException> {
-            country.deleteWhere { id eq lebanonId }
+            testRestrict(isTestingOnDelete = true)
         }
     }
 
     @Test
     fun `test ON UPDATE RESTRICT for databases that support it without SQLite`() {
         withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) {
-            testOnUpdateRestrict()
+            testRestrict(isTestingOnDelete = false)
         }
     }
 
@@ -138,11 +97,11 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
         transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
-            testOnUpdateRestrict()
+            testRestrict(isTestingOnDelete = false)
         }
     }
 
-    private fun testOnUpdateRestrict() {
+    private fun testRestrict(isTestingOnDelete: Boolean) {
         val country = object : Table("Country") {
             val id = integer("id")
             val name = varchar(name = "name", length = 20)
@@ -156,7 +115,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             val countryId = integer("countryId")
                 .references(
                     country.id,
-                    onUpdate = ReferenceOption.RESTRICT
+                    onDelete = if (isTestingOnDelete) ReferenceOption.RESTRICT else null,
+                    onUpdate = if (isTestingOnDelete) null else ReferenceOption.RESTRICT,
                 )
 
             override val primaryKey = PrimaryKey(id)
@@ -178,9 +138,15 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             it[countryId] = 0
         }
 
-        expectException<ExposedSQLException> {
-            country.update({ country.id eq lebanonId }) {
-                it[id] = 1
+        if (isTestingOnDelete) {
+            expectException<ExposedSQLException> {
+                country.deleteWhere { id eq lebanonId }
+            }
+        } else {
+            expectException<ExposedSQLException> {
+                country.update({ country.id eq lebanonId }) {
+                    it[id] = 1
+                }
             }
         }
     }
