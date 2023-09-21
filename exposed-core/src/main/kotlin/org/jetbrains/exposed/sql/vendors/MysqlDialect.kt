@@ -283,6 +283,8 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsOrderByNullsFirstLast: Boolean = false
 
+    override val supportsSetDefaultReferenceOption: Boolean = false
+
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
     // Available from MySQL 8.0.19

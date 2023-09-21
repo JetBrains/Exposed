@@ -37,6 +37,7 @@ class MariaDBDialect : MysqlDialect() {
     override val name: String = dialectName
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsSetDefaultReferenceOption: Boolean = false
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
