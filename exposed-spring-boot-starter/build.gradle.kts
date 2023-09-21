@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.exposed.gradle.Versions
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
@@ -26,6 +27,12 @@ dependencies {
     // put in testImplementation so no hard dependency for those using the starter
     testImplementation("org.springframework.boot", "spring-boot-starter-webflux", Versions.springBoot)
     testImplementation("com.h2database", "h2", Versions.h2_v2)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 tasks.withType<Test>().configureEach {
