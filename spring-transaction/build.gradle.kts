@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.exposed.gradle.Versions
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply true
@@ -33,6 +34,12 @@ dependencies {
     testImplementation("junit", "junit", "4.12")
     testImplementation("org.hamcrest", "hamcrest-library", "1.3")
     testImplementation("com.h2database", "h2", Versions.h2)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 tasks.withType<Test>().configureEach {
