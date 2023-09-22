@@ -112,7 +112,7 @@ See the [official documentation](https://docs.spring.io/spring-boot/docs/current
 ## Automatic Schema Creation
 This starter will create the database schema if enabled automatically using any class that extends `org.jetbrains.exposed.sql.Table`
 
-Sometimes you will want to exclude packages from the list of auto-created schema. In this event, the property `spring.exposed.excluded-packages` can be used to exclude everything under the provided packages.
+Sometimes you will want to exclude packages from the list of auto-created schemas. In this event, the property `spring.exposed.excluded-packages` can be used to exclude everything under the provided packages.
 
 ### application.properties
 ```properties
