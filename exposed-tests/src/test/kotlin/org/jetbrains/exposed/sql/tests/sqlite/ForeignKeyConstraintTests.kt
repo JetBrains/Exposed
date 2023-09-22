@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.DEFAULT_CATEGORY_ID
 import org.jetbrains.exposed.sql.tests.shared.Item
@@ -27,7 +28,13 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     fun `test ON DELETE SET DEFAULT for SQLite`() {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
-        transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
+        transaction(
+            Database.connect(
+                "jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on",
+                user = "root",
+                driver = "org.sqlite.JDBC"
+            )
+        ) {
             testOnDeleteSetDefault()
         }
     }
@@ -80,7 +87,13 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     fun `test ON DELETE RESTRICT for SQLite`() {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
-        transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
+        transaction(
+            Database.connect(
+                "jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on",
+                user = "root",
+                driver = "org.sqlite.JDBC"
+            )
+        ) {
             testRestrict(isTestingOnDelete = true)
         }
     }
@@ -96,7 +109,13 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     fun `test ON UPDATE RESTRICT for SQLite`() {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
 
-        transaction(Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on", user = "root", driver = "org.sqlite.JDBC")) {
+        transaction(
+            Database.connect(
+                "jdbc:sqlite:file:test?mode=memory&cache=shared&foreign_keys=on",
+                user = "root",
+                driver = "org.sqlite.JDBC"
+            )
+        ) {
             testRestrict(isTestingOnDelete = false)
         }
     }
@@ -146,6 +165,68 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             expectException<ExposedSQLException> {
                 country.update({ country.id eq lebanonId }) {
                     it[id] = 1
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testUpdateRuleReadCorrectlyWhenNotSpecifiedInChildTable() {
+        val category = object : Table("Category") {
+            val id = integer("id")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val item = object : Table("Item") {
+            val id = integer("id")
+            val categoryId = integer("categoryId").references(category.id)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(category, item) { testDb ->
+            if (currentDialectTest.supportsOnUpdate) {
+                val constraints = connection.metadata {
+                    tableConstraints(listOf(item))
+                }
+                constraints.values.forEach { list ->
+                    list.forEach {
+                        when (testDb) {
+                            TestDB.H2_ORACLE, TestDB.H2_SQLSERVER ->
+                                assertEquals(ReferenceOption.RESTRICT, it.updateRule)
+                            else -> assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testUpdateRuleReadCorrectlyWhenSpecifiedInChildTable() {
+        val category = object : Table("Category") {
+            val id = integer("id")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val item = object : Table("Item") {
+            val id = integer("id")
+            val categoryId = integer("categoryId").references(category.id, onUpdate = ReferenceOption.CASCADE)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(category, item) {
+            if (currentDialectTest.supportsOnUpdate) {
+                val constraints = connection.metadata {
+                    tableConstraints(listOf(item))
+                }
+                constraints.values.forEach { list ->
+                    list.forEach {
+                        assertEquals(ReferenceOption.CASCADE, it.updateRule)
+                    }
                 }
             }
         }
