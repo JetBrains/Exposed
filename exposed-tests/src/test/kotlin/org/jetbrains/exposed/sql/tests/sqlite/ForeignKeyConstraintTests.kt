@@ -171,7 +171,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateRuleReadCorrectlyWhenNotSpecifiedInChildTable() {
+    fun testUpdateAndDeleteRulesReadCorrectlyWhenNotSpecifiedInChildTable() {
         val category = object : Table("Category") {
             val id = integer("id")
 
@@ -193,9 +193,14 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 constraints.values.forEach { list ->
                     list.forEach {
                         when (testDb) {
-                            TestDB.H2_ORACLE, TestDB.H2_SQLSERVER ->
+                            TestDB.H2_ORACLE, TestDB.H2_SQLSERVER -> {
                                 assertEquals(ReferenceOption.RESTRICT, it.updateRule)
-                            else -> assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                                assertEquals(ReferenceOption.RESTRICT, it.deleteRule)
+                            }
+                            else -> {
+                                assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                                assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
+                            }
                         }
                     }
                 }
@@ -204,7 +209,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateRuleReadCorrectlyWhenSpecifiedInChildTable() {
+    fun testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable() {
         val category = object : Table("Category") {
             val id = integer("id")
 
@@ -213,7 +218,12 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
         val item = object : Table("Item") {
             val id = integer("id")
-            val categoryId = integer("categoryId").references(category.id, onUpdate = ReferenceOption.CASCADE)
+            val categoryId = integer("categoryId")
+                .references(
+                    category.id,
+                    onUpdate = ReferenceOption.CASCADE,
+                    onDelete = ReferenceOption.CASCADE
+                )
 
             override val primaryKey = PrimaryKey(id)
         }
@@ -226,6 +236,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 constraints.values.forEach { list ->
                     list.forEach {
                         assertEquals(ReferenceOption.CASCADE, it.updateRule)
+                        assertEquals(ReferenceOption.CASCADE, it.deleteRule)
                     }
                 }
             }

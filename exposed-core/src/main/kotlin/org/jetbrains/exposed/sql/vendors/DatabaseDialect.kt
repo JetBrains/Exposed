@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.DatabaseMetaData
 
 /**
  * Common interface for all database dialects.
@@ -143,6 +144,16 @@ interface DatabaseDialect {
         if (cascade) {
             append(" CASCADE")
         }
+    }
+
+    /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
+    fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
+        DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
+        DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
+        DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
+        DatabaseMetaData.importedKeyNoAction -> ReferenceOption.NO_ACTION
+        DatabaseMetaData.importedKeySetDefault -> ReferenceOption.SET_DEFAULT
+        else -> currentDialect.defaultReferenceOption
     }
 
     companion object {
