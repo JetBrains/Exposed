@@ -4,7 +4,6 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -38,7 +37,9 @@ private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
     ISODateTimeFormat.dateTime().withLocale(Locale.ROOT)
 }
 
-private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
+private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(
+    date.substringAfterLast('.', "").length
+)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "YYYY-MM-dd HH:mm:ss"
     val newFormat = baseFormat + if (fraction in 1..9) ".${"S".repeat(fraction)}" else ""
@@ -82,14 +83,8 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
                 currentDialect is SQLiteDialect -> SQLITE_DATE_STRING_FORMATTER.parseDateTime(value)
                 else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
             }
-
-            else -> {
-                if (localDateTimeClass == value.javaClass) {
-                    DateTime.parse(value.toString())
-                } else {
-                    valueFromDB(value.toString()) as DateTime
-                }
-            }
+            is java.time.LocalDateTime -> DateTime.parse(value.toString())
+            else -> valueFromDB(value.toString()) as DateTime
         }
         return when (time) {
             true -> dateTime
@@ -98,18 +93,12 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
-        /*
-         Since MySQL ConnectorJ 8.0.23 driver returns LocalDateTime instead of String for DateTime columns.
-         As exposed-jodatime module should work with Java 1.7 it's necessary to fetch it as String as it was before.
-
-         MariaDB however may return '0000-00-00 00:00:00' on getString even though it is also null in many other
-          regards (and can obviously never be converted to anything reasonable). So dont do that for MariaDB.
-         */
-        return if (time && localDateTimeClass != null && currentDialect is MysqlDialect) {
-            rs.getObject(index, localDateTimeClass)
-        } else if (time && currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-            rs.getObject(index, String::class.java)
-        } else super.readObject(rs, index)
+        // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
+        return if (time && currentDialect is MysqlDialect) {
+            rs.getObject(index, java.time.LocalDateTime::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
     }
 
     override fun notNullValueToDB(value: Any): Any = when {
@@ -135,15 +124,6 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         result = 31 * result + time.hashCode()
         return result
     }
-
-    companion object {
-        // https://www.baeldung.com/java-check-class-exists
-        private val localDateTimeClass = try {
-            Class.forName("java.time.LocalDateTime", false, this::class.java.classLoader)
-        } catch (_: ClassNotFoundException) {
-            null
-        }
-    }
 }
 
 class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
@@ -163,29 +143,23 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun valueFromDB(value: Any): DateTime = when {
-        value.javaClass == offsetDateTimeClass -> DateTime.parse(value.toString())
-        value is String -> {
+    override fun valueFromDB(value: Any): DateTime = when (value) {
+        is java.time.OffsetDateTime -> DateTime.parse(value.toString())
+        is String -> {
             if (currentDialect is SQLiteDialect) {
                 DateTime.parse(value, SQLITE_DATE_TIME_WITH_TIME_ZONE_FORMATTER)
             } else {
                 DateTime.parse(value)
             }
         }
-        value is java.sql.Timestamp -> DateTime(value.time)
+        is java.sql.Timestamp -> DateTime(value.time)
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
-        else -> {
-            if (offsetDateTimeClass != null) {
-                rs.getObject(index, offsetDateTimeClass)
-            } else {
-                super.readObject(rs, index)
-            }
-        }
+        else -> rs.getObject(index, java.time.OffsetDateTime::class.java)
     }
 
     override fun notNullValueToDB(value: Any): Any = when (value) {
@@ -197,15 +171,6 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
             }
         }
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
-    }
-
-    companion object {
-        // https://www.baeldung.com/java-check-class-exists
-        private val offsetDateTimeClass = try {
-            Class.forName("java.time.OffsetDateTime", false, this::class.java.classLoader)
-        } catch (_: ClassNotFoundException) {
-            null
-        }
     }
 }
 
