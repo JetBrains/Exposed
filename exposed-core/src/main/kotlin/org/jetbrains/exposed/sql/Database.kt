@@ -112,7 +112,7 @@ class Database private constructor(
         }
 
         fun registerDialect(prefix: String, dialect: () -> DatabaseDialect) {
-            dialects[prefix] = dialect
+            dialects[prefix.lowercase()] = dialect
         }
 
         fun registerJdbcDriver(prefix: String, driverClassName: String, dialect: String) {

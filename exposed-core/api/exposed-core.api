@@ -3245,9 +3245,12 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun getSupportsDualTableConcept ()Z
 	public abstract fun getSupportsIfNotExists ()Z
 	public abstract fun getSupportsMultipleGeneratedKeys ()Z
+	public abstract fun getSupportsOnUpdate ()Z
 	public abstract fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public abstract fun getSupportsOrderByNullsFirstLast ()Z
+	public abstract fun getSupportsRestrictReferenceOption ()Z
 	public abstract fun getSupportsSequenceAsGeneratedKeys ()Z
+	public abstract fun getSupportsSetDefaultReferenceOption ()Z
 	public abstract fun getSupportsSubqueryUnions ()Z
 	public abstract fun getSupportsTernaryAffectedRowValues ()Z
 	public abstract fun getSupportsWindowFrameGroupsMode ()Z
@@ -3285,9 +3288,12 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 	public static fun getSupportsCreateSequence (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsDualTableConcept (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsIfNotExists (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
+	public static fun getSupportsOnUpdate (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOnlyIdentifiersInGeneratedKeys (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsOrderByNullsFirstLast (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
+	public static fun getSupportsRestrictReferenceOption (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsSequenceAsGeneratedKeys (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
+	public static fun getSupportsSetDefaultReferenceOption (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsSubqueryUnions (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsTernaryAffectedRowValues (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsWindowFrameGroupsMode (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
@@ -3501,6 +3507,7 @@ public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbra
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;
 	public fun getName ()Ljava/lang/String;
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsSetDefaultReferenceOption ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
@@ -3516,6 +3523,7 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	protected fun fillConstraintCacheForTables (Ljava/util/List;)V
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
@@ -3542,8 +3550,11 @@ public class org/jetbrains/exposed/sql/vendors/OracleDialect : org/jetbrains/exp
 	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRestrictReferenceOption ()Z
+	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
@@ -3556,10 +3567,13 @@ public final class org/jetbrains/exposed/sql/vendors/OracleDialect$Companion : o
 public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect : org/jetbrains/exposed/sql/vendors/VendorDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/PostgreSQLDialect$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	protected fun createIndexWithType (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
@@ -3609,6 +3623,7 @@ public class org/jetbrains/exposed/sql/vendors/SQLServerDialect : org/jetbrains/
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
@@ -3674,9 +3689,12 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun getSupportsDualTableConcept ()Z
 	public fun getSupportsIfNotExists ()Z
 	public fun getSupportsMultipleGeneratedKeys ()Z
+	public fun getSupportsOnUpdate ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsRestrictReferenceOption ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
+	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z

@@ -243,6 +243,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsSequenceAsGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsRestrictReferenceOption: Boolean = false
 
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 
@@ -347,7 +348,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
     override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
 
-    companion object : DialectNameProvider("sqlserver") {
+    companion object : DialectNameProvider("SQLServer") {
         private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')
     }
 }

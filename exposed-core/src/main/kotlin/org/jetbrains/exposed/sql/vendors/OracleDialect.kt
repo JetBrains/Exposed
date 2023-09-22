@@ -310,6 +310,11 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsDualTableConcept: Boolean = true
     override val supportsOrderByNullsFirstLast: Boolean = true
+    override val supportsOnUpdate: Boolean = false
+    override val supportsSetDefaultReferenceOption: Boolean = false
+
+    // Preventing the deletion of a parent row if a child row references it is the default behaviour in Oracle.
+    override val supportsRestrictReferenceOption: Boolean = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -361,5 +366,5 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
-    companion object : DialectNameProvider("oracle")
+    companion object : DialectNameProvider("Oracle")
 }

@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.sql.DatabaseMetaData
@@ -118,42 +121,36 @@ data class ForeignKeyConstraint(
                 append("CONSTRAINT $fkName ")
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
+
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (deleteRule == ReferenceOption.SET_DEFAULT) {
-                    when (currentDialect) {
-                        is MariaDBDialect -> exposedLogger.warn(
-                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is OracleDialect -> exposedLogger.warn(
-                            "Oracle doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        else -> append(" ON DELETE $deleteRule")
-                    }
+                if (deleteRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                            "Please check your $fromTableName table."
+                    )
+                } else if (deleteRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                            "Please check your $fromTableName table."
+                    )
                 } else {
                     append(" ON DELETE $deleteRule")
                 }
             }
+
             if (updateRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
-                } else if (updateRule == ReferenceOption.SET_DEFAULT) {
-                    when (currentDialect) {
-                        is MariaDBDialect -> exposedLogger.warn(
-                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        else -> append(" ON UPDATE $updateRule")
-                    }
+                if (!currentDialect.supportsOnUpdate) {
+                    exposedLogger.warn("${currentDialect.name} doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (updateRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON UPDATE clause. " +
+                            "Please check your $fromTableName table."
+                    )
+                } else if (updateRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                            "Please check your $fromTableName table."
+                    )
                 } else {
                     append(" ON UPDATE $updateRule")
                 }
