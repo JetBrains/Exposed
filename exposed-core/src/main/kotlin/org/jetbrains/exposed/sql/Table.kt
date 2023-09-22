@@ -1221,13 +1221,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun String.warnIfUnflaggedKeyword() {
         val warn = TransactionManager.currentOrNull()?.db?.identifierManager?.isUnflaggedKeyword(this) == true
         if (warn) {
-            val actual = inProperCase()
-            if (this != actual) {
-                exposedLogger.warn(
-                    "Keyword identifier used: '$this'. Case sensitivity is not kept when quoted by default: '$actual'. " +
-                        "To keep case sensitivity, opt-in and set 'preserveKeywordCasing' to true in DatabaseConfig block."
-                )
-            }
+            exposedLogger.warn(
+                "Keyword identifier used: '$this'. Case sensitivity may not be kept when quoted by default: '${inProperCase()}'. " +
+                    "To keep case sensitivity, opt-in and set 'preserveKeywordCasing' to true in DatabaseConfig block."
+            )
         }
     }
 

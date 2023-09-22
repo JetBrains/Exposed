@@ -111,23 +111,20 @@ class DDLTests : DatabaseTestsBase() {
     // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
     @Test
     fun testKeywordIdentifiersLogWarningWithoutOptIn() {
-        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        withDb {
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            try {
+                SchemaUtils.create(FlagTestTable)
+                assertEquals(2, logCaptor.warnLogs.size)
+                logCaptor.clearLogs()
 
-        withDb(excludeSettings = TestDB.allH2TestDB - TestDB.H2) { testDb ->
-            SchemaUtils.create(FlagTestTable)
-            val expectedLogs = when (testDb) {
-                TestDB.H2, TestDB.ORACLE -> 2
-                TestDB.POSTGRESQL -> 1 // column name is already lower case, so only table name changes case
-                else -> 0
+                FlagTestTable.insert { it[name] = "A" }
+                FlagTestTable.selectAll().toList()
+                SchemaUtils.drop(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+            } finally {
+                logCaptor.clearLogs()
             }
-            assertEquals(expectedLogs, logCaptor.warnLogs.size)
-            logCaptor.clearLogs()
-
-            FlagTestTable.insert { it[name] = "A" }
-            FlagTestTable.selectAll().toList()
-            SchemaUtils.drop(FlagTestTable)
-            assertEquals(0, logCaptor.warnLogs.size)
-            logCaptor.clearLogs()
         }
     }
 
@@ -197,17 +194,19 @@ class DDLTests : DatabaseTestsBase() {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
 
         val logCaptor = LogCaptor.forName(exposedLogger.name)
+        try {
+            transaction(keywordFlagDB) {
+                SchemaUtils.create(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+                logCaptor.clearLogs()
 
-        transaction(keywordFlagDB) {
-            SchemaUtils.create(FlagTestTable)
-            assertEquals(0, logCaptor.warnLogs.size)
+                SchemaUtils.drop(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+            }
+        } finally {
             logCaptor.clearLogs()
-
-            SchemaUtils.drop(FlagTestTable)
-            assertEquals(0, logCaptor.warnLogs.size)
-            logCaptor.clearLogs()
+            TransactionManager.closeAndUnregister(keywordFlagDB)
         }
-        TransactionManager.closeAndUnregister(keywordFlagDB)
     }
 
     // Placed outside test function to shorten generated name
