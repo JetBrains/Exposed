@@ -10,7 +10,7 @@ import org.junit.Test
 
 class LikeTests : DatabaseTestsBase() {
 
-    object t : Table("table") {
+    object t : Table("testTable") {
         val id = integer("charnum")
         val char = varchar("thechar", 255)
 

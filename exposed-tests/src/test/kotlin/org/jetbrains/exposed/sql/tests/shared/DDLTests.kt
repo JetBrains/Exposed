@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -16,10 +17,15 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.junit.Assume
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
@@ -55,16 +61,151 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    object KeyWordTable : IntIdTable(name = "keywords") {
-        val bool = bool("bool")
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersWithoutOptIn() {
+        val keywords = listOf("Integer", "name")
+        val tester = object : Table(keywords[0]) {
+            val name = varchar(keywords[1], 32)
+        }
+
+        withDb(excludeSettings = TestDB.allH2TestDB - TestDB.H2) {
+            assertFalse(db.config.preserveKeywordCasing)
+
+            SchemaUtils.create(tester)
+            assertTrue(tester.exists())
+
+            val (tableName, columnName) = keywords.map {
+                when (currentDialectTest) {
+                    is MysqlDialect -> "`$it`"
+                    is PostgreSQLDialect -> "\"${it.lowercase()}\""
+                    is OracleDialect, is H2Dialect -> "\"${it.uppercase()}\""
+                    else -> "\"$it\""
+                }
+            }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, tester.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            tester.insert { it[name] = "A" }
+
+            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
+            tester.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(tester)
+        }
     }
 
-    @Test fun tableExistsWithKeyword() {
-        withTables(KeyWordTable) {
-            assertEquals(true, KeyWordTable.exists())
-            KeyWordTable.insert {
-                it[bool] = true
+    private object FlagTestTable : Table("BooLean") {
+        val name = varchar("name", 32)
+    }
+
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersLogWarningWithoutOptIn() {
+        withDb {
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            try {
+                SchemaUtils.create(FlagTestTable)
+                assertEquals(2, logCaptor.warnLogs.size)
+                logCaptor.clearLogs()
+
+                FlagTestTable.insert { it[name] = "A" }
+                FlagTestTable.selectAll().toList()
+                SchemaUtils.drop(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+            } finally {
+                logCaptor.clearLogs()
             }
+        }
+    }
+
+    private val keywordFlagDB by lazy {
+        Database.connect(
+            url = "jdbc:h2:mem:flagtest;DB_CLOSE_DELAY=-1;",
+            driver = "org.h2.Driver",
+            user = "root",
+            password = "",
+            databaseConfig = DatabaseConfig {
+                @OptIn(ExperimentalKeywordApi::class)
+                preserveKeywordCasing = true
+            }
+        )
+    }
+
+    // TODO: Refactor test to cover all DB when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersWithOptIn() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+
+        val keywords = listOf("data", "public", "key", "constraint")
+        val keywordTable = object : Table(keywords[0]) {
+            val public = bool(keywords[1])
+            val data = integer(keywords[2])
+            val constraint = varchar(keywords[3], 32)
+        }
+
+        transaction(keywordFlagDB) {
+            assertTrue(db.config.preserveKeywordCasing)
+
+            SchemaUtils.create(keywordTable)
+            assertTrue(keywordTable.exists())
+
+            val (tableName, publicName, dataName, constraintName) = keywords.map { "\"$it\"" }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$publicName ${keywordTable.public.columnType.sqlType()} NOT NULL, " +
+                "$dataName ${keywordTable.data.columnType.sqlType()} NOT NULL, " +
+                "$constraintName ${keywordTable.constraint.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, keywordTable.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            keywordTable.insert {
+                it[public] = false
+                it[data] = 999
+                it[constraint] = "unique"
+            }
+
+            val expectedSelect = "SELECT $tableName.$publicName, $tableName.$dataName, $tableName.$constraintName FROM $tableName"
+            keywordTable.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(keywordTable)
+        }
+        TransactionManager.closeAndUnregister(keywordFlagDB)
+    }
+
+    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    @Test
+    fun testKeywordIdentifiersLogNoWarningWithOptIn() {
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+        try {
+            transaction(keywordFlagDB) {
+                SchemaUtils.create(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+                logCaptor.clearLogs()
+
+                SchemaUtils.drop(FlagTestTable)
+                assertEquals(0, logCaptor.warnLogs.size)
+            }
+        } finally {
+            logCaptor.clearLogs()
+            TransactionManager.closeAndUnregister(keywordFlagDB)
         }
     }
 
@@ -925,8 +1066,13 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    object KeyWordTable : IntIdTable(name = "keywords") {
+        val bool = bool("bool")
+    }
+
     // https://github.com/JetBrains/Exposed/issues/112
-    @Test fun testDropTableFlushesCache() {
+    @Test
+    fun testDropTableFlushesCache() {
         withDb {
             class Keyword(id: EntityID<Int>) : IntEntity(id) {
                 var bool by KeyWordTable.bool

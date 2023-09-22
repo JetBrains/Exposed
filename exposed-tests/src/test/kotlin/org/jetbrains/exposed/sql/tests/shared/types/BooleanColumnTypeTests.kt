@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
 class BooleanColumnTypeTests : DatabaseTestsBase() {
-    object BooleanTable : IntIdTable() {
+    object BooleanTable : IntIdTable("booleanTable") {
         val boolColumn = bool("boolColumn")
     }
 

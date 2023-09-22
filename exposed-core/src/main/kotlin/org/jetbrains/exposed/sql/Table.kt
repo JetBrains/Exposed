@@ -1214,6 +1214,21 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
     }
 
+    @Deprecated(
+        message = "This will be removed in future releases when the check becomes default in IdentifierManagerApi",
+        level = DeprecationLevel.WARNING
+    )
+    private fun String.warnIfUnflaggedKeyword() {
+        val warn = TransactionManager.currentOrNull()?.db?.identifierManager?.isUnflaggedKeyword(this) == true
+        if (warn) {
+            exposedLogger.warn(
+                "Keyword identifier used: '$this'. Case sensitivity may not be kept when quoted by default: '${inProperCase()}'. " +
+                    "To keep case sensitivity, opt-in and set 'preserveKeywordCasing' to true in DatabaseConfig block."
+            )
+        }
+    }
+
+    @Suppress("CyclomaticComplexMethod")
     override fun createStatement(): List<String> {
         val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
             Sequence(
@@ -1233,9 +1248,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(TransactionManager.current().identity(this@Table).also { tableName.warnIfUnflaggedKeyword() })
             if (columns.isNotEmpty()) {
-                columns.joinTo(this, prefix = " (") { it.descriptionDdl(false) }
+                columns.joinTo(this, prefix = " (") { column ->
+                    column.descriptionDdl(false).also { column.name.warnIfUnflaggedKeyword() }
+                }
 
                 if (columns.any { it.isPrimaryConstraintWillBeDefined }) {
                     primaryKeyConstraint()?.let { append(", $it") }
