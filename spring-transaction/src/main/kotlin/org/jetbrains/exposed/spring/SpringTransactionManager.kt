@@ -63,11 +63,13 @@ class SpringTransactionManager(
 
         return (currentManager.currentOrNull() as Any).apply {
             currentManager.bindTransactionToThread(null)
+            TransactionManager.resetCurrent(null)
         }
     }
 
     override fun doResume(transaction: Any?, suspendedResources: Any) {
         threadLocalTransactionManager.bindTransactionToThread(suspendedResources as Transaction?)
+        TransactionManager.resetCurrent(threadLocalTransactionManager)
     }
 
     override fun isExistingTransaction(transaction: Any): Boolean {
@@ -79,7 +81,7 @@ class SpringTransactionManager(
         val trxObject = transaction as ExposedTransactionObject
 
         val currentTransactionManager = trxObject.manager
-        TransactionManager.resetCurrent(currentTransactionManager)
+        TransactionManager.resetCurrent(threadLocalTransactionManager)
 
         currentTransactionManager.newTransaction(
             isolation = definition.isolationLevel, readOnly = definition.isReadOnly, outerTransaction = currentTransactionManager.currentOrNull()

@@ -297,6 +297,27 @@ class SpringTransactionManagerTest {
         assertEquals(2, con1.closeCallCount)
     }
 
+    @Test
+    fun `not support with required transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(
+                initializeConnection = false,
+                propagationBehavior = TransactionDefinition.PROPAGATION_NOT_SUPPORTED
+            ) {
+                assertFailsWith<IllegalStateException> {
+                    TransactionManager.current().connection
+                }
+            }
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
     private fun SpringTransactionManager.executeAssert(
         initializeConnection: Boolean = true,
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,

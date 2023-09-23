@@ -48,4 +48,7 @@ abstract class SpringTransactionTestBase {
 
     @Autowired
     lateinit var ctx: ApplicationContext
+
+    @Autowired
+    lateinit var transactionManager: PlatformTransactionManager
 }
