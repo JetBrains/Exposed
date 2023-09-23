@@ -209,6 +209,46 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    @Test
+    @Repeat(5)
+    @Transactional
+    open fun testPropagationMandatoryWithTransaction() {
+        T1.insertRandom()
+        transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
+            T1.insertRandom()
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    open fun testPropagationMandatoryWithoutTransaction() {
+        assertFailsWith<IllegalTransactionStateException> {
+            transactionManager.execute(TransactionDefinition.PROPAGATION_MANDATORY) {
+                T1.insertRandom()
+            }
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    @Transactional
+    open fun testPropagationSupportWithTransaction() {
+        T1.insertRandom()
+        transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
+            T1.insertRandom()
+        }
+    }
+
+    @Test
+    @Repeat(5)
+    open fun testPropagationSupportWithoutTransaction() {
+        transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
+            assertFailsWith<IllegalStateException> { // No transaction exist
+                T1.insertRandom()
+            }
+        }
+    }
+
     @AfterTest
     fun afterTest() {
         transactionManager.execute {

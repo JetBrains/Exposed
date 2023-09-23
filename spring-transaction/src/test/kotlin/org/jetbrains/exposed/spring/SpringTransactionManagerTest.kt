@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
+import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
@@ -316,6 +317,54 @@ class SpringTransactionManagerTest {
 
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `mandatory with transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `mandatory without transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        assertFailsWith<IllegalTransactionStateException> {
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
+        }
+    }
+
+    @Test
+    fun `support with transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `support without transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        assertFailsWith<IllegalStateException> {
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+        }
+        tm.executeAssert(initializeConnection = false, propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+        assertEquals(0, con1.commitCallCount)
+        assertEquals(0, con1.rollbackCallCount)
+        assertEquals(0, con1.closeCallCount)
     }
 
     private fun SpringTransactionManager.executeAssert(

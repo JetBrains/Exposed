@@ -61,16 +61,26 @@ class SpringTransactionManager(
         val trxObject = transaction as ExposedTransactionObject
         val currentManager = trxObject.manager
 
-        return (currentManager.currentOrNull() as Any).apply {
+        return SuspendedObject(
+            transaction = currentManager.currentOrNull() as Transaction,
+            manager = currentManager,
+        ).apply {
             currentManager.bindTransactionToThread(null)
             TransactionManager.resetCurrent(null)
         }
     }
 
     override fun doResume(transaction: Any?, suspendedResources: Any) {
-        threadLocalTransactionManager.bindTransactionToThread(suspendedResources as Transaction?)
-        TransactionManager.resetCurrent(threadLocalTransactionManager)
+        val suspendedObject = suspendedResources as SuspendedObject
+
+        TransactionManager.resetCurrent(suspendedObject.manager)
+        threadLocalTransactionManager.bindTransactionToThread(suspendedObject.transaction)
     }
+
+    private data class SuspendedObject(
+        val transaction: Transaction,
+        val manager: TransactionManager
+    )
 
     override fun isExistingTransaction(transaction: Any): Boolean {
         val trxObject = transaction as ExposedTransactionObject
@@ -84,7 +94,9 @@ class SpringTransactionManager(
         TransactionManager.resetCurrent(threadLocalTransactionManager)
 
         currentTransactionManager.newTransaction(
-            isolation = definition.isolationLevel, readOnly = definition.isReadOnly, outerTransaction = currentTransactionManager.currentOrNull()
+            isolation = definition.isolationLevel,
+            readOnly = definition.isReadOnly,
+            outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
             if (showSql) {
                 addLogger(StdOutSqlLogger)
@@ -180,9 +192,6 @@ class SpringTransactionManager(
 
         fun getCurrentTransaction(): Transaction? = manager.currentOrNull()
 
-        /**
-         * implementation of @SmartTransactionObject
-         */
         fun setRollbackOnly() {
             isRollback = true
         }
