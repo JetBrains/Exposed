@@ -13,6 +13,7 @@ import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.*
@@ -45,7 +46,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     @BeforeTest
-    open fun beforeTest() {
+    fun beforeTest() {
         transactionManager.execute {
             SchemaUtils.create(T1)
         }
@@ -69,7 +70,6 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = rnd
         }
-
         Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
     }
 
@@ -82,7 +82,6 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             T1.insert {
                 it[c1] = rnd
             }
-
             Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
 
             transactionManager.execute {
@@ -111,75 +110,63 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     @Test
     @Repeat(5)
-    fun testConnectionWithNestedTransactionCommit() {
-        transactionManager.execute {
+    @Transactional
+    open fun testConnectionWithNestedTransactionCommit() {
+        T1.insertRandom()
+        Assert.assertEquals(1, T1.selectAll().count())
+        transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
             T1.insertRandom()
-            Assert.assertEquals(1, T1.selectAll().count())
-            transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
-                T1.insertRandom()
-                Assert.assertEquals(2, T1.selectAll().count())
-            }
             Assert.assertEquals(2, T1.selectAll().count())
         }
+        Assert.assertEquals(2, T1.selectAll().count())
     }
 
     @Test
     @Repeat(5)
-    fun testConnectionWithNestedTransactionInnerRollback() {
-        transactionManager.execute {
+    @Transactional
+    open fun testConnectionWithNestedTransactionInnerRollback() {
+        T1.insertRandom()
+        Assert.assertEquals(1, T1.selectAll().count())
+        transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
             T1.insertRandom()
-            Assert.assertEquals(1, T1.selectAll().count())
-            transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
-                T1.insertRandom()
-                Assert.assertEquals(2, T1.selectAll().count())
-                status.setRollbackOnly()
-            }
-            Assert.assertEquals(1, T1.selectAll().count())
+            Assert.assertEquals(2, T1.selectAll().count())
+            status.setRollbackOnly()
         }
+        Assert.assertEquals(1, T1.selectAll().count())
     }
 
     @Test
     @Repeat(5)
     fun testConnectionWithNestedTransactionOuterRollback() {
-        val tm = ctx.getBean(PlatformTransactionManager::class.java)
-        if (tm !is SpringTransactionManager) error("Wrong txManager instance: ${tm.javaClass.name}")
-        val tt = TransactionTemplate(tm)
-
-        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
-
-        tt.execute {
+        transactionManager.execute {
             T1.insertRandom()
             Assert.assertEquals(T1.selectAll().count(), 1)
             it.setRollbackOnly()
 
-            tt.execute {
+            transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
                 T1.insertRandom()
                 Assert.assertEquals(T1.selectAll().count(), 2)
             }
             Assert.assertEquals(T1.selectAll().count(), 2)
         }
 
-        tt.execute {
+        transactionManager.execute {
             Assert.assertEquals(T1.selectAll().count(), 0)
         }
     }
 
     @Test
     @Repeat(5)
-    fun testConnectionWithRequiresNew() {
-        transactionManager.execute {
+    @Transactional
+    open fun testConnectionWithRequiresNew() {
+        T1.insertRandom()
+        Assert.assertEquals(T1.selectAll().count(), 1)
+        transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+            Assert.assertEquals(T1.selectAll().count(), 0)
             T1.insertRandom()
             Assert.assertEquals(T1.selectAll().count(), 1)
-            transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-                T1.insertRandom()
-                Assert.assertEquals(T1.selectAll().count(), 1)
-            }
-            Assert.assertEquals(T1.selectAll().count(), 2)
         }
-
-        transactionManager.execute {
-            Assert.assertEquals(T1.selectAll().count(), 2)
-        }
+        Assert.assertEquals(T1.selectAll().count(), 2)
     }
 
     @Test
@@ -203,29 +190,27 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     @Test
     @Repeat(5)
-    fun testPropagationNever() {
-        transactionManager.execute(TransactionDefinition.PROPAGATION_NEVER) {
-            assertFailsWith<IllegalStateException> {
-                T1.insertRandom()
-            }
+    @Transactional(propagation = Propagation.NEVER)
+    open fun testPropagationNever() {
+        assertFailsWith<IllegalStateException> {
+            T1.insertRandom()
         }
     }
 
     @Test
     @Repeat(5)
-    fun testPropagationNeverWithExistingTransaction() {
+    @Transactional
+    open fun testPropagationNeverWithExistingTransaction() {
         assertFailsWith<IllegalTransactionStateException> {
-            transactionManager.execute {
+            T1.insertRandom()
+            transactionManager.execute(TransactionDefinition.PROPAGATION_NEVER) {
                 T1.insertRandom()
-                transactionManager.execute(TransactionDefinition.PROPAGATION_NEVER) {
-                    T1.insertRandom()
-                }
             }
         }
     }
 
     @AfterTest
-    open fun afterTest() {
+    fun afterTest() {
         transactionManager.execute {
             SchemaUtils.drop(T1)
         }
