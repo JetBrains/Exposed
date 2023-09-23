@@ -61,7 +61,7 @@ class SpringTransactionManager(
         val trxObject = transaction as ExposedTransactionObject
         val currentManager = trxObject.manager
 
-        return (currentManager.currentOrNull() as Any).run {
+        return (currentManager.currentOrNull() as Any).apply {
             currentManager.bindTransactionToThread(null)
         }
     }

@@ -234,35 +234,13 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
-    private fun SpringTransactionManager.executeAssert(
-        initializeConnection: Boolean = true,
-        body: (TransactionStatus) -> Unit = {}
-    ) {
-        TransactionTemplate(this).executeWithoutResult {
-            assertEquals(
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
-                TransactionManager.manager
-            )
-            if (initializeConnection) TransactionManager.current().connection
-            body(it)
-        }
-    }
-
     @Test
     fun `nested transaction with commit`() {
         val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
-        val tt = TransactionTemplate(tm)
-        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
 
-        tt.execute {
-            TransactionManager.current().connection
+        tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
             assertTrue(it.isNewTransaction)
-
-            tt.execute {
-                TransactionManager.current().connection
-            }
-
-            TransactionManager.current().connection
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED)
             assertTrue(it.isNewTransaction)
         }
 
@@ -273,19 +251,11 @@ class SpringTransactionManagerTest {
     @Test
     fun `nested transaction with rollback`() {
         val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
-        val tt = TransactionTemplate(tm)
-        tt.propagationBehavior = TransactionDefinition.PROPAGATION_NESTED
-
-        tt.execute {
-            TransactionManager.current().connection
+        tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
             assertTrue(it.isNewTransaction)
-
-            tt.execute { status ->
-                TransactionManager.current().connection
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) { status ->
                 status.setRollbackOnly()
             }
-
-            TransactionManager.current().connection
             assertTrue(it.isNewTransaction)
         }
 
@@ -298,19 +268,11 @@ class SpringTransactionManagerTest {
     @Test
     fun `requires new with commit`() {
         val tm = SpringTransactionManager(ds1)
-        val tt = TransactionTemplate(tm)
-        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
-
-        tt.execute {
-            TransactionManager.current().connection
+        tm.executeAssert {
             assertTrue(it.isNewTransaction)
-
-            tt.execute { status ->
-                TransactionManager.current().connection
-                assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
+                assertTrue(status.isNewTransaction)
             }
-
-            TransactionManager.current().connection
             assertTrue(it.isNewTransaction)
         }
 
@@ -321,25 +283,34 @@ class SpringTransactionManagerTest {
     @Test
     fun `requires new with inner rollback`() {
         val tm = SpringTransactionManager(ds1)
-        val tt = TransactionTemplate(tm)
-        tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
-
-        tt.execute {
-            TransactionManager.current().connection
+        tm.executeAssert {
             assertTrue(it.isNewTransaction)
-
-            tt.execute { status ->
-                TransactionManager.current().connection
-                assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
+                assertTrue(status.isNewTransaction)
                 status.setRollbackOnly()
             }
-
-            TransactionManager.current().connection
             assertTrue(it.isNewTransaction)
         }
 
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.rollbackCallCount)
         assertEquals(2, con1.closeCallCount)
+    }
+
+    private fun SpringTransactionManager.executeAssert(
+        initializeConnection: Boolean = true,
+        propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        body: (TransactionStatus) -> Unit = {}
+    ) {
+        val tt = TransactionTemplate(this)
+        tt.propagationBehavior = propagationBehavior
+        tt.executeWithoutResult {
+            assertEquals(
+                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
+                TransactionManager.manager
+            )
+            if (initializeConnection) TransactionManager.current().connection
+            body(it)
+        }
     }
 }
