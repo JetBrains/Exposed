@@ -58,7 +58,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Repeat(5)
     open fun testConnection() {
         T1.insertRandom()
-        Assert.assertEquals(T1.selectAll().count(), 1)
+        Assert.assertEquals(1, T1.selectAll().count())
     }
 
     @Test
@@ -140,18 +140,18 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     fun testConnectionWithNestedTransactionOuterRollback() {
         transactionManager.execute {
             T1.insertRandom()
-            Assert.assertEquals(T1.selectAll().count(), 1)
+            Assert.assertEquals(1, T1.selectAll().count())
             it.setRollbackOnly()
 
             transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
                 T1.insertRandom()
-                Assert.assertEquals(T1.selectAll().count(), 2)
+                Assert.assertEquals(2, T1.selectAll().count())
             }
-            Assert.assertEquals(T1.selectAll().count(), 2)
+            Assert.assertEquals(2, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            Assert.assertEquals(T1.selectAll().count(), 0)
+            Assert.assertEquals(0, T1.selectAll().count())
         }
     }
 
@@ -160,13 +160,13 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testConnectionWithRequiresNew() {
         T1.insertRandom()
-        Assert.assertEquals(T1.selectAll().count(), 1)
+        Assert.assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-            Assert.assertEquals(T1.selectAll().count(), 0)
+            Assert.assertEquals(0, T1.selectAll().count())
             T1.insertRandom()
-            Assert.assertEquals(T1.selectAll().count(), 1)
+            Assert.assertEquals(1, T1.selectAll().count())
         }
-        Assert.assertEquals(T1.selectAll().count(), 2)
+        Assert.assertEquals(2, T1.selectAll().count())
     }
 
     @Test
@@ -174,17 +174,17 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
         transactionManager.execute {
             T1.insertRandom()
-            Assert.assertEquals(T1.selectAll().count(), 1)
+            Assert.assertEquals(1, T1.selectAll().count())
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
                 T1.insertRandom()
-                Assert.assertEquals(T1.selectAll().count(), 1)
+                Assert.assertEquals(1, T1.selectAll().count())
                 it.setRollbackOnly()
             }
-            Assert.assertEquals(T1.selectAll().count(), 1)
+            Assert.assertEquals(1, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            Assert.assertEquals(T1.selectAll().count(), 1)
+            Assert.assertEquals(1, T1.selectAll().count())
         }
     }
 
