@@ -70,7 +70,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = rnd
         }
-        Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
+        Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
     }
 
     @Test
@@ -82,7 +82,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             T1.insert {
                 it[c1] = rnd
             }
-            Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
+            Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
             transactionManager.execute {
                 T1.insertRandom()
@@ -100,7 +100,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = rnd
         }
-        Assert.assertEquals(T1.selectAll().single()[T1.c1], rnd)
+        Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
         transaction {
             T1.insertRandom()
@@ -168,7 +168,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.REQUIRED
+     * Test For Propagation.REQUIRES_NEW
      * Create a new transaction, and suspend the current transaction if one exists.
      */
     @Test
@@ -186,7 +186,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.REQUIRED with inner transaction roll-back
+     * Test For Propagation.REQUIRES_NEW with inner transaction roll-back
      * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
