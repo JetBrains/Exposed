@@ -108,6 +108,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.NESTED
+     * Execute within a nested transaction if a current transaction exists, behave like REQUIRED otherwise.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -121,6 +125,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         Assert.assertEquals(2, T1.selectAll().count())
     }
 
+    /**
+     * Test For Propagation.NESTED with inner roll-back
+     * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -135,6 +143,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         Assert.assertEquals(1, T1.selectAll().count())
     }
 
+    /**
+     * Test For Propagation.NESTED with outer roll-back
+     * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
+     */
     @Test
     @Repeat(5)
     fun testConnectionWithNestedTransactionOuterRollback() {
@@ -155,6 +167,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.REQUIRED
+     * Create a new transaction, and suspend the current transaction if one exists.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -169,6 +185,11 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         Assert.assertEquals(2, T1.selectAll().count())
     }
 
+    /**
+     * Test For Propagation.REQUIRED with inner transaction roll-back
+     * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
+     * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
+     */
     @Test
     @Repeat(5)
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
@@ -188,15 +209,23 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.NEVER
+     * Execute non-transactionally, throw an exception if a transaction exists.
+     */
     @Test
     @Repeat(5)
     @Transactional(propagation = Propagation.NEVER)
     open fun testPropagationNever() {
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
             T1.insertRandom()
         }
     }
 
+    /**
+     * Test For Propagation.NEVER
+     * Throw an exception cause outer transaction exists.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -209,6 +238,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.MANDATORY
+     * Support a current transaction, throw an exception if none exists.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -219,6 +252,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.MANDATORY
+     * Throw an exception cause no transaction exists.
+     */
     @Test
     @Repeat(5)
     open fun testPropagationMandatoryWithoutTransaction() {
@@ -229,6 +266,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.SUPPORTS
+     * Support a current transaction, execute non-transactionally if none exists.
+     */
     @Test
     @Repeat(5)
     @Transactional
@@ -239,11 +280,15 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
+    /**
+     * Test For Propagation.SUPPORTS
+     * Execute non-transactionally if none exists.
+     */
     @Test
     @Repeat(5)
     open fun testPropagationSupportWithoutTransaction() {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
-            assertFailsWith<IllegalStateException> { // No transaction exist
+            assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
                 T1.insertRandom()
             }
         }
