@@ -13,7 +13,7 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     override val supportsMixedQuotedIdentifiers = metadata.supportsMixedCaseQuotedIdentifiers()
     private val _keywords = metadata.sqlKeywords.split(',')
     override fun dbKeywords(): List<String> = _keywords
-    override val extraNameCharacters = metadata.extraNameCharacters !!
+    override val extraNameCharacters = metadata.extraNameCharacters!!
 
     @Suppress("MagicNumber")
     override val oracleVersion = when {
