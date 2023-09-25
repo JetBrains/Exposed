@@ -324,8 +324,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
-    ):
-        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
     /**
      * Registers a reference as an immutable field of the parent entity class, which returns a child object of
@@ -338,8 +337,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     @JvmName("backReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF?>
-    ):
-        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
