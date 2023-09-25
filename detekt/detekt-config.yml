@@ -24,6 +24,9 @@ formatting:
     SpacingAroundUnaryOperator:
         active: true
         autoCorrect: true
+    Wrapping:
+        active: true
+        maxLineLength: 166
 
 style:
     MaxLineLength:
