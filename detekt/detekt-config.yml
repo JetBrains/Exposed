@@ -6,6 +6,8 @@ build:
 formatting:
     ArgumentListWrapping:
         active: false
+    EnumEntryNameCase:
+        active: false
     MaximumLineLength:
         maxLineLength: 166
     MultiLineIfElse:
