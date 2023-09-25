@@ -636,7 +636,7 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
                     }
                     else -> {
                         tr.putUserData(cacheLoadingState, this)
-                        super.all().toList() /* force iteration to initialize lazy collection */
+                        super.all().toList() // force iteration to initialize lazy collection
                         _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
                         tr.removeUserData(cacheLoadingState)
                     }
