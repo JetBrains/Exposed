@@ -46,11 +46,6 @@ Bug fixes:
 * chore: EXPOSED-186 Replace JDK 1.7 support in exposed-jodatime classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/1866
 * fix: EXPOSED-178 DELETE_RULE read incorrectly for Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/1868
 
-New contributors:
-* @ymotchi made their first contribution in https://github.com/JetBrains/Exposed/pull/1847
-* @Hakky54 made their first contribution in https://github.com/JetBrains/Exposed/pull/1852
-* @rbraeunlich made their first contribution in https://github.com/JetBrains/Exposed/pull/1645
-
 # 0.43.0
 Infrastructure:
 * Kotlin 1.9.10
