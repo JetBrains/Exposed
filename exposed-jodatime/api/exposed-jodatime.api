@@ -16,7 +16,6 @@ public final class org/jetbrains/exposed/sql/jodatime/Date : org/jetbrains/expos
 }
 
 public final class org/jetbrains/exposed/sql/jodatime/DateColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
-	public static final field Companion Lorg/jetbrains/exposed/sql/jodatime/DateColumnType$Companion;
 	public fun <init> (Z)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getHasTimePart ()Z
@@ -27,9 +26,6 @@ public final class org/jetbrains/exposed/sql/jodatime/DateColumnType : org/jetbr
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public final class org/jetbrains/exposed/sql/jodatime/DateColumnType$Companion {
 }
 
 public final class org/jetbrains/exposed/sql/jodatime/DateColumnTypeKt {
@@ -58,7 +54,6 @@ public final class org/jetbrains/exposed/sql/jodatime/DateFunctionsKt {
 }
 
 public final class org/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
-	public static final field Companion Lorg/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -67,9 +62,6 @@ public final class org/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumn
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
-}
-
-public final class org/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumnType$Companion {
 }
 
 public final class org/jetbrains/exposed/sql/jodatime/Day : org/jetbrains/exposed/sql/Function {
