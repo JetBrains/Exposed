@@ -22,8 +22,10 @@ internal class DateInternal(val expr: Expression<*>) : Function<LocalDate>(Kotli
 
 @JvmName("LocalDateDateFunction")
 fun <T : LocalDate?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
+
 @JvmName("LocalDateTimeDateFunction")
 fun <T : LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
+
 @JvmName("InstantDateFunction")
 fun <T : Instant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
 
@@ -33,8 +35,10 @@ internal class TimeFunction(val expr: Expression<*>) : Function<LocalTime>(Kotli
 
 @JvmName("LocalDateTimeFunction")
 fun <T : LocalDate?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+
 @JvmName("LocalDateTimeTimeFunction")
 fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+
 @JvmName("InstantTimeFunction")
 fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
 
@@ -86,8 +90,10 @@ class YearInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType())
 
 @JvmName("LocalDateYearFunction")
 fun <T : LocalDate?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
+
 @JvmName("LocalDateTimeYearFunction")
 fun <T : LocalDateTime?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
+
 @JvmName("InstantYearFunction")
 fun <T : Instant?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
 
@@ -104,8 +110,10 @@ internal class MonthInternal(val expr: Expression<*>) : Function<Int>(IntegerCol
 
 @JvmName("LocalDateMonthFunction")
 fun <T : LocalDate?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
+
 @JvmName("LocalDateTimeMonthFunction")
 fun <T : LocalDateTime?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
+
 @JvmName("InstantMonthFunction")
 fun <T : Instant?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
 
@@ -122,8 +130,10 @@ internal class DayInternal(val expr: Expression<*>) : Function<Int>(IntegerColum
 
 @JvmName("LocalDateDayFunction")
 fun <T : LocalDate?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
+
 @JvmName("LocalDateTimeDayFunction")
 fun <T : LocalDateTime?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
+
 @JvmName("InstantDayFunction")
 fun <T : Instant?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
 
@@ -140,8 +150,10 @@ internal class HourInternal(val expr: Expression<*>) : Function<Int>(IntegerColu
 
 @JvmName("LocalDateHourFunction")
 fun <T : LocalDate?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
+
 @JvmName("LocalDateTimeHourFunction")
 fun <T : LocalDateTime?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
+
 @JvmName("InstantHourFunction")
 fun <T : Instant?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
 
@@ -158,8 +170,10 @@ internal class MinuteInternal(val expr: Expression<*>) : Function<Int>(IntegerCo
 
 @JvmName("LocalDateMinuteFunction")
 fun <T : LocalDate?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
+
 @JvmName("LocalDateTimeMinuteFunction")
 fun <T : LocalDateTime?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
+
 @JvmName("InstantMinuteFunction")
 fun <T : Instant?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
 
@@ -176,8 +190,10 @@ internal class SecondInternal(val expr: Expression<*>) : Function<Int>(IntegerCo
 
 @JvmName("LocalDateSecondFunction")
 fun <T : LocalDate?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
+
 @JvmName("LocalDateTimeSecondFunction")
 fun <T : LocalDateTime?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
+
 @JvmName("InstantSecondFunction")
 fun <T : Instant?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
 
@@ -185,50 +201,64 @@ fun <T : Instant?> Second(expr: Expression<T>): Function<Int> = SecondInternal(e
 
 @JvmName("LocalDateDateExt")
 fun <T : LocalDate?> Expression<T>.date() = Date(this)
+
 @JvmName("LocalDateTimeDateExt")
 fun <T : LocalDateTime?> Expression<T>.date() = Date(this)
+
 @JvmName("InstantDateExt")
 fun <T : Instant?> Expression<T>.date() = Date(this)
 
 @JvmName("LocalDateYearExt")
 fun <T : LocalDate?> Expression<T>.year() = Year(this)
+
 @JvmName("LocalDateTimeYearExt")
 fun <T : LocalDateTime?> Expression<T>.year() = Year(this)
+
 @JvmName("InstantYearExt")
 fun <T : Instant?> Expression<T>.year() = Year(this)
 
 @JvmName("LocalDateMonthExt")
 fun <T : LocalDate?> Expression<T>.month() = Month(this)
+
 @JvmName("LocalDateTimeMonthExt")
 fun <T : LocalDateTime?> Expression<T>.month() = Month(this)
+
 @JvmName("InstantMonthExt")
 fun <T : Instant?> Expression<T>.month() = Month(this)
 
 @JvmName("LocalDateDayExt")
 fun <T : LocalDate?> Expression<T>.day() = Day(this)
+
 @JvmName("LocalDateTimeDayExt")
 fun <T : LocalDateTime?> Expression<T>.day() = Day(this)
+
 @JvmName("InstantDayExt")
 fun <T : Instant?> Expression<T>.day() = Day(this)
 
 @JvmName("LocalDateHourExt")
 fun <T : LocalDate?> Expression<T>.hour() = Hour(this)
+
 @JvmName("LocalDateTimeHourExt")
 fun <T : LocalDateTime?> Expression<T>.hour() = Hour(this)
+
 @JvmName("InstantHourExt")
 fun <T : Instant?> Expression<T>.hour() = Hour(this)
 
 @JvmName("LocalDateMinuteExt")
 fun <T : LocalDate?> Expression<T>.minute() = Minute(this)
+
 @JvmName("LocalDateTimeMinuteExt")
 fun <T : LocalDateTime?> Expression<T>.minute() = Minute(this)
+
 @JvmName("InstantMinuteExt")
 fun <T : Instant?> Expression<T>.minute() = Minute(this)
 
 @JvmName("LocalDateSecondExt")
 fun <T : LocalDate?> Expression<T>.second() = Second(this)
+
 @JvmName("LocalDateTimeSecondExt")
 fun <T : LocalDateTime?> Expression<T>.second() = Second(this)
+
 @JvmName("InstantSecondExt")
 fun <T : Instant?> Expression<T>.second() = Second(this)
 
