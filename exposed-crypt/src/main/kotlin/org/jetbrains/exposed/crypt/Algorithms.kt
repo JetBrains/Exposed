@@ -21,7 +21,6 @@ object Algorithms {
 
     @Suppress("FunctionNaming")
     fun AES_256_PBE_GCM(password: CharSequence, salt: CharSequence): Encryptor {
-
         return AesBytesEncryptor(
             password.toString(),
             salt,
@@ -42,7 +41,6 @@ object Algorithms {
 
     @Suppress("FunctionNaming")
     fun AES_256_PBE_CBC(password: CharSequence, salt: CharSequence): Encryptor {
-
         return AesBytesEncryptor(
             password.toString(),
             salt,
