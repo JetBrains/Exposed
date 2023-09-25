@@ -88,7 +88,10 @@ abstract class BaseBatchInsertStatement(
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        return if (!shouldReturnGeneratedValues) transaction.connection.prepareStatement(sql, false)
-        else super.prepared(transaction, sql)
+        return if (!shouldReturnGeneratedValues) {
+            transaction.connection.prepareStatement(sql, false)
+        } else {
+            super.prepared(transaction, sql)
+        }
     }
 }
