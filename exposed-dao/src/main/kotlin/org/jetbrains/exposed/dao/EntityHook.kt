@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 enum class EntityChangeType {
     Created,
     Updated,
-    Removed;
+    Removed
 }
 
 data class EntityChange(
