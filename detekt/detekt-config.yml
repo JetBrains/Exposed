@@ -15,6 +15,7 @@ formatting:
         active: true
         autoCorrect: true
         indentSize: 4
+        maxLineLength: 166
     NoWildcardImports:
         active: false
     NoMultipleSpaces:
