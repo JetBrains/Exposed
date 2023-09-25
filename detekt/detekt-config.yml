@@ -4,6 +4,8 @@ build:
     maxIssues: 52
 
 formatting:
+    ArgumentListWrapping:
+        active: false
     MaximumLineLength:
         maxLineLength: 166
     MultiLineIfElse:
