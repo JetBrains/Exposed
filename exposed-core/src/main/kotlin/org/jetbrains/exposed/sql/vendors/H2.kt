@@ -217,7 +217,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsCreateSequence: Boolean by lazy { resolveDelegatedDialect()?.supportsCreateSequence ?: super.supportsCreateSequence }
     override val needsSequenceToAutoInc: Boolean by lazy { resolveDelegatedDialect()?.needsSequenceToAutoInc ?: super.needsSequenceToAutoInc }
     override val defaultReferenceOption: ReferenceOption by lazy { resolveDelegatedDialect()?.defaultReferenceOption ?: super.defaultReferenceOption }
-//    override val needsQuotesWhenSymbolsInNames: Boolean by lazy { resolveDelegatedDialect()?.needsQuotesWhenSymbolsInNames ?: super.needsQuotesWhenSymbolsInNames }
     override val supportsSequenceAsGeneratedKeys: Boolean by lazy {
         resolveDelegatedDialect()?.supportsSequenceAsGeneratedKeys ?: super.supportsSequenceAsGeneratedKeys
     }

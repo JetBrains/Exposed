@@ -7,6 +7,7 @@ package org.jetbrains.exposed.sql
  */
 abstract class CompositeColumn<T> : Expression<T>() {
     internal var nullable: Boolean = false
+
     /**
      * Parse values from [compositeValue] and return list of real columns with its values
      *
