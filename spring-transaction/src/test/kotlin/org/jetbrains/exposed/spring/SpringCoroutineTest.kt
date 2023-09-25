@@ -25,7 +25,9 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
     }
 
     @RepeatableTest(times = 5)
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     // Is this test flaky?
     open fun testNestedCoroutineTransaction() {
         try {
