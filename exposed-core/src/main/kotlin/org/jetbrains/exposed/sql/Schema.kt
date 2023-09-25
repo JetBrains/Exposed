@@ -40,7 +40,6 @@ data class Schema(
     fun exists(): Boolean = currentDialect.schemaExists(this)
 
     fun createStatement(): List<String> {
-
         if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support create schema statement", currentDialect)
         }
