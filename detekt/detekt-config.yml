@@ -21,6 +21,8 @@ formatting:
     NoMultipleSpaces:
         active: true
         autoCorrect: false
+    PropertyWrapping:
+        active: false
     SpacingAroundUnaryOperator:
         active: true
         autoCorrect: true
