@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.sql.DatabaseMetaData
 
 /**
  * Common interface for database objects that can be created, modified and dropped.
@@ -36,18 +35,6 @@ enum class ReferenceOption {
     SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
-
-    companion object {
-        /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
-        fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-            DatabaseMetaData.importedKeyCascade -> CASCADE
-            DatabaseMetaData.importedKeySetNull -> SET_NULL
-            DatabaseMetaData.importedKeyRestrict -> RESTRICT
-            DatabaseMetaData.importedKeyNoAction -> NO_ACTION
-            DatabaseMetaData.importedKeySetDefault -> SET_DEFAULT
-            else -> currentDialect.defaultReferenceOption
-        }
-    }
 }
 
 /**

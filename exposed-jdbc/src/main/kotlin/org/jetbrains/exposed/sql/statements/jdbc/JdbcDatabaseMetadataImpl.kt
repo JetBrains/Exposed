@@ -288,9 +288,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
                 val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
-                    ReferenceOption.resolveRefOptionFromJdbc(it)
+                    currentDialect.resolveRefOptionFromJdbc(it)
                 }
-                val constraintDeleteRule = ReferenceOption.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
                 ForeignKeyConstraint(
                     target = targetColumn,
                     from = fromColumn,
