@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.spring
 
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.junit.FixMethodOrder
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
@@ -22,10 +23,15 @@ import org.springframework.transaction.annotation.TransactionManagementConfigure
 open class TestConfig : TransactionManagementConfigurer {
 
     @Bean
-    open fun ds(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName("embeddedTest").setType(EmbeddedDatabaseType.H2).build()
+    open fun ds(): EmbeddedDatabase = EmbeddedDatabaseBuilder().setName(
+        "embeddedTest"
+    ).setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds())
+    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(
+        ds(),
+        DatabaseConfig { useNestedTransactions = true }
+    )
 
     @Bean
     open fun service(): Service = Service()
@@ -42,4 +48,7 @@ abstract class SpringTransactionTestBase {
 
     @Autowired
     lateinit var ctx: ApplicationContext
+
+    @Autowired
+    lateinit var transactionManager: PlatformTransactionManager
 }

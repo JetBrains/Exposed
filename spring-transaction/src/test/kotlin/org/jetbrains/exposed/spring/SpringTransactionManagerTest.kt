@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.spring
 
 import junit.framework.TestCase.assertEquals
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
+import org.springframework.transaction.IllegalTransactionStateException
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.TransactionTemplate
@@ -232,11 +235,146 @@ class SpringTransactionManagerTest {
         assertEquals(1, con1.closeCallCount)
     }
 
+    @Test
+    fun `nested transaction with commit`() {
+        val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
+
+        tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED)
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `nested transaction with rollback`() {
+        val tm = SpringTransactionManager(ds1, DatabaseConfig { useNestedTransactions = true })
+        tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_NESTED) { status ->
+                status.setRollbackOnly()
+            }
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.rollbackCallCount)
+        assertEquals(1, con1.releaseSavepointCallCount)
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `requires new with commit`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
+                assertTrue(status.isNewTransaction)
+            }
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(2, con1.commitCallCount)
+        assertEquals(2, con1.closeCallCount)
+    }
+
+    @Test
+    fun `requires new with inner rollback`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
+                assertTrue(status.isNewTransaction)
+                status.setRollbackOnly()
+            }
+            assertTrue(it.isNewTransaction)
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.rollbackCallCount)
+        assertEquals(2, con1.closeCallCount)
+    }
+
+    @Test
+    fun `not support with required transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(
+                initializeConnection = false,
+                propagationBehavior = TransactionDefinition.PROPAGATION_NOT_SUPPORTED
+            ) {
+                assertFailsWith<IllegalStateException> {
+                    TransactionManager.current().connection
+                }
+            }
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `mandatory with transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `mandatory without transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        assertFailsWith<IllegalTransactionStateException> {
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
+        }
+    }
+
+    @Test
+    fun `support with transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert {
+            assertTrue(it.isNewTransaction)
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+            assertTrue(it.isNewTransaction)
+            TransactionManager.current().connection
+        }
+
+        assertEquals(1, con1.commitCallCount)
+        assertEquals(1, con1.closeCallCount)
+    }
+
+    @Test
+    fun `support without transaction`() {
+        val tm = SpringTransactionManager(ds1)
+        assertFailsWith<IllegalStateException> {
+            tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+        }
+        tm.executeAssert(initializeConnection = false, propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
+        assertEquals(0, con1.commitCallCount)
+        assertEquals(0, con1.rollbackCallCount)
+        assertEquals(0, con1.closeCallCount)
+    }
+
     private fun SpringTransactionManager.executeAssert(
         initializeConnection: Boolean = true,
+        propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
         body: (TransactionStatus) -> Unit = {}
     ) {
-        TransactionTemplate(this).executeWithoutResult {
+        val tt = TransactionTemplate(this)
+        tt.propagationBehavior = propagationBehavior
+        tt.executeWithoutResult {
             assertEquals(
                 TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
                 TransactionManager.manager
