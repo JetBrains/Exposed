@@ -72,9 +72,12 @@ interface TransactionManager {
     companion object {
         internal val currentDefaultDatabase = AtomicReference<Database>()
 
+        @Suppress("SpacingBetweenDeclarationsWithAnnotations")
         var defaultDatabase: Database?
             @Synchronized get() = currentDefaultDatabase.get() ?: databases.firstOrNull()
-            @Synchronized set(value) { currentDefaultDatabase.set(value) }
+            @Synchronized set(value) {
+                currentDefaultDatabase.set(value)
+            }
 
         private val databases = ConcurrentLinkedDeque<Database>()
 

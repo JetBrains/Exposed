@@ -187,6 +187,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             H2MajorVersion.One -> "NAME" to "VALUE"
             H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
         }
+
         @Language("H2")
         val fetchModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
         val modeValue = TransactionManager.current().exec(fetchModeQuery) { rs ->
