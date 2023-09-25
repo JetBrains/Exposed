@@ -32,7 +32,6 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
             SchemaUtils.create(Testing)
 
             val mainJob = GlobalScope.async {
-
                 val results = (1..5).map { indx ->
                     suspendedTransactionAsync(Dispatchers.IO) {
                         Testing.insert { }
