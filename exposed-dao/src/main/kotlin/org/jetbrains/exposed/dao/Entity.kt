@@ -150,9 +150,9 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 else -> {
                     // @formatter:off
                     factory.findWithCacheCondition(
-                        { reference.referee !!.getValue(this, desc) == refValue }
+                        { reference.referee!!.getValue(this, desc) == refValue }
                     ) {
-                        reference.referee<REF>() !! eq refValue
+                        reference.referee<REF>()!! eq refValue
                     }.singleOrNull().also {
                         storeReferenceInCache(reference, it)
                     }
@@ -263,6 +263,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
             if (batch == null) {
                 val table = klass.table
                 // Store values before update to prevent flush inside UpdateStatement
+
                 @Suppress("VariableNaming")
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()

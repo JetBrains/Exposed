@@ -4,6 +4,10 @@ build:
     maxIssues: 52
 
 formatting:
+    ArgumentListWrapping:
+        active: false
+    EnumEntryNameCase:
+        active: false
     MaximumLineLength:
         maxLineLength: 166
     MultiLineIfElse:
@@ -13,14 +17,20 @@ formatting:
         active: true
         autoCorrect: true
         indentSize: 4
+        maxLineLength: 166
     NoWildcardImports:
         active: false
     NoMultipleSpaces:
         active: true
         autoCorrect: false
+    PropertyWrapping:
+        active: false
     SpacingAroundUnaryOperator:
         active: true
         autoCorrect: true
+    Wrapping:
+        active: true
+        maxLineLength: 166
 
 style:
     MaxLineLength:
@@ -46,7 +56,7 @@ complexity:
         thresholdInClasses: 40
         thresholdInFiles: 100
         thresholdInObjects: 26
-    ComplexMethod:
+    CyclomaticComplexMethod:
         threshold: 26
     LongMethod:
         threshold: 90

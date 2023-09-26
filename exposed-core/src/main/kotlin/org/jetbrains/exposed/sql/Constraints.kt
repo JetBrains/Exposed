@@ -259,7 +259,9 @@ data class Index(
             val table = columns.distinctBy { it.table }.singleOrNull()?.table
             requireNotNull(table) { "Columns from different tables can't persist in one index" }
             table
-        } else null
+        } else {
+            null
+        }
         if (functions?.isNotEmpty() == true) {
             requireNotNull(functionsTable) { "functionsTable argument must also be provided if functions are defined to create an index" }
         }

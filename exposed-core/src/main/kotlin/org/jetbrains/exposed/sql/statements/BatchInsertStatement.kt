@@ -29,8 +29,9 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val values = arguments!!
-        val sql = if (values.isEmpty()) ""
-        else {
+        val sql = if (values.isEmpty()) {
+            ""
+        } else {
             val output = columnToReturnValue?.let {
                 " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
             }.orEmpty()

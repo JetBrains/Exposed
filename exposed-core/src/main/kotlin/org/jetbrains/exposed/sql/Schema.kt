@@ -40,7 +40,6 @@ data class Schema(
     fun exists(): Boolean = currentDialect.schemaExists(this)
 
     fun createStatement(): List<String> {
-
         if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support create schema statement", currentDialect)
         }
@@ -64,6 +63,7 @@ data class Schema(
         return listOf(currentDialect.setSchema(this))
     }
 }
+
 /** Appends both [str1] and [str2] to the receiver [StringBuilder] if [str2] is not `null`. */
 internal fun StringBuilder.appendIfNotNull(str1: String, str2: Any?) = apply {
     if (str2 != null) {

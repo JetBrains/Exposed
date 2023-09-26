@@ -324,8 +324,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
-    ):
-        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
     /**
      * Registers a reference as an immutable field of the parent entity class, which returns a child object of
@@ -338,8 +337,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     @JvmName("backReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF?>
-    ):
-        ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
+    ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
@@ -627,19 +625,21 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
         val tr = TransactionManager.current()
         val db = tr.db
         val transactionCache = super.warmCache()
-        if (_cachedValues[db] == null) synchronized(this) {
-            val cachedValues = _cachedValues[db]
-            when {
-                cachedValues != null -> {
-                } // already loaded in another transaction
-                tr.getUserData(cacheLoadingState) != null -> {
-                    return transactionCache // prevent recursive call to warmCache() in .all()
-                }
-                else -> {
-                    tr.putUserData(cacheLoadingState, this)
-                    super.all().toList() /* force iteration to initialize lazy collection */
-                    _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
-                    tr.removeUserData(cacheLoadingState)
+        if (_cachedValues[db] == null) {
+            synchronized(this) {
+                val cachedValues = _cachedValues[db]
+                when {
+                    cachedValues != null -> {
+                    } // already loaded in another transaction
+                    tr.getUserData(cacheLoadingState) != null -> {
+                        return transactionCache // prevent recursive call to warmCache() in .all()
+                    }
+                    else -> {
+                        tr.putUserData(cacheLoadingState, this)
+                        super.all().toList() // force iteration to initialize lazy collection
+                        _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
+                        tr.removeUserData(cacheLoadingState)
+                    }
                 }
             }
         }

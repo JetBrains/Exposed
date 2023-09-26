@@ -85,8 +85,11 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
-                    if (col.columnType.isAutoInc || value is NextVal<*>) map.getOrPut(col) { value }
-                    else map[col] = value
+                    if (col.columnType.isAutoInc || value is NextVal<*>) {
+                        map.getOrPut(col) { value }
+                    } else {
+                        map[col] = value
+                    }
                 }
             }
 
@@ -124,11 +127,15 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
 
     protected fun List<Pair<Column<*>, Any?>>.toSqlString(prepared: Boolean): String {
         val builder = QueryBuilder(prepared)
-        return if (isEmpty()) "" else with(builder) {
-            this@toSqlString.appendTo(prefix = "VALUES (", postfix = ")") { (column, value) ->
-                registerArgument(column, value)
+        return if (isEmpty()) {
+            ""
+        } else {
+            with(builder) {
+                this@toSqlString.appendTo(prefix = "VALUES (", postfix = ")") { (column, value) ->
+                    registerArgument(column, value)
+                }
+                toString()
             }
-            toString()
         }
     }
 
@@ -136,7 +143,9 @@ open class InsertStatement<Key : Any>(val table: Table, val isIgnore: Boolean = 
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         val rs = if (autoIncColumns.isNotEmpty()) {
             resultSet
-        } else null
+        } else {
+            null
+        }
         return inserted to rs
     }
 

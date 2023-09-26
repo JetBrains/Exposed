@@ -187,6 +187,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             H2MajorVersion.One -> "NAME" to "VALUE"
             H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
         }
+
         @Language("H2")
         val fetchModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
         val modeValue = TransactionManager.current().exec(fetchModeQuery) { rs ->
@@ -217,7 +218,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsCreateSequence: Boolean by lazy { resolveDelegatedDialect()?.supportsCreateSequence ?: super.supportsCreateSequence }
     override val needsSequenceToAutoInc: Boolean by lazy { resolveDelegatedDialect()?.needsSequenceToAutoInc ?: super.needsSequenceToAutoInc }
     override val defaultReferenceOption: ReferenceOption by lazy { resolveDelegatedDialect()?.defaultReferenceOption ?: super.defaultReferenceOption }
-//    override val needsQuotesWhenSymbolsInNames: Boolean by lazy { resolveDelegatedDialect()?.needsQuotesWhenSymbolsInNames ?: super.needsQuotesWhenSymbolsInNames }
     override val supportsSequenceAsGeneratedKeys: Boolean by lazy {
         resolveDelegatedDialect()?.supportsSequenceAsGeneratedKeys ?: super.supportsSequenceAsGeneratedKeys
     }

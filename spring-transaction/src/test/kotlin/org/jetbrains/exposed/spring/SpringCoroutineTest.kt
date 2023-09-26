@@ -25,14 +25,15 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
     }
 
     @RepeatableTest(times = 5)
-    @Test @Transactional @Commit
+    @Test
+    @Transactional
+    @Commit
     // Is this test flaky?
     open fun testNestedCoroutineTransaction() {
         try {
             SchemaUtils.create(Testing)
 
             val mainJob = GlobalScope.async {
-
                 val results = (1..5).map { indx ->
                     suspendedTransactionAsync(Dispatchers.IO) {
                         Testing.insert { }

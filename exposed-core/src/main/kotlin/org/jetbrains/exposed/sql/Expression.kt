@@ -12,6 +12,7 @@ class QueryBuilder(
 ) {
     private val internalBuilder = StringBuilder()
     private val _args = mutableListOf<Pair<IColumnType, Any?>>()
+
     /** Returns the list of arguments used in this query. */
     val args: List<Pair<IColumnType, Any?>> get() = _args
 

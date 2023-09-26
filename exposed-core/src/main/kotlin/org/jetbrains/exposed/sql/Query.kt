@@ -228,8 +228,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
  */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if (this == null) expr
-    else this and expr
+    if (this == null) expr else this and expr
 }
 
 /**
@@ -238,8 +237,7 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  */
 fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { orPart() }
-    if (this == null) expr
-    else this or expr
+    if (this == null) expr else this or expr
 }
 
 /**
@@ -248,8 +246,7 @@ fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere 
  */
 fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
     val expr = Op.build { andPart() }
-    if (this == null) expr
-    else this and expr
+    if (this == null) expr else this and expr
 }
 
 /**
@@ -258,6 +255,5 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  */
 fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
     val expr = Op.build { orPart() }
-    if (this == null) expr
-    else this or expr
+    if (this == null) expr else this or expr
 }

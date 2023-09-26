@@ -1,4 +1,4 @@
-@file:Suppress("MaximumLineLength")
+@file:Suppress("MaximumLineLength", "Wrapping")
 
 package org.jetbrains.exposed
 

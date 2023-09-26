@@ -1,4 +1,4 @@
-@file:Suppress("PackageNaming", "InvalidPackageDeclaration")
+@file:Suppress("PackageName", "InvalidPackageDeclaration")
 
 package org.jetbrains.exposed.`jdbc-template`
 

@@ -25,7 +25,11 @@ class CeilingFunction<T : Number?>(expression: ExpressionWithColumnType<T>) : Cu
     functionName = if (
         currentDialectIfAvailable is SQLiteDialect || currentDialectIfAvailable is OracleDialect ||
         currentDialectIfAvailable?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
-    ) "CEIL" else "CEILING",
+    ) {
+        "CEIL"
+    } else {
+        "CEILING"
+    },
     columnType = LongColumnType(),
     expr = arrayOf(expression)
 )
