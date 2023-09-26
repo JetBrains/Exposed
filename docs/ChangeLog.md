@@ -14,6 +14,7 @@ Infrastructure:
 Breaking changes:
 * `SpringTransactionManager` no longer extends `DataSourceTransactionManager`; instead, it directly extends `AbstractPlatformTransactionManager`.
   The class also no longer implements the Exposed interface `TransactionManager`, as transaction operations are instead delegated to Spring.
+* `spring-transaction` and `exposed-spring-boot-starter` modules now use Spring Framework 6.0 and Spring Boot 3.0, which require Java 17 as a minimum version.
 * A table that is created with a keyword identifier now logs a warning that the identifier's case may be lost when it is automatically quoted in generated SQL.
   `DatabaseConfig` now includes the property `preserveKeywordCasing`, which can be set to `true` to remove these warnings and to ensure that the identifier matches the exact case used.
 * More details at [Breaking changes](BREAKING_CHANGES.md#0440)
