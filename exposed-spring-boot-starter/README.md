@@ -18,7 +18,7 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>
     <artifactId>exposed-spring-boot-starter</artifactId>
-    <version>0.43.0</version>
+    <version>0.44.0</version>
   </dependency>
 </dependencies>
 ```
@@ -28,7 +28,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.43.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.44.0'
 }
 ```
 ### Gradle Kotlin DSL
@@ -44,7 +44,7 @@ dependencies {
 ```
 In `gradle.properties`
 ```properties
-exposedVersion=0.43.0
+exposedVersion=0.44.0
 ```
 
 ## Setting up a database connection

@@ -1,5 +1,44 @@
 # Breaking Changes
 
+## 0.44.0
+
+* `SpringTransactionManager` no longer extends `DataSourceTransactionManager`; instead, it directly extends `AbstractPlatformTransactionManager` while retaining the previous basic functionality.
+  The class also no longer implements the Exposed interface `TransactionManager`, as transaction operations are instead delegated to Spring.
+  These changes ensure that Exposed's underlying transaction management no longer interferes with the expected behavior of Spring's transaction management, for example,
+  when using nested transactions or with `@Transactional` elements like `propagation` or `isolation`.
+
+  If integration still requires a `DataSourceTransactionManager`, please add two bean declarations to the configuration: one for  `SpringTransactionManager` and one for `DataSourceTransactionManager`.
+  Then define a composite transaction manager that combines these two managers.
+
+  If `TransactionManager` functions were being invoked by a `SpringTransactionManager` instance, please replace these calls with the appropriate Spring annotation
+  or, if necessary, by using the companion object of `TransactionManager` directly (for example, `TransactionManager.currentOrNull()`).
+* `spring-transaction` and `exposed-spring-boot-starter` modules now use Spring Framework 6.0 and Spring Boot 3.0, which require Java 17 as a minimum version.
+* A table that is created with a keyword identifier (a table or column name) now logs a warning that the identifier's case may be lost when it is automatically quoted in generated SQL.
+  This primarily affects H2 and Oracle, both of which support folding identifiers to uppercase, and PostgreSQL, which folds identifiers to lower case.
+
+  To remove these warnings and to ensure that the keyword identifier sent to the database matches the exact case used in the Exposed table object, please set `preserveKeywordCasing = true` in `DatabaseConfig`:
+```kotlin
+object TestTable : Table("table") {
+    val col = integer("select")
+}
+
+// without opt-in (default set to false)
+// H2 generates SQL -> CREATE TABLE IF NOT EXISTS "TABLE" ("SELECT" INT NOT NULL)
+
+// with opt-in
+Database.connect(
+    url = "jdbc:h2:mem:test",
+    driver = "org.h2.Driver",
+    databaseConfig = DatabaseConfig {
+        @OptIn(ExperimentalKeywordApi::class)
+        preserveKeywordCasing = true
+    }
+)
+// H2 generates SQL -> CREATE TABLE IF NOT EXISTS "table" ("select" INT NOT NULL)
+```
+
+**Note:** `preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases and its behavior when set to `true` may become the default.
+
 ## 0.43.0
 
 * In all databases except MySQL, MariaDB, and SQL Server, the `ubyte()` column now maps to data type `SMALLINT` instead of `TINYINT`, which allows the full range of 

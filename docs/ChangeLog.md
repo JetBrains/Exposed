@@ -1,3 +1,52 @@
+# 0.44.0
+Infrastructure:
+* Kotlin 1.9.10
+* Kotlin Coroutines 1.7.3
+* log4j2 2.20.0
+* h2-database driver 2.2.220
+* MariaDB driver 2.7.9 and 3.1.4
+* MySQL driver 8.0.30
+* PostgreSQL driver 42.6.0
+* SQLite driver 3.43.0.0
+* Spring Framework 6.0.11
+* Spring Boot 3.1.3
+
+Breaking changes:
+* `SpringTransactionManager` no longer extends `DataSourceTransactionManager`; instead, it directly extends `AbstractPlatformTransactionManager`.
+  The class also no longer implements the Exposed interface `TransactionManager`, as transaction operations are instead delegated to Spring.
+* `spring-transaction` and `exposed-spring-boot-starter` modules now use Spring Framework 6.0 and Spring Boot 3.0, which require Java 17 as a minimum version.
+* A table that is created with a keyword identifier now logs a warning that the identifier's case may be lost when it is automatically quoted in generated SQL.
+  `DatabaseConfig` now includes the property `preserveKeywordCasing`, which can be set to `true` to remove these warnings and to ensure that the identifier matches the exact case used.
+* More details at [Breaking changes](BREAKING_CHANGES.md#0440)
+
+Features:
+* feat!: EXPOSED-109 Improve implementation of Spring transaction manager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1840
+* feat: EXPOSED-78 Support database-generated values for columns by @joc-a in https://github.com/JetBrains/Exposed/pull/1844
+* feat: EXPOSED-188 Support Propagation in SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1867
+
+Bug fixes:
+* docs: EXPOSED-159 Add KDocs for EntityClass reference functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1848
+* fix: EXPOSED-158 avoid SQL syntax error of CASE WHEN using nested CASE by @ymotchi in https://github.com/JetBrains/Exposed/pull/1847
+* Fix how changes are calculated for non-default schema table by @AlexeySoshin in https://github.com/JetBrains/Exposed/pull/1678
+* fix: Fix tables creation depending on each other via foreignKey constraint by @naftalmm in https://github.com/JetBrains/Exposed/pull/1649
+* fix: Verbose logging in test module by @Hakky54 in https://github.com/JetBrains/Exposed/pull/1852
+* fix: EXPOSED-161 SQL Server syntax incorrectly allows CASCADE with dropSchema by @bog-walk in https://github.com/JetBrains/Exposed/pull/1850
+* chore: Reuse Containers in tests; Add Test parameters by @e5l in https://github.com/JetBrains/Exposed/pull/1853
+* docs: EXPOSED-124 Add Spring Boot samples by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1826
+* fix: EXPOSED-117 Set jvmToolchain to 8 for all modules by @e5l in https://github.com/JetBrains/Exposed/pull/1855
+* chore: Adjust test md files by @joc-a in https://github.com/JetBrains/Exposed/pull/1857
+* fix: EXPOSED-162 SQLite generatedKeys exception by @joc-a in https://github.com/JetBrains/Exposed/pull/1854
+* fix: Unable to download required toolchain on MAC by @joc-a in https://github.com/JetBrains/Exposed/pull/1859
+* fix: EXPOSED-171 Switch from spring.factories to AutoConfiguration.imports by @rbraeunlich in https://github.com/JetBrains/Exposed/pull/1645
+* fix: EXPOSED-179 Unsigned column check constraint is not unique to table by @bog-walk in https://github.com/JetBrains/Exposed/pull/1860
+* fix: EXPOSED-182 Schema name breaks Create Table with default column in SQLServer by @bog-walk in https://github.com/JetBrains/Exposed/pull/1861
+* fix: Exception when using RESTRICT reference option by @joc-a in https://github.com/JetBrains/Exposed/pull/1862
+* fix!: EXPOSED-150 Auto-quoted column names change case across databases by @bog-walk in https://github.com/JetBrains/Exposed/pull/1841
+* docs: EXPOSED-132 Add annotations to spring-boot-starter README samples by @bog-walk in https://github.com/JetBrains/Exposed/pull/1856
+* fix: EXPOSED-173 UPDATE_RULE read incorrectly for Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/1865
+* chore: EXPOSED-186 Replace JDK 1.7 support in exposed-jodatime classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/1866
+* fix: EXPOSED-178 DELETE_RULE read incorrectly for Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/1868
+
 # 0.43.0
 Infrastructure:
 * Kotlin 1.9.10
