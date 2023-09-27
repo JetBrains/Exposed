@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -626,6 +627,28 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(10, testTable.selectAll().singleOrNull()?.get(testTable.int))
             } finally {
                 SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    @Test
+    fun `create table with dot in name without creating schema beforehand`() {
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) {
+            val q = db.identifierManager.quoteString
+            val tableName = "${q}SomeNamespace.SomeTable$q"
+
+            val tester = object : IntIdTable(tableName) {
+                val text_col = text("text_col")
+            }
+
+            try {
+                SchemaUtils.create(tester)
+
+                val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
+                tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
+                tester.deleteWhere { tester.id eq id }
+            } finally {
+                SchemaUtils.drop(tester)
             }
         }
     }

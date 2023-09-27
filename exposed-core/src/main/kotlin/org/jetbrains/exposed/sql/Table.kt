@@ -1192,8 +1192,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
+            val q = if (tableName.contains('.')) "\"" else ""
+            val fallbackSeqName = "$q${tableName.replace("\"", "")}_${name}_seq$q"
             this.withColumnType(
-                AutoIncColumnType(columnType, idSeqName, "${tableName?.replace("\"", "")}_${name}_seq")
+                AutoIncColumnType(columnType, idSeqName, fallbackSeqName)
             )
         }
 

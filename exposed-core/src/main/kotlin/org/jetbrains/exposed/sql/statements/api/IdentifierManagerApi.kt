@@ -97,7 +97,7 @@ abstract class IdentifierManagerApi {
     }
 
     fun quoteIfNecessary(identity: String): String {
-        return if (identity.contains('.')) {
+        return if (identity.contains('.') && !identity.isAlreadyQuoted()) {
             identity.split('.').joinToString(".") { quoteTokenIfNecessary(it) }
         } else {
             quoteTokenIfNecessary(identity)
