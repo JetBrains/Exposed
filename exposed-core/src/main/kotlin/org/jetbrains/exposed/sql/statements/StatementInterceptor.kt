@@ -20,14 +20,10 @@ interface StatementInterceptor {
 
     fun beforeCommit(transaction: Transaction) {}
 
-    @Deprecated("Use afterCommit() with a transaction", level = DeprecationLevel.HIDDEN)
-    fun afterCommit() {}
     fun afterCommit(transaction: Transaction) {}
 
     fun beforeRollback(transaction: Transaction) {}
 
-    @Deprecated("Use afterRollback() with a transaction", level = DeprecationLevel.HIDDEN)
-    fun afterRollback() {}
     fun afterRollback(transaction: Transaction) {}
 
     fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> = emptyMap()

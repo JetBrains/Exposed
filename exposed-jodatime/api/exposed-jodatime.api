@@ -5,7 +5,6 @@ public final class org/jetbrains/exposed/sql/jodatime/CurrentDate : org/jetbrain
 
 public final class org/jetbrains/exposed/sql/jodatime/CurrentDateTime : org/jetbrains/exposed/sql/Function {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/jodatime/CurrentDateTime;
-	public final synthetic fun invoke ()Lorg/jetbrains/exposed/sql/jodatime/CurrentDateTime;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
