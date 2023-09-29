@@ -23,12 +23,14 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     abstract val currentScheme: String
     abstract fun resetCurrentScheme()
     abstract val tableNames: Map<String, List<String>>
     abstract val schemaNames: List<String>
+
+    abstract fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): Pair<String, List<String>>
 
     abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>
 

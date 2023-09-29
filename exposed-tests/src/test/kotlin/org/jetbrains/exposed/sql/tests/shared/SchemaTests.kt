@@ -140,7 +140,7 @@ class SchemaTests : DatabaseTestsBase() {
 
         transaction {
             connection.metadata {
-                assertEquals("PUBLIC", currentScheme)
+                assertEquals("PUBLIC", tableNamesByCurrentSchema(null).first)
             }
         }
 
@@ -154,13 +154,13 @@ class SchemaTests : DatabaseTestsBase() {
 
         transaction(db) {
             connection.metadata {
-                val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(tableNamesByCurrentSchema(null).first)
                 assertEquals(schema.identifier, currentScheme)
             }
             // Nested transaction
             transaction(db) {
                 connection.metadata {
-                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(tableNamesByCurrentSchema(null).first)
                     assertEquals(schema.identifier, currentScheme)
                 }
             }
