@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Statement
 import java.sql.Types
 
 class JdbcPreparedStatementImpl(
@@ -60,7 +61,15 @@ class JdbcPreparedStatementImpl(
         if (!statement.isClosed) statement.close()
     }
 
-    override fun executeBatch(): List<Int> = statement.executeBatch().toList()
+    override fun executeBatch(): List<Int> {
+        return statement.executeBatch().map {
+            when (it) {
+                Statement.SUCCESS_NO_INFO -> 1
+                Statement.EXECUTE_FAILED -> 0
+                else -> it
+            }
+        }
+    }
 
     override fun cancel() {
         if (!statement.isClosed) statement.cancel()

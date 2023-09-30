@@ -33,6 +33,7 @@ dependencies {
     implementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
 
     implementation("com.zaxxer", "HikariCP", "4.0.3")
+    testCompileOnly("mysql", "mysql-connector-java", Versions.mysql80)
     testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
     testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
     compileOnly("com.h2database", "h2", Versions.h2)
