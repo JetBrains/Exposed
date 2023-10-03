@@ -30,13 +30,6 @@ object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INS
             else -> "CURRENT_TIMESTAMP"
         }
     }
-
-    @Deprecated(
-        message = "This class is now a singleton, no need for its constructor call",
-        replaceWith = ReplaceWith("this"),
-        level = DeprecationLevel.HIDDEN,
-    )
-    operator fun invoke() = this
 }
 
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {

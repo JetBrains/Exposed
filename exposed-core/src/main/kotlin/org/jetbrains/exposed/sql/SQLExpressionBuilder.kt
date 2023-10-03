@@ -99,10 +99,6 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
-@Deprecated("Please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.HIDDEN)
-fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
-
-/** Advances this sequence and returns the new value. */
 fun Sequence.nextIntVal(): NextVal<Int> = NextVal.IntNextVal(this)
 
 /** Advances this sequence and returns the new value. */
@@ -185,9 +181,6 @@ data class LikePattern(
         }
     }
 }
-
-@Deprecated("Implement interface ISqlExpressionBuilder directly instead", level = DeprecationLevel.HIDDEN)
-open class SqlExpressionBuilderClass : ISqlExpressionBuilder
 
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {

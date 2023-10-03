@@ -20,13 +20,6 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
             else -> "CURRENT_TIMESTAMP"
         }
     }
-
-    @Deprecated(
-        message = "This class is now a singleton, no need for its constructor call",
-        replaceWith = ReplaceWith("this"),
-        level = DeprecationLevel.HIDDEN,
-    )
-    operator fun invoke() = this
 }
 
 object CurrentDate : Function<DateTime>(DateColumnType(false)) {
