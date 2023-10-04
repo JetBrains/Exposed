@@ -48,7 +48,7 @@ enum class TestDB(
         connection = {
             "jdbc:mysql://127.0.0.1:3001/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
         },
-        driver = "com.mysql.jdbc.Driver"
+        driver = "com.mysql.cj.jdbc.Driver"
     ),
     POSTGRESQL(
         { "jdbc:postgresql://127.0.0.1:3004/postgres?lc_messages=en_US.UTF-8" },
