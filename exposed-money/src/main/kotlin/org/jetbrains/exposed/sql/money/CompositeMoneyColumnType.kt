@@ -6,9 +6,15 @@ import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.MonetaryAmount
 
+/**
+ * Creates a composite column made up of:
+ * - A numeric column, with the specified [amountName], for storing numbers with the specified [precision] and [scale].
+ * - A character column, with the specified [currencyName], for storing currency (as javax.money.CurrencyUnit).
+ */
 fun Table.compositeMoney(precision: Int, scale: Int, amountName: String, currencyName: String = amountName + "_C") =
     registerCompositeColumn(CompositeMoneyColumn(this, precision, scale, amountName, currencyName))
 
+/** Creates a composite column made up of a decimal column and a currency column. */
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal>,
     currencyColumn: Column<CurrencyUnit>
@@ -20,6 +26,7 @@ fun Table.compositeMoney(
     }
 }
 
+/** Creates a composite column made up of a nullable decimal column and a nullable currency column. */
 @JvmName("compositeMoneyNullable")
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal?>,
