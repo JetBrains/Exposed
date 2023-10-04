@@ -81,6 +81,9 @@ internal fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 @Suppress("MagicNumber")
 internal val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
+/**
+ * Column for storing dates.
+ */
 @Suppress("MagicNumber")
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
@@ -125,6 +128,9 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone.
+ */
 @Suppress("MagicNumber")
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -176,6 +182,9 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing times.
+ */
 class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -227,6 +236,9 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone, as an `Instant`.
+ */
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -270,6 +282,9 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times with time zone.
+ */
 class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -320,6 +335,9 @@ class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing time-based amounts of time, as a `Duration`.
+ */
 class JavaDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
