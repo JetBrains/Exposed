@@ -2,6 +2,9 @@ package org.jetbrains.exposed.crypt
 
 import org.jetbrains.exposed.sql.BinaryColumnType
 
+/**
+ * Binary column for storing encrypted binary strings of a specific [length], using the provided [encryptor].
+ */
 class EncryptedBinaryColumnType(
     private val encryptor: Encryptor,
     length: Int
