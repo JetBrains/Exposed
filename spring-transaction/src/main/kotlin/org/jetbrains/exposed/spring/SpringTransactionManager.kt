@@ -15,6 +15,14 @@ import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.SmartTransactionObject
 import javax.sql.DataSource
 
+/**
+ * Transaction Manager implementation that builds on top of Spring's standard transaction workflow.
+ *
+ * @param dataSource The data source that produces `Connection` objects.
+ * @param databaseConfig The configuration that defines custom properties to be used with connections.
+ * If none is specified, the default configuration values will be used.
+ * @property showSql Whether transaction queries should be logged. Defaults to `false`.
+ */
 class SpringTransactionManager(
     dataSource: DataSource,
     databaseConfig: DatabaseConfig = DatabaseConfig {},
