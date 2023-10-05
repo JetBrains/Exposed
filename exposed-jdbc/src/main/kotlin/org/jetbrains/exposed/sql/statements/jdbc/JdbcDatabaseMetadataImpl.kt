@@ -130,11 +130,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     /**
-     * Returns the default schema name and a list of its existing table names, as a pair,
+     * Returns the default schema name and a list of its existing table names, as [SchemaMetadata],
      * found either by reading metadata or from a cache of previously read metadata.
      */
-    override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): Pair<String, List<String>> {
-        return currentSchema!! to (tableNamesCache ?: tableNames).getValue(currentSchema!!)
+    override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
+        val tablesInSchema = (tableNamesCache ?: tableNames).getValue(currentSchema!!)
+        return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
     private fun ResultSet.extractColumns(): List<ColumnMetadata> {

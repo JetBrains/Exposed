@@ -53,7 +53,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
-	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lkotlin/Pair;
+	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl$Companion {

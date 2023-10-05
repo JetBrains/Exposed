@@ -2998,7 +2998,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun getVersion ()Ljava/math/BigDecimal;
 	public abstract fun resetCurrentScheme ()V
 	public abstract fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
-	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lkotlin/Pair;
+	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
 }
 
 public abstract class org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {
@@ -3656,6 +3656,19 @@ public class org/jetbrains/exposed/sql/vendors/SQLiteDialect : org/jetbrains/exp
 
 public final class org/jetbrains/exposed/sql/vendors/SQLiteDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
 	public final fun getENABLE_UPDATE_DELETE_LIMIT ()Z
+}
+
+public final class org/jetbrains/exposed/sql/vendors/SchemaMetadata {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSchemaName ()Ljava/lang/String;
+	public final fun getTableNames ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetbrains/exposed/sql/vendors/DatabaseDialect {

@@ -28,7 +28,7 @@ abstract class VendorDialect(
     val allTablesNames: List<String>
         get() {
             val connection = TransactionManager.current().connection
-            return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()) }.second
+            return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
         }
 
     protected fun getAllTableNamesCache(): Map<String, List<String>> {
@@ -57,8 +57,8 @@ abstract class VendorDialect(
      * Using `allTablesNames` field is the preferred way.
      */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        tableNamesByCurrentSchema(null)
-    }.second
+        tableNamesByCurrentSchema(null).tableNames
+    }
 
     override fun tableExists(table: Table): Boolean {
         return table.schemaName?.let { schema ->
