@@ -38,7 +38,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     private val databaseName
         get() = when (databaseDialectName) {
-            MysqlDialect.dialectName, MariaDBDialect.dialectName -> _currentScheme!!
+            MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentSchema!!
             else -> database
         }
 
@@ -56,7 +56,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    private var _currentScheme: String? = null
+    private var currentSchema: String? = null
         get() {
             if (field == null) {
                 field = try {
@@ -76,10 +76,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         message = "This will be removed when the interface property is fully deprecated",
         level = DeprecationLevel.ERROR
     )
-    override val currentScheme: String get() = _currentScheme!!
+    override val currentScheme: String get() = currentSchema!!
 
     override fun resetCurrentScheme() {
-        _currentScheme = null
+        currentSchema = null
     }
 
     private inner class CachableMapWithDefault<K, V>(
@@ -134,7 +134,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
      * found either by reading metadata or from a cache of previously read metadata.
      */
     override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): Pair<String, List<String>> {
-        return _currentScheme!! to (tableNamesCache ?: tableNames).getValue(_currentScheme!!)
+        return currentSchema!! to (tableNamesCache ?: tableNames).getValue(currentSchema!!)
     }
 
     private fun ResultSet.extractColumns(): List<ColumnMetadata> {
@@ -148,11 +148,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val result = mutableMapOf<Table, List<ColumnMetadata>>()
         val useSchemaInsteadOfDatabase = currentDialect is MysqlDialect
-        val tablesBySchema = tables.groupBy { identifierManager.inProperCase(it.schemaName ?: _currentScheme!!) }
+        val tablesBySchema = tables.groupBy { identifierManager.inProperCase(it.schemaName ?: currentSchema!!) }
 
         for ((schema, schemaTables) in tablesBySchema.entries) {
             for (table in schemaTables) {
-                val catalog = if (!useSchemaInsteadOfDatabase || schema == _currentScheme!!) databaseName else schema
+                val catalog = if (!useSchemaInsteadOfDatabase || schema == currentSchema!!) databaseName else schema
                 val rs = metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
                 val columns = rs.extractColumns()
                 check(columns.isNotEmpty())
@@ -220,7 +220,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     rs.close()
                     names
                 }
-                val storedIndexTable = if (tableSchema == _currentScheme!!) table.nameInDatabaseCase() else table.nameInDatabaseCaseUnquoted()
+                val storedIndexTable = if (tableSchema == currentSchema!!) table.nameInDatabaseCase() else table.nameInDatabaseCaseUnquoted()
                 val rs = metadata.getIndexInfo(catalog, tableSchema, storedIndexTable, false, false)
 
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
@@ -324,8 +324,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
      * metadata if 'my_schema' is used as the database name.
      */
     private fun tableCatalogAndSchema(table: Table): Pair<String, String> {
-        val tableSchema = identifierManager.inProperCase(table.schemaName ?: _currentScheme!!)
-        return if (currentDialect is MysqlDialect && tableSchema != _currentScheme!!) {
+        val tableSchema = identifierManager.inProperCase(table.schemaName ?: currentSchema!!)
+        return if (currentDialect is MysqlDialect && tableSchema != currentSchema!!) {
             tableSchema to tableSchema
         } else {
             databaseName to tableSchema
