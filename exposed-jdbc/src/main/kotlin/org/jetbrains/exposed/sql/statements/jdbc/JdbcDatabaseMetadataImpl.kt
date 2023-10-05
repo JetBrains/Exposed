@@ -11,6 +11,9 @@ import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Class responsible for retrieving and storing information about the JDBC driver and underlying DBMS, using [metadata].
+ */
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
