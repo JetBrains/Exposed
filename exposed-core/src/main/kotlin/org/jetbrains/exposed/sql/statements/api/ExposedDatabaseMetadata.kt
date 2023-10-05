@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.sql.vendors.SchemaMetadata
 import java.math.BigDecimal
 
 abstract class ExposedDatabaseMetadata(val database: String) {
@@ -23,12 +24,14 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     abstract val currentScheme: String
     abstract fun resetCurrentScheme()
     abstract val tableNames: Map<String, List<String>>
     abstract val schemaNames: List<String>
+
+    abstract fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata
 
     abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>
 

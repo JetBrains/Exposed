@@ -28,7 +28,7 @@ abstract class VendorDialect(
     val allTablesNames: List<String>
         get() {
             val connection = TransactionManager.current().connection
-            return getAllTableNamesCache().getValue(connection.metadata { currentScheme })
+            return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
         }
 
     protected fun getAllTableNamesCache(): Map<String, List<String>> {
@@ -57,22 +57,31 @@ abstract class VendorDialect(
      * Using `allTablesNames` field is the preferred way.
      */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        tableNames.getValue(currentScheme)
+        tableNamesByCurrentSchema(null).tableNames
     }
 
     override fun tableExists(table: Table): Boolean {
-        val tableScheme = table.schemaName
-        val scheme = tableScheme?.inProperCase() ?: TransactionManager.current().connection.metadata { currentScheme }
-        val allTables = getAllTableNamesCache().getValue(scheme)
-        return allTables.any {
-            when {
-                tableScheme != null -> it == table.nameInDatabaseCase()
-                scheme.isEmpty() -> it == table.nameInDatabaseCaseUnquoted()
-                else -> {
-                    val sanitizedTableName = table.tableNameWithoutSchemeSanitized
-                    val nameInDb = "$scheme.$sanitizedTableName".inProperCase()
-                    it == nameInDb
-                }
+        return table.schemaName?.let { schema ->
+            getAllTableNamesCache().getValue(schema.inProperCase()).any {
+                it == table.nameInDatabaseCase()
+            }
+        } ?: run {
+            val (schema, allTables) = TransactionManager.current().connection.metadata {
+                tableNamesByCurrentSchema(getAllTableNamesCache())
+            }
+            allTables.any {
+                it.metadataMatchesTable(schema, table)
+            }
+        }
+    }
+
+    protected open fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
+        return when {
+            schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
+            else -> {
+                val sanitizedTableName = table.tableNameWithoutSchemeSanitized
+                val nameInDb = "$schema.$sanitizedTableName".inProperCase()
+                this == nameInDb
             }
         }
     }
