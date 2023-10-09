@@ -631,6 +631,15 @@ class CreateTableTests : DatabaseTestsBase() {
         }
     }
 
+    /**
+     * Note on Oracle exclusion in this test:
+     * Oracle names are not case-sensitive. They can be made case-sensitive by using quotes around them. The Oracle JDBC
+     * driver converts the entire SQL INSERT statement to upper case before extracting the table name from it. This
+     * happens regardless of whether there is a dot in the name. Even when a name is quoted, the driver converts
+     * it to upper case. Therefore, the INSERT statement fails when it contains a quoted table name because it attempts
+     * to insert into a table that does not exist (“SOMENAMESPACE.SOMETABLE” is not found) . It does not fail when the
+     * table name is not quoted because the case would not matter in that scenario.
+     */
     @Test
     fun `create table with dot in name without creating schema beforehand`() {
         withDb(excludeSettings = listOf(TestDB.ORACLE)) {
