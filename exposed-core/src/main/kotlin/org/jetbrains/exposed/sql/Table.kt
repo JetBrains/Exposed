@@ -346,14 +346,21 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Returns the schema name, or null if one does not exist for this table. */
-    val schemaName: String? = if (name.contains(".")) name.substringBeforeLast(".") else null
+    val schemaName: String? = if (name.contains(".") && !name.isAlreadyQuoted()) {
+        name.substringBeforeLast(".")
+    } else {
+        null
+    }
 
-    internal val tableNameWithoutScheme: String get() = tableName.substringAfterLast(".")
+    internal val tableNameWithoutScheme: String
+        get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
     // Table name may contain quotes, remove those before appending
-    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme
-        .replace("\"", "")
-        .replace("'", "")
+    internal val tableNameWithoutSchemeSanitized: String
+        get() = tableNameWithoutScheme
+            .replace("\"", "")
+            .replace("'", "")
+            .replace("`", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -1337,3 +1344,8 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
+
+private fun String.isAlreadyQuoted(): Boolean =
+    listOf("\"", "'", "`").any { quoteString ->
+        startsWith(quoteString) && endsWith(quoteString)
+    }

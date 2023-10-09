@@ -652,6 +652,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
             try {
                 SchemaUtils.create(tester)
+                assertTrue(tester.exists())
 
                 val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
                 tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
