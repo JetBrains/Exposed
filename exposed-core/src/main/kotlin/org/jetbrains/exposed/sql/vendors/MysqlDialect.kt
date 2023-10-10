@@ -388,7 +388,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
             else -> {
-                val sanitizedTableName = table.tableNameWithoutSchemeSanitized
+                val sanitizedTableName = table.tableNameWithoutScheme.replace("`", "")
                 val nameInDb = "$schema.$sanitizedTableName".inProperCase()
                 this == nameInDb
             }
