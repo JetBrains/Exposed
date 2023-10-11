@@ -345,15 +345,40 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
-    /** Returns the schema name, or null if one does not exist for this table. */
-    val schemaName: String? = if (name.contains(".")) name.substringBeforeLast(".") else null
+    /** Returns the schema name, or null if one does not exist for this table.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is, so there would be no schema. If it is not quoted, whatever is after the dot is
+     * considered to be the table name, and whatever is before the dot is considered to be the schema.
+     */
+    val schemaName: String? = if (name.contains(".") && !name.isAlreadyQuoted()) {
+        name.substringBeforeLast(".")
+    } else {
+        null
+    }
 
-    internal val tableNameWithoutScheme: String get() = tableName.substringAfterLast(".")
+    /**
+     * Returns the table name without schema.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
+     */
+    internal val tableNameWithoutScheme: String
+        get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
-    // Table name may contain quotes, remove those before appending
-    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme
-        .replace("\"", "")
-        .replace("'", "")
+    /**
+     * Returns the table name without schema, with all quotes removed.
+     *
+     * Used for two purposes:
+     * 1. Forming primary and foreign key names
+     * 2. Comparing table names from database metadata (except MySQL and MariaDB)
+     * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
+     */
+    internal val tableNameWithoutSchemeSanitized: String
+        get() = tableNameWithoutScheme
+            .replace("\"", "")
+            .replace("'", "")
+            .replace("`", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -1192,8 +1217,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
+            val q = if (tableName.contains('.')) "\"" else ""
+            val fallbackSeqName = "$q${tableName.replace("\"", "")}_${name}_seq$q"
             this.withColumnType(
-                AutoIncColumnType(columnType, idSeqName, "${tableName?.replace("\"", "")}_${name}_seq")
+                AutoIncColumnType(columnType, idSeqName, fallbackSeqName)
             )
         }
 
@@ -1335,3 +1362,8 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
+
+private fun String.isAlreadyQuoted(): Boolean =
+    listOf("\"", "'", "`").any { quoteString ->
+        startsWith(quoteString) && endsWith(quoteString)
+    }

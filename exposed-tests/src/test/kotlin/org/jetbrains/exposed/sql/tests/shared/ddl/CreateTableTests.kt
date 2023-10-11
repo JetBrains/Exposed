@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -444,7 +445,7 @@ class CreateTableTests : DatabaseTestsBase() {
     fun createTableWithExplicitForeignKeyName4() {
         val fkName = "MyForeignKey4"
         val parent = object : LongIdTable() {
-            override val tableName = "parent4"
+            override val tableName get() = "parent4"
             val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
         }
         val child = object : LongIdTable("child4") {
@@ -626,6 +627,38 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(10, testTable.selectAll().singleOrNull()?.get(testTable.int))
             } finally {
                 SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    /**
+     * Note on Oracle exclusion in this test:
+     * Oracle names are not case-sensitive. They can be made case-sensitive by using quotes around them. The Oracle JDBC
+     * driver converts the entire SQL INSERT statement to upper case before extracting the table name from it. This
+     * happens regardless of whether there is a dot in the name. Even when a name is quoted, the driver converts
+     * it to upper case. Therefore, the INSERT statement fails when it contains a quoted table name because it attempts
+     * to insert into a table that does not exist (“SOMENAMESPACE.SOMETABLE” is not found) . It does not fail when the
+     * table name is not quoted because the case would not matter in that scenario.
+     */
+    @Test
+    fun `create table with dot in name without creating schema beforehand`() {
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) {
+            val q = db.identifierManager.quoteString
+            val tableName = "${q}SomeNamespace.SomeTable$q"
+
+            val tester = object : IntIdTable(tableName) {
+                val text_col = text("text_col")
+            }
+
+            try {
+                SchemaUtils.create(tester)
+                assertTrue(tester.exists())
+
+                val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
+                tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
+                tester.deleteWhere { tester.id eq id }
+            } finally {
+                SchemaUtils.drop(tester)
             }
         }
     }
