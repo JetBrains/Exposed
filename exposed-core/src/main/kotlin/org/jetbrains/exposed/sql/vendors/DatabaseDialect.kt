@@ -38,6 +38,8 @@ interface DatabaseDialect {
 
     /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
+
+    /** Returns `true` if the dialect supports only returning generated keys that are identity columns. */
     val supportsOnlyIdentifiersInGeneratedKeys: Boolean get() = false
 
     /** Returns `true` if the dialect supports an upsert operation returning an affected-row value of 0, 1, or 2. */
@@ -49,22 +51,28 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
     val supportsSubqueryUnions: Boolean get() = false
 
+    /** Returns `true` if the dialect provides a special dummy DUAL table, accessible by all users. */
     val supportsDualTableConcept: Boolean get() = false
 
+    /** Returns `true` if the dialect provides options to configure how nulls are sorted compared to non-null values. */
     val supportsOrderByNullsFirstLast: Boolean get() = false
 
     /** Returns `true` if the dialect supports window function definitions with GROUPS mode in frame clause */
     val supportsWindowFrameGroupsMode: Boolean get() = false
 
+    /** Returns `true` if the dialect supports using the ON UPDATE clause with a foreign key constraint. */
     val supportsOnUpdate: Boolean get() = true
 
+    /** Returns `true` if the dialect supports the SET DEFAULT action as part of a foreign key constraint clause. */
     val supportsSetDefaultReferenceOption: Boolean get() = true
 
+    /** Returns `true` if the dialect supports the RESTRICT action as part of a foreign key constraint clause. */
     val supportsRestrictReferenceOption: Boolean get() = true
 
+    /** Returns a mapping of dialect-specific characters to be escaped when used as alongside the LIKE operator. */
     val likePatternSpecialChars: Map<Char, Char?> get() = defaultLikePatternSpecialChars
 
-    /** Returns true if autoCommit should be enabled to create/drop database */
+    /** Returns true if autoCommit should be enabled to create/drop database. */
     val requiresAutoCommitOnCreateDrop: Boolean get() = false
 
     /** Returns the name of the current database. */
@@ -124,20 +132,26 @@ interface DatabaseDialect {
     /** Returns the SQL command that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
+    /** Returns the SQL command that creates a database with the specified [name]. */
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
+    /** Returns the SQL command that retrieves a set of existing databases. */
     fun listDatabases(): String = "SHOW DATABASES"
 
+    /** Returns the SQL command that drops the database with the specified [name]. */
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 
+    /** Returns the SQL command that sets the current schema to the specified [schema]. */
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
 
+    /** Returns the SQL command that creates the specified [schema]. */
     fun createSchema(schema: Schema): String = buildString {
         append("CREATE SCHEMA IF NOT EXISTS ")
         append(schema.identifier)
         appendIfNotNull(" AUTHORIZATION ", schema.authorization)
     }
 
+    /** Returns the SQL command that drops the specified [schema], as well as all its objects if [cascade] is `true`. */
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 

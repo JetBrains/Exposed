@@ -89,6 +89,7 @@ abstract class DataTypeProvider {
     /** Binary type for storing [UUID]. */
     open fun uuidType(): String = "BINARY(16)"
 
+    /** Returns a database-compatible object from the specified UUID [value]. */
     @Suppress("MagicNumber")
     open fun uuidToDB(value: UUID): Any =
         ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
@@ -144,6 +145,7 @@ abstract class DataTypeProvider {
         else -> "($e)"
     }
 
+    /** Returns the SQL representation of the specified [expression], for it to be used in an ORDER BY clause. */
     open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
     }
