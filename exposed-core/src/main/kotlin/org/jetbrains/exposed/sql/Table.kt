@@ -355,7 +355,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     internal val tableNameWithoutScheme: String
         get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
-    // Table name may contain quotes, remove those before appending
+    /**
+     * Returns the table name without schema, with all quotes removed.
+     *
+     * Used for two purposes:
+     * 1. Forming primary and foreign key names
+     * 2. Comparing table names from database metadata (except MySQL and MariaDB)
+     * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
+     */
     internal val tableNameWithoutSchemeSanitized: String
         get() = tableNameWithoutScheme
             .replace("\"", "")
