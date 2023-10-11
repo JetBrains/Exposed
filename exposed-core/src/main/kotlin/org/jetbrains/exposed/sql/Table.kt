@@ -352,6 +352,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         null
     }
 
+    /**
+     * Returns the table name without schema.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
+     */
     internal val tableNameWithoutScheme: String
         get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
