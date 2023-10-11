@@ -345,7 +345,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
-    /** Returns the schema name, or null if one does not exist for this table. */
+    /** Returns the schema name, or null if one does not exist for this table.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is, so there would be no schema. If it is not quoted, whatever is after the dot is
+     * considered to be the table name, and whatever is before the dot is considered to be the schema.
+     */
     val schemaName: String? = if (name.contains(".") && !name.isAlreadyQuoted()) {
         name.substringBeforeLast(".")
     } else {
