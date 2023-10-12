@@ -48,7 +48,11 @@ fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeFu
 @JvmName("InstantTimeFunction")
 fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
 
-/** Represents an SQL function that returns the current date and time, as a `LocalDateTime`. */
+/**
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
@@ -58,7 +62,11 @@ object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.I
     }
 }
 
-/** Represents an SQL function that returns the current date. */
+/**
+ * Represents an SQL function that returns the current date, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
@@ -69,7 +77,11 @@ object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
     }
 }
 
-/** Represents an SQL function that returns the current date and time. */
+/**
+ * Represents an SQL function that returns the current date and time.
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 class CurrentTimestamp<T> : Function<T>(KotlinInstantColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {

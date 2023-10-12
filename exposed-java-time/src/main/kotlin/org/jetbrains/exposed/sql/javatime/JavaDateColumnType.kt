@@ -82,7 +82,9 @@ internal fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 internal val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
 /**
- * Column for storing dates.
+ * Column for storing dates, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.date
  */
 @Suppress("MagicNumber")
 class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
@@ -129,7 +131,9 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
 }
 
 /**
- * Column for storing dates and times without time zone.
+ * Column for storing dates and times without time zone, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.datetime
  */
 @Suppress("MagicNumber")
 class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
@@ -183,7 +187,9 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 /**
- * Column for storing times.
+ * Column for storing times, as [LocalTime].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.time
  */
 class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -237,7 +243,9 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 /**
- * Column for storing dates and times without time zone, as an `Instant`.
+ * Column for storing dates and times without time zone, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.timestamp
  */
 class JavaInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -283,7 +291,9 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 }
 
 /**
- * Column for storing dates and times with time zone.
+ * Column for storing dates and times with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
  */
 class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -336,7 +346,9 @@ class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
 }
 
 /**
- * Column for storing time-based amounts of time, as a `Duration`.
+ * Column for storing time-based amounts of time, as [Duration].
+ *
+ * @sample org.jetbrains.exposed.sql.javatime.duration
  */
 class JavaDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()

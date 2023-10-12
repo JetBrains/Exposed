@@ -15,13 +15,13 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
  * either as a JSON representation or as a scalar value.
  */
 class Extract<T>(
-    /** Returns the expression from which to extract JSON subcomponents matched by [path]. */
+    /** The expression from which to extract JSON subcomponents matched by [path]. */
     val expression: Expression<*>,
-    /** Returns array of Strings representing JSON path/keys that match fields to be extracted. */
+    /** Array of Strings representing JSON path/keys that match fields to be extracted. */
     vararg val path: String,
-    /** Returns whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
+    /** Whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
     val toScalar: Boolean,
-    /** Returns the column type of [expression] to check, if casting to JSONB is required. */
+    /** The column type of [expression] to check, if casting to JSONB is required. */
     val jsonType: IColumnType,
     columnType: IColumnType
 ) : Function<T>(columnType) {
@@ -38,6 +38,7 @@ class Extract<T>(
  * If none are provided, the root context item `'$'` will be used by default.
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
  * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
+ * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testJsonExtractWithArrays
  */
 inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
     vararg path: String,

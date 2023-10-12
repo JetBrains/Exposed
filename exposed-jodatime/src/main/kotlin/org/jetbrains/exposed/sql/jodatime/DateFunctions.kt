@@ -14,7 +14,11 @@ class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColu
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
 }
 
-/** Represents an SQL function that returns the current date and time. */
+/**
+ * Represents an SQL function that returns the current date and time, as [DateTime]
+ *
+ * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ */
 object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
@@ -24,7 +28,11 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     }
 }
 
-/** Represents an SQL function that returns the current date. */
+/**
+ * Represents an SQL function that returns the current date, as [DateTime].
+ *
+ * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ */
 object CurrentDate : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {

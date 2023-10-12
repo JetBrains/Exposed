@@ -2,13 +2,15 @@ package org.jetbrains.exposed.crypt
 
 /**
  * Base cipher class responsible for the encryption and decryption of data.
+ *
+ * @sample org.jetbrains.exposed.crypt.Algorithms.AES_256_PBE_GCM
  */
 class Encryptor(
-    /** Returns the function that converts a plaintext String to ciphertext. */
+    /** Encrypt a plaintext string to ciphertext. */
     val encryptFn: (String) -> String,
-    /** Returns the function that converts ciphertext to a plaintext String. */
+    /** Decrypt ciphertext to a plaintext string. */
     val decryptFn: (String) -> String,
-    /** Returns the function that converts the expected input length into the maximum encoded length to be stored. */
+    /** Convert the expected input length into the maximum encoded length to be stored. */
     val maxColLengthFn: (Int) -> Int
 ) {
     /** Returns an encrypted value using [encryptFn]. */

@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.regex.Pattern
 
 /**
- * Class responsible for the automatic creation of a database schema.
+ * Base class responsible for the automatic creation of a database schema, using the results of [discoverExposedTables].
+ *
+ * If more than just table creation is required, a derived class can be implemented to override the transactional
+ * function, [run], so that other schema operations can be performed when initialized.
  *
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  * @property excludedPackages List of packages to exclude, so that their contained tables are not auto-created.

@@ -25,7 +25,11 @@ class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLoc
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
 }
 
-/** Represents an SQL function that returns the current date and time, as a `LocalDateTime`. */
+/**
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
@@ -35,7 +39,11 @@ object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INS
     }
 }
 
-/** Represents an SQL function that returns the current date. */
+/**
+ * Represents an SQL function that returns the current date, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
@@ -46,7 +54,11 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     }
 }
 
-/** Represents an SQL function that returns the current date and time. */
+/**
+ * Represents an SQL function that returns the current date and time.
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
 class CurrentTimestamp<T : Temporal> : Function<T>(JavaInstantColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {

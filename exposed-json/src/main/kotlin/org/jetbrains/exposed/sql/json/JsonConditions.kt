@@ -15,13 +15,13 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
  * Represents an SQL operator that checks whether a [candidate] expression is contained within a JSON [target].
  */
 class Contains(
-    /** Returns the JSON expression being searched. */
+    /** The JSON expression being searched. */
     val target: Expression<*>,
-    /** Returns the expression being searched for in [target]. */
+    /** The expression being searched for in [target]. */
     val candidate: Expression<*>,
-    /** Returns an optional String representing JSON path/keys that match specific fields to search for [candidate]. */
+    /** An optional String representing JSON path/keys that match specific fields to search for [candidate]. */
     val path: String?,
-    /** Returns the column type of [target] to check, if casting to JSONB is required. */
+    /** The column type of [target] to check, if casting to JSONB is required. */
     val jsonType: IColumnType
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
@@ -32,13 +32,13 @@ class Contains(
  * Represents an SQL operator that checks whether data exists within a JSON [expression] at the specified [path].
  */
 class Exists(
-    /** Returns the JSON expression being checked. */
+    /** The JSON expression being checked. */
     val expression: Expression<*>,
-    /** Returns the array of Strings representing JSON path/keys that match fields to check for existing data. */
+    /** The array of Strings representing JSON path/keys that match fields to check for existing data. */
     vararg val path: String,
-    /** Returns an optional String representing any vendor-specific clause or argument. */
+    /** An optional String representing any vendor-specific clause or argument. */
     val optional: String?,
-    /** Returns the column type of [expression] to check, if casting to JSONB is required. */
+    /** The column type of [expression] to check, if casting to JSONB is required. */
     val jsonType: IColumnType
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
@@ -53,6 +53,7 @@ class Exists(
  * @param candidate Expression to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
+ * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testJsonContains
  */
 fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String? = null): Contains =
     Contains(this, candidate, path, columnType)
@@ -63,6 +64,7 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  * @param candidate Value to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
+ * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testJsonContains
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains =
     Contains(this, asLiteral(candidate), path, columnType)
@@ -75,6 +77,7 @@ fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null)
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
  * @param optional String representing any optional vendor-specific clause or argument.
  * **Note:** [optional] function arguments are not supported by all vendors; please check the documentation.
+ * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testJsonExists
  */
 fun ExpressionWithColumnType<*>.exists(vararg path: String, optional: String? = null): Exists =
     Exists(this, path = path, optional, columnType)
