@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
  *
  * @param serialize Function that encodes an object of type [T] to a JSON String
  * @param deserialize Function that decodes a JSON String to an object of type [T]
+ * @sample jsonb
  */
 class JsonBColumnType<T : Any>(
     serialize: (T) -> String,
@@ -51,6 +52,7 @@ fun <T : Any> Table.jsonb(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
+ * @sample org.jetbrains.exposed.sql.json.JsonBColumnTests.testLoggerWithJsonBCollections
  */
 inline fun <reified T : Any> Table.jsonb(
     name: String,

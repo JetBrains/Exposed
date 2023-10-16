@@ -13,6 +13,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
+/**
+ * Main configuration class for Exposed that can be automatically applied by Spring Boot.
+ *
+ * This should be applied on a Spring configuration class using:
+ * `@ImportAutoConfiguration(ExposedAutoConfiguration::class)`
+ *
+ * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
+ */
 @AutoConfiguration(after = [DataSourceAutoConfiguration::class])
 @EnableTransactionManagement
 open class ExposedAutoConfiguration(private val applicationContext: ApplicationContext) {
@@ -23,6 +31,12 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     @Value("\${spring.exposed.show-sql:false}")
     private var showSql: Boolean = false
 
+    /**
+     * Returns a [SpringTransactionManager] instance using the specified [datasource] and [databaseConfig].
+     *
+     * To enable logging of all transaction queries by the SpringTransactionManager instance, set the property
+     * `spring.exposed.show-sql` to `true` in the application.properties file.
+     */
     @Bean
     open fun springTransactionManager(datasource: DataSource, databaseConfig: DatabaseConfig): SpringTransactionManager {
         return SpringTransactionManager(datasource, databaseConfig, showSql)
@@ -37,6 +51,13 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
         return DatabaseConfig {}
     }
 
+    /**
+     * Returns a [DatabaseInitializer] that auto-creates the database schema, if enabled by the property
+     * `spring.exposed.generate-ddl` in the application.properties file.
+     *
+     * The property `spring.exposed.excluded-packages` can be used to ensure that tables in specified packages are
+     * not auto-created.
+     */
     @Bean
     @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
     open fun databaseInitializer() = DatabaseInitializer(applicationContext, excludedPackages)

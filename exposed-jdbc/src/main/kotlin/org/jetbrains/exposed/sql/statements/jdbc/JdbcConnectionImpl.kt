@@ -12,6 +12,9 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 
+/**
+ * Class representing a wrapped database [connection].
+ */
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
     // Oracle driver could throw exception on catalog

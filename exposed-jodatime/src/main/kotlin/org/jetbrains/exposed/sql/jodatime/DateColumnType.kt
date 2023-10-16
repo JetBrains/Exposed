@@ -46,6 +46,11 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormat.forPattern(newFormat)
 }
 
+/**
+ * Column for storing dates, as [DateTime]. If [time] is set to `true`, both date and time data is stored.
+ *
+ * @sample org.jetbrains.exposed.sql.jodatime.datetime
+ */
 class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = time
     override fun sqlType(): String = if (time) {
@@ -126,6 +131,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times with time zone, as [DateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.jodatime.timestampWithTimeZone
+ */
 class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 

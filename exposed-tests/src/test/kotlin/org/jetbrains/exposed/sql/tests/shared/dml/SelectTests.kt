@@ -284,7 +284,7 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test encryptedColumnType with a string`() {
+    fun testEncryptedColumnTypeWithAString() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = encryptedVarchar("name", 80, Algorithms.AES_256_PBE_CBC("passwd", "5c0744940b5c369b"))
             val city = encryptedBinary("city", 80, Algorithms.AES_256_PBE_GCM("passwd", "5c0744940b5c369b"))

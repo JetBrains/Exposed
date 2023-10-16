@@ -91,6 +91,11 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 
 private val LocalDate.millis get() = this.atStartOfDayIn(TimeZone.currentSystemDefault()).epochSeconds * MILLIS_IN_SECOND
 
+/**
+ * Column for storing dates, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.date
+ */
 class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
@@ -134,6 +139,11 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.datetime
+ */
 class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -186,6 +196,11 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing times, as [LocalTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.time
+ */
 class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -237,6 +252,11 @@ class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.timestamp
+ */
 class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -279,6 +299,11 @@ class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.timestampWithTimeZone
+ */
 class KotlinOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -329,6 +354,11 @@ class KotlinOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing time-based amounts of time, as [Duration].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.duration
+ */
 class KotlinDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
