@@ -58,7 +58,7 @@ spring.datasource.username=sa
 spring.datasource.password=password
 ```
 
-## Configuring Exposed 
+## Configuring Exposed
 When using this starter, you can customize the default Exposed configuration by registering a [DatabaseConfig](https://github.com/JetBrains/Exposed/blob/master/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/DatabaseConfig.kt). See the class itself for available configuration options.
 
 Example:
@@ -109,8 +109,30 @@ fun main(args: Array<String>) {
 
 See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.auto-configuration.disabling-specific) for more options to exclude auto-configuration classes.
 
+### Configuring Additional Transaction Managers
+
+Once Exposed has been configured as shown [above](#configuring-exposed), other transaction managers can also be registered by creating their own `@Configuration` class containing a declared transaction manager bean.
+
+To then determine which manager should be used, set the `transactionManager` attribute of `@Transactional` to the qualifier value of the independent transaction manager bean.
+
+Additionally, [custom composed annotations](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html#tx-custom-attributes) can be defined to reduce repetitive code when switching between these transaction managers:
+```kotlin
+@Transactional(transactionManager = "springTransactionManager")
+annotation class ExposedTransactional
+
+@ExposedTransactional
+fun doSomething() {
+    // ...
+}
+```
+
+If one of these transaction managers is used predominantly, the `@Primary` annotation can also be used on its bean to give it higher preference.
+This ensures that the annotated transaction manager will be the autowired value when `@Transactional` is used without setting the `transactionManager` attribute.
+
+See the [official documentation](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html#tx-multiple-tx-mgrs-with-attransactional) for more details about handling multiple transaction managers.
+
 ## Automatic Schema Creation
-This starter will create the database schema if enabled automatically using any class that extends `org.jetbrains.exposed.sql.Table`
+Including the property `spring.exposed.generate-ddl` enables this starter to create the database schema automatically using any class that extends `org.jetbrains.exposed.sql.Table`.
 
 Sometimes you will want to exclude packages from the list of auto-created schemas. In this event, the property `spring.exposed.excluded-packages` can be used to exclude everything under the provided packages.
 
@@ -118,6 +140,14 @@ Sometimes you will want to exclude packages from the list of auto-created schema
 ```properties
 spring.exposed.generate-ddl=true
 spring.exposed.excluded-packages=com.example.models.ignore,com.example.utils
+```
+
+## Logging SQL Statements
+Instead of invoking `addLogger()` to log all database transaction statements, add the property `spring.exposed.show-sql` to your configuration file.
+
+### application.properties
+```properties
+spring.exposed.show-sql=true
 ```
 
 ## Sample
