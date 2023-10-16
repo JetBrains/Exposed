@@ -282,6 +282,21 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }
 
     @Test
+    fun testCurrentDateTimeFunction() {
+        val fakeTestTable = object : IntIdTable("fakeTable") {}
+
+        withTables(fakeTestTable) {
+            fun currentDbDateTime(): DateTime {
+                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
+            }
+
+            fakeTestTable.insert {}
+
+            currentDbDateTime()
+        }
+    }
+
+    @Test
     fun testDefaultCurrentDateTime() {
         val testDate = object : IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
