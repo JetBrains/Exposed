@@ -164,6 +164,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is Int -> longToLocalDateTime(value.toLong())
         is Long -> longToLocalDateTime(value)
         is String -> LocalDateTime.parse(value, formatterForDateString(value))
+        is OffsetDateTime -> value.toLocalDateTime()
         else -> valueFromDB(value.toString())
     }
 
@@ -175,6 +176,14 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
         }
         else -> value
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return if (currentDialect is OracleDialect) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())

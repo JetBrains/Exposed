@@ -449,6 +449,21 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testCurrentDateTimeFunction() {
+        val fakeTestTable = object : IntIdTable("fakeTable") {}
+
+        withTables(fakeTestTable) {
+            fun currentDbDateTime(): LocalDateTime {
+                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
+            }
+
+            fakeTestTable.insert {}
+
+            currentDbDateTime()
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {
