@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.insertAndWait
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -446,6 +447,35 @@ class DefaultsTest : DatabaseTestsBase() {
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
             }
+        }
+    }
+
+    @Test
+    fun testDefaultCurrentDateTime() {
+        val testDate = object : IntIdTable("TestDate") {
+            val time = datetime("time").defaultExpression(CurrentDateTime)
+        }
+
+        fun LocalDateTime.millis(): Long = this.toEpochSecond(ZoneOffset.UTC) * 1000
+
+        withTables(testDate) {
+            val duration: Long = 2000
+
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            Thread.sleep(duration)
+
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.time] }.sorted()
+
+            assertTrue(sortedEntries[1].millis() - sortedEntries[0].millis() >= 2000)
+            assertTrue(sortedEntries[2].millis() - sortedEntries[0].millis() >= 6000)
+            assertTrue(sortedEntries[3].millis() - sortedEntries[0].millis() >= 8000)
         }
     }
 }

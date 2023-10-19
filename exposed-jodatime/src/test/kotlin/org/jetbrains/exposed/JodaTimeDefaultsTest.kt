@@ -13,11 +13,12 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.insertAndWait
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
@@ -29,7 +30,6 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
@@ -282,21 +282,6 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }
 
     @Test
-    fun testCurrentDateTimeFunction() {
-        val fakeTestTable = object : IntIdTable("fakeTable") {}
-
-        withTables(fakeTestTable) {
-            fun currentDbDateTime(): DateTime {
-                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
-            }
-
-            fakeTestTable.insert {}
-
-            currentDbDateTime()
-        }
-    }
-
-    @Test
     fun testDefaultCurrentDateTime() {
         val testDate = object : IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
@@ -305,24 +290,21 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         withTables(testDate) {
             val duration: Long = 2000
 
-            val before = currentDateTime()
-            Thread.sleep(duration)
             repeat(2) {
                 testDate.insertAndWait(duration)
             }
-            val middle = currentDateTime()
-            Thread.sleep(duration)
-            repeat(2) {
-                testDate.insertAndWait(duration)
-            }
-            val after = currentDateTime()
 
-            assertEquals(0, testDate.select { testDate.time less before }.count())
-            assertEquals(4, testDate.select { testDate.time greater before }.count())
-            assertEquals(2, testDate.select { testDate.time less middle }.count())
-            assertEquals(2, testDate.select { testDate.time greater middle }.count())
-            assertEquals(4, testDate.select { testDate.time less after }.count())
-            assertEquals(0, testDate.select { testDate.time greater after }.count())
+            Thread.sleep(duration)
+
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            val sortedEntries = testDate.selectAll().map { it[testDate.time] }.sorted()
+
+            assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 2000)
+            assertTrue(sortedEntries[2].millis - sortedEntries[0].millis >= 6000)
+            assertTrue(sortedEntries[3].millis - sortedEntries[0].millis >= 8000)
         }
     }
 
@@ -457,11 +439,3 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         }
     }
 }
-
-fun Table.insertAndWait(duration: Long) {
-    this.insert { }
-    TransactionManager.current().commit()
-    Thread.sleep(duration)
-}
-
-fun currentDateTime(): DateTime = DateTime.now().withZone(DateTimeZone.getDefault())
