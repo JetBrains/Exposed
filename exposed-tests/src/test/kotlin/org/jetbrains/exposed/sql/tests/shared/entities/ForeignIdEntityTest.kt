@@ -25,7 +25,6 @@ class ForeignIdEntityTest : DatabaseTestsBase() {
             override val id = reference("id", Projects)
             val setting = bool("setting")
         }
-
     }
 
     class Project(id: EntityID<Long>) : LongEntity(id) {
@@ -58,8 +57,6 @@ class ForeignIdEntityTest : DatabaseTestsBase() {
             transaction {
                 assertFalse(ProjectConfig.all().first().setting)
             }
-
         }
     }
-
 }

@@ -57,5 +57,4 @@ class LikeTests : DatabaseTestsBase() {
             assertEquals(listOf("_a", "_b"), t.select { t.char like LikePattern.ofLiteral("_") + "%" }.map { it[t.char] } as Any)
         }
     }
-
 }
