@@ -468,10 +468,11 @@ class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
-            if (currentDialectTest is SQLiteDialect)
+            if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
-            else
+            } else {
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
+            }
         }
     }
 
@@ -486,10 +487,11 @@ class DDLTests : DatabaseTestsBase() {
         withTables(t) {
             val q = db.identifierManager.quoteString
             val alter = SchemaUtils.createIndex(t.indices[0])
-            if (currentDialectTest is SQLiteDialect)
+            if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
-            else
+            } else {
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
+            }
         }
     }
 
@@ -508,10 +510,11 @@ class DDLTests : DatabaseTestsBase() {
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
-            if (currentDialectTest is SQLiteDialect)
+            if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"t1_type_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
-            else
+            } else {
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
+            }
         }
     }
 
@@ -530,10 +533,11 @@ class DDLTests : DatabaseTestsBase() {
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
-            if (currentDialectTest is SQLiteDialect)
+            if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
-            else
+            } else {
                 assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter)
+            }
         }
     }
 
@@ -1296,8 +1300,14 @@ class DDLTests : DatabaseTestsBase() {
 
         withSchemas(one) {
             SchemaUtils.create(tableA, tableB)
-            tableA.insert { it[idA] = 1; it[idB] = 1 }
-            tableB.insert { it[idA] = 1; it[idB] = 1 }
+            tableA.insert {
+                it[idA] = 1
+                it[idB] = 1
+            }
+            tableB.insert {
+                it[idA] = 1
+                it[idB] = 1
+            }
 
             assertEquals(1, tableA.selectAll().count())
             assertEquals(1, tableB.selectAll().count())

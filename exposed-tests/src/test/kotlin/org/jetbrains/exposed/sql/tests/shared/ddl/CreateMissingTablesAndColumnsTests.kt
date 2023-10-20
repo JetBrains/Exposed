@@ -164,7 +164,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
                 val expected = if (t1.id.nameInDatabaseCase() != t2.id.nameInDatabaseCase()) {
                     "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.id.nameInDatabaseCase()} INT"
-                } else null
+                } else {
+                    null
+                }
 
                 assertEquals(expected, missingStatements.firstOrNull())
 
