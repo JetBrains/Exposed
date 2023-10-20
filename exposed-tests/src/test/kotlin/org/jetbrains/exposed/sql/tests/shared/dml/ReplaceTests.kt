@@ -71,7 +71,7 @@ class ReplaceTests : DatabaseTestsBase() {
             assertEquals(0, tester.selectAll().single()[tester.replaced])
 
             val timeNow = System.currentTimeMillis()
-            tester.replace {// insert because only 1 constraint is equal
+            tester.replace { // insert because only 1 constraint is equal
                 it[key1] = id1
                 it[key2] = "$id2 2"
                 it[replaced] = timeNow
