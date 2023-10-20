@@ -160,7 +160,7 @@ class EntityCacheTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `EntityCache should not be cleaned on explicit commit` () {
+    fun `EntityCache should not be cleaned on explicit commit`() {
         withTables(TestTable) {
             val entity = TestEntity.new {
                 value = Random.nextInt()
