@@ -43,7 +43,6 @@ class CoroutineTests : DatabaseTestsBase() {
     fun suspendedTx() {
         withTables(Testing) {
             val mainJob = GlobalScope.async(singleThreadDispatcher) {
-
                 val job = launch(singleThreadDispatcher) {
                     newSuspendedTransaction(db = db) {
                         Testing.insert {}
@@ -190,7 +189,6 @@ class CoroutineTests : DatabaseTestsBase() {
         }
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
-
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
                         connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
@@ -252,7 +250,6 @@ class CoroutineTests : DatabaseTestsBase() {
     fun awaitAllTest() {
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
-
                 val results = (1..5).map { indx ->
                     suspendedTransactionAsync(Dispatchers.IO, db = db) {
                         Testing.insert { }

@@ -303,7 +303,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         val text = text("text_column").default(" ")
                     }
                 } else {
-
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                     }
