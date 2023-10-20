@@ -33,6 +33,7 @@ import kotlin.random.Random
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
+@Suppress("LargeClass")
 class DDLTests : DatabaseTestsBase() {
 
     @Test
