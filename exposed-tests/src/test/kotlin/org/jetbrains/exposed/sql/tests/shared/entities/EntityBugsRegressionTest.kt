@@ -1,4 +1,5 @@
 @file: Suppress("MatchingDeclarationName", "Filename")
+
 package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.Entity

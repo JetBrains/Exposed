@@ -39,7 +39,8 @@ class CoroutineTests : DatabaseTestsBase() {
     @JvmField
     val timeout = CoroutinesTimeout.seconds(60)
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun suspendedTx() {
         withTables(Testing) {
             val mainJob = GlobalScope.async(singleThreadDispatcher) {
@@ -67,7 +68,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun testSuspendTransactionWithRepetition() {
         withTables(TestingUnique) {
             val (originalId, updatedId) = 1 to 99
@@ -111,7 +113,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun suspendTxAsync() {
         withTables(Testing) {
             val job = GlobalScope.async {
@@ -143,7 +146,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun testSuspendTransactionAsyncWithRepetition() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), TestingUnique) {
             val (originalId, updatedId) = 1 to 99
@@ -182,7 +186,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun nestedSuspendTxTest() {
         suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
             Testing.insert {}
@@ -214,7 +219,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun nestedSuspendAsyncTxTest() {
         withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
@@ -246,7 +252,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun awaitAllTest() {
         withTables(listOf(TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
@@ -267,7 +274,8 @@ class CoroutineTests : DatabaseTestsBase() {
         }
     }
 
-    @Test @RepeatableTest(10)
+    @Test
+    @RepeatableTest(10)
     fun suspendedAndNormalTransactions() {
         withTables(Testing) {
             val db = this.db
