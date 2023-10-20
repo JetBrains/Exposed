@@ -70,7 +70,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testCreated01() {
+    @Test
+    fun testCreated01() {
         withTables(*EntityHookTestData.allTables) {
             val (_, events, txId) = trackChanges {
                 val ru = EntityHookTestData.Country.new {
@@ -91,7 +92,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testDeleted01() {
+    @Test
+    fun testDeleted01() {
         withTables(*EntityHookTestData.allTables) {
             val spbId = transaction {
                 val ru = EntityHookTestData.Country.new {
@@ -118,7 +120,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testModifiedSimple01() {
+    @Test
+    fun testModifiedSimple01() {
         withTables(*EntityHookTestData.allTables) {
             val (_, events1, _) = trackChanges {
                 val ru = EntityHookTestData.Country.new {
@@ -140,7 +143,7 @@ class EntityHookTest : DatabaseTestsBase() {
                 x.name = "Munich"
                 x.country = de
             }
-            // TODO: one may expect change for RU but we do not send it due to performance reasons
+            // One may expect change for RU but we do not send it due to performance reasons
             assertEquals(2, events2.count())
             assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.City)?.name }, "Munich")
             assertEqualCollections(events2.mapNotNull { it.toEntity(EntityHookTestData.Country)?.name }, "DE")
@@ -150,7 +153,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testModifiedInnerTable01() {
+    @Test
+    fun testModifiedInnerTable01() {
         withTables(*EntityHookTestData.allTables) {
             transaction {
                 val ru = EntityHookTestData.Country.new {
@@ -190,7 +194,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testModifiedInnerTable02() {
+    @Test
+    fun testModifiedInnerTable02() {
         withTables(*EntityHookTestData.allTables) {
             transaction {
                 val ru = EntityHookTestData.Country.new {
@@ -231,7 +236,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testModifiedInnerTable03() {
+    @Test
+    fun testModifiedInnerTable03() {
         withTables(*EntityHookTestData.allTables) {
             transaction {
                 val ru = EntityHookTestData.Country.new {
@@ -271,7 +277,8 @@ class EntityHookTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `single entity flush should trigger events`() {
+    @Test
+    fun `single entity flush should trigger events`() {
         withTables(EntityHookTestData.User.table) {
             val (user, events, _) = trackChanges {
                 EntityHookTestData.User.new {

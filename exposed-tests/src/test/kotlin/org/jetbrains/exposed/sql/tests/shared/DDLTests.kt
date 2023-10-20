@@ -64,7 +64,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    // EXPOSED-206
     @Test
     fun testKeywordIdentifiersWithoutOptIn() {
         val keywords = listOf("Integer", "name")
@@ -111,7 +111,7 @@ class DDLTests : DatabaseTestsBase() {
         val name = varchar("name", 32)
     }
 
-    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    // EXPOSED-206
     @Test
     fun testKeywordIdentifiersLogWarningWithoutOptIn() {
         withDb {
@@ -144,7 +144,7 @@ class DDLTests : DatabaseTestsBase() {
         )
     }
 
-    // TODO: Refactor test to cover all DB when preserveKeywordCasing flag behavior becomes default
+    // EXPOSED-206
     @Test
     fun testKeywordIdentifiersWithOptIn() {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
@@ -191,7 +191,7 @@ class DDLTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(keywordFlagDB)
     }
 
-    // TODO: Remove test when preserveKeywordCasing flag behavior becomes default
+    // EXPOSED-206
     @Test
     fun testKeywordIdentifiersLogNoWarningWithOptIn() {
         Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
