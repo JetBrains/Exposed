@@ -447,8 +447,8 @@ class InsertTests : DatabaseTestsBase() {
     @Test fun testGeneratedKey04() {
         val CharIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
-                    .clientDefault { UUID.randomUUID().toString() }
-                    .entityId()
+                .clientDefault { UUID.randomUUID().toString() }
+                .entityId()
             val foo = integer("foo")
 
             override val primaryKey: PrimaryKey = PrimaryKey(id)
