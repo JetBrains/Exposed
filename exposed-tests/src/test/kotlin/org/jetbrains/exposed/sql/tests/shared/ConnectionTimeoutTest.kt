@@ -63,7 +63,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
             assertEquals(10, datasource.connectCount)
         }
 
-        datasource.connectCount = 0  // reset connection count
+        datasource.connectCount = 0 // reset connection count
 
         try {
             // property set in transaction block should override default DatabaseConfig

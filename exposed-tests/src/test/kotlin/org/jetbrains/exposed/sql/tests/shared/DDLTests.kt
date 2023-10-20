@@ -558,7 +558,7 @@ class DDLTests : DatabaseTestsBase() {
         withDb { testDb ->
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
-            val uniqueIndexName =  "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
+            val uniqueIndexName = "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
             val (p1, p2) = if (testDb == TestDB.MYSQL) "(" to ")" else "" to ""
             val functionStrings = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> listOf("(amount + price)", "LOWER(item)", "COALESCE(item, '*')").map(String::inProperCase)

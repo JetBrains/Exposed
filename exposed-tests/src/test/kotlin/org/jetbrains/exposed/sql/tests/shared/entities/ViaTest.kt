@@ -229,7 +229,7 @@ class ViaTests : DatabaseTestsBase() {
             checkChildrenReferences(root2, listOf(child1, child2))
 
             fun checkParentsReferences(node: Node, values: List<Node>) {
-                val sourceColumn =  (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
+                val sourceColumn = (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
                 val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 assertEqualLists(children?.toList().orEmpty(), values)
             }

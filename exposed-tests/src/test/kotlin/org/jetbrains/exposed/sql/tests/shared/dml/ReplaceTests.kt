@@ -27,7 +27,7 @@ class ReplaceTests : DatabaseTestsBase() {
     fun testReplaceWithPKConflict() {
         withTables(replaceNotSupported, NewAuth) {
             val (name1, session1) = "username" to "session"
-            NewAuth.replace {  // replace, like any insert, should accept defaults
+            NewAuth.replace { // replace, like any insert, should accept defaults
                 it[username] = name1
                 it[session] = session1.toByteArray()
             }
@@ -80,7 +80,7 @@ class ReplaceTests : DatabaseTestsBase() {
             assertEquals(2, tester.selectAll().count())
             assertEquals(0, tester.select { tester.key2 eq id2 }.single()[tester.replaced])
 
-            tester.replace {  // delete & insert because both constraints match
+            tester.replace { // delete & insert because both constraints match
                 it[key1] = id1
                 it[key2] = id2
                 it[replaced] = timeNow
