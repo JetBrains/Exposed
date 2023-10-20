@@ -30,7 +30,9 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin02() {
         withCitiesAndUsers { cities, users, userData ->
-            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
+            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select {
+                cities.name.eq("St. Petersburg") or users.cityId.isNull()
+            }.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
         }

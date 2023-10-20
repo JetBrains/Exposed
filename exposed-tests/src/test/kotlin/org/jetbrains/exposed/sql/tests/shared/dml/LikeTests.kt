@@ -46,10 +46,22 @@ class LikeTests : DatabaseTestsBase() {
     fun testSelectWithLike() {
         withTables(t) {
             var i = 1
-            t.insert { it[this.id] = i++; it[this.char] = "%a%" }
-            t.insert { it[this.id] = i++; it[this.char] = "_a" }
-            t.insert { it[this.id] = i++; it[this.char] = "_b" }
-            t.insert { it[this.id] = i++; it[this.char] = "\\a" }
+            t.insert {
+                it[this.id] = i++
+                it[this.char] = "%a%"
+            }
+            t.insert {
+                it[this.id] = i++
+                it[this.char] = "_a"
+            }
+            t.insert {
+                it[this.id] = i++
+                it[this.char] = "_b"
+            }
+            t.insert {
+                it[this.id] = i++
+                it[this.char] = "\\a"
+            }
 
             assertEquals("_a", t.select { t.char like LikePattern.ofLiteral("_a") }.firstOrNull()?.get(t.char))
             assertEquals("%a%", t.select { t.char like LikePattern.ofLiteral("%a%") }.firstOrNull()?.get(t.char))
