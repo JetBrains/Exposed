@@ -11,6 +11,7 @@ import kotlin.test.assertFailsWith
 class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
+    @Suppress("SwallowedException")
     fun testCreateAndDropDatabase() {
         withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)) {
             val dbName = "jetbrains"

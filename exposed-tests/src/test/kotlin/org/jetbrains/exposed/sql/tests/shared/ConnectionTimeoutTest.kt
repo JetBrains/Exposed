@@ -44,6 +44,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
     }
 
     @Test
+    @Suppress("SwallowedException")
     fun testTransactionRepetitionWithDefaults() {
         val datasource = ExceptionOnGetConnectionDataSource()
         val db = Database.connect(
