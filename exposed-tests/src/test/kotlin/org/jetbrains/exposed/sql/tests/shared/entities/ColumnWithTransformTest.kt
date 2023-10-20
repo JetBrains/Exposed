@@ -14,7 +14,7 @@ object TransformationsTable : IntIdTable() {
     val value = varchar("value", 50)
 }
 
-object NullableTransformationsTable: IntIdTable() {
+object NullableTransformationsTable : IntIdTable() {
     val value = varchar("nullable", 50).nullable()
 }
 
@@ -34,7 +34,7 @@ class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
     )
 }
 
-class ColumnWithTransformTest: DatabaseTestsBase() {
+class ColumnWithTransformTest : DatabaseTestsBase() {
 
     @Test
     fun `set and get value`() {
