@@ -9,7 +9,7 @@ import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class SortByReferenceTest {
+class SelfReferenceTest {
 
     @Test
     fun simpleTest() {
