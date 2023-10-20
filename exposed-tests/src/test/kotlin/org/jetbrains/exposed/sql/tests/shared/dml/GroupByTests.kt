@@ -212,14 +212,14 @@ class GroupByTests : DatabaseTestsBase() {
                 assertNull(it["Prague"])
             }
 
-            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.ASC).checkExcept{
+            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.ASC).checkExcept {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 assertEquals("Eugene | Sergey", it["Munich"])
                 assertNull(it["Prague"])
             }
 
-            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.DESC).checkExcept{
+            users.name.groupConcat(separator = " | ", orderBy = users.name to SortOrder.DESC).checkExcept {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 assertEquals("Sergey | Eugene", it["Munich"])

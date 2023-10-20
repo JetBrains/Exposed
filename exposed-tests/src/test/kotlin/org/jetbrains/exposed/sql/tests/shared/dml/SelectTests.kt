@@ -77,7 +77,7 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(0L, cities.select { cities.name eq "Qwertt" }.count())
             assertEquals(3L, cities.selectAll().count())
             val cityID: Int? = null
-            assertEquals(2L, users.select{ users.cityId eq cityID } .count())
+            assertEquals(2L, users.select { users.cityId eq cityID }.count())
         }
     }
 
