@@ -347,6 +347,21 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testCurrentDateTimeFunction() {
+        val fakeTestTable = object : IntIdTable("fakeTable") {}
+
+        withTables(fakeTestTable) {
+            fun currentDbDateTime(): DateTime {
+                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
+            }
+
+            fakeTestTable.insert {}
+
+            currentDbDateTime()
+        }
+    }
 }
 
 fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
