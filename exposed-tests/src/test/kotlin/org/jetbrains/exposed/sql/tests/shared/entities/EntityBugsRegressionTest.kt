@@ -1,4 +1,4 @@
-@file: Suppress("MatchingDeclarationName", "Filename")
+@file: Suppress("MatchingDeclarationName", "Filename", "ClassNaming")
 
 package org.jetbrains.exposed.sql.tests.shared.entities
 
