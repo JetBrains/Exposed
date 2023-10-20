@@ -14,15 +14,16 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin01() {
         withCitiesAndUsers { cities, users, userData ->
-            (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }.forEach {
-                val userName = it[users.name]
-                val cityName = it[cities.name]
-                when (userName) {
-                    "Andrey" -> assertEquals("St. Petersburg", cityName)
-                    "Sergey" -> assertEquals("Munich", cityName)
-                    else -> error("Unexpected user $userName")
+            (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }
+                .forEach {
+                    val userName = it[users.name]
+                    val cityName = it[cities.name]
+                    when (userName) {
+                        "Andrey" -> assertEquals("St. Petersburg", cityName)
+                        "Sergey" -> assertEquals("Munich", cityName)
+                        else -> error("Unexpected user $userName")
+                    }
                 }
-            }
         }
     }
 

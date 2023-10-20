@@ -384,6 +384,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
+    @Suppress("MaximumLineLength")
     fun testAddMissingColumnsStatementsChangeDefault() {
         val t1 = object : Table("foo") {
             val id = integer("idcol")

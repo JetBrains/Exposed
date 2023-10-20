@@ -123,7 +123,8 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testBitwiseAnd1() {
         withCitiesAndUsers { _, users, _ ->
             // SQLServer and Oracle don't support = on bit values
-            val doesntSupportBitwiseEQ = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val doesntSupportBitwiseEQ =
+                currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val adminFlag = DMLTestsData.Users.Flags.IS_ADMIN
             val adminAndFlagsExpr = Expression.build { (users.flags bitwiseAnd adminFlag) }
             val adminEq = Expression.build { adminAndFlagsExpr eq adminFlag }
