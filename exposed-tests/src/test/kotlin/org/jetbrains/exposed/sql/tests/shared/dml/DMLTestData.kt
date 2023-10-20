@@ -57,83 +57,83 @@ fun DatabaseTestsBase.withCitiesAndUsers(
         userData: DMLTestsData.UserData
     ) -> Unit
 ) {
-    val Users = DMLTestsData.Users
-    val UserFlags = DMLTestsData.Users.Flags
-    val Cities = DMLTestsData.Cities
-    val UserData = DMLTestsData.UserData
+    val users = DMLTestsData.Users
+    val userFlags = DMLTestsData.Users.Flags
+    val cities = DMLTestsData.Cities
+    val userData = DMLTestsData.UserData
 
-    withTables(exclude, Cities, Users, UserData) {
-        val saintPetersburgId = Cities.insert {
+    withTables(exclude, cities, users, userData) {
+        val saintPetersburgId = cities.insert {
             it[name] = "St. Petersburg"
-        } get Cities.id
+        } get cities.id
 
-        val munichId = Cities.insert {
+        val munichId = cities.insert {
             it[name] = "Munich"
-        } get Cities.id
+        } get cities.id
 
-        Cities.insert {
+        cities.insert {
             it[name] = "Prague"
         }
 
-        Users.insert {
+        users.insert {
             it[id] = "andrey"
             it[name] = "Andrey"
             it[cityId] = saintPetersburgId
-            it[flags] = UserFlags.IS_ADMIN
+            it[flags] = userFlags.IS_ADMIN
         }
 
-        Users.insert {
+        users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
             it[cityId] = munichId
-            it[flags] = UserFlags.IS_ADMIN or UserFlags.HAS_DATA
+            it[flags] = userFlags.IS_ADMIN or userFlags.HAS_DATA
         }
 
-        Users.insert {
+        users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
             it[cityId] = munichId
-            it[flags] = UserFlags.HAS_DATA
+            it[flags] = userFlags.HAS_DATA
         }
 
-        Users.insert {
+        users.insert {
             it[id] = "alex"
             it[name] = "Alex"
             it[cityId] = null
         }
 
-        Users.insert {
+        users.insert {
             it[id] = "smth"
             it[name] = "Something"
             it[cityId] = null
-            it[flags] = UserFlags.HAS_DATA
+            it[flags] = userFlags.HAS_DATA
         }
 
-        UserData.insert {
+        userData.insert {
             it[user_id] = "smth"
             it[comment] = "Something is here"
             it[value] = 10
         }
 
-        UserData.insert {
+        userData.insert {
             it[user_id] = "smth"
             it[comment] = "Comment #2"
             it[value] = 20
         }
 
-        UserData.insert {
+        userData.insert {
             it[user_id] = "eugene"
             it[comment] = "Comment for Eugene"
             it[value] = 20
         }
 
-        UserData.insert {
+        userData.insert {
             it[user_id] = "sergey"
             it[comment] = "Comment for Sergey"
             it[value] = 30
         }
 
-        statement(Cities, Users, UserData)
+        statement(cities, users, userData)
     }
 }
 

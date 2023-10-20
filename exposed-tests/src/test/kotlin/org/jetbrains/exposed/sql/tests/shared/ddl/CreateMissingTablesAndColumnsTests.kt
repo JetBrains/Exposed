@@ -29,7 +29,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateMissingTablesAndColumns01() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
             val time = long("time").uniqueIndex()
@@ -37,16 +37,16 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(testTable)) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            SchemaUtils.drop(testTable)
         }
     }
 
     @Test
     fun testCreateMissingTablesAndColumns02() {
-        val TestTable = object : IdTable<String>("Users2") {
+        val testTable = object : IdTable<String>("Users2") {
             override val id: Column<EntityID<String>> = varchar("id", 64).clientDefault { UUID.randomUUID().toString() }.entityId()
 
             val name = varchar("name", 255)
@@ -58,12 +58,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withDb {
             if (!isOldMySql()) {
-                SchemaUtils.createMissingTablesAndColumns(TestTable)
-                assertTrue(TestTable.exists())
+                SchemaUtils.createMissingTablesAndColumns(testTable)
+                assertTrue(testTable.exists())
                 try {
-                    SchemaUtils.createMissingTablesAndColumns(TestTable)
+                    SchemaUtils.createMissingTablesAndColumns(testTable)
                 } finally {
-                    SchemaUtils.drop(TestTable)
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

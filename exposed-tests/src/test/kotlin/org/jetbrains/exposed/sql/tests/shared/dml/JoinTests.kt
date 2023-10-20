@@ -56,37 +56,37 @@ class JoinTests : DatabaseTestsBase() {
     // triple join
     @Test
     fun testJoin04() {
-        val Numbers = object : Table() {
+        val numbers = object : Table() {
             val id = integer("id")
 
             override val primaryKey = PrimaryKey(id)
         }
 
-        val Names = object : Table() {
+        val names = object : Table() {
             val name = varchar("name", 10)
 
             override val primaryKey = PrimaryKey(name)
         }
 
-        val Map = object : Table() {
-            val id_ref = integer("id_ref") references Numbers.id
-            val name_ref = varchar("name_ref", 10) references Names.name
+        val map = object : Table() {
+            val id_ref = integer("id_ref") references numbers.id
+            val name_ref = varchar("name_ref", 10) references names.name
         }
 
-        withTables(Numbers, Names, Map) {
-            Numbers.insert { it[id] = 1 }
-            Numbers.insert { it[id] = 2 }
-            Names.insert { it[name] = "Foo" }
-            Names.insert { it[name] = "Bar" }
-            Map.insert {
+        withTables(numbers, names, map) {
+            numbers.insert { it[id] = 1 }
+            numbers.insert { it[id] = 2 }
+            names.insert { it[name] = "Foo" }
+            names.insert { it[name] = "Bar" }
+            map.insert {
                 it[id_ref] = 2
                 it[name_ref] = "Foo"
             }
 
-            val r = (Numbers innerJoin Map innerJoin Names).selectAll().toList()
+            val r = (numbers innerJoin map innerJoin names).selectAll().toList()
             assertEquals(1, r.size)
-            assertEquals(2, r[0][Numbers.id])
-            assertEquals("Foo", r[0][Names.name])
+            assertEquals(2, r[0][numbers.id])
+            assertEquals("Foo", r[0][names.name])
         }
     }
 
@@ -197,22 +197,22 @@ class JoinTests : DatabaseTestsBase() {
     fun testNoWarningsOnLeftJoinRegression() {
         val logCaptor = LogCaptor.forName(exposedLogger.name)
 
-        val MainTable = object : Table("maintable") {
+        val mainTable = object : Table("maintable") {
             val id = integer("idCol")
         }
-        val JoinTable = object : Table("jointable") {
+        val joinTable = object : Table("jointable") {
             val id = integer("idCol")
             val data = integer("dataCol").default(42)
         }
 
-        withTables(MainTable, JoinTable) {
-            MainTable.insert { it[id] = 2 }
+        withTables(mainTable, joinTable) {
+            mainTable.insert { it[id] = 2 }
 
-            MainTable.join(JoinTable, JoinType.LEFT, JoinTable.id, MainTable.id)
-                .slice(JoinTable.data)
+            mainTable.join(joinTable, JoinType.LEFT, joinTable.id, mainTable.id)
+                .slice(joinTable.data)
                 .selectAll()
                 .single()
-                .getOrNull(JoinTable.data)
+                .getOrNull(joinTable.data)
 
             // Assert no logging took place
             assertTrue(logCaptor.warnLogs.isEmpty())

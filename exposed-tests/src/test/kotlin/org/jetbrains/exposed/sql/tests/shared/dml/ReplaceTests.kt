@@ -152,28 +152,28 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchReplaceWithSequence() {
-        val Cities = DMLTestsData.Cities
-        withTables(replaceNotSupported, Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(replaceNotSupported, cities) {
             val amountOfNames = 25
             val names = List(amountOfNames) { index -> index + 1 to UUID.randomUUID().toString() }.asSequence()
 
-            Cities.batchReplace(names) { (index, name) ->
-                this[Cities.id] = index
-                this[Cities.name] = name
+            cities.batchReplace(names) { (index, name) ->
+                this[cities.id] = index
+                this[cities.name] = name
             }
 
-            val namesFromDB1 = Cities.selectAll().toCityNameList()
+            val namesFromDB1 = cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB1.size)
             assertEqualLists(names.unzip().second, namesFromDB1)
 
             val namesToReplace = List(amountOfNames) { index -> index + 1 to UUID.randomUUID().toString() }.asSequence()
 
-            Cities.batchReplace(namesToReplace) { (index, name) ->
-                this[Cities.id] = index
-                this[Cities.name] = name
+            cities.batchReplace(namesToReplace) { (index, name) ->
+                this[cities.id] = index
+                this[cities.name] = name
             }
 
-            val namesFromDB2 = Cities.selectAll().toCityNameList()
+            val namesFromDB2 = cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB2.size)
             assertEqualLists(namesToReplace.unzip().second, namesFromDB2)
         }
@@ -181,12 +181,12 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchReplaceWithEmptySequence() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = emptySequence<String>()
-            Cities.batchReplace(names) { name -> this[Cities.name] = name }
+            cities.batchReplace(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
         }
