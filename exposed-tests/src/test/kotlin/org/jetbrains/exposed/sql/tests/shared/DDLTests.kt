@@ -225,9 +225,9 @@ class DDLTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
-                "$q${"UnnamedTable$1".inProperCase()}$q"
+                "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
-                "UnnamedTable$1".inProperCase()
+                "unnamedTable$1".inProperCase()
             }
             val integerType = currentDialectTest.dataTypeProvider.integerType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
@@ -244,9 +244,9 @@ class DDLTests : DatabaseTestsBase() {
         withDb(TestDB.SQLITE) {
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
-                "$q${"UnnamedTable$1".inProperCase()}$q"
+                "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
-                "UnnamedTable$1".inProperCase()
+                "unnamedTable$1".inProperCase()
             }
             val integerType = currentDialectTest.dataTypeProvider.integerType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
