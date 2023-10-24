@@ -37,8 +37,6 @@ subprojects {
         detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", "1.23.1")
     }
     tasks.withType<Detekt>().configureEach detekt@{
-        onlyIf { this@subprojects.name !== "exposed-tests" }
-
         finalizedBy(reportMerge)
         reportMerge.configure {
             input.from(this@detekt.xmlReportFile)

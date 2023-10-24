@@ -5,17 +5,16 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.junit.Test
 import java.util.*
-import kotlin.test.*
 
 class SelectBatchedTests : DatabaseTestsBase() {
     @Test
     fun `selectBatched should respect 'where' expression and the provided batch size`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = List(100) { UUID.randomUUID().toString() }
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batches = Cities.selectBatched(batchSize = 25) { Cities.id less 51 }
+            val batches = cities.selectBatched(batchSize = 25) { cities.id less 51 }
                 .toList().map { it.toCityNameList() }
 
             val expectedNames = names.take(50)
@@ -31,12 +30,12 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when batch size is greater than the amount of available items, selectAllBatched should return 1 batch`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = List(25) { UUID.randomUUID().toString() }
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batches = Cities.selectAllBatched(batchSize = 100).toList().map { it.toCityNameList() }
+            val batches = cities.selectAllBatched(batchSize = 100).toList().map { it.toCityNameList() }
 
             assertEqualLists(listOf(names), batches)
         }
@@ -44,9 +43,9 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items, selectAllBatched should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
-            val batches = Cities.selectAllBatched().toList()
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
+            val batches = cities.selectAllBatched().toList()
 
             assertEqualLists(batches, emptyList())
         }
@@ -54,12 +53,12 @@ class SelectBatchedTests : DatabaseTestsBase() {
 
     @Test
     fun `when there are no items of the given condition, should return an empty iterable`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = List(25) { UUID.randomUUID().toString() }
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batches = Cities.selectBatched(batchSize = 100) { Cities.id greater 50 }
+            val batches = cities.selectBatched(batchSize = 100) { cities.id greater 50 }
                 .toList().map { it.toCityNameList() }
 
             assertEqualLists(emptyList(), batches)

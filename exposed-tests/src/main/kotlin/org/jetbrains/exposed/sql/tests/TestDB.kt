@@ -72,6 +72,8 @@ enum class TestDB(
         )
         transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
             repetitionAttempts = 1
+
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
                 exec("DROP USER ExposedTest CASCADE")
             } catch (e: Exception) { // ignore

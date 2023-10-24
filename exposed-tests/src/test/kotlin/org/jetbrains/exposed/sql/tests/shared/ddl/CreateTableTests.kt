@@ -239,7 +239,10 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
 
             assertEquals(1, ddlId2.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", ddlId2.first())
+            assertEquals(
+                "ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)",
+                ddlId2.first()
+            )
         }
     }
 

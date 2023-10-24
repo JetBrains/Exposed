@@ -14,34 +14,34 @@ import kotlin.test.assertNull
 class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
-        val Stables = object : UUIDTable("Stables") {
+        val stables = object : UUIDTable("Stables") {
             val name = varchar("name", 256).uniqueIndex()
         }
 
-        val Facilities = object : UUIDTable("Facilities") {
-            val stableId = reference("stable_id", Stables)
+        val facilities = object : UUIDTable("Facilities") {
+            val stableId = reference("stable_id", stables)
             val name = varchar("name", 256)
         }
 
-        withTables(Facilities, Stables) {
-            val stable1Id = Stables.insertAndGetId {
-                it[Stables.name] = "Stables1"
+        withTables(facilities, stables) {
+            val stable1Id = stables.insertAndGetId {
+                it[stables.name] = "Stables1"
             }
-            Stables.insertAndGetId {
-                it[Stables.name] = "Stables2"
+            stables.insertAndGetId {
+                it[stables.name] = "Stables2"
             }
-            Facilities.insertAndGetId {
-                it[Facilities.stableId] = stable1Id
-                it[Facilities.name] = "Facility1"
+            facilities.insertAndGetId {
+                it[facilities.stableId] = stable1Id
+                it[facilities.name] = "Facility1"
             }
-            val fcAlias = Facilities.name.count().alias("fc")
-            val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
-            val sliceColumns = Stables.columns + fAlias[fcAlias]
-            val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
+            val fcAlias = facilities.name.count().alias("fc")
+            val fAlias = facilities.slice(facilities.stableId, fcAlias).selectAll().groupBy(facilities.stableId).alias("f")
+            val sliceColumns = stables.columns + fAlias[fcAlias]
+            val stats = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
                 .slice(sliceColumns)
                 .selectAll()
                 .groupBy(*sliceColumns.toTypedArray()).map {
-                    it[Stables.name] to it[fAlias[fcAlias]]
+                    it[stables.name] to it[fAlias[fcAlias]]
                 }.toMap()
             assertEquals(2, stats.size)
             assertEquals(1, stats["Stables1"])

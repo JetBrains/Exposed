@@ -20,7 +20,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
     @Test
     fun createStandardIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -28,16 +28,16 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(testTable)) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            SchemaUtils.drop(testTable)
         }
     }
 
     @Test
     fun createHashIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -47,16 +47,16 @@ class CreateIndexTests : DatabaseTestsBase() {
 
         withTables(
             excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
-            tables = arrayOf(TestTable)
+            tables = arrayOf(testTable)
         ) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
         }
     }
 
     @Test
     fun createNonClusteredSQLServerIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -65,9 +65,9 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            SchemaUtils.drop(testTable)
         }
     }
 
@@ -76,6 +76,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         val testTable = object : Table("test_table") {
             val id = integer("id").uniqueIndex()
             val name = varchar("name", length = 42).index("test_index")
+
             init {
                 index(false, id, name)
             }
@@ -100,6 +101,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val value = integer("value")
             val anotherValue = integer("anotherValue")
             val flag = bool("flag")
+
             init {
                 index("flag_index", columns = arrayOf(flag, name)) {
                     flag eq true

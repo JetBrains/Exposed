@@ -184,12 +184,12 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using a sequence should work`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = List(25) { UUID.randomUUID().toString() }.asSequence()
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(25, batchesSize)
         }
@@ -197,12 +197,12 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using empty sequence should work`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = emptySequence<String>()
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
         }
@@ -445,17 +445,17 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test fun testGeneratedKey04() {
-        val CharIdTable = object : IdTable<String>("charId") {
+        val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
-                    .clientDefault { UUID.randomUUID().toString() }
-                    .entityId()
+                .clientDefault { UUID.randomUUID().toString() }
+                .entityId()
             val foo = integer("foo")
 
             override val primaryKey: PrimaryKey = PrimaryKey(id)
         }
-        withTables(CharIdTable) {
-            val id = CharIdTable.insertAndGetId {
-                it[CharIdTable.foo] = 5
+        withTables(charIdTable) {
+            val id = charIdTable.insertAndGetId {
+                it[charIdTable.foo] = 5
             }
             assertNotNull(id.value)
         }

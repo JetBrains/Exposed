@@ -10,45 +10,57 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
 
+@Suppress("MemberNameEqualsClassName")
 object UUIDTables {
     object Cities : UUIDTable() {
         val name = varchar("name", 50)
     }
+
     class City(id: EntityID<UUID>) : UUIDEntity(id) {
         companion object : UUIDEntityClass<City>(Cities)
+
         var name by Cities.name
     }
+
     object People : UUIDTable() {
         val name = varchar("name", 80)
         val cityId = reference("city_id", Cities)
     }
+
     class Person(id: EntityID<UUID>) : UUIDEntity(id) {
         companion object : UUIDEntityClass<Person>(People)
+
         var name by People.name
         var city by City referencedOn People.cityId
     }
+
     object Addresses : UUIDTable() {
         val person = reference("person_id", People)
         val city = reference("city_id", Cities)
         val address = varchar("address", 255)
     }
+
     class Address(id: EntityID<UUID>) : UUIDEntity(id) {
         companion object : UUIDEntityClass<Address>(Addresses)
+
         var person by Person.referencedOn(Addresses.person)
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
 }
+
 class UUIDTableEntityTest : DatabaseTestsBase() {
 
-    @Test fun `create tables`() {
+    @Test
+    fun `create tables`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
             assertEquals(true, UUIDTables.Cities.exists())
             assertEquals(true, UUIDTables.People.exists())
         }
     }
 
-    @Test fun `create records`() {
+    @Test
+    fun `create records`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
             val mumbai = UUIDTables.City.new { name = "Mumbai" }
             val pune = UUIDTables.City.new { name = "Pune" }
@@ -76,7 +88,8 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `update and delete records`() {
+    @Test
+    fun `update and delete records`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
             val mumbai = UUIDTables.City.new(UUID.randomUUID()) { name = "Mumbai" }
             val pune = UUIDTables.City.new(UUID.randomUUID()) { name = "Pune" }
@@ -106,7 +119,8 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `insert with inner table`() {
+    @Test
+    fun `insert with inner table`() {
         withTables(UUIDTables.Addresses, UUIDTables.Cities, UUIDTables.People) {
             val city1 = UUIDTables.City.new {
                 name = "city1"

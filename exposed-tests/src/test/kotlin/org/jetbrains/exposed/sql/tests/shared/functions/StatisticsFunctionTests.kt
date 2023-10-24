@@ -71,17 +71,17 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
         if (this < BigDecimal.ZERO) throw ArithmeticException("Square root of negative number")
         if (this == BigDecimal.ZERO) return BigDecimal.ZERO
 
-        val TWO = BigDecimal(2)
-        val EPSILON = BigDecimal(0.1).pow(scale)
+        val two = BigDecimal(2)
+        val epsilon = BigDecimal(0.1).pow(scale)
 
         var low = BigDecimal.ZERO
         var high = max(BigDecimal.ONE)
-        var result = (low + high).divide(TWO)
+        var result = (low + high).divide(two)
 
         while (true) {
             val square = result.multiply(result)
             val diff = square.subtract(this).abs()
-            if (diff < EPSILON) {
+            if (diff < epsilon) {
                 break
             }
 
@@ -90,7 +90,7 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
             } else {
                 high = result
             }
-            result = (low + high).divide(TWO)
+            result = (low + high).divide(two)
         }
 
         result = result.round(MathContext(scale, RoundingMode.HALF_EVEN))

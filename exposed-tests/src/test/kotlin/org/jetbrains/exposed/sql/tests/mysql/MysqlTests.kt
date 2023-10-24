@@ -22,7 +22,12 @@ class MysqlTests : DatabaseTestsBase() {
     @Test
     fun testEmbeddedConnection() {
         withDb(TestDB.MYSQL) {
-            assertFalse(TransactionManager.current().exec("SELECT VERSION();") { it.next(); it.getString(1) }.isNullOrEmpty())
+            assertFalse(
+                TransactionManager.current().exec("SELECT VERSION();") {
+                    it.next()
+                    it.getString(1)
+                }.isNullOrEmpty()
+            )
         }
     }
 

@@ -88,6 +88,7 @@ object EntityTestsData {
     }
 }
 
+@Suppress("LargeClass")
 class EntityTests : DatabaseTestsBase() {
     @Test
     fun testDefaults01() {

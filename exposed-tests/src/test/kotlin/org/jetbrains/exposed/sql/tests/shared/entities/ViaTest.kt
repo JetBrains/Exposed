@@ -62,6 +62,7 @@ class VNumber(id: EntityID<UUID>) : UUIDEntity(id) {
 
 class VString(id: EntityID<Long>) : Entity<Long>(id) {
     var text by ViaTestData.StringsTable.text
+
     companion object : EntityClass<Long, VString>(ViaTestData.StringsTable)
 }
 
@@ -80,7 +81,8 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConnection01() {
+    @Test
+    fun testConnection01() {
         withTables(*ViaTestData.allTables) {
             val n = VNumber.new { number = 10 }
             val s = VString.new { text = "aaa" }
@@ -92,7 +94,8 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConnection02() {
+    @Test
+    fun testConnection02() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
@@ -108,7 +111,8 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConnection03() {
+    @Test
+    fun testConnection03() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
@@ -132,7 +136,8 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testConnection04() {
+    @Test
+    fun testConnection04() {
         withTables(*ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
@@ -157,10 +162,12 @@ class ViaTests : DatabaseTestsBase() {
     object NodesTable : IntIdTable() {
         val name = varchar("name", 50)
     }
+
     object NodeToNodes : Table() {
         val parent = reference("parent_node_id", NodesTable)
         val child = reference("child_user_id", NodesTable)
     }
+
     class Node(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Node>(NodesTable)
 
@@ -169,6 +176,8 @@ class ViaTests : DatabaseTestsBase() {
         var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
 
         override fun equals(other: Any?): Boolean = (other as? Node)?.id == id
+
+        override fun hashCode(): Int = Objects.hash(id)
     }
 
     @Test
@@ -191,7 +200,8 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testRefresh() {
+    @Test
+    fun testRefresh() {
         withTables(*ViaTestData.allTables) {
             val s = VString.new { text = "ccc" }.apply {
                 refresh(true)
@@ -217,7 +227,7 @@ class ViaTests : DatabaseTestsBase() {
             entityCache.clear(flush = true)
 
             fun checkChildrenReferences(node: Node, values: List<Node>) {
-                val sourceColumn = (Node::children.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
+                val sourceColumn = (Node::children.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*, *, *, *>).sourceColumn
                 val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 assertEqualLists(children?.toList().orEmpty(), values)
             }
@@ -229,7 +239,7 @@ class ViaTests : DatabaseTestsBase() {
             checkChildrenReferences(root2, listOf(child1, child2))
 
             fun checkParentsReferences(node: Node, values: List<Node>) {
-                val sourceColumn =  (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*,*,*,*>).sourceColumn
+                val sourceColumn = (Node::parents.apply { isAccessible = true }.getDelegate(node) as InnerTableLink<*, *, *, *>).sourceColumn
                 val children = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 assertEqualLists(children?.toList().orEmpty(), values)
             }
