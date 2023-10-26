@@ -1,3 +1,21 @@
+# 0.44.1
+Infrastructure:
+* MySQL driver 8.0.33
+
+Bug fixes:
+* [MySQL] Fix bug when inserted ids are not returned if `rewriteBatchedStatements` property set to true by @Tapac in https://github.com/JetBrains/Exposed/pull/1873
+* fix: Incorrect SQL statements when creating a table with a dot in its name by @joc-a in https://github.com/JetBrains/Exposed/pull/1871
+* fix: Parsing failure when selecting CURRENT_TIMESTAMP using CurrentDateTime function by @joc-a in https://github.com/JetBrains/Exposed/pull/1879
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/1872
+* deprecate: Raise deprecation level of currentScheme property by @bog-walk in https://github.com/JetBrains/Exposed/pull/1874
+
+Docs:
+* Version Notice for JVM by @adambrangenberg in https://github.com/JetBrains/Exposed/pull/1858
+* docs: Add missing KDocs in all modules except core and dao by @bog-walk in https://github.com/JetBrains/Exposed/pull/1876
+* docs: EXPOSED-199 Update configuration section in spring-boot-starter README by @bog-walk in https://github.com/JetBrains/Exposed/pull/1878
+
 # 0.44.0
 Infrastructure:
 * Kotlin 1.9.10
