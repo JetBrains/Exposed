@@ -34,7 +34,7 @@ val reportMerge by tasks.registering(ReportMergeTask::class) {
 
 subprojects {
     dependencies {
-        detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", "1.23.1")
+        detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", "1.23.3")
     }
     tasks.withType<Detekt>().configureEach detekt@{
         finalizedBy(reportMerge)
