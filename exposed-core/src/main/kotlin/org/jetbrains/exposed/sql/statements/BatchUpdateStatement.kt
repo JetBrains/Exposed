@@ -9,10 +9,20 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.util.*
 
+/**
+ * Represents the SQL command that batch updates rows of a table.
+ *
+ * @param table Identity table to update values from.
+ */
 open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, null) {
+    /** The mappings of columns to update with their updated values for each entity in the batch. */
     val data = ArrayList<Pair<EntityID<*>, Map<Column<*>, Any?>>>()
     override val firstDataSet: List<Pair<Column<*>, Any?>> get() = data.first().second.toList()
 
+    /**
+     * Adds the provided entity [id] to the current list of update commands, using the mapping of columns to update
+     * provided for this `BatchUpdateStatement`.
+     */
     fun addBatch(id: EntityID<*>) {
         val lastBatch = data.lastOrNull()
         val different by lazy {
