@@ -985,6 +985,12 @@ class CustomEnumerationColumnType<T : Enum<T>>(
     override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
 }
 
+class ArrayColumnType<T> : ColumnType() {
+    override fun sqlType(): String =
+        //currentDialect.dataTypeProvider.arrayType()
+        "ARRAY" // TODO
+}
+
 // Date/Time columns
 
 /**

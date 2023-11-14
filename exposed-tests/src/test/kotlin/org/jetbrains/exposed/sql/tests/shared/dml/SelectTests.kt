@@ -211,6 +211,27 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    // adapted from `testInList01`
+    @Test
+    fun testEqAny() {
+        withCitiesAndUsers { _, users, _ ->
+            val r = users.select { users.id eq listOf("andrey", "alex").anyOp() }.orderBy(users.name).toList()
+
+            assertEquals(2, r.size)
+            assertEquals("Alex", r[0][users.name])
+            assertEquals("Andrey", r[1][users.name])
+        }
+    }
+
+    @Test
+    fun testGreaterEqAll() {
+        withSales { _, sales ->
+            val r = sales.select { sales.amount greaterEq listOf(1, 10, 100, 1000).map { it.toBigDecimal() }.allOp() }.toList()
+            assertEquals(3, r.size)
+            r.forEach { assertEquals("coffee", it[sales.product]) }
+        }
+    }
+
     @Test
     fun testSelectDistinct() {
         val tbl = DMLTestsData.Cities
