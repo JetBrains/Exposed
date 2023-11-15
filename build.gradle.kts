@@ -5,10 +5,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     kotlin("jvm") apply true
-    id("io.gitlab.arturbosch.detekt")
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
-
-    id("com.avast.gradle.docker-compose")
+    id(libs.plugins.detekt.get().pluginId) apply true
+    alias(libs.plugins.binary.compatibility.validator)
+    id(libs.plugins.docker.compose.get().pluginId)
 }
 
 repositories {
@@ -34,7 +33,7 @@ val reportMerge by tasks.registering(ReportMergeTask::class) {
 
 subprojects {
     dependencies {
-        detektPlugins("io.gitlab.arturbosch.detekt", "detekt-formatting", "1.23.3")
+        detektPlugins(rootProject.libs.plugins.detekt)
     }
     tasks.withType<Detekt>().configureEach detekt@{
         finalizedBy(reportMerge)
@@ -55,14 +54,14 @@ subprojects {
 subprojects {
     if (name == "exposed-bom") return@subprojects
 
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
 
     testDb("h2") {
         withContainer = false
         dialects("H2", "H2_MYSQL", "H2_PSQL", "H2_MARIADB", "H2_ORACLE", "H2_SQLSERVER")
 
         dependencies {
-            dependency("com.h2database:h2:${Versions.h2_v2}")
+            dependency(rootProject.libs.h2)
         }
     }
 
@@ -71,7 +70,7 @@ subprojects {
         dialects("H2", "H2_MYSQL")
 
         dependencies {
-            dependency("com.h2database:h2:${Versions.h2}")
+            dependency(rootProject.libs.h1)
         }
     }
 
@@ -80,7 +79,7 @@ subprojects {
         dialects("sqlite")
 
         dependencies {
-            dependency("org.xerial:sqlite-jdbc:${Versions.sqlLite3}")
+            dependency(rootProject.libs.sqlite.jdbc)
         }
     }
 
@@ -88,7 +87,7 @@ subprojects {
         port = 3001
         dialects("mysql")
         dependencies {
-            dependency("mysql:mysql-connector-java:${Versions.mysql51}")
+            dependency(rootProject.libs.mysql51)
         }
     }
 
@@ -96,7 +95,7 @@ subprojects {
         port = 3002
         dialects("mysql")
         dependencies {
-            dependency("mysql:mysql-connector-java:${Versions.mysql80}")
+            dependency(rootProject.libs.mysql)
         }
     }
 
@@ -105,7 +104,7 @@ subprojects {
         container = "mariadb"
         port = 3000
         dependencies {
-            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v2}")
+            dependency(rootProject.libs.maria.db2)
         }
     }
 
@@ -114,7 +113,7 @@ subprojects {
         container = "mariadb"
         port = 3000
         dependencies {
-            dependency("org.mariadb.jdbc:mariadb-java-client:${Versions.mariaDB_v3}")
+            dependency(rootProject.libs.maria.db3)
         }
     }
 
@@ -123,7 +122,7 @@ subprojects {
         colima = true
         dialects("oracle")
         dependencies {
-            dependency("com.oracle.database.jdbc:ojdbc8:${Versions.oracle12}")
+            dependency(rootProject.libs.oracle12)
         }
     }
 
@@ -131,7 +130,7 @@ subprojects {
         port = 3004
         dialects("postgresql")
         dependencies {
-            dependency("org.postgresql:postgresql:${Versions.postgre}")
+            dependency(rootProject.libs.postgre)
         }
     }
 
@@ -140,8 +139,8 @@ subprojects {
         dialects("postgresqlng")
         container = "postgres"
         dependencies {
-            dependency("org.postgresql:postgresql:${Versions.postgre}")
-            dependency("com.impossibl.pgjdbc-ng:pgjdbc-ng:${Versions.postgreNG}")
+            dependency(rootProject.libs.postgre)
+            dependency(rootProject.libs.pgjdbc.ng)
         }
     }
 
@@ -149,7 +148,7 @@ subprojects {
         port = 3005
         dialects("sqlserver")
         dependencies {
-            dependency("com.microsoft.sqlserver:mssql-jdbc:${Versions.sqlserver}")
+            dependency(rootProject.libs.mssql)
         }
     }
 }

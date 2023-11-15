@@ -2,7 +2,9 @@ package org.jetbrains.exposed.gradle
 
 import com.avast.gradle.dockercompose.ComposeExtension
 import org.gradle.api.Project
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.internal.tasks.testing.filter.DefaultTestFilter
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
@@ -11,6 +13,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import java.time.Duration
+import java.util.*
 
 const val HEALTH_TIMEOUT: Long = 60
 
@@ -26,6 +29,11 @@ class TestDb(val name: String) {
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
             dependencies.add(dependencyNotation)
+        }
+
+        fun dependency(dependencyNotation: Provider<MinimalExternalModuleDependency>) {
+            // translate dependency to string
+            dependency(dependencyNotation.get().toString())
         }
     }
 
@@ -49,7 +57,7 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         group = "verification"
         systemProperties["exposed.test.name"] = db.name
         systemProperties["exposed.test.container"] = if (db.withContainer) db.container else "none"
-        systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.toUpperCase() }
+        systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.uppercase(Locale.getDefault()) }
         outputs.cacheIf { false }
 
         if (!db.withContainer) return@register

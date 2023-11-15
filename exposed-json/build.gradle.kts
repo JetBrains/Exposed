@@ -1,8 +1,7 @@
-import org.jetbrains.exposed.gradle.Versions
-
 plugins {
     kotlin("jvm") apply true
-    kotlin("plugin.serialization") apply true
+    alias(libs.plugins.serialization) apply true
+    //kotlin("plugin.serialization") apply true
 }
 
 repositories {
@@ -15,10 +14,10 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    api("org.jetbrains.kotlinx", "kotlinx-serialization-json", Versions.kotlinxSerialization)
-    compileOnly("org.postgresql", "postgresql", Versions.postgre)
+    api(libs.kotlinx.serialization)
+    compileOnly(libs.postgre)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
-    testImplementation("junit", "junit", "4.12")
+    testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
 }
