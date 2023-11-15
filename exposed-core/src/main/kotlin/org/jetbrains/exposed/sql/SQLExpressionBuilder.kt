@@ -5,12 +5,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ops.AllOp
-import org.jetbrains.exposed.sql.ops.AnyOp
-import org.jetbrains.exposed.sql.ops.InListOrNotInListBaseOp
-import org.jetbrains.exposed.sql.ops.PairInListOp
-import org.jetbrains.exposed.sql.ops.SingleValueInListOp
-import org.jetbrains.exposed.sql.ops.TripleInListOp
+import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -98,8 +93,8 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
-fun <T> Iterable<T>.allOp() = AllOp(this)
-fun <T> Iterable<T>.anyOp() = AnyOp(this)
+inline fun <reified T> Iterable<T>.allOp() = AllAnyOp(AllAnyOp.OpType.All, this)
+inline fun <reified T> Iterable<T>.anyOp() = AllAnyOp(AllAnyOp.OpType.Any, this)
 
 // Sequence Manipulation Functions
 

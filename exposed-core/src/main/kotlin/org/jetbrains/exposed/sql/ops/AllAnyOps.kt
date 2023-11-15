@@ -4,30 +4,24 @@ import org.jetbrains.exposed.sql.ArrayColumnType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 
-abstract class AllAnyOp<T>(val list: Iterable<T>) : Op<T>() {
+class AllAnyOp<T>(val opType: OpType, val list: Iterable<T>, val toTypedArray: List<T>.() -> Any) : Op<T>() {
     enum class OpType {
         All, Any
     }
 
-    abstract fun isAllOrAny(): OpType
-
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when (isAllOrAny()) {
+        +when (opType) {
             OpType.All -> "ALL"
             OpType.Any -> "ANY"
         }
         +'('
-        //+"ARRAY[" // This syntax is for PostgresSQL.
-        registerArgument(ArrayColumnType<T>(), list)
-        //+"]"
+        // +"ARRAY[" // This syntax is for PostgresSQL.
+        val array = list.toList().toTypedArray()
+        registerArgument(ArrayColumnType, array)
+        // +"]"
         +')'
     }
 }
 
-class AllOp<T>(list: Iterable<T>) : AllAnyOp<T>(list) {
-    override fun isAllOrAny(): OpType = OpType.All
-}
-
-class AnyOp<T>(list: Iterable<T>) : AllAnyOp<T>(list) {
-    override fun isAllOrAny(): OpType = OpType.Any
-}
+inline fun <reified T> AllAnyOp(opType: AllAnyOp.OpType, list: Iterable<T>) =
+    AllAnyOp(opType, list) { this.toTypedArray() }
