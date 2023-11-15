@@ -5,6 +5,8 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.functions.AllFunction
+import org.jetbrains.exposed.sql.functions.AnyFunction
 import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -93,8 +95,13 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
+inline fun <reified T> Array<T>.allOp() = AllAnyOp(AllAnyOp.OpType.All, this)
+inline fun <reified T> Array<T>.anyOp() = AllAnyOp(AllAnyOp.OpType.Any, this)
 inline fun <reified T> Iterable<T>.allOp() = AllAnyOp(AllAnyOp.OpType.All, this)
 inline fun <reified T> Iterable<T>.anyOp() = AllAnyOp(AllAnyOp.OpType.Any, this)
+
+fun <T> Array<T>.allFunction() = AllFunction(this)
+fun <T> Array<T>.anyFunction() = AnyFunction(this)
 
 // Sequence Manipulation Functions
 

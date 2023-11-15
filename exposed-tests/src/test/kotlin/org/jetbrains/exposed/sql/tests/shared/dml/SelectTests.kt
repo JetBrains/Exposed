@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.junit.Test
+import java.math.BigDecimal
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -212,10 +213,9 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     // adapted from `testInList01`
-    @Test
-    fun testEqAny() {
+    fun testEqAny(anyExpression: Expression<String>) {
         withCitiesAndUsers { _, users, _ ->
-            val r = users.select { users.id eq listOf("andrey", "alex").anyOp() }.orderBy(users.name).toList()
+            val r = users.select { users.id eq anyExpression }.orderBy(users.name).toList()
 
             assertEquals(2, r.size)
             assertEquals("Alex", r[0][users.name])
@@ -223,14 +223,35 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    val userIds = arrayOf("andrey", "alex")
+
     @Test
-    fun testGreaterEqAll() {
+    fun testEqAnyOp() = testEqAny(userIds.anyOp())
+
+    @Test
+    fun testEqAnyOpWithIterable() = testEqAny(userIds.asIterable().anyOp())
+
+    @Test
+    fun testEqAnyFunction() = testEqAny(userIds.anyFunction())
+
+    val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
+
+    fun testGreaterEqAll(allExpression: Expression<BigDecimal>) {
         withSales { _, sales ->
-            val r = sales.select { sales.amount greaterEq listOf(1, 10, 100, 1000).map { it.toBigDecimal() }.allOp() }.toList()
+            val r = sales.select { sales.amount greaterEq allExpression }.toList()
             assertEquals(3, r.size)
             r.forEach { assertEquals("coffee", it[sales.product]) }
         }
     }
+
+    @Test
+    fun testGreaterEqAllOp() = testGreaterEqAll(amounts.allOp())
+
+    @Test
+    fun testGreaterEqAllOpWithIterable() = testGreaterEqAll(amounts.asIterable().allOp())
+
+    @Test
+    fun testGreaterEqAllFunction() = testGreaterEqAll(amounts.allFunction())
 
     @Test
     fun testSelectDistinct() {
