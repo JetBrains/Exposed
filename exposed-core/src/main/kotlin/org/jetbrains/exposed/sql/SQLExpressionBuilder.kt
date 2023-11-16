@@ -99,22 +99,22 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 // using `Op`
 
 /** Returns this array of data wrapped in the `ALL` operator. */
-fun <T> Array<T>.allOp() = AllAnyOp("ALL", this)
+fun <T> Array<T>.allOp(): Op<T> = AllAnyOp("ALL", this)
 
 /** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
-fun <T> Array<T>.anyOp() = AllAnyOp("ANY", this)
+fun <T> Array<T>.anyOp(): Op<T> = AllAnyOp("ANY", this)
 
 // using `CustomFunction`
 
 /** Returns this array of data wrapped in the `ALL` operator. */
-fun <T> Array<T>.allFunction() = AllFunction(this)
+fun <T> Array<T>.allFunction(): CustomFunction<T> = AllFunction(this)
 
 /** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
-fun <T> Array<T>.anyFunction() = AnyFunction(this)
+fun <T> Array<T>.anyFunction(): CustomFunction<T> = AnyFunction(this)
 
 /** Checks if this expression is equal to any element from [array].
  * This is a more efficient alternative to [ISqlExpressionBuilder.inList] on PostgreSQL and H2. */
-infix fun <T> ExpressionWithColumnType<T>.eqAny(array: Array<T>) =
+infix fun <T> ExpressionWithColumnType<T>.eqAny(array: Array<T>): Op<Boolean> =
     this eq array.anyOp() // TODO or `array.anyFunction()`
 
 // Sequence Manipulation Functions
