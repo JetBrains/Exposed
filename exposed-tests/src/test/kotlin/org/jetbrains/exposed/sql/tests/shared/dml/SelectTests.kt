@@ -212,14 +212,19 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    val testDBsSupportingArrays =
+        listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2, TestDB.H2_MYSQL, TestDB.H2_MARIADB, TestDB.H2_PSQL, TestDB.H2_ORACLE, TestDB.H2_SQLSERVER)
+
     // adapted from `testInList01`
     fun testEqAny(anyExpression: Expression<String>) {
-        withCitiesAndUsers { _, users, _ ->
-            val r = users.select { users.id eq anyExpression }.orderBy(users.name).toList()
+        withDb(testDBsSupportingArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.select { users.id eq anyExpression }.orderBy(users.name).toList()
 
-            assertEquals(2, r.size)
-            assertEquals("Alex", r[0][users.name])
-            assertEquals("Andrey", r[1][users.name])
+                assertEquals(2, r.size)
+                assertEquals("Alex", r[0][users.name])
+                assertEquals("Andrey", r[1][users.name])
+            }
         }
     }
 
@@ -229,26 +234,22 @@ class SelectTests : DatabaseTestsBase() {
     fun testEqAnyOp() = testEqAny(userIds.anyOp())
 
     @Test
-    fun testEqAnyOpWithIterable() = testEqAny(userIds.asIterable().anyOp())
-
-    @Test
     fun testEqAnyFunction() = testEqAny(userIds.anyFunction())
 
     val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
 
     fun testGreaterEqAll(allExpression: Expression<BigDecimal>) {
-        withSales { _, sales ->
-            val r = sales.select { sales.amount greaterEq allExpression }.toList()
-            assertEquals(3, r.size)
-            r.forEach { assertEquals("coffee", it[sales.product]) }
+        withDb(testDBsSupportingArrays) {
+            withSales { _, sales ->
+                val r = sales.select { sales.amount greaterEq allExpression }.toList()
+                assertEquals(3, r.size)
+                r.forEach { assertEquals("coffee", it[sales.product]) }
+            }
         }
     }
 
     @Test
     fun testGreaterEqAllOp() = testGreaterEqAll(amounts.allOp())
-
-    @Test
-    fun testGreaterEqAllOpWithIterable() = testGreaterEqAll(amounts.asIterable().allOp())
 
     @Test
     fun testGreaterEqAllFunction() = testGreaterEqAll(amounts.allFunction())

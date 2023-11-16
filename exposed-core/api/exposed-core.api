@@ -154,11 +154,6 @@ public final class org/jetbrains/exposed/sql/AndOp : org/jetbrains/exposed/sql/C
 	public fun <init> (Ljava/util/List;)V
 }
 
-public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/ArrayColumnType;
-	public fun sqlType ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/exposed/sql/IColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/String;Ljava/lang/String;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -1472,6 +1467,7 @@ public final class org/jetbrains/exposed/sql/OpKt {
 	public static final fun andIfNotNull (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun andIfNotNull (Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun andNot (Lorg/jetbrains/exposed/sql/Expression;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun arrayParam ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun blobParam (Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun booleanLiteral (Z)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun booleanParam (Z)Lorg/jetbrains/exposed/sql/Expression;
@@ -1724,6 +1720,10 @@ public final class org/jetbrains/exposed/sql/RowNumber : org/jetbrains/exposed/s
 public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun CustomLongFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun CustomStringFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun allFunction ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/functions/AllFunction;
+	public static final fun allOp ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/ops/AllAnyOp;
+	public static final fun anyFunction ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/functions/AnyFunction;
+	public static final fun anyOp ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/ops/AllAnyOp;
 	public static final fun avg (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/Avg;
 	public static synthetic fun avg$default (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;IILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Avg;
 	public static final fun castTo (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/IColumnType;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
@@ -2378,6 +2378,11 @@ public final class org/jetbrains/exposed/sql/UnionAll : org/jetbrains/exposed/sq
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/SetOperation;
 }
 
+public final class org/jetbrains/exposed/sql/UntypedAndUnsizedArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/UntypedAndUnsizedArrayColumnType;
+	public fun sqlType ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/sql/UpperCase : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/Expression;
@@ -2484,6 +2489,18 @@ public final class org/jetbrains/exposed/sql/XorBitOp : org/jetbrains/exposed/sq
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
+public abstract class org/jetbrains/exposed/sql/functions/AllAnyFunction : org/jetbrains/exposed/sql/CustomFunction {
+	public fun <init> (Ljava/lang/String;[Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/sql/functions/AllFunction : org/jetbrains/exposed/sql/functions/AllAnyFunction {
+	public fun <init> ([Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/sql/functions/AnyFunction : org/jetbrains/exposed/sql/functions/AllAnyFunction {
+	public fun <init> ([Ljava/lang/Object;)V
+}
+
 public final class org/jetbrains/exposed/sql/functions/math/ACosFunction : org/jetbrains/exposed/sql/CustomFunction {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)V
 }
@@ -2558,18 +2575,10 @@ public final class org/jetbrains/exposed/sql/functions/math/TanFunction : org/je
 }
 
 public final class org/jetbrains/exposed/sql/ops/AllAnyOp : org/jetbrains/exposed/sql/Op {
-	public fun <init> (Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function1;)V
-	public final fun getList ()Ljava/lang/Iterable;
-	public final fun getOpType ()Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;
-	public final fun getToTypedArray ()Lkotlin/jvm/functions/Function1;
+	public fun <init> (Ljava/lang/String;[Ljava/lang/Object;)V
+	public final fun getArray ()[Ljava/lang/Object;
+	public final fun getOpName ()Ljava/lang/String;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
-}
-
-public final class org/jetbrains/exposed/sql/ops/AllAnyOp$OpType : java/lang/Enum {
-	public static final field All Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;
-	public static final field Any Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;
-	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;
-	public static fun values ()[Lorg/jetbrains/exposed/sql/ops/AllAnyOp$OpType;
 }
 
 public abstract class org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression {
@@ -3118,6 +3127,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun ubyteType ()Ljava/lang/String;
 	public fun uintegerType ()Ljava/lang/String;
 	public fun ulongType ()Ljava/lang/String;
+	public abstract fun untypedAndUnsizedArrayType ()Ljava/lang/String;
 	public fun ushortType ()Ljava/lang/String;
 	public fun uuidToDB (Ljava/util/UUID;)Ljava/lang/Object;
 	public fun uuidType ()Ljava/lang/String;

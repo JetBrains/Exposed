@@ -95,10 +95,12 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
-inline fun <reified T> Array<T>.allOp() = AllAnyOp(AllAnyOp.OpType.All, this)
-inline fun <reified T> Array<T>.anyOp() = AllAnyOp(AllAnyOp.OpType.Any, this)
-inline fun <reified T> Iterable<T>.allOp() = AllAnyOp(AllAnyOp.OpType.All, this)
-inline fun <reified T> Iterable<T>.anyOp() = AllAnyOp(AllAnyOp.OpType.Any, this)
+// using `Op`
+
+fun <T> Array<T>.allOp() = AllAnyOp("ALL", this)
+fun <T> Array<T>.anyOp() = AllAnyOp("ANY", this)
+
+// using `CustomFunction`
 
 fun <T> Array<T>.allFunction() = AllFunction(this)
 fun <T> Array<T>.anyFunction() = AnyFunction(this)

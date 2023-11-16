@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -62,6 +63,9 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     }
 
     override fun jsonType(): String = "VARCHAR2(4000)"
+
+    override fun untypedAndUnsizedArrayType(): String =
+        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"

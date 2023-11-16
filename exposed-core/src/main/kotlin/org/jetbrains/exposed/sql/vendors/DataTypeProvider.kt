@@ -127,6 +127,10 @@ abstract class DataTypeProvider {
     open fun jsonBType(): String =
         throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
 
+    /** Data type for arrays with no specified size or element type, used only as types of [QueryParameter]s for PostgreSQL and H2.
+     * An array with no element type cannot be used for storing arrays in a column in either PostgreSQL or H2. */
+    abstract fun untypedAndUnsizedArrayType(): String
+
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
