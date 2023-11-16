@@ -730,6 +730,7 @@ fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(val
 /** Returns the specified [value] as a blob query parameter. */
 fun blobParam(value: ExposedBlob): Expression<ExposedBlob> = QueryParameter(value, BlobColumnType())
 
+/** Returns the specified [value] as an array query parameter. */
 fun <T> arrayParam(value: Array<T>): Expression<Array<T>> = QueryParameter(value, UntypedAndUnsizedArrayColumnType)
 
 // Misc.
