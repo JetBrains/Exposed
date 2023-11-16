@@ -5,6 +5,7 @@ import org.jetbrains.exposed.crypt.encryptedBinary
 import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -216,10 +217,11 @@ class SelectTests : DatabaseTestsBase() {
         listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2, TestDB.H2_MYSQL, TestDB.H2_MARIADB, TestDB.H2_PSQL, TestDB.H2_ORACLE, TestDB.H2_SQLSERVER)
 
     // adapted from `testInList01`
-    fun testEqAny(anyExpression: Expression<String>) {
+    // TODO all the other tests of `inList` can be adapted to test both `inList` and `eqAny` if necessary
+    fun testEqAny(eqOp: Column<String>.() -> Op<Boolean>) {
         withDb(testDBsSupportingArrays) {
             withCitiesAndUsers { _, users, _ ->
-                val r = users.select { users.id eq anyExpression }.orderBy(users.name).toList()
+                val r = users.select { users.id.eqOp() }.orderBy(users.name).toList()
 
                 assertEquals(2, r.size)
                 assertEquals("Alex", r[0][users.name])
@@ -228,6 +230,9 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    fun testEqAny(anyExpression: Expression<String>) =
+        testEqAny { this eq anyExpression }
+
     val userIds = arrayOf("andrey", "alex")
 
     @Test
@@ -235,6 +240,9 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testEqAnyFunction() = testEqAny(userIds.anyFunction())
+
+    @Test
+    fun testEqAny() = testEqAny { this eqAny userIds }
 
     val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
 

@@ -5,6 +5,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.functions.AllFunction
 import org.jetbrains.exposed.sql.functions.AnyFunction
 import org.jetbrains.exposed.sql.ops.*
@@ -97,13 +98,24 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 
 // using `Op`
 
+/** Returns this array of data wrapped in the `ALL` operator. */
 fun <T> Array<T>.allOp() = AllAnyOp("ALL", this)
+
+/** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
 fun <T> Array<T>.anyOp() = AllAnyOp("ANY", this)
 
 // using `CustomFunction`
 
+/** Returns this array of data wrapped in the `ALL` operator. */
 fun <T> Array<T>.allFunction() = AllFunction(this)
+
+/** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
 fun <T> Array<T>.anyFunction() = AnyFunction(this)
+
+/** Checks if this expression is equal to any element from [array].
+ * This is a more efficient alternative to [ISqlExpressionBuilder.inList] on PostgreSQL and H2. */
+infix fun <T> ExpressionWithColumnType<T>.eqAny(array: Array<T>) =
+    this eq array.anyOp() // TODO or `array.anyFunction()`
 
 // Sequence Manipulation Functions
 
@@ -587,7 +599,7 @@ interface ISqlExpressionBuilder {
 
     // Array Comparisons
 
-    /** Checks if this expression is equals to any element from [list]. */
+    /** Checks if this expression is equal to any element from [list]. */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
     /**
