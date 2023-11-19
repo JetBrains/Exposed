@@ -52,6 +52,9 @@ open class Transaction(
     /** The maximum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
     var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
 
+    /** The number of seconds to wait before timing out a statement */
+    var timeout: Int? = db.config.defaultTimeout
+
     val id by lazy { UUID.randomUUID().toString() }
 
     // currently executing statement. Used to log error properly

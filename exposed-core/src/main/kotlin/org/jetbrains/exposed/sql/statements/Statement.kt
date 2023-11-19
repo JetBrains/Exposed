@@ -21,7 +21,9 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
     abstract fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>>
 
     open fun prepared(transaction: Transaction, sql: String): PreparedStatementApi =
-        transaction.connection.prepareStatement(sql, false)
+        transaction.connection.prepareStatement(sql, false).apply {
+            timeout = transaction.timeout
+        }
 
     open val isAlwaysBatch: Boolean = false
 
