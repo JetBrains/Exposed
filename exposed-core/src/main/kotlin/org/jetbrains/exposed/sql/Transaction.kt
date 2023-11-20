@@ -126,6 +126,7 @@ open class Transaction(
             override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
                     StatementType.SELECT, StatementType.EXEC, StatementType.SHOW, StatementType.PRAGMA -> executeQuery()
+                    StatementType.MULTI -> executeMultiQuery()
                     else -> {
                         executeUpdate()
                         resultSet

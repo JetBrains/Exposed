@@ -22,6 +22,8 @@ interface PreparedStatementApi {
 
     fun executeUpdate(): Int
 
+    fun executeMultiQuery(): ResultSet?
+
     val resultSet: ResultSet?
 
     operator fun set(index: Int, value: Any)
