@@ -47,7 +47,7 @@ class JdbcPreparedStatementImpl(
 
     override fun executeUpdate(): Int = statement.executeUpdate()
 
-    override fun executeMultiQuery(): ResultSet? {
+    override fun executeMultiple(): ResultSet? {
         return if (statement.execute()) {
             statement.resultSet
         } else {

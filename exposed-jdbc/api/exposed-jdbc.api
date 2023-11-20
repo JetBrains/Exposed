@@ -69,7 +69,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun cancel ()V
 	public fun closeIfPossible ()V
 	public fun executeBatch ()Ljava/util/List;
-	public fun executeMultiQuery ()Ljava/sql/ResultSet;
+	public fun executeMultiple ()Ljava/sql/ResultSet;
 	public fun executeQuery ()Ljava/sql/ResultSet;
 	public fun executeUpdate ()I
 	public fun fillParameters (Ljava/lang/Iterable;)I
