@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.Table.Dual.source
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
@@ -28,14 +31,13 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     private var forUpdate: ForUpdateOption? = null
 
-    // private set
     var where: Op<Boolean>? = where
         private set
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
         return if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSlice { slice(distinctExpressions) }
+            copy().adjustSelect { select(distinctExpressions).set }
         } else {
             this
         }
@@ -63,12 +65,18 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         distinct = value
     }
 
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        level = DeprecationLevel.WARNING
+    )
+    fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
+
     /**
      * Changes [set.fields] field of a Query, [set.source] will be preserved
      * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an argument, you are expected to slice it
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
-    fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
+    fun adjustSelect(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
      * Changes [set.source] field of a Query, [set.fields] will be preserved
@@ -76,7 +84,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
-        return adjustSlice { oldSlice -> body().slice(oldSlice.fields) }
+        return adjustSelect { oldSlice -> body().select(oldSlice.fields).set }
     }
 
     /**
@@ -179,6 +187,63 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
+
+    fun where(predicate: Op<Boolean>): Query {
+        where?.let {
+            error("WHERE clause is specified twice. Old value = '$it', new value = '$predicate'")
+        }
+        where = predicate
+        return this
+    }
+
+    fun fetchBatchedResults(batchSize: Int = 1000): Iterable<Iterable<ResultRow>> {
+        require(batchSize > 0) { "Batch size should be greater than 0." }
+        require(limit == null) { "A manual LIMIT clause should not be set. By default, batchSize will be used." }
+        require(orderByExpressions.isEmpty()) {
+            "A manual ORDER BY clause should not be set. By default, the auto-incrementing column will be used."
+        }
+
+        val autoIncColumn = try {
+            set.source.columns.first { it.columnType.isAutoInc }
+        } catch (_: NoSuchElementException) {
+            throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
+        }
+        limit = batchSize
+        (orderByExpressions as MutableList).add(autoIncColumn to SortOrder.ASC)
+        val whereOp = where ?: Op.TRUE
+
+        return object : Iterable<Iterable<ResultRow>> {
+            override fun iterator(): Iterator<Iterable<ResultRow>> {
+                return iterator {
+                    var lastOffset = 0L
+                    while (true) {
+                        val query = this@Query.copy().adjustWhere {
+                            whereOp and (autoIncColumn greater lastOffset)
+                        }
+
+                        // query.iterator() executes the query
+                        val results = query.iterator().asSequence().toList()
+
+                        if (results.isNotEmpty()) {
+                            yield(results)
+                        }
+
+                        if (results.size < batchSize) break
+
+                        lastOffset = toLong(results.last()[autoIncColumn]!!)
+                    }
+                }
+            }
+
+            private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
+                is EntityID<*> -> toLong(autoIncVal.value)
+                is Int -> autoIncVal.toLong()
+                else -> autoIncVal as Long
+            }
+        }
+    }
+
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() =
@@ -187,12 +252,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             val originalSet = set
             try {
                 var expInx = 0
-                adjustSlice {
-                    slice(
-                        originalSet.fields.map {
-                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
-                        }
-                    )
+                adjustSelect {
+                    select(originalSet.fields.map {
+                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                    }).set
                 }
 
                 alias("subquery").selectAll().count()

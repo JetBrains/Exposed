@@ -8,26 +8,30 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import kotlin.sequences.Sequence
 
-/**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelect01
- */
-inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = select(SqlExpressionBuilder.where())
+@Deprecated(
+    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+    replaceWith = ReplaceWith("selectAll().where { where.invoke() }", "import org.jetbrains.exposed.sql.selectAll"),
+    level = DeprecationLevel.WARNING
+)
+inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = selectAll().where(SqlExpressionBuilder.where())
 
+@Deprecated(
+    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+    replaceWith = ReplaceWith("selectAll().where(predicate = where", "import org.jetbrains.exposed.sql.selectAll"),
+    level = DeprecationLevel.WARNING
+)
 fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 
-/**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testSelectDistinct
- */
 fun FieldSet.selectAll(): Query = Query(this, null)
 
-/**
- * That function will make multiple queries with limit equals to [batchSize]
- * and return result as a collection of [ResultRow] sub-collections.
- * [FieldSet] will be sorted by the first auto-increment column and then returned in batches.
- *
- * @param batchSize Size of a sub-collections to return
- * @param where Where condition to be applied
- */
+@Deprecated(
+    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+    replaceWith = ReplaceWith(
+        "selectAll().where { where.invoke() }.fetchBatchedResults(batchSize)",
+        "import org.jetbrains.exposed.sql.selectAll"
+    ),
+    level = DeprecationLevel.WARNING
+)
 fun FieldSet.selectBatched(
     batchSize: Int = 1000,
     where: SqlExpressionBuilder.() -> Op<Boolean>
@@ -35,13 +39,11 @@ fun FieldSet.selectBatched(
     return selectBatched(batchSize, SqlExpressionBuilder.where())
 }
 
-/**
- * That function will make multiple queries with limit equals to [batchSize]
- * and return result as a collection of [ResultRow] sub-collections.
- * [FieldSet] will be sorted by the first auto-increment column and then returned in batches.
- *
- * @param batchSize Size of a sub-collections to return
- */
+@Deprecated(
+    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+    replaceWith = ReplaceWith("selectAll().fetchBatchedResults(batchSize)", "import org.jetbrains.exposed.sql.selectAll"),
+    level = DeprecationLevel.WARNING
+)
 fun FieldSet.selectAllBatched(
     batchSize: Int = 1000
 ): Iterable<Iterable<ResultRow>> {
