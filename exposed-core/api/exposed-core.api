@@ -2291,10 +2291,6 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 public final class org/jetbrains/exposed/sql/Transaction$Companion {
 }
 
-public synthetic class org/jetbrains/exposed/sql/Transaction$EntriesMappings {
-	public static final synthetic field entries$0 Lkotlin/enums/EnumEntries;
-}
-
 public final class org/jetbrains/exposed/sql/Trim : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/Expression;

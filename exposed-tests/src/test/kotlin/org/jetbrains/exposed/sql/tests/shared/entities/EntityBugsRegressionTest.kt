@@ -99,7 +99,7 @@ class `Text id loosed on insert issue 1379` : DatabaseTestsBase() {
 
     @Test
     fun testRegression() {
-        val runTests = TestDB.entries - TestDB.POSTGRESQL
+        val runTests = TestDB.values().toList() - TestDB.POSTGRESQL
         withTables(runTests, Table1, Table2) {
             val obj1 = Obj1.new {
                 a = "hello world!"

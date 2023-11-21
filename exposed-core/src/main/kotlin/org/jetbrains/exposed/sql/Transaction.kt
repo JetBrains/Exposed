@@ -119,7 +119,7 @@ open class Transaction(
         if (stmt.isEmpty()) return null
 
         val type = explicitStatementType
-            ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) }
+            ?: StatementType.values().find { stmt.trim().startsWith(it.name, true) }
             ?: StatementType.OTHER
 
         return exec(object : Statement<T>(type, emptyList()) {
