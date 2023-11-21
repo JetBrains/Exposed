@@ -31,6 +31,10 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl 
 	public fun setTransactionIsolation (I)V
 }
 
+public synthetic class org/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl$EntriesMappings {
+	public static final synthetic field entries$0 Lkotlin/enums/EnumEntries;
+}
+
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl : org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/sql/DatabaseMetaData;)V

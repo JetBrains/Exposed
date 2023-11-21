@@ -150,7 +150,7 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
-    private val jsonContainsNotSupported = TestDB.values().toList() -
+    private val jsonContainsNotSupported = TestDB.entries -
         listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL, TestDB.MARIADB)
 
     @Test

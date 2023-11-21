@@ -94,7 +94,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
-            StatementType.values().find {
+            StatementType.entries.find {
                 stmt.startsWith(it.name, true)
             } ?: StatementType.OTHER
         }

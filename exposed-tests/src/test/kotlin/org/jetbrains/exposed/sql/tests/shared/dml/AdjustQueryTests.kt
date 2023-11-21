@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -27,8 +28,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val actualSlice = queryAdjusted.set.fields
             fun containsInAnyOrder(list: List<*>) = Matchers.containsInAnyOrder(*list.toTypedArray())
 
-            Assert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
-            Assert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+            MatcherAssert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
+            MatcherAssert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
             assertQueryResultValid(queryAdjusted)
         }
     }
