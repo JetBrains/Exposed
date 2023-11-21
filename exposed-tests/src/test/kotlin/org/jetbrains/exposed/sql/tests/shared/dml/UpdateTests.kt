@@ -60,7 +60,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit02() {
-        val dialects = TestDB.values().toList() - notSupportLimit
+        val dialects = TestDB.entries - notSupportLimit
         withCitiesAndUsers(dialects) { _, users, _ ->
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
@@ -112,7 +112,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.values().toList() - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
