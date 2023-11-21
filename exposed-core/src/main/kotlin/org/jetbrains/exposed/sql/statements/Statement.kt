@@ -165,11 +165,11 @@ enum class StatementType(val group: StatementGroup) {
     /** An EXEC statement to execute a stored procedure or command. */
     EXEC(StatementGroup.DML),
 
-    /** A SHOW statement to provide information about database objects. */
-    SHOW(StatementGroup.DML),
-
     /** A PRAGMA statement to configure or query the internal database state. */
     PRAGMA(StatementGroup.DML),
+
+    /** A SHOW statement to provide information about database objects. */
+    SHOW(StatementGroup.DML),
 
     /** Represents multiple statements of mixed types concatenated in a single string. */
     MULTI(StatementGroup.DML),

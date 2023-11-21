@@ -39,7 +39,7 @@ interface PreparedStatementApi {
      * Executes multiple SQL statements stored in a single [PreparedStatement].
      *
      * @return A list of [StatementResult]s retrieved from the database, which may store either affected row counts
-     * or [ResultSet]s.
+     * or [ResultSet]s. The order of elements is based on the order of the statements in the `PreparedStatement`.
      */
     fun executeMultiple(): List<StatementResult>
 

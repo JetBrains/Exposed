@@ -92,7 +92,7 @@ class TransactionExecTests : DatabaseTestsBase() {
 
         val columnAlias = "last_inserted_id"
         val selectLastIdStatement = when (testDb) {
-            TestDB.SQLSERVER -> "SELECT current_value  AS $columnAlias FROM sys.sequences"
+            TestDB.SQLSERVER -> "SELECT current_value AS $columnAlias FROM sys.sequences"
             TestDB.ORACLE -> "SELECT ${ExecTable.id.autoIncColumnType?.autoincSeq}.CURRVAL AS $columnAlias FROM DUAL"
             TestDB.POSTGRESQL -> "SELECT lastval() AS $columnAlias"
             else -> "SELECT LAST_INSERT_ID() AS $columnAlias"
