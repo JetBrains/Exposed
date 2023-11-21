@@ -6,6 +6,7 @@ import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+@Suppress("TooManyFunctions")
 interface PreparedStatementApi {
 
     var fetchSize: Int?
