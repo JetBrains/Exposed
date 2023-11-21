@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements.api
 
 import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.statements.StatementResult
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -36,8 +37,11 @@ interface PreparedStatementApi {
 
     /**
      * Executes multiple SQL statements stored in a single [PreparedStatement].
+     *
+     * @return A list of [StatementResult]s retrieved from the database, which may store either affected row counts
+     * or [ResultSet]s.
      */
-    fun executeMultiple(): ResultSet?
+    fun executeMultiple(): List<StatementResult>
 
     val resultSet: ResultSet?
 

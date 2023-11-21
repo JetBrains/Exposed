@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements.jdbc
 import org.jetbrains.exposed.sql.BinaryColumnType
 import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -47,14 +48,16 @@ class JdbcPreparedStatementImpl(
 
     override fun executeUpdate(): Int = statement.executeUpdate()
 
-    override fun executeMultiple(): ResultSet? {
+    override fun executeMultiple(): List<StatementResult> {
+        // execute() returns true only if first result is a ResultSet
         return if (statement.execute()) {
-            statement.resultSet
+            listOf(StatementResult.Object(statement.resultSet))
         } else {
+            // getMoreResults() returns true only if next result is a ResultSet
             while (!statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT)) {
-                if (statement.updateCount == -1) break
+                if (statement.updateCount == -1) return emptyList()
             }
-            statement.resultSet
+            listOf(StatementResult.Object(statement.resultSet))
         }
     }
 
