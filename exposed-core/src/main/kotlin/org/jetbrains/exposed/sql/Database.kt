@@ -65,9 +65,6 @@ class Database private constructor(
     var defaultFetchSize: Int? = config.defaultFetchSize
         private set
 
-    var defaultTimeout: Int? = config.defaultTimeout
-        private set
-
     @Deprecated("Use DatabaseConfig to define the defaultFetchSize")
     @TestOnly
     fun defaultFetchSize(size: Int): Database {

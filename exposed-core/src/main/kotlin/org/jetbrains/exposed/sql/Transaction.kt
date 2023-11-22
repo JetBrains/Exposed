@@ -53,7 +53,7 @@ open class Transaction(
     var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
 
     /** The number of seconds to wait before timing out a statement */
-    var timeout: Int? = db.config.defaultTimeout
+    var timeout: Int? = null
 
     val id by lazy { UUID.randomUUID().toString() }
 

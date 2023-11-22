@@ -7,7 +7,6 @@ class DatabaseConfig private constructor(
     val sqlLogger: SqlLogger,
     val useNestedTransactions: Boolean,
     val defaultFetchSize: Int?,
-    val defaultTimeout: Int?,
     val defaultIsolationLevel: Int,
     val defaultRepetitionAttempts: Int,
     val defaultMinRepetitionDelay: Long,
@@ -35,10 +34,6 @@ class DatabaseConfig private constructor(
          * How many records will be fetched at once by select queries
          */
         var defaultFetchSize: Int? = null,
-        /**
-         * Timeout when querying the database. No timeout by default.
-         */
-        var defaultTimeout: Int? = null,
         /**
          * Default transaction isolation level. If not specified, the database-specific level will be used.
          * This can be overridden on a per-transaction level by specifying the `transactionIsolation` parameter of
@@ -124,7 +119,6 @@ class DatabaseConfig private constructor(
                 sqlLogger = builder.sqlLogger ?: Slf4jSqlDebugLogger,
                 useNestedTransactions = builder.useNestedTransactions,
                 defaultFetchSize = builder.defaultFetchSize,
-                defaultTimeout = builder.defaultTimeout,
                 defaultIsolationLevel = builder.defaultIsolationLevel,
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
                 defaultMinRepetitionDelay = builder.defaultMinRepetitionDelay,
