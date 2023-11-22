@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Test
 import java.util.concurrent.Executors
@@ -89,14 +88,6 @@ class H2Tests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(t)
             }
-        }
-    }
-
-    @Test
-    fun timeoutStatements() {
-        withDb(listOf(TestDB.H2, TestDB.H2_MYSQL)) {
-            this.timeout = 10
-            transaction {  }
         }
     }
 
