@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.springframework.jdbc.support.DatabaseStartupValidator.DEFAULT_TIMEOUT
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
@@ -107,8 +108,9 @@ class SpringTransactionManager(
             readOnly = definition.isReadOnly,
             outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
-            timeout = definition.timeout
-
+            if (definition.timeout != DEFAULT_TIMEOUT) {
+                timeout = definition.timeout
+            }
             if (showSql) {
                 addLogger(StdOutSqlLogger)
             }
