@@ -145,7 +145,7 @@ abstract class DataTypeProvider {
         else -> "($e)"
     }
 
-    /** Returns the SQL representation of the specified [expression], for it to be used in an ORDER BY clause. */
+    /** Returns the SQL representation of the specified [expression], to be used in an ORDER BY clause. */
     open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
     }

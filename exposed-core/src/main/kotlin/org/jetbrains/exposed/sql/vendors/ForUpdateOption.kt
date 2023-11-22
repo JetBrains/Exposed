@@ -18,16 +18,16 @@ sealed class ForUpdateOption(open val querySuffix: String) {
 
     // https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
     object MySQL {
-        /** MySQL option that acquires a shared lock for each row retrieved. */
+        /** MySQL clause that acquires a shared lock for each row retrieved. */
         object ForShare : ForUpdateOption("FOR SHARE")
 
-        /** This MySQL option is equivalent to [ForShare] but exists for backward compatibility. */
+        /** This MySQL clause is equivalent to [ForShare] but exists for backward compatibility. */
         object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
     }
 
     // https://mariadb.com/kb/en/select/#lock-in-share-modefor-update
     object MariaDB {
-        /** MariaDB option that acquires a shared lock for each row retrieved. */
+        /** MariaDB clause that acquires a shared lock for each row retrieved. */
         object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
     }
 
@@ -61,13 +61,13 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             final override val querySuffix: String = preparedQuerySuffix
         }
 
-        /** PostgreSQL option that locks the rows retrieved as though for update. */
+        /** PostgreSQL clause that locks the rows retrieved as though for update. */
         class ForUpdate(
             mode: MODE? = null,
             vararg ofTables: Table
         ) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
 
-        /** PostgreSQL option that locks the rows retrieved, but at a weaker strength than [ForUpdate]. */
+        /** PostgreSQL clause that locks the rows retrieved, but at a weaker strength than [ForUpdate]. */
         open class ForNoKeyUpdate(
             mode: MODE? = null,
             vararg ofTables: Table
@@ -75,7 +75,7 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             companion object : ForNoKeyUpdate()
         }
 
-        /** PostgreSQL option that acquires a shared lock for each row retrieved. */
+        /** PostgreSQL clause that acquires a shared lock for each row retrieved. */
         open class ForShare(
             mode: MODE? = null,
             vararg ofTables: Table
@@ -83,7 +83,7 @@ sealed class ForUpdateOption(open val querySuffix: String) {
             companion object : ForShare()
         }
 
-        /** PostgreSQL option that acquires a shared lock for each row, but at a weaker strength than [ForShare]. */
+        /** PostgreSQL clause that acquires a shared lock for each row, but at a weaker strength than [ForShare]. */
         open class ForKeyShare(
             mode: MODE? = null,
             vararg ofTables: Table
@@ -94,10 +94,10 @@ sealed class ForUpdateOption(open val querySuffix: String) {
 
     // https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
     object Oracle {
-        /** Oracle option that never waits to acquire a row lock. */
+        /** Oracle clause that never waits to acquire a row lock. */
         object ForUpdateNoWait : ForUpdateOption("FOR UPDATE NOWAIT")
 
-        /** Oracle option that waits for the provided timeout until the row becomes available. */
+        /** Oracle clause that waits for the provided timeout until the row becomes available. */
         class ForUpdateWait(timeout: Int) : ForUpdateOption("FOR UPDATE WAIT $timeout")
     }
 }
