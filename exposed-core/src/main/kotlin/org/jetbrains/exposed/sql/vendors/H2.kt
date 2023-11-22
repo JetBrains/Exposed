@@ -278,4 +278,5 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     companion object : DialectNameProvider("H2")
 }
 
+/** The current H2 database compatibility mode or `null` if the current database is not H2. */
 val DatabaseDialect.h2Mode: H2Dialect.H2CompatibilityMode? get() = (this as? H2Dialect)?.h2Mode
