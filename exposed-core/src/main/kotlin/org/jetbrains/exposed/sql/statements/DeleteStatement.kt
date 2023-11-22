@@ -7,16 +7,6 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
-/**
- * Represents the SQL command that deletes one or more rows of a table.
- *
- * @param table Table to delete rows from.
- * @param where Condition that determines which rows to delete.
- * @param isIgnore Whether to ignore errors or not.
- * **Note** [isIgnore] is not supported by all vendors. Please check the documentation.
- * @param limit Maximum number of rows to delete.
- * @param offset The number of rows to skip.
- */
 open class DeleteStatement(
     val table: Table,
     val where: Op<Boolean>? = null,
@@ -38,19 +28,9 @@ open class DeleteStatement(
     }
 
     companion object {
-        /**
-         * Creates a delete statement that deletes only rows in [table] that match the provided [op].
-         *
-         * @return Count of deleted rows.
-         */
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
             DeleteStatement(table, op, isIgnore, limit, offset).execute(transaction) ?: 0
 
-        /**
-         * Creates a delete statement that deletes all rows in [table].
-         *
-         * @return Count of deleted rows.
-         */
         fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction) ?: 0
     }
 }

@@ -9,16 +9,9 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
-/**
- * Represents the SQL command that updates rows of a table.
- *
- * @param targetsSet Column set to update rows from. This may be a [Table] or a [Join] instance.
- * @param limit Maximum number of rows to update.
- * @param where Condition that determines which rows to update.
- */
 open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where: Op<Boolean>? = null) :
     UpdateBuilder<Int>(StatementType.UPDATE, targetsSet.targetTables()) {
-    /** The initial list of columns to update with their updated values. */
+
     open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
