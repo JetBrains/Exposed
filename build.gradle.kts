@@ -1,7 +1,6 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.jetbrains.exposed.gradle.*
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     kotlin("jvm") apply true
@@ -40,14 +39,6 @@ subprojects {
         finalizedBy(reportMerge)
         reportMerge.configure {
             input.from(this@detekt.xmlReportFile)
-        }
-    }
-
-    tasks.withType<KotlinJvmCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-            apiVersion = "1.6"
-            languageVersion = "1.6"
         }
     }
 }

@@ -56,7 +56,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB = TestDB.values().toList() -
+    private val insertIgnoreUnsupportedDB = TestDB.entries -
         listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
     @Test

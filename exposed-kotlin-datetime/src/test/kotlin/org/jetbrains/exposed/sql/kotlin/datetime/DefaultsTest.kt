@@ -34,7 +34,6 @@ import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
@@ -210,9 +209,9 @@ class DefaultsTest : DatabaseTestsBase() {
         val dateTimeConstValue = instConstValue.toLocalDateTime(TimeZone.UTC)
         val dLiteral = dateLiteral(dateConstValue)
         val dtLiteral = dateTimeLiteral(dateTimeConstValue)
-        val tsConstValue = instConstValue.plus(Duration.seconds(42))
+        val tsConstValue = instConstValue.plus(42.toDuration(DurationUnit.SECONDS))
         val tsLiteral = timestampLiteral(tsConstValue)
-        val durConstValue = Duration.milliseconds(tsConstValue.toEpochMilliseconds())
+        val durConstValue = tsConstValue.toEpochMilliseconds().toDuration((DurationUnit.MILLISECONDS))
         val durLiteral = durationLiteral(durConstValue)
         val tmConstValue = LocalTime(12, 0)
         val tLiteral = timeLiteral(tmConstValue)
