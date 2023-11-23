@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.tests.postgresql
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
@@ -9,14 +8,12 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption.PostgreSQL
 import org.junit.Rule
 import org.junit.Test
 import java.sql.ResultSet
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class PostgresqlTests : DatabaseTestsBase() {
     @get:Rule

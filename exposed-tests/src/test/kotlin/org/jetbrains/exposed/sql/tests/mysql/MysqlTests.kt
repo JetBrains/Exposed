@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.mysql
 
 import com.mysql.cj.conf.PropertyKey
 import com.mysql.cj.jdbc.ConnectionImpl
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
@@ -12,7 +11,6 @@ import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Rule
 import org.junit.Test
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
