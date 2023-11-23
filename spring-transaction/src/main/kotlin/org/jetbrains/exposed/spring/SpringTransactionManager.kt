@@ -108,9 +108,6 @@ class SpringTransactionManager(
             readOnly = definition.isReadOnly,
             outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
-            if (definition.timeout != DEFAULT_TIMEOUT) {
-                timeout = definition.timeout
-            }
             if (showSql) {
                 addLogger(StdOutSqlLogger)
             }
