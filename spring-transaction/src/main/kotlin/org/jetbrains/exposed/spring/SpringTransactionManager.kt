@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
-import org.springframework.jdbc.support.DatabaseStartupValidator.DEFAULT_TIMEOUT
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
