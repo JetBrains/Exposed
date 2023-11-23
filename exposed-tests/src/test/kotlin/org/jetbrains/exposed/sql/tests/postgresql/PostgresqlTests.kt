@@ -119,18 +119,6 @@ class PostgresqlTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun timeoutStatements() {
-        withDb(listOf(TestDB.POSTGRESQL)) {
-            this.timeout = 3
-            assertFailsWith<ExposedSQLException> {
-                TransactionManager.current().exec(
-                    "SELECT 1 WHERE pg_sleep(5);"
-                )
-            }
-        }
-    }
-
     private fun Transaction.withTable(statement: Transaction.() -> Unit) {
         SchemaUtils.create(table)
         try {

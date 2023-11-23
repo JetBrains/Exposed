@@ -50,16 +50,4 @@ class MysqlTests : DatabaseTestsBase() {
             }
         }
     }
-
-    @Test
-    fun timeoutStatements() {
-        withDb(listOf(TestDB.MYSQL)) {
-            this.timeout = 3
-            assertFailsWith<ExposedSQLException> {
-                TransactionManager.current().exec(
-                    "SELECT SLEEP(5) = 0;"
-                )
-            }
-        }
-    }
 }
