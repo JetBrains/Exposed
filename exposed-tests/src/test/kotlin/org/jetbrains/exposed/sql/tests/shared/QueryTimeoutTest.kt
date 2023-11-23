@@ -4,9 +4,7 @@ import com.impossibl.postgres.jdbc.PGSQLSimpleException
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Assert.fail
 import org.junit.Test
 import org.postgresql.util.PSQLException
@@ -26,11 +24,11 @@ class QueryTimeoutTest : DatabaseTestsBase() {
         }
     }
 
-    private val timeoutTestDatabaseList = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)
+    private val timeoutTestDBList = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)
 
     @Test
     fun timeoutStatements() {
-        withDb(timeoutTestDatabaseList) {testDB ->
+        withDb(timeoutTestDBList) { testDB ->
             this.timeout = 3
             try {
                 TransactionManager.current().exec(
@@ -40,9 +38,9 @@ class QueryTimeoutTest : DatabaseTestsBase() {
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PgSQLException with a cancelled statement message
-                    TestDB.POSTGRESQL ->  assertTrue(cause.cause is PSQLException)
+                    TestDB.POSTGRESQL -> assertTrue(cause.cause is PSQLException)
                     // PostgreSQLNG throws a regular PGSQLSimpleException with a cancelled statement message
-                    TestDB.POSTGRESQLNG ->  assertTrue(cause.cause is PGSQLSimpleException)
+                    TestDB.POSTGRESQLNG -> assertTrue(cause.cause is PGSQLSimpleException)
                     else -> assertTrue(cause.cause is SQLTimeoutException)
                 }
             }
@@ -51,7 +49,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
 
     @Test
     fun noTimeoutWithTimeoutStatement() {
-        withDb(timeoutTestDatabaseList) {
+        withDb(timeoutTestDBList) {
             this.timeout = 3
             TransactionManager.current().exec(
                 generateTimeoutStatements(it, 1)
