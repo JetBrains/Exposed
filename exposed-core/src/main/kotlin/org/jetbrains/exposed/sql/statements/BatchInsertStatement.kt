@@ -4,8 +4,10 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.ResultSet
 
+/** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
 
+/** Represents the SQL statement that batch inserts new rows into a table. */
 open class BatchInsertStatement(
     table: Table,
     ignore: Boolean = false,
@@ -14,8 +16,17 @@ open class BatchInsertStatement(
 
 private const val OUTPUT_ROW_LIMIT = 1000
 
-open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, shouldReturnGeneratedValues: Boolean = true) :
-    BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
+/**
+ * Represents the SQL statement that batch inserts new rows into a table, specifically for the SQL Server database.
+ *
+ * Before adding each new batch, the class validates that the database's maximum number of inserted rows (1000)
+ * is not being exceeded.
+ */
+open class SQLServerBatchInsertStatement(
+    table: Table,
+    ignore: Boolean = false,
+    shouldReturnGeneratedValues: Boolean = true
+) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
     override val isAlwaysBatch: Boolean = false
 
     override fun validateLastBatch() {
@@ -25,7 +36,9 @@ open class SQLServerBatchInsertStatement(table: Table, ignore: Boolean = false, 
         }
     }
 
-    private val columnToReturnValue = table.autoIncColumn?.takeIf { shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null }
+    private val columnToReturnValue = table.autoIncColumn?.takeIf {
+        shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null
+    }
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val values = arguments!!
