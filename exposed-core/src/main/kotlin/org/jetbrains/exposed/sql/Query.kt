@@ -105,6 +105,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     override fun prepareSQL(builder: QueryBuilder): String {
+        require(set.fields.isNotEmpty()) { "Can't prepare SELECT statement without columns or expressions to retrieve" }
+
         builder {
             append("SELECT ")
 

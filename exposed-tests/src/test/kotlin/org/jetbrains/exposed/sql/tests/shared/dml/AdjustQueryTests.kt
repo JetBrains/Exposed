@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -30,6 +31,17 @@ class AdjustQueryTests : DatabaseTestsBase() {
             MatcherAssert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
             MatcherAssert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
             assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
+    fun testAdjustQuerySliceWithEmptyListThrows() {
+        withCitiesAndUsers { cities, _, _ ->
+            val originalQuery = cities.slice(cities.name).selectAll()
+
+            assertFailsWith<IllegalArgumentException> {
+                originalQuery.adjustSlice { slice(emptyList()) }.toList()
+            }
         }
     }
 
