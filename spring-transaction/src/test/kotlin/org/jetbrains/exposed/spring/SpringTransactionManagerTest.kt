@@ -367,13 +367,34 @@ class SpringTransactionManagerTest {
         assertEquals(0, con1.closeCallCount)
     }
 
+    @Test
+    fun `transaction timeout`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert(initializeConnection = true, timeout = 1) {
+            assertEquals(1, TransactionManager.current().queryTimeout)
+        }
+    }
+
+    @Test
+    fun `transaction timeout propagation`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert(initializeConnection = true, timeout = 1) {
+            tm.executeAssert(initializeConnection = true, timeout = 2) {
+                assertEquals(1, TransactionManager.current().queryTimeout)
+            }
+            assertEquals(1, TransactionManager.current().queryTimeout)
+        }
+    }
+
     private fun SpringTransactionManager.executeAssert(
         initializeConnection: Boolean = true,
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        timeout: Int? = null,
         body: (TransactionStatus) -> Unit = {}
     ) {
         val tt = TransactionTemplate(this)
         tt.propagationBehavior = propagationBehavior
+        if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
             assertEquals(
                 TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),

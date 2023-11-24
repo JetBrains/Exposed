@@ -35,11 +35,13 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     private fun PlatformTransactionManager.execute(
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        timeout: Int? = null,
         block: (TransactionStatus) -> Unit
     ) {
         if (this !is SpringTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
         val tt = TransactionTemplate(this)
         tt.propagationBehavior = propagationBehavior
+        if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
             block(it)
         }
