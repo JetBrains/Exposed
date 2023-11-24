@@ -9,7 +9,7 @@ import java.io.InputStream
 class ExposedBlob(inputStream: InputStream) {
     constructor(bytes: ByteArray) : this (bytes.inputStream())
 
-    /** The [InputStream] contained within the wrapping class. */
+    /** The [InputStream] contained by this wrapper. */
     var inputStream = inputStream
         private set
 
