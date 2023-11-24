@@ -2266,6 +2266,7 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getMaxRepetitionDelay ()J
 	public final fun getMinRepetitionDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public fun getReadOnly ()Z
 	public final fun getRepetitionAttempts ()I
 	public final fun getStatementCount ()I
@@ -2282,6 +2283,7 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setDuration (J)V
 	public final fun setMaxRepetitionDelay (J)V
 	public final fun setMinRepetitionDelay (J)V
+	public final fun setQueryTimeout (Ljava/lang/Integer;)V
 	public final fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
@@ -2969,10 +2971,12 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/Prepare
 	public abstract fun fillParameters (Ljava/lang/Iterable;)I
 	public abstract fun getFetchSize ()Ljava/lang/Integer;
 	public abstract fun getResultSet ()Ljava/sql/ResultSet;
+	public abstract fun getTimeout ()Ljava/lang/Integer;
 	public abstract fun set (ILjava/lang/Object;)V
 	public abstract fun setFetchSize (Ljava/lang/Integer;)V
 	public abstract fun setInputStream (ILjava/io/InputStream;)V
 	public abstract fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
+	public abstract fun setTimeout (Ljava/lang/Integer;)V
 }
 
 public final class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi$DefaultImpls {

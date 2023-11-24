@@ -40,6 +40,12 @@ class JdbcPreparedStatementImpl(
             value?.let { statement.fetchSize = value }
         }
 
+    override var timeout: Int?
+        get() = statement.queryTimeout
+        set(value) {
+            value?.let { statement.queryTimeout = it }
+        }
+
     override fun addBatch() {
         statement.addBatch()
     }

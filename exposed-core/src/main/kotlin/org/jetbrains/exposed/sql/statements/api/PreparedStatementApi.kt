@@ -11,6 +11,8 @@ interface PreparedStatementApi {
 
     var fetchSize: Int?
 
+    var timeout: Int?
+
     fun fillParameters(args: Iterable<Pair<IColumnType, Any?>>): Int {
         args.forEachIndexed { index, (c, v) ->
             c.setParameter(this, index + 1, c.valueToDB(v))
