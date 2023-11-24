@@ -52,8 +52,11 @@ open class Transaction(
     /** The maximum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
     var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
 
-    /** The number of seconds to wait before timing out a statement */
-    var timeout: Int? = null
+    /**
+     * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.
+     * Note Not all JDBC drivers implement this limit. Please check the driver documentation.
+     */
+    var queryTimeout: Int? = null
 
     val id by lazy { UUID.randomUUID().toString() }
 

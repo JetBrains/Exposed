@@ -45,7 +45,7 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
         val statement = try {
             prepared(transaction, prepareSQL(transaction)).apply {
-                timeout = transaction.timeout
+                timeout = transaction.queryTimeout
             }
         } catch (e: SQLException) {
             throw ExposedSQLException(e, contexts, transaction)

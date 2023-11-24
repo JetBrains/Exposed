@@ -29,7 +29,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     @Test
     fun timeoutStatements() {
         withDb(timeoutTestDBList) { testDB ->
-            this.timeout = 3
+            this.queryTimeout = 3
             try {
                 TransactionManager.current().exec(
                     generateTimeoutStatements(testDB, 5)
@@ -50,7 +50,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     @Test
     fun noTimeoutWithTimeoutStatement() {
         withDb(timeoutTestDBList) {
-            this.timeout = 3
+            this.queryTimeout = 3
             TransactionManager.current().exec(
                 generateTimeoutStatements(it, 1)
             )
