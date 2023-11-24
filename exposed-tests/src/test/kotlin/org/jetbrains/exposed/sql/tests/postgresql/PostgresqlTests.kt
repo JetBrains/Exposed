@@ -24,7 +24,7 @@ class PostgresqlTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test for update options syntax`() {
+    fun testForUpdateOptionsSyntax() {
         val id = 1
 
         fun Query.city() = map { it[table.name] }.single()
