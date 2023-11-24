@@ -16,6 +16,10 @@ class ParameterizationTests : DatabaseTestsBase() {
         val name = varchar("foo", 50)
     }
 
+    private val supportMultipleStatements by lazy {
+        setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
+    }
+
     @Test
     fun testInsertWithQuotesAndGetItBack() {
         withTables(TempTable) {
@@ -29,9 +33,8 @@ class ParameterizationTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testParametersWithMultipleStatements() {
-        val supported = setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
-        Assume.assumeTrue(supported.containsAll(TestDB.enabledDialects()))
+    fun testSingleParametersWithMultipleStatements() {
+        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
         val urlExtra = when (dialect) {
@@ -78,6 +81,66 @@ class ParameterizationTests : DatabaseTestsBase() {
                 assertEquals("Anya", TempTable.selectAll().single()[TempTable.name])
             } finally {
                 SchemaUtils.drop(TempTable)
+            }
+        }
+
+        TransactionManager.closeAndUnregister(db)
+    }
+
+    @Test
+    fun testMultipleParametersWithMultipleStatements() {
+        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
+
+        val tester = object : Table("tester") {
+            val name = varchar("foo", 50)
+            val age = integer("age")
+            val active = bool("active")
+        }
+
+        val dialect = TestDB.enabledDialects().first()
+        val urlExtra = when (dialect) {
+            TestDB.MYSQL -> "&allowMultiQueries=true"
+            TestDB.MARIADB -> "?&allowMultiQueries=true"
+            else -> ""
+        }
+        val db = Database.connect(
+            dialect.connection.invoke().plus(urlExtra),
+            dialect.driver,
+            dialect.user,
+            dialect.pass
+        )
+
+        transaction(db) {
+            try {
+                SchemaUtils.create(tester)
+
+                val table = tester.tableName.inProperCase()
+                val (name, age, active) = tester.columns.map { it.name.inProperCase() }
+
+                val result = exec(
+                    """
+                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
+                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
+                        UPDATE $table SET $age=? WHERE ($table.$name LIKE ?) AND ($table.$active = ?);
+                        SELECT COUNT(*) FROM $table WHERE ($table.$name LIKE ?) AND ($table.$age = ?);
+                    """.trimIndent(),
+                    args = listOf(
+                        BooleanColumnType() to true, IntegerColumnType() to 1, VarCharColumnType() to "Anna",
+                        BooleanColumnType() to false, IntegerColumnType() to 1, VarCharColumnType() to "Anya",
+                        IntegerColumnType() to 2, VarCharColumnType() to "A%", BooleanColumnType() to true,
+                        VarCharColumnType() to "A%", IntegerColumnType() to 2
+                    ),
+                    explicitStatementType = StatementType.MULTI
+                ) { resultSet ->
+                    resultSet.next()
+                    resultSet.getInt(1)
+                }
+                assertNotNull(result)
+                assertEquals(1, result)
+
+                assertEquals(2, tester.selectAll().count())
+            } finally {
+                SchemaUtils.drop(tester)
             }
         }
 
