@@ -2263,12 +2263,12 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getMaxRepetitionDelay ()J
 	public final fun getMinRepetitionDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public fun getReadOnly ()Z
 	public final fun getRepetitionAttempts ()I
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
 	public final fun getStatements ()Ljava/lang/StringBuilder;
-	public final fun getTimeout ()Ljava/lang/Integer;
 	public fun getTransactionIsolation ()I
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 	public final fun identity (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
@@ -2280,9 +2280,9 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setDuration (J)V
 	public final fun setMaxRepetitionDelay (J)V
 	public final fun setMinRepetitionDelay (J)V
+	public final fun setQueryTimeout (Ljava/lang/Integer;)V
 	public final fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
-	public final fun setTimeout (Ljava/lang/Integer;)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
 	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;)Z
 }
