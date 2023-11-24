@@ -120,38 +120,38 @@ interface DatabaseDialect {
 
     // Specific SQL statements
 
-    /** Returns the SQL command that creates the specified [index]. */
+    /** Returns the SQL statement that creates the specified [index]. */
     fun createIndex(index: Index): String
 
-    /** Returns the SQL command that drops the specified [indexName] from the specified [tableName]. */
+    /** Returns the SQL statement that drops the specified [indexName] from the specified [tableName]. */
     fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String
 
-    /** Returns the SQL command that modifies the specified [column]. */
+    /** Returns the SQL statement that modifies the specified [column]. */
     fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String>
 
-    /** Returns the SQL command that adds a primary key specified [pkName] to an existing [table]. */
+    /** Returns the SQL statement that adds a primary key specified [pkName] to an existing [table]. */
     fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String
 
-    /** Returns the SQL command that creates a database with the specified [name]. */
+    /** Returns the SQL statement that creates a database with the specified [name]. */
     fun createDatabase(name: String) = "CREATE DATABASE IF NOT EXISTS ${name.inProperCase()}"
 
-    /** Returns the SQL command that retrieves a set of existing databases. */
+    /** Returns the SQL query that retrieves a set of existing databases. */
     fun listDatabases(): String = "SHOW DATABASES"
 
-    /** Returns the SQL command that drops the database with the specified [name]. */
+    /** Returns the SQL statement that drops the database with the specified [name]. */
     fun dropDatabase(name: String) = "DROP DATABASE IF EXISTS ${name.inProperCase()}"
 
-    /** Returns the SQL command that sets the current schema to the specified [schema]. */
+    /** Returns the SQL statement that sets the current schema to the specified [schema]. */
     fun setSchema(schema: Schema): String = "SET SCHEMA ${schema.identifier}"
 
-    /** Returns the SQL command that creates the specified [schema]. */
+    /** Returns the SQL statement that creates the specified [schema]. */
     fun createSchema(schema: Schema): String = buildString {
         append("CREATE SCHEMA IF NOT EXISTS ")
         append(schema.identifier)
         appendIfNotNull(" AUTHORIZATION ", schema.authorization)
     }
 
-    /** Returns the SQL command that drops the specified [schema], as well as all its objects if [cascade] is `true`. */
+    /** Returns the SQL statement that drops the specified [schema], as well as all its objects if [cascade] is `true`. */
     fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
         append("DROP SCHEMA IF EXISTS ", schema.identifier)
 
