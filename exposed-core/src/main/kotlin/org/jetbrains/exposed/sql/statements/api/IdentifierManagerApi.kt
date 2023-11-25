@@ -5,22 +5,50 @@ import org.jetbrains.exposed.sql.vendors.ANSI_SQL_2003_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.VENDORS_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+/** Base class responsible for the parsing and processing of identifier tokens in SQL command syntax. */
 abstract class IdentifierManagerApi {
+    /** The string used to quote SQL identifiers for the database. */
     abstract val quoteString: String
+
+    /** Whether the database treats mixed case unquoted identifiers as case-insensitive and stores them in upper case. */
     protected abstract val isUpperCaseIdentifiers: Boolean
+
+    /** Whether the database treats mixed case quoted identifiers as case-insensitive and stores them in upper case. */
     protected abstract val isUpperCaseQuotedIdentifiers: Boolean
+
+    /** Whether the database treats mixed case unquoted identifiers as case-insensitive and stores them in lower case. */
     protected abstract val isLowerCaseIdentifiers: Boolean
+
+    /** Whether the database treats mixed case quoted identifiers as case-insensitive and stores them in lower case. */
     protected abstract val isLowerCaseQuotedIdentifiers: Boolean
+
+    /** Whether the database treats and stores mixed case unquoted identifiers as case-sensitive. */
     protected abstract val supportsMixedIdentifiers: Boolean
+
+    /** Whether the database treats and stores mixed case quoted identifiers as case-sensitive. */
     protected abstract val supportsMixedQuotedIdentifiers: Boolean
+
+    /** Returns all keywords for the database beyond the [ANSI_SQL_2003_KEYWORDS]. */
     protected abstract fun dbKeywords(): List<String>
-    val keywords by lazy { ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords() }
+
+    /** All keywords for the database, including [ANSI_SQL_2003_KEYWORDS] and database-specific keywords. */
+    val keywords by lazy {
+        ANSI_SQL_2003_KEYWORDS + VENDORS_KEYWORDS[currentDialect.name].orEmpty() + dbKeywords()
+    }
+
+    /** The database-specific special characters that can be additionally used in unquoted identifiers. */
     protected abstract val extraNameCharacters: String
+
+    /** The [OracleVersion] of the database, if Oracle is the underlying DBMS; otherwise, [OracleVersion.NonOracle]. */
     protected abstract val oracleVersion: OracleVersion
+
+    /** The maximum number of characters in a column name allowed by the database. */
     protected abstract val maxColumnNameLength: Int
 
+    /** Oracle version number classifier. */
     protected enum class OracleVersion { Oracle11g, Oracle12_1g, Oracle12plus, NonOracle }
 
+    /** The maximum number of characters in an identifier allowed by the database. */
     protected val identifierLengthLimit by lazy {
         @Suppress("MagicNumber")
         when (oracleVersion) {
@@ -57,6 +85,7 @@ abstract class IdentifierManagerApi {
         TransactionManager.currentOrNull()?.db?.config?.preserveKeywordCasing == true
     }
 
+    /** Returns whether an SQL token should be wrapped in quotations and caches the returned value. */
     fun needQuotes(identity: String): Boolean {
         return checkedIdentitiesCache.getOrPut(identity.lowercase()) {
             !identity.isAlreadyQuoted() && (identity.isAKeyword() || !identity.isIdentifier())
@@ -65,6 +94,7 @@ abstract class IdentifierManagerApi {
 
     private fun String.isAlreadyQuoted() = startsWith(quoteString) && endsWith(quoteString)
 
+    /** Returns whether an [identity] should be wrapped in quotations and caches the returned value. */
     fun shouldQuoteIdentifier(identity: String): Boolean = shouldQuoteIdentifiersCache.getOrPut(identity) {
         val alreadyQuoted = identity.isAlreadyQuoted()
         val alreadyLower = identity == identity.lowercase()
@@ -81,6 +111,10 @@ abstract class IdentifierManagerApi {
         }
     }
 
+    /**
+     * Returns an [identity] in a casing appropriate for its identifier status and the database,
+     * then caches the returned value.
+     */
     fun inProperCase(identity: String): String = identifiersInProperCaseCache.getOrPut(identity) {
         val alreadyQuoted = identity.isAlreadyQuoted()
         when {
@@ -96,6 +130,7 @@ abstract class IdentifierManagerApi {
         }
     }
 
+    /** Returns an SQL token wrapped in quotations, if validated as necessary. */
     fun quoteIfNecessary(identity: String): String {
         return if (identity.contains('.') && !identity.isAlreadyQuoted()) {
             identity.split('.').joinToString(".") { quoteTokenIfNecessary(it) }
@@ -104,6 +139,7 @@ abstract class IdentifierManagerApi {
         }
     }
 
+    /** Returns an [identity] wrapped in quotations, if validated as necessary. */
     fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String): String {
         val inProperCase = inProperCase(identity)
         return if (shouldQuoteIdentifier(identity) && inProperCase != identity) {
@@ -113,6 +149,7 @@ abstract class IdentifierManagerApi {
         }
     }
 
+    /** Returns an [identity] wrapped in quotations and containing no more than the maximum [identifierLengthLimit]. */
     fun cutIfNecessaryAndQuote(identity: String) = quoteIfNecessary(identity.take(identifierLengthLimit))
 
     private fun quoteTokenIfNecessary(token: String): String = if (needQuotes(token)) quote(token) else token
