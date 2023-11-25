@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
+import com.microsoft.sqlserver.jdbc.SQLServerException
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -87,7 +88,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
                     TestDB.MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value
-                    TestDB.SQLSERVER -> assertTrue(true)
+                    TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
                     else -> throw NotImplementedError()
                 }
             }
