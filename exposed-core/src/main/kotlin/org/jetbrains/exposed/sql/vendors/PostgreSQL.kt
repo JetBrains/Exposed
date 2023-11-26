@@ -249,7 +249,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        val dataColumns = data.unzip().first
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
 
         return with(QueryBuilder(true)) {
             appendInsertToUpsertClause(table, data, transaction)

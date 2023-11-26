@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertNotNull
 
 // Upsert implementation does not support H2 version 1
 // https://youtrack.jetbrains.com/issue/EXPOSED-30/Phase-Out-Support-for-H2-Version-1.x
@@ -82,6 +83,41 @@ class UpsertTests : DatabaseTestsBase() {
                 assertEquals(3, tester.selectAll().count())
                 val updatedResult = tester.select { tester.idA eq insertStmt[tester.idA] }.single()
                 assertEquals("D", updatedResult[tester.name])
+            }
+        }
+    }
+
+    @Test
+    fun testUpsertWithAllColumnsInPK() {
+        val tester = object : Table("tester") {
+            val userId = varchar("user_id", 32)
+            val keyId = varchar("key_id", 32)
+            val keyValue = varchar("key_value", 32)
+            override val primaryKey = PrimaryKey(userId, keyId, keyValue)
+        }
+
+        // Oracle explicitly prohibits and throws 'ORA-38104: Columns referenced in the ON Clause cannot be updated'
+        // All other databases allow all key columns in update clause as valid SQL
+        withTables(excludeSettings = listOf(TestDB.ORACLE), tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val primaryKeyValues = Triple("User A", "Key A", "A")
+                tester.upsert {
+                    it[userId] = primaryKeyValues.first
+                    it[keyId] = primaryKeyValues.second
+                    it[keyValue] = primaryKeyValues.third
+                }
+                // existing row 'updated' to have identical values
+                tester.upsert {
+                    it[userId] = primaryKeyValues.first
+                    it[keyId] = primaryKeyValues.second
+                    it[keyValue] = primaryKeyValues.third
+                }
+
+                val result = tester.selectAll().singleOrNull()
+                assertNotNull(result)
+
+                val resultValues = Triple(result[tester.userId], result[tester.keyId], result[tester.keyValue])
+                assertEquals(primaryKeyValues, resultValues)
             }
         }
     }
