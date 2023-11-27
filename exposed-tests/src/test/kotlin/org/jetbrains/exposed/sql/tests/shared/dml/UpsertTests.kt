@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
@@ -92,32 +93,37 @@ class UpsertTests : DatabaseTestsBase() {
         val tester = object : Table("tester") {
             val userId = varchar("user_id", 32)
             val keyId = varchar("key_id", 32)
-            val keyValue = varchar("key_value", 32)
-            override val primaryKey = PrimaryKey(userId, keyId, keyValue)
+            override val primaryKey = PrimaryKey(userId, keyId)
         }
 
-        // Oracle explicitly prohibits and throws 'ORA-38104: Columns referenced in the ON Clause cannot be updated'
-        // All other databases allow all key columns in update clause as valid SQL
-        withTables(excludeSettings = listOf(TestDB.ORACLE), tester) { testDb ->
+        fun upsertOnlyKeyColumns(values: Pair<String, String>) {
+            tester.upsert {
+                it[userId] = values.first
+                it[keyId] = values.second
+            }
+        }
+
+        withTables(tester) { testDb ->
             excludingH2Version1(testDb) {
-                val primaryKeyValues = Triple("User A", "Key A", "A")
-                tester.upsert {
-                    it[userId] = primaryKeyValues.first
-                    it[keyId] = primaryKeyValues.second
-                    it[keyValue] = primaryKeyValues.third
-                }
-                // existing row 'updated' to have identical values
-                tester.upsert {
-                    it[userId] = primaryKeyValues.first
-                    it[keyId] = primaryKeyValues.second
-                    it[keyValue] = primaryKeyValues.third
-                }
+                val primaryKeyValues = Pair("User A", "Key A")
+                if (testDb == TestDB.ORACLE) {
+                    // Oracle explicitly prohibits using key columns in update clause
+                    // throws 'ORA-38104: Columns referenced in the ON Clause cannot be updated'
+                    expectException<ExposedSQLException> {
+                        upsertOnlyKeyColumns(primaryKeyValues)
+                    }
+                } else {
+                    // insert new row
+                    upsertOnlyKeyColumns(primaryKeyValues)
+                    // 'update' existing row to have identical values
+                    upsertOnlyKeyColumns(primaryKeyValues)
 
-                val result = tester.selectAll().singleOrNull()
-                assertNotNull(result)
+                    val result = tester.selectAll().singleOrNull()
+                    assertNotNull(result)
 
-                val resultValues = Triple(result[tester.userId], result[tester.keyId], result[tester.keyValue])
-                assertEquals(primaryKeyValues, resultValues)
+                    val resultValues = Pair(result[tester.userId], result[tester.keyId])
+                    assertEquals(primaryKeyValues, resultValues)
+                }
             }
         }
     }
