@@ -539,7 +539,7 @@ abstract class FunctionProvider {
         val autoIncColumn = table.autoIncColumn
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression
         val dataColumnsWithoutAutoInc = autoIncColumn?.let { dataColumns - autoIncColumn } ?: dataColumns
-        val updateColumns = dataColumns.filter { it !in keyColumns }
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
 
         return with(QueryBuilder(true)) {
             +"MERGE INTO "

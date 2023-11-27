@@ -216,7 +216,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
 
         +" DO"
-        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        val dataColumns = data.unzip().first
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
         appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
 
         where?.let {
