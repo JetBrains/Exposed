@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
+import com.microsoft.sqlserver.jdbc.SQLServerException
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -8,6 +9,8 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Assert.fail
 import org.junit.Test
 import org.postgresql.util.PSQLException
+import java.sql.SQLException
+import java.sql.SQLSyntaxErrorException
 import java.sql.SQLTimeoutException
 
 /**
@@ -54,6 +57,41 @@ class QueryTimeoutTest : DatabaseTestsBase() {
             TransactionManager.current().exec(
                 generateTimeoutStatements(it, 1)
             )
+        }
+    }
+
+    @Test
+    fun timeoutZeroWithTimeoutStatement() {
+        withDb(timeoutTestDBList) {
+            this.queryTimeout = 0
+            TransactionManager.current().exec(
+                generateTimeoutStatements(it, 1)
+            )
+        }
+    }
+
+    @Test
+    fun timeoutMinusWithTimeoutStatement() {
+        withDb(timeoutTestDBList) { testDB ->
+            this.queryTimeout = -1
+            try {
+                TransactionManager.current().exec(
+                    generateTimeoutStatements(testDB, 1)
+                )
+                fail("Should have thrown a timeout or cancelled statement exception")
+            } catch (cause: ExposedSQLException) {
+                when (testDB) {
+                    // PostgreSQL throws a regular PSQLException with a minus timeout value
+                    TestDB.POSTGRESQL -> assertTrue(cause.cause is PSQLException)
+                    // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
+                    TestDB.MYSQL, TestDB.POSTGRESQLNG -> assertTrue(cause.cause is SQLException)
+                    // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
+                    TestDB.MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
+                    // SqlServer throws a regular SQLServerException with a minus timeout value
+                    TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
+                    else -> throw NotImplementedError()
+                }
+            }
         }
     }
 }

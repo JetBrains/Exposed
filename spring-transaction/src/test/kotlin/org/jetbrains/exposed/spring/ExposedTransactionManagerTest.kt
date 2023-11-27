@@ -1,9 +1,12 @@
 package org.jetbrains.exposed.spring
 
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
@@ -16,10 +19,13 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
+import java.sql.SQLTimeoutException
 import java.util.*
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
@@ -35,11 +41,13 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
 
     private fun PlatformTransactionManager.execute(
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        timeout: Int? = null,
         block: (TransactionStatus) -> Unit
     ) {
         if (this !is SpringTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
         val tt = TransactionTemplate(this)
         tt.propagationBehavior = propagationBehavior
+        if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
             block(it)
         }
@@ -290,6 +298,34 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
             assertFailsWith<IllegalStateException> { // Should Be "No transaction exist"
                 T1.insertRandom()
+            }
+        }
+    }
+
+    /**
+     * Test for Timeout
+     * Execute with query timeout
+     */
+    @Test
+    @Repeat(5)
+    open fun testTimeout() {
+        transactionManager.execute(timeout = 1) {
+            try {
+                // H2 database doesn't support sql sleep function so use recursive query to simulate long running query
+                TransactionManager.current().exec(
+                    """
+               WITH RECURSIVE T(N) AS (
+               SELECT 1
+               UNION ALL
+               SELECT N+1 FROM T WHERE N<10000000
+               )
+               SELECT * FROM T;
+                    """.trimIndent(),
+                    explicitStatementType = StatementType.SELECT
+                )
+                fail("Should have thrown a timeout exception")
+            } catch (cause: ExposedSQLException) {
+                assertTrue(cause.cause is SQLTimeoutException)
             }
         }
     }
