@@ -33,7 +33,7 @@ val reportMerge by tasks.registering(ReportMergeTask::class) {
 
 subprojects {
     dependencies {
-        detektPlugins(rootProject.libs.plugins.detekt)
+        detektPlugins(rootProject.libs.detekt.formatting)
     }
     tasks.withType<Detekt>().configureEach detekt@{
         finalizedBy(reportMerge)
