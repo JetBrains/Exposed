@@ -2,7 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -12,11 +15,15 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 object EntityTestsData {
 
@@ -1493,6 +1500,70 @@ class EntityTests : DatabaseTestsBase() {
                 flush()
             }
             assertEquals(10000uL, creditCard.spendingLimit)
+        }
+    }
+
+    object Countries : IdTable<String>("Countries") {
+        override val id = varchar("id", 3).uniqueIndex().entityId()
+        var name = text("name")
+    }
+
+    class Country(id: EntityID<String>) : Entity<String>(id) {
+        var name by Countries.name
+        val dishes by Dish referrersOn Dishes.country
+
+        companion object : EntityClass<String, Country>(Countries)
+    }
+
+    object Dishes : IntIdTable("Dishes") {
+        var name = text("name")
+        val country = reference("country_id", Countries)
+    }
+
+    class Dish(id: EntityID<Int>) : IntEntity(id) {
+        var name by Dishes.name
+        var country by Country referencedOn Dishes.country
+
+        companion object : IntEntityClass<Dish>(Dishes)
+    }
+
+    @Test
+    fun testEagerLoadingWithStringParentId() {
+        withDb {
+            val db = it.connect {
+                keepLoadedReferencesOutOfTransaction = true
+            }
+            transaction(db) {
+                try {
+                    SchemaUtils.drop(Dishes, Countries)
+                    SchemaUtils.create(Countries, Dishes)
+
+                    val lebanonId = Countries.insertAndGetId {
+                        it[id] = "LB"
+                        it[name] = "Lebanon"
+                    }
+                    val lebanon = Country.findById(lebanonId)!!
+
+                    Dish.new {
+                        name = "Kebbeh"
+                        country = lebanon
+                    }
+
+                    Dish.new {
+                        name = "Mjaddara"
+                        country = lebanon
+                    }
+
+                    Dish.new {
+                        name = "Fatteh"
+                        country = lebanon
+                    }
+
+                    Country.all().with(Country::dishes)
+                } finally {
+                    SchemaUtils.drop(Dishes, Countries)
+                }
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
  * **Note**: Unlike `UpsertStatement`, `BatchUpsertStatement` does not include a `where` parameter. Please log a feature request
  * on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.

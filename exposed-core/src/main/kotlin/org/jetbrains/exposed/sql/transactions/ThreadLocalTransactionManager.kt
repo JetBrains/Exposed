@@ -12,6 +12,12 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
+/**
+ * [TransactionManager] implementation registered to the provided database value [db].
+ *
+ * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
+ * connection is retrieved from the database.
+ */
 class ThreadLocalTransactionManager(
     private val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
@@ -50,6 +56,7 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
+    /** A thread local variable storing the current transaction. */
     val threadLocal = ThreadLocal<Transaction>()
 
     override fun toString(): String {
@@ -158,6 +165,15 @@ class ThreadLocalTransactionManager(
     }
 }
 
+/**
+ * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
+ */
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(
         db.transactionManager.defaultIsolationLevel,
@@ -166,6 +182,16 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
         statement
     )
 
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
+ */
 fun <T> transaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
@@ -211,6 +237,19 @@ fun <T> transaction(
     }
 }
 
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** All changes in this transaction will be committed at the end of the [statement] block, even if
+ * it is nested and even if `DatabaseConfig.useNestedTransactions` is set to `false`.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
+ */
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,

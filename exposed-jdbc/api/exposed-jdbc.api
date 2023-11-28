@@ -31,6 +31,10 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl 
 	public fun setTransactionIsolation (I)V
 }
 
+public synthetic class org/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl$EntriesMappings {
+	public static final synthetic field entries$0 Lkotlin/enums/EnumEntries;
+}
+
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl : org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/sql/DatabaseMetaData;)V
@@ -65,17 +69,20 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun cancel ()V
 	public fun closeIfPossible ()V
 	public fun executeBatch ()Ljava/util/List;
+	public fun executeMultiple ()Ljava/util/List;
 	public fun executeQuery ()Ljava/sql/ResultSet;
 	public fun executeUpdate ()I
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public fun getFetchSize ()Ljava/lang/Integer;
 	public fun getResultSet ()Ljava/sql/ResultSet;
 	public final fun getStatement ()Ljava/sql/PreparedStatement;
+	public fun getTimeout ()Ljava/lang/Integer;
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;)V
 	public fun setInputStream (ILjava/io/InputStream;)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
+	public fun setTimeout (Ljava/lang/Integer;)V
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

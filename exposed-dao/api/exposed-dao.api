@@ -106,6 +106,7 @@ public final class org/jetbrains/exposed/dao/EntityChangeType : java/lang/Enum {
 	public static final field Created Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static final field Removed Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static final field Updated Lorg/jetbrains/exposed/dao/EntityChangeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static fun values ()[Lorg/jetbrains/exposed/dao/EntityChangeType;
 }

@@ -77,7 +77,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithLimit02() {
-        val dialects = TestDB.values().toList() - notSupportLimit
+        val dialects = TestDB.entries - notSupportLimit
         withCitiesAndUsers(dialects) { _, _, userData ->
             expectException<UnsupportedByDialectException> {
                 userData.deleteWhere(limit = 1) {
